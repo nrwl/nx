@@ -3,31 +3,42 @@ title: Everything You Need to Know About TypeScript Project References
 slug: typescript-project-references
 authors: [Zack DeRose]
 tags: [typescript, monorepo, nx]
-cover_image: /blog/images/2025-01-21/ts-islands.png
-youtubeUrl: https://youtu.be/6M-eefksU8I
+cover_image: /blog/images/articles/ts-islands.png
+youtubeUrl: https://youtu.be/SDE3cIq28s8
 ---
+
+{% callout type="deepdive" title="TypeScript Project References Series" %}
+
+This article is part of the TypeScript Project References series:
+
+- **Everything You Need to Know About TypeScript Project References**
+- _Managing TypeScript Packages in Monorepos_ (coming soon)
+- _A new Nx Experience For TypeScript Monorepos_ (coming soon)
+
+{% /callout %}
 
 Consider the following workspace:
 
-```filesystem
-is-even
-  index.ts
-  tsconfig.json
-is-odd
-  index.ts
-  tsconfig.json
-tsconfig.json
+```plaintext
+.
+├─ is-even
+│ ├─ index.ts
+│ └─ tsconfig.json
+├─ is-odd
+│ ├─ index.ts
+│ └─ tsconfig.json
+└─ tsconfig.json
 ```
 
 And here we can see the relevant code:
 
-```typescript {% fileName="is-even/index.ts" %}
+```ts {% fileName="is-even/index.ts" %}
 export function isEven(n: number): boolean {
   return n % 2 === 0;
 }
 ```
 
-```typescript {% fileName="is-even/index.ts" %}
+```ts {% fileName="is-even/index.ts" %}
 import { isEven } from 'is-even';
 
 export function isOdd(n: number): boolean {
@@ -61,27 +72,25 @@ TypeScript needs to be informed as to how to find the module named `is-even`. Th
 }
 ```
 
-By having the individual `tsconfig.json` files `extend` this base config, they will all get these paths, and now our build command will work:
+By having the individual `tsconfig.json` files `extend` this base config, they will all get these paths, and now our build command will work.
 
 ```{% title="Successfully building 'is-odd' package" path="~/is-odd" command="tsc" %}
 
 ```
 
-This solution that we just implemented is how Nx has set up tsconfigs in the past. Before the new "Project References" feature that this article will look at next, this was the best option available for allowing you to import from another named project inside of your monorepo.
+The biggest downsides with this approach is that it does not enforce any boundaries within your monorepo. **At the TypeScript level we treat the entire monorepo as one "unit"**. The TypeScript path aliases we defined, while seeming to create boundaries, are really just a nicer alternative for relative imports.
 
-Before we look at project references though - one of the important things we should do is understand the downsides of this "paths"-based approach.
-
-The biggest one being that this approach does not enforce any boundaries within your monorepo at the TypeScript level - instead, we treat the entire monorepo as one "unit," but by adding `paths`, we are adding aliases to specific files (usually the `index.ts` barrel files for each project in our monorepo) so we can reference them in our import statements.
+To solve this, TypeScript introduced [Project References](https://www.typescriptlang.org/docs/handbook/project-references.html). Let's have a look.
 
 ## TypeScript Project References
 
 By adding boundaries at the TypeScript level, we can significantly cut down on the "surface area" that TypeScript has to contend with when doing its job. This way, rather than TypeScript seeing our entire monorepo as one unit, it can now understand our workspace as a series of connected "islands" or nodes.
 
-![Islands of TypeScript](/blog/images/2025-01-21/ts-islands.png)
+![Islands of TypeScript](/blog/images/articles/ts-islands.png)
 
 To add this to our previous example, we'll adjust the `tsconfig.json` file for `is-odd` since it depends on `is-even` (note that the `references` field is the only difference from the `is-even/tsconfig.json` file):
 
-```json {% fileName="is-odd/tsconfig.json" %}
+```json {% fileName="is-odd/tsconfig.json" highlightLines=[10] %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
@@ -104,7 +113,7 @@ import { isEven } from 'is-even';
 There are alternatives to path aliases to allow for this name to be resolved. The most recent enhancements in Nx use the `workspaces` functionality of your package manager of choice (npm/pnpm/yarn/bun) as the way of resolving these names.
 With a few more adjustments to this set up, we can now use the `-b` or `--build` option when building `is-odd`. One of these is turning on [the `composite` compiler option](https://www.typescriptlang.org/tsconfig/#composite) for each project, which we can do by setting the `compilerOption` of `composite` to `true` at the root `tsconfig.json` file - since our other `tsconfig.json` files for the 2 different projects already extend our root file:
 
-```json {% fileName="tsconfig.json" %}
+```json {% fileName="tsconfig.json" highlightLines=[7] %}
 {
   "compilerOptions": {
     "paths": {
@@ -134,20 +143,21 @@ Building project '/Users/zackderose/monorepo-project-references/is-odd/tsconfig.
 
 Notice our filesystem now:
 
-```filesystem
-is-even
-  index.d.ts
-  index.js
-  index.ts
-  tsconfig.json
-  tsconfig.tsbuildinfo
-is-odd
-  index.d.ts
-  index.js
-  index.ts
-  tsconfig.json
-  tsconfig.tsbuildinfo
-tsconfig.json
+```plaintext
+.
+├─ is-even
+│  ├─ index.d.ts
+│  ├─ index.js
+│  ├─ index.ts
+│  ├─ tsconfig.json
+│  └─ tsconfig.tsbuildinfo
+├─ is-odd
+│  ├─ index.d.ts
+│  ├─ index.js
+│  ├─ index.ts
+│  ├─ tsconfig.json
+│  └─ tsconfig.tsbuildinfo
+└─ tsconfig.json
 ```
 
 Notice how both `is-even` AND `is-odd` now have a compiled `index.d.ts` declaration file and `index.js`. They also both have a `tsconfig.tsbuildinfo` file now (this holds the additional data TypeScript needs to determine which builds are needed). With the `--build` option, TypeScript is now operating as a build orchestrator - by finding all referenced projects, determining if they are out-of-date, and then building them in the correct order.
@@ -158,40 +168,33 @@ As a practical/pragmatic developer - the TLDR of all of this information is proj
 
 We've put together [a repo to demonstrate the performance gains](https://github.com/nrwl/typecheck-timings), summarized by this graphic:
 
-![results](/blog/images/2025-01-21/results.png)
+![results of the perf measurements for TypeScript project references](/blog/images/articles/results-proj-refs-perf.png)
 
 In addition to the time savings we saw reduced memory usage (~< 1GB vs 3 GB). This makes sense given what we saw about how project references work. This is actually a very good thing for CI pipelines, as exceeding memory usage is a common issue we see with our clients for their TypeScript builds. Less memory usage means we can use smaller machines, which saves on the CI costs.
 
-In general, while it's good to understand the mechanics around everything, we believe it's better to use tools for this (like Nx!). This way you can off-shore your mental capacity to the tool and instead focus on building your solution.
+## Can I use Project References in Nx?
 
-To setup a similar workspace as our example we started with, we can use:
+Yes. You benefit from the performance gains of TypeScript project references the most in large monorepos. However, this is also when the biggest downsides of project references are felt, namely having to manually manage all the references in various `tsconfig.json` files. This is what we help automate in Nx.
+
+We're going to **dive deeper into the new Nx experience with project references in one of the next articles** of the series, but TL;DR, you can experiment with the setup now by either using the `--preset=ts`:
 
 ```shell
 npx create-nx-workspace@latest foo --preset=ts
-cd foo
-nx g lib packages/is-even
-nx g lib packages/is-odd
 ```
 
-After making the adjustments to the contents of the `is-even` and `is-odd`, we can now simply build `is-even` and Nx will automatically prompt us to "sync" our workspace (updating our project references since `is-odd` now depends on `is-even`):
+Or alternatively by appending the `--workspaces` flag to other presets:
 
-```{% title="Showing Nx's sync generators in action" path="~" command="nx build is-odd" lineWrap=80 %}
-
- NX   The workspace is out of sync
-
-[@nx/js:typescript-sync]: Some TypeScript configuration files are missing project references to the projects they depend on or contain outdated project references.
-
-This will result in an error in CI.
-
-? Would you like to sync the identified changes to get your workspace up to date? …
-Yes, sync the changes and run the tasks
-No, run the tasks without syncing the changes
-
-You can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.
-For more information, refer to the docs: https://nx.dev/concepts/sync-generators.
+```shell
+npx create-nx-workspace@latest reactmono --preset=react --workspaces
 ```
 
-So, offload the mental load to your tools, focus on building your solution, and you should have the best of all worlds.
+> Note, Angular doesn't work with TypeScript project references yet but we're looking into various options to make it happen.
+
+## Next up
+
+Stay tuned for our next article in the series about managing TypeScript packages in monorepos.
+
+---
 
 - [Nx Docs](/getting-started/intro)
 - [X/Twitter](https://twitter.com/nxdevtools)
