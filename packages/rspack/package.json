@@ -36,7 +36,7 @@
     "browserslist": "^4.21.4",
     "css-loader": "^6.4.0",
     "enquirer": "~2.3.6",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "fork-ts-checker-webpack-plugin": "7.2.13",
     "http-proxy-middleware": "^3.0.3",
     "less-loader": "11.1.0",

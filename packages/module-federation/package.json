@@ -34,7 +34,7 @@
     "@module-federation/enhanced": "^0.8.8",
     "@module-federation/node": "^2.6.21",
     "@module-federation/sdk": "^0.8.8",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3"
   },
   "peerDependencies": {},

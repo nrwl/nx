@@ -339,7 +339,7 @@ importers:
         version: 20.4.0-beta.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.4.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
       '@nx/rspack':
         specifier: 20.4.0-beta.2
-        version: 20.4.0-beta.2(wlkb6a4wcyj4acel4rda2yga7i)
+        version: 20.4.0-beta.2(mxattjuq2eyw4l2wsec4lxaxym)
       '@nx/storybook':
         specifier: 20.4.0-beta.2
         version: 20.4.0-beta.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(cypress@13.13.0)(eslint@8.57.0)(nx@20.4.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
@@ -399,7 +399,7 @@ importers:
         version: 1.1.6(@swc/helpers@0.5.11)
       '@rspack/dev-server':
         specifier: 1.0.9
-        version: 1.0.9(@rspack/core@1.1.6(@swc/helpers@0.5.11))(@types/express@4.17.14)(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)
+        version: 1.0.9(@rspack/core@1.1.6(@swc/helpers@0.5.11))(@types/express@4.17.21)(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)
       '@rspack/plugin-minify':
         specifier: ^0.7.5
         version: 0.7.5
@@ -485,8 +485,8 @@ importers:
         specifier: ^8.42.3
         version: 8.42.3
       '@types/express':
-        specifier: 4.17.14
-        version: 4.17.14
+        specifier: ^4.17.21
+        version: 4.17.21
       '@types/flat':
         specifier: ^5.0.1
         version: 5.0.5
@@ -683,11 +683,8 @@ importers:
         specifier: ^0.8.0
         version: 0.8.0(eslint@8.57.0)(typescript@5.7.3)
       express:
-        specifier: ^4.19.2
+        specifier: ^4.21.2
         version: 4.21.2
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.3
       fast-xml-parser:
         specifier: ^4.2.7
         version: 4.5.0
@@ -7661,9 +7658,6 @@ packages:
 
   '@types/express-serve-static-core@4.19.5':
     resolution: {integrity: sha512-y6W03tvrACO72aijJ5uF02FRq5cgDR9lUxddQ8vyF+GvmjJQqbzDcJngEjURc+ZsG31VI3hODNZJ2URj86pzmg==}
-
-  '@types/express@4.17.14':
-    resolution: {integrity: sha512-TEbt+vaPFQ+xpxFLFssxUDXj5cWCxZJjIcB7Yg0k0GMHGtgtQgpvx/MUQUeAkNbA9AAGrwkAsoeItdTgS7FMyg==}
 
   '@types/express@4.17.21':
     resolution: {integrity: sha512-ejlPM315qwLpaQlQDTjPdsUFSc6ZsP4AN6AlWnogPjQ7CVi7PYF3YVz+CY3jE2pwYf7E/7HlDAN0rV2GxTG0HQ==}
@@ -25148,7 +25142,7 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/rspack@20.4.0-beta.2(wlkb6a4wcyj4acel4rda2yga7i)':
+  '@nx/rspack@20.4.0-beta.2(mxattjuq2eyw4l2wsec4lxaxym)':
     dependencies:
       '@module-federation/enhanced': 0.8.8(@rspack/core@1.1.6(@swc/helpers@0.5.11))(bufferutil@4.0.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(webpack@5.88.0)
       '@module-federation/node': 2.6.22(@rspack/core@1.1.6(@swc/helpers@0.5.11))(bufferutil@4.0.7)(next@14.2.16(@babel/core@7.25.2)(@playwright/test@1.47.1)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.55.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.7.3)(webpack@5.88.0)
@@ -25158,7 +25152,7 @@ snapshots:
       '@nx/web': 20.4.0-beta.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.4.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@5.32.2(encoding@0.1.13)(typanion@3.14.0))
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.7.3)
       '@rspack/core': 1.1.6(@swc/helpers@0.5.11)
-      '@rspack/dev-server': 1.0.9(@rspack/core@1.1.6(@swc/helpers@0.5.11))(@types/express@4.17.14)(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)
+      '@rspack/dev-server': 1.0.9(@rspack/core@1.1.6(@swc/helpers@0.5.11))(@types/express@4.17.21)(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)
       '@rspack/plugin-react-refresh': 1.0.0(react-refresh@0.10.0)
       autoprefixer: 10.4.13(postcss@8.4.38)
       browserslist: 4.24.2
@@ -26923,13 +26917,13 @@ snapshots:
     optionalDependencies:
       '@swc/helpers': 0.5.15
 
-  '@rspack/dev-server@1.0.9(@rspack/core@1.1.6(@swc/helpers@0.5.11))(@types/express@4.17.14)(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)':
+  '@rspack/dev-server@1.0.9(@rspack/core@1.1.6(@swc/helpers@0.5.11))(@types/express@4.17.21)(bufferutil@4.0.7)(webpack-cli@5.1.4)(webpack@5.88.0)':
     dependencies:
       '@rspack/core': 1.1.6(@swc/helpers@0.5.11)
       chokidar: 3.6.0
       connect-history-api-fallback: 2.0.0
       express: 4.21.2
-      http-proxy-middleware: 2.0.6(@types/express@4.17.14)
+      http-proxy-middleware: 2.0.6(@types/express@4.17.21)
       mime-types: 2.1.35
       p-retry: 4.6.2
       webpack-dev-middleware: 7.4.2(webpack@5.88.0)
@@ -28038,13 +28032,6 @@ snapshots:
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
 
-  '@types/express@4.17.14':
-    dependencies:
-      '@types/body-parser': 1.19.5
-      '@types/express-serve-static-core': 4.19.5
-      '@types/qs': 6.9.16
-      '@types/serve-static': 1.15.7
-
   '@types/express@4.17.21':
     dependencies:
       '@types/body-parser': 1.19.5
@@ -28271,7 +28258,7 @@ snapshots:
 
   '@types/serve-index@1.9.4':
     dependencies:
-      '@types/express': 4.17.14
+      '@types/express': 4.17.21
 
   '@types/serve-static@1.15.7':
     dependencies:
@@ -34041,18 +34028,6 @@ snapshots:
       debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
-
-  http-proxy-middleware@2.0.6(@types/express@4.17.14):
-    dependencies:
-      '@types/http-proxy': 1.17.15
-      http-proxy: 1.18.1(debug@4.3.7)
-      is-glob: 4.0.3
-      is-plain-obj: 3.0.0
-      micromatch: 4.0.8
-    optionalDependencies:
-      '@types/express': 4.17.14
-    transitivePeerDependencies:
-      - debug
 
   http-proxy-middleware@2.0.6(@types/express@4.17.21):
     dependencies:
