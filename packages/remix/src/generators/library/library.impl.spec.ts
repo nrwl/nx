@@ -201,7 +201,7 @@ describe('Remix Library Generator', () => {
         addPlugin: true,
       });
 
-      expect(tree.exists(`test/src/server.ts`));
+      expect(tree.exists(`test/src/server.ts`)).toBeTruthy();
       expect(tree.children(`test/src/lib`).sort()).toMatchInlineSnapshot(`
         [
           "test.module.css",

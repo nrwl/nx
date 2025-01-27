@@ -244,7 +244,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
-    const installReactTask = installCommonDependencies(host, options);
+    const installReactTask = await installCommonDependencies(host, options);
     tasks.push(installReactTask);
   }
 
