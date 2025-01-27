@@ -15,28 +15,13 @@ export function getPackageEntryPointsToProjectMap<
     }
 
     const { packageName, packageExports } = metadata.js;
-    if (
-      !packageExports ||
-      typeof packageExports === 'string' ||
-      !Object.keys(packageExports).length
-    ) {
+    if (!packageExports || typeof packageExports === 'string') {
       // no `exports` or it points to a file, which would be the equivalent of
       // an '.' export, in which case the package name is the entry point
       result[packageName] = project;
     } else {
       for (const entryPoint of Object.keys(packageExports)) {
-        // if entrypoint begins with '.', it is a relative subpath export
-        // otherwise, it is a conditional export
-        // https://nodejs.org/api/packages.html#conditional-exports
-        if (entryPoint.startsWith('.')) {
-          result[join(packageName, entryPoint)] = project;
-        } else {
-          result[packageName] = project;
-        }
-      }
-      // if there was no '.' entrypoint, ensure the package name is matched with the project
-      if (!result[packageName]) {
-        result[packageName] = project;
+        result[join(packageName, entryPoint)] = project;
       }
     }
   }
