@@ -11,9 +11,13 @@ import type {
   CreateNodesContextV2,
   CreateNodesResult,
   NxPluginV2,
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
 import { createNodesFromFiles } from './utils';
+import { isIsolationEnabled } from './isolation/enabled';
+import { isDaemonEnabled } from '../../daemon/client/client';
 
 export class LoadedNxPlugin {
   readonly name: string;
@@ -35,6 +39,12 @@ export class LoadedNxPlugin {
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => Promise<ProjectsMetadata>;
+  readonly preTasksExecution?: (
+    context: PreTasksExecutionContext
+  ) => Promise<NodeJS.ProcessEnv>;
+  readonly postTasksExecution?: (
+    context: PostTasksExecutionContext
+  ) => Promise<void>;
 
   readonly options?: unknown;
   readonly include?: string[];
@@ -107,10 +117,37 @@ export class LoadedNxPlugin {
       this.createMetadata = async (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
     }
+
+    if (plugin.preTasksExecution) {
+      this.preTasksExecution = async (context: PreTasksExecutionContext) => {
+        const updates = {};
+        let revokeFn: () => void;
+        if (isIsolationEnabled() || isDaemonEnabled()) {
+          const { proxy, revoke } = Proxy.revocable<NodeJS.ProcessEnv>(
+            process.env,
+            {
+              set: (target, key: string, value) => {
+                target[key] = value;
+                updates[key] = value;
+                return true;
+              },
+            }
+          );
+          process.env = proxy;
+          revokeFn = revoke;
+        }
+        await plugin.preTasksExecution(this.options, context);
+
+        if (revokeFn) {
+          revokeFn();
+        }
+        return updates;
+      };
+
+      if (plugin.postTasksExecution) {
+        this.postTasksExecution = async (context: PostTasksExecutionContext) =>
+          plugin.postTasksExecution(this.options, context);
+      }
+    }
   }
 }
-
-export type CreateNodesResultWithContext = CreateNodesResult & {
-  file: string;
-  pluginName: string;
-};

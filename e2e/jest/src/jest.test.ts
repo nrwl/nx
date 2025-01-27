@@ -14,6 +14,7 @@ import {
 describe('Jest', () => {
   beforeAll(() => {
     newProject({ name: uniq('proj-jest'), packages: ['@nx/js', '@nx/node'] });
+    process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });
 
   afterAll(() => cleanupProject());
