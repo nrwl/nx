@@ -1,0 +1,12 @@
+{
+  "name": "move-use-daemon-process",
+  "version": "20.0.0-beta.7",
+  "description": "Migration for v20.0.0-beta.7",
+  "implementation": "/packages/nx/src/migrations/update-20-0-0/move-use-daemon-process.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

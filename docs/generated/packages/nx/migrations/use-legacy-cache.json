@@ -1,0 +1,13 @@
+{
+  "name": "use-legacy-cache",
+  "version": "20.0.1",
+  "description": "Set `useLegacyCache` to true for migrating workspaces",
+  "implementation": "/packages/nx/src/migrations/update-20-0-1/use-legacy-cache.ts",
+  "x-repair-skip": true,
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}
