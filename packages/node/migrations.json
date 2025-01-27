@@ -37,6 +37,14 @@
         "@fastify/sensible": {
           "version": "~6.0.2",
           "alwaysAddToPackageJson": false
+        },
+        "express": {
+          "version": "^4.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "^4.17.21",
+          "alwaysAddToPackageJson": false
         }
       }
     }
