@@ -22,7 +22,7 @@ In addition, Nx allows you to incrementally enable [plugins and supporting featu
 
 Here are some examples for Nx:
 
-- [Article: Setup a Monorepo with PNPM and speed it up with Nx](https://dev.to/nx/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx-1eem)
+- [Article: Setup a Monorepo with PNPM and speed it up with Nx](/blog/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx)
 - [Video: Nx in 100 seconds: Adding Nx to an existing PNPM workspace](https://youtu.be/8X2sGZn_ffY)
 
 #### 2. Understanding your workspace
