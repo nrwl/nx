@@ -27,7 +27,7 @@ export default async function customTasksRunner(tasks, options, context) {
     throw new Error('Env is not set up correctly');
   }
   const allTaskResults = {};
-  const lifeCyle = {
+  const lifeCycle = {
     endTasks(taskResults) {
       taskResults.forEach((tr) => {
         allTaskResults[tr.task.id] = tr;
@@ -36,7 +36,7 @@ export default async function customTasksRunner(tasks, options, context) {
   };
   const ret = await defaultTasksRunner(
     tasks,
-    { ...options, lifeCyle },
+    { ...options, lifeCycle },
     context
   );
   if (options.reportAnalytics) {
@@ -157,7 +157,7 @@ You can replace it with two plugins:
 }
 ```
 
-Simple add a condition to your hooks as follows:
+Simply add a condition to your hooks as follows:
 
 ```typescript
 export async function preTasksExecution() {
@@ -169,7 +169,7 @@ export async function postTasksExecution(options, tasksResults) {
 }
 ```
 
-You can then choose which hooks ot use by setting the RUNNER env variable.
+You can then choose which hooks to use by setting the RUNNER env variable.
 
 ### Passing Options
 

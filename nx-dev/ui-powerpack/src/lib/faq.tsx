@@ -17,15 +17,15 @@ export function Faq(): ReactElement {
     {
       question: 'Does Nx Powerpack activation require network access?',
       answer:
-        'If you enable Nx Powerpack without Nx Cloud, no networks will be created and no data will be collected.',
+        'If you enable Nx Powerpack without Nx Cloud, no network requests will be created and no data will be collected.',
     },
     {
-      question: 'Can I get Nx Powerpack license for free?',
+      question: 'Can I get an Nx Powerpack license for free?',
       answer:
         'Open source projects can get Powerpack for free, and small teams can get a remote cache only license for free. All licenses are perpetual and licenses can be updated as long as the organization still qualifies.',
     },
     {
-      question: 'How we define a small team?',
+      question: 'How do we define a small team?',
       answer:
         'We value small teams using Nx. That is why we provide a free, perpetual, remote cache only license to any company with fewer than 30 engineers using Nx. If you have a special case, reach out and we will help. Read more here: https://nx.dev/nx-enterprise/powerpack/free-licenses-and-trials',
     },
@@ -38,7 +38,7 @@ export function Faq(): ReactElement {
       question:
         'Only interested in Nx Powerpack because of Custom Tasks Runner deprecation',
       answer:
-        'We created a transition path from using Custom Tasks Runners to using the new plugins api hooks (beforeTasksExecution and aftertTasksExectution) and Nx Powerpack. Read more here: https://nx.dev/deprecated/custom-tasks-runner',
+        'We created a transition path from using Custom Tasks Runners to using the new plugins api hooks (preTasksExecution and postTasksExectution) and Nx Powerpack. Read more here: https://nx.dev/deprecated/custom-tasks-runner',
     },
     {
       question: 'Is Nx Powerpack license perpetual?',
