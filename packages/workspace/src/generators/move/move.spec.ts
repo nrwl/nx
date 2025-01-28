@@ -129,4 +129,20 @@ describe('move', () => {
       '../../node_modules/nx/schemas/project-schema.json'
     );
   });
+
+  it('should work without tsconfig.base.json (https://github.com/nrwl/nx/issues/28349)', async () => {
+    await libraryGenerator(tree, {
+      directory: 'my-lib',
+    });
+    tree.delete('tsconfig.base.json');
+
+    await moveGenerator(tree, {
+      projectName: 'my-lib',
+      importPath: '@proj/shared-mylib',
+      updateImportPath: true,
+      destination: 'shared/my-lib-new',
+    });
+
+    expect(tree.exists('tsconfig.base.json')).toBeFalsy();
+  });
 });
