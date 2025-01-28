@@ -1,6 +1,9 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { processProjectReports } from './get-gradle-report';
+import {
+  processGradleDependencies,
+  processProjectReports,
+} from './get-gradle-report';
 
 describe('processProjectReports', () => {
   it('should process project reports', () => {
@@ -44,5 +47,30 @@ describe('processProjectReports', () => {
     ]);
     expect(report.gradleProjectToProjectName.get('')).toEqual('app');
     expect(report.gradleProjectToChildProjects.get('')).toEqual([]);
+  });
+});
+
+describe('processGradleDependencies', () => {
+  it('should process gradle dependencies with composite build', () => {
+    const depFilePath = join(
+      __dirname,
+      '..',
+      'utils/__mocks__/gradle-composite-dependencies.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([
+      ':my-utils:number-utils',
+      ':my-utils:string-utils',
+    ]);
+  });
+
+  it('should process gradle dependencies with regular build', () => {
+    const depFilePath = join(
+      __dirname,
+      '..',
+      'utils/__mocks__/gradle-dependencies.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([':utilities']);
   });
 });
