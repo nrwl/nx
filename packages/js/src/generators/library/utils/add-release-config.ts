@@ -22,8 +22,8 @@ export async function addReleaseOptionForPublishableTarget(
   tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration,
-  defaultOutputDirectory: string = 'dist',
-  isUsingTsSolutionConfig: boolean = false
+  isUsingTsSolutionConfig: boolean = false,
+  defaultOutputDirectory: string = 'dist'
 ): Promise<ProjectConfiguration> {
   if (!isUsingTsSolutionConfig) {
     const packageRoot = joinPathFragments(

@@ -336,8 +336,8 @@ async function configureProject(
       tree,
       options.name,
       projectConfiguration,
-      defaultOutputDirectory,
-      options.isUsingTsSolutionConfig
+      options.isUsingTsSolutionConfig,
+      defaultOutputDirectory
     );
   }
 

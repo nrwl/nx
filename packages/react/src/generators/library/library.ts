@@ -6,11 +6,11 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  readNxJson,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
-  updateNxJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
@@ -37,6 +37,10 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { determineEntryFields } from './lib/determine-entry-fields';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addReleaseOptionForPublishableTarget,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -77,7 +81,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   if (options.isUsingTsSolutionConfig) {
     writeJson(host, `${options.projectRoot}/package.json`, {
-      name: options.importPath,
+      name: options.importPath ?? options.name,
       version: '0.0.1',
       ...determineEntryFields(options),
       nx: options.parsedTags?.length
@@ -103,7 +107,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(lintTask);
 
   // Set up build target
-  if (options.buildable && options.bundler === 'vite') {
+  if (options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
       ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(host, {
@@ -140,7 +144,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       },
       false
     );
-  } else if (options.buildable && options.bundler === 'rollup') {
+  } else if (options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
     tasks.push(rollupTask);
   }
@@ -236,11 +240,16 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(componentTask);
   }
 
-  if (options.publishable || options.buildable) {
-    updateJson(host, `${options.projectRoot}/package.json`, (json) => {
-      json.name = options.importPath;
-      return json;
-    });
+  if (options.publishable) {
+    const projectConfiguration = readProjectConfiguration(host, options.name);
+    await addReleaseOptionForPublishableTarget(
+      host,
+      options.name,
+      projectConfiguration,
+      options.isUsingTsSolutionConfig
+    );
+    updateProjectConfiguration(host, options.name, projectConfiguration);
+    tasks.push(await releaseTasks(host));
   }
 
   if (!options.skipPackageJson) {

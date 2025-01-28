@@ -9,9 +9,8 @@ import {
 describe('publishable libraries release', () => {
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js'],
+      packages: ['@nx/js', '@nx/react'],
     });
-
     // Normalize git committer information so it is deterministic in snapshots
     await runCommandAsync(`git config user.email "test@test.com"`);
     await runCommandAsync(`git config user.name "Test"`);
@@ -25,14 +24,23 @@ describe('publishable libraries release', () => {
   });
   afterAll(() => cleanupProject());
 
-  it('should be able to release publishable js library', async () => {
+  it('should be able release js publishable libraries', async () => {
     const jsLib = uniq('js-lib');
     runCLI(
       `generate @nx/js:lib ${jsLib} --publishable --importPath=@proj/${jsLib}`
     );
 
-    let versionOutput = runCLI(`release --first-release`);
-    versionOutput = runCLI(`release patch`);
+    runCLI(`release --first-release`);
+    const versionOutput = runCLI(`release patch`);
+    expect(versionOutput).toContain('Executing pre-version command');
+  });
+
+  it('should be able release react publishable libraries', async () => {
+    const reactLib = uniq('react-lib');
+    runCLI(
+      `generate @nx/react:lib ${reactLib} --publishable --importPath=@proj/${reactLib}`
+    );
+    const versionOutput = runCLI(`release patch`);
     expect(versionOutput).toContain('Executing pre-version command');
   });
 });
