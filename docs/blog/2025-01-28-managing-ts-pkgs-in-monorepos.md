@@ -475,7 +475,7 @@ Here's our updated `package.json` for `lib-a`:
 }
 ```
 
-Note how it directly exports the `index.ts` file, eliminating the need for pre-compilation. This approach works regardless of whether you use TypeScript project references, as long as the consuming application handles compilation or transpilation. The package manager's workspaces feature makes sure that the packages are properly linked s.t. they can be resolved at runtime (by Node or respective bundler).
+Note how it directly exports the `index.ts` file, eliminating the need for pre-compilation. This approach works regardless of whether you use TypeScript project references, as long as the consuming application handles compilation or transpilation. The package manager's workspaces feature makes sure that the packages are properly linked so they can be resolved at runtime (by Node or respective bundler).
 
 ### Do I need to reference dependent packages in the consuming package's `package.json`?
 
