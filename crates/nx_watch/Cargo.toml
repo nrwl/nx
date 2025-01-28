@@ -1,0 +1,21 @@
+[package]
+name = "nx_watch"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+tracing = { workspace = true }
+nx_walker = { workspace = true }
+nx_glob = { workspace = true }
+watchexec = { workspace = true }
+watchexec-events = { workspace = true }
+watchexec-filterer-ignore = { workspace = true }
+watchexec-signals = { workspace = true }
+ignore-files = { workspace = true }
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+assert_fs = { workspace = true }
+tempfile = { workspace = true }

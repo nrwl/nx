@@ -2,11 +2,11 @@ use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-use nx_glob::{contains_glob_pattern, partition_glob};
-use nx_glob::NxGlobSet;
 use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
-use crate::native::walker::{nx_walker, nx_walker_sync};
+use nx_glob::NxGlobSet;
+use nx_glob::{contains_glob_pattern, partition_glob};
+use nx_walker::{nx_walker, nx_walker_sync};
 
 #[napi]
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {

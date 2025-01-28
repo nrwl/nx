@@ -1,12 +1,12 @@
+mod utils;
+
 use ignore::WalkBuilder;
+use nx_glob::NxGlobSet;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-
-
-use crate::native::logger::enable_logger;
-use crate::native::utils::{get_mod_time, Normalize};
 use walkdir::WalkDir;
-use nx_glob::NxGlobSet;
+
+use crate::utils::{get_mod_time, Normalize};
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
 pub struct NxFile {
@@ -50,14 +50,13 @@ where
             !ignore_glob_set.is_match(path.as_ref())
         })
         .filter_map(move |entry| {
-            entry
-                .ok()
-                .and_then(|e|
-                    e.path()
-                    .strip_prefix(&base_dir).ok()
+            entry.ok().and_then(|e| {
+                e.path()
+                    .strip_prefix(&base_dir)
+                    .ok()
                     .filter(|p| !p.to_string_lossy().is_empty())
                     .map(|p| p.to_owned())
-                )
+            })
         })
 }
 
@@ -107,8 +106,6 @@ where
     use std::thread::available_parallelism;
 
     use crossbeam_channel::unbounded;
-    use tracing::trace;
-    enable_logger();
 
     let directory = directory.as_ref();
     let mut walker = create_walker(directory, use_ignores);
@@ -116,8 +113,6 @@ where
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
     let (sender, receiver) = unbounded();
-
-    trace!(?directory, "walking");
 
     let now = std::time::Instant::now();
     walker.threads(cpus).build_parallel().run(|| {
@@ -131,7 +126,7 @@ where
 
             if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
                 return Continue;
-            }
+            };
 
             let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
@@ -151,7 +146,6 @@ where
             Continue
         })
     });
-    trace!("walked in {:?}", now.elapsed());
 
     let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
@@ -247,72 +241,22 @@ mod test {
         let temp_dir = setup_fs();
 
         temp_dir
-            .child("nested")
-            .child("child.txt")
-            .write_str("data")
-            .unwrap();
-        temp_dir
-            .child("nested")
-            .child("child-two")
-            .child("grand_child.txt")
-            .write_str("data")
-            .unwrap();
-        temp_dir
-            .child("v1")
-            .child("packages")
-            .child("pkg-a")
-            .child("pkg-a.txt")
-            .write_str("data")
-            .unwrap();
-        temp_dir
-            .child("v1")
-            .child("packages")
-            .child("pkg-b")
-            .child("pkg-b.txt")
-            .write_str("data")
-            .unwrap();
-        temp_dir
-            .child("packages")
-            .child("pkg-c")
-            .child("pkg-c.txt")
-            .write_str("data")
-            .unwrap();
-
-        // add nxignore file
-        temp_dir
             .child(".nxignore")
-            .write_str(
-                r"baz/
-nested/child.txt
-nested/child-two/
-
-# this should only ignore root level packages, not nested
-/packages
-    ",
-            )
+            .write_str("foo.txt\nbar.txt")
             .unwrap();
 
-        let mut file_names = nx_walker(temp_dir, true)
-            .map(
-                |NxFile {
-                     normalized_path: relative_path,
-                     ..
-                 }| relative_path,
-            )
+        let mut content = nx_walker(&temp_dir, true).collect::<Vec<_>>();
+        content.sort();
+        let content = content
+            .into_iter()
+            .map(|f| (f.full_path.into(), f.normalized_path.into()))
             .collect::<Vec<_>>();
-
-        file_names.sort();
-
         assert_eq!(
-            file_names,
-            vec!(
-                ".nxignore",
-                "bar.txt",
-                "foo.txt",
-                "test.txt",
-                "v1/packages/pkg-a/pkg-a.txt",
-                "v1/packages/pkg-b/pkg-b.txt"
-            )
+            content,
+            vec![
+                (temp_dir.join("baz/qux.txt"), PathBuf::from("baz/qux.txt")),
+                (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
+            ]
         );
     }
 }

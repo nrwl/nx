@@ -1494,8 +1494,19 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
- "nom",
- "once_cell",
+"nom",
+"once_cell",
+"nx_cache",
+"nx_db",
+"nx_glob",
+"nx_hasher",
+"nx_machine",
+"nx_project_graph",
+"nx_tasks",
+"nx_terminal",
+"nx_walker",
+"nx_watch",
+"nx_workspace",
  "parking_lot",
  "portable-pty",
  "rayon",
@@ -1519,6 +1530,171 @@ dependencies = [
  "watchexec-signals",
  "winapi",
  "xxhash-rust",
+]
+
+[[package]]
+name = "nx_cache"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "nx_db",
+ "nx_glob",
+ "nx_hasher",
+ "nx_walker",
+ "parking_lot",
+ "rayon",
+ "rkyv",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "nx_db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "fs4",
+ "parking_lot",
+ "rusqlite",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "nx_glob"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "globset",
+ "itertools",
+ "nom",
+ "tracing",
+]
+
+[[package]]
+name = "nx_hasher"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "tracing",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "nx_machine"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "tracing",
+]
+
+[[package]]
+name = "nx_project_graph"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "nx_glob",
+ "nx_hasher",
+ "nx_walker",
+ "parking_lot",
+ "rayon",
+ "serde",
+ "serde_json",
+ "swc_common",
+ "swc_ecma_ast",
+ "swc_ecma_dep_graph",
+ "swc_ecma_parser",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "nx_tasks"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "nx_db",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "nx_terminal"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "crossterm",
+ "mio",
+ "parking_lot",
+ "portable-pty",
+ "tempfile",
+ "tracing",
+ "winapi",
+]
+
+[[package]]
+name = "nx_walker"
+version = "0.1.0"
+dependencies = [
+ "assert_fs",
+ "crossbeam-channel",
+ "ignore",
+ "nx_glob",
+ "rayon",
+ "serde",
+ "serde_json",
+ "walkdir",
+]
+
+[[package]]
+name = "nx_watch"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "ignore-files 2.1.0",
+ "nx_glob",
+ "nx_walker",
+ "parking_lot",
+ "tempfile",
+ "tracing",
+ "watchexec",
+ "watchexec-events",
+ "watchexec-filterer-ignore",
+ "watchexec-signals",
+]
+
+[[package]]
+name = "nx_workspace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "nx_hasher",
+ "nx_walker",
+ "parking_lot",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
 ]
 
 [[package]]
@@ -1944,6 +2120,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ryu"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1994,6 +2176,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.53",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.137"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "930cfb6e6abf99298aaad7d29abbef7a9999a9a8806a40088f55f0dcec03146b"
+dependencies = [
+ "itoa",
+ "memchr",
+ "ryu",
+ "serde",
 ]
 
 [[package]]

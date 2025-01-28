@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use anyhow::*;
 use itertools::Itertools;
+use nx_hasher::hash;
 
-use crate::native::hasher::hash;
 use crate::native::project_graph::types::Project;
 use crate::native::types::Input;
 
@@ -17,7 +17,6 @@ pub fn hash_project_config(
     let targets = project
         .targets
         .iter()
-        .map(|(k, v)| (k, v))
         .sorted_by(|a, b| a.0.cmp(b.0))
         .map(|(k, v)| {
             format!(
@@ -40,7 +39,6 @@ pub fn hash_project_config(
         .map(|inputs| {
             inputs
                 .iter()
-                .map(|(k, v)| (k, v))
                 .sorted_by(|a, b| a.0.cmp(b.0))
                 .map(|(_, v)| {
                     v.iter()

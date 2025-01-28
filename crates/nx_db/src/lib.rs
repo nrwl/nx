@@ -1,28 +1,26 @@
 pub mod connection;
 mod initialize;
 
-use crate::native::logger::enable_logger;
-use crate::native::machine_id::get_machine_id;
-use crate::native::{db::connection::NxDbConnection, hasher::hash};
-use napi::bindgen_prelude::External;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::{mem, process};
 use tracing::{trace, trace_span};
 
-#[napi]
+use connection::NxDbConnection;
+
+/// Connect to the Nx database
 pub fn connect_to_nx_db(
     cache_dir: String,
     nx_version: String,
     db_name: Option<String>,
-) -> anyhow::Result<External<NxDbConnection>> {
-    enable_logger();
+    machine_id: String,
+) -> anyhow::Result<NxDbConnection> {
     let cache_dir_buf = PathBuf::from(cache_dir);
-    let mut db_file_name = db_name.unwrap_or_else(get_machine_id);
+    let mut db_file_name = db_name.unwrap_or_else(|| machine_id);
 
     if db_file_name.is_empty() {
         trace!("Invalid db file name, using fallback name");
-        db_file_name = hash(b"machine");
+        db_file_name = "machine".to_string();
     }
 
     let db_path = cache_dir_buf.join(format!("{}.db", db_file_name));
@@ -37,12 +35,12 @@ pub fn connect_to_nx_db(
 
         initialize::unlock_file(&lock_file);
 
-        Ok(External::new(c))
+        Ok(c)
     })
 }
 
-#[napi]
-pub fn close_db_connection(mut connection: External<NxDbConnection>) -> anyhow::Result<()> {
-    let conn = mem::take(connection.as_mut());
+/// Close the database connection
+pub fn close_db_connection(mut connection: NxDbConnection) -> anyhow::Result<()> {
+    let conn = mem::take(&mut connection);
     conn.close()
 }

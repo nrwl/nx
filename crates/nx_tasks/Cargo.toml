@@ -1,0 +1,18 @@
+[package]
+name = "nx_tasks"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+tracing = { workspace = true }
+nx_db = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+assert_fs = { workspace = true }
+tempfile = { workspace = true }

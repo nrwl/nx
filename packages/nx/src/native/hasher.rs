@@ -1,12 +1,3 @@
-use std::path::Path;
-
-use tracing::trace;
-use xxhash_rust::xxh3;
-
-pub fn hash(content: &[u8]) -> String {
-    xxh3::xxh3_64(content).to_string()
-}
-
 #[napi]
 pub fn hash_array(input: Vec<Option<String>>) -> String {
     let joined = input.iter().filter_map(|s| {

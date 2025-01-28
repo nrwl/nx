@@ -1,5 +1,4 @@
 use anyhow::Result;
-
 use rusqlite::{Connection, DatabaseName, Error, OptionalExtension, Params, Row, Statement, ToSql};
 use std::thread;
 use std::time::Duration;
@@ -53,7 +52,7 @@ macro_rules! retry_db_operation_when_busy {
 }
 
 impl NxDbConnection {
-    pub fn new(connection: Connection) -> Self {
+    pub(crate) fn new(connection: Connection) -> Self {
         Self {
             conn: Some(connection),
         }

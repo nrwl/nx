@@ -1,9 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/*",
-    "packages/nx",
-]
+members = ["crates/*", "packages/nx"]
 
 [workspace.package]
 edition = "2021"
@@ -12,6 +9,16 @@ version = "0.1.0"
 
 [workspace.dependencies]
 nx_glob = { path = "crates/nx_glob" }
+nx_walker = { path = "crates/nx_walker" }
+nx_db = { path = "crates/nx_db" }
+nx_hasher = { path = "crates/nx_hasher" }
+nx_tasks = { path = "crates/nx_tasks" }
+nx_workspace = { path = "crates/nx_workspace" }
+nx_project_graph = { path = "crates/nx_project_graph" }
+nx_cache = { path = "crates/nx_cache" }
+nx_terminal = { path = "crates/nx_terminal" }
+nx_watch = { path = "crates/nx_watch" }
+nx_machine = { path = "crates/nx_machine" }
 
 anyhow = "1.0.95"
 colored = "2"
@@ -44,6 +51,8 @@ swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 #windows dependencies
 winapi = { version = "0.3", features = ["fileapi"] }
@@ -72,5 +81,3 @@ tempfile = "3.13.0"
 
 [profile.release]
 lto = true
-
-

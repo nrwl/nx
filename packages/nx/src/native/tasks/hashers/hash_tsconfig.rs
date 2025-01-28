@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use anyhow::*;
+use nx_hasher::hash;
 
-use crate::native::hasher::hash;
 use crate::native::project_graph::utils::find_project_for_path;
 
 pub fn hash_tsconfig_selectively(

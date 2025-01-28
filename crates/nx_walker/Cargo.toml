@@ -1,0 +1,17 @@
+[package]
+name = "nx_walker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ignore = { workspace = true }
+walkdir = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+nx_glob = { workspace = true }
+crossbeam-channel = { workspace = true }
+
+[dev-dependencies]
+assert_fs = { workspace = true }

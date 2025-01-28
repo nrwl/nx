@@ -1,5 +1,5 @@
-use crate::native::hasher::hash;
 use dashmap::DashMap;
+use nx_hasher::hash;
 use std::collections::HashMap;
 use std::process::Command;
 use std::sync::Arc;

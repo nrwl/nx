@@ -1,15 +1,15 @@
-use crate::native::db::connection::NxDbConnection;
+use crate::connection::NxDbConnection;
 use rusqlite::{Connection, OpenFlags};
 use std::fs::{remove_file, File};
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
-pub(super) struct LockFile {
+pub(crate) struct LockFile {
     file: File,
     path: PathBuf,
 }
 
-pub(super) fn unlock_file(lock_file: &LockFile) {
+pub(crate) fn unlock_file(lock_file: &LockFile) {
     if lock_file.path.exists() {
         fs4::fs_std::FileExt::unlock(&lock_file.file)
             .and_then(|_| remove_file(&lock_file.path))
@@ -17,7 +17,7 @@ pub(super) fn unlock_file(lock_file: &LockFile) {
     }
 }
 
-pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
+pub(crate) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
     let lock_file_path = db_path.with_extension("lock");
     let lock_file = File::create(&lock_file_path)
         .map_err(|e| anyhow::anyhow!("Unable to create db lock file: {:?}", e))?;
@@ -32,7 +32,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
     })
 }
 
-pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
+pub(crate) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Result<NxDbConnection> {
     match open_database_connection(db_path) {
         Ok(mut c) => {
             trace!(
@@ -135,8 +135,6 @@ fn configure_database(connection: &NxDbConnection) -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::native::logger::enable_logger;
-
     use super::*;
 
     #[test]
@@ -181,10 +179,9 @@ mod tests {
 
     #[test]
     fn initialize_db_recreates_incompatible_db() -> anyhow::Result<()> {
-        enable_logger();
         let temp_dir = tempfile::tempdir()?;
         let db_path = temp_dir.path().join("test.db");
-        //
+
         // Create initial db
         let _ = initialize_db("1.0.0".to_string(), &db_path)?;
 

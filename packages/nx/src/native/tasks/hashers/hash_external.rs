@@ -1,10 +1,11 @@
-use crate::native::hasher::{hash, hash_array};
-use crate::native::project_graph::types::ExternalNode;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
+use nx_hasher::{hash, hash_array};
+
+use crate::native::project_graph::types::ExternalNode;
 
 pub fn hash_external(
     external_name: &str,

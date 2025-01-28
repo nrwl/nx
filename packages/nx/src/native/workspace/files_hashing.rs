@@ -5,9 +5,9 @@ use std::thread::available_parallelism;
 use rayon::prelude::*;
 use tracing::trace;
 
-use crate::native::hasher::hash_file_path;
-use crate::native::walker::{nx_walker, NxFile};
 use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
+use nx_hasher::hash_file_path;
+use nx_walker::{nx_walker, NxFile};
 
 pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
     let files = nx_walker(workspace_root, true).collect::<Vec<_>>();
@@ -61,7 +61,11 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
             })
             .collect::<Vec<_>>()
     } else {
-        trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
+        trace!(
+            "hashing workspace files in {} chunks of {}",
+            num_parallelism,
+            chunks
+        );
         files
             .par_chunks(chunks)
             .flat_map_iter(|chunks| {

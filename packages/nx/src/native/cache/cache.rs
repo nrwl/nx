@@ -10,8 +10,8 @@ use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
-use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
+use nx_db::connection::NxDbConnection;
 
 #[napi(object)]
 #[derive(Default, Clone, Debug)]

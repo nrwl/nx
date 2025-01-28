@@ -1,5 +1,6 @@
-use crate::native::hasher::hash;
 use std::collections::HashMap;
+
+use nx_hasher::hash;
 
 pub fn hash_env(env_name: &str, env: &HashMap<String, String>) -> String {
     let env_value = env.get(env_name).map(|s| s.as_str()).unwrap_or("");

@@ -4,8 +4,8 @@ pub fn get_machine_id() -> String {
 
     #[cfg(target_arch = "wasm32")]
     {
-        use crate::native::hasher::hash;
         use crate::native::tasks::hashers::create_command_builder;
+        use nx_hasher::hash;
         use std::fs::read_to_string;
 
         hash(

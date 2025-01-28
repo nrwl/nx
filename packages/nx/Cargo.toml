@@ -9,7 +9,17 @@ crate-type = ['cdylib']
 
 
 [dependencies]
-nx_glob = { workspace = true}
+nx_glob = { workspace = true }
+nx_walker = { workspace = true }
+nx_db = { workspace = true }
+nx_machine = { workspace = true }
+nx_hasher = { workspace = true }
+nx_tasks = { workspace = true }
+nx_workspace = { workspace = true }
+nx_project_graph = { workspace = true }
+nx_cache = { workspace = true }
+nx_terminal = { workspace = true }
+nx_watch = { workspace = true }
 anyhow = { workspace = true }
 colored = { workspace = true }
 crossbeam-channel = { workspace = true }
@@ -52,7 +62,6 @@ watchexec-events = { workspace = true }
 watchexec-filterer-ignore = { workspace = true }
 watchexec-signals = { workspace = true }
 machine-uid = { workspace = true }
-
 
 
 [build-dependencies]

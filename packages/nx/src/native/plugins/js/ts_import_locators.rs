@@ -713,10 +713,10 @@ fn find_imports(
 #[cfg(test)]
 mod find_imports {
     use super::*;
-    use nx_glob::NxGlobSet;
-    use crate::native::walker::nx_walker;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use nx_glob::NxGlobSet;
+    use nx_walker::nx_walker;
     use std::env;
     use std::path::PathBuf;
     use swc_common::comments::NoopComments;
@@ -962,7 +962,7 @@ import('./dynamic-import.vue')
     </template>
     <template #heading>Documentation</template>
 
-    Vue’s
+    Vue's
     <a href="https://vuejs.org/" target="_blank" rel="noopener">official documentation</a>
     provides you with all information you need to get started.
   </WelcomeItem>
