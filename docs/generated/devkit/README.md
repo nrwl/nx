@@ -20,6 +20,7 @@ It only uses language primitives and immutable objects
 ### Classes
 
 - [AggregateCreateNodesError](../../devkit/documents/AggregateCreateNodesError)
+- [StaleProjectGraphCacheError](../../devkit/documents/StaleProjectGraphCacheError)
 
 ### Interfaces
 
