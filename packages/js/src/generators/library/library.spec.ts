@@ -31,7 +31,6 @@ describe('lib', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     tree.write('/.gitignore', '');
-    tree.write('/.gitignore', '');
   });
 
   it.each`
