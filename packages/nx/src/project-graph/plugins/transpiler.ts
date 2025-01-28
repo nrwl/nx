@@ -5,7 +5,7 @@ import {
   registerTranspiler,
   registerTsConfigPaths,
 } from '../../plugins/js/utils/register';
-import { readTsConfig } from '../../plugins/js/utils/typescript';
+import { readTsConfigOptions } from '../../plugins/js/utils/typescript';
 import type * as ts from 'typescript';
 
 export let unregisterPluginTSTranspiler: (() => void) | null = null;
@@ -25,19 +25,16 @@ export function registerPluginTSTranspiler() {
     return;
   }
 
-  const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
-    ? readTsConfig(tsConfigName)
+  const tsConfigOptions: Partial<ts.CompilerOptions> = tsConfigName
+    ? readTsConfigOptions(tsConfigName)
     : {};
   const cleanupFns = [
     registerTsConfigPaths(tsConfigName),
-    registerTranspiler(
-      {
-        experimentalDecorators: true,
-        emitDecoratorMetadata: true,
-        ...tsConfig.options,
-      },
-      tsConfig.raw
-    ),
+    registerTranspiler({
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
+      ...tsConfigOptions,
+    }),
   ];
   unregisterPluginTSTranspiler = () => {
     cleanupFns.forEach((fn) => fn?.());
