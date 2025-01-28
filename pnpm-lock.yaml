@@ -844,9 +844,6 @@ importers:
       ng-packagr:
         specifier: ~19.1.0
         version: 19.1.2(@angular/compiler-cli@19.1.5(@angular/compiler@19.1.5(@angular/core@19.1.5(rxjs@7.8.1)(zone.js@0.14.10)))(typescript@5.7.3))(tailwindcss@3.4.4(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.7.3)))(tslib@2.7.0)(typescript@5.7.3)
-      node-fetch:
-        specifier: ^2.6.7
-        version: 2.7.0(encoding@0.1.13)
       npm-package-arg:
         specifier: 11.0.1
         version: 11.0.1
