@@ -8,7 +8,7 @@ All licenses are perpetual, so you can use the latest version of Nx available to
 
 [Get Your Free License Immediately](https://cloud.nx.app/powerpack/request/free)
 
-We understand that some organizations may not neatly fit this definition (e.g., a larger organization with a small number of engineers using an Nx workspace). We'd like to unblock you. [Please reach out.](powerpack-support@nrwl.io)
+We understand that some organizations may not neatly fit this definition (e.g., a larger organization with a small number of engineers using an Nx workspace). We'd like to unblock you. [Please reach out.](mailto:powerpack-support@nrwl.io)
 
 ## OSS License
 
@@ -20,8 +20,8 @@ You can get a free, 30-day license immediately if you want to try Nx Powerpack. 
 
 [Get Your Trial License Immediately](https://cloud.nx.app/powerpack/request/trial)
 
-If you're having trouble, [reach out for help.](powerpack-support@nrwl.io)
+If you're having trouble, [reach out for help.](mailto:powerpack-support@nrwl.io)
 
 ## Extended Trial Periods
 
-Nx Powerpack does not make any requests to external APIs, and activating Powerpack can be completed in just a few minutes. However, we understand that in many large organizations approval processes can take a long time. We're here to help you. Need a trial extension or help with your business case? [Reach out and we'll help.](powerpack-support@nrwl.io)
+Nx Powerpack does not make any requests to external APIs, and activating Powerpack can be completed in just a few minutes. However, we understand that in many large organizations approval processes can take a long time. We're here to help you. Need a trial extension or help with your business case? [Reach out and we'll help.](mailto:powerpack-support@nrwl.io)
