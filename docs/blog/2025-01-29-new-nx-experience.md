@@ -1,6 +1,6 @@
 ---
 title: 'A New Nx Experience for TypeScript Monorepos and Beyond'
-slug: new-nx-experience-for-ts
+slug: new-nx-experience-for-typescript-monorepos
 authors: [Juri Strumpflohner]
 tags: []
 cover_image: /blog/images/articles/new-ts-experience-bg.jpg
@@ -19,7 +19,7 @@ This article is part of the TypeScript Project References series:
 
 Today we're excited to release a brand new experience for Nx workspaces. Historically, Nx, and many other monorepo tools, have relied on TypeScript's path aliases to connect your many packages to one another. While this approach can work, it does come with some overhead. Apart from runtimes and bundlers requiring special handling, the main limitation is in large monorepos. We've seen larger organizations struggle with slowness, memory issues and editors not being able to properly resolve symbols.
 
-This is why we're releasing a new NPM/Yarn/PNPM/Bun workspaces-based setup combined with TypeScript project references. The new setup is faster, more efficient in terms of memory use, and fixes common issue with TypeScript editor support for large monorepos.
+This is why we're releasing a new NPM/Yarn/PNPM/Bun workspaces-based setup combined with TypeScript project references. The new setup is [faster, more efficient in terms of memory use](#key-highlight-performance), and fixes common issue with TypeScript editor support for large monorepos.
 
 **For existing Nx users:** Don't worry as we're not going to deprecate the current TypeScript alias based setup. We are going to have a migration guides and potentially tooling to automate some of it. More about that [later in the article](#nx-by-default-creates-a-typescript-path-aliases-based-setup-is-that-deprecated). Also, for now the new workspaces based setup is behind a `--workspaces` flag as we're gathering feedback and polishing it further.
 
@@ -168,7 +168,7 @@ However, if you're using PNPM, you must explicitly declare the dependency either
 
 {% /callout %}
 
-### Automatically Synching TypeScript Project References
+### Automatically Syncing TypeScript Project References
 
 {% video-player src="/documentation/blog/media/04-tssetup-sync-tsrefs.mp4" alt="Nx automatically prompts to sync TypeScript project references if they are out of sync" showDescription=true showControls=true autoPlay=true loop=false /%}
 
@@ -297,6 +297,8 @@ And this is the **worst-case scenario**, relying solely on the distribution of t
 
 It is important to emphasize that the main reason we can fully leverage these benefits from TypeScript project references is that we avoid the maintenance burden of setting them up manually, thanks to the automated [Nx sync](#automatically-syncing-typescript-project-references) command.
 
+**Struggling with performance in your large TypeScript monorepo?** [Let us know](/contact/engineering). We’ve [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](/contact/engineering)
+
 ## FAQ
 
 Here are some common questions and corresponding answers.
@@ -327,7 +329,13 @@ Currently, Angular and its underlying compiler don't support TypeScript project 
 
 For now, we continue to use the TypeScript path alias-based setup for pure Angular monorepos, as it offers a better developer experience in the current context. That said, we're actively working on improving this. Large Angular applications stand to benefit significantly from the performance and memory optimizations enabled by TypeScript project references.
 
-## Learn More
+## Wrapping up
+
+That’s it! Try it out and let us know what you think. If you encounter any issues or have questions, don’t hesitate to reach out. We want to catch all edge cases before making this the default for new Nx workspaces.
+
+If you’re working in a large monorepo and **struggling with the performance issues we discussed**, [reach out](/contact/engineering). We’ve [helped many teams](/customers) tackle similar challenges and would be happy to assist.
+
+---
 
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
