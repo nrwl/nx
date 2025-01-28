@@ -1,5 +1,6 @@
 import { AggregateCreateNodesError, workspaceRoot } from '@nx/devkit';
 import { ExecFileOptions, execFile } from 'node:child_process';
+import { SIGTERM } from 'node:constants';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -41,7 +42,7 @@ export function execGradleAsync(
     });
 
     cp.on('exit', (code) => {
-      if (code === 0) {
+      if (code === 0 || code === SIGTERM) {
         res(stdout);
       } else {
         rej(stdout);
