@@ -63,7 +63,10 @@ export type {
   PostTasksExecutionContext,
 } from './project-graph/plugins';
 
-export { AggregateCreateNodesError } from './project-graph/error-types';
+export {
+  AggregateCreateNodesError,
+  StaleProjectGraphCacheError,
+} from './project-graph/error-types';
 
 export { createNodesFromFiles } from './project-graph/plugins';
 
