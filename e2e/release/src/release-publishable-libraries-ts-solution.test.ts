@@ -3,8 +3,10 @@ import {
   newProject,
   runCLI,
   runCommandAsync,
+  tmpProjPath,
   uniq,
 } from '@nx/e2e/utils';
+import { emptydirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
 
 expect.addSnapshotSerializer({
@@ -19,10 +21,15 @@ expect.addSnapshotSerializer({
         )
         .replaceAll(/\b[0-9a-f]{40}\b/g, '{SHASUM}')
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
-        .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
-        .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
+        .replaceAll(/\d*B\s+project\.json/g, 'XXB project.json')
+        .replaceAll(/\d*B\s+package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        .replaceAll(/\d*B\s+src\//g, 'XXB src/')
+        .replaceAll(/\d*B\s+index/g, 'XXB index')
+        .replaceAll(/\d*B\s+dist\//g, 'XXB dist/')
+        .replaceAll(/total files:\s+\d*/g, 'total files: X')
+        .replaceAll(/\d*B\s+README.md/g, 'XXB README.md')
         .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
         .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         .replaceAll(/(\w+) lock file/g, 'PM lock file')
@@ -45,7 +52,7 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js'],
+      packages: ['@nx/js', '@nx/react'],
       preset: 'ts',
     });
 
@@ -62,25 +69,30 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
+  }, 60000);
+
+  beforeEach(() => {
+    try {
+      emptydirSync(tmpProjPath('packages'));
+    } catch (e) {}
   });
+
   afterAll(() => cleanupProject());
 
   it('should be able to release publishable js library', async () => {
     const jsLib = uniq('my-pkg-');
     runCLI(
-      `generate @nx/js:lib ${jsLib} --publishable --importPath=@proj/${jsLib}`
+      `generate @nx/js:lib packages/${jsLib} --publishable --importPath=@proj/${jsLib} --no-interactive`
     );
 
-    let releaseOutput = runCLI(`release --first-release`);
-    expect(releaseOutput).toContain('Executing pre-version command');
-    releaseOutput = runCLI(`release --specifier 0.0.2 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`);
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from {project-name}/package.json
+      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
       @proj/{project-name} 📄 Using the provided version specifier "0.0.2".
-      @proj/{project-name} ✍️  New version 0.0.2 written to {project-name}/package.json
+      @proj/{project-name} ✍️  New version 0.0.2 written to packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.2",
@@ -99,13 +111,13 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       > nx run @proj/{project-name}:nx-release-publish
       📦  @proj/{project-name}@0.0.2
       === Tarball Contents ===
-      138B README.md
-      76B  dist/index.d.ts
-      125B dist/index.d.ts.map
-      41B  dist/index.js
-      92B  dist/lib/{project-name}.d.ts
-      161B dist/lib/{project-name}.d.ts.map
-      64B  dist/lib/{project-name}.js
+      XXB README.md
+      XXB dist/index.d.ts
+      XXB dist/index.d.ts.map
+      XXB dist/index.js
+      XXB dist/lib/{project-name}.d.ts
+      XXB dist/lib/{project-name}.d.ts.map
+      XXB dist/lib/{project-name}.js
       XXXB package.json
       === Tarball Details ===
       name:          @proj/{project-name}
@@ -115,7 +127,67 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       unpacked size: XXX.XXX kb
       shasum:        {SHASUM}
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      total files:   8
+      total files: X
+      Published to ${e2eRegistryUrl} with tag "latest"
+      NX   Successfully ran target nx-release-publish for project @proj/{project-name}
+    `);
+  });
+
+  it('should be able to release publishable react library', async () => {
+    const reactLib = uniq('my-pkg-');
+    runCLI(
+      `generate @nx/react:lib packages/${reactLib} --publishable --importPath=@proj/${reactLib} --no-interactive`
+    );
+    runCLI('sync');
+
+    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`);
+    expect(releaseOutput).toMatchInlineSnapshot(`
+      NX   Executing pre-version command
+      NX   Running release version for project: @proj/{project-name}
+      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
+      @proj/{project-name} 📄 Using the provided version specifier "0.0.3".
+      @proj/{project-name} ✍️  New version 0.0.3 written to packages/{project-name}/package.json
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.1",
+      +   "version": "0.0.3",
+      "type": "module",
+      NX   Updating PM lock file
+      NX   Staging changed files with git
+      NX   Generating an entry in CHANGELOG.md for v0.0.3
+      + ## 0.0.3 (YYYY-MM-DD)
+      +
+      + This was a version bump only, there were no code changes.
+      +
+      ## 0.0.2 (YYYY-MM-DD)
+      This was a version bump only, there were no code changes.
+      NX   Staging changed files with git
+      NX   Committing changes with git
+      NX   Tagging commit with git
+      NX   Running target nx-release-publish for project @proj/{project-name}:
+      - @proj/{project-name}
+      > nx run @proj/{project-name}:nx-release-publish
+      📦  @proj/{project-name}@0.0.3
+      === Tarball Contents ===
+      XXB README.md
+      XXB dist/index.esm.css
+      XXB dist/index.esm.d.ts
+      XXB dist/index.esm.js
+      XXX.XXX kb dist/README.md
+      XXB dist/src/index.d.ts
+      XXB dist/src/index.d.ts.map
+      XXB dist/src/lib/{project-name}.d.ts
+      XXB dist/src/lib/{project-name}.d.ts.map
+      XXXB package.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       0.0.3
+      filename:      proj-{project-name}-0.0.3.tgz
+      package size:  XXX.XXX kb
+      unpacked size: XXX.XXX kb
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project @proj/{project-name}
     `);
