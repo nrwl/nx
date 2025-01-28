@@ -407,12 +407,12 @@ function getTargetOutputs(
   reporterOutputs: Array<[string, string]>,
   workspaceRoot: string,
   projectRoot: string,
-  scope?: string
+  subFolder?: string
 ): string[] {
   const outputs = new Set<string>();
   outputs.add(
     normalizeOutput(
-      scope ? join(testOutput, scope) : testOutput,
+      addSubfolderToOutput(testOutput, subFolder),
       workspaceRoot,
       projectRoot
     )
@@ -420,13 +420,22 @@ function getTargetOutputs(
   for (const [, output] of reporterOutputs) {
     outputs.add(
       normalizeOutput(
-        scope ? join(output, scope) : output,
+        addSubfolderToOutput(output, subFolder),
         workspaceRoot,
         projectRoot
       )
     );
   }
   return Array.from(outputs);
+}
+
+function addSubfolderToOutput(output: string, subfolder?: string): string {
+  if (!subfolder) return output;
+  const parts = parse(output);
+  if (parts.ext !== '') {
+    return join(parts.dir, subfolder, parts.base);
+  }
+  return join(output, subfolder);
 }
 
 function normalizeOutput(
@@ -460,7 +469,7 @@ function getOutputEnvVars(
       const envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
         isFile ? 'FILE' : 'DIR'
       }`;
-      env[envVarName] = join(output, outputSubfolder);
+      env[envVarName] = addSubfolderToOutput(output, outputSubfolder);
       // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
       // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
       if (reporter === 'html') {

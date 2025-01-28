@@ -262,6 +262,7 @@ describe('@nx/playwright/plugin', () => {
       testIgnore: [/.*skip.*/, '**/ignored/**'],
       reporter: [
         ['html', { outputFolder: 'test-results/html' }],
+        ['junit', { outputFile: 'test-results/report.xml' }],
       ],
     }`
     );
@@ -335,6 +336,7 @@ describe('@nx/playwright/plugin', () => {
         "outputs": [
           "{projectRoot}/test-results",
           "{projectRoot}/test-results/html",
+          "{projectRoot}/test-results/report.xml",
         ],
         "parallelism": false,
       }
@@ -371,11 +373,13 @@ describe('@nx/playwright/plugin', () => {
           "env": {
             "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
             "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
           },
         },
         "outputs": [
           "{projectRoot}/test-results/tests-run-me-spec-ts",
           "{projectRoot}/test-results/html/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
         ],
         "parallelism": false,
       }
@@ -412,11 +416,13 @@ describe('@nx/playwright/plugin', () => {
           "env": {
             "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-2-spec-ts",
             "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-2-spec-ts/report.xml",
           },
         },
         "outputs": [
           "{projectRoot}/test-results/tests-run-me-2-spec-ts",
           "{projectRoot}/test-results/html/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts/report.xml",
         ],
         "parallelism": false,
       }
