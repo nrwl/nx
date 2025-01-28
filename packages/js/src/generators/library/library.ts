@@ -125,6 +125,7 @@ export async function libraryGeneratorInternal(
       project: options.name,
       compiler: 'swc',
       format: options.isUsingTsSolutionConfig ? ['esm'] : ['cjs', 'esm'],
+      skipFormat: true,
     });
   }
 
