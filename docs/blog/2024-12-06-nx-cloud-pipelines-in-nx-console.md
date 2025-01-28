@@ -10,7 +10,7 @@ cover_image: /blog/images/2024-11-25/thumbnail.png
 
 We're in the process of adding a new integration between [Nx Cloud](/nx-cloud), our CI product, and [Nx Console](/getting-started/editor-setup) our official plugin for the VSCode and JetBrains IDEs!
 
-Now, once you've [connected your Nx Console to Nx Cloud](https://blog.nrwl.io/nx-console-meets-nx-cloud-d45dc099dc5d), you will have access to a new panel in the console that shows all of your recent CI Pipelines, including those in progress now.
+Now, once you've [connected your Nx Console to Nx Cloud](/blog/nx-console-meets-nx-cloud), you will have access to a new panel in the console that shows all of your recent CI Pipelines, including those in progress now.
 
 {% video-player src="/documentation/blog/media/nx-console-pipeline-running.mp4" alt="Nx Console CI Pipeline Execution" autoPlay=true loop=true  /%}
 
