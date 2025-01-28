@@ -74,3 +74,5 @@ assert_fs = "1.0.10"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"
 tempfile = "3.13.0"
+# We only explicitly use tokio for async tests
+tokio = "1.38.0"
