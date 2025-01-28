@@ -48,5 +48,6 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    js: options.js ?? false,
   };
 }
