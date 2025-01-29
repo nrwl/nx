@@ -35,6 +35,7 @@ export interface NxArgs {
   select?: string;
   graph?: string | boolean;
   skipNxCache?: boolean;
+  skipRemoteCache?: boolean;
   outputStyle?: string;
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
@@ -182,7 +183,15 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   if (!nxArgs.skipNxCache) {
-    nxArgs.skipNxCache = process.env.NX_SKIP_NX_CACHE === 'true';
+    nxArgs.skipNxCache =
+      process.env.NX_SKIP_NX_CACHE === 'true' ||
+      process.env.NX_DISABLE_NX_CACHE === 'true';
+  }
+
+  if (!nxArgs.skipRemoteCache) {
+    nxArgs.skipRemoteCache =
+      process.env.NX_DISABLE_REMOTE_CACHE === 'true' ||
+      process.env.NX_SKIP_REMOTE_CACHE === 'true';
   }
 
   normalizeNxArgsRunner(nxArgs, nxJson, options);

@@ -35,6 +35,8 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -53,6 +55,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
@@ -69,23 +76,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.isUsingTsSolutionConfig) {
-    const sourceEntry =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : undefined;
     writeJson(host, `${options.projectRoot}/package.json`, {
       name: options.importPath,
       version: '0.0.1',
-      main: sourceEntry,
-      types: sourceEntry,
-      nx: {
-        name: options.importPath === options.name ? undefined : options.name,
-        projectType: 'library',
-        sourceRoot: `${options.projectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      ...determineEntryFields(options),
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   } else {
@@ -245,7 +244,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
-    const installReactTask = installCommonDependencies(host, options);
+    const installReactTask = await installCommonDependencies(host, options);
     tasks.push(installReactTask);
   }
 
@@ -278,9 +277,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       : undefined
   );
 
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
+  sortPackageJsonFields(host, options.projectRoot);
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }

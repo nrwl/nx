@@ -20,6 +20,7 @@ import {
 import { editTsConfig } from '../application/lib/create-ts-config';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -73,7 +74,7 @@ export async function configurationGenerator(
     if (
       alreadyHasNxRspackTargets.build &&
       (alreadyHasNxRspackTargets.serve ||
-        projectType === 'library' ||
+        getProjectType(tree, options.project, projectType) === 'library' ||
         options.framework === 'nest')
     ) {
       throw new Error(

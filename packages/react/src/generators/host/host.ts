@@ -64,7 +64,7 @@ export async function hostGenerator(
   const initTask = await applicationGenerator(host, {
     ...options,
     directory: options.appProjectRoot,
-    name: options.projectName,
+    name: options.name,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
     skipFormat: true,
@@ -146,7 +146,7 @@ export async function hostGenerator(
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,

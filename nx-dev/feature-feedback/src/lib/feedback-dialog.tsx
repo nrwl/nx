@@ -1,4 +1,11 @@
-import { Dialog, Transition } from '@headlessui/react';
+import {
+  Description,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import { ChangeEvent, Fragment, useMemo, useState } from 'react';
 import { GithubIcon } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
@@ -58,7 +65,7 @@ function FeedbackDialog({
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog open={isOpen} onClose={closeDialog} className="relative z-50">
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -72,12 +79,12 @@ function FeedbackDialog({
             className="fixed inset-0 bg-black/10 backdrop-blur-sm dark:bg-white/10"
             aria-hidden="true"
           />
-        </Transition.Child>
+        </TransitionChild>
 
         {/* This is the modal */}
         <div className="fixed inset-0 w-full overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
@@ -86,8 +93,8 @@ function FeedbackDialog({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-slate-900">
-                <Dialog.Title
+              <DialogPanel className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-slate-900">
+                <DialogTitle
                   as="h3"
                   className="bg-white p-4 text-center text-lg font-medium leading-6 text-slate-700 dark:bg-slate-900 dark:text-slate-400"
                 >
@@ -95,7 +102,7 @@ function FeedbackDialog({
                   <button className={styles.closebutton} onClick={closeDialog}>
                     &times;
                   </button>
-                </Dialog.Title>
+                </DialogTitle>
 
                 {/* The anatomy here should be
               
@@ -217,11 +224,11 @@ function FeedbackDialog({
                 </ul>
                 {isIdea && (
                   <div className={styles.fadeinout}>
-                    <Dialog.Description>
+                    <Description>
                       We are always looking to improve our documentation. If you
                       have any suggestions, please let us know.
-                    </Dialog.Description>
-                    <Dialog.Description className="pt-4">
+                    </Description>
+                    <Description className="pt-4">
                       <textarea
                         rows={5}
                         className="box-border w-full rounded dark:bg-gray-800"
@@ -229,8 +236,8 @@ function FeedbackDialog({
                         value={feedback}
                         onChange={updateFeedback}
                       ></textarea>
-                    </Dialog.Description>
-                    <Dialog.Description className="relative mt-4 flex justify-end rounded-l-md">
+                    </Description>
+                    <Description className="relative mt-4 flex justify-end rounded-l-md">
                       <button
                         onClick={submitFeedback}
                         disabled={formDisabled}
@@ -245,11 +252,11 @@ function FeedbackDialog({
                       >
                         Done
                       </button>
-                    </Dialog.Description>
+                    </Description>
                   </div>
                 )}
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>

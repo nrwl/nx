@@ -1,0 +1,15 @@
+{
+  "name": "add-localize-polyfill-to-targets",
+  "cli": "nx",
+  "version": "20.2.0-beta.5",
+  "requires": { "@angular/core": ">=19.0.0" },
+  "description": "Add the '@angular/localize/init' polyfill to the 'polyfills' option of targets using esbuild-based executors.",
+  "factory": "./src/migrations/update-20-2-0/add-localize-polyfill-to-targets",
+  "implementation": "/packages/angular/src/migrations/update-20-2-0/add-localize-polyfill-to-targets.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

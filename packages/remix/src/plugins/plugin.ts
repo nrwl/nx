@@ -7,6 +7,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   joinPathFragments,
   logger,
   ProjectConfiguration,
@@ -19,21 +20,27 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
-import { dirname, isAbsolute, join, relative } from 'path';
+import { dirname, join } from 'path';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface RemixPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
   typecheckTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
+
   /**
    * @deprecated Use serveStaticTargetName instead. This option will be removed in Nx 21.
    */
   staticServeTargetName?: string;
   serveStaticTargetName?: string;
 }
+
+const pmc = getPackageManagerCommand();
 
 type RemixTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
@@ -200,6 +207,14 @@ async function buildRemixTargets(
     projectRoot,
     namedInputs,
     siblingFiles
+  );
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
   );
 
   return { targets, metadata: {} };

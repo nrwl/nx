@@ -12,7 +12,7 @@ import {
 import { tsquery } from '@phenomnomnominal/tsquery';
 import addE2eCiTargetDefaults from './add-e2e-ci-target-defaults';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/internal-api';
+import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/loaded-nx-plugin';
 import { retrieveProjectConfigurations } from 'nx/src/project-graph/utils/retrieve-workspace-files';
 import { ProjectConfigurationsError } from 'nx/src/project-graph/error-types';
 import { createNodesV2 as webpackCreateNodesV2 } from '@nx/webpack/src/plugins/plugin';

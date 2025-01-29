@@ -372,8 +372,9 @@ function updateTsConfigReferences(
 
   let hasChanges = false;
   for (const dep of dependencies) {
-    // Ensure the project reference for the target is set
-    let referencePath = dep.data.root;
+    // Ensure the project reference for the target is set if we can find the
+    // relevant tsconfig file
+    let referencePath: string;
     if (runtimeTsConfigFileName) {
       const runtimeTsConfigPath = joinPathFragments(
         dep.data.root,
@@ -434,6 +435,19 @@ function updateTsConfigReferences(
         continue;
       }
     }
+    if (!referencePath) {
+      if (
+        tsconfigExists(
+          tree,
+          tsconfigInfoCaches,
+          joinPathFragments(dep.data.root, 'tsconfig.json')
+        )
+      ) {
+        referencePath = dep.data.root;
+      } else {
+        continue;
+      }
+    }
     const relativePathToTargetRoot = relative(projectRoot, referencePath);
     if (!newReferencesSet.has(relativePathToTargetRoot)) {
       newReferencesSet.add(relativePathToTargetRoot);
@@ -477,8 +491,8 @@ function collectProjectDependencies(
 
   for (const dep of projectGraph.dependencies[projectName]) {
     const targetProjectNode = projectGraph.nodes[dep.target];
-    if (!targetProjectNode) {
-      // It's an npm dependency
+    if (!targetProjectNode || dep.type === 'implicit') {
+      // It's an npm or an implicit dependency
       continue;
     }
 
@@ -491,7 +505,7 @@ function collectProjectDependencies(
       collectedDependencies.get(projectName).push(targetProjectNode);
     }
 
-    if (process.env.NX_DISABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES === 'true') {
+    if (process.env.NX_ENABLE_TS_SYNC_TRANSITIVE_DEPENDENCIES !== 'true') {
       continue;
     }
 

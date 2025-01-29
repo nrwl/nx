@@ -485,6 +485,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/foo.ts",
@@ -552,6 +553,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
@@ -628,6 +630,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
@@ -719,6 +722,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.spec.json",
@@ -771,6 +775,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/lib/**/*.ts",
                       "^production",
@@ -833,6 +838,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -869,6 +875,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -905,6 +912,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -941,6 +949,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -980,6 +989,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.typecheck.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.spec.json",
@@ -1194,6 +1204,118 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
       });
 
+      it('should include tsbuildinfo file when outDir and rootDir at both set', async () => {
+        await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            references: [{ path: './tsconfig.lib.json' }],
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'out-tsc/my-lib', rootDir: 'src' },
+            files: ['src/main.ts'],
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+
+        expect(
+          await invokeCreateNodesOnMatchingFiles(context, {
+            build: {
+              configName: 'tsconfig.lib.json',
+            },
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "projects": {
+              "libs/my-lib": {
+                "projectType": "library",
+                "targets": {
+                  "build": {
+                    "cache": true,
+                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "dependsOn": [
+                      "^build",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "typescript",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "libs/my-lib",
+                    },
+                    "outputs": [
+                      "{projectRoot}/out-tsc/my-lib",
+                      "{projectRoot}/out-tsc/*.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
+                  },
+                  "typecheck": {
+                    "cache": true,
+                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "dependsOn": [
+                      "^typecheck",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "typescript",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "libs/my-lib",
+                    },
+                    "outputs": [
+                      "{projectRoot}/out-tsc/my-lib",
+                      "{projectRoot}/out-tsc/*.tsbuildinfo",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
+                  },
+                },
+              },
+            },
+          }
+        `);
+      });
+
       it('should add the inline output files when `outDir` is not defined', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': JSON.stringify({
@@ -1320,6 +1442,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^typecheck",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.spec.json",
@@ -1696,7 +1819,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
-        'libs/my-lib/tsconfig.lib.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
@@ -1744,7 +1867,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
-        'libs/my-lib/tsconfig.lib.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': `{}`,
       });
@@ -1794,9 +1917,21 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
-        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"rootDir": "src"}}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
-        'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+        'libs/my-lib/package.json': JSON.stringify({
+          name: 'my-lib',
+          main: 'dist/index.js',
+          types: 'dist/index.d.ts',
+          exports: {
+            '.': {
+              types: './dist/index.d.ts',
+              import: './dist/index.js',
+              default: './dist/index.js',
+            },
+            './package.json': './package.json',
+          },
+        }),
       });
       expect(
         await invokeCreateNodesOnMatchingFiles(context, {
@@ -1842,9 +1977,22 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
+                  ],
+                },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "dependsOn": [
+                    "build-deps",
                   ],
                 },
               },
@@ -1855,8 +2003,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       // Sibling project.json
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{"compilerOptions": {"rootDir": "src"}}`,
-        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"rootDir": "src"}}`,
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/project.json': `{}`,
       });
@@ -1904,7 +2052,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -1920,7 +2070,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
-        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"rootDir": "src"}}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/package.json': `{ "main": "dist/index.js" }`,
       });
@@ -1970,7 +2120,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -1987,7 +2139,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': `{}`,
         'libs/my-lib/tsconfig.lib.json': `{}`,
-        'libs/my-lib/tsconfig.build.json': `{"compilerOptions": {"rootDir": "src"}}`,
+        'libs/my-lib/tsconfig.build.json': `{"compilerOptions": {"outDir": "dist"}}`,
         'libs/my-lib/project.json': `{}`,
       });
       expect(
@@ -2036,7 +2188,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   "options": {
                     "cwd": "libs/my-lib",
                   },
-                  "outputs": [],
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
                   ],
@@ -2070,7 +2224,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
-              rootDir: 'src',
+              outDir: 'dist',
             },
             include: ['src/**/*.ts'],
             exclude: ['src/**/*.spec.ts'],
@@ -2096,6 +2250,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{projectRoot}/src/**/*.spec.ts",
@@ -2123,7 +2278,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -2148,7 +2305,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
             extends: '../../tsconfig.foo.json',
             include: ['src/**/*.ts'],
             compilerOptions: {
-              rootDir: 'src',
+              outDir: 'dist',
             },
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
@@ -2171,6 +2328,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
@@ -2201,7 +2359,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -2226,7 +2386,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             extends: '../../tsconfig.foo.json',
             compilerOptions: {
-              rootDir: 'src',
+              outDir: 'dist',
             },
             include: ['src/**/*.ts'],
           }),
@@ -2255,6 +2415,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
@@ -2286,7 +2447,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -2302,7 +2465,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' },
+            compilerOptions: { outDir: 'dist' },
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'], // should be ignored because a referenced internal project includes this same pattern
             references: [
@@ -2336,6 +2499,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/src/**/*.ts",
@@ -2367,7 +2531,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -2384,7 +2550,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' }, // rootDir is required to determine if the project is buildable
+            compilerOptions: { outDir: 'dist' }, // outDir is required to determine if the project is buildable
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'], // should be ignored
             references: [{ path: './tsconfig.other.json' }],
@@ -2402,6 +2568,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2420,7 +2587,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' },
+            compilerOptions: { outDir: 'dist' },
             include: ['**/*.ts'],
             exclude: ['**/foo.ts'], // should be ignored
             references: [{ path: './tsconfig.other.json' }],
@@ -2437,6 +2604,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/**/*.ts",
@@ -2455,7 +2623,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' }, // rooDir is required to determine if the project is buildable
+            compilerOptions: { outDir: 'dist' }, // outDir is required to determine if the project is buildable
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'], // should be ignored
             references: [{ path: './tsconfig.other.json' }],
@@ -2472,6 +2640,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2490,7 +2659,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' },
+            compilerOptions: { outDir: 'dist' },
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'], // should be ignored
             references: [{ path: './tsconfig.other.json' }],
@@ -2507,6 +2676,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2525,7 +2695,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' },
+            compilerOptions: { outDir: 'dist' },
             include: ['src/**/*.ts'],
             exclude: [
               'src/**/foo.ts', // should be ignored
@@ -2545,6 +2715,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         expect(result.projects['libs/my-lib'].targets.build.inputs)
           .toMatchInlineSnapshot(`
           [
+            "{projectRoot}/package.json",
             "{projectRoot}/tsconfig.lib.json",
             "{projectRoot}/tsconfig.other.json",
             "{projectRoot}/src/**/*.ts",
@@ -2564,7 +2735,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       it('should fall back to named inputs when not using include', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' },
+            compilerOptions: { outDir: 'dist' },
             files: ['main.ts'],
           }),
           'libs/my-lib/tsconfig.json': `{}`,
@@ -2614,19 +2785,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "cwd": "libs/my-lib",
                     },
                     "outputs": [
-                      "{projectRoot}/**/*.js",
-                      "{projectRoot}/**/*.cjs",
-                      "{projectRoot}/**/*.mjs",
-                      "{projectRoot}/**/*.jsx",
-                      "{projectRoot}/**/*.js.map",
-                      "{projectRoot}/**/*.jsx.map",
-                      "{projectRoot}/**/*.d.ts",
-                      "{projectRoot}/**/*.d.cts",
-                      "{projectRoot}/**/*.d.mts",
-                      "{projectRoot}/**/*.d.ts.map",
-                      "{projectRoot}/**/*.d.cts.map",
-                      "{projectRoot}/**/*.d.mts.map",
-                      "{projectRoot}/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/dist",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -2646,12 +2805,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outFile: '../../dist/libs/my-lib/index.js',
-              rootDir: 'src',
             },
             files: ['main.ts'],
           }),
           'libs/my-lib/tsconfig.json': `{}`,
-          'libs/my-lib/package.json': `{"main": "dist/libs/my-lib/index.js"}`,
+          'libs/my-lib/package.json': `{}`,
         });
         expect(
           await invokeCreateNodesOnMatchingFiles(context, {
@@ -2719,12 +2877,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: '../../dist/libs/my-lib',
-              rootDir: 'src',
             },
             files: ['main.ts'],
           }),
           'libs/my-lib/tsconfig.json': `{}`,
-          'libs/my-lib/package.json': `{"main": "dist/libs/my-lib/index.js"}`,
+          'libs/my-lib/package.json': `{"main": "../../dist/libs/my-lib/index.js"}`,
         });
         expect(
           await invokeCreateNodesOnMatchingFiles(context, {
@@ -2786,7 +2943,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       it('should add the inline output files when `outDir` is not defined', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            compilerOptions: { rootDir: 'src' },
             files: ['main.ts'],
           }),
           'libs/my-lib/tsconfig.json': `{}`,
@@ -2867,7 +3023,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outFile: '../../dist/libs/my-lib/lib.js',
-              rootDir: 'src',
             },
             files: ['main.ts'],
             references: [{ path: './tsconfig.other.json' }],
@@ -2875,11 +3030,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.other.json': JSON.stringify({
             compilerOptions: {
               outDir: '../../dist/libs/my-lib/other',
-              rootDir: 'src',
             },
             include: ['other/**/*.ts'],
           }),
-          'libs/my-lib/package.json': `{"main": "dist/libs/my-lib/lib.js"}`,
+          'libs/my-lib/package.json': `{"main": "../../dist/libs/my-lib/lib.js"}`,
         });
         expect(
           await invokeCreateNodesOnMatchingFiles(context, {
@@ -2899,6 +3053,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "^build",
                     ],
                     "inputs": [
+                      "{projectRoot}/package.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/tsconfig.other.json",
                       "{projectRoot}/other/**/*.ts",
@@ -2952,12 +3107,11 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outFile: '../../dist/libs/my-lib/index.js',
-              rootDir: 'src',
               tsBuildInfoFile: '../../dist/libs/my-lib/my-lib.tsbuildinfo',
             },
             files: ['main.ts'],
           }),
-          'libs/my-lib/package.json': `{"main": "dist/libs/my-lib/index.js"}`,
+          'libs/my-lib/package.json': `{"main": "../../dist/libs/my-lib/index.js"}`,
         });
         expect(
           await invokeCreateNodesOnMatchingFiles(context, {
@@ -3024,7 +3178,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
-              rootDir: 'src',
               tsBuildInfoFile: '../../dist/libs/my-lib/my-lib.tsbuildinfo',
             },
             files: ['main.ts'],
@@ -3104,7 +3257,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
-              rootDir: 'src',
               outDir: 'dist',
               tsBuildInfoFile: 'my-lib.tsbuildinfo',
             },
@@ -3177,7 +3329,6 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             compilerOptions: {
               outDir: 'dist',
-              rootDir: 'src',
               tsBuildInfoFile: 'dist/my-lib.tsbuildinfo',
             },
             files: ['main.ts'],

@@ -37,7 +37,9 @@ describe('Normalize Options', () => {
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
+      isUsingTsSolutionConfig: false,
       linter: Linter.EsLint,
+      js: false,
     });
   });
 
@@ -66,6 +68,8 @@ describe('Normalize Options', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
       framework: 'react-native',
+      isUsingTsSolutionConfig: false,
+      js: false,
     });
   });
 
@@ -94,6 +98,8 @@ describe('Normalize Options', () => {
       e2eDirectory: 'directory',
       e2eProjectName: 'directory-my-app-e2e',
       framework: 'react-native',
+      isUsingTsSolutionConfig: false,
+      js: false,
     });
   });
 });

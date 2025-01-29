@@ -82,6 +82,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const applicationTask = await nodeApplicationGenerator(tree, {
     ...options,
     bundler: 'webpack',
+    framework: 'express',
     skipFormat: true,
   });
   tasks.push(applicationTask);

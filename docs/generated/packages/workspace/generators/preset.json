@@ -69,7 +69,7 @@
       "bundler": {
         "description": "The bundler to use for building the application.",
         "type": "string",
-        "enum": ["webpack", "vite", "rspack", "esbuild"],
+        "enum": ["vite", "rspack", "rsbuild", "esbuild", "webpack"],
         "default": "vite"
       },
       "docker": {
@@ -86,6 +86,11 @@
         "description": "Generate a `src` directory for this project.",
         "type": "boolean",
         "default": true
+      },
+      "unitTestRunner": {
+        "description": "The tool to use for running unit tests.",
+        "type": "string",
+        "enum": ["jest", "vitest", "none"]
       },
       "e2eTestRunner": {
         "description": "The tool to use for running e2e tests.",

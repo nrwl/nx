@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, parse, relative } from 'node:path';
+import { dirname, join, parse, relative, resolve } from 'node:path';
 
 import {
   CreateNodes,
@@ -113,7 +113,7 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    options,
+    normalizedOptions,
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -188,7 +188,12 @@ async function buildPlaywrightTargets(
         : ['default', '^default']),
       { externalDependencies: ['@playwright/test'] },
     ],
-    outputs: getTargetOutputs(testOutput, reporterOutputs, projectRoot),
+    outputs: getTargetOutputs(
+      testOutput,
+      reporterOutputs,
+      context.workspaceRoot,
+      projectRoot
+    ),
   };
 
   if (options.ciTargetName) {
@@ -201,7 +206,12 @@ async function buildPlaywrightTargets(
           : ['default', '^default']),
         { externalDependencies: ['@playwright/test'] },
       ],
-      outputs: getTargetOutputs(testOutput, reporterOutputs, projectRoot),
+      outputs: getTargetOutputs(
+        testOutput,
+        reporterOutputs,
+        context.workspaceRoot,
+        projectRoot
+      ),
     };
 
     const groupName = 'E2E (CI)';
@@ -236,6 +246,7 @@ async function buildPlaywrightTargets(
           outputs: getTargetOutputs(
             testOutput,
             reporterOutputs,
+            context.workspaceRoot,
             projectRoot,
             outputSubfolder
           ),
@@ -343,8 +354,8 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
 function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
   return {
     ...options,
-    targetName: options.targetName ?? 'e2e',
-    ciTargetName: options.ciTargetName ?? 'e2e-ci',
+    targetName: options?.targetName ?? 'e2e',
+    ciTargetName: options?.ciTargetName ?? 'e2e-ci',
   };
 }
 
@@ -394,27 +405,57 @@ function getReporterOutputs(
 function getTargetOutputs(
   testOutput: string,
   reporterOutputs: Array<[string, string]>,
+  workspaceRoot: string,
   projectRoot: string,
-  scope?: string
+  subFolder?: string
 ): string[] {
   const outputs = new Set<string>();
   outputs.add(
-    normalizeOutput(projectRoot, scope ? join(testOutput, scope) : testOutput)
+    normalizeOutput(
+      addSubfolderToOutput(testOutput, subFolder),
+      workspaceRoot,
+      projectRoot
+    )
   );
   for (const [, output] of reporterOutputs) {
     outputs.add(
-      normalizeOutput(projectRoot, scope ? join(output, scope) : output)
+      normalizeOutput(
+        addSubfolderToOutput(output, subFolder),
+        workspaceRoot,
+        projectRoot
+      )
     );
   }
   return Array.from(outputs);
 }
 
-function normalizeOutput(projectRoot: string, path: string): string {
-  if (path.startsWith('..')) {
-    return join('{workspaceRoot}', join(projectRoot, path));
-  } else {
-    return join('{projectRoot}', path);
+function addSubfolderToOutput(output: string, subfolder?: string): string {
+  if (!subfolder) return output;
+  const parts = parse(output);
+  if (parts.ext !== '') {
+    return join(parts.dir, subfolder, parts.base);
   }
+  return join(output, subfolder);
+}
+
+function normalizeOutput(
+  path: string,
+  workspaceRoot: string,
+  projectRoot: string
+): string {
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(fullProjectRoot, path);
+  const pathRelativeToProjectRoot = normalizePath(
+    relative(fullProjectRoot, fullPath)
+  );
+  if (pathRelativeToProjectRoot.startsWith('..')) {
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, fullPath)
+    );
+  }
+
+  return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 
 function getOutputEnvVars(
@@ -428,7 +469,7 @@ function getOutputEnvVars(
       const envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
         isFile ? 'FILE' : 'DIR'
       }`;
-      env[envVarName] = join(output, outputSubfolder);
+      env[envVarName] = addSubfolderToOutput(output, outputSubfolder);
       // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
       // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
       if (reporter === 'html') {

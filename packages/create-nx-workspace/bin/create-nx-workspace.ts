@@ -53,6 +53,7 @@ interface ReactArguments extends BaseArguments {
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
   nextSrcDir: boolean;
+  unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -63,6 +64,7 @@ interface AngularArguments extends BaseArguments {
   style: string;
   routing: boolean;
   standaloneApi: boolean;
+  unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   bundler: 'webpack' | 'esbuild';
   ssr: boolean;
@@ -76,6 +78,7 @@ interface VueArguments extends BaseArguments {
   appName: string;
   framework: 'none' | 'nuxt';
   style: string;
+  unitTestRunner: 'none' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -83,8 +86,9 @@ interface NodeArguments extends BaseArguments {
   stack: 'node';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'express' | 'fastify' | 'koa' | 'nest';
+  framework: 'none' | 'express' | 'fastify' | 'koa' | 'nest';
   docker: boolean;
+  unitTestRunner: 'none' | 'jest';
 }
 
 interface UnknownStackArguments extends BaseArguments {
@@ -188,6 +192,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('e2eTestRunner', {
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['playwright', 'cypress', 'none'],
+            type: 'string',
+          })
+          .option('unitTestRunner', {
+            describe: chalk.dim`Test runner to use for unit tests.`,
+            choices: ['jest', 'vitest', 'none'],
             type: 'string',
           })
           .option('ssr', {
@@ -568,11 +577,12 @@ async function determineNoneOptions(
 
 async function determineReactOptions(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<ReactArguments>> {
   let preset: Preset;
   let style: undefined | string = undefined;
   let appName: string;
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
   let nextSrcDir = false;
@@ -633,17 +643,29 @@ async function determineReactOptions(
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
     bundler = await determineReactBundler(parsedArgs);
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      preferVitest: bundler === 'vite',
+    });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
     nextSrcDir = await determineNextSrcDir(parsedArgs);
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      exclude: 'vitest',
+    });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (
     preset === Preset.RemixMonorepo ||
-    preset === Preset.RemixStandalone ||
-    preset === Preset.ReactNative ||
-    preset === Preset.Expo
+    preset === Preset.RemixStandalone
   ) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      preferVitest: true,
+    });
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+  } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
+    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+      exclude: 'vitest',
+    });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -715,6 +737,7 @@ async function determineReactOptions(
     bundler,
     nextAppDir,
     nextSrcDir,
+    unitTestRunner,
     e2eTestRunner,
     linter,
     formatter,
@@ -724,10 +747,11 @@ async function determineReactOptions(
 
 async function determineVueOptions(
   parsedArgs: yargs.Arguments<VueArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<VueArguments>> {
   let preset: Preset;
   let style: undefined | string = undefined;
   let appName: string;
+  let unitTestRunner: undefined | 'none' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let linter: undefined | 'none' | 'eslint';
   let formatter: undefined | 'none' | 'prettier';
@@ -768,6 +792,9 @@ async function determineVueOptions(
     }
   }
 
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    exclude: 'jest',
+  });
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   if (parsedArgs.style) {
@@ -815,6 +842,7 @@ async function determineVueOptions(
     preset,
     style,
     appName,
+    unitTestRunner,
     e2eTestRunner,
     linter,
     formatter,
@@ -824,10 +852,11 @@ async function determineVueOptions(
 
 async function determineAngularOptions(
   parsedArgs: yargs.Arguments<AngularArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<AngularArguments>> {
   let preset: Preset;
   let style: string;
   let appName: string;
+  let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
@@ -965,6 +994,7 @@ async function determineAngularOptions(
     serverRouting = false;
   }
 
+  unitTestRunner = await determineUnitTestRunner(parsedArgs);
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   return {
@@ -973,6 +1003,7 @@ async function determineAngularOptions(
     appName,
     standaloneApi,
     routing,
+    unitTestRunner,
     e2eTestRunner,
     bundler,
     ssr,
@@ -983,14 +1014,14 @@ async function determineAngularOptions(
 
 async function determineNodeOptions(
   parsedArgs: yargs.Arguments<NodeArguments>
-): Promise<Partial<Arguments>> {
+): Promise<Partial<NodeArguments>> {
   let preset: Preset;
   let appName: string;
   let framework: 'express' | 'fastify' | 'koa' | 'nest' | 'none';
   let docker: boolean;
   let linter: undefined | 'none' | 'eslint';
   let formatter: undefined | 'none' | 'prettier';
-
+  let unitTestRunner: undefined | 'none' | 'jest' = undefined;
   const workspaces = parsedArgs.workspaces ?? false;
 
   if (parsedArgs.preset) {
@@ -1051,6 +1082,10 @@ async function determineNodeOptions(
     docker = reply.docker === 'Yes';
   }
 
+  unitTestRunner = await determineUnitTestRunner(parsedArgs, {
+    exclude: 'vitest',
+  });
+
   if (workspaces) {
     linter = await determineLinterOptions(parsedArgs);
     formatter = await determineFormatterOptions(parsedArgs);
@@ -1067,6 +1102,7 @@ async function determineNodeOptions(
     linter,
     formatter,
     workspaces,
+    unitTestRunner,
   };
 }
 
@@ -1356,6 +1392,60 @@ async function determineNodeFramework(
     },
   ]);
   return reply.framework;
+}
+
+async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(
+  parsedArgs: yargs.Arguments<{
+    bundler?: 'vite' | string;
+    unitTestRunner?: T;
+    workspaces?: boolean;
+  }>,
+  options?: {
+    exclude?: 'jest' | 'vitest';
+    preferVitest?: boolean;
+  }
+): Promise<T | undefined> {
+  if (parsedArgs.unitTestRunner) {
+    return parsedArgs.unitTestRunner;
+  } else if (!parsedArgs.workspaces) {
+    return undefined;
+  }
+
+  const reply = await enquirer.prompt<{
+    unitTestRunner: 'none' | 'jest' | 'vitest';
+  }>([
+    {
+      message: 'Which unit test runner would you like to use?',
+      type: 'autocomplete',
+      name: 'unitTestRunner',
+      skip: !parsedArgs.interactive || isCI(),
+      choices: [
+        {
+          name: 'none',
+          message: 'None',
+        },
+        {
+          name: 'jest',
+          message: 'Jest   [ https://jestjs.io/ ]',
+        },
+        {
+          name: 'vitest',
+          message: 'Vitest [ https://vitest.dev/ ]',
+        },
+      ]
+        .filter((t) => !options?.exclude || options.exclude !== t.name)
+        .sort((a, b) => {
+          if (a.name === 'none') return -1;
+          if (b.name === 'none') return 1;
+          if (options?.preferVitest && a.name === 'vitest') return -1;
+          if (options?.preferVitest && b.name === 'vitest') return 1;
+          return 0;
+        }),
+      initial: 0,
+    },
+  ]);
+
+  return reply.unitTestRunner as T;
 }
 
 async function determineE2eTestRunner(

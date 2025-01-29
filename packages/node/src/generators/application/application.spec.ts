@@ -599,6 +599,16 @@ describe('app', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "name": "@proj/myapp",
@@ -704,6 +714,65 @@ describe('app', () => {
             },
           ],
         }
+      `);
+    });
+
+    it('should use @swc/jest for jest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/my-app',
+        swcJest: true,
+      } as Schema);
+
+      expect(tree.read('apps/my-app/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'my-app',
+          preset: '../../jest.preset.js',
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
+      expect(tree.read('apps/my-app/.spec.swcrc', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": []
+        }
+        "
       `);
     });
   });

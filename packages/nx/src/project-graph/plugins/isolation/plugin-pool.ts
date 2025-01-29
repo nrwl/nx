@@ -7,7 +7,7 @@ import { PluginConfiguration } from '../../../config/nx-json';
 // TODO (@AgentEnder): After scoped verbose logging is implemented, re-add verbose logs here.
 // import { logger } from '../../utils/logger';
 
-import { LoadedNxPlugin } from '../internal-api';
+import type { LoadedNxPlugin } from '../loaded-nx-plugin';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
 
@@ -17,7 +17,7 @@ import {
   sendMessageOverSocket,
 } from './messaging';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
-import { resolveNxPlugin } from '../loader';
+import { resolveNxPlugin } from '../resolve-plugin';
 
 const cleanupFunctions = new Set<() => void>();
 
@@ -43,7 +43,7 @@ const MAX_MESSAGE_WAIT =
 
 interface PendingPromise {
   promise: Promise<unknown>;
-  resolver: (result: any) => void;
+  resolver: (result?: any) => void;
   rejector: (err: any) => void;
 }
 
@@ -217,6 +217,46 @@ function createWorkerHandler(
                   );
                 }
               : undefined,
+            preTasksExecution: result.hasPreTasksExecution
+              ? (context) => {
+                  const tx =
+                    pluginName + worker.pid + ':preTasksExecution:' + txId++;
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'preTasksExecution',
+                        payload: { tx, context },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'preTasksExecution',
+                    }
+                  );
+                }
+              : undefined,
+            postTasksExecution: result.hasPostTasksExecution
+              ? (context) => {
+                  const tx =
+                    pluginName + worker.pid + ':postTasksExecution:' + txId++;
+                  return registerPendingPromise(
+                    tx,
+                    pending,
+                    () => {
+                      sendMessageOverSocket(socket, {
+                        type: 'postTasksExecution',
+                        payload: { tx, context },
+                      });
+                    },
+                    {
+                      plugin: pluginName,
+                      operation: 'postTasksExecution',
+                    }
+                  );
+                }
+              : undefined,
           });
         } else if (result.success === false) {
           onloadError(result.error);
@@ -242,6 +282,22 @@ function createWorkerHandler(
         const { resolver, rejector } = pending.get(tx);
         if (result.success) {
           resolver(result.metadata);
+        } else if (result.success === false) {
+          rejector(result.error);
+        }
+      },
+      preTasksExecutionResult: ({ tx, ...result }) => {
+        const { resolver, rejector } = pending.get(tx);
+        if (result.success) {
+          resolver(result.mutations);
+        } else if (result.success === false) {
+          rejector(result.error);
+        }
+      },
+      postTasksExecutionResult: ({ tx, ...result }) => {
+        const { resolver, rejector } = pending.get(tx);
+        if (result.success) {
+          resolver();
         } else if (result.success === false) {
           rejector(result.error);
         }

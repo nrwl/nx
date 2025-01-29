@@ -26,6 +26,11 @@ import {
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { printConfigAndExit } from './utils/print-config';
+import { workspaceRoot } from '../../utils/workspace-root';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../../project-graph/plugins/tasks-execution-hooks';
 
 export interface PublishProjectsResult {
   [projectName: string]: {
@@ -249,6 +254,10 @@ async function runPublishOnProjects(
       ].join('\n')}\n`
     );
   }
+  await runPreTasksExecution({
+    workspaceRoot,
+    nxJsonConfiguration: nxJson,
+  });
 
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
@@ -276,6 +285,11 @@ async function runPublishOnProjects(
       code: taskData.code,
     };
   }
+  await runPostTasksExecution({
+    taskResults: commandResults,
+    workspaceRoot,
+    nxJsonConfiguration: nxJson,
+  });
 
   return publishProjectsResult;
 }

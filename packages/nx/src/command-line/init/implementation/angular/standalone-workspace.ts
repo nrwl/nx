@@ -159,7 +159,10 @@ function updateProjectOutputs(
       target.outputs = ['{options.outputPath}'];
     } else if (target.executor === '@angular-eslint/builder:lint') {
       target.outputs = ['{options.outputFile}'];
-    } else if (target.executor === '@angular-devkit/build-angular:ng-packagr') {
+    } else if (
+      target.executor === '@angular-devkit/build-angular:ng-packagr' ||
+      target.executor === '@angular/build:ng-packagr'
+    ) {
       try {
         const ngPackageJsonPath = join(repoRoot, target.options.project);
         const ngPackageJson = readJsonFile(ngPackageJsonPath);

@@ -1,7 +1,7 @@
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
-import { ReactElement } from 'react';
-import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { type ReactElement } from 'react';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export function Hero(): ReactElement {
   return (
@@ -35,7 +35,7 @@ export function Hero(): ReactElement {
         <div className="mx-auto max-w-2xl lg:mx-0 lg:-mt-12 lg:shrink-0">
           {/*<p>*/}
           {/*  <a*/}
-          {/*    href="https://bit.ly/3B0Ebfe"*/}
+          {/*    href="https://bit.ly/40t8IMN"*/}
           {/*    title="See live event in details"*/}
           {/*    className="group/event-link inline-flex space-x-6"*/}
           {/*  >*/}
@@ -43,7 +43,7 @@ export function Hero(): ReactElement {
           {/*      Live event*/}
           {/*    </span>*/}
           {/*    <span className="inline-flex items-center space-x-2 text-sm/6 font-medium">*/}
-          {/*      <span>Webinar + live Q&A on Dec 10th</span>*/}
+          {/*      <span>Webinar + live Q&A on January 22nd</span>*/}
           {/*      <ChevronRightIcon*/}
           {/*        aria-hidden="true"*/}
           {/*        className="size-5 transform transition-all group-hover/event-link:translate-x-1"*/}
@@ -70,9 +70,9 @@ export function Hero(): ReactElement {
             Accelerate your organization's journey to tighter collaboration,
             better developer experience, and speed…lots of speed.
           </SectionHeading>
-          <div className="mt-8 flex items-center gap-x-6">
+          <div className="mt-8 flex items-center gap-x-3">
             <ButtonLink
-              href="/contact/sales"
+              href="/enterprise/trial"
               title="Request a free trial"
               variant="primary"
               size="default"
@@ -85,6 +85,22 @@ export function Hero(): ReactElement {
               }
             >
               Request a free trial
+            </ButtonLink>
+
+            <ButtonLink
+              href="/contact/sales"
+              title="Talk to the team"
+              variant="secondary"
+              size="default"
+              onClick={() =>
+                sendCustomEvent(
+                  'contact-sales-click',
+                  'enterprise-hero',
+                  'enterprise'
+                )
+              }
+            >
+              Contact sales
             </ButtonLink>
           </div>
         </div>

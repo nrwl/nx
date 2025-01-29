@@ -769,6 +769,22 @@
       "path": "/nx-api/nx/documents/sync-check"
     }
   ],
+  "project-linking": [
+    {
+      "description": "",
+      "file": "shared/concepts/typescript-project-linking",
+      "id": "typescript-project-linking",
+      "name": "TypeScript Project Linking",
+      "path": "/concepts/typescript-project-linking"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+      "id": "switch-to-workspaces-project-references",
+      "name": "Switch to Workspaces and TS Project References",
+      "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+    }
+  ],
   "module-federation": [
     {
       "description": "",
