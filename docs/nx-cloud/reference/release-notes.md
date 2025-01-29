@@ -39,7 +39,7 @@ We now also make much fewer requests to GitHub (or your other VCS providers) dur
 
 The PR comment containing status updates about your CI execution has had make-over, showing a more clear breakdown of your runs, their duration and the status:
 
-![new PR comment](/nx-cloud/reference/images/new_github_comments.png)
+![new PR comment](/nx-cloud/reference/images/new_github_comment.png)
 
 ##### Misc Items
 
