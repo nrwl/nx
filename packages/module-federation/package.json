@@ -29,7 +29,7 @@
     "@nx/js": "file:../js",
     "@nx/web": "file:../web",
     "picocolors": "^1.1.0",
-    "webpack": "5.88.0",
+    "webpack": "^5.88.0",
     "@rspack/core": "^1.1.5",
     "@module-federation/enhanced": "^0.8.8",
     "@module-federation/node": "^2.6.21",
