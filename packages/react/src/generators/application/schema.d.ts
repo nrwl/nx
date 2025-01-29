@@ -23,7 +23,7 @@ export interface Schema {
   devServerPort?: number;
   skipPackageJson?: boolean;
   rootProject?: boolean;
-  bundler?: 'webpack' | 'vite' | 'rspack';
+  bundler?: 'webpack' | 'vite' | 'rspack' | 'rsbuild';
   minimal?: boolean;
   // Internal options
   addPlugin?: boolean;

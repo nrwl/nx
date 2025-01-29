@@ -1,26 +1,21 @@
 import { existsSync } from 'fs';
+
 import { PackageJson } from '../../utils/package-json';
 import { prerelease } from 'semver';
 import { output } from '../../utils/output';
-import {
-  getPackageManagerCommand,
-  PackageManagerCommands,
-} from '../../utils/package-manager';
+import { getPackageManagerCommand } from '../../utils/package-manager';
 import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import { runNxSync } from '../../utils/child-process';
 import { readJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
-  addDepsToPackageJson,
   createNxJsonFile,
   initCloud,
   isMonorepo,
   printFinalMessage,
-  runInstall,
   updateGitIgnore,
 } from './implementation/utils';
 import { prompt } from 'enquirer';
-import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
@@ -28,41 +23,17 @@ import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
+import {
+  configurePlugins,
+  runPackageManagerInstallPlugins,
+} from './configure-plugins';
 
 export interface InitArgs {
   interactive: boolean;
   nxCloud?: boolean;
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
-}
-
-export function installPlugins(
-  repoRoot: string,
-  plugins: string[],
-  pmc: PackageManagerCommands,
-  updatePackageScripts: boolean
-) {
-  if (plugins.length === 0) {
-    return;
-  }
-
-  addDepsToPackageJson(repoRoot, plugins);
-
-  runInstall(repoRoot, pmc);
-
-  output.log({ title: '🔨 Configuring plugins' });
-  for (const plugin of plugins) {
-    execSync(
-      `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-        updatePackageScripts ? '--updatePackageScripts' : ''
-      }`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-        windowsHide: false,
-      }
-    );
-  }
+  verbose?: boolean;
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
@@ -146,7 +117,14 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '📦 Installing Nx' });
 
-  installPlugins(repoRoot, plugins, pmc, updatePackageScripts);
+  runPackageManagerInstallPlugins(repoRoot, pmc, plugins);
+  await configurePlugins(
+    plugins,
+    updatePackageScripts,
+    pmc,
+    repoRoot,
+    options.verbose
+  );
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });

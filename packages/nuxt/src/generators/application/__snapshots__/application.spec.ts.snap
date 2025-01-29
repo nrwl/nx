@@ -7,7 +7,8 @@ exports[`app generated files content - as-provided - my-app general application 
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*"
+vite.config.*.timestamp*
+vitest.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
@@ -32,10 +33,10 @@ exports[`app generated files content - as-provided - my-app general application 
 "
 `;
 
-exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config CJS) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -55,6 +56,40 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
+"
+`;
+
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config ESM) 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import baseConfig from '../eslint.config.mjs';
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
       },
     },
   },
@@ -366,7 +401,8 @@ exports[`app generated files content - as-provided - myApp general application s
 .nuxt
 .nitro
 .cache
-vite.config.*.timestamp*"
+vite.config.*.timestamp*
+vitest.config.*.timestamp*"
 `;
 
 exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
@@ -391,10 +427,10 @@ exports[`app generated files content - as-provided - myApp general application s
 "
 `;
 
-exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config CJS) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -414,6 +450,40 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
+"
+`;
+
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config ESM) 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import baseConfig from '../eslint.config.mjs';
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
       },
     },
   },

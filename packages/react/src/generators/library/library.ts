@@ -31,8 +31,12 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -51,6 +55,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
@@ -67,23 +76,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(initTask);
 
   if (options.isUsingTsSolutionConfig) {
-    const sourceEntry =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : undefined;
     writeJson(host, `${options.projectRoot}/package.json`, {
       name: options.importPath,
       version: '0.0.1',
-      main: sourceEntry,
-      types: sourceEntry,
-      nx: {
-        name: options.importPath === options.name ? undefined : options.name,
-        projectType: 'library',
-        sourceRoot: `${options.projectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      ...determineEntryFields(options),
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   } else {
@@ -142,10 +143,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   } else if (options.buildable && options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
     tasks.push(rollupTask);
-  } else if (options.bundler === 'none' && options.addPlugin) {
-    const nxJson = readNxJson(host);
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
-    updateNxJson(host, nxJson);
   }
 
   // Set up test target
@@ -247,7 +244,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
-    const installReactTask = installCommonDependencies(host, options);
+    const installReactTask = await installCommonDependencies(host, options);
     tasks.push(installReactTask);
   }
 
@@ -279,6 +276,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

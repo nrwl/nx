@@ -30,9 +30,13 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { relative } from 'node:path/posix';
+import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
@@ -123,6 +127,10 @@ export async function e2eProjectGeneratorInternal(
   const tsConfigFile = isUsingTsSolutionConfig
     ? 'tsconfig.json'
     : 'tsconfig.spec.json';
+  const rootOffset = offsetFromRoot(options.e2eProjectRoot);
+  const coverageDirectory = isUsingTsSolutionConfig
+    ? 'test-output/jest/coverage'
+    : joinPathFragments(rootOffset, 'coverage', options.e2eProjectName);
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -132,8 +140,10 @@ export async function e2eProjectGeneratorInternal(
         ...options,
         ...names(options.rootProject ? 'server' : options.project),
         tsConfigFile,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         jestPreset,
+        coverageDirectory,
+        isUsingTsSolutionConfig,
         tmpl: '',
       }
     );
@@ -147,7 +157,7 @@ export async function e2eProjectGeneratorInternal(
           ...options,
           ...names(options.rootProject ? 'server' : options.project),
           tsConfigFile,
-          offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+          offsetFromRoot: rootOffset,
           tmpl: '',
         }
       );
@@ -163,14 +173,17 @@ export async function e2eProjectGeneratorInternal(
         ...names(options.rootProject ? 'cli' : options.project),
         mainFile,
         tsConfigFile,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         jestPreset,
+        coverageDirectory,
+        isUsingTsSolutionConfig,
         tmpl: '',
       }
     );
   }
 
   if (isUsingTsSolutionConfig) {
+    addSwcTestConfig(host, options.e2eProjectRoot, 'es6');
     generateFiles(
       host,
       path.join(__dirname, 'files/ts-solution'),
@@ -181,7 +194,7 @@ export async function e2eProjectGeneratorInternal(
           options.e2eProjectRoot,
           appProject.root
         ),
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         tmpl: '',
       }
     );
@@ -192,7 +205,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         tmpl: '',
       }
     );
@@ -230,10 +243,6 @@ export async function e2eProjectGeneratorInternal(
     }
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
-
   if (isUsingTsSolutionConfig) {
     updateJson(host, 'tsconfig.json', (json) => {
       json.references ??= [];
@@ -243,6 +252,16 @@ export async function e2eProjectGeneratorInternal(
       }
       return json;
     });
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
   }
 
   tasks.push(() => {

@@ -7,6 +7,8 @@ import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
 import { Linter } from '@nx/eslint';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -47,7 +49,9 @@ export async function normalizeOptions(
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
     prefix: getNpmScope(tree), // we could also allow customizing this
-    projectName,
+    projectName: isUsingTsSolutionSetup(tree)
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectRoot,
     importPath,
     service: options.service ?? false,

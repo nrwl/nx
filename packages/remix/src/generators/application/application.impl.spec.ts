@@ -346,6 +346,21 @@ describe('Remix Application', () => {
         tags: 'foo',
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "private",
+          "type",
+          "scripts",
+          "engines",
+          "sideEffects",
+          "nx",
+          "dependencies",
+          "devDependencies",
+        ]
+      `);
       expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
@@ -364,10 +379,8 @@ describe('Remix Application', () => {
           "engines": {
             "node": ">=20",
           },
-          "name": "myapp",
+          "name": "@proj/myapp",
           "nx": {
-            "projectType": "application",
-            "sourceRoot": "myapp",
             "tags": [
               "foo",
             ],
@@ -431,6 +444,7 @@ describe('Remix Application', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "tests/**/*.spec.ts",
             "tests/**/*.test.ts",
@@ -500,12 +514,12 @@ describe('Remix Application', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "outDir": "dist",
+            "outDir": "out-tsc/playwright",
             "sourceMap": false,
-            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
           },
           "exclude": [
-            "dist",
+            "out-tsc",
+            "test-output",
             "eslint.config.js",
             "eslint.config.mjs",
             "eslint.config.cjs",
@@ -521,11 +535,41 @@ describe('Remix Application', () => {
             "src/**/*.test.js",
             "src/**/*.d.ts",
           ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
-          ],
+        }
+      `);
+    });
+
+    it('should skip nx property in package.json when no tags are provided', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'apps/myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "@remix-run/node": "^2.14.0",
+            "@remix-run/react": "^2.14.0",
+            "@remix-run/serve": "^2.14.0",
+            "isbot": "^4.4.0",
+            "react": "^18.2.0",
+            "react-dom": "^18.2.0",
+          },
+          "devDependencies": {
+            "@remix-run/dev": "^2.14.0",
+            "@types/react": "^18.2.0",
+            "@types/react-dom": "^18.2.0",
+          },
+          "engines": {
+            "node": ">=20",
+          },
+          "name": "@proj/myapp",
+          "private": true,
+          "scripts": {},
+          "sideEffects": false,
+          "type": "module",
         }
       `);
     });
@@ -542,6 +586,71 @@ describe('Remix Application', () => {
       expect(() =>
         JSON.parse(tree.read('myapp/package.json', 'utf-8'))
       ).not.toThrow();
+    });
+
+    it('should generate jest test config with @swc/jest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('myapp/tests/routes/_index.spec.tsx')).toBeTruthy();
+      expect(tree.exists('myapp/jest.config.ts')).toBeTruthy();
+      expect(tree.read('myapp/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: '@proj/myapp',
+          preset: '../jest.preset.js',
+          transform: {
+            '^.+\\\\.[tj]sx?$': ['@swc/jest', swcJestConfig]
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: 'test-output/jest/coverage'
+        };
+        "
+      `);
+      expect(tree.read('myapp/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
+          "{
+            "jsc": {
+              "target": "es2017",
+              "parser": {
+                "syntax": "typescript",
+                "decorators": true,
+                "dynamicImport": true,
+                "tsx": true
+              },
+              "transform": {
+                "decoratorMetadata": true,
+                "legacyDecorator": true,
+                "react": {
+                  "runtime": "automatic"
+                }
+              },
+              "keepClassNames": true,
+              "externalHelpers": true,
+              "loose": true
+            },
+            "module": {
+              "type": "es6"
+            },
+            "sourceMaps": true,
+            "exclude": []
+          }
+          "
+        `);
     });
   });
 });

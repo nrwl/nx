@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
@@ -74,7 +75,46 @@ export async function configurationGeneratorInternal(
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
-  if (!tree.exists(tsconfigPath)) {
+  if (tree.exists(tsconfigPath)) {
+    if (isTsSolutionSetup) {
+      const tsconfig: any = {
+        extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
+        compilerOptions: {
+          allowJs: true,
+          outDir: 'out-tsc/playwright',
+          sourceMap: false,
+        },
+        include: [
+          joinPathFragments(options.directory, '**/*.ts'),
+          joinPathFragments(options.directory, '**/*.js'),
+          'playwright.config.ts',
+        ],
+        exclude: ['out-tsc', 'test-output'],
+      };
+
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
+      }
+
+      writeJson(
+        tree,
+        joinPathFragments(projectConfig.root, 'tsconfig.e2e.json'),
+        tsconfig
+      );
+
+      updateJson(tree, tsconfigPath, (json) => {
+        // add the project tsconfig to the workspace root tsconfig.json references
+        json.references ??= [];
+        json.references.push({ path: './tsconfig.e2e.json' });
+        return json;
+      });
+    }
+  } else {
     const tsconfig: any = {
       extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
       compilerOptions: {
@@ -95,18 +135,17 @@ export async function configurationGeneratorInternal(
     };
 
     if (isTsSolutionSetup) {
+      tsconfig.exclude = ['out-tsc', 'test-output'];
       // skip eslint from typechecking since it extends from root file that is outside rootDir
       if (options.linter === 'eslint') {
-        tsconfig.exclude = [
-          'dist',
+        tsconfig.exclude.push(
           'eslint.config.js',
           'eslint.config.mjs',
-          'eslint.config.cjs',
-        ];
+          'eslint.config.cjs'
+        );
       }
 
-      tsconfig.compilerOptions.outDir = 'dist';
-      tsconfig.compilerOptions.tsBuildInfoFile = 'dist/tsconfig.tsbuildinfo';
+      tsconfig.compilerOptions.outDir = 'out-tsc/playwright';
 
       if (!options.rootProject) {
         updateJson(tree, 'tsconfig.json', (json) => {
@@ -231,11 +270,49 @@ async function normalizeOptions(
 
   const linter = await normalizeLinterOption(tree, options.linter);
 
+  if (!options.webServerCommand || !options.webServerAddress) {
+    const { webServerCommand, webServerAddress } =
+      await promptForMissingServeData(options.project);
+    options.webServerCommand = webServerCommand;
+    options.webServerAddress = webServerAddress;
+  }
+
   return {
     ...options,
     addPlugin,
     linter,
     directory: options.directory ?? 'e2e',
+  };
+}
+
+async function promptForMissingServeData(projectName: string) {
+  const { command, port } = await promptWhenInteractive<{
+    command: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'command',
+        message: 'What command should be run to serve the application locally?',
+        initial: `npx nx serve ${projectName}`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      command: `npx nx serve ${projectName}`,
+      port: 3000,
+    }
+  );
+
+  return {
+    webServerCommand: command,
+    webServerAddress: `http://localhost:${port}`,
   };
 }
 

@@ -261,9 +261,6 @@ describe('application generator', () => {
       `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "esModuleInterop": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -281,16 +278,19 @@ describe('application generator', () => {
         {
           "compilerOptions": {
             "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
             "target": "es2021",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "jest.config.ts",
             "src/**/*.spec.ts",
@@ -308,6 +308,8 @@ describe('application generator', () => {
       expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
             "module": "nodenext",
             "moduleResolution": "nodenext",
             "outDir": "./out-tsc/jest",

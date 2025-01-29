@@ -45,10 +45,6 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
-import {
-  TerminalVideo,
-  terminalVideo,
-} from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
@@ -56,6 +52,8 @@ import { pill } from './lib/tags/pill.schema';
 import { fence } from './lib/nodes/fence.schema';
 import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
+import { TableOfContents } from './lib/tags/table-of-contents.component';
+import { tableOfContents } from './lib/tags/table-of-contents.schema';
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
 
@@ -91,7 +89,7 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
-      'terminal-video': terminalVideo,
+      toc: tableOfContents,
       tweet,
       youtube,
       'video-link': videoLink,
@@ -121,7 +119,7 @@ export const getMarkdocCustomConfig = (
     SideBySide,
     Tab,
     Tabs,
-    TerminalVideo,
+    TableOfContents,
     Tweet,
     YouTube,
     VideoLink,

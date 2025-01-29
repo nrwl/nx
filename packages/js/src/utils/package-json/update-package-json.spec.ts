@@ -157,6 +157,7 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },
@@ -268,6 +269,7 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },

@@ -65,8 +65,8 @@ describe('app', () => {
           ).toMatchSnapshot();
         });
 
-        it('should configure eslint correctly (flat config)', async () => {
-          tree.write('eslint.config.js', '');
+        it('should configure eslint correctly (flat config ESM)', async () => {
+          tree.write('eslint.config.mjs', 'export default {};');
 
           await applicationGenerator(tree, {
             directory: name,
@@ -74,7 +74,20 @@ describe('app', () => {
           });
 
           expect(
-            tree.read(`${name}/eslint.config.js`, 'utf-8')
+            tree.read(`${name}/eslint.config.mjs`, 'utf-8')
+          ).toMatchSnapshot();
+        });
+
+        it('should configure eslint correctly (flat config CJS)', async () => {
+          tree.write('eslint.config.cjs', 'module.exports = {};');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+          });
+
+          expect(
+            tree.read(`${name}/eslint.config.cjs`, 'utf-8')
           ).toMatchSnapshot();
         });
 
@@ -242,6 +255,16 @@ describe('app', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",
@@ -259,7 +282,6 @@ describe('app', () => {
       expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": true,
             "jsx": "preserve",
             "jsxImportSource": "vue",
             "module": "esnext",
@@ -267,8 +289,10 @@ describe('app', () => {
             "outDir": "out-tsc/myapp",
             "resolveJsonModule": true,
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "vite.config.ts",
             "vite.config.mts",
@@ -296,7 +320,6 @@ describe('app', () => {
       expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": true,
             "jsx": "preserve",
             "jsxImportSource": "vue",
             "module": "esnext",
@@ -339,12 +362,12 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
-            "outDir": "dist",
+            "outDir": "out-tsc/playwright",
             "sourceMap": false,
-            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
           },
           "exclude": [
-            "dist",
+            "out-tsc",
+            "test-output",
             "eslint.config.js",
             "eslint.config.mjs",
             "eslint.config.cjs",
@@ -359,11 +382,6 @@ describe('app', () => {
             "src/**/*.test.ts",
             "src/**/*.test.js",
             "src/**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
           ],
         }
       `);

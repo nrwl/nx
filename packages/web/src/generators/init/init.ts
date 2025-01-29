@@ -6,7 +6,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -27,8 +26,6 @@ function updateDependencies(tree: Tree, schema: Schema) {
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(tree, 'web', 'init');
-
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(tree, schema);

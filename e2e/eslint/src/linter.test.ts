@@ -567,7 +567,7 @@ describe('Linter', () => {
           name: `@proj/${mylib}`,
           private: true,
           type: 'commonjs',
-          typings: './src/index.d.ts',
+          types: './src/index.d.ts',
           version: '0.0.1',
         });
 
@@ -615,8 +615,8 @@ describe('Linter', () => {
         runCLI(`generate @nx/js:lib ${jsLib} --linter eslint`);
 
         checkFilesExist(
-          `${reactLib}/eslint.config.js`,
-          `${jsLib}/eslint.config.js`
+          `${reactLib}/eslint.config.mjs`,
+          `${jsLib}/eslint.config.mjs`
         );
         checkFilesDoNotExist(
           `${reactLib}/.eslintrc.json`,
@@ -772,7 +772,7 @@ describe('Linter', () => {
       const mylib = uniq('mylib');
 
       runCLI(
-        `generate @nx/node:app --name=${myapp} --linter=eslint --directory="." --e2eTestRunner=jest --no-interactive`
+        `generate @nx/node:app --name=${myapp} --linter=eslint --directory="." --unitTestRunner=jest --e2eTestRunner=jest --no-interactive`
       );
       runCLI('reset', { env: { CI: 'false' } });
       verifySuccessfulStandaloneSetup(myapp);

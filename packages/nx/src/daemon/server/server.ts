@@ -17,6 +17,7 @@ import {
   killSocketOrPath,
 } from '../socket-utils';
 import {
+  hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
@@ -109,6 +110,16 @@ import {
   isHandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import {
+  isHandlePostTasksExecutionMessage,
+  isHandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
+import {
+  handleRunPostTasksExecution,
+  handleRunPreTasksExecution,
+} from './handle-tasks-execution-hooks';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -280,6 +291,14 @@ async function handleMessage(socket, data: string) {
         payload.deletedFiles
       )
     );
+  } else if (isHandlePreTasksExecutionMessage(payload)) {
+    await handleResult(socket, PRE_TASKS_EXECUTION, () =>
+      handleRunPreTasksExecution(payload.context)
+    );
+  } else if (isHandlePostTasksExecutionMessage(payload)) {
+    await handleResult(socket, POST_TASKS_EXECUTION, () =>
+      handleRunPostTasksExecution(payload.context)
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -311,9 +330,9 @@ export async function handleResult(
 }
 
 function handleInactivityTimeout() {
-  if (numberOfOpenConnections > 0) {
+  if (hasRegisteredFileWatcherSockets()) {
     serverLogger.log(
-      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`
+      `There are open file watchers. Resetting inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {

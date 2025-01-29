@@ -8,11 +8,8 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { setupTailwindGenerator } from '@nx/react';
-import {
-  testingLibraryReactVersion,
-  typesReactDomVersion,
-  typesReactVersion,
-} from '@nx/react/src/utils/versions';
+import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
+import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
@@ -30,7 +27,11 @@ import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { tsLibVersion } from '../../utils/versions';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -51,6 +52,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 
@@ -99,9 +101,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
+    const reactVersions = await getReactDependenciesVersionsToInstall(host);
     const devDependencies: Record<string, string> = {
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
+      '@types/react': reactVersions['@types/react'],
+      '@types/react-dom': reactVersions['@types/react-dom'],
     };
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
@@ -131,6 +134,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       : ['.next'],
     options.src ? 'src' : '.'
   );
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.useTsSolution) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
+
+  sortPackageJsonFields(host, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

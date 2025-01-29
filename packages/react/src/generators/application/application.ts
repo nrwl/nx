@@ -1,5 +1,22 @@
-import { extraEslintDependencies } from '../../utils/lint';
-import { NormalizedSchema, Schema } from './schema';
+import {
+  formatFiles,
+  GeneratorCallback,
+  joinPathFragments,
+  readNxJson,
+  runTasksInSerial,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import reactInitGenerator from '../init/init';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
@@ -7,130 +24,71 @@ import { addProject } from './lib/add-project';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
-import {
-  addDependenciesToPackageJson,
-  ensurePackage,
-  formatFiles,
-  GeneratorCallback,
-  joinPathFragments,
-  logger,
-  readNxJson,
-  runTasksInSerial,
-  stripIndents,
-  Tree,
-  updateNxJson,
-} from '@nx/devkit';
-import reactInitGenerator from '../init/init';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
-import { babelLoaderVersion, nxVersion } from '../../utils/versions';
-import { maybeJs } from '../../utils/maybe-js';
-import { installCommonDependencies } from './lib/install-common-dependencies';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import * as pc from 'picocolors';
-import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { addLinting } from './lib/add-linting';
 import { addE2e } from './lib/add-e2e';
+import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { installCommonDependencies } from './lib/install-common-dependencies';
+import { initWebpack } from './lib/bundlers/add-webpack';
 import {
-  addExtendsToLintConfig,
-  addOverrideToLintConfig,
-  addPredefinedConfigToFlatLintConfig,
-  isEslintConfigSupported,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
-async function addLinting(host: Tree, options: NormalizedSchema) {
-  const tasks: GeneratorCallback[] = [];
-  if (options.linter === Linter.EsLint) {
-    const lintTask = await lintProjectGenerator(host, {
-      linter: options.linter,
-      project: options.projectName,
-      tsConfigPaths: [
-        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      ],
-      unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
-      rootProject: options.rootProject,
-      skipPackageJson: options.skipPackageJson,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
-
-    if (isEslintConfigSupported(host)) {
-      if (useFlatConfig(host)) {
-        addPredefinedConfigToFlatLintConfig(
-          host,
-          options.appProjectRoot,
-          'flat/react'
-        );
-        // Add an empty rules object to users know how to add/override rules
-        addOverrideToLintConfig(host, options.appProjectRoot, {
-          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-          rules: {},
-        });
-      } else {
-        const addExtendsTask = addExtendsToLintConfig(
-          host,
-          options.appProjectRoot,
-          { name: 'plugin:@nx/react', needCompatFixup: true }
-        );
-        tasks.push(addExtendsTask);
-      }
-    }
-
-    if (!options.skipPackageJson) {
-      const installTask = addDependenciesToPackageJson(
-        host,
-        extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
-      );
-      const addSwcTask = addSwcDependencies(host);
-      tasks.push(installTask, addSwcTask);
-    }
-  }
-  return runTasksInSerial(...tasks);
-}
+  handleStyledJsxForRspack,
+  initRspack,
+  setupRspackConfiguration,
+} from './lib/bundlers/add-rspack';
+import {
+  initRsbuild,
+  setupRsbuildConfiguration,
+} from './lib/bundlers/add-rsbuild';
+import {
+  setupViteConfiguration,
+  setupVitestConfiguration,
+} from './lib/bundlers/add-vite';
+import { Schema } from './schema';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function applicationGenerator(
-  host: Tree,
+  tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return await applicationGeneratorInternal(host, {
+  return await applicationGeneratorInternal(tree, {
     addPlugin: false,
     ...schema,
   });
 }
 
 export async function applicationGeneratorInternal(
-  host: Tree,
+  tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
   const tasks = [];
 
-  const jsInitTask = await jsInitGenerator(host, {
+  const jsInitTask = await jsInitGenerator(tree, {
     ...schema,
     tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 
-  const options = await normalizeOptions(host, schema);
-  showPossibleWarnings(host, options);
+  const options = await normalizeOptions(tree, schema);
 
-  const initTask = await reactInitGenerator(host, {
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
+  showPossibleWarnings(tree, options);
+
+  const initTask = await reactInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
   tasks.push(initTask);
 
   if (!options.addPlugin) {
-    const nxJson = readNxJson(host);
+    const nxJson = readNxJson(tree);
     nxJson.targetDefaults ??= {};
     if (!Object.keys(nxJson.targetDefaults).includes('build')) {
       nxJson.targetDefaults.build = {
@@ -140,159 +98,48 @@ export async function applicationGeneratorInternal(
     } else if (!nxJson.targetDefaults.build.dependsOn) {
       nxJson.targetDefaults.build.dependsOn = ['^build'];
     }
-    updateNxJson(host, nxJson);
+    updateNxJson(tree, nxJson);
   }
 
   if (options.bundler === 'webpack') {
-    const { webpackInitGenerator } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
-    const webpackInitTask = await webpackInitGenerator(host, {
-      skipPackageJson: options.skipPackageJson,
-      skipFormat: true,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(webpackInitTask);
-    if (!options.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
-      );
-      tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
-    }
+    await initWebpack(tree, options, tasks);
   } else if (options.bundler === 'rspack') {
-    const { rspackInitGenerator } = ensurePackage('@nx/rspack', nxVersion);
-    const rspackInitTask = await rspackInitGenerator(host, {
-      ...options,
-      addPlugin: false,
-      skipFormat: true,
-    });
-    tasks.push(rspackInitTask);
+    await initRspack(tree, options, tasks);
+  } else if (options.bundler === 'rsbuild') {
+    await initRsbuild(tree, options, tasks);
   }
 
   if (!options.rootProject) {
-    extractTsConfigBase(host);
+    extractTsConfigBase(tree);
   }
 
-  await createApplicationFiles(host, options);
-  addProject(host, options);
+  await createApplicationFiles(tree, options);
+  addProject(tree, options);
 
   if (options.style === 'tailwind') {
-    const twTask = await setupTailwindGenerator(host, {
+    const twTask = await setupTailwindGenerator(tree, {
       project: options.projectName,
     });
     tasks.push(twTask);
   }
 
   if (options.bundler === 'vite') {
-    const { createOrEditViteConfig, viteConfigurationGenerator } =
-      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
-    // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
-    // See: https://vitejs.dev/guide/env-and-mode.html
-    if (
-      host.exists(joinPathFragments(options.appProjectRoot, 'src/environments'))
-    ) {
-      host.delete(
-        joinPathFragments(options.appProjectRoot, 'src/environments')
-      );
-    }
-
-    const viteTask = await viteConfigurationGenerator(host, {
-      uiFramework: 'react',
-      project: options.projectName,
-      newProject: true,
-      includeVitest: options.unitTestRunner === 'vitest',
-      inSourceTests: options.inSourceTests,
-      compiler: options.compiler,
-      skipFormat: true,
-      addPlugin: options.addPlugin,
-      projectType: 'application',
-    });
-    tasks.push(viteTask);
-    createOrEditViteConfig(
-      host,
-      {
-        project: options.projectName,
-        includeLib: false,
-        includeVitest: options.unitTestRunner === 'vitest',
-        inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
-          "'react'",
-          "'react-dom'",
-          "'react/jsx-runtime'",
-        ],
-        imports: [
-          options.compiler === 'swc'
-            ? `import react from '@vitejs/plugin-react-swc'`
-            : `import react from '@vitejs/plugin-react'`,
-        ],
-        plugins: ['react()'],
-      },
-      false
-    );
+    await setupViteConfiguration(tree, options, tasks);
   } else if (options.bundler === 'rspack') {
-    const { configurationGenerator } = ensurePackage('@nx/rspack', nxVersion);
-    const rspackTask = await configurationGenerator(host, {
-      project: options.projectName,
-      main: joinPathFragments(
-        options.appProjectRoot,
-        maybeJs(
-          {
-            js: options.js,
-            useJsx: true,
-          },
-          `src/main.tsx`
-        )
-      ),
-      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      target: 'web',
-      newProject: true,
-      framework: 'react',
-    });
-    tasks.push(rspackTask);
+    await setupRspackConfiguration(tree, options, tasks);
+  } else if (options.bundler === 'rsbuild') {
+    await setupRsbuildConfiguration(tree, options, tasks);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-
-    const vitestTask = await vitestGenerator(host, {
-      uiFramework: 'react',
-      coverageProvider: 'v8',
-      project: options.projectName,
-      inSourceTests: options.inSourceTests,
-      skipFormat: true,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(vitestTask);
-    createOrEditViteConfig(
-      host,
-      {
-        project: options.projectName,
-        includeLib: false,
-        includeVitest: true,
-        inSourceTests: options.inSourceTests,
-        rollupOptionsExternal: [
-          "'react'",
-          "'react-dom'",
-          "'react/jsx-runtime'",
-        ],
-        imports: [
-          options.compiler === 'swc'
-            ? `import react from '@vitejs/plugin-react-swc'`
-            : `import react from '@vitejs/plugin-react'`,
-        ],
-        plugins: ['react()'],
-      },
-      true
-    );
+    await setupVitestConfiguration(tree, options, tasks);
   }
 
   if (
     (options.bundler === 'vite' || options.unitTestRunner === 'vitest') &&
     options.inSourceTests
   ) {
-    host.delete(
+    tree.delete(
       joinPathFragments(
         options.appProjectRoot,
         `src/app/${options.fileName}.spec.tsx`
@@ -300,69 +147,33 @@ export async function applicationGeneratorInternal(
     );
   }
 
-  const lintTask = await addLinting(host, options);
+  const lintTask = await addLinting(tree, options);
   tasks.push(lintTask);
 
-  const e2eTask = await addE2e(host, options);
+  const e2eTask = await addE2e(tree, options);
   tasks.push(e2eTask);
 
   if (options.unitTestRunner === 'jest') {
-    const jestTask = await addJest(host, options);
+    const jestTask = await addJest(tree, options);
     tasks.push(jestTask);
   }
 
   // Handle tsconfig.spec.json for jest or vitest
-  updateSpecConfig(host, options);
-  const stylePreprocessorTask = installCommonDependencies(host, options);
+  updateSpecConfig(tree, options);
+  const stylePreprocessorTask = await installCommonDependencies(tree, options);
   tasks.push(stylePreprocessorTask);
-  const styledTask = addStyledModuleDependencies(host, options);
+  const styledTask = addStyledModuleDependencies(tree, options);
   tasks.push(styledTask);
-  const routingTask = addRouting(host, options);
+  const routingTask = addRouting(tree, options);
   tasks.push(routingTask);
-  setDefaults(host, options);
+  setDefaults(tree, options);
 
   if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
-    logger.warn(
-      `${pc.bold('styled-jsx')} is not supported by ${pc.bold(
-        'Rspack'
-      )}. We've added ${pc.bold(
-        'babel-loader'
-      )} to your project, but using babel will slow down your build.`
-    );
-
-    tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        {},
-        { 'babel-loader': babelLoaderVersion }
-      )
-    );
-
-    host.write(
-      joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
-      stripIndents`
-        const { composePlugins, withNx, withReact } = require('@nx/rspack');
-        module.exports = composePlugins(withNx(), withReact(), (config) => {
-          config.module.rules.push({
-            test: /\\.[jt]sx$/i,
-            use: [
-              {
-                loader: 'babel-loader',
-                options: {
-                  presets: ['@babel/preset-typescript'],
-                  plugins: ['styled-jsx/babel'],
-                },
-              },
-            ],
-          });
-          return config;
-        });
-        `
-    );
+    handleStyledJsxForRspack(tasks, tree, options);
   }
 
   updateTsconfigFiles(
-    host,
+    tree,
     options.appProjectRoot,
     'tsconfig.app.json',
     {
@@ -375,8 +186,10 @@ export async function applicationGeneratorInternal(
       : undefined
   );
 
+  sortPackageJsonFields(tree, options.appProjectRoot);
+
   if (!options.skipFormat) {
-    await formatFiles(host);
+    await formatFiles(tree);
   }
 
   tasks.push(() => {

@@ -61,6 +61,9 @@ describe('Rsbuild configuration generator', () => {
                   index: './src/index.ts'
               },
           },
+          server: {
+              port: 4200
+          },
           output: {
               target: 'web',
               distPath: {
@@ -93,6 +96,9 @@ describe('Rsbuild configuration generator', () => {
               entry: {
                   index: './src/main.ts'
               },
+          },
+          server: {
+              port: 4200
           },
           output: {
               target: 'web',
@@ -127,6 +133,9 @@ describe('Rsbuild configuration generator', () => {
                   index: './src/main.ts'
               },
           },
+          server: {
+              port: 4200
+          },
           output: {
               target: 'web',
               distPath: {
@@ -156,6 +165,9 @@ describe('Rsbuild configuration generator', () => {
                   index: './src/index.ts'
               },
               tsconfigPath: './tsconfig.json',
+          },
+          server: {
+              port: 4200
           },
           output: {
               target: 'web',

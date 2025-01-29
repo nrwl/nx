@@ -15,6 +15,7 @@ import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
+const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -931,7 +932,7 @@ module.exports = withNx(
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => {
-        json.workspaces = ['packages/*', 'apps/*'];
+        json.workspaces = ['packages/*', 'apps/*', 'libs/*'];
         return json;
       });
       writeJson(tree, 'tsconfig.base.json', {
@@ -952,11 +953,11 @@ module.exports = withNx(
         ...defaultSchema,
         bundler: 'vite',
         unitTestRunner: 'vitest',
-        directory: 'mylib',
-        name: 'mylib',
+        directory: 'libs/mylib',
       });
 
-      expect(tree.read('mylib/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      expect(tree.read('libs/mylib/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
@@ -965,7 +966,7 @@ module.exports = withNx(
 
         export default defineConfig({
           root: __dirname,
-          cacheDir: '../node_modules/.vite/mylib',
+          cacheDir: '../../node_modules/.vite/libs/mylib',
           plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
@@ -983,7 +984,7 @@ module.exports = withNx(
             lib: {
               // Could also be a dictionary or array of multiple entry points.
               entry: 'src/index.ts',
-              name: 'mylib',
+              name: '@proj/mylib',
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
@@ -1012,13 +1013,26 @@ module.exports = withNx(
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
         [
           {
-            "path": "./mylib",
+            "path": "./libs/mylib",
           },
         ]
       `);
-      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'libs/mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "type",
+          "main",
+          "module",
+          "types",
+          "exports",
+        ]
+      `);
+      expect(readJson(tree, 'libs/mylib/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "extends": "../tsconfig.base.json",
+          "extends": "../../tsconfig.base.json",
           "files": [],
           "include": [],
           "references": [
@@ -1031,7 +1045,8 @@ module.exports = withNx(
           ],
         }
       `);
-      expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+      expect(readJson(tree, 'libs/mylib/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
             "jsx": "react-jsx",
@@ -1039,6 +1054,7 @@ module.exports = withNx(
             "moduleResolution": "bundler",
             "outDir": "out-tsc/mylib",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1047,6 +1063,7 @@ module.exports = withNx(
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "**/*.spec.ts",
             "**/*.test.ts",
@@ -1072,7 +1089,7 @@ module.exports = withNx(
             "eslint.config.cjs",
             "eslint.config.mjs",
           ],
-          "extends": "../tsconfig.base.json",
+          "extends": "../../tsconfig.base.json",
           "include": [
             "src/**/*.js",
             "src/**/*.jsx",
@@ -1081,7 +1098,8 @@ module.exports = withNx(
           ],
         }
       `);
-      expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
+      expect(readJson(tree, 'libs/mylib/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
         {
           "compilerOptions": {
             "jsx": "react-jsx",
@@ -1096,7 +1114,7 @@ module.exports = withNx(
               "vitest",
             ],
           },
-          "extends": "../tsconfig.base.json",
+          "extends": "../../tsconfig.base.json",
           "include": [
             "vite.config.ts",
             "vite.config.mts",
@@ -1126,41 +1144,42 @@ module.exports = withNx(
         ...defaultSchema,
         bundler: 'none',
         unitTestRunner: 'none',
-        directory: 'mylib',
-        name: 'mylib',
+        directory: 'libs/mylib',
       });
 
       await libraryGenerator(tree, {
         ...defaultSchema,
         bundler: 'none',
         unitTestRunner: 'none',
-        directory: 'myjslib',
-        name: 'myjslib',
+        directory: 'libs/myjslib',
         js: true,
       });
 
-      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+      expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/mylib",
-          "nx": {
-            "name": "mylib",
-            "projectType": "library",
-            "sourceRoot": "mylib/src",
-          },
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
       `);
-      expect(readJson(tree, 'myjslib/package.json')).toMatchInlineSnapshot(`
+      expect(readJson(tree, 'libs/myjslib/package.json'))
+        .toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": "./src/index.js",
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.js",
           "name": "@proj/myjslib",
-          "nx": {
-            "name": "myjslib",
-            "projectType": "library",
-            "sourceRoot": "myjslib/src",
-          },
           "types": "./src/index.js",
           "version": "0.0.1",
         }
@@ -1172,11 +1191,10 @@ module.exports = withNx(
         ...defaultSchema,
         bundler: 'rollup',
         unitTestRunner: 'none',
-        directory: 'mylib',
-        name: 'mylib',
+        directory: 'libs/mylib',
       });
 
-      expect(tree.read('mylib/rollup.config.cjs', 'utf-8'))
+      expect(tree.read('libs/mylib/rollup.config.cjs', 'utf-8'))
         .toMatchInlineSnapshot(`
         "const { withNx } = require('@nx/rollup/with-nx');
         const url = require('@rollup/plugin-url');
@@ -1213,17 +1231,16 @@ module.exports = withNx(
       await libraryGenerator(tree, {
         ...defaultSchema,
         bundler: 'rollup',
+        directory: 'libs/mylib',
         publishable: true,
         importPath: '@acme/mylib',
-        unitTestRunner: 'none',
-        directory: 'mylib',
-        name: 'mylib',
       });
 
-      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+      expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
         {
           "exports": {
             ".": {
+              "default": "./dist/index.esm.js",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -1236,16 +1253,27 @@ module.exports = withNx(
           "main": "./dist/index.esm.js",
           "module": "./dist/index.esm.js",
           "name": "@acme/mylib",
-          "nx": {
-            "name": "mylib",
-            "projectType": "library",
-            "sourceRoot": "mylib/src",
-          },
           "type": "module",
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should add project to workspaces when using TS solution', async () => {
+      tree.write('pnpm-workspace.yaml', `packages:`);
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+      const pnpmContent = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const pnpmWorkspaceFile = load(pnpmContent);
+
+      expect(pnpmWorkspaceFile.packages).toEqual(['mylib']);
     });
   });
 });

@@ -4,12 +4,10 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  readNxJson,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
-  updateNxJson,
   writeJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
@@ -26,8 +24,12 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { ensureProjectIsExcludedFromPluginRegistrations } from '@nx/js/src/utils/typescript/plugin';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -45,32 +47,24 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    const moduleFile =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : './dist/index.mjs';
-    const typesFile =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : './dist/index.d.ts';
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
+  if (options.isUsingTsSolutionConfig) {
     writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
       name: getImportPath(tree, options.name),
       version: '0.0.1',
       private: true,
-      module: moduleFile,
-      types: typesFile,
+      ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: `${options.projectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
     });
   } else {
     addProjectConfiguration(tree, options.name, {
@@ -130,12 +124,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  if (options.bundler === 'none') {
-    const nxJson = readNxJson(tree);
-    ensureProjectIsExcludedFromPluginRegistrations(nxJson, options.projectRoot);
-    updateNxJson(tree, nxJson);
-  }
-
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
@@ -147,8 +135,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   if (options.js) toJS(tree);
-
-  if (!options.skipFormat) await formatFiles(tree);
 
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
@@ -167,6 +153,10 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         : undefined
     );
   }
+
+  sortPackageJsonFields(tree, options.projectRoot);
+
+  if (!options.skipFormat) await formatFiles(tree);
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {

@@ -1,10 +1,13 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import {
+  addProjectConfiguration,
   createProjectGraphAsync,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
@@ -239,6 +242,94 @@ describe('vitest generator', () => {
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@analogjs/vite-plugin-angular']).toBeDefined();
       expect(devDependencies['@analogjs/vitest-angular']).toBeDefined();
+    });
+  });
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace();
+      updateJson(appTree, 'package.json', (json) => {
+        json.workspaces = ['packages/*'];
+        return json;
+      });
+      writeJson(appTree, 'tsconfig.base.json', {
+        compilerOptions: { composite: true },
+      });
+      writeJson(appTree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+
+      addProjectConfiguration(appTree, 'pkg1', {
+        root: 'packages/pkg1',
+        sourceRoot: 'packages/pkg1/src',
+        targets: {
+          lint: {
+            executor: '@nx/eslint:lint',
+            options: {},
+          },
+        },
+      });
+      writeJson(appTree, 'packages/pkg1/tsconfig.json', {
+        files: [],
+        include: [],
+        references: [],
+      });
+    });
+
+    it('should add a tsconfig.spec.json file', async () => {
+      await generator(appTree, {
+        project: 'pkg1',
+        coverageProvider: 'v8',
+      });
+
+      const tsconfig = readJson(appTree, 'packages/pkg1/tsconfig.json');
+      expect(tsconfig.references).toEqual(
+        expect.arrayContaining([{ path: './tsconfig.spec.json' }])
+      );
+      expect(appTree.read('packages/pkg1/tsconfig.spec.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "../../tsconfig.base.json",
+          "compilerOptions": {
+            "outDir": "./out-tsc/vitest",
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest"
+            ]
+          },
+          "include": [
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts"
+          ]
+        }
+        "
+      `);
+    });
+
+    it(`should setup a task pipeline for the test target to depend on the deps' build target`, async () => {
+      await generator(appTree, {
+        project: 'pkg1',
+        coverageProvider: 'v8',
+      });
+
+      const nxJson = readNxJson(appTree);
+      expect(nxJson.targetDefaults.test.dependsOn).toStrictEqual(['^build']);
     });
   });
 });

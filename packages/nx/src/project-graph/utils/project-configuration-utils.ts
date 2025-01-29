@@ -13,7 +13,8 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { LoadedNxPlugin } from '../plugins/internal-api';
+
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   MergeNodesError,
   ProjectConfigurationsError,
@@ -27,9 +28,11 @@ import {
   isProjectWithNoNameError,
   isAggregateCreateNodesError,
   AggregateCreateNodesError,
+  formatAggregateCreateNodesError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
 
 export type SourceInformation = [file: string | null, plugin: string];
 export type ConfigurationSourceMaps = Record<
@@ -324,7 +327,46 @@ export async function createProjectConfigurations(
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
 
-  const results: Array<ReturnType<LoadedNxPlugin['createNodes'][1]>> = [];
+  let spinner: DelayedSpinner;
+  const inProgressPlugins = new Set<string>();
+
+  function updateSpinner() {
+    if (!spinner || inProgressPlugins.size === 0) {
+      return;
+    }
+
+    if (inProgressPlugins.size === 1) {
+      spinner.setMessage(
+        `Creating project graph nodes with ${
+          inProgressPlugins.values().next().value
+        }`
+      );
+    } else if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      spinner.setMessage(
+        [
+          `Creating project graph nodes with ${inProgressPlugins.size} plugins`,
+          ...Array.from(inProgressPlugins).map((p) => `  - ${p}`),
+        ].join('\n')
+      );
+    } else {
+      spinner.setMessage(
+        `Creating project graph nodes with ${inProgressPlugins.size} plugins`
+      );
+    }
+  }
+
+  spinner = new DelayedSpinner(
+    `Creating project graph nodes with ${plugins.length} plugins`
+  );
+
+  const results: Promise<
+    (readonly [
+      plugin: string,
+      file: string,
+      result: CreateNodesResult,
+      index?: number
+    ])[]
+  >[] = [];
   const errors: Array<
     | AggregateCreateNodesError
     | MergeNodesError
@@ -333,12 +375,10 @@ export async function createProjectConfigurations(
   > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const {
-    createNodes: createNodesTuple,
-    include,
-    exclude,
-    name: pluginName,
-  } of plugins) {
+  for (const [
+    index,
+    { createNodes: createNodesTuple, include, exclude, name: pluginName },
+  ] of plugins.entries()) {
     const [pattern, createNodes] = createNodesTuple ?? [];
 
     if (!pattern) {
@@ -352,44 +392,37 @@ export async function createProjectConfigurations(
       exclude
     );
 
+    inProgressPlugins.add(pluginName);
     let r = createNodes(matchingConfigFiles, {
       nxJsonConfiguration: nxJson,
       workspaceRoot: root,
-    }).catch((e: Error) => {
-      const errorBodyLines = [
-        `An error occurred while processing files for the ${pluginName} plugin.`,
-      ];
-      const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
-        ? // This is an expected error if something goes wrong while processing files.
-          e
-        : // This represents a single plugin erroring out with a hard error.
-          new AggregateCreateNodesError([[null, e]], []);
-
-      const innerErrors = error.errors;
-      for (const [file, e] of innerErrors) {
-        if (file) {
-          errorBodyLines.push(`  - ${file}: ${e.message}`);
-        } else {
-          errorBodyLines.push(`  - ${e.message}`);
-        }
-        if (e.stack) {
-          const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
-          errorBodyLines.push(innerStackTrace);
-        }
-      }
-
-      error.stack = errorBodyLines.join('\n');
-
-      // This represents a single plugin erroring out with a hard error.
-      errors.push(error);
-      // The plugin didn't return partial results, so we return an empty array.
-      return error.partialResults.map((r) => [pluginName, r[0], r[1]] as const);
-    });
+    })
+      .catch((e: Error) => {
+        const error: AggregateCreateNodesError = isAggregateCreateNodesError(e)
+          ? // This is an expected error if something goes wrong while processing files.
+            e
+          : // This represents a single plugin erroring out with a hard error.
+            new AggregateCreateNodesError([[null, e]], []);
+        formatAggregateCreateNodesError(error, pluginName);
+        error.pluginIndex = index;
+        // This represents a single plugin erroring out with a hard error.
+        errors.push(error);
+        // The plugin didn't return partial results, so we return an empty array.
+        return error.partialResults.map(
+          (r) => [pluginName, r[0], r[1], index] as const
+        );
+      })
+      .finally(() => {
+        inProgressPlugins.delete(pluginName);
+        updateSpinner();
+      });
 
     results.push(r);
   }
 
   return Promise.all(results).then((results) => {
+    spinner?.cleanup();
+
     const { projectRootMap, externalNodes, rootMap, configurationSourceMaps } =
       mergeCreateNodesResults(results, nxJson, errors);
 
@@ -424,7 +457,8 @@ function mergeCreateNodesResults(
   results: (readonly [
     plugin: string,
     file: string,
-    result: CreateNodesResult
+    result: CreateNodesResult,
+    index?: number
   ])[][],
   nxJsonConfiguration: NxJsonConfiguration,
   errors: (
@@ -443,7 +477,7 @@ function mergeCreateNodesResults(
   > = {};
 
   for (const result of results.flat()) {
-    const [pluginName, file, nodes] = result;
+    const [pluginName, file, nodes, index] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
       nodes;
@@ -472,6 +506,7 @@ function mergeCreateNodesResults(
             file,
             pluginName,
             error,
+            pluginIndex: index,
           })
         );
       }

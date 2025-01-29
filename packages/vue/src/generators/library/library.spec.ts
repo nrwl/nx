@@ -149,9 +149,9 @@ describe('library', () => {
     expect(eslintJson).toMatchSnapshot();
   });
 
-  it('should support eslint flat config', async () => {
+  it('should support eslint flat config CJS', async () => {
     tree.write(
-      'eslint.config.js',
+      'eslint.config.cjs',
       `const { FlatCompat } = require('@eslint/eslintrc');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
@@ -208,10 +208,80 @@ module.exports = [
 
     await libraryGenerator(tree, defaultSchema);
 
-    const eslintJson = tree.read('my-lib/eslint.config.js', 'utf-8');
+    const eslintJson = tree.read('my-lib/eslint.config.cjs', 'utf-8');
     expect(eslintJson).toMatchSnapshot();
     // assert **/*.vue was added to override in base eslint config
-    const eslintBaseJson = tree.read('eslint.config.js', 'utf-8');
+    const eslintBaseJson = tree.read('eslint.config.cjs', 'utf-8');
+    expect(eslintBaseJson).toContain(
+      `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
+    );
+  });
+
+  it('should support eslint flat config ESM', async () => {
+    tree.write(
+      'eslint.config.mjs',
+      `import { FlatCompat } from '@eslint/eslintrc';
+        import { dirname } from 'path';
+        import { fileURLToPath } from 'url';
+        import js from '@eslint/js';
+        import nx from '@nx/eslint-plugin';
+        import baseConfig from '../eslint.config.mjs';
+
+        const compat = new FlatCompat({
+          baseDirectory: dirname(fileURLToPath(import.meta.url)),
+          recommendedConfig: js.configs.recommended,
+        });
+        
+        export default [
+        { plugins: { '@nx': nxEslintPlugin } },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+  ...compat.config({ env: { jest: true } }).map((config) => ({
+    ...config,
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
+    rules: {
+      ...config.rules,
+    },
+  })),
+]`
+    );
+
+    await libraryGenerator(tree, defaultSchema);
+
+    const eslintJson = tree.read('my-lib/eslint.config.mjs', 'utf-8');
+    expect(eslintJson).toMatchSnapshot();
+    // assert **/*.vue was added to override in base eslint config
+    const eslintBaseJson = tree.read('eslint.config.mjs', 'utf-8');
     expect(eslintBaseJson).toContain(
       `files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],`
     );
@@ -501,6 +571,19 @@ module.exports = [
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'my-lib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "module",
+          "types",
+          "exports",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",
@@ -526,11 +609,13 @@ module.exports = [
             "outDir": "out-tsc/my-lib",
             "resolveJsonModule": true,
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
             "types": [
               "vite/client",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/__tests__/*",
             "src/**/*.spec.vue",
@@ -601,49 +686,6 @@ module.exports = [
             },
           ],
         }
-      `);
-    });
-
-    it('should exclude non-buildable libraries from TS plugin registration', async () => {
-      updateJson(tree, 'nx.json', (json) => {
-        json.plugins = ['@nx/js/typescript'];
-        return json;
-      });
-      await libraryGenerator(tree, {
-        ...defaultSchema,
-        addPlugin: true,
-        setParserOptionsProject: true,
-        linter: 'eslint',
-        bundler: 'none',
-      });
-
-      const nxJson = readJson(tree, 'nx.json');
-      expect(nxJson.plugins).toMatchInlineSnapshot(`
-        [
-          {
-            "exclude": [
-              "my-lib/*",
-            ],
-            "plugin": "@nx/js/typescript",
-          },
-          {
-            "options": {
-              "targetName": "lint",
-            },
-            "plugin": "@nx/eslint/plugin",
-          },
-          {
-            "options": {
-              "buildTargetName": "build",
-              "previewTargetName": "preview",
-              "serveStaticTargetName": "serve-static",
-              "serveTargetName": "serve",
-              "testTargetName": "test",
-              "typecheckTargetName": "typecheck",
-            },
-            "plugin": "@nx/vite/plugin",
-          },
-        ]
       `);
     });
   });

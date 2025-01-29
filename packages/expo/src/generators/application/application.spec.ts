@@ -368,21 +368,18 @@ describe('app', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'my-app/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
         {
-          "compilerOptions": {
-            "allowSyntheticDefaultImports": true,
-            "declaration": true,
-            "jsx": "react-native",
-            "lib": [
-              "dom",
-              "esnext",
-            ],
-            "moduleResolution": "node",
-            "resolveJsonModule": true,
-            "skipLibCheck": true,
-            "strict": true,
-          },
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
@@ -405,11 +402,13 @@ describe('app', () => {
             "noUnusedLocals": false,
             "outDir": "out-tsc/my-app",
             "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/my-app/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "**/*.test.ts",
             "**/*.spec.ts",

@@ -58,13 +58,17 @@ export default async function cypressExecutor(
   process.env.NX_CYPRESS_TARGET_CONFIGURATION = context.configurationName;
   let success;
 
-  for await (const devServerValues of startDevServer(options, context)) {
+  const generatorInstance = startDevServer(options, context);
+  for await (const devServerValues of generatorInstance) {
     try {
       success = await runCypress(devServerValues.baseUrl, {
         ...options,
         portLockFilePath: devServerValues.portLockFilePath,
       });
-      if (!options.watch) break;
+      if (!options.watch) {
+        generatorInstance.return();
+        break;
+      }
     } catch (e) {
       logger.error(e.message);
       success = false;

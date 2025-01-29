@@ -32,6 +32,7 @@ interface Schema {
   standaloneApi?: boolean;
   routing?: boolean;
   packageManager?: PackageManager;
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
   serverRouting?: boolean;

@@ -79,12 +79,15 @@ describe('@nx/vite:init', () => {
           "plugins": [
             {
               "options": {
+                "buildDepsTargetName": "build-deps",
                 "buildTargetName": "build",
+                "devTargetName": "dev",
                 "previewTargetName": "preview",
                 "serveStaticTargetName": "serve-static",
                 "serveTargetName": "serve",
                 "testTargetName": "test",
                 "typecheckTargetName": "typecheck",
+                "watchDepsTargetName": "watch-deps",
               },
               "plugin": "@nx/vite/plugin",
             },
@@ -137,8 +140,9 @@ describe('@nx/vite:init', () => {
     await initGenerator(tree, {});
 
     // ASSERT
-    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(
-      `"vite.config.*.timestamp*"`
-    );
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+      "vite.config.*.timestamp*
+      vitest.config.*.timestamp*"
+    `);
   });
 });

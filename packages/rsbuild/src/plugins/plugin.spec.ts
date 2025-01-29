@@ -15,7 +15,7 @@ jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
   isUsingTsSolutionSetup: jest.fn().mockReturnValue(false),
 }));
 
-describe('@nx/rsbuild/plugin', () => {
+describe('@nx/rsbuild', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
@@ -68,6 +68,11 @@ describe('@nx/rsbuild/plugin', () => {
                 "metadata": {},
                 "root": "my-app",
                 "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
                   "build-something": {
                     "cache": true,
                     "command": "rsbuild build",
@@ -124,12 +129,22 @@ describe('@nx/rsbuild/plugin', () => {
                   },
                   "preview-serve": {
                     "command": "rsbuild preview",
+                    "dependsOn": [
+                      "build-something",
+                      "^build-something",
+                    ],
                     "options": {
                       "args": [
                         "--mode=production",
                       ],
                       "cwd": "my-app",
                     },
+                  },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "dependsOn": [
+                      "build-deps",
+                    ],
                   },
                 },
               },

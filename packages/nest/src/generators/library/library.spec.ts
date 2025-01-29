@@ -398,7 +398,7 @@ describe('lib', () => {
         {
           "compilerOptions": {
             "baseUrl": ".",
-            "emitDeclarationOnly": false,
+            "emitDeclarationOnly": true,
             "forceConsistentCasingInFileNames": true,
             "importHelpers": true,
             "module": "nodenext",
@@ -433,7 +433,15 @@ describe('lib', () => {
       expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
+            "forceConsistentCasingInFileNames": true,
+            "importHelpers": true,
+            "module": "nodenext",
+            "moduleResolution": "nodenext",
+            "noFallthroughCasesInSwitch": true,
+            "noImplicitOverride": true,
+            "noImplicitReturns": true,
             "outDir": "./out-tsc/jest",
+            "strict": true,
             "types": [
               "jest",
               "node",

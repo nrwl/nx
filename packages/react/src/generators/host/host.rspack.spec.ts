@@ -1,4 +1,3 @@
-import * as devkit from '@nx/devkit';
 import { Tree, updateJson, writeJson } from '@nx/devkit';
 import { ProjectGraph, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -9,6 +8,10 @@ jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
   return {
     ...original,
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      dependencies: {},
+      nodes: {},
+    }),
     readCachedProjectGraph: jest.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
@@ -508,7 +511,7 @@ describe('hostGenerator', () => {
             "moduleResolution": "bundler",
             "outDir": "out-tsc/myapp",
             "rootDir": "src",
-            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -516,6 +519,7 @@ describe('hostGenerator', () => {
             ],
           },
           "exclude": [
+            "out-tsc",
             "dist",
             "src/**/*.spec.ts",
             "src/**/*.test.ts",

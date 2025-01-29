@@ -254,7 +254,9 @@ function createConfig(
 
   const defaultConfig = generateDefaultConfig(project, buildOptions);
 
-  if (isWebFramework(options)) {
+  if (options.framework === 'react') {
+    return generateReactConfig(options);
+  } else if (isWebFramework(options)) {
     return generateWebConfig(tree, options, defaultConfig);
   } else if (options.framework === 'nest') {
     return generateNestConfig(tree, options, project, buildOptions);
@@ -336,6 +338,26 @@ module.exports = composePlugins(withNx(), withWeb(${
     return config;
   });
 `;
+}
+
+function generateReactConfig({
+  stylePreprocessorOptions,
+}: ConfigurationWithStylePreprocessorOptions) {
+  return `
+const { composePlugins, withNx, withReact } = require('@nx/rspack');
+
+module.exports = composePlugins(withNx(), withReact(${
+    stylePreprocessorOptions
+      ? `
+  {
+    stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
+  }
+  `
+      : ''
+  }), (config) => {
+  return config;
+});
+    `;
 }
 
 function generateNestConfig(

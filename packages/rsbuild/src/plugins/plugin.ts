@@ -20,6 +20,7 @@ import { existsSync, readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';
 import { minimatch } from 'minimatch';
 import { loadConfig, type RsbuildConfig } from '@rsbuild/core';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -29,6 +30,8 @@ export interface RsbuildPluginOptions {
   previewTargetName?: string;
   inspectTargetName?: string;
   typecheckTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -193,6 +196,7 @@ async function createRsbuildTargets(
 
   targets[options.previewTargetName] = {
     command: `rsbuild preview`,
+    dependsOn: [`${options.buildTargetName}`, `^${options.buildTargetName}`],
     options: {
       cwd: projectRoot,
       args: ['--mode=production'],
@@ -236,6 +240,14 @@ async function createRsbuildTargets(
       },
     };
   }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return { targets, metadata: {} };
 }

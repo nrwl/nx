@@ -10,9 +10,11 @@ import {
 } from '@nx/js/src/utils/generator-prompts';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Schema } from '../schema';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   name: string;
+  projectName: string;
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
@@ -20,7 +22,7 @@ export interface NormalizedSchema extends Schema {
   npmPackageName: string;
   bundler: 'swc' | 'tsc';
   publishable: boolean;
-  unitTestRunner: 'jest' | 'none';
+  unitTestRunner: 'jest' | 'vitest' | 'none';
   linter: LinterType;
   useProjectJson: boolean;
   addPlugin: boolean;
@@ -35,7 +37,7 @@ export async function normalizeOptions(
   const unitTestRunner = await normalizeUnitTestRunnerOption(
     host,
     options.unitTestRunner,
-    ['jest']
+    ['jest', 'vitest']
   );
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
@@ -71,6 +73,9 @@ export async function normalizeOptions(
     bundler: options.compiler ?? 'tsc',
     fileName: projectName,
     name: projectName,
+    projectName: isTsSolutionSetup
+      ? getImportPath(host, projectName)
+      : projectName,
     projectRoot,
     projectDirectory,
     parsedTags,

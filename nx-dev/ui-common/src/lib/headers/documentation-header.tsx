@@ -1,7 +1,6 @@
 'use client';
-import { Fragment, type JSX } from 'react';
-
-import { GitHubIcon } from '@nx/nx-dev/ui-icons';
+import { Fragment, ReactElement } from 'react';
+import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 import {
   Bars3Icon,
   ChevronDownIcon,
@@ -12,22 +11,17 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
-import { Popover, Transition } from '@headlessui/react';
-import { TwoColumnsMenu } from './two-columns-menu';
 import {
-  companyItems,
-  eventItems,
-  featuresItems,
-  learnItems,
-  ossProducts,
-  resourceMenuItems,
-  productsMenuItems,
-} from './menu-items';
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
-import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 
-function Menu({ tabs }: { tabs: any[] }): JSX.Element {
+function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
     <div className="hidden sm:block">
       <nav
@@ -62,7 +56,7 @@ export function DocumentationHeader({
 }: {
   isNavOpen: boolean;
   toggleNav: (value: boolean) => void;
-}): JSX.Element {
+}): ReactElement {
   const router = useRouter();
   let routerPath = router.asPath;
   const isCI: boolean = routerPath.startsWith('/ci');
@@ -134,6 +128,23 @@ export function DocumentationHeader({
         >
           {/*<title>X</title>*/}
           <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Bluesky',
+      label: 'Latest news on Bluesky',
+      href: 'https://bsky.app/profile/nx.dev?utm_source=nx.dev',
+      icon: (props: any) => (
+        <svg
+          fill="currentColor"
+          role="img"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          {...props}
+        >
+          {/*<title>Bluesky</title>*/}
+          <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z" />
         </svg>
       ),
     },
@@ -242,7 +253,7 @@ export function DocumentationHeader({
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -260,7 +271,7 @@ export function DocumentationHeader({
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -271,9 +282,9 @@ export function DocumentationHeader({
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <PopoverPanel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
                       <SectionsMenu sections={resourceMenuItems} />
-                    </Popover.Panel>
+                    </PopoverPanel>
                   </Transition>
                 </>
               )}
@@ -321,12 +332,12 @@ export function DocumentationHeader({
             className="items-justified hidden justify-center space-x-4 lg:flex"
           >
             <ButtonLink
-              href="/nx-cloud"
+              href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
               title="Try Nx Cloud for free"
               variant="primary"
               size="small"
             >
-              <NxCloudAnimatedIcon className="h-4 w-4" aria-hidden="true" />
+              <NxCloudAnimatedIcon className="size-4" aria-hidden="true" />
               <span>Try Nx Cloud for free</span>
             </ButtonLink>
           </nav>

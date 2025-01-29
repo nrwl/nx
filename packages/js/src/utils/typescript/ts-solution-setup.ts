@@ -8,9 +8,10 @@ import {
   updateJson,
   workspaceRoot,
 } from '@nx/devkit';
+import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
-import { relative } from 'node:path/posix';
+import { getNeededCompilerOptionOverrides } from './configuration';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
   const nxJson = readNxJson(tree);
@@ -62,7 +63,7 @@ function isWorkspaceSetupWithTsSolution(tree: Tree): boolean {
   if (
     !baseTsconfigJson.compilerOptions ||
     !baseTsconfigJson.compilerOptions.composite ||
-    !baseTsconfigJson.compilerOptions.declaration
+    baseTsconfigJson.compilerOptions.declaration === false
   ) {
     return false;
   }
@@ -98,7 +99,9 @@ export function assertNotUsingTsSolutionSetup(
     ],
   });
 
-  process.exit(1);
+  throw new Error(
+    `The ${artifactString} doesn't yet support the existing TypeScript setup. See the error above.`
+  );
 }
 
 export function findRuntimeTsConfigName(
@@ -120,16 +123,16 @@ export function updateTsconfigFiles(
   exclude: string[] = [],
   rootDir = 'src'
 ) {
-  if (!isUsingTsSolutionSetup(tree)) return;
+  if (!isUsingTsSolutionSetup(tree)) {
+    return;
+  }
 
   const offset = offsetFromRoot(projectRoot);
-  const tsconfig = `${projectRoot}/${runtimeTsconfigFileName}`;
-  const tsconfigSpec = `${projectRoot}/tsconfig.spec.json`;
-  const e2eRoot = `${projectRoot}-e2e`;
-  const tsconfigE2E = `${e2eRoot}/tsconfig.json`;
+  const runtimeTsconfigPath = `${projectRoot}/${runtimeTsconfigFileName}`;
+  const specTsconfigPath = `${projectRoot}/tsconfig.spec.json`;
 
-  if (tree.exists(tsconfig)) {
-    updateJson(tree, tsconfig, (json) => {
+  if (tree.exists(runtimeTsconfigPath)) {
+    updateJson(tree, runtimeTsconfigPath, (json) => {
       json.extends = joinPathFragments(offset, 'tsconfig.base.json');
 
       json.compilerOptions = {
@@ -141,8 +144,30 @@ export function updateTsconfigFiles(
         ...compilerOptions,
       };
 
+      if (rootDir && rootDir !== '.') {
+        // when rootDir is different from '.', the tsbuildinfo file is output
+        // at `<outDir>/<relative path to config from rootDir>/`, so we need
+        // to set it explicitly to ensure it's output to the outDir
+        // https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile
+        json.compilerOptions.tsBuildInfoFile = join(
+          json.compilerOptions.outDir,
+          basename(runtimeTsconfigFileName, '.json') + '.tsbuildinfo'
+        );
+      } else if (json.compilerOptions.tsBuildInfoFile) {
+        // when rootDir is '.' or not set, it would be output to the outDir, so
+        // we don't need to set it explicitly
+        delete json.compilerOptions.tsBuildInfoFile;
+      }
+
+      // don't duplicate compiler options from base tsconfig
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        'tsconfig.base.json'
+      );
+
       const excludeSet: Set<string> = json.exclude
-        ? new Set(['dist', ...json.exclude, ...exclude])
+        ? new Set(['out-tsc', 'dist', ...json.exclude, ...exclude])
         : new Set(exclude);
       json.exclude = Array.from(excludeSet);
 
@@ -150,28 +175,24 @@ export function updateTsconfigFiles(
     });
   }
 
-  if (tree.exists(tsconfigSpec)) {
-    updateJson(tree, tsconfigSpec, (json) => {
+  if (tree.exists(specTsconfigPath)) {
+    updateJson(tree, specTsconfigPath, (json) => {
       json.extends = joinPathFragments(offset, 'tsconfig.base.json');
       json.compilerOptions = {
         ...json.compilerOptions,
         ...compilerOptions,
       };
+      // don't duplicate compiler options from base tsconfig
+      json.compilerOptions = getNeededCompilerOptionOverrides(
+        tree,
+        json.compilerOptions,
+        'tsconfig.base.json'
+      );
       const runtimePath = `./${runtimeTsconfigFileName}`;
       json.references ??= [];
-      if (!json.references.some((x) => x.path === runtimePath))
+      if (!json.references.some((x) => x.path === runtimePath)) {
         json.references.push({ path: runtimePath });
-      return json;
-    });
-  }
-
-  if (tree.exists(tsconfigE2E)) {
-    // tsconfig.json for e2e projects need to have references array
-    updateJson(tree, tsconfigE2E, (json) => {
-      json.references ??= [];
-      const projectPath = relative(e2eRoot, projectRoot);
-      if (!json.references.some((x) => x.path === projectPath))
-        json.references.push({ path: projectPath });
+      }
       return json;
     });
   }
@@ -180,9 +201,65 @@ export function updateTsconfigFiles(
     updateJson(tree, 'tsconfig.json', (json) => {
       const projectPath = './' + projectRoot;
       json.references ??= [];
-      if (!json.references.some((x) => x.path === projectPath))
+      if (!json.references.some((x) => x.path === projectPath)) {
         json.references.push({ path: projectPath });
+      }
       return json;
     });
   }
+}
+
+export function addProjectToTsSolutionWorkspace(
+  tree: Tree,
+  projectDir: string
+) {
+  // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
+  // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
+  // If the dir is just "foo" then we have to add it as is.
+  const baseDir = dirname(projectDir);
+  const pattern = baseDir === '.' ? projectDir : `${baseDir}/*`;
+  if (tree.exists('pnpm-workspace.yaml')) {
+    const { load, dump } = require('@zkochan/js-yaml');
+    const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
+    const yamlData = load(workspaceFile) ?? {};
+    yamlData.packages ??= [];
+
+    if (!yamlData.packages.includes(pattern)) {
+      yamlData.packages.push(pattern);
+      tree.write(
+        'pnpm-workspace.yaml',
+        dump(yamlData, { indent: 2, quotingType: '"', forceQuotes: true })
+      );
+    }
+  } else {
+    // Update package.json
+    const packageJson = readJson(tree, 'package.json');
+    if (!packageJson.workspaces) {
+      packageJson.workspaces = [];
+    }
+
+    if (!packageJson.workspaces.includes(pattern)) {
+      packageJson.workspaces.push(pattern);
+      tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    }
+  }
+}
+
+export function getProjectType(
+  tree: Tree,
+  projectRoot: string,
+  projectType?: 'library' | 'application'
+): 'library' | 'application' {
+  if (projectType) return projectType;
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
+    return 'library';
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
+    return 'application';
+  // If there are no exports, assume it is an application since both buildable and non-buildable libraries have exports.
+  const packageJsonPath = joinPathFragments(projectRoot, 'package.json');
+  const packageJson = tree.exists(packageJsonPath)
+    ? readJson(tree, joinPathFragments(projectRoot, 'package.json'))
+    : null;
+  if (!packageJson?.exports) return 'application';
+  return 'library';
 }

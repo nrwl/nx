@@ -9,7 +9,7 @@ import {
   ConfigurationResult,
   createProjectConfigurations,
 } from './project-configuration-utils';
-import { LoadedNxPlugin } from '../plugins/internal-api';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
@@ -97,7 +97,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     pluginsToLoad.push(join(__dirname, '../../adapter/angular-json'));
   }
 
-  const plugins = await getPlugins();
+  const plugins = await getPlugins(workspaceRoot);
 
   const res = await retrieveProjectConfigurations(
     plugins,

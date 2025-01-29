@@ -28,10 +28,9 @@ import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator'
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
@@ -149,6 +148,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     skipSerializers: true,
     skipFormat: true,
     addPlugin: options.addPlugin,
+    compiler: options.isTsSolutionSetup ? 'swc' : undefined,
   });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
@@ -256,22 +256,14 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
-  if (options.isTsSolutionSetup && !options.skipWorkspacesWarning) {
-    const projectPackageManagerWorkspaceState =
-      getProjectPackageManagerWorkspaceState(host, options.projectRoot);
-
-    if (projectPackageManagerWorkspaceState !== 'included') {
-      tasks.push(
-        getProjectPackageManagerWorkspaceStateWarningTask(
-          projectPackageManagerWorkspaceState,
-          host.root
-        )
-      );
-    }
+  if (!options.skipFormat) {
+    await formatFiles(host);
   }
 
   return runTasksInSerial(...tasks);
