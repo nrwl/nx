@@ -19,9 +19,9 @@ This article is part of the TypeScript Project References series:
 
 Today we're excited to release a brand new experience for Nx workspaces. Historically, Nx, and many other monorepo tools, have relied on TypeScript's path aliases to connect your many packages to one another. While this approach can work, it does come with some overhead. Apart from runtimes and bundlers requiring special handling, the main limitation is in large monorepos. We've seen larger organizations struggle with slowness, memory issues and editors not being able to properly resolve symbols.
 
-This is why we're releasing a new NPM/Yarn/PNPM/Bun workspaces-based setup combined with TypeScript project references. The new setup is [faster, more efficient in terms of memory use](#key-highlight-performance), and fixes common issue with TypeScript editor support for large monorepos.
+This is why we're releasing a new NPM/Yarn/PNPM/Bun workspaces-based setup combined with TypeScript project references. The new setup is [faster, more efficient in terms of memory use](#key-highlight-performance), and fixes common issues with TypeScript editor support for large monorepos.
 
-**For existing Nx users:** Don't worry as we're not going to deprecate the current TypeScript alias based setup. We are going to have a migration guides and potentially tooling to automate some of it. More about that [later in the article](#nx-by-default-creates-a-typescript-path-aliases-based-setup-is-that-deprecated). Also, for now the new workspaces based setup is behind a `--workspaces` flag as we're gathering feedback and polishing it further.
+**For existing Nx users:** Don't worry as we're not going to deprecate the current TypeScript alias based setup. We are going to have a migration guide and potentially tooling to automate some of it. More about that [later in the article](#nx-by-default-creates-a-typescript-path-aliases-based-setup-is-that-deprecated). Also, for now the new workspaces based setup is behind a `--workspaces` flag as we're gathering feedback and polishing it further.
 
 Ready? Let's dive in!
 
@@ -297,7 +297,7 @@ And this is the **worst-case scenario**, relying solely on the distribution of t
 
 It is important to emphasize that the main reason we can fully leverage these benefits from TypeScript project references is that we avoid the maintenance burden of setting them up manually, thanks to the automated [Nx sync](#automatically-syncing-typescript-project-references) command.
 
-**Struggling with performance in your large TypeScript monorepo?** [Let us know](/contact/engineering). We’ve [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](/contact/engineering)
+**Struggling with performance in your large TypeScript monorepo?** [Let us know](https://bit.ly/3EgXq5x). We’ve [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](https://bit.ly/3EgXq5x)
 
 ## FAQ
 
@@ -333,7 +333,7 @@ For now, we continue to use the TypeScript path alias-based setup for pure Angul
 
 That’s it! Try it out and let us know what you think. If you encounter any issues or have questions, don’t hesitate to reach out. We want to catch all edge cases before making this the default for new Nx workspaces.
 
-If you’re working in a large monorepo and **struggling with the performance issues we discussed**, [reach out](/contact/engineering). We’ve [helped many teams](/customers) tackle similar challenges and would be happy to assist.
+If you’re working in a large monorepo and **struggling with the performance issues we discussed**, [reach out](https://bit.ly/3EgXq5x). We’ve [helped many teams](/customers) tackle similar challenges and would be happy to assist.
 
 ---
 
