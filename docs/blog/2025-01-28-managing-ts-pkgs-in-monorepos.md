@@ -6,7 +6,7 @@ tags: [typescript, monorepo, nx]
 cover_image: /blog/images/articles/bg-managing-typescript-packages.jpg
 ---
 
-{% callout type="deepdive" title="TypeScript Project References Series" %}
+{% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
 
 This article is part of the TypeScript Project References series:
 
