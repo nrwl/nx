@@ -16,7 +16,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
       "{workspaceRoot}/.nx/workflows/agents.yaml",
-      "{workspaceRoot}/.circleci/config.yml"
+      "{workspaceRoot}/.github/workflows/ci.yml"
     ],
     "native": [
       "{projectRoot}/**/*.rs",
@@ -245,7 +245,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 2,
+  "bust": 3,
   "defaultBase": "master",
   "conformance": {
     "rules": [
