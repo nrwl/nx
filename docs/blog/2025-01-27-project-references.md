@@ -7,7 +7,7 @@ cover_image: /blog/images/articles/ts-islands.png
 youtubeUrl: https://youtu.be/SDE3cIq28s8
 ---
 
-{% callout type="deepdive" title="TypeScript Project References Series" %}
+{% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
 
 This article is part of the TypeScript Project References series:
 

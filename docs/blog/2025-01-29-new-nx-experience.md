@@ -7,7 +7,7 @@ cover_image: /blog/images/articles/new-ts-experience-bg.jpg
 youtubeUrl: https://youtu.be/D9D8KNffyBk
 ---
 
-{% callout type="deepdive" title="TypeScript Project References Series" %}
+{% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
 
 This article is part of the TypeScript Project References series:
 
