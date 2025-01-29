@@ -158,6 +158,8 @@ export const getGlobalFlatEslintConfiguration = (
         files: [
           '**/*.ts',
           '**/*.tsx',
+          '**/*.cts',
+          '**/*.mts',
           '**/*.js',
           '**/*.jsx',
           '**/*.cjs',

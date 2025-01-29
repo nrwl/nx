@@ -1,5 +1,57 @@
 # Enterprise Release Notes
 
+### 2025.01
+
+##### Affected project graph
+
+The affected project graph for pull requests has now made it to the on-prem release! Read the full announcement [here](/blog/ci-affected-graph).
+
+##### DTE improvements
+
+- There have been a lot of performance improvements to the DTE algorithm and how tasks get sorted to ensure optimal distribution
+- Improved early agent shutdown: we now look at more parameters to decide whether we can shutdown a DTE agent earlier
+- Project graph integrity checks
+  - both the main job and the agents require the exact same project graph for the DTE algorithm to run correctly
+  - differences can appear, for example, if the agents or main job restore an older cached version of the project graph (instead of re-calculating the current one)
+  - it can also happen if the main job and agents run off of different commits (maybe your main CI job does a `git merge` with `main` and your agents do not)
+  - we now explicitly check if the agents and main job run on the same exact commit hash and also if they use the same project graph: otherwise we fail the DTE early
+- `stop-agents-after` now supports target configs
+  - if you are running two affected commands at different points in your main job, each triggering the same target but under different configurations
+    - `nx affected -t build:config1`
+    - `nx affected -t build:config2`
+  - you can configure agents to wait for both of them to complete before ending the DTE
+    - `--stop-agents-after=build:config1,build:config2,lint,test`
+
+##### Nx Agents improvements
+
+Previously, if an agent ran out of memory or crashed in the middle of its run, the logs would be lost.
+Now, we have a dedicated long-running "log uploader" that can upload logs even if the main agent container crashed.
+To enable, you will need to configure the following env var on your workflow controller:
+
+```yaml
+- name: LOG_UPLOADER_IMAGE
+  value: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-cloud-workflow-log-uploader'
+```
+
+We now also make much fewer requests to GitHub (or your other VCS providers) during a CIPE start, so you should see improved Nx Agents startup times.
+
+##### PR comments look refresh
+
+The PR comment containing status updates about your CI execution has had make-over, showing a more clear breakdown of your runs, their duration and the status:
+
+![new PR comment](/nx-cloud/reference/images/new_github_comment.png)
+
+##### Misc Items
+
+- while we do our best to infer your commit message to display on the CIPE page, if it ever doesn't look right, you can manually override in your CI pipeline by setting `NX_CLOUD_COMMIT_MESSAGE`
+- improved workspace analytics controls
+- we now print more information on the main CI job summary table, such as a direct link to the associated CIPE
+- there is now a workspace level setting enabling or disabling flaky task retrying
+
+### 2024.10.3
+
+- Feat: Support NO_PROXY env var on pods
+
 ### 2024.10.2
 
 - Fix: AWS S3 bucket connections when using STS role-based authentication

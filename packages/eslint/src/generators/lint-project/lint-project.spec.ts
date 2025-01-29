@@ -327,6 +327,8 @@ describe('@nx/eslint:lint-project', () => {
               files: [
                   "**/*.ts",
                   "**/*.tsx",
+                  "**/*.cts",
+                  "**/*.mts",
                   "**/*.js",
                   "**/*.jsx",
                   "**/*.cjs",
@@ -396,6 +398,8 @@ describe('@nx/eslint:lint-project', () => {
               files: [
                   "**/*.ts",
                   "**/*.tsx",
+                  "**/*.cts",
+                  "**/*.mts",
                   "**/*.js",
                   "**/*.jsx",
                   "**/*.cjs",
