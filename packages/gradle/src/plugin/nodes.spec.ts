@@ -26,7 +26,7 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToGradleProjectMap: new Map<string, string>([
         ['proj/build.gradle', 'proj'],
       ]),
-      buildFileToDepsMap: new Map<string, string>(),
+      buildFileToDepsMap: new Map<string, Set<string>>(),
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['proj/build.gradle', new Map([['build', 'build']])],
       ]),
@@ -249,7 +249,7 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToGradleProjectMap: new Map<string, string>([
         ['nested/nested/proj/build.gradle', 'proj'],
       ]),
-      buildFileToDepsMap: new Map<string, string>(),
+      buildFileToDepsMap: new Map<string, Set<string>>(),
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
       ]),
@@ -341,7 +341,7 @@ describe('@nx/gradle/plugin', () => {
         gradleFileToGradleProjectMap: new Map<string, string>([
           ['nested/nested/proj/build.gradle', 'proj'],
         ]),
-        buildFileToDepsMap: new Map<string, string>(),
+        buildFileToDepsMap: new Map<string, Set<string>>(),
         gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
           ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
         ]),
