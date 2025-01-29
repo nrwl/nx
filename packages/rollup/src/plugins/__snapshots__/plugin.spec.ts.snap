@@ -47,6 +47,17 @@ exports[`@nx/rollup/plugin non-root project should create nodes 1`] = `
                 "{workspaceRoot}/mylib/dist",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
           },
         },
       },
@@ -100,6 +111,17 @@ exports[`@nx/rollup/plugin non-root project should create nodes 2`] = `
               "outputs": [
                 "{workspaceRoot}/mylib/build",
                 "{workspaceRoot}/mylib/dist",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "dependsOn": [
+                "build-deps",
               ],
             },
           },
@@ -156,6 +178,17 @@ exports[`@nx/rollup/plugin root project should create nodes 1`] = `
                 "{workspaceRoot}/dist",
               ],
             },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
           },
         },
       },
@@ -208,6 +241,17 @@ exports[`@nx/rollup/plugin root project should create nodes 2`] = `
               },
               "outputs": [
                 "{workspaceRoot}/dist",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects mylib --includeDependentProjects -- npx nx build-deps mylib",
+              "dependsOn": [
+                "build-deps",
               ],
             },
           },

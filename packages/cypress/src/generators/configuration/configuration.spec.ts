@@ -8,6 +8,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import cypressE2EConfigurationGenerator from './configuration';
@@ -554,6 +555,77 @@ export default defineConfig({
         });
         "
       `);
+    });
+
+    describe('TS Solution Setup', () => {
+      beforeEach(() => {
+        updateJson(tree, 'package.json', (json) => {
+          json.workspaces = ['packages/*', 'apps/*'];
+          return json;
+        });
+        writeJson(tree, 'tsconfig.base.json', {
+          compilerOptions: {
+            composite: true,
+            declaration: true,
+          },
+        });
+        writeJson(tree, 'tsconfig.json', {
+          extends: './tsconfig.base.json',
+          files: [],
+          references: [],
+        });
+      });
+
+      it('should handle existing tsconfig.json files', async () => {
+        addProject(tree, { name: 'my-lib', type: 'libs' });
+        writeJson(tree, 'libs/my-lib/tsconfig.json', {
+          include: [],
+          files: [],
+          references: [],
+        });
+
+        await cypressE2EConfigurationGenerator(tree, {
+          project: 'my-lib',
+          baseUrl: 'http://localhost:4200',
+          js: true,
+        });
+
+        expect(tree.read('libs/my-lib/tsconfig.json', 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "{
+            "include": [],
+            "files": [],
+            "references": [
+              {
+                "path": "./src/tsconfig.json"
+              }
+            ]
+          }
+          "
+        `);
+        expect(tree.read('libs/my-lib/src/tsconfig.json', 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "{
+            "extends": "../../../tsconfig.base.json",
+            "compilerOptions": {
+              "outDir": "out-tsc/cypress",
+              "allowJs": true,
+              "types": ["cypress", "node"],
+              "sourceMap": false
+            },
+            "include": [
+              "**/*.ts",
+              "**/*.js",
+              "../cypress.config.ts",
+              "../**/*.cy.ts",
+              "../**/*.cy.js",
+              "../**/*.d.ts"
+            ],
+            "exclude": ["out-tsc", "test-output"]
+          }
+          "
+        `);
+      });
     });
   });
 });

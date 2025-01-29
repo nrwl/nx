@@ -78,6 +78,16 @@ import {
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { DelayedSpinner } from '../../utils/delayed-spinner';
+import {
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
+import {
+  HandlePostTasksExecutionMessage,
+  HandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -431,6 +441,26 @@ export class DaemonClient {
       createdFiles,
       updatedFiles,
       deletedFiles,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPreTasksExecution(
+    context: PreTasksExecutionContext
+  ): Promise<NodeJS.ProcessEnv[]> {
+    const message: HandlePreTasksExecutionMessage = {
+      type: PRE_TASKS_EXECUTION,
+      context,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPostTasksExecution(
+    context: PostTasksExecutionContext
+  ): Promise<void> {
+    const message: HandlePostTasksExecutionMessage = {
+      type: POST_TASKS_EXECUTION,
+      context,
     };
     return this.sendToDaemonViaQueue(message);
   }

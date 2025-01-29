@@ -45,10 +45,6 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
-import {
-  TerminalVideo,
-  terminalVideo,
-} from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
@@ -93,7 +89,6 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
-      'terminal-video': terminalVideo,
       toc: tableOfContents,
       tweet,
       youtube,
@@ -125,7 +120,6 @@ export const getMarkdocCustomConfig = (
     Tab,
     Tabs,
     TableOfContents,
-    TerminalVideo,
     Tweet,
     YouTube,
     VideoLink,

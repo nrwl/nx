@@ -15,7 +15,7 @@ import {
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
 import { NxPluginV2 } from '../plugins';
-import { LoadedNxPlugin } from '../plugins/internal-api';
+import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname } from 'path';
 import { isProjectConfigurationsError } from '../error-types';
 

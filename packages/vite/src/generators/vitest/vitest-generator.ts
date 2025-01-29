@@ -12,9 +12,13 @@ import {
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
@@ -117,7 +121,7 @@ getTestBed().initTestEnvironment(
         tree,
         {
           project: schema.project,
-          includeLib: projectType === 'library',
+          includeLib: getProjectType(tree, root, projectType) === 'library',
           includeVitest: true,
           inSourceTests: schema.inSourceTests,
           rollupOptionsExternal: [
@@ -141,15 +145,29 @@ getTestBed().initTestEnvironment(
         {
           ...schema,
           includeVitest: true,
-          includeLib: projectType === 'library',
+          includeLib: getProjectType(tree, root, projectType) === 'library',
         },
         true
       );
     }
   }
 
-  createFiles(tree, schema, root);
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
+  createFiles(tree, schema, root, isTsSolutionSetup);
   updateTsConfig(tree, schema, root, projectType);
+
+  if (isTsSolutionSetup) {
+    // in the TS solution setup, the test target depends on the build outputs
+    // so we need to setup the task pipeline accordingly
+    const nxJson = readNxJson(tree);
+    const testTarget = schema.testTarget ?? 'test';
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[testTarget] ??= {};
+    nxJson.targetDefaults[testTarget].dependsOn ??= [];
+    nxJson.targetDefaults[testTarget].dependsOn.push('^build');
+    updateNxJson(tree, nxJson);
+  }
 
   const coverageProviderDependency = getCoverageProviderDependency(
     schema.coverageProvider
@@ -250,7 +268,9 @@ function updateTsConfig(
 
   let runtimeTsconfigPath = joinPathFragments(
     projectRoot,
-    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json'
+    getProjectType(tree, projectRoot, projectType) === 'application'
+      ? 'tsconfig.app.json'
+      : 'tsconfig.lib.json'
   );
   if (options.runtimeTsconfigFileName) {
     runtimeTsconfigPath = joinPathFragments(
@@ -304,9 +324,9 @@ function updateTsConfig(
 function createFiles(
   tree: Tree,
   options: VitestGeneratorSchema,
-  projectRoot: string
+  projectRoot: string,
+  isTsSolutionSetup: boolean
 ) {
-  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const rootOffset = offsetFromRoot(projectRoot);
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {

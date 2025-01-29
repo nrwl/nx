@@ -27,7 +27,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
   ) {
     super(
       tree,
-      '@angular-eslint/builder:lint',
+      ['@angular-eslint/builder:lint'],
       'eslint',
       project,
       projectConfig,

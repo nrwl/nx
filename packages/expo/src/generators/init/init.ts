@@ -55,6 +55,16 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
           'expo:run-android',
           'expo-run-android',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'expo:build-deps',
+          'expo-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'expo:watch-deps',
+          'expo-watch-deps',
+        ],
       },
 
       schema.updatePackageScripts

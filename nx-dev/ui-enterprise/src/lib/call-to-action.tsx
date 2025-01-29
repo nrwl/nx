@@ -64,7 +64,7 @@ export function CallToAction(): ReactElement {
         <div className="mt-10">
           <Link
             aria-label="Request a free trial"
-            href="/contact/sales"
+            href="/enterprise/trial"
             prefetch={false}
             title="Request a free trial"
             onClick={() =>

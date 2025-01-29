@@ -1,9 +1,8 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   getPackageManagerCommand,
   getProjects,
+  ProjectGraph,
   readJson,
   readNxJson,
   Tree,
@@ -20,6 +19,17 @@ const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
+
+let projectGraph: ProjectGraph;
+jest.mock('@nx/devkit', () => {
+  const original = jest.requireActual('@nx/devkit');
+  return {
+    ...original,
+    createProjectGraphAsync: jest
+      .fn()
+      .mockImplementation(() => Promise.resolve(projectGraph)),
+  };
+});
 
 const packageCmd = getPackageManagerCommand().exec;
 
@@ -41,6 +51,7 @@ describe('app', () => {
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
+    projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
   });
 
   describe('not nested', () => {
@@ -88,10 +99,8 @@ describe('app', () => {
         addPlugin: true,
       });
 
-      expect(
-        appTree.read('my-app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchInlineSnapshot(
-        `
+      expect(appTree.read('my-app-e2e/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
         import { defineConfig } from 'cypress';
 
@@ -101,18 +110,17 @@ describe('app', () => {
               "cypressDir": "src",
               "bundler": "vite",
               "webServerCommands": {
-                "default": "${packageCmd} nx run my-app:serve",
-                "production": "${packageCmd} nx run my-app:preview"
+                "default": "npx nx run my-app:dev",
+                "production": "npx nx run my-app:preview"
               },
-              "ciWebServerCommand": "${packageCmd} nx run my-app:preview",
+              "ciWebServerCommand": "npx nx run my-app:preview",
               "ciBaseUrl": "http://localhost:4300"
             }),
             baseUrl: 'http://localhost:4200'
           }
         });
         "
-      `
-      );
+      `);
     });
 
     it('should setup playwright correctly for vite', async () => {
@@ -137,7 +145,6 @@ describe('app', () => {
       const snapshot = `
         "import { defineConfig, devices } from '@playwright/test';
         import { nxE2EPreset } from '@nx/playwright/preset';
-
         import { workspaceRoot } from '@nx/devkit';
 
         // For CI, you may want to set BASE_URL to the deployed application.
@@ -1279,7 +1286,7 @@ describe('app', () => {
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'package.json', (json) => {
-        json.workspaces = ['packages/**', 'apps/**'];
+        json.workspaces = ['packages/*', 'apps/*'];
         return json;
       });
       writeJson(appTree, 'tsconfig.base.json', {
@@ -1315,6 +1322,15 @@ describe('app', () => {
           {
             "path": "./myapp",
           },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(appTree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
         ]
       `);
       expect(readJson(appTree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
@@ -1482,10 +1498,10 @@ describe('app', () => {
 
       const packageJson = readJson(appTree, 'package.json');
       expect(packageJson.workspaces).toEqual([
-        'packages/**',
-        'apps/**',
+        'packages/*',
+        'apps/*',
         'myapp',
-        'libs/**',
+        'libs/*',
       ]);
     });
 
@@ -1519,11 +1535,24 @@ describe('app', () => {
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
       });
+      await applicationGenerator(appTree, {
+        directory: 'packages/shared/util',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'none',
+        e2eTestRunner: 'none',
+      });
 
       const pnpmContent = appTree.read('pnpm-workspace.yaml', 'utf-8');
       const pnpmWorkspaceFile = load(pnpmContent);
 
-      expect(pnpmWorkspaceFile.packages).toEqual(['myapp', 'apps/**']);
+      expect(pnpmWorkspaceFile.packages).toEqual([
+        'myapp',
+        'apps/*',
+        'packages/shared/*',
+      ]);
     });
   });
 
@@ -1549,5 +1578,56 @@ describe('app', () => {
         expect(configContents).toMatchSnapshot();
       }
     );
+  });
+
+  describe('react 19 support', () => {
+    beforeEach(() => {
+      projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
+    });
+
+    it('should add react 19 dependencies when react version is not found', async () => {
+      projectGraph.externalNodes['npm:react'] = undefined;
+      const tree = createTreeWithEmptyWorkspace();
+
+      await applicationGenerator(tree, {
+        ...schema,
+        directory: 'my-dir/my-app',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
+        `"19.0.0"`
+      );
+      expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
+        `"19.0.0"`
+      );
+    });
+
+    it('should add react 18 dependencies when react version is already 18', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+
+      projectGraph.externalNodes['npm:react'] = {
+        type: 'npm',
+        name: 'npm:react',
+        data: {
+          version: '18.3.1',
+          packageName: 'react',
+          hash: 'sha512-4+0/v9+l9/3+3/2+2/1+1/0',
+        },
+      };
+
+      await applicationGenerator(tree, {
+        ...schema,
+        directory: 'my-dir/my-app',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+      expect(packageJson.dependencies['react']).toMatchInlineSnapshot(
+        `"18.3.1"`
+      );
+      expect(packageJson.dependencies['react-dom']).toMatchInlineSnapshot(
+        `"18.3.1"`
+      );
+    });
   });
 });

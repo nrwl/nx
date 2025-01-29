@@ -24,6 +24,7 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -32,6 +33,8 @@ export interface WebpackPluginOptions {
   serveTargetName?: string;
   serveStaticTargetName?: string;
   previewTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type WebpackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -167,10 +170,12 @@ async function createWebpackTargets(
 
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
-  const outputPath = normalizeOutputPath(
-    webpackOptions.output?.path,
-    projectRoot
-  );
+  const outputs = [];
+  for (const config of webpackOptions) {
+    if (config.output?.path) {
+      outputs.push(normalizeOutputPath(config.output.path, projectRoot));
+    }
+  }
 
   const targets: Record<string, TargetConfiguration> = {};
 
@@ -195,7 +200,7 @@ async function createWebpackTargets(
               externalDependencies: ['webpack-cli'],
             },
           ],
-    outputs: [outputPath],
+    outputs,
     metadata: {
       technologies: ['webpack'],
       description: 'Runs Webpack build',
@@ -275,6 +280,14 @@ async function createWebpackTargets(
     ];
   }
 
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
+
   return { targets, metadata: {} };
 }
 
@@ -317,5 +330,7 @@ function normalizeOptions(
     serveTargetName: options?.serveTargetName ?? 'serve',
     serveStaticTargetName: options?.serveStaticTargetName ?? 'serve-static',
     previewTargetName: options?.previewTargetName ?? 'preview',
+    buildDepsTargetName: 'build-deps',
+    watchDepsTargetName: 'watch-deps',
   };
 }

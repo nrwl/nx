@@ -16,6 +16,7 @@
     ],
     "executors": [],
     "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-azure-cache",
     "packageName": "@nx/powerpack-azure-cache",
@@ -35,6 +36,17 @@
         "path": "powerpack-conformance/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+      },
+      {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/powerpack-conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "powerpack-conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/powerpack-conformance/create-conformance-rule"
       }
     ],
     "executors": [
@@ -48,7 +60,18 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Create a new conformance rule",
+        "file": "external-generated/packages/powerpack-conformance/generators/create-rule.json",
+        "hidden": false,
+        "name": "create-rule",
+        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/generators/create-rule/schema.json",
+        "path": "powerpack-conformance/generators/create-rule",
+        "type": "generator"
+      }
+    ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-conformance",
     "packageName": "@nx/powerpack-conformance",
@@ -70,6 +93,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-enterprise-cloud",
     "packageName": "@nx/powerpack-enterprise-cloud",
@@ -93,6 +117,7 @@
     ],
     "executors": [],
     "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-gcs-cache",
     "packageName": "@nx/powerpack-gcs-cache",
@@ -104,6 +129,7 @@
     "documents": [],
     "executors": [],
     "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-license",
     "packageName": "@nx/powerpack-license",
@@ -146,6 +172,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-owners",
     "packageName": "@nx/powerpack-owners",
@@ -168,17 +195,8 @@
       }
     ],
     "executors": [],
-    "generators": [
-      {
-        "description": "Initialize the S3 Cache",
-        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
-        "path": "powerpack-s3-cache/generators/init",
-        "type": "generator"
-      }
-    ],
+    "generators": [],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-s3-cache",
     "packageName": "@nx/powerpack-s3-cache",
@@ -212,6 +230,7 @@
         "type": "generator"
       }
     ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "powerpack-shared-fs-cache",
     "packageName": "@nx/powerpack-shared-fs-cache",

@@ -101,9 +101,9 @@ export function Cards({
   );
 }
 
-function callIfFunction(fn: any) {
+function callIfFunction(fn: any, props: { [key: string]: string } = {}) {
   if (typeof fn === 'function') {
-    return fn({});
+    return fn(props);
   }
   return fn;
 }
@@ -142,7 +142,8 @@ export function LinkCard({
             (frameworkIcons[icon as Framework]?.image ||
               callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
               callIfFunction(
-                (heroIcons[icon as keyof typeof heroIcons] as any)?.render
+                (heroIcons[icon as keyof typeof heroIcons] as any)?.render,
+                { className: 'w-full h-full' }
               ))}
         </div>
       )}

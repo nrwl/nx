@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   className: string; // app name in class case
@@ -56,6 +57,8 @@ export async function normalizeOptions(
 
   const entryFile = options.js ? 'src/main.js' : 'src/main.tsx';
 
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
+
   return {
     ...options,
     name: projectNames.projectSimpleName,
@@ -63,7 +66,9 @@ export async function normalizeOptions(
     fileName,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,
-    projectName: appProjectName,
+    projectName: isTsSolutionSetup
+      ? getImportPath(host, appProjectName)
+      : appProjectName,
     appProjectRoot,
     iosProjectRoot,
     androidProjectRoot,
@@ -72,6 +77,6 @@ export async function normalizeOptions(
     rootProject,
     e2eProjectName,
     e2eProjectRoot,
-    isTsSolutionSetup: isUsingTsSolutionSetup(host),
+    isTsSolutionSetup,
   };
 }

@@ -9,3 +9,4 @@ export * from './lib/vmware-testimonial';
 export * from './lib/scale-your-organization';
 export * from './lib/testimonial-carousel';
 export * from './lib/download-case-study';
+export * from './lib/trial-nx-enterprise';
