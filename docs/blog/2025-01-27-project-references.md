@@ -12,8 +12,8 @@ youtubeUrl: https://youtu.be/SDE3cIq28s8
 This article is part of the TypeScript Project References series:
 
 - **Everything You Need to Know About TypeScript Project References**
-- _Managing TypeScript Packages in Monorepos_ (coming soon)
-- _A new Nx Experience For TypeScript Monorepos_ (coming soon)
+- [Managing TypeScript Packages in Monorepos](/blog/managing-ts-packages-in-monorepos)
+- [A new Nx Experience For TypeScript Monorepos and Beyond](/blog/new-nx-experience-for-typescript-monorepos)
 
 {% /callout %}
 
