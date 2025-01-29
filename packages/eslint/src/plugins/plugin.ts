@@ -36,6 +36,8 @@ export interface EslintPluginOptions {
 
 const DEFAULT_EXTENSIONS = [
   'ts',
+  'cts',
+  'mts',
   'tsx',
   'js',
   'cjs',
