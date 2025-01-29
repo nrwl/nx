@@ -19,7 +19,7 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/rust:1.73.0-browsers
+      - image: cimg/rust:1.84.0-browsers
     resource_class: medium+
 
   macos:
