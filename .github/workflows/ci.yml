@@ -8,9 +8,6 @@ on:
     branches:
       - "**"
 
-env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-
 jobs:
   main-linux:
     runs-on: ubuntu-latest
@@ -63,7 +60,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Check Documentation
-        run: pnpm nx documentation --no-dte
+        run: pnpm nx documentation
         timeout-minutes: 20
 
       - name: Run Checks/Lint/Test/Build
@@ -79,7 +76,7 @@ jobs:
           pnpm nx-cloud record -- nx-cloud conformance:check
           pids+=($!)
 
-          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
+          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
           pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
