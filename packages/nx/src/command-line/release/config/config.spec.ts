@@ -28,13 +28,6 @@ describe('createNxReleaseConfig()', () => {
   let tempFs: TempFs;
 
   beforeEach(async () => {
-    try {
-      require('../../../native');
-    } catch (e) {
-      console.log("COULDN'T REQUIRE NATIVE MODULE");
-      console.log(e.cause);
-    }
-
     tempFs = new TempFs('nx-release-config-test');
     await tempFs.createFiles({
       'package.json': JSON.stringify({
