@@ -11,7 +11,7 @@ Follow the specific instructions for your package manager to enable workspaces p
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "libs/**"]
+  "workspaces": ["apps/*", "libs/*"]
 }
 ```
 
@@ -32,7 +32,7 @@ If you reference a local library project with its own `build` task, you should i
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "libs/**"]
+  "workspaces": ["apps/*", "libs/*"]
 }
 ```
 
@@ -53,7 +53,7 @@ If you reference a local library project with its own `build` task, you should i
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "libs/**"]
+  "workspaces": ["apps/*", "libs/*"]
 }
 ```
 
@@ -74,8 +74,8 @@ If you reference a local library project with its own `build` task, you should i
 
 ```yaml {% fileName="pnpm-workspace.yaml" %}
 packages:
-  - 'apps/**'
-  - 'libs/**'
+  - 'apps/*'
+  - 'libs/*'
 ```
 
 Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
@@ -172,18 +172,71 @@ The root `tsconfig.json` file should extend `tsconfig.base.json` and not include
 {% /tab %}
 {% /tabs %}
 
+## Register Nx Typescript Plugin
+
+Make sure that the `@nx/js` plugin is installed in your repository and `@nx/js/typescript` is registered as a plugin in the `nx.json` file.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    }
+  ]
+}
+```
+
+This plugin will register a [sync generator](/concepts/sync-generators) to automatically maintain the project references across the repository.
+
 ## Create Individual Project package.json files
 
 When using package manager project linking, every project needs to have a `package.json` file. You can leave all the task configuration in the existing `project.json` file. For application projects, you only need to specify the `name` property. For library projects, you should add an `exports` property that accounts for any TypeScript path aliases that referenced the project. A typical configuration is shown below:
+
+{% tabs %}
+{% tab label="Non-buildable library" %}
 
 ```json {% fileName="libs/ui/package.json" %}
 {
   "name": "@myorg/ui",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    }
   }
 }
 ```
+
+{% /tab %}
+{% tab label="Buildable Library" %}
+
+```json {% fileName="libs/ui/package.json" %}
+{
+  "name": "@myorg/ui",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="warning" title="Package Names with Multiple Slashes" %}
 The `package.json` name can only have one `/` character in it. This is more restrictive than the TypeScript path aliases. So if you have a project that you have been referencing with `@myorg/shared/ui`, you'll need to make the `package.json` name be something like `@myorg/shared-ui` and update all the import statements in your codebase to reference the new name.
@@ -191,7 +244,7 @@ The `package.json` name can only have one `/` character in it. This is more rest
 
 ## Update Individual Project TypeScript Configuration
 
-Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies.
+Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies. Remove any `compilerOptions` listed and combine them with the options listed in the `tsconfig.lib.json` and `tsconfig.spec.json` files.
 
 ```jsonc {% fileName="libs/ui/tsconfig.json" %}
 {
@@ -211,12 +264,14 @@ Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file 
 }
 ```
 
-Each project's `tsconfig.lib.json` file extends the project's `tsconfig.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies.
+Each project's `tsconfig.lib.json` file extends the root `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies.
 
 ```jsonc {% fileName="libs/ui/tsconfig.lib.json" %}
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // outDir should be local to the project and not in the same folder as any other tsconfig.*.json
+    "outDir": "./out-tsc/lib"
     // Any overrides
   },
   "include": ["src/**/*.ts"],
@@ -234,8 +289,10 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 
 ```jsonc {% fileName="libs/ui/tsconfig.spec.json" %}
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // outDir should be local to the project and not in the same folder as any other tsconfig.*.json
+    "outDir": "./out-tsc/spec"
     // Any overrides
   },
   "include": [
@@ -251,6 +308,38 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 ```
 
 After creating these `tsconfig.*.json` files, run `nx sync` to have Nx automatically add the correct references for each project.
+
+### Vite Configuration Updates
+
+If you are using Vite to build a project, you need to update the `vite.config.ts` file for each project.
+
+1. Remove the `nxViteTsPaths` plugin from the `plugins` array.
+2. Set the `build.outDir` to `./dist` relative to the project's folder.
+3. Make sure the `build.lib.name` matches the full name of the project, including the organization.
+
+```ts {% fileName="libs/ui/vite.config.ts" %}
+export default defineConfig({
+  // ...
+  plugins: [
+    // any needed plugins, but remove nxViteTsPaths
+    react(),
+    nxCopyAssetsPlugin(['*.md', 'package.json']),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+    }),
+  ],
+  build: {
+    // ...
+    outDir: './dist',
+    // ...
+    lib: {
+      name: '@myorg/ui',
+      // ...
+    },
+  },
+});
+```
 
 ## Future Plans
 
