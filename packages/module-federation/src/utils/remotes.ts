@@ -51,6 +51,9 @@ function handleArrayRemote(
 
   // If remote location already has .js or .mjs extension
   if (['.js', '.mjs', '.json'].includes(remoteLocationExt)) {
+    if (isRemoteGlobal && !remoteLocation.startsWith(`${mfRemoteName}@`)) {
+      return `${mfRemoteName}@${remoteLocation}`;
+    }
     return remoteLocation;
   }
 
