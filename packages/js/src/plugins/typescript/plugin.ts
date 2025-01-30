@@ -51,6 +51,7 @@ export interface TscPluginOptions {
         buildDepsName?: string;
         watchDepsName?: string;
       };
+  verboseOutput?: boolean;
 }
 
 interface NormalizedPluginOptions {
@@ -67,6 +68,7 @@ interface NormalizedPluginOptions {
         buildDepsName?: string;
         watchDepsName?: string;
       };
+  verboseOutput: boolean;
 }
 
 type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
@@ -263,12 +265,6 @@ function buildTscTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
   const tsConfig = readCachedTsConfig(configFilePath);
 
-  // TODO: check whether we want to always run with --pretty --verbose, it makes replacing scripts harder
-  // `--verbose` conflicts with `tsc -b --clean`, might be another reason for not using it, it would
-  // prevent users from running the task with `--clean` flag.
-  // Should we consider creating a different optional target for `--clean`?
-  // Should we consider having a plugin option to disable `--pretty` and `--verbose`?
-
   let internalProjectReferences: Record<string, ParsedCommandLine>;
   // Typecheck target
   if (basename(configFilePath) === 'tsconfig.json' && options.typecheck) {
@@ -284,7 +280,9 @@ function buildTscTargets(
     );
     const targetName = options.typecheck.targetName;
     if (!targets[targetName]) {
-      let command = `tsc --build --emitDeclarationOnly --pretty --verbose`;
+      let command = `tsc --build --emitDeclarationOnly${
+        options.verboseOutput ? ' --verbose' : ''
+      }`;
       if (
         tsConfig.options.noEmit ||
         Object.values(internalProjectReferences).some(
@@ -348,7 +346,9 @@ function buildTscTargets(
 
     targets[targetName] = {
       dependsOn: [`^${targetName}`],
-      command: `tsc --build ${options.build.configName} --pretty --verbose`,
+      command: `tsc --build ${options.build.configName}${
+        options.verboseOutput ? ' --verbose' : ''
+      }`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: getInputs(
@@ -1009,6 +1009,7 @@ function normalizePluginOptions(
   return {
     typecheck,
     build,
+    verboseOutput: pluginOptions.verboseOutput ?? false,
   };
 }
 

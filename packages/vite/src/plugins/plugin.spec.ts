@@ -97,6 +97,49 @@ describe('@nx/vite/plugin', () => {
       expect(targets?.['serve-input'].command).toMatch(/vite/);
     });
 
+    it('should infer typecheck with -p flag when not using TS solution setup', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
+        `tsc --noEmit -p tsconfig.json`
+      );
+      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
+        .toMatchInlineSnapshot(`
+        {
+          "description": "Runs type-checking for the project.",
+          "help": {
+            "command": "npx tsc -p tsconfig.json --help",
+            "example": {
+              "options": {
+                "noEmit": true,
+              },
+            },
+          },
+          "technologies": [
+            "typescript",
+          ],
+        }
+      `);
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.dependsOn
+      ).toBeUndefined();
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
+      ).toBeUndefined();
+    });
+
     it('should infer typecheck with --build flag when using TS solution setup', async () => {
       (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
       tempFs.createFileSync('tsconfig.json', '');
@@ -114,8 +157,31 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes[0][1].projects['.'].targets.typecheck.command).toEqual(
-        `tsc --build --emitDeclarationOnly --pretty --verbose`
+        `tsc --build --emitDeclarationOnly`
       );
+      expect(nodes[0][1].projects['.'].targets.typecheck.metadata)
+        .toMatchInlineSnapshot(`
+        {
+          "description": "Runs type-checking for the project.",
+          "help": {
+            "command": "npx tsc --build --help",
+            "example": {
+              "args": [
+                "--force",
+              ],
+            },
+          },
+          "technologies": [
+            "typescript",
+          ],
+        }
+      `);
+      expect(nodes[0][1].projects['.'].targets.typecheck.dependsOn).toEqual([
+        `^typecheck`,
+      ]);
+      expect(
+        nodes[0][1].projects['.'].targets.typecheck.syncGenerators
+      ).toEqual(['@nx/js:typescript-sync']);
     });
 
     it('should infer the sync generator when using TS solution setup', async () => {
