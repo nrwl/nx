@@ -73,7 +73,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
             },
             "tsc": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -83,6 +83,20 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
@@ -174,7 +188,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
             },
             "tsc": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -184,6 +198,20 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
@@ -270,7 +298,7 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -280,6 +308,20 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },
@@ -364,7 +406,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
             },
             "tsc": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -374,6 +416,20 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": "my-app",
               },
@@ -459,7 +515,7 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc",
+              "command": "tsc --noEmit",
               "inputs": [
                 "production",
                 "^production",
@@ -469,6 +525,20 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
                   ],
                 },
               ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "npx tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
               "options": {
                 "cwd": ".",
               },
