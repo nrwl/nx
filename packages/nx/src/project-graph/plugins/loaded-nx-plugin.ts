@@ -143,11 +143,11 @@ export class LoadedNxPlugin {
         }
         return updates;
       };
+    }
 
-      if (plugin.postTasksExecution) {
-        this.postTasksExecution = async (context: PostTasksExecutionContext) =>
-          plugin.postTasksExecution(this.options, context);
-      }
+    if (plugin.postTasksExecution) {
+      this.postTasksExecution = async (context: PostTasksExecutionContext) =>
+        plugin.postTasksExecution(this.options, context);
     }
   }
 }
