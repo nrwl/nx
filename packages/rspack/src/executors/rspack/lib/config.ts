@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { ExecutorContext } from '@nx/devkit';
 import { type Configuration } from '@rspack/core';
 import {
@@ -14,7 +13,7 @@ export async function getRspackConfigs(
   options: NormalizedRspackExecutorSchema & { devServer?: any },
   context: ExecutorContext
 ): Promise<Configuration | Configuration[]> {
-  let userDefinedConfig = resolveUserDefinedRspackConfig(
+  let userDefinedConfig = await resolveUserDefinedRspackConfig(
     options.rspackConfig,
     options.tsConfig
   );
