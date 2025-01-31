@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type ReactNode } from 'react';
 import cx from 'classnames';
 import {
   ChevronRightIcon,
@@ -84,22 +84,22 @@ export function Callout({
   title,
   type,
   children,
-  defaultExpanded = false,
+  expanded = false,
 }: {
   title: string;
   type: CalloutType;
   children: ReactNode;
-  defaultExpanded?: boolean;
+  expanded?: boolean;
 }) {
-  const [isOpen, setIsOpen] = useState(type !== 'deepdive');
+  const [isOpen, setIsOpen] = useState(type !== 'deepdive' || expanded);
   const ui = typeMap[type] || typeMap.note;
   const isCollapsible = type === 'deepdive';
 
   useEffect(() => {
     if (isCollapsible) {
-      setIsOpen(defaultExpanded);
+      setIsOpen(expanded);
     }
-  }, [defaultExpanded, isCollapsible]);
+  }, [expanded, isCollapsible]);
 
   const toggleOpen = () => {
     if (isCollapsible) {

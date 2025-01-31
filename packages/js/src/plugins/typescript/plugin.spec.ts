@@ -71,7 +71,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                  "command": "tsc --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -126,7 +126,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                  "command": "tsc --build --emitDeclarationOnly",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -184,7 +184,180 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "typecheck": {
                   "cache": true,
-                  "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                  "command": "tsc --build --emitDeclarationOnly",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a node with a typecheck target with "--verbose" flag when the "verboseOutput" plugin option is true', async () => {
+      // Sibling package.json
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/package.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, { verboseOutput: true })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+
+      // Sibling project.json
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, { verboseOutput: true })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsc --build --emitDeclarationOnly --verbose",
+                  "dependsOn": [
+                    "^typecheck",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Runs type-checking for the project.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+
+      // Other tsconfigs present
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{}`,
+        'libs/my-lib/tsconfig.build.json': `{}`,
+        'libs/my-lib/tsconfig.spec.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, { verboseOutput: true })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "typecheck": {
+                  "cache": true,
+                  "command": "tsc --build --emitDeclarationOnly --verbose",
                   "dependsOn": [
                     "^typecheck",
                   ],
@@ -480,7 +653,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -548,7 +721,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -625,7 +798,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -717,7 +890,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -770,7 +943,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1020,7 +1193,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1095,7 +1268,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1160,7 +1333,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1231,7 +1404,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -1271,7 +1444,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   },
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1332,7 +1505,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1437,7 +1610,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1494,7 +1667,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1559,7 +1732,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1625,7 +1798,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1702,7 +1875,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1768,7 +1941,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "typecheck": {
                     "cache": true,
-                    "command": "tsc --build --emitDeclarationOnly --pretty --verbose",
+                    "command": "tsc --build --emitDeclarationOnly",
                     "dependsOn": [
                       "^typecheck",
                     ],
@@ -1947,7 +2120,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "build": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                  "command": "tsc --build tsconfig.lib.json",
                   "dependsOn": [
                     "^build",
                   ],
@@ -2022,7 +2195,162 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "build": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create a node with a build target with "--verbose" flag when the "verboseOutput" plugin option is true', async () => {
+      // Sibling package.json
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/tsconfig.build.json': `{}`,
+        'libs/my-lib/package.json': JSON.stringify({
+          name: 'my-lib',
+          main: 'dist/index.js',
+          types: 'dist/index.d.ts',
+          exports: {
+            '.': {
+              types: './dist/index.d.ts',
+              import: './dist/index.js',
+              default: './dist/index.js',
+            },
+            './package.json': './package.json',
+          },
+        }),
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          // Reduce noise in build snapshots by disabling default typecheck target
+          typecheck: false,
+          build: true, // shorthand for apply with default options
+          verboseOutput: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json --verbose",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+                "build-deps": {
+                  "dependsOn": [
+                    "^build",
+                  ],
+                },
+                "watch-deps": {
+                  "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "dependsOn": [
+                    "build-deps",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+
+      // Sibling project.json
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/tsconfig.build.json': `{}`,
+        'libs/my-lib/project.json': `{}`,
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          // Reduce noise in build snapshots by disabling default typecheck target
+          typecheck: false,
+          build: {}, // apply with default options
+          verboseOutput: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json --verbose",
                   "dependsOn": [
                     "^build",
                   ],
@@ -2090,7 +2418,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "my-build": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                  "command": "tsc --build tsconfig.lib.json",
                   "dependsOn": [
                     "^my-build",
                   ],
@@ -2158,7 +2486,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               "targets": {
                 "build": {
                   "cache": true,
-                  "command": "tsc --build tsconfig.build.json --pretty --verbose",
+                  "command": "tsc --build tsconfig.build.json",
                   "dependsOn": [
                     "^build",
                   ],
@@ -2245,7 +2573,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2323,7 +2651,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2410,7 +2738,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2494,7 +2822,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2754,7 +3082,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2824,7 +3152,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2896,7 +3224,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -2961,7 +3289,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -3048,7 +3376,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -3126,7 +3454,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -3197,7 +3525,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -3279,7 +3607,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
@@ -3350,7 +3678,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 "targets": {
                   "build": {
                     "cache": true,
-                    "command": "tsc --build tsconfig.lib.json --pretty --verbose",
+                    "command": "tsc --build tsconfig.lib.json",
                     "dependsOn": [
                       "^build",
                     ],
