@@ -4,6 +4,7 @@ slug: 'whats-new-in-nx-15'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.png'
 tags: [nx, release]
+description: 'Nx v15 is finally here! Let’s go through all the great features that went into this major release.'
 ---
 
 Nx v15 is finally here! Let’s go through all the great features that went into this major release.

@@ -4,6 +4,7 @@ slug: 'nx-14-4-inputs-optional-npm-scope-project-graph-cache-directory-and-more'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-07-05/lpmHhIiE9v5yJI6nLi2dlw.png'
 tags: [nx, release]
+description: 'Our last release blog post has been published not even a month ago and we already released 2 more minors. You missed the releases? No worries, we’ve got you covered. Here’s all you need to know.'
 ---
 
 Our [last release blog post](/blog/nx-14-2-angular-v14-storybook-update-lightweight-nx-and-more) has been published not even a month ago and we already released 2 more minors. You missed the releases? No worries, we’ve got you covered. Here’s all you need to know.

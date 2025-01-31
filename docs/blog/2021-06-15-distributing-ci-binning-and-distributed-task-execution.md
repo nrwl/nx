@@ -4,6 +4,7 @@ slug: 'distributing-ci-binning-and-distributed-task-execution'
 authors: ['Victor Savkin']
 cover_image: '/blog/images/2021-06-15/jFVfKEglfQIM9QsP.png'
 tags: [nx]
+description: "In this post we looked at two ways to distribute your CI: binning and using Nx Cloud's distributed task execution."
 ---
 
 As your Nx workspaces grow, running CI on a single agent becomes unworkable. Nx’s code change analysis and computation caching allows you to do the minimum amount of computation needed to verify that the PR is good to merge, but it only helps with the average case CI time. No matter how smart Nx is, in the worst case you need to rebuild/retest everything. **That’s why any sizable workspace has to distribute CI across multiple agents.**

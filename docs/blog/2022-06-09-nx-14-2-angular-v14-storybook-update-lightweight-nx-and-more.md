@@ -4,6 +4,7 @@ slug: 'nx-14-2-angular-v14-storybook-update-lightweight-nx-and-more'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-06-09/uScdSDGP4NgCKFrPdznbhw.png'
 tags: [nx, release]
+description: 'Another release packed with cool features and improvements just got released: Nx 14.2. Read all about the Angular v14 upgrade that comes with it, TypeScript and other 3rd party package upgrades, improved Angular CLI to Nx migrations, optional `nx.json` and speed improvements.'
 ---
 
 Another release packed with cool features and improvements just got released: [Nx 14.2](https://github.com/nrwl/nx/releases/tag/14.2.2). Read all about the Angular v14 upgrade that comes with it, TypeScript and other 3rd party package upgrades, improved Angular CLI to Nx migrations, optional `nx.json` and speed improvements.

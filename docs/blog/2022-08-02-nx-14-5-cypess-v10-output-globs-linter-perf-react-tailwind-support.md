@@ -4,6 +4,7 @@ slug: 'nx-14-5-cypress-v10-output-globs-linter-perf-react-tailwind-support'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-08-02/ZUzLD-4JgrEBIZb3dXOvag.png'
 tags: [nx, release]
+description: 'Here we go! After not even a month of releasing v14.4, Nx v14.5 is out!! Here’s all you need to know.'
 ---
 
 Here we go! After not even a month of [releasing v14.4](/blog/nx-14-4-inputs-optional-npm-scope-project-graph-cache-directory-and-more), Nx v14.5 is out!! Here’s all you need to know.
