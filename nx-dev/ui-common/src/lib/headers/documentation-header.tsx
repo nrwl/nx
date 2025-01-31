@@ -20,6 +20,7 @@ import {
 import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
+import { VersionPicker } from '../version-picker';
 
 function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
@@ -186,7 +187,7 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
+      <div className="mx-auto flex w-full items-center gap-4 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
           <button
@@ -229,6 +230,7 @@ export function DocumentationHeader({
               Docs
             </span>
           </Link>
+          <VersionPicker />
         </div>
         {/*SEARCH*/}
         <div className="hidden w-full max-w-[14rem] lg:inline">
