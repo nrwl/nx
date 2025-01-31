@@ -4,10 +4,10 @@ slug: 'nx-14-4-inputs-optional-npm-scope-project-graph-cache-directory-and-more'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-07-05/lpmHhIiE9v5yJI6nLi2dlw.png'
 tags: [nx, release]
-description: 'Our last release blog post has been published not even a month ago and we already released 2 more minors. You missed the releases? No worries, we’ve got you covered. Here’s all you need to know.'
+description: 'Nx 14.4 enhances build caching with configurable inputs, simplifies workspace setup with optional npm scope, and optimizes CI performance with project graph improvements.'
 ---
 
-Our [last release blog post](/blog/nx-14-2-angular-v14-storybook-update-lightweight-nx-and-more) has been published not even a month ago and we already released 2 more minors. You missed the releases? No worries, we’ve got you covered. Here’s all you need to know.
+Our [last release blog post](/blog/nx-14-2-angular-v14-storybook-update-lightweight-nx-and-more) has been published not even a month ago and we already released 2 more minors. You missed the releases? No worries, we've got you covered. Here's all you need to know.
 
 ## targetDependencies -> targetDefaults
 
@@ -15,9 +15,9 @@ To get things started, `targetDependencies` got renamed to `targetDefaults`. We 
 
 You could always do more though. However, with our current mission to reduce configuration duplication, the now-called `targetDefaults` will get more powerful by allowing you to define sensible defaults for your project configs in a central place.
 
-> _Don’t worry, if you’re using `nx migrate` it'll handle the rewriting for you._
+> _Don't worry, if you're using `nx migrate` it'll handle the rewriting for you._
 
-## Syntactic sugar for “dependsOn”
+## Syntactic sugar for "dependsOn"
 
 One of the key features of the Nx task scheduling system is that it is able to automatically build/test/lint/{name your operation} dependencies of your project. If you have `proj-a` which has a dependency on `proj-b` and we run `nx build proj-a` then Nx automatically builds `proj-b` before building `proj-a`. Why? Because `proj-a` depends on the output of `proj-b`.
 
@@ -59,7 +59,7 @@ With this release we introduce another, much more concise and elegant way of exp
 }
 ```
 
-Similarly, if you don’t specify the `^` it would be the same as writing the following:
+Similarly, if you don't specify the `^` it would be the same as writing the following:
 
 ```json {% fileName="nx.json" %}
 {
@@ -146,7 +146,7 @@ Check out the following video which goes into some of the details on the example
 
 ## Optional npmScope
 
-When you create a new Nx workspace it sets up a “npm scope” which you can find in the `nx.json`.
+When you create a new Nx workspace it sets up a "npm scope" which you can find in the `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
@@ -191,9 +191,9 @@ npx nx migrate --run-migrations
 
 ## Exciting?
 
-We’re already deep into following our v15 [roadmap](https://github.com/nrwl/nx/discussions/9716) with a lot of cool stuff coming up on the horizon.
+We're already deep into following our v15 [roadmap](https://github.com/nrwl/nx/discussions/9716) with a lot of cool stuff coming up on the horizon.
 
-Makes sure you don’t miss anything by
+Makes sure you don't miss anything by
 
 - Following us [on Twitter](https://twitter.com/NxDevTools), and
 - Subscribe to the [YouTube Channel](https://youtube.com/nrwl_io?sub_confirmation=1) for more information on [Angular](https://angular.io/), [React](https://reactjs.org/), Nx, and more!

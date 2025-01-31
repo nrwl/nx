@@ -4,6 +4,7 @@ slug: nx-cloud-pipelines-come-to-nx-console
 authors: [Zack DeRose]
 tags: [nx, nx-cloud, nx-console, enterprise]
 cover_image: /blog/images/2024-11-25/thumbnail.png
+description: Track your Nx Cloud CI pipelines directly in your IDE with the new Nx Console integration, featuring status updates and notifications.
 ---
 
 ## Your CI Pipelines, Now At-A-Glance In Your IDE

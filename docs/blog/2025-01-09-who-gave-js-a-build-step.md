@@ -4,6 +4,7 @@ slug: who-gave-js-a-build-step
 authors: [Zack DeRose]
 tags: []
 cover_image: /blog/images/2025-01-09/thumbnail.png
+description: 'Explore the evolution of JavaScript build tools with Webpack maintainer Zack Jackson, from simple script tags to modern bundling solutions.'
 ---
 
 JavaScript is awesome for many reasons. Not the least of these is as an interpreted language, we can actually send our JavaScript as-is over HTTP just as plain text right to a browser.
@@ -75,7 +76,7 @@ When we utilize "code-splitting", we're "chunking" that 1 massive javascript fil
 
 Our bundler is capable of automating some of this code-splitting for us, but by using [dynamic `import()` statements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import), we can signal to most bundlers to create dynamic chunks around those imports. This can be particularly effective when using a router on your application - to ensure that the code for each route is dynamically loaded when the route is activated.
 
-Let’s break down code-splitting with an actual example. Imagine you’re building a single-page application (SPA) with React and `react-router` that dynamically loads components for each route:
+Let's break down code-splitting with an actual example. Imagine you're building a single-page application (SPA) with React and `react-router` that dynamically loads components for each route:
 
 ```tsx {% filename="app.tsx" %}
 import React from 'react';
@@ -154,7 +155,7 @@ EcmaScript Modules (or ESM or `"type": "module"` or `.mjs`) vs. CommonJS modules
 
 Quoting from [an article I read on this topic that rang especially true](https://redfin.engineering/node-modules-at-war-why-commonjs-and-es-modules-cant-get-along-9617135eeca1):
 
-> Superficially, ESM looks very similar to CJS, but their implementations couldn’t be more different. One of them is a honey bee, and the other is a murder hornet. But I can never remember which one is which.
+> Superficially, ESM looks very similar to CJS, but their implementations couldn't be more different. One of them is a honey bee, and the other is a murder hornet. But I can never remember which one is which.
 
 The ESM module format uses `import` statements to bring in other modules, and `export` statements to mark public/consumable pieces of a module.
 
