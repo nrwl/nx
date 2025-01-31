@@ -2269,7 +2269,7 @@
       "/nx-api/gradle/generators/init": {
         "description": "Initializes a Gradle project in the current workspace",
         "file": "generated/packages/gradle/generators/init.json",
-        "hidden": false,
+        "hidden": true,
         "name": "init",
         "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
         "path": "/nx-api/gradle/generators/init",
@@ -3749,7 +3749,7 @@
       "/nx-api/playwright/generators/init": {
         "description": "Initializes a Playwright project in the current workspace",
         "file": "generated/packages/playwright/generators/init.json",
-        "hidden": false,
+        "hidden": true,
         "name": "init",
         "originalFilePath": "/packages/playwright/src/generators/init/schema.json",
         "path": "/nx-api/playwright/generators/init",
