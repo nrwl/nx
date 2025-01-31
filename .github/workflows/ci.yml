@@ -108,6 +108,7 @@ jobs:
 
       - name: Fetch Master
         run: git fetch origin master:master
+        if: ${{ github.event_name == 'pull_request' }}
 
       - name: Restore Homebrew packages
         uses: actions/cache@v3
