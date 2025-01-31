@@ -211,9 +211,9 @@ When using package manager project linking, every project needs to have a `packa
   "name": "@myorg/ui",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "import": "./src/index.js",
-      "default": "./src/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   }
 }
@@ -246,6 +246,8 @@ The `package.json` name can only have one `/` character in it. This is more rest
 
 Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file and list `references` to the project's dependencies. Remove any `compilerOptions` listed and combine them with the options listed in the `tsconfig.lib.json` and `tsconfig.spec.json` files.
 
+The `tsconfig.json` file's purpose is to provide your IDE with `references` to the `tsconfig.*.json` files that define the compilation settings for all the files in the project. In this case, `tsconfig.spec.json` handles the compilation of the test files and `tsconfig.lib.json` handles the compilation of the production code.
+
 ```jsonc {% fileName="libs/ui/tsconfig.json" %}
 {
   "extends": "../../tsconfig.base.json",
@@ -264,7 +266,11 @@ Each project's `tsconfig.json` file should extend the `tsconfig.base.json` file 
 }
 ```
 
-Each project's `tsconfig.lib.json` file extends the root `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies.
+Each project's `tsconfig.lib.json` file extends the root `tsconfig.base.json` file and adds `references` to the `tsconfig.lib.json` files of project dependencies. This file should not extend the project's `tsconfig.json` file because the `tsconfig.json` file includes a reference to the `tsconfig.spec.json` file. Keeping the `tsconfig.spec.json` file unreferenced from the `tsconfig.lib.json` file makes the `typecheck` and `build` tasks faster because the test files do not need to be analyzed. Note that the `outDir` location needs to be unique across all `tsconfig.*.json` files so that one task's cached output does not interfere with another task's cached output.
+
+{% callout type="note" title="Shared Compiler Options" %}
+If there are a lot of shared `compilerOptions` between `tsconfig.lib.json` and `tsconfig.spec.json`, you could create a `tsconfig.project.json` that contains those shared settings. `tsconfig.project.json` would extend `tsconfig.base.json` while `tsconfig.lib.json` and `tsconfig.spec.json` would each extend `tsconfig.project.json`.
+{% /callout %}
 
 ```jsonc {% fileName="libs/ui/tsconfig.lib.json" %}
 {
@@ -284,6 +290,10 @@ Each project's `tsconfig.lib.json` file extends the root `tsconfig.base.json` fi
   ]
 }
 ```
+
+{% callout type="note" title="Task Outputs Within the Project" %}
+As part of this migration process, we are moving the task outputs for `typecheck` and `build` to be local to the project instead of being output to a root `dist` folder. This structure is more consistent with a workspaces style repository and helps to keep projects self-contained. It should be possible to continue to send task outputs to a root `dist` folder, but you'll need to make sure that the `outDir` and `exports` paths work correctly for your folder structure.
+{% /callout %}
 
 The project's `tsconfig.spec.json` does not need to reference project dependencies.
 
@@ -318,6 +328,10 @@ If you are using Vite to build a project, you need to update the `vite.config.ts
 3. Make sure the `build.lib.name` matches the full name of the project, including the organization.
 
 ```ts {% fileName="libs/ui/vite.config.ts" %}
+import react from '@vitejs/plugin-react';
+import dts from 'vite-plugin-dts';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
 export default defineConfig({
   // ...
   plugins: [
