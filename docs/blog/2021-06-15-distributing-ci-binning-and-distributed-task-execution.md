@@ -4,10 +4,10 @@ slug: 'distributing-ci-binning-and-distributed-task-execution'
 authors: ['Victor Savkin']
 cover_image: '/blog/images/2021-06-15/jFVfKEglfQIM9QsP.png'
 tags: [nx]
-description: "In this post we looked at two ways to distribute your CI: binning and using Nx Cloud's distributed task execution."
+description: "Learn how to scale your CI pipeline using two distribution strategies: binning for workload distribution and Nx Cloud's distributed task execution for optimal performance."
 ---
 
-As your Nx workspaces grow, running CI on a single agent becomes unworkable. Nx’s code change analysis and computation caching allows you to do the minimum amount of computation needed to verify that the PR is good to merge, but it only helps with the average case CI time. No matter how smart Nx is, in the worst case you need to rebuild/retest everything. **That’s why any sizable workspace has to distribute CI across multiple agents.**
+As your Nx workspaces grow, running CI on a single agent becomes unworkable. Nx's code change analysis and computation caching allows you to do the minimum amount of computation needed to verify that the PR is good to merge, but it only helps with the average case CI time. No matter how smart Nx is, in the worst case you need to rebuild/retest everything. **That's why any sizable workspace has to distribute CI across multiple agents.**
 
 In this post we look at two ways to do that.
 
@@ -19,7 +19,7 @@ Binning is an approach to distribution where the planning job divides the work i
 
 Nx has always provided affordances to do that, and many workspaces took advantage of it. Most of the setups look similar. This is an [example of implementing binning using Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure).
 
-The planning job invokes _print-affected_. This command executes the same logic as _“affected:\*”_ but instead of running the tasks, it returns the tasks’ descriptions. The job invokes this command for each target such as build/test/lint/e2e. After that, each worker agent runs the tasks assigned to it.
+The planning job invokes _print-affected_. This command executes the same logic as _"affected:\*"_ but instead of running the tasks, it returns the tasks' descriptions. The job invokes this command for each target such as build/test/lint/e2e. After that, each worker agent runs the tasks assigned to it.
 
 Binning is very common. For instance, [the CircleCI support for running tests in parallel](https://circleci.com/docs/2.0/parallelism-faster-jobs/) uses binning.
 
@@ -27,7 +27,7 @@ We at Nrwl helped many large companies distribute CI using different variations 
 
 ## Issues with Binning
 
-### Binning doesn’t partition the work in the optimal way.
+### Binning doesn't partition the work in the optimal way.
 
 First, you cannot partition tasks into bins without knowing how long every task takes. Most binning solutions collect timings (including the one in the Azure example above) which works imperfectly.
 
@@ -41,7 +41,7 @@ If you partition your tests into five bins, you have five agents with separate l
 
 More importantly, you often need all the file outputs for a given target on the same machine to do post-processing. For instance, **you can run the tests on 5 agents, but you need all the coverage reports in the same place to combine them and send them to SonarQube.** Doing this is challenging.
 
-### Binning doesn’t work for builds.
+### Binning doesn't work for builds.
 
 Any time you run a command in a monorepo, Nx creates a task graph, which it then executes.
 
@@ -51,17 +51,17 @@ This is common when you have libraries that depend on other libraries.
 
 ![](/blog/images/2021-06-15/lS7eewNQuZzQ72kU.avif)
 
-In this example, the Child 1 and Child 2 libraries have to be built first. Parent 1 can start only when Child 1 has been built because it needs the Child 1’s dist folder. Parent 2 has to wait for both Child 1 and Child 2. And they can all be built on different agents, so their dist folders will have to be moved from agent to agent. You cannot implement it using binning. This problem also occurs for tests that require the libraries or applications to be built first.
+In this example, the Child 1 and Child 2 libraries have to be built first. Parent 1 can start only when Child 1 has been built because it needs the Child 1's dist folder. Parent 2 has to wait for both Child 1 and Child 2. And they can all be built on different agents, so their dist folders will have to be moved from agent to agent. You cannot implement it using binning. This problem also occurs for tests that require the libraries or applications to be built first.
 
-That’s why you often see tool authors talking about distributing tests and not builds. **Distributing tests is relatively straightforward. Distributing builds is hard.**
+That's why you often see tool authors talking about distributing tests and not builds. **Distributing tests is relatively straightforward. Distributing builds is hard.**
 
 ### Binning complicates CI/CD Setup.
 
-Maintaining a CI setup that uses binning is often an ongoing effort. Because you don’t have a proper coordinator, your CI has to be the coordinator, which complicates things.
+Maintaining a CI setup that uses binning is often an ongoing effort. Because you don't have a proper coordinator, your CI has to be the coordinator, which complicates things.
 
 ## Approach 2: Nx Cloud 2.0 Distributed Task Execution (DTE)
 
-We at Nrwl are in the business of helping companies use monorepos, so we have been dealing with these issues for many years. Nx Cloud 2.0’s support for Distributed Task Execution is our solution for this problem. It solves all the problems listed above and more.
+We at Nrwl are in the business of helping companies use monorepos, so we have been dealing with these issues for many years. Nx Cloud 2.0's support for Distributed Task Execution is our solution for this problem. It solves all the problems listed above and more.
 
 ## How Does Distributed Task Execution Work?
 
@@ -121,23 +121,23 @@ As you can see there is not much that changed. We added the agent job, registere
 
 ![](/blog/images/2021-06-15/XISTgZIBj5ZZ3Sp7.avif)
 
-It won’t run the build locally. Instead, it sends the Task Graph to Nx Cloud. Nx Cloud Agents pick up the tasks they can run and execute them.
+It won't run the build locally. Instead, it sends the Task Graph to Nx Cloud. Nx Cloud Agents pick up the tasks they can run and execute them.
 
 > The Nx Cloud agents here are CI jobs that run `npx nx-cloud start-agent` so they can can be defined in any CI env.
 
-This happens transparently. If an agent builds `app1`, it fetches the outputs for lib if it doesn’t have it already.
+This happens transparently. If an agent builds `app1`, it fetches the outputs for lib if it doesn't have it already.
 
 As agents complete tasks, the main job where you invoked `nx affected --build` l starts receiving created files and terminal outputs.
 
 After `nx affected --build` completes, the main job has the built artifacts and all the terminal outputs as if it ran it locally.
 
-Let’s reexamine the issues above to see how we addressed them.
+Let's reexamine the issues above to see how we addressed them.
 
 ### Nx Cloud partitions the work in the optimal way.
 
-In theory every agent could pull one task at a time to partition things evenly, but it doesn’t work well in practice. The network overhead can add up for very small tasks, and it’s often faster to run several tasks in parallel because of the batching capabilities Nx has.
+In theory every agent could pull one task at a time to partition things evenly, but it doesn't work well in practice. The network overhead can add up for very small tasks, and it's often faster to run several tasks in parallel because of the batching capabilities Nx has.
 
-As you run commands in your repo, Nx Cloud collects the timings and uses those to partition the work into well-sized batches, such that if one agent is slow, the CI isn’t blocked. Agents also run tasks of different types (tests/lints), so the pool of agents is shared evenly.
+As you run commands in your repo, Nx Cloud collects the timings and uses those to partition the work into well-sized batches, such that if one agent is slow, the CI isn't blocked. Agents also run tasks of different types (tests/lints), so the pool of agents is shared evenly.
 
 ### Nx Cloud does not split commands.
 
@@ -151,7 +151,7 @@ To stress one more time the main job contains all the terminal outputs and all t
 
 **Nx Cloud is a proper coordinator and it can process any task graph**. An Nx Cloud agent asks for tasks to execute. The Nx Cloud service looks at the commands currently running and will see if there are any tasks that have no unfulfilled dependencies. If there are some, the Nx Cloud service will use the collected timings to create a well-size batch of tasks that it will send to the agent.
 
-The agent sees if it has all the files required to run those tasks (`dist` folders from previous tasks). And if it doesn’t, it downloads them. When it’s done running the task, it lets the Nx Cloud service know to “unblock” other tasks in the graph. At the same time, the Nx Cloud service sends the created files and terminal outputs to the main job.
+The agent sees if it has all the files required to run those tasks (`dist` folders from previous tasks). And if it doesn't, it downloads them. When it's done running the task, it lets the Nx Cloud service know to "unblock" other tasks in the graph. At the same time, the Nx Cloud service sends the created files and terminal outputs to the main job.
 
 ### Nx Cloud does not require you to rewrite the CI setup.
 
@@ -165,7 +165,7 @@ When using distributed task execution all the communication is done from your ag
 
 ## Summary
 
-In this post we looked at two ways to distribute your CI: binning and using Nx Cloud’s distributed task execution.
+In this post we looked at two ways to distribute your CI: binning and using Nx Cloud's distributed task execution.
 
 Binning has been supported from Day 1 and works well for a variety of workspaces. It has drawbacks: the resource allocation, the developer ergonomics, the inability to distribute builds, and a much more complex Ci setup.
 
