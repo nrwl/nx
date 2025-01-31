@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - "**"
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
+jobs:
+  main-linux:
+    runs-on: ubuntu-latest
+    container: cimg/rust:1.84.0-browsers
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Fetch Master
+        run: git fetch origin master:master
+
+      - name: Set SHAs
+        uses: nrwl/nx-set-shas@v4
+      
+      - name: Start CI Run
+        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.8.0
+          run_install: false
+
+      - name: Install project dependencies
+        run: |
+          pnpm install --frozen-lockfile
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+
+      - name: Run Conformance
+        shell: bash
+        run: |
+          pnpm nx-cloud record -- nx-cloud conformance:check
+        timeout-minutes: 100
