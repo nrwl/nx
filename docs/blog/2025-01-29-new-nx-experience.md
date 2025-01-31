@@ -5,6 +5,7 @@ authors: [Juri Strumpflohner]
 tags: []
 cover_image: /blog/images/articles/new-ts-experience-bg.jpg
 youtubeUrl: https://youtu.be/D9D8KNffyBk
+description: Discover how Nx's new workspaces setup combines package managers with TypeScript project references for better performance and developer experience in monorepos.
 ---
 
 {% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
@@ -186,7 +187,7 @@ For example, after importing `mytslib` into `myviteapp`, you'll notice that `app
 
 {% video-player src="/documentation/blog/media/08-tssetup-watching.mp4" alt="Automatically watching buildable libraries and rebuilding them." showControls=true autoPlay=true loop=false showDescription=true /%}
 
-In our current setup, the `mytslib` package is not “buildable”. Notice it directly exports the TypeScript files. This means when `myviteapp` imports `mytslib`, it directly imports the TypeScript files and handles the transpilation. As a result, if we serve the application in dev mode, any changes to `mytslib` will automatically update the application because it depends on the source files directly.
+In our current setup, the `mytslib` package is not "buildable". Notice it directly exports the TypeScript files. This means when `myviteapp` imports `mytslib`, it directly imports the TypeScript files and handles the transpilation. As a result, if we serve the application in dev mode, any changes to `mytslib` will automatically update the application because it depends on the source files directly.
 
 However, in some cases, you may have buildable libraries. These are useful for caching, CI optimizations, or releasing packages outside the monorepo. When a buildable library changes, it must be recompiled to reflect the updates. To streamline this process, Nx introduces a `watch-deps` target, which automatically watches and rebuilds the dependencies of your applications.
 
@@ -336,7 +337,7 @@ And note, this is the **worst-case scenario**, relying solely on distributing ty
 
 It's also important to emphasize that the main reason we can fully leverage these benefits from TypeScript project references is that we avoid the maintenance burden of setting them up manually, thanks to the automated [Nx sync](#automatically-syncing-typescript-project-references) command.
 
-Now, **if your company struggles with these performance issues in large TypeScript monorepos**, [let us know](https://bit.ly/3EgXq5x). We’ve [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](https://bit.ly/3EgXq5x)
+Now, **if your company struggles with these performance issues in large TypeScript monorepos**, [let us know](https://bit.ly/3EgXq5x). We've [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](https://bit.ly/3EgXq5x)
 
 ## FAQ
 
@@ -370,9 +371,9 @@ For now, we continue to use the TypeScript path alias-based setup for pure Angul
 
 ## Wrapping up
 
-That’s it! Try it out and let us know what you think. If you encounter any issues or have questions, don’t hesitate to reach out. We want to catch all edge cases before making this the default for new Nx workspaces.
+That's it! Try it out and let us know what you think. If you encounter any issues or have questions, don't hesitate to reach out. We want to catch all edge cases before making this the default for new Nx workspaces.
 
-If you’re working in a large monorepo and **struggling with the performance issues we discussed**, [reach out](https://bit.ly/3EgXq5x). We’ve [helped many teams](/customers) tackle similar challenges and would be happy to assist.
+If you're working in a large monorepo and **struggling with the performance issues we discussed**, [reach out](https://bit.ly/3EgXq5x). We've [helped many teams](/customers) tackle similar challenges and would be happy to assist.
 
 ---
 

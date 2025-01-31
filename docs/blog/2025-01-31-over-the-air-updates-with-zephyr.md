@@ -4,6 +4,7 @@ slug: ota-updates-with-zephyr
 authors: [Colum Ferry]
 tags: []
 cover_image: /blog/images/2025-01-31/cover-image.jpg
+description: 'Deploy React Native app updates instantly with Module Federation and Zephyr Cloud, skipping app store review processes.'
 ---
 
 Module Federation is an exciting and continually evolving technology. The use cases for Module Federation have expanded from [Micro Frontends](/concepts/module-federation/micro-frontend-architecture) and [Faster Builds](/concepts/module-federation/faster-builds-with-module-federation) to also include something that should be extremely interesting for React Native users.
@@ -12,9 +13,9 @@ Thanks to the wonderful work from the [Re.Pack](https://re-pack.dev/) team at [C
 
 We have an article on [**Next-Gen Module Federation Deployments with Nx and Zephyr Cloud**](/blog/next-gen-module-federation-deployment) where you can learn more about what Zephyr Cloud is and how you can leverage it to improve your deployment story with Module Federation.
 
-In this article, we’ll be discussing Super Apps and how you can achieve Over-The-Air updates to your native mobile applications with React Native and Re.Pack.
+In this article, we'll be discussing Super Apps and how you can achieve Over-The-Air updates to your native mobile applications with React Native and Re.Pack.
 
-## What are “Super Apps”?
+## What are "Super Apps"?
 
 First, to help us all get familiar with terminology, Super Apps are a term commonly used in the Asian development world to signify single applications that encompass many different domains. A good example is the [WeChat](https://www.wechat.com/) app which expanded from a simple messaging service to also include payments and e-commerce systems.
 
@@ -43,7 +44,7 @@ Zephyr Cloud is already known as the best-in-class solution for deploying and ma
 
 As Zephyr Cloud handles rollbacks and versioning of producers - hot fixes and issue remediation can happen within seconds. Load the dashboard, find the producer, rollback to previous version.
 
-For user support this is incredible. Imagine a scenario where a user is Live Chatting with your support team about an issue - the agent contacts the dev team about the issue - the dev team rolls back to the previous working version all within a matter of minutes (Zephyr Cloud’s rollbacks tend to be sub-second, but we need to account for time lost in communication). The agent can then tell the user to simply close and re-open the application. It’s **incredible**.
+For user support this is incredible. Imagine a scenario where a user is Live Chatting with your support team about an issue - the agent contacts the dev team about the issue - the dev team rolls back to the previous working version all within a matter of minutes (Zephyr Cloud's rollbacks tend to be sub-second, but we need to account for time lost in communication). The agent can then tell the user to simply close and re-open the application. It's **incredible**.
 
 ## Where does Nx fit?
 
@@ -53,7 +54,7 @@ While you could have multiple repositories housing each portion of the applicati
 
 There are known limitations around dependency management when using React Native, Re.Pack and Module Federation. Limitations such as dependencies that rely on native code must be aligned between all portions of the application. If these were to change, a new binary deployment to the app store must be done. JavaScript dependencies _can_ differ between portions, but this also introduces risk of runtime breaking changes.
 
-Nx mitigates these risks. With its enforcement of a [single-version policy](/concepts/decisions/dependency-management#single-version-policy) it becomes much easier to ensure that if a dependency changes _all_ portions of the Module Federation setup are marked as [“affected”](/ci/features/affected) requiring a new deployment.
+Nx mitigates these risks. With its enforcement of a [single-version policy](/concepts/decisions/dependency-management#single-version-policy) it becomes much easier to ensure that if a dependency changes _all_ portions of the Module Federation setup are marked as ["affected"](/ci/features/affected) requiring a new deployment.
 
 Beyond just mitigating risk of changing dependencies that can cause runtime errors, Nx will also ensure your application to scale to more developers and more feature teams. With features such as [Task Caching](/features/cache-task-results) and [Task Orchestration](/features/run-tasks#defining-a-task-pipeline) developers will know when they make their changes if they are introducing regressions or breaking changes to other areas within the system faster - before it hits production.
 
@@ -116,7 +117,7 @@ If you run `pnpm nx graph` you will see the project graph below:
 
 ![Nx Project Graph](/blog/images/2025-01-31/zc-blog-graph.jpg)
 
-MobileHost is the main binary application while the others act as “Mini apps” that provide the federated modules for each domain/feature within the shell application.
+MobileHost is the main binary application while the others act as "Mini apps" that provide the federated modules for each domain/feature within the shell application.
 
 The [README.md](http://README.md) at the root of the workspace provides a great overview of the architecture involved and the next steps for commands to be run.
 

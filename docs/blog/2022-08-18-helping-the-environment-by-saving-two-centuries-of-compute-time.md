@@ -4,6 +4,7 @@ slug: 'helping-the-environment-by-saving-two-centuries-of-compute-time'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-08-18/FBQVoC9YXF7wlq3dhxfQMQ.png'
 tags: [nx]
+description: "Discover how Nx's caching and computation-saving features have saved over 200 years of compute time, reducing CO2 emissions through efficient task execution."
 ---
 
 Among the core features of Nx is the ability to save computation time by applying different strategies. Scroll to the end of the article for some more info, but first, **how much time is actually being saved?**
@@ -44,7 +45,7 @@ Calculating the CO2 emissions can be tricky. It really depends on what machines 
 
 ## Help me out! A Primer on how Nx saves computation
 
-Nx has various strategies to help you reduce computation time, locally and on CI. Here’s a very short overview of the strategies Nx applies with some links for further reading.
+Nx has various strategies to help you reduce computation time, locally and on CI. Here's a very short overview of the strategies Nx applies with some links for further reading.
 
 ### Affected Commands
 
