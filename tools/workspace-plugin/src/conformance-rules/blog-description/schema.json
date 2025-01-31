@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "mdGlobPattern": {
+      "type": "string",
+      "description": "The glob pattern to use to find the markdown files to analyze"
+    }
+  },
+  "additionalProperties": false
+}
