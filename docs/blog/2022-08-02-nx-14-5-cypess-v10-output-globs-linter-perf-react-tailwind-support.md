@@ -1,13 +1,13 @@
 ---
-title: 'Nx 14.5 — Cypess v10, Output globs, Linter perf, React Tailwind support'
+title: 'Nx 14.5 — Cypress v10, output globs, linter perf, React Tailwind support'
 slug: 'nx-14-5-cypress-v10-output-globs-linter-perf-react-tailwind-support'
 authors: ['Juri Strumpflohner']
 cover_image: '/blog/images/2022-08-02/ZUzLD-4JgrEBIZb3dXOvag.png'
 tags: [nx, release]
-description: 'Here we go! After not even a month of releasing v14.4, Nx v14.5 is out!! Here’s all you need to know.'
+description: 'Nx 14.5 adds Cypress v10 with component testing, glob-based outputs for better caching, and improved React Tailwind integration.'
 ---
 
-Here we go! After not even a month of [releasing v14.4](/blog/nx-14-4-inputs-optional-npm-scope-project-graph-cache-directory-and-more), Nx v14.5 is out!! Here’s all you need to know.
+Here we go! After not even a month of [releasing v14.4](/blog/nx-14-4-inputs-optional-npm-scope-project-graph-cache-directory-and-more), Nx v14.5 is out!! Here's all you need to know.
 
 **TL;DR:** [https://github.com/nrwl/nx/releases/tag/14.5.0](https://github.com/nrwl/nx/releases/tag/14.5.0)
 
@@ -87,7 +87,7 @@ Globs are particularly useful when multiple targets write to the same directory.
 }
 ```
 
-Sometimes that’s not feasible though. In that case, globs come in handy:
+Sometimes that's not feasible though. In that case, globs come in handy:
 
 ```json {% fileName="nx.json" %}
 {
@@ -104,7 +104,7 @@ Sometimes that’s not feasible though. In that case, globs come in handy:
 
 ## Parameter Forwarding when building dependent projects
 
-Besides the speed aspect, one key feature of Nx is the ability to build dependent projects automatically. Let’s say you have `project-a` which depends on `project-b`, then whenever you run the build for `project-a`, thanks to its project graph, Nx will automatically run the build for `project-b` first. You can define such dependencies either directly in your [project.json](/reference/project-configuration) or [package.json](/reference/project-configuration) file, or globally for an entire workspace in `nx.json`:
+Besides the speed aspect, one key feature of Nx is the ability to build dependent projects automatically. Let's say you have `project-a` which depends on `project-b`, then whenever you run the build for `project-a`, thanks to its project graph, Nx will automatically run the build for `project-b` first. You can define such dependencies either directly in your [project.json](/reference/project-configuration) or [package.json](/reference/project-configuration) file, or globally for an entire workspace in `nx.json`:
 
 ```json {% fileName="nx.json" %}
 {
@@ -130,9 +130,9 @@ The `^` is a short-hand notation for
 
 ...and defines that the `build` task should be run for all its dependencies first.
 
-> _You have a PNPM,NPM or Yarn workspace? Adding Nx doesn’t only benefit you in terms of speed improvements, but also to define such build dependencies. Have a look at this video to learn more:_ [_Setup a monorepo with PNPM workspaces and add Nx for speed: Defining task dependencies aka build pipelines_](https://youtu.be/ngdoUQBvAjo?t=1485)
+> _You have a PNPM,NPM or Yarn workspace? Adding Nx doesn't only benefit you in terms of speed improvements, but also to define such build dependencies. Have a look at this video to learn more:_ [_Setup a monorepo with PNPM workspaces and add Nx for speed: Defining task dependencies aka build pipelines_](https://youtu.be/ngdoUQBvAjo?t=1485)
 
-What happens to parameters when invoking the target on a project’s dependencies? By default, they are not forwarded but starting with 14.5 you can. Here are some configuration options:
+What happens to parameters when invoking the target on a project's dependencies? By default, they are not forwarded but starting with 14.5 you can. Here are some configuration options:
 
 ```json
 "build": {
@@ -169,7 +169,7 @@ Replacing `Sets`, `foreach`, `reduce` with plain `for` loops can often have quit
 
 The [Nx Module Boundary lint rule](/features/enforce-module-boundaries) is a powerful concept especially when it comes to the maintainability aspect of projects and monorepos. Learn more in our blog article on [Taming Code Organization with Module Boundaries in Nx](/blog/mastering-the-project-boundaries-in-nx).
 
-The Module Boundary rule allows for much more though. It also allows to ban external imports. Say you have a frontend project where you want to make sure none of the “backend-type” dependencies accidentally get imported. Or vice-versa, a backend project where you wouldn’t necessarily want to depend on any “frontend-type” package references. You can use the `bannedExternalImports` for that. For example:
+The Module Boundary rule allows for much more though. It also allows to ban external imports. Say you have a frontend project where you want to make sure none of the "backend-type" dependencies accidentally get imported. Or vice-versa, a backend project where you wouldn't necessarily want to depend on any "frontend-type" package references. You can use the `bannedExternalImports` for that. For example:
 
 ```json {% fileName=".eslintrc.json" %}
 {
@@ -242,7 +242,7 @@ import { libSayHi } from '@myorg/tslib-a';
 
 ## Nx Migrate improvements and Nx Repair
 
-We improved our log output from the Nx automated code migration run to make it more clear what a code migration actually changes. Also, those migrations that don’t do anything because they don’t apply to your workspace are not shown in the output at all.
+We improved our log output from the Nx automated code migration run to make it more clear what a code migration actually changes. Also, those migrations that don't do anything because they don't apply to your workspace are not shown in the output at all.
 
 ![](/blog/images/2022-08-02/IWGJcienK4L_oGxl.avif)
 
@@ -264,7 +264,7 @@ We also improved our React Native support by adding the possibility to generate 
 
 ## Deprecating Angular Protractor e2e tests
 
-[Protractor](https://github.com/angular/protractor/issues/5502) has been deprecated for a while on the Angular CLI side and given Nx has had [Cypress](https://cypress.io/) support for a while it has never been a popular choice. Starting with this release we’re deprecating the generator for setting up Protractor and we’re planning on removing support entirely in Nx v15.
+[Protractor](https://github.com/angular/protractor/issues/5502) has been deprecated for a while on the Angular CLI side and given Nx has had [Cypress](https://cypress.io/) support for a while it has never been a popular choice. Starting with this release we're deprecating the generator for setting up Protractor and we're planning on removing support entirely in Nx v15.
 
 ## Other Package updates
 
