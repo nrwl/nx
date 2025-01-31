@@ -15,7 +15,7 @@
     "nx-release": "nx nx-release @nx/nx-source --parallel 8",
     "prepublishOnly": "node ./scripts/update-package-group.js",
     "local-registry": "nx local-registry @nx/nx-source",
-    "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts && pnpm check-documentation-map",
+    "documentation": "nx documentation",
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky",
     "echo": "echo 123458",
@@ -384,32 +384,8 @@
       "check-format",
       "check-imports",
       "check-lock-files",
-      "check-codeowners",
-      "documentation"
-    ],
-    "targets": {
-      "documentation": {
-        "cache": true,
-        "inputs": [
-          "{workspaceRoot}/packages/**",
-          "{workspaceRoot}/docs/**",
-          "{workspaceRoot}/scripts/documentation/**",
-          "!{workspaceRoot}/docs/external-generated",
-          "!{workspaceRoot}/docs/generated",
-          "!{workspaceRoot}/packages/**/*.spec.ts",
-          "!{workspaceRoot}/packages/**/project.json",
-          "!{workspaceRoot}/packages/**/tsconfig.json",
-          "!{workspaceRoot}/packages/**/tsconfig.lib.json",
-          "!{workspaceRoot}/packages/**/tsconfig.spec.json",
-          "!{workspaceRoot}/packages/**/jest.config.{ts,js}",
-          "!{workspaceRoot}/packages/**/.eslintrc.json"
-        ]
-      },
-      "outputs": [
-        "{workspaceRoot}/docs/external-generated",
-        "{workspaceRoot}/docs/generated"
-      ]
-    }
+      "check-codeowners"
+    ]
   },
   "packageManager": "pnpm@9.8.0"
 }
