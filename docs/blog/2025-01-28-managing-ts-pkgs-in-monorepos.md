@@ -6,13 +6,13 @@ tags: [typescript, monorepo, nx]
 cover_image: /blog/images/articles/bg-managing-typescript-packages.jpg
 ---
 
-{% callout type="deepdive" title="TypeScript Project References Series" %}
+{% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
 
 This article is part of the TypeScript Project References series:
 
 - [Everything You Need to Know About TypeScript Project References](/blog/typescript-project-references)
 - **Managing TypeScript Packages in Monorepos**
-- _A new Nx Experience For TypeScript Monorepos and Beyond_ (coming soon)
+- [A new Nx Experience For TypeScript Monorepos and Beyond](/blog/new-nx-experience-for-typescript-monorepos)
 
 {% /callout %}
 

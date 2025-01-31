@@ -65,15 +65,18 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
                 },
               ],
               "metadata": {
-                "description": "Run Typechecking",
+                "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc --help -p tsconfig.lib.json",
+                  "command": "npx tsc -p tsconfig.lib.json --help",
                   "example": {
                     "options": {
                       "noEmit": true,
                     },
                   },
                 },
+                "technologies": [
+                  "typescript",
+                ],
               },
               "options": {
                 "cwd": ".",

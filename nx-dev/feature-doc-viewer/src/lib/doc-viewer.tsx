@@ -115,7 +115,7 @@ export function DocViewer({
           </div>
           <div className="min-w-0 flex-auto pb-24 lg:pb-16">
             {/*MAIN CONTENT*/}
-            <div className="flex justify-between">
+            <div className="justify-between xl:flex">
               <div className="relative">
                 <div
                   ref={ref}
