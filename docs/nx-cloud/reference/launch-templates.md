@@ -3,7 +3,7 @@
 A launch template defines the setup steps Nx Agents will run before running tasks. A custom launch template isn't required to use Nx Agents.
 Nx Cloud provides several pre-built launch templates for common use-cases. You can view available templates in the [`nx-cloud-workflows` repository](https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates).
 
-{% github-repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
+{% github-repository url="<https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates>" title="Pre-Built Launch Templates" /%}
 
 ## Getting Started with Custom Launch Templates
 
@@ -596,4 +596,35 @@ launch-templates:
           env  
           # This is a safer approach to prevent leaking tokens/passwords
           echo "SOME_VALUE: $SOME_VALUE"
+```
+
+## Docker Layer Caching
+
+> Currently, Docker in Docker support is an Nx Cloud Enterprise plan only.
+> The docker commands are agnostic to Nx Agents and be used on other platform as needed
+
+1. create build driver with support for registry cache
+   - `docker context create cache-builder`
+   - `docker buildx create cache-builder --driver docker-container --use`
+1. build command with `--cache-to` and `--cache-from`
+   `docker buildx build --push -t "barbadosclemens/test:node-latest" -f ./apps/demo/Dockerfile --cache-to type=registry,ref=barbadosclemens/cache-image,mode=max --cache-from type=registry,ref=barbadosclemens/cache-image .``
+
+   First thing needed is to have a builder that can support the registry caching backend. To do this you need to make a new context and builder
+
+   ```shell {% title="Create builder" %}
+   docker context create cache-builder
+   docker buildx create cache-builder --driver docker-container --use
+   ```
+
+   Now we can run our docker build commands.
+   Commonly, the docker build command will be created as targets within their own project configurations. Assuming the name of the image we want to publish is called `mycoolcompany/fancy-app` and the `Dockerfile` is located at `apps/fancy-app/Dockerfile`. You could have a docker build command configured like so:
+
+```json
+{
+  "targets": {
+    "package": {
+      "command": "docker buildx build --push -t mycoolcompany/fancy-app:latest -f ./apps/fancy-app/Dockerfile --cache-to type=registry,ref=mycoolcompany/cache-image,mode=max"
+    }
+  }
+}
 ```
