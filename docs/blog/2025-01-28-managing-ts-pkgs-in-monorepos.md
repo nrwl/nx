@@ -4,6 +4,7 @@ slug: managing-ts-packages-in-monorepos
 authors: [Juri Strumpflohner]
 tags: [typescript, monorepo, nx]
 cover_image: /blog/images/articles/bg-managing-typescript-packages.jpg
+description: Compare strategies for managing TypeScript packages in monorepos, from relative imports to project references, and find the best approach for your project.
 ---
 
 {% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
@@ -16,7 +17,7 @@ This article is part of the TypeScript Project References series:
 
 {% /callout %}
 
-Managing TypeScript packages in a monorepo presents unique challenges. As your monorepo grows, so does the complexity of structuring and resolving dependencies between packages. From using simple relative imports to taking advantage of TypeScript path aliases, project references, and your package manager’s workspaces feature, developers have a variety of strategies at their disposal. But which approach is the best fit for you?
+Managing TypeScript packages in a monorepo presents unique challenges. As your monorepo grows, so does the complexity of structuring and resolving dependencies between packages. From using simple relative imports to taking advantage of TypeScript path aliases, project references, and your package manager's workspaces feature, developers have a variety of strategies at their disposal. But which approach is the best fit for you?
 
 {% toc /%}
 
@@ -245,12 +246,10 @@ This is distinct from `tsconfig.base.json`, which is used to share common config
     "module": "NodeNext",
     "strict": true,
     "moduleResolution": "NodeNext",
-+   "composite": true,
-+   "declaration": true,
-+   "declarationMap": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": ".",
--   "rootDir": ".",
     "paths": {
       "@ts-monorepo-linking/lib-a": ["packages/lib-a/src/index.ts"]
     }
@@ -400,10 +399,6 @@ This approach **eliminates the need for TypeScript path aliases for module resol
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
--   "baseUrl": ".",
--   "paths": {
--     "@ts-monorepo-linking/lib-a": ["packages/lib-a/src/index.ts"]
--   }
   }
 }
 ```
