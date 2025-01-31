@@ -34,6 +34,8 @@ jobs:
 
       - name: Fetch Master
         run: git fetch origin master:master
+        if: ${{ github.event_name == 'pull_request' }}
+        
 
       - name: Set SHAs
         uses: nrwl/nx-set-shas@v4
