@@ -11,26 +11,6 @@ export interface BlogDetailsProps {
   post: BlogPostDataEntry;
 }
 
-export async function generateMetadata({ post }: BlogDetailsProps) {
-  return {
-    title: post.title,
-    description: post.description,
-    openGraph: {
-      images: [
-        {
-          url: post.cover_image
-            ? `https://nx.dev${post.cover_image}`
-            : 'https://nx.dev/socials/nx-media.png',
-          width: 800,
-          height: 421,
-          alt: 'Nx: Smart Monorepos · Fast CI',
-          type: 'image/jpeg',
-        },
-      ],
-    },
-  };
-}
-
 export function BlogDetails({ post }: BlogDetailsProps) {
   const { node } = renderMarkdown(post.content, {
     filePath: post.filePath ?? '',
@@ -79,11 +59,7 @@ export function BlogDetails({ post }: BlogDetailsProps) {
           </div>
         ) : post.youtubeUrl ? (
           <div className="mx-auto mb-16 w-full max-w-screen-md">
-            <YouTube
-              src={post.youtubeUrl}
-              title={post.title}
-              caption={post.description}
-            />
+            <YouTube src={post.youtubeUrl} title={post.title} />
           </div>
         ) : (
           post.cover_image && (
