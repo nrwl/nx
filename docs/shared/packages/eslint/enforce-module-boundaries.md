@@ -62,4 +62,4 @@ Read more about the proper usage of this rule:
 - [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
 - [Ban External Imports](/recipes/enforce-module-boundaries/ban-external-imports)
 - [Tags Allow List](/recipes/enforce-module-boundaries/tags-allow-list)
-- [Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)
+- [Taming Code Organization with Module Boundaries in Nx](/blog/mastering-the-project-boundaries-in-nx)
