@@ -81,7 +81,7 @@ A crucial feature in Nx is the ability to not only parallelize your tasks on a s
 - **Distributed task execution has a significantly higher impact on the ability to scale the repo than the computation cache.** You can scale without the cache, you cannot scale without the distribution.
 - This is the biggest feature related to performance and scaling that Turborepo is missing. And it’s by far the hardest one to build.
 
-If you want to learn more, check out our article on [Distributing CI - Binning and Distributed Task Execution](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953)
+If you want to learn more, check out our article on [Distributing CI - Binning and Distributed Task Execution](/blog/distributing-ci-binning-and-distributed-task-execution)
 
 #### 9. Editor support
 
