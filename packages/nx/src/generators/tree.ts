@@ -291,10 +291,7 @@ export class FsTree implements Tree {
       return !r?.isDeleted;
     });
     // Dedupe
-    res = Array.from(new Set(res));
-    // in windows the result may not be sorted
-    res.sort();
-    return res;
+    return Array.from(new Set(res));
   }
 
   listChanges(): FileChange[] {

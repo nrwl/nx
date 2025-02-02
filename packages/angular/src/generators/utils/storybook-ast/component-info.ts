@@ -6,7 +6,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { basename, dirname, extname, join, relative, sep } from 'path';
+import { basename, dirname, extname, relative } from 'path';
 import type { Identifier, SourceFile, Statement } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
 import { getInstalledAngularVersionInfo } from '../version-utils';
@@ -261,7 +261,7 @@ function getComponentInfoFromDir(
 
   const componentImportPathChildren: string[] = [];
   visitNotIgnoredFiles(tree, dir, (filePath) => {
-    componentImportPathChildren.push(filePath);
+    componentImportPathChildren.push(normalizePath(filePath));
   });
 
   for (const candidateFile of componentImportPathChildren) {
@@ -273,10 +273,10 @@ function getComponentInfoFromDir(
       );
       if (content.match(classAndComponentRegex)) {
         path = candidateFile
-          .slice(0, candidateFile.lastIndexOf(sep))
-          .replace(join(moduleFolderPath), '.');
+          .slice(0, candidateFile.lastIndexOf('/'))
+          .replace(moduleFolderPath, '.');
         componentFileName = candidateFile.slice(
-          candidateFile.lastIndexOf(sep) + 1,
+          candidateFile.lastIndexOf('/') + 1,
           candidateFile.lastIndexOf('.')
         );
         break;
