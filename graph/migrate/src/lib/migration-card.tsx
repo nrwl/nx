@@ -9,6 +9,7 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 import {
   ArrowPathIcon,
   CheckCircleIcon,
+  CodeBracketIcon,
   ExclamationCircleIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
@@ -22,6 +23,7 @@ export function MigrationCard({
   onSelect,
   onRunMigration,
   onFileClick,
+  onViewImplementation,
   forceIsRunning,
 }: {
   migration: MigrationDetailsWithId;
@@ -30,6 +32,7 @@ export function MigrationCard({
   onSelect?: (isSelected: boolean) => void;
   onRunMigration?: () => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  onViewImplementation: () => void;
   forceIsRunning?: boolean;
 }) {
   const migrationResult = nxConsoleMetadata.completedMigrations?.[migration.id];
@@ -102,7 +105,7 @@ export function MigrationCard({
                 />
               ) : null}
             </div>
-            <span className={`text-sm`}>{migration.description}</span>
+            <span className="text-sm">{migration.description}</span>
             <div className="flex gap-2">
               {migration.package && (
                 <Pill
@@ -114,6 +117,13 @@ export function MigrationCard({
                 text={migration.version}
                 color={succeeded ? 'green' : failed ? 'red' : 'grey'}
               />
+              <span
+                onClick={() => onViewImplementation()}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
+              >
+                <CodeBracketIcon className="h-4 w-4" />
+                View Source
+              </span>
             </div>
           </div>
         </div>

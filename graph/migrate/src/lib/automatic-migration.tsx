@@ -20,6 +20,7 @@ export function AutomaticMigration(props: {
   nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onViewImplementation: (migration: MigrationDetailsWithId) => void;
 }) {
   const actor = useInterpret(automaticMigrationMachine, {
     actions: {
@@ -120,6 +121,9 @@ export function AutomaticMigration(props: {
               migration={migration}
               nxConsoleMetadata={props.nxConsoleMetadata}
               onFileClick={() => {}}
+              onViewImplementation={() => {
+                props.onViewImplementation(migration);
+              }}
             />
           ))}
       </div>
@@ -194,6 +198,9 @@ export function AutomaticMigration(props: {
                   nxConsoleMetadata={props.nxConsoleMetadata}
                   onFileClick={() => {}}
                   forceIsRunning={currentMigrationRunning}
+                  onViewImplementation={() => {
+                    props.onViewImplementation(currentMigration);
+                  }}
                 />
               </div>
             )}
@@ -205,6 +212,9 @@ export function AutomaticMigration(props: {
                 migration={migration}
                 nxConsoleMetadata={props.nxConsoleMetadata}
                 onFileClick={() => {}}
+                onViewImplementation={() => {
+                  props.onViewImplementation(migration);
+                }}
               />
             ))}
           </div>

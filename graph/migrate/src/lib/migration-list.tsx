@@ -16,6 +16,7 @@ export function MigrationList(props: {
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onRunMany: (migrations: MigrationDetailsWithId[]) => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  onViewImplementation: (migration: MigrationDetailsWithId) => void;
 }) {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
@@ -54,11 +55,6 @@ export function MigrationList(props: {
 
   const handleHeaderCheckboxClick = () => {
     const newSelectedState = !anySelected;
-    console.log('header checkbox clicked', newSelectedState);
-    console.log('selectedMigrations', selectedMigrations);
-    console.log('allSelected', allSelected);
-    console.log('anySelected', anySelected);
-    console.log('numberSelected', numberSelected);
     setSelectedMigrations(
       Object.keys(selectedMigrations).reduce((acc, migrationId) => {
         acc[migrationId] = newSelectedState;
@@ -146,6 +142,9 @@ export function MigrationList(props: {
               })
             }
             onRunMigration={() => props.onRunMigration(migration)}
+            onViewImplementation={() => {
+              props.onViewImplementation(migration);
+            }}
             onFileClick={(file) => {
               props.onFileClick(file);
             }}

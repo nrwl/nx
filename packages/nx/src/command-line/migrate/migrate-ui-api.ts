@@ -3,7 +3,11 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { MigrationDetailsWithId } from '../../config/misc-interfaces';
 import { FileChange } from '../../generators/tree';
-import { nxCliPath } from './migrate';
+import {
+  getImplementationPath as getMigrationImplementationPath,
+  nxCliPath,
+  readMigrationCollection,
+} from './migrate';
 
 export type MigrationsJsonMetadata = {
   completedMigrations?: Record<
@@ -186,6 +190,24 @@ export async function runSingleMigration(
       removeRunningMigration(migration.id)
     );
   }
+}
+
+export async function getImplementationPath(
+  workspacePath: string,
+  migration: MigrationDetailsWithId
+) {
+  const { collection, collectionPath } = readMigrationCollection(
+    migration.package,
+    workspacePath
+  );
+
+  const { path } = getMigrationImplementationPath(
+    collection,
+    collectionPath,
+    migration.name
+  );
+
+  return path;
 }
 
 export function modifyMigrationsJsonMetadata(

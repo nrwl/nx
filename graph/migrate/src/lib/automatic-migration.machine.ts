@@ -315,7 +315,6 @@ function findFirstIncompleteMigration(
   migrations: MigrationDetailsWithId[],
   nxConsoleMetadata: MigrationsJsonMetadata
 ) {
-  console.log('finding first incomplete migration');
   return (
     migrations.find(
       (migration) =>

@@ -29,6 +29,7 @@ export interface MigrateUIProps {
   onCancel: () => void;
   onFinish: (squashCommits: boolean) => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  onViewImplementation: (migration: MigrationDetailsWithId) => void;
 }
 
 export function MigrateUI(props: MigrateUIProps) {
@@ -73,6 +74,9 @@ export function MigrateUI(props: MigrateUIProps) {
             props.onRunMigration(migration, { createCommits })
           }
           onSkipMigration={(migration) => props.onSkipMigration(migration)}
+          onViewImplementation={(migration) =>
+            props.onViewImplementation(migration)
+          }
         />
       ) : (
         <MigrationList
@@ -85,6 +89,9 @@ export function MigrateUI(props: MigrateUIProps) {
             props.onRunMany(migrations, { createCommits })
           }
           onFileClick={props.onFileClick}
+          onViewImplementation={(migration) =>
+            props.onViewImplementation(migration)
+          }
         />
       )}
       <div className="sticky bottom-0 flex justify-end gap-2 bg-white py-4 dark:bg-slate-900">

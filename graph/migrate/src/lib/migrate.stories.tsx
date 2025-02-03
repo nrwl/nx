@@ -18,6 +18,7 @@ export const Manual: Story = {
         description: 'This is a migration that does a thing labeled with one.',
         version: '1.0.0',
         package: 'nx',
+        implementation: './src/migrations/migration-1.ts',
       },
       {
         id: 'migration-2',
@@ -26,6 +27,7 @@ export const Manual: Story = {
           'Funnily, this is another migration that does a thing labeled with two.',
         version: '1.0.1',
         package: '@nx/react',
+        implementation: './src/migrations/migration-2.ts',
       },
       {
         id: 'migration-3',
@@ -34,6 +36,7 @@ export const Manual: Story = {
           'This is a migration that does a thing labeled with three.',
         version: '1.0.1',
         package: '@nx/js',
+        implementation: './src/migrations/migration-3.ts',
       },
       {
         id: 'migration-4',
@@ -41,6 +44,7 @@ export const Manual: Story = {
         description: 'This is a migration that does a thing labeled with four.',
         version: '1.0.2',
         package: 'nx',
+        implementation: './src/migrations/migration-4.ts',
       },
       {
         id: 'migration-3-1',
@@ -49,6 +53,7 @@ export const Manual: Story = {
           'This is a migration that does a thing labeled with three.',
         version: '1.0.1',
         package: '@nx/js',
+        implementation: './src/migrations/migration-3.ts',
       },
       {
         id: 'migration-6',
@@ -56,6 +61,7 @@ export const Manual: Story = {
         description: 'This migration performs updates labeled as number six.',
         version: '1.0.3',
         package: '@nx/workspace',
+        implementation: './src/migrations/migration-6.ts',
       },
       {
         id: 'migration-7',
@@ -64,6 +70,7 @@ export const Manual: Story = {
           'Lucky number seven migration that updates configurations.',
         version: '1.0.3',
         package: '@nx/devkit',
+        implementation: './src/migrations/migration-7.ts',
       },
     ],
     nxConsoleMetadata: {
@@ -108,6 +115,9 @@ export const Manual: Story = {
     onFileClick: (file: any) => {
       console.log(file);
     },
+    onViewImplementation: (migration: any) => {
+      console.log(migration);
+    },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -125,6 +135,7 @@ export const Automatic: Story = {
         description: 'This is a migration that does a thing labeled with one.',
         version: '1.0.0',
         package: 'nx',
+        implementation: './src/migrations/migration-1.ts',
       },
       {
         id: 'migration-2',
@@ -133,6 +144,7 @@ export const Automatic: Story = {
           'Funnily, this is another migration that does a thing labeled with two.',
         version: '1.0.1',
         package: '@nx/react',
+        implementation: './src/migrations/migration-2.ts',
       },
       {
         id: 'migration-3',
@@ -141,6 +153,7 @@ export const Automatic: Story = {
           'This is a migration that does a thing labeled with three.',
         version: '1.0.1',
         package: '@nx/js',
+        implementation: './src/migrations/migration-3.ts',
       },
       {
         id: 'migration-4',
@@ -148,6 +161,7 @@ export const Automatic: Story = {
         description: 'This is a migration that does a thing labeled with four.',
         version: '1.0.2',
         package: 'nx',
+        implementation: './src/migrations/migration-4.ts',
       },
       {
         id: 'migration-3-1',
@@ -156,6 +170,7 @@ export const Automatic: Story = {
           'This is a migration that does a thing labeled with three.',
         version: '1.0.1',
         package: '@nx/js',
+        implementation: './src/migrations/migration-3.ts',
       },
       {
         id: 'migration-6',
@@ -163,6 +178,7 @@ export const Automatic: Story = {
         description: 'This migration performs updates labeled as number six.',
         version: '1.0.3',
         package: '@nx/workspace',
+        implementation: './src/migrations/migration-6.ts',
       },
       {
         id: 'migration-7',
@@ -171,6 +187,7 @@ export const Automatic: Story = {
           'Lucky number seven migration that updates configurations.',
         version: '1.0.3',
         package: '@nx/devkit',
+        implementation: './src/migrations/migration-7.ts',
       },
     ],
     nxConsoleMetadata: {

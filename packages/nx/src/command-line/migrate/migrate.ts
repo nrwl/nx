@@ -1777,7 +1777,7 @@ export function runMigration() {
   }
 }
 
-function readMigrationCollection(packageName: string, root: string) {
+export function readMigrationCollection(packageName: string, root: string) {
   const collectionPath = readPackageMigrationConfig(
     packageName,
     root
@@ -1790,7 +1790,7 @@ function readMigrationCollection(packageName: string, root: string) {
   };
 }
 
-function getImplementationPath(
+export function getImplementationPath(
   collection: MigrationsJson,
   collectionPath: string,
   name: string

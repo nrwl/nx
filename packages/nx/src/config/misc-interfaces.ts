@@ -83,6 +83,7 @@ export interface GeneratedMigrationDetails {
   version: string;
   package: string;
   description: string;
+  implementation: string;
 }
 
 export interface MigrationsJson {
