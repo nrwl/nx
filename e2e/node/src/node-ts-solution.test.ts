@@ -49,8 +49,8 @@ describe('Node Applications', () => {
     updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
     runCLI(`build ${nodeapp}`);
 
-    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
-    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
+    checkFilesExist(`apps/${nodeapp}/dist/main.js`);
+    const result = execSync(`node apps/${nodeapp}/dist/main.js`, {
       cwd: tmpProjPath(),
     }).toString();
     expect(result).toContain('Hello World!');
@@ -144,7 +144,7 @@ describe('Node Applications', () => {
     expect(() => runCLI(`test ${nestapp}`)).not.toThrow();
 
     runCLI(`build ${nestapp}`);
-    checkFilesExist(`dist/apps/${nestapp}/main.js`);
+    checkFilesExist(`apps/${nestapp}/dist/main.js`);
 
     const p = await runCommandUntil(
       `serve ${nestapp}`,
