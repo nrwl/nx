@@ -5,6 +5,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes based on gradle 1`] = `
   [
     "proj/build.gradle",
     {
+      "externalNodes": {},
       "projects": {
         "proj": {
           "metadata": {
@@ -46,6 +47,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes based on gradle for nested 
   [
     "nested/nested/proj/build.gradle",
     {
+      "externalNodes": {},
       "projects": {
         "nested/nested/proj": {
           "metadata": {
@@ -87,6 +89,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets
   [
     "proj/application/build.gradle",
     {
+      "externalNodes": {},
       "projects": {
         "proj/application": {
           "metadata": {
@@ -469,6 +472,7 @@ exports[`@nx/gradle/plugin/nodes should not create nodes with atomized tests tar
   [
     "proj/application/build.gradle",
     {
+      "externalNodes": {},
       "projects": {
         "proj/application": {
           "metadata": {

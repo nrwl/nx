@@ -60,6 +60,7 @@ describe('@nx/gradle/plugin', () => {
         [
           "proj/build.gradle",
           {
+            "externalNodes": {},
             "projects": {
               "proj": {
                 "metadata": {

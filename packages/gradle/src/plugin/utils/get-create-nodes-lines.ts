@@ -2,7 +2,6 @@ import { AggregateCreateNodesError, logger, workspaceRoot } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { cacheDirectoryForWorkspace } from 'nx/src/utils/cache-directory';
 
 export async function getCreateNodesLines(
   gradlewFile: string,
@@ -24,13 +23,12 @@ export async function getCreateNodesLines(
   try {
     createNodesBuffer = await execGradleAsync(gradlewFile, [
       'createNodes',
-      '--outputDirectory',
-      cacheDirectoryForWorkspace(workspaceRoot),
-      '--workspaceRoot',
-      workspaceRoot,
       '--hash',
       gradleConfigHash,
-      '--no-parallel', // we need to run this task sequentially because tasks need to be processed in order
+      '--parallel', // add flags to improve performance
+      '--build-cache',
+      '--warning-mode',
+      'none',
     ]);
   } catch (e) {
     throw new AggregateCreateNodesError(

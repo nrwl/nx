@@ -160,7 +160,7 @@ export function processCreateNodes(createNodesLines: string[]): NodesReport {
           ...nodesReportJson.dependencies
         );
       }
-      if (Object.keys(nodesReportJson.externalNodes)) {
+      if (Object.keys(nodesReportJson.externalNodes ?? {}).length > 0) {
         nodesReportForAllProjects.externalNodes = {
           ...nodesReportForAllProjects.externalNodes,
           ...nodesReportJson.externalNodes,

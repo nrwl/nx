@@ -64,11 +64,6 @@ export function createGradleProject(
   addLocalPluginManagement(
     join(cwd, `buildSrc/settings.gradle${type === 'kotlin' ? '.kts' : ''}`)
   );
-  // Disable configuration cache to avoid issues with the createNodes task
-  writeFileSync(
-    join(cwd, `gradle.properties`),
-    'org.gradle.configuration-cache=false'
-  );
 
   e2eConsoleLogger(
     execSync(`${gradleCommand} publishToMavenLocal`, {

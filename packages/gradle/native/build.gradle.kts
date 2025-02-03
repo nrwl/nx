@@ -15,10 +15,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.0"
 
     id("java-library")
-    id("org.jetbrains.kotlin.jvm") version "2.0.21"
-
-    // Apply the Kotlin JVM plugin to add support for Kotlin.
-    // alias(libs.plugins.jvm)
+    kotlin("jvm") version "2.1.10"
 }
 
 repositories {
@@ -33,16 +30,27 @@ gradlePlugin {
     plugins {
         create("nxGradleNodesPlugin") {
             id = "dev.nx.gradle.native"
-            implementationClass = "dev.nx.gradle.native.Nodes"
+            implementationClass = "dev.nx.gradle.native.NodesPlugin"
             displayName = "The Nx Plugin for Gradle to generate nodes, dependencies and external nodes"
             description = "A plugin to generate a json file with nodes, dependencies and external nodes for Nx"
             tags = listOf("nx", "monorepo", "javascript", "typescript")
         }
     }
 }
+ 
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "dev.nx.gradle"
+            artifactId = "native"
+            version = "0.0.1-alpha.2"
+        }
+    }
+}
 
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
+
     testImplementation(kotlin("test"))
 }
 

@@ -35,8 +35,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit",
-    "dotenv": "~16.4.5"
+    "@nx/devkit": "file:../devkit"
   },
   "publishConfig": {
     "access": "public"

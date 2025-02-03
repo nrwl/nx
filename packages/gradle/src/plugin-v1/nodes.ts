@@ -20,7 +20,7 @@ import {
   populateGradleReport,
   getCurrentGradleReport,
   GradleReport,
-} from '../utils/get-gradle-report';
+} from './utils/get-gradle-report';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import {
   gradleConfigAndTestGlob,

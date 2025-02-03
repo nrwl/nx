@@ -14,6 +14,8 @@ import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { dirname, join, basename } from 'path';
 
+const nativePluginName = 'dev.nx.gradle.native';
+
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
 
@@ -31,7 +33,6 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
     );
   }
   await addBuildGradleFileNextToSettingsGradle(tree);
-  await disableConfigurationCacheProperty(tree);
   addPlugin(tree);
   updateNxJsonConfiguration(tree);
 
@@ -92,11 +93,31 @@ function addCreateNodesPluginToBuildGradle(
     buildGradleContent = tree.read(gradleFilePath).toString();
   }
 
+  const applyNodesPlugin = `plugin("${nativePluginName}")`;
+  if (buildGradleContent.includes('allprojects {')) {
+    if (!buildGradleContent.includes(applyNodesPlugin)) {
+      logger.warn(
+        `Please add the ${nativePluginName} plugin to your ${gradleFilePath}:
+allprojects {
+  apply {
+      ${applyNodesPlugin}
+  }
+}`
+      );
+    }
+  } else {
+    buildGradleContent = `${buildGradleContent}\n\rallprojects {
+    apply {
+        ${applyNodesPlugin}
+    }
+  }`;
+  }
+
   const nodesPlugin = filename.endsWith('.kts')
-    ? ` id("dev.nx.gradle.native") version("+")`
-    : ` id "dev.nx.gradle.native" version "+"`;
+    ? `id("${nativePluginName}") version("+")`
+    : `id "${nativePluginName}" version "+"`;
   if (buildGradleContent.includes('plugins {')) {
-    if (!buildGradleContent.includes('"dev.nx.gradle.native"')) {
+    if (!buildGradleContent.includes(nativePluginName)) {
       buildGradleContent = buildGradleContent.replace(
         'plugins {',
         `plugins {
@@ -104,33 +125,10 @@ function addCreateNodesPluginToBuildGradle(
       );
     }
   } else {
-    buildGradleContent += `\n\rplugins {
+    buildGradleContent = `plugins {
     ${nodesPlugin}
-}`;
+}\n\r${buildGradleContent}`;
   }
-
-  if (buildGradleContent) {
-    tree.write(gradleFilePath, buildGradleContent);
-  }
-}
-
-/**
- * Need to set org.gradle.configuration-cache=false for createNodes task to not throw an error.
- * @param tree
- */
-export async function disableConfigurationCacheProperty(tree: Tree) {
-  const gradlePropertiesFiles = await globAsync(tree, ['**/gradle.properties']);
-  gradlePropertiesFiles.forEach((gradlePropertiesFile) => {
-    const content = tree.read(gradlePropertiesFile).toString();
-    if (
-      content.includes('org.gradle.configuration-cache') &&
-      !content.includes('org.gradle.configuration-cache=false')
-    ) {
-      logger.warn(
-        'org.gradle.configuration-cache property is set to true. Setting it to false to avoid issues with createNodes task.'
-      );
-    }
-  });
 }
 
 export function updateNxJsonConfiguration(tree: Tree) {
