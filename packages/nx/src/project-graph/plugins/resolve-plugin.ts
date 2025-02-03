@@ -1,7 +1,10 @@
 import * as path from 'node:path';
 import { existsSync } from 'node:fs';
 
-import { getPackageEntryPointsToProjectMap } from '../../plugins/js/utils/packages';
+import {
+  getWorkspacePackagesMetadata,
+  matchImportToWildcardEntryPointsToProjectMap,
+} from '../../plugins/js/utils/packages';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { normalizePath } from '../../utils/path';
@@ -119,6 +122,7 @@ function lookupLocalPlugin(
 }
 
 let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
+let wildcardEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
 function findNxProjectForImportPath(
   importPath: string,
   projects: Record<string, ProjectConfiguration>,
@@ -146,10 +150,22 @@ function findNxProjectForImportPath(
     }
   }
 
-  packageEntryPointsToProjectMap ??=
-    getPackageEntryPointsToProjectMap(projects);
+  if (!packageEntryPointsToProjectMap && !wildcardEntryPointsToProjectMap) {
+    ({
+      entryPointsToProjectMap: packageEntryPointsToProjectMap,
+      wildcardEntryPointsToProjectMap,
+    } = getWorkspacePackagesMetadata(projects));
+  }
   if (packageEntryPointsToProjectMap[importPath]) {
     return packageEntryPointsToProjectMap[importPath];
+  }
+
+  const project = matchImportToWildcardEntryPointsToProjectMap(
+    wildcardEntryPointsToProjectMap,
+    importPath
+  );
+  if (project) {
+    return project;
   }
 
   logger.verbose(

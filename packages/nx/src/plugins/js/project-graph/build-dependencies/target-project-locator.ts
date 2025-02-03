@@ -13,7 +13,10 @@ import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 import type { PackageJson } from '../../../../utils/package-json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
-import { getPackageEntryPointsToProjectMap } from '../../utils/packages';
+import {
+  getWorkspacePackagesMetadata,
+  matchImportToWildcardEntryPointsToProjectMap,
+} from '../../utils/packages';
 import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 import {
   getRootTsConfigFileName,
@@ -45,10 +48,11 @@ export class TargetProjectLocator {
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
-  private packageEntryPointsToProjectMap: Record<
-    string,
-    ProjectGraphProjectNode
-  >;
+  private packagesMetadata: {
+    entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
+    wildcardEntryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
+    packageToProjectMap: Record<string, ProjectGraphProjectNode>;
+  };
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
@@ -142,7 +146,7 @@ export class TargetProjectLocator {
 
     // fall back to see if it's a locally linked workspace project where the
     // output might not exist yet
-    const localProject = this.findDependencyInWorkspaceProjects(importExpr);
+    const localProject = this.findImportInWorkspaceProjects(importExpr);
     if (localProject) {
       return localProject;
     }
@@ -254,12 +258,25 @@ export class TargetProjectLocator {
     return undefined;
   }
 
-  findDependencyInWorkspaceProjects(dep: string): string | null {
-    this.packageEntryPointsToProjectMap ??= getPackageEntryPointsToProjectMap(
-      this.nodes
+  findImportInWorkspaceProjects(importPath: string): string | null {
+    this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
+
+    if (this.packagesMetadata.entryPointsToProjectMap[importPath]) {
+      return this.packagesMetadata.entryPointsToProjectMap[importPath].name;
+    }
+
+    const project = matchImportToWildcardEntryPointsToProjectMap(
+      this.packagesMetadata.wildcardEntryPointsToProjectMap,
+      importPath
     );
 
-    return this.packageEntryPointsToProjectMap[dep]?.name ?? null;
+    return project?.name;
+  }
+
+  findDependencyInWorkspaceProjects(dep: string): string | null {
+    this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
+
+    return this.packagesMetadata.packageToProjectMap[dep]?.name;
   }
 
   private resolveImportWithTypescript(
