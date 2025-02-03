@@ -1,8 +1,9 @@
-import { CallToAction, DefaultLayout, TrustedBy } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import {
   CiForMonorepos,
   Hero,
+  HetznerCloudTestimonial,
   SmarterToolsForMonorepos,
   Statistics,
   TeamAndCommunity,
@@ -43,7 +44,7 @@ export default function Index(): JSX.Element {
           <Statistics />
         </div>
         <div className="mt-32 lg:mt-56">
-          <TrustedBy />
+          <HetznerCloudTestimonial />
         </div>
         <div className="mt-32 lg:mt-56">
           <CiForMonorepos />
