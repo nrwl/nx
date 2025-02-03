@@ -1,6 +1,6 @@
 # Typescript Project Linking
 
-The naive way to reference code in a separate project is to use a relative path in the `import` statement.
+The native way to reference code in a separate project is to use a relative path in the `import` statement.
 
 ```ts
 import { someFunction } from '../../teamA/otherProject';
