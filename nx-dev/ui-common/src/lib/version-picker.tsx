@@ -12,19 +12,19 @@ import { Fragment, JSX, useState } from 'react';
 
 const versionOptions = [
   {
-    label: '20',
+    label: 'v20',
     value: '',
   },
   {
-    label: '19',
+    label: 'v19',
     value: '19',
   },
   {
-    label: '18',
+    label: 'v18',
     value: '18',
   },
   {
-    label: '17',
+    label: 'v17',
     value: '17',
   },
 ];
@@ -33,19 +33,18 @@ export function VersionPicker(): JSX.Element {
   const [selected, _] = useState(versionOptions[0]);
   return (
     <>
-      <span className="inline-block align-bottom text-sm font-semibold uppercase leading-[38px] tracking-wide text-slate-800 lg:text-xs lg:leading-[38px] dark:text-slate-200"></span>
-      <div className="ml-2 inline-block">
+      <div className="inline-block">
         <div className="w-full">
           <Listbox value={selected}>
             {({ open }) => (
               <div className="relative">
                 <ListboxButton
                   className={
-                    'relative w-full cursor-pointer rounded-lg border border-slate-200 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-slate-700'
+                    'relative w-full cursor-pointer rounded-lg border-slate-200 py-2 pr-6 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-slate-700'
                   }
                 >
                   <span className="block truncate">{selected.label}</span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
                     <ChevronUpDownIcon
                       className="h-5 w-5 text-slate-500"
                       aria-hidden="true"
