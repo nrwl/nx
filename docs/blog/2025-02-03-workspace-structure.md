@@ -4,10 +4,10 @@ slug: virtuous-cycle-of-workspace-structure
 authors: [Philip Fulcher]
 tags: ['nx']
 cover_image: /blog/images/2025-02-03/virtuous-cycle.avif
-description: 'Learn more aboutorganizing your workspace like a modulith. We focus on workspaces with applications and breaking those applications down into libraries.'
+description: 'Learn more about organizing your workspace like a modulith. We focus on workspaces with applications and breaking those applications down into libraries.'
 ---
 
-We work with a [lot of companies](/customers) as part of our [Nx Enterprise](/enterprise) program., and the question we get from many customers is:
+We work with a [lot of companies](/customers) as part of our [Nx Enterprise](/enterprise) program, and the question we get from many customers is:
 
 > How can I organize my workspace the right way?
 
