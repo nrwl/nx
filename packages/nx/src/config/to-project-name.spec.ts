@@ -58,6 +58,7 @@ describe('Workspaces', () => {
           "metadata": {
             "description": "my-package description",
             "js": {
+              "isInPackageManagerWorkspaces": true,
               "packageName": "my-package",
             },
             "targetGroups": {},

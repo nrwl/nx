@@ -50,8 +50,10 @@ export const createNodesV2: CreateNodesV2 = [
 
     return createNodesFromFiles(
       (packageJsonPath, options, context) => {
+        const isInPackageManagerWorkspaces =
+          isInPackageJsonWorkspaces(packageJsonPath);
         if (
-          !isInPackageJsonWorkspaces(packageJsonPath) &&
+          !isInPackageManagerWorkspaces &&
           !isNextToProjectJson(packageJsonPath)
         ) {
           // Skip if package.json is not part of the package.json workspaces and not next to a project.json.
@@ -61,7 +63,8 @@ export const createNodesV2: CreateNodesV2 = [
         return createNodeFromPackageJson(
           packageJsonPath,
           context.workspaceRoot,
-          cache
+          cache,
+          isInPackageManagerWorkspaces
         );
       },
       packageJsons,
@@ -91,7 +94,7 @@ function splitConfigFiles(configFiles: readonly string[]): {
 
 export function buildPackageJsonWorkspacesMatcher(
   workspaceRoot: string,
-  readJson: (string) => any
+  readJson: (path: string) => any
 ) {
   const patterns = getGlobPatternsFromPackageManagerWorkspaces(
     workspaceRoot,
@@ -129,7 +132,8 @@ export function buildPackageJsonWorkspacesMatcher(
 export function createNodeFromPackageJson(
   pkgJsonPath: string,
   workspaceRoot: string,
-  cache: PackageJsonConfigurationCache
+  cache: PackageJsonConfigurationCache,
+  isInPackageManagerWorkspaces: boolean
 ) {
   const json: PackageJson = readJsonFile(join(workspaceRoot, pkgJsonPath));
 
@@ -138,12 +142,7 @@ export function createNodeFromPackageJson(
   const hash = hashObject({
     ...json,
     root: projectRoot,
-    /**
-     * Increment this number to force processing the package.json again. Do it
-     * when the implementation of this plugin is changed and results in different
-     * results for the same package.json contents.
-     */
-    bust: 1,
+    isInPackageManagerWorkspaces,
   });
 
   const cached = cache[hash];
@@ -159,7 +158,8 @@ export function createNodeFromPackageJson(
     json,
     workspaceRoot,
     pkgJsonPath,
-    readNxJson(workspaceRoot)
+    readNxJson(workspaceRoot),
+    isInPackageManagerWorkspaces
   );
 
   cache[hash] = project;
@@ -174,7 +174,8 @@ export function buildProjectConfigurationFromPackageJson(
   packageJson: PackageJson,
   workspaceRoot: string,
   packageJsonPath: string,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = packageJsonPath.split('\\').join('/');
   const projectRoot = dirname(normalizedPath);
@@ -213,7 +214,10 @@ export function buildProjectConfigurationFromPackageJson(
     ...packageJson.nx,
     targets: readTargetsFromPackageJson(packageJson, nxJson),
     tags: getTagsFromPackageJson(packageJson),
-    metadata: getMetadataFromPackageJson(packageJson),
+    metadata: getMetadataFromPackageJson(
+      packageJson,
+      isInPackageManagerWorkspaces
+    ),
   };
 
   if (
