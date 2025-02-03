@@ -100,15 +100,12 @@
     "deploy-build": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/public/documentation"],
+      "dependsOn": ["@nx/nx-source:documentation"],
       "options": {
         "commands": [
           {
             "command": "nx run nx-dev:generate-og-images",
             "description": "OG images generation"
-          },
-          {
-            "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
-            "description": "Pre-generate official package metadata"
           },
           {
             "command": "nx copy-docs nx-dev",

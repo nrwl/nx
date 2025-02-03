@@ -165,4 +165,4 @@ Matching just a single source tag is sometimes not enough for solving complex re
 
 ## Further reading
 
-- [Article: Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)
+- [Article: Taming Code Organization with Module Boundaries in Nx](/blog/mastering-the-project-boundaries-in-nx)

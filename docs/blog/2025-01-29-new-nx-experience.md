@@ -267,37 +267,76 @@ src="https://youtu.be/_6tpsu8zOik"
 title="Making TypeScript type checking distributable"
 width="100%" /%}
 
-We have already highlighted some raw metrics from benchmarking TypeScript project references compared to running type checking globally for the entire monorepo. [Check out our 1st article of the series](/blog/typescript-project-references#why-this-matters) for more details.
+We have already highlighted some raw metrics from benchmarking TypeScript project references compared to running type checking globally for the entire monorepo. [Check out our first article in the series](/blog/typescript-project-references#why-this-matters) for more details.
 
-The core difference to understand here is that, traditionally, you might have a single task that combines building and type checking, or at least two separate ones (like for Vite applications): one for building and one for type checking. For large TypeScript monorepos, this approach can become problematic because type checking occurs at the application level for all projects in the repository. This means a single TypeScript program is responsible for the entire process.
-
-{% video-player src="/documentation/blog/media/animation-tsrefs-splitting.mp4" alt="Moving from a single build + typecheck to fine-grained distributable typechecks" showDescription=true autoPlay=true loop=true /%}
+The core difference to understand here is that **traditionally, you might have a single task that combines building and type checking**, or at least two separate ones (like for Vite applications): one for building and one for type checking. For large TypeScript monorepos, this approach can become problematic because type checking occurs at the application level for all projects in the repository. This means a single TypeScript program is responsible for the entire process.
 
 This has two major implications:
 
 - It cannot be parallelized and distributed on CI, which makes it slow.
 - It is memory-intensive, requiring large CI machines (resulting in higher costs).
 
-By leveraging the new Nx and TypeScript project references setup, we now have fine-grained, individual type checking tasks at the project level. This allows for much better distribution as these tasks can be spread across different [Nx Agents](/ci/features/distribute-task-execution).
+By **leveraging the new Nx and TypeScript project references setup**, we now have fine-grained, individual type checking tasks at the project level. This allows you to run tasks in parallel and potentially distribute them across different [Nx Agents](/ci/features/distribute-task-execution) on CI.
 
 ![Running type checking on different agents on CI](/blog/images/articles/cipe-typecheck-distribution.avif)
 
 As such, the new approach:
 
+- Has **fine-grained type checking tasks**, which can be run in parallel.
 - Is **distributable across multiple machines**, resulting in faster CI runs.
 - Each individual type check **requires less memory**, allowing the use of smaller machines.
 - Each **individual type check can be [cached](/features/cache-task-results)**, significantly speeding up follow-up runs.
 
-We **ran some benchmarks** comparing [the current Nx setup](https://github.com/jaysoo/ts-bench-old) and [the new TypeScript project references-based setup](https://github.com/jaysoo/ts-bench-new):
+{% video-player src="/documentation/blog/media/animation-tsrefs-splitting.mp4" alt="Moving from a single build + type check to fine-grained distributable type checks" showDescription=true autoPlay=true loop=true /%}
 
-- Current: [~11m 54s](https://github.com/jaysoo/ts-bench-old/actions/runs/12956714862)
-- New TypeScript project references setup: [~8m 8s](https://github.com/jaysoo/ts-bench-new/actions/runs/12956715557)
+We **ran some benchmarks** comparing [the current Nx setup (not using TS project references)](https://github.com/nrwl/ts-bench-old) and [the new TypeScript project references-based setup](https://github.com/nrwl/ts-bench-new). TL;DR, here are some high-level numbers:
 
-And this is the **worst-case scenario**, relying solely on the distribution of type checking tasks across different machines. Subsequent runs might hit the cache and become even faster.
+- Setup without TS project references: **~8 min**
+- New TypeScript project references setup: **~2 min**
 
-It is important to emphasize that the main reason we can fully leverage these benefits from TypeScript project references is that we avoid the maintenance burden of setting them up manually, thanks to the automated [Nx sync](#automatically-syncing-typescript-project-references) command.
+You're seeing a `~` in front because it might fluctuate slightly (within ~20 sec) depending on how many machines we use and the distribution of tasks. Let's break it down. I'll refer to "Old" as the setup without TypeScript project references and "New" as the setup using TypeScript project references.
 
-**Struggling with performance in your large TypeScript monorepo?** [Let us know](https://bit.ly/3EgXq5x). We’ve [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](https://bit.ly/3EgXq5x)
+**3 Agents - Old: 8m 38s; New: 2m 49s**
+
+We just have two tasks running here: `demo:build` and `demo:typecheck`. Tasks are distributed across two agents, while one agent remains unused.
+
+![Without TypeScript project references - 3 Nx Agents](/blog/images/articles/ts-distribution-without-proj-refs.avif)
+
+If we run the same setup but leverage the new fine-grained `typecheck` tasks, we can see how the distribution is much more optimal. Now, all three agents are utilized, reducing the runtime to approximately **3m 29s**, which corresponds to the slowest agent.
+
+![With TypeScript project references - 3 Nx Agents](/blog/images/articles/ts-distribution-with-proj-refs-3-agents.avif)
+
+Let's explore whether increasing the number of agents further improves the overall CI runtime.
+
+{% tabs %}
+
+{% tab label="4 Agents" %}
+
+**New setup, 4 Nx Agents - 3m 02s**
+
+![With TypeScript project references - 4 Nx Agents](/blog/images/articles/ts-distribution-with-proj-refs-4-agents.avif)
+
+{% /tab %}
+
+{% tab label="5 Agents" %}
+
+**New setup, 5 Nx Agents - 2m 42s**
+
+![With TypeScript project references - 5 Nx Agents](/blog/images/articles/ts-distribution-with-proj-refs-5-agents.avif)
+
+{% /tab %}
+
+{% /tabs %}
+
+Beyond four agents, we won't be able to go any faster because the slowest, non-splittable, and thus non-distributable task (`huge-lib:typecheck`) takes approximately **2m 32s**.
+
+![We cannot get faster than the slowest unsplittable task](/blog/images/articles/ts-distribution-with-proj-refs-unsplittable-tasks.avif)
+
+And note, this is the **worst-case scenario**, relying solely on distributing type-checking tasks across different machines. Subsequent runs might hit the cache, making them even faster.
+
+It's also important to emphasize that the main reason we can fully leverage these benefits from TypeScript project references is that we avoid the maintenance burden of setting them up manually, thanks to the automated [Nx sync](#automatically-syncing-typescript-project-references) command.
+
+Now, **if your company struggles with these performance issues in large TypeScript monorepos**, [let us know](https://bit.ly/3EgXq5x). We’ve [worked with many teams](/customers) to solve similar challenges and would be happy to help. [Reach out!](https://bit.ly/3EgXq5x)
 
 ## FAQ
 
