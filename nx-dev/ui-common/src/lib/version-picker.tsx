@@ -33,8 +33,7 @@ export function VersionPicker(): JSX.Element {
   const [selected, _] = useState(versionOptions[0]);
   return (
     <>
-      <span className="inline-block align-bottom text-sm font-semibold uppercase leading-[38px] tracking-wide text-slate-800 lg:text-xs lg:leading-[38px] dark:text-slate-200"></span>
-      <div className="ml-2 inline-block">
+      <div className="inline-block">
         <div className="w-full">
           <Listbox value={selected}>
             {({ open }) => (
@@ -45,7 +44,7 @@ export function VersionPicker(): JSX.Element {
                   }
                 >
                   <span className="block truncate">{selected.label}</span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
                     <ChevronUpDownIcon
                       className="h-5 w-5 text-slate-500"
                       aria-hidden="true"

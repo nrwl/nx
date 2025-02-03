@@ -212,7 +212,7 @@ export function DocumentationHeader({
           </div>
         </div>
         {/*LOGO*/}
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <Link
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
