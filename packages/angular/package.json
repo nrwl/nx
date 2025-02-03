@@ -60,6 +60,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/rspack": "file:../rspack",
     "@nx/module-federation": "file:../module-federation",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",
