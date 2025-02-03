@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { VideoModal } from '@nx/nx-dev/ui-common';
+import { VideoModal } from '@nx/nx-dev/ui-common/src/lib/video-modal';
 
 function PlayButton({
   className,
@@ -79,17 +79,20 @@ export function HetznerCloudTestimonial(): ReactElement {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-t border-slate-200 bg-slate-50 py-24 sm:py-32 dark:border-slate-800 dark:bg-slate-900">
+    <div>
       <section
         id="hetzner-cloud-testimonial"
         className="z-0 mx-auto max-w-7xl scroll-mt-20 px-4 sm:px-6 lg:px-8"
       >
-        <SectionHeading as="h2" variant="title">
+        <SectionHeading
+          as="h2"
+          variant="subtitle"
+          className="scroll-mt-24 text-center font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
+        >
           Nx Enterprise{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             speeds build and test times
           </span>{' '}
-          <br className="hidden md:block" />
           as Hetzner Cloud{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             scales up
@@ -97,69 +100,8 @@ export function HetznerCloudTestimonial(): ReactElement {
           product offering
         </SectionHeading>
         <div className="mt-8 md:grid md:grid-cols-2 md:items-center md:gap-10 lg:gap-12">
-          <div className="mb-24 block sm:px-6 md:mb-0">
+          <div className="mb-12 block sm:px-6 md:mb-0">
             <div className="relative">
-              <div className="absolute bottom-0 start-0 -translate-x-14 translate-y-10">
-                <svg
-                  className="h-auto max-w-40 text-slate-200 dark:text-slate-800"
-                  width="696"
-                  height="653"
-                  viewBox="0 0 696 653"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle cx="72.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="171.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="270.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="369.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="468.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="567.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="666.5" cy="29.5" r="29.5" fill="currentColor" />
-                  <circle cx="29.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="128.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="227.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="326.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="425.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="524.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="623.5" cy="128.5" r="29.5" fill="currentColor" />
-                  <circle cx="72.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="171.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="270.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="369.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="468.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="567.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="666.5" cy="227.5" r="29.5" fill="currentColor" />
-                  <circle cx="29.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="128.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="227.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="326.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="425.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="524.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="623.5" cy="326.5" r="29.5" fill="currentColor" />
-                  <circle cx="72.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="171.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="270.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="369.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="468.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="567.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="666.5" cy="425.5" r="29.5" fill="currentColor" />
-                  <circle cx="29.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="128.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="227.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="326.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="425.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="524.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="623.5" cy="524.5" r="29.5" fill="currentColor" />
-                  <circle cx="72.5" cy="623.5" r="29.5" fill="currentColor" />
-                  <circle cx="171.5" cy="623.5" r="29.5" fill="currentColor" />
-                  <circle cx="270.5" cy="623.5" r="29.5" fill="currentColor" />
-                  <circle cx="369.5" cy="623.5" r="29.5" fill="currentColor" />
-                  <circle cx="468.5" cy="623.5" r="29.5" fill="currentColor" />
-                  <circle cx="567.5" cy="623.5" r="29.5" fill="currentColor" />
-                  <circle cx="666.5" cy="623.5" r="29.5" fill="currentColor" />
-                </svg>
-              </div>
-
               <Image
                 src="/images/enterprise/video-story-pavlo-grosse.avif"
                 alt="video still"
@@ -177,7 +119,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                     sendCustomEvent(
                       'hetzner-cloud-testimonial-video-click',
                       'hetzner-cloud-testimonial',
-                      'enterprise'
+                      'homepage'
                     );
                   }}
                 />
@@ -188,7 +130,7 @@ export function HetznerCloudTestimonial(): ReactElement {
           <figure>
             <blockquote className="relative">
               <svg
-                className="absolute start-0 top-0 size-24 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"
+                className="absolute start-0 top-0 size-12 -translate-x-8 -translate-y-4 transform text-slate-200 dark:text-slate-800"
                 width="16"
                 height="16"
                 viewBox="0 0 16 16"
@@ -203,22 +145,22 @@ export function HetznerCloudTestimonial(): ReactElement {
               </svg>
 
               <div className="relative z-10">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-200">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-200">
                   Featured client
                 </p>
 
-                <p className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
+                <p className="mt-2 text-xl font-medium italic text-slate-800 md:leading-normal dark:text-neutral-200">
                   Nx is speed and scalability. Before we only had a few features
                   and CI was slow and now it’s fast with way more features.
                   That’s a huge win for us.
                 </p>
               </div>
 
-              <figcaption className="mt-6 flex flex-wrap items-center gap-4 sm:flex-nowrap">
+              <figcaption className="mt-4 flex flex-wrap items-center gap-4 sm:flex-nowrap">
                 <img
                   alt="pavlo grosse"
                   src="https://avatars.githubusercontent.com/u/2219064?v=4"
-                  className="size-12 flex-none rounded-full bg-gray-50"
+                  className="size-10 flex-none rounded-full bg-gray-50"
                 />
                 <div className="flex-auto">
                   <div className="text-base font-semibold">Pavlo Grosse</div>
@@ -232,7 +174,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                 />
               </figcaption>
 
-              <footer className="mt-8 flex items-center gap-6">
+              <footer className="mt-6 flex items-center gap-6">
                 <Button
                   title="Watch the customer story"
                   variant="secondary"
@@ -242,7 +184,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                     sendCustomEvent(
                       'hetzner-cloud-testimonial-video-click',
                       'hetzner-cloud-testimonial',
-                      'enterprise'
+                      'homepage'
                     );
                   }}
                 >
