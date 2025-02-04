@@ -159,9 +159,9 @@ pub fn run_command(
     }
 
     let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
+    trace!("Running {}", command);
     let mut child = pair.slave.spawn_command(cmd)?;
     pseudo_terminal.running.store(true, Ordering::SeqCst);
-    trace!("Running {}", command);
     let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
     if is_tty {
         trace!("Enabling raw mode");

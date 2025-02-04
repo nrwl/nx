@@ -212,12 +212,15 @@ export class TasksSchedule {
       ({
         tasks: {},
         dependencies: {},
+        continuousDependencies: {},
         roots: [],
       } as TaskGraph));
 
     batch.tasks[task.id] = task;
     batch.dependencies[task.id] =
       this.notScheduledTaskGraph.dependencies[task.id];
+    batch.continuousDependencies[task.id] =
+      this.notScheduledTaskGraph.continuousDependencies[task.id];
     if (isRoot) {
       batch.roots.push(task.id);
     }
@@ -251,9 +254,13 @@ export class TasksSchedule {
     const hasDependenciesCompleted = this.taskGraph.dependencies[taskId].every(
       (id) => this.completedTasks.has(id)
     );
+    const hasContinuousDependenciesStarted =
+      this.taskGraph.continuousDependencies[taskId].every((id) =>
+        this.runningTasks.has(id)
+      );
 
     // if dependencies have not completed, cannot schedule
-    if (!hasDependenciesCompleted) {
+    if (!hasDependenciesCompleted || !hasContinuousDependenciesStarted) {
       return false;
     }
 
