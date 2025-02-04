@@ -394,6 +394,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
         'lib3:build': [],
         'lib4:build': [],
       },
+      continuousDependencies: {},
       roots: [],
       tasks: {
         'lib1:build': {
@@ -402,6 +403,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib1', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -409,6 +411,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -416,6 +419,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -423,6 +427,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib3', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -430,6 +435,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib4', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
       },
     };
@@ -569,6 +575,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
         'lib4:build': ['lib4:build-base'],
         'lib4:build-base': [],
       },
+      continuousDependencies: {},
       roots: [],
       tasks: {
         'lib1:build': {
@@ -577,6 +584,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib1', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib1:build-base': {
           id: 'lib1:build-base',
@@ -584,6 +592,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib1', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -591,6 +600,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -598,6 +608,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib2', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -605,6 +616,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib3', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib3:build-base': {
           id: 'lib3:build-base',
@@ -612,6 +624,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib3', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -619,6 +632,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib4', target: 'build' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
         'lib4:build-base': {
           id: 'lib4:build-base',
@@ -626,6 +640,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           target: { project: 'lib4', target: 'build-base' },
           outputs: [],
           parallelism: true,
+          continuous: false,
         },
       },
     };
@@ -717,6 +732,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
     // not relevant for this test case
     const taskGraph: TaskGraph = {
       dependencies: {},
+      continuousDependencies: {},
       roots: [],
       tasks: {},
     };
