@@ -1,5 +1,7 @@
 # Typescript Project Linking
 
+{% youtube src="https://youtu.be/D9D8KNffyBk" title="TypeScript Monorepos Done Right!" /%}
+
 The naive way to reference code in a separate project is to use a relative path in the `import` statement.
 
 ```ts
@@ -218,6 +220,8 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 ```
 
 ### TypeScript Project References Performance Benefits
+
+{% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%}
 
 Using TypeScript project references improves both the speed and memory usage of build and typecheck tasks. The repository below contains benchmarks showing the difference between running typecheck with and without using TypeScript project references.
 
