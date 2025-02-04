@@ -2,6 +2,7 @@ import { AggregateCreateNodesError, workspaceRoot } from '@nx/devkit';
 import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
 
 /**
  * For gradle command, it needs to be run from the directory of the gradle binary
@@ -29,6 +30,7 @@ export function execGradleAsync(
       shell: true,
       windowsHide: true,
       env: process.env,
+      maxBuffer: LARGE_BUFFER,
       ...execOptions,
     });
 
