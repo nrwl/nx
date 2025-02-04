@@ -1,5 +1,9 @@
 # Enterprise Release Notes
 
+### 2025.01.1
+
+- Fix: adds data migrations for older organizations
+
 ### 2025.01
 
 ##### Affected project graph
