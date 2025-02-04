@@ -53,6 +53,7 @@ export async function remixLibraryGeneratorInternal(
     buildable: options.buildable,
     bundler: options.bundler,
     addPlugin: options.addPlugin,
+    publishable: options.publishable,
   });
   tasks.push(libGenTask);
 
