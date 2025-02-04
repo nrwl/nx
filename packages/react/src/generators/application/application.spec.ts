@@ -5,6 +5,7 @@ import {
   ProjectGraph,
   readJson,
   readNxJson,
+  readProjectConfiguration,
   Tree,
   updateJson,
   updateNxJson,
@@ -1553,6 +1554,92 @@ describe('app', () => {
         'apps/*',
         'packages/shared/*',
       ]);
+    });
+
+    it('should configure webpack correctly with the output contained within the project root', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'apps/my-app',
+        bundler: 'webpack',
+        linter: Linter.EsLint,
+        style: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(appTree.read('apps/my-app/webpack.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, 'dist'),
+          },
+          devServer: {
+            port: 4200,
+            historyApiFallback: {
+              index: '/index.html',
+              disableDotRule: true,
+              htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+            },
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              tsConfig: './tsconfig.app.json',
+              compiler: 'babel',
+              main: './src/main.tsx',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ["./src/favicon.ico","./src/assets"],
+              styles: [],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            }),
+            new NxReactWebpackPlugin({
+              // Uncomment this line if you don't want to use SVGR
+              // See: https://react-svgr.com/
+              // svgr: false
+            }),
+          ],
+        };
+        "
+      `);
+    });
+
+    it('should configure webpack build task correctly with the output contained within the project root', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'apps/my-app',
+        bundler: 'webpack',
+        linter: Linter.EsLint,
+        style: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
+          .outputPath
+      ).toBe('apps/my-app/dist');
+    });
+
+    it('should configure rspack build task correctly with the output contained within the project root', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'apps/my-app',
+        bundler: 'rspack',
+        linter: Linter.EsLint,
+        style: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
+          .outputPath
+      ).toBe('apps/my-app/dist');
     });
   });
 

@@ -697,6 +697,48 @@ describe('app', () => {
     });
   });
 
+  describe('--bundler=webpack', () => {
+    it('should configure webpack correctly', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/my-app',
+        bundler: 'webpack',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, '../../dist/apps/my-app'),
+          },
+          devServer: {
+            port: 4200
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              tsConfig: './tsconfig.app.json',
+              compiler: 'babel',
+              main: './src/main.ts',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ["./src/favicon.ico","./src/assets"],
+              styles: ["./src/styles.css"],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            })
+          ],
+        };
+
+        "
+      `);
+    });
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -850,6 +892,46 @@ describe('app', () => {
             "src/**/*.d.ts",
           ],
         }
+      `);
+    });
+
+    it('should configure webpack correctly with the output contained within the project root', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/my-app',
+        bundler: 'webpack',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "
+        const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, 'dist'),
+          },
+          devServer: {
+            port: 4200
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              tsConfig: './tsconfig.app.json',
+              compiler: 'babel',
+              main: './src/main.ts',
+              index: './src/index.html',
+              baseHref: '/',
+              assets: ["./src/favicon.ico","./src/assets"],
+              styles: ["./src/styles.css"],
+              outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+              optimization: process.env['NODE_ENV'] === 'production',
+            })
+          ],
+        };
+
+        "
       `);
     });
   });

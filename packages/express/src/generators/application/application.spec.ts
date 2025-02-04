@@ -202,7 +202,7 @@ describe('app', () => {
                   ],
                   "compiler": "tsc",
                   "main": "myapp/src/main.ts",
-                  "outputPath": "dist/myapp",
+                  "outputPath": "myapp/dist",
                   "target": "node",
                   "tsConfig": "myapp/tsconfig.app.json",
                   "webpackConfig": "myapp/webpack.config.js",
