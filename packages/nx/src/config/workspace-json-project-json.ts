@@ -259,6 +259,11 @@ export interface TargetConfiguration<T = any> {
   parallelism?: boolean;
 
   /**
+   * Whether this target runs continuously
+   */
+  continuous?: boolean;
+
+  /**
    * List of generators to run before the target to ensure the workspace
    * is up to date.
    */
