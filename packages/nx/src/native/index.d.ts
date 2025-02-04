@@ -11,6 +11,7 @@ export declare class ChildProcess {
   kill(): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
+  cleanup(): void
 }
 
 export declare class FileLock {
