@@ -43,4 +43,13 @@ describe('publishable libraries release', () => {
     const versionOutput = runCLI(`release patch`);
     expect(versionOutput).toContain('Executing pre-version command');
   });
+
+  it('should be able release remix publishable libraries', async () => {
+    const remixLib = uniq('remix-lib');
+    runCLI(
+      `generate @nx/react:lib ${remixLib} --publishable --importPath=@proj/${remixLib}`
+    );
+    const versionOutput = runCLI(`release patch`);
+    expect(versionOutput).toContain('Executing pre-version command');
+  });
 });
