@@ -322,7 +322,7 @@ export type ConfigurationResult = {
 export async function createProjectConfigurations(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  projectFiles: string[][], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[]
 ): Promise<ConfigurationResult> {
   performance.mark('build-project-configs:start');
@@ -386,7 +386,7 @@ export async function createProjectConfigurations(
     }
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
-      projectFiles,
+      projectFiles[index],
       pattern,
       include,
       exclude
@@ -439,7 +439,7 @@ export async function createProjectConfigurations(
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles,
+        matchingProjectFiles: projectFiles.flat(),
       };
     } else {
       throw new ProjectConfigurationsError(errors, {
@@ -447,7 +447,7 @@ export async function createProjectConfigurations(
         externalNodes,
         projectRootMap: rootMap,
         sourceMaps: configurationSourceMaps,
-        matchingProjectFiles: projectFiles,
+        matchingProjectFiles: projectFiles.flat(),
       });
     }
   });

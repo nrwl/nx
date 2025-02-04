@@ -13,6 +13,7 @@ import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
   getNxWorkspaceFilesFromContext,
   globWithWorkspaceContext,
+  multiGlobWithWorkspaceContext,
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 import { join } from 'path';
@@ -67,7 +68,7 @@ export async function retrieveProjectConfigurations(
   nxJson: NxJsonConfiguration
 ): Promise<ConfigurationResult> {
   const globPatterns = configurationGlobs(plugins);
-  const workspaceFiles = await globWithWorkspaceContext(
+  const workspaceFiles = await multiGlobWithWorkspaceContext(
     workspaceRoot,
     globPatterns
   );
@@ -137,7 +138,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   }
 
   const projectFiles =
-    (await globWithWorkspaceContext(root, projectGlobPatterns)) ?? [];
+    (await multiGlobWithWorkspaceContext(root, projectGlobPatterns)) ?? [];
   const { projects } = await createProjectConfigurations(
     root,
     nxJson,
