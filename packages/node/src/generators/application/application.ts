@@ -246,7 +246,13 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
       ),
       webpackPluginOptions: hasWebpackPlugin(tree)
         ? {
-            outputPath: options.outputPath,
+            outputPath: options.isUsingTsSolutionConfig
+              ? 'dist'
+              : joinPathFragments(
+                  offsetFromRoot(options.appProjectRoot),
+                  'dist',
+                  options.rootProject ? options.name : options.appProjectRoot
+                ),
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
             assets: ['./src/assets'],
@@ -650,10 +656,12 @@ async function normalizeOptions(
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
-    outputPath: joinPathFragments(
-      'dist',
-      options.rootProject ? options.name : appProjectRoot
-    ),
+    outputPath: isUsingTsSolutionConfig
+      ? joinPathFragments(appProjectRoot, 'dist')
+      : joinPathFragments(
+          'dist',
+          options.rootProject ? options.name : appProjectRoot
+        ),
     isUsingTsSolutionConfig,
     swcJest,
   };
