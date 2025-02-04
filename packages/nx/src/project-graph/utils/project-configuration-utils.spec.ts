@@ -1678,16 +1678,6 @@ describe('project-configuration-utils', () => {
       ],
     };
 
-    const noProjectsPlugin: NxPluginV2 = {
-      name: 'no-projects-plugin',
-      createNodesV2: [
-        '!**/*',
-        async () => {
-          return [];
-        },
-      ],
-    };
-
     it('should create nodes for files matching included patterns only', async () => {
       const projectConfigurations = await createProjectConfigurations(
         undefined,
