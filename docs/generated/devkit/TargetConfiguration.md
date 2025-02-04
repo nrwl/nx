@@ -15,6 +15,7 @@ Target's configuration
 - [cache](../../devkit/documents/TargetConfiguration#cache): boolean
 - [command](../../devkit/documents/TargetConfiguration#command): string
 - [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
+- [continuous](../../devkit/documents/TargetConfiguration#continuous): boolean
 - [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
 - [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
 - [executor](../../devkit/documents/TargetConfiguration#executor): string
@@ -52,6 +53,14 @@ Sets of options
 #### Index signature
 
 ▪ [config: `string`]: `any`
+
+---
+
+### continuous
+
+• `Optional` **continuous**: `boolean`
+
+Whether this target runs continuously
 
 ---
 
