@@ -4,10 +4,11 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
-  updateJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
@@ -30,6 +31,10 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { determineEntryFields } from './lib/determine-entry-fields';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addReleaseOptionForPublishableTarget,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -114,16 +119,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  if (
-    !options.isUsingTsSolutionConfig &&
-    (options.publishable || options.bundler !== 'none')
-  ) {
-    updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
-      json.name = options.importPath;
-      return json;
-    });
-  }
-
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
@@ -155,6 +150,18 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   sortPackageJsonFields(tree, options.projectRoot);
+
+  if (options.publishable) {
+    tasks.push(await releaseTasks(tree));
+    const projectConfig = readProjectConfiguration(tree, options.name);
+    await addReleaseOptionForPublishableTarget(
+      tree,
+      options.name,
+      projectConfig,
+      options.isUsingTsSolutionConfig
+    );
+    updateProjectConfiguration(tree, options.name, projectConfig);
+  }
 
   if (!options.skipFormat) await formatFiles(tree);
 

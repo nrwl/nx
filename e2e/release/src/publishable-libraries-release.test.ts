@@ -35,4 +35,14 @@ describe('publishable libraries release', () => {
     versionOutput = runCLI(`release patch`);
     expect(versionOutput).toContain('Executing pre-version command');
   });
+
+  it('should be able to release publishable vue library', async () => {
+    const vueLib = uniq('vue-lib');
+    runCLI(
+      `generate @nx/js:lib ${vueLib} --publishable --importPath=@proj/${vueLib}`
+    );
+
+    let versionOutput = runCLI(`release patch`);
+    expect(versionOutput).toContain('Executing pre-version command');
+  });
 });
