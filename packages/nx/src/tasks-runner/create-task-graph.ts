@@ -16,6 +16,7 @@ export class ProcessTasks {
   private readonly seen = new Set<string>();
   readonly tasks: { [id: string]: Task } = {};
   readonly dependencies: { [k: string]: string[] } = {};
+  readonly continuousDependencies: { [k: string]: string[] } = {};
   private readonly allTargetNames: string[];
 
   constructor(
@@ -58,6 +59,7 @@ export class ProcessTasks {
           );
           this.tasks[task.id] = task;
           this.dependencies[task.id] = [];
+          this.continuousDependencies[task.id] = [];
         }
       }
     }
@@ -75,10 +77,16 @@ export class ProcessTasks {
         if (!initialTasks[t]) {
           delete this.tasks[t];
           delete this.dependencies[t];
+          delete this.continuousDependencies[t];
         }
       }
       for (let d of Object.keys(this.dependencies)) {
         this.dependencies[d] = this.dependencies[d].filter(
+          (dd) => !!initialTasks[dd]
+        );
+      }
+      for (let d of Object.keys(this.continuousDependencies)) {
+        this.continuousDependencies[d] = this.continuousDependencies[d].filter(
           (dd) => !!initialTasks[dd]
         );
       }
@@ -96,8 +104,22 @@ export class ProcessTasks {
       }
     }
 
-    return Object.keys(this.dependencies).filter(
-      (d) => this.dependencies[d].length === 0
+    filterDummyTasks(this.continuousDependencies);
+
+    for (const taskId of Object.keys(this.continuousDependencies)) {
+      if (this.continuousDependencies[taskId].length > 0) {
+        this.continuousDependencies[taskId] = [
+          ...new Set(
+            this.continuousDependencies[taskId].filter((d) => d !== taskId)
+          ).values(),
+        ];
+      }
+    }
+
+    return Object.keys(this.tasks).filter(
+      (d) =>
+        this.dependencies[d].length === 0 &&
+        this.continuousDependencies[d].length === 0
     );
   }
 
@@ -204,9 +226,6 @@ export class ProcessTasks {
         dependencyConfig.target,
         resolvedConfiguration
       );
-      if (task.id !== selfTaskId) {
-        this.dependencies[task.id].push(selfTaskId);
-      }
       if (!this.tasks[selfTaskId]) {
         const newTask = this.createTask(
           selfTaskId,
@@ -217,12 +236,20 @@ export class ProcessTasks {
         );
         this.tasks[selfTaskId] = newTask;
         this.dependencies[selfTaskId] = [];
+        this.continuousDependencies[selfTaskId] = [];
         this.processTask(
           newTask,
           newTask.target.project,
           configuration,
           overrides
         );
+      }
+      if (task.id !== selfTaskId) {
+        if (this.tasks[selfTaskId].continuous) {
+          this.continuousDependencies[task.id].push(selfTaskId);
+        } else {
+          this.dependencies[task.id].push(selfTaskId);
+        }
       }
     }
   }
@@ -265,8 +292,17 @@ export class ProcessTasks {
           resolvedConfiguration
         );
 
+        const depTargetConfiguration =
+          this.projectGraph.nodes[depProject.name].data.targets[
+            dependencyConfig.target
+          ];
+
         if (task.id !== depTargetId) {
-          this.dependencies[task.id].push(depTargetId);
+          if (depTargetConfiguration.continuous) {
+            this.continuousDependencies[task.id].push(depTargetId);
+          } else {
+            this.dependencies[task.id].push(depTargetId);
+          }
         }
         if (!this.tasks[depTargetId]) {
           const newTask = this.createTask(
@@ -278,6 +314,7 @@ export class ProcessTasks {
           );
           this.tasks[depTargetId] = newTask;
           this.dependencies[depTargetId] = [];
+          this.continuousDependencies[depTargetId] = [];
 
           this.processTask(
             newTask,
@@ -298,6 +335,7 @@ export class ProcessTasks {
         );
         this.dependencies[task.id].push(dummyId);
         this.dependencies[dummyId] ??= [];
+        this.continuousDependencies[dummyId] ??= [];
         const noopTask = this.createDummyTask(dummyId, task);
         this.processTask(noopTask, depProject.name, configuration, overrides);
       }
@@ -354,6 +392,7 @@ export class ProcessTasks {
       ),
       cache: project.data.targets[target].cache,
       parallelism: project.data.targets[target].parallelism ?? true,
+      continuous: project.data.targets[target].continuous ?? false,
     };
   }
 
@@ -405,6 +444,7 @@ export function createTaskGraph(
     roots,
     tasks: p.tasks,
     dependencies: p.dependencies,
+    continuousDependencies: p.continuousDependencies,
   };
 }
 
