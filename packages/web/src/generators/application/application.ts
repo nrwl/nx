@@ -83,6 +83,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       }
     );
   } else {
+    const rootOffset = offsetFromRoot(options.appProjectRoot);
     generateFiles(
       tree,
       join(__dirname, './files/app-webpack'),
@@ -91,18 +92,21 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+        offsetFromRoot: rootOffset,
         rootTsConfigPath,
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
               compiler: options.compiler,
               target: 'web',
-              outputPath: joinPathFragments(
-                'dist',
-                options.appProjectRoot != '.'
-                  ? options.appProjectRoot
-                  : options.projectName
-              ),
+              outputPath: options.isUsingTsSolutionConfig
+                ? 'dist'
+                : joinPathFragments(
+                    rootOffset,
+                    'dist',
+                    options.appProjectRoot !== '.'
+                      ? options.appProjectRoot
+                      : options.projectName
+                  ),
               tsConfig: './tsconfig.app.json',
               main: './src/main.ts',
               assets: ['./src/favicon.ico', './src/assets'],
@@ -181,7 +185,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       addPlugin: options.addPlugin,
     });
     const project = readProjectConfiguration(tree, options.projectName);
-    if (project.targets.build) {
+    if (project.targets?.build) {
       const prodConfig = project.targets.build.configurations.production;
       const buildOptions = project.targets.build.options;
       buildOptions.assets = assets;

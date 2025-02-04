@@ -775,5 +775,67 @@ describe('app', () => {
         "
       `);
     });
+
+    it('should configure webpack correctly with the output contained within the project root', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/my-app',
+        bundler: 'webpack',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('apps/my-app/webpack.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+        const { join } = require('path');
+
+        module.exports = {
+          output: {
+            path: join(__dirname, 'dist'),
+          },
+          plugins: [
+            new NxAppWebpackPlugin({
+              target: 'node',
+              compiler: 'tsc',
+              main: './src/main.ts',
+              tsConfig: './tsconfig.app.json',
+              assets: ["./src/assets"],
+              optimization: false,
+              outputHashing: 'none',
+              generatePackageJson: true,
+            })
+          ],
+        };
+        "
+      `);
+    });
+
+    it('should configure webpack build task correctly with the output contained within the project root', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/my-app',
+        bundler: 'webpack',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'my-app').targets.build.options
+          .outputPath
+      ).toBe('apps/my-app/dist');
+    });
+
+    it('should configure esbuild build task correctly with the output contained within the project root', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/my-app',
+        bundler: 'esbuild',
+        addPlugin: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readProjectConfiguration(tree, 'my-app').targets.build.options
+          .outputPath
+      ).toBe('apps/my-app/dist');
+    });
   });
 });

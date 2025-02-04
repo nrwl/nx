@@ -5,12 +5,12 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -43,11 +43,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       name: options.projectName,
       version: '0.0.1',
       private: true,
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
     });
   }
 
@@ -55,6 +50,16 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     addProjectConfiguration(host, options.projectName, {
       ...project,
     });
+  } else if (
+    options.parsedTags?.length ||
+    Object.keys(project.targets).length
+  ) {
+    const updatedProject: ProjectConfiguration = {
+      root: options.appProjectRoot,
+      targets: project.targets,
+      tags: options.parsedTags?.length ? options.parsedTags : undefined,
+    };
+    updateProjectConfiguration(host, options.projectName, updatedProject);
   }
 }
 
@@ -66,7 +71,14 @@ function createRspackBuildTarget(
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: options.isUsingTsSolutionConfig
+        ? joinPathFragments(options.appProjectRoot, 'dist')
+        : joinPathFragments(
+            'dist',
+            options.appProjectRoot !== '.'
+              ? options.appProjectRoot
+              : options.projectName
+          ),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',
       main: joinPathFragments(
@@ -139,12 +151,14 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
     defaultConfiguration: 'production',
     options: {
       compiler: options.compiler ?? 'babel',
-      outputPath: joinPathFragments(
-        'dist',
-        options.appProjectRoot != '.'
-          ? options.appProjectRoot
-          : options.projectName
-      ),
+      outputPath: options.isUsingTsSolutionConfig
+        ? joinPathFragments(options.appProjectRoot, 'dist')
+        : joinPathFragments(
+            'dist',
+            options.appProjectRoot !== '.'
+              ? options.appProjectRoot
+              : options.projectName
+          ),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',
       main: joinPathFragments(
