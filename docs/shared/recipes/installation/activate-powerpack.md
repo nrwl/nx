@@ -10,10 +10,10 @@ Activating Powerpack is a two-step process.
 
 ## Get a License Key
 
-1. Small teams can [immediately get a free Nx Powerpack license for remote cache](https://cloud.nx.app/powerpack/request/free). _[Read more about who qualifies.](/nx-enterprise/powerpack/free-licenses-and-trials)_
+1. Small teams can [immediately get a free Nx Powerpack license for remote cache](https://cloud.nx.app/powerpack/request/free?utm_source=nx-docs&utm_medium=referral&utm_campaign=powerpack-free-license&utm_content=link&utm_term=free-license-for-remote-cache). _[Read more about who qualifies.](/nx-enterprise/powerpack/free-licenses-and-trials)_
 2. Open-source projects can [register for a free OSS license](https://forms.gle/mWjQo6Vrv5Kt6WYh9) as well.
-3. Larger teams can immediately [get a free trial license](https://cloud.nx.app/powerpack/request/trial). _[Read more about how trials work](/nx-enterprise/powerpack/free-licenses-and-trials)._
-4. You can also [purchase a license](https://cloud.nx.app/powerpack/purchase) online.
+3. Larger teams can immediately [get a free trial license](https://cloud.nx.app/powerpack/request/trial?utm_source=nx-docs&utm_medium=referral&utm_campaign=powerpack-trial&utm_content=link&utm_term=free-trial-license-for-larger-teams). _[Read more about how trials work](/nx-enterprise/powerpack/free-licenses-and-trials)._
+4. You can also [purchase a license](https://cloud.nx.app/powerpack/purchase?utm_source=nx-docs&utm_medium=referral&utm_campaign=powerpack-purchase&utm_content=link&utm_term=pruchase-license) online.
 
 **If you are unsure how to proceed, starting with a trial process is recommended, and we will accommodate your organization's needs.**
 
