@@ -233,7 +233,7 @@ describe('preset', () => {
 
       module.exports = {
         output: {
-          path: join(__dirname, './dist/react-standalone-preset-webpack'),
+          path: join(__dirname, 'dist/react-standalone-preset-webpack'),
         },
         devServer: {
           port: 4200,
