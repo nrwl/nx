@@ -209,7 +209,7 @@ export function PowerpackFeatures(): ReactElement {
                 . Your teams can get started quickly without lengthy
                 negotiations, ensuring a faster go-to-market.{' '}
                 <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  href="https://cloud.nx.app/powerpack/request/trial?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=link&utm_term=free-trial-available-for-enterprises"
                   title="Get a Powerpack license"
                 >
                   Free trial available for Enterprises
