@@ -9,7 +9,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
   plugins: [
@@ -56,10 +56,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -100,7 +100,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
   plugins: [
@@ -147,10 +147,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -182,10 +182,11 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "eslint": "~8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-vue": "^9.16.1",
+    "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
     "typescript": "~5.7.2",
-    "vite": "^5.0.0",
+    "vite": "^6.0.0",
     "vitest": "^3.0.0",
     "vue-tsc": "^2.0.0",
   },

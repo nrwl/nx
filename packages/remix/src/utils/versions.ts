@@ -16,6 +16,7 @@ export const autoprefixerVersion = '^10.4.19';
 export const testingLibraryReactVersion = '^14.1.2';
 // TODO(colum): Unpin this when @testing-library/jest-dom pushes a fix
 export const testingLibraryJestDomVersion = '6.4.2';
+export const testingLibraryDomVersion = '^10.4.0';
 export const testingLibraryUserEventsVersion = '^14.5.2';
 export const viteVersion = '^5.0.0';
 

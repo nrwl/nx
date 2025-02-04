@@ -7,6 +7,7 @@ import {
   logger,
   offsetFromRoot,
   ProjectType,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -29,6 +30,7 @@ import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { getVitestDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { coerce, major } from 'semver';
 
 /**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
@@ -66,9 +68,14 @@ export async function vitestGeneratorInternal(
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+
+  const pkgJson = readJson(tree, 'package.json');
+  const useVite5 =
+    major(coerce(pkgJson.devDependencies['vite']) ?? '6.0.0') === 5;
   const initTask = await initGenerator(tree, {
     skipFormat: true,
     addPlugin: schema.addPlugin,
+    useViteV5: useVite5,
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));

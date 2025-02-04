@@ -1,0 +1,12 @@
+{
+  "name": "update-20-5-0-install-jiti",
+  "version": "20.5.0-beta.2",
+  "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
+  "implementation": "/packages/vite/src/migrations/update-20-5-0/install-jiti.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Installs the `jiti` package\n\nThis migration ensures that the [`jiti`](https://github.com/unjs/jiti) package is installed.  \nThis is a requirement for Vite to parse `postcss` configuration files that use TypeScript.\n\nLearn more: [https://vite.dev/guide/migration#postcss-load-config](https://vite.dev/guide/migration#postcss-load-config)\n"
+}

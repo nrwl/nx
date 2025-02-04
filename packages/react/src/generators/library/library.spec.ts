@@ -964,7 +964,7 @@ module.exports = withNx(
         import dts from 'vite-plugin-dts';
         import * as path from 'path';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../../node_modules/.vite/libs/mylib',
           plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
@@ -1003,10 +1003,10 @@ module.exports = withNx(
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
-              provider: 'v8',
+              provider: 'v8' as const,
             }
           },
-        });
+        }));
         "
       `);
 
