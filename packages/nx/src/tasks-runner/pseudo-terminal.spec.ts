@@ -17,6 +17,7 @@ describe('PseudoTerminal', () => {
       done();
     });
   });
+
   it('should kill a running command', (done) => {
     const childProcess = terminal.runCommand(
       'sleep 3 && echo "hello world" > file.txt'
@@ -31,16 +32,33 @@ describe('PseudoTerminal', () => {
 
   it('should subscribe to output', (done) => {
     const childProcess = terminal.runCommand('echo "hello world"');
-
     let output = '';
     childProcess.onOutput((chunk) => {
       output += chunk;
     });
 
     childProcess.onExit(() => {
-      expect(output.trim()).toContain('hello world');
-      done();
+      try {
+        expect(output.trim()).toContain('hello world');
+      } finally {
+        done();
+      }
     });
+  });
+
+  it('should get results', async () => {
+    const childProcess = terminal.runCommand('echo "hello world"');
+
+    const results = await childProcess.getResults();
+
+    expect(results.code).toEqual(0);
+    expect(results.terminalOutput).toContain('hello world');
+    const childProcess2 = terminal.runCommand('echo "hello jason"');
+
+    const results2 = await childProcess2.getResults();
+
+    expect(results2.code).toEqual(0);
+    expect(results2.terminalOutput).toContain('hello jason');
   });
 
   if (process.env.CI !== 'true') {
@@ -56,17 +74,12 @@ describe('PseudoTerminal', () => {
   }
 
   it('should run multiple commands', async () => {
-    function runCommand() {
-      return new Promise((res) => {
-        const cp1 = terminal.runCommand('whoami', {});
-
-        cp1.onExit(res);
-      });
-    }
-
     let i = 0;
     while (i < 10) {
-      await runCommand();
+      const childProcess = terminal.runCommand('whoami', {});
+
+      await childProcess.getResults();
+
       i++;
     }
   });
