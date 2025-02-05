@@ -86,15 +86,15 @@ This is our most important goal, and meeting it supports the other two goals. A 
 To aid in this, we like to think of different types of projects. By having a limited set of types of projects, we can better categorize them and think about their purpose.
 
 - **Feature libraries**
-  Developers should consider feature libraries as libraries that implement smart UI (with access to data sources) for specific business use cases or pages in an application.
+  Developers should consider feature libraries as libraries that implement container components (with access to data sources) for specific business use cases or pages in an application.
 - **UI libraries**
-  A UI library contains only presentational components (also called "dumb" components).
+  A UI library contains only presentational components.
 - **Data-access libraries**
   A data-access library contains code for interacting with a back-end system.
 - **Utility libraries**
   A utility library contains low-level utilities used by many libraries and applications.
 
-These are a great starting point because they encourage **good engineering practices**. Having the concept of a UI library encourages engineers to think of presentational or “dumb” components in terms of structure, inputs, and outputs. Data-access libraries encourage engineers to separate the API interactions into their own logic. Feature libraries take those two UI and data-access projects and plug them together to implement a single feature with smart components. A different feature library may plug different UI and data-access projects together to implement a different feature. It’s the beginning of an structure that emphasizes separation of concerns and DRY code.
+These are a great starting point because they encourage **good engineering practices**. Having the concept of a UI library encourages engineers to think of presentational components in terms of structure, inputs, and outputs. Data-access libraries encourage engineers to separate the API interactions into their own logic. Feature libraries take those two UI and data-access projects and plug them together to implement a single feature with container components. A different feature library may plug different UI and data-access projects together to implement a different feature. It’s the beginning of an structure that emphasizes separation of concerns and DRY code.
 
 This is a **starting point** but not an ending point. We find that these are the most common types of projects that we can specify, but your organization may find the need for more. We commonly find these other examples:
 
