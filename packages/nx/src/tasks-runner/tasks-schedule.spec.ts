@@ -6,6 +6,7 @@ import * as nxJsonUtils from '../config/nx-json';
 import * as executorUtils from '../command-line/run/executor-utils';
 import * as taskHistoryUtils from '../utils/task-history';
 import type { LifeCycle } from './life-cycle';
+import { RunningTasksService } from '../native';
 
 function createMockTask(id: string, parallelism: boolean = true): Task {
   const [project, target] = id.split(':');
@@ -23,6 +24,7 @@ function createMockTask(id: string, parallelism: boolean = true): Task {
 }
 
 describe('TasksSchedule', () => {
+  let runningTasksService: RunningTasksService;
   let taskHistory: any;
   let lifeCycle: LifeCycle;
 
@@ -36,6 +38,11 @@ describe('TasksSchedule', () => {
       getEstimatedTaskTimings: jest.fn(),
       getFlakyTasks: jest.fn(),
       recordTaskRuns: jest.fn(),
+    };
+    runningTasksService = {
+      getRunningTasks: jest.fn().mockReturnValue([]),
+      addRunningTask: jest.fn(),
+      removeRunningTask: jest.fn(),
     };
     jest.spyOn(taskHistoryUtils, 'getTaskHistory').mockReturnValue(taskHistory);
   });
@@ -144,9 +151,14 @@ describe('TasksSchedule', () => {
         version: '5',
       };
       taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        taskGraph,
+        runningTasksService,
+        {
+          lifeCycle,
+        }
+      );
       await taskSchedule.init();
     });
 
@@ -389,9 +401,14 @@ describe('TasksSchedule', () => {
         externalNodes: {},
         version: '5',
       };
-      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-        lifeCycle,
-      });
+      taskSchedule = new TasksSchedule(
+        projectGraph,
+        taskGraph,
+        runningTasksService,
+        {
+          lifeCycle,
+        }
+      );
     });
 
     describe('Without Batch Mode', () => {
@@ -643,9 +660,14 @@ describe('TasksSchedule', () => {
           version: '5',
         };
         taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-        taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-          lifeCycle,
-        });
+        taskSchedule = new TasksSchedule(
+          projectGraph,
+          taskGraph,
+          runningTasksService,
+          {
+            lifeCycle,
+          }
+        );
         await taskSchedule.init();
       });
 
@@ -817,9 +839,14 @@ describe('TasksSchedule', () => {
           version: '5',
         };
         taskHistory.getEstimatedTaskTimings.mockReturnValue({});
-        taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
-          lifeCycle,
-        });
+        taskSchedule = new TasksSchedule(
+          projectGraph,
+          taskGraph,
+          runningTasksService,
+          {
+            lifeCycle,
+          }
+        );
         await taskSchedule.init();
       });
 

@@ -367,6 +367,7 @@ module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache
 module.exports.NxTaskHistory = nativeBinding.NxTaskHistory
+module.exports.RunningTasksService = nativeBinding.RunningTasksService
 module.exports.RustPseudoTerminal = nativeBinding.RustPseudoTerminal
 module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
