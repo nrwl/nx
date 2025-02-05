@@ -9,6 +9,7 @@ import { FileChange } from 'nx/src/devkit-exports';
 import { useState } from 'react';
 import { MigrationList } from './migration-list';
 import { AutomaticMigration } from './automatic-migration';
+import { MigrationSettingsPanel } from './migration-settings-panel';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -55,16 +56,7 @@ export function MigrateUI(props: MigrateUIProps) {
               ? 'Switch to manual mode'
               : 'Switch to automatic mode'}
           </button>
-          <label htmlFor="create-commits">Create commits</label>
-          <input
-            checked={createCommits}
-            onChange={(e) => setCreateCommits((e.target as any).checked)}
-            id="create-commits"
-            name="create-commits"
-            value="create-commits"
-            type="checkbox"
-            className={`h-4 w-4`}
-          />
+          <MigrationSettingsPanel />
         </div>
       </div>
       {automaticMode ? (
