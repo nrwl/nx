@@ -198,7 +198,7 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
         title,
         bodyLines: bodyLines,
       });
-    } else {
+    } else if (typeof e.message === 'string') {
       const lines = e.message.split('\n');
       output.error({
         title: lines[0],
@@ -207,6 +207,8 @@ export function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
       if (isVerbose) {
         console.error(e);
       }
+    } else {
+      console.error(e);
     }
     process.exit(1);
   } else {
