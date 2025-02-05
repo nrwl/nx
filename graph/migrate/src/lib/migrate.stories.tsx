@@ -199,6 +199,14 @@ export const Automatic: Story = {
         },
         'migration-2': {
           name: 'migration-2',
+          type: 'successful',
+          changedFiles: [
+            { path: 'libs/a/src/index.ts', type: 'UPDATE' },
+            { path: 'libs/b/src/index.ts', type: 'UPDATE' },
+          ],
+        },
+        'migration-3': {
+          name: 'migration-3',
           type: 'failed',
           error: 'This is an error',
         },

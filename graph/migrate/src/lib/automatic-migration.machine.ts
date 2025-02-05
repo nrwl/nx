@@ -51,23 +51,6 @@ const guards = {
     if (!ctx.currentMigration) {
       return false;
     }
-    const completedMigration =
-      ctx.nxConsoleMetadata?.completedMigrations?.[ctx.currentMigration.id];
-
-    console.log(
-      'currentMigrationIsDone?',
-      !!ctx.currentMigration &&
-        !ctx.currentMigrationRunning &&
-        ((completedMigration?.type === 'successful' &&
-          completedMigration.changedFiles.length === 0) ||
-          currentMigrationIsSkipped(ctx) ||
-          currentMigrationIsReviewed(ctx)),
-      `running = ${ctx.currentMigrationRunning}`,
-      `currentMigration = ${ctx.currentMigration?.id}`,
-      `completedMigration = ${completedMigration}`,
-      `skipped = ${currentMigrationIsSkipped(ctx)}`,
-      `reviewed = ${currentMigrationIsReviewed(ctx)}`
-    );
 
     return (
       !!ctx.currentMigration &&
@@ -90,7 +73,6 @@ const guards = {
     );
   },
   needsReview: (ctx: AutomaticMigrationState) => {
-    console.log('evaluating needs review');
     return (
       !ctx.currentMigrationRunning &&
       !guards.canStartRunningCurrentMigration(ctx)
@@ -121,7 +103,6 @@ export const automaticMigrationMachine = createMachine<
         },
       },
       running: {
-        entry: [log('running')],
         on: {
           pause: [
             {
@@ -133,23 +114,15 @@ export const automaticMigrationMachine = createMachine<
           {
             cond: 'lastMigrationIsDone',
             target: 'done',
-            actions: [log('last migration is done')],
           },
           {
             cond: 'currentMigrationIsDone',
             target: 'running',
-            actions: [
-              'incrementCurrentMigration',
-              log('incremented current migration'),
-            ],
+            actions: ['incrementCurrentMigration'],
           },
           {
             cond: 'canStartRunningCurrentMigration',
-            actions: [
-              'setCurrentMigrationRunning',
-              'runMigration',
-              log('running current migration'),
-            ],
+            actions: ['setCurrentMigrationRunning', 'runMigration'],
           },
           {
             target: 'needsReview',
@@ -158,7 +131,6 @@ export const automaticMigrationMachine = createMachine<
         ],
       },
       needsReview: {
-        entry: [log('entering needs review')],
         on: {
           pause: [
             {
@@ -173,9 +145,7 @@ export const automaticMigrationMachine = createMachine<
           },
         ],
       },
-      done: {
-        entry: [log('done')],
-      },
+      done: {},
     },
     on: {
       loadInitialData: [
@@ -195,9 +165,7 @@ export const automaticMigrationMachine = createMachine<
       updateMetadata: [
         {
           actions: [
-            log('updating metadata'),
             assign((ctx, event) => {
-              console.log('metadata', event.metadata);
               ctx.nxConsoleMetadata = event.metadata;
 
               if (
@@ -206,7 +174,6 @@ export const automaticMigrationMachine = createMachine<
                   ctx.currentMigration.id
                 ]
               ) {
-                console.log('setting current migration running to false');
                 ctx.currentMigrationRunning = false;
               }
             }),
@@ -216,7 +183,6 @@ export const automaticMigrationMachine = createMachine<
       reviewMigration: [
         {
           actions: [
-            log('reviewing migration'),
             assign((ctx, event) => {
               ctx.reviewedMigrations = [
                 ...ctx.reviewedMigrations,

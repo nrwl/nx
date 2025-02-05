@@ -91,6 +91,13 @@ export function MigrateApp({
     });
   };
 
+  const onViewDocumentation = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'view-documentation',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -102,6 +109,7 @@ export function MigrateApp({
       onFileClick={onFileClick}
       onSkipMigration={onSkipMigration}
       onViewImplementation={onViewImplementation}
+      onViewDocumentation={onViewDocumentation}
     ></MigrateUI>
   );
 }

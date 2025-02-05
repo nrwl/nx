@@ -1,18 +1,20 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
+import { FileChange } from '@nx/devkit';
+// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { PauseIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { useInterpret, useSelector } from '@xstate/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   automaticMigrationMachine,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
 } from './automatic-migration.machine';
-import { MigrationCard } from './migration-card';
+import { MigrationCard, MigrationCardHandle } from './migration-card';
 import { Pill } from '@nx/graph-internal/ui-project-details';
 
 export function AutomaticMigration(props: {
@@ -20,7 +22,9 @@ export function AutomaticMigration(props: {
   nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onFileClick: (file: Omit<FileChange, 'content'>) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
+  onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }) {
   const actor = useInterpret(automaticMigrationMachine, {
     actions: {
@@ -88,6 +92,15 @@ export function AutomaticMigration(props: {
 
   const [showCompletedMigrations, setShowCompletedMigrations] = useState(false);
 
+  const currentMigrationRef = useRef<MigrationCardHandle>(null);
+
+  // Auto-expand when entering needsReview state with failed migration
+  useEffect(() => {
+    if (currentMigrationFailed && currentMigrationRef.current) {
+      currentMigrationRef.current.expand();
+    }
+  }, [currentMigration?.id, currentMigrationFailed]);
+
   return (
     <div>
       <div
@@ -120,9 +133,12 @@ export function AutomaticMigration(props: {
               key={migration.id}
               migration={migration}
               nxConsoleMetadata={props.nxConsoleMetadata}
-              onFileClick={() => {}}
+              onFileClick={props.onFileClick}
               onViewImplementation={() => {
                 props.onViewImplementation(migration);
+              }}
+              onViewDocumentation={() => {
+                props.onViewDocumentation(migration);
               }}
             />
           ))}
@@ -194,12 +210,16 @@ export function AutomaticMigration(props: {
             {currentMigration && (
               <div className="rounded-md border border-black p-3">
                 <MigrationCard
+                  ref={currentMigrationRef}
                   migration={currentMigration}
                   nxConsoleMetadata={props.nxConsoleMetadata}
                   onFileClick={() => {}}
                   forceIsRunning={currentMigrationRunning}
                   onViewImplementation={() => {
                     props.onViewImplementation(currentMigration);
+                  }}
+                  onViewDocumentation={() => {
+                    props.onViewDocumentation(currentMigration);
                   }}
                 />
               </div>
@@ -214,6 +234,9 @@ export function AutomaticMigration(props: {
                 onFileClick={() => {}}
                 onViewImplementation={() => {
                   props.onViewImplementation(migration);
+                }}
+                onViewDocumentation={() => {
+                  props.onViewDocumentation(migration);
                 }}
               />
             ))}

@@ -8,33 +8,61 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
   ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   CodeBracketIcon,
   ExclamationCircleIcon,
+  ListBulletIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal/ui-project-details';
-import { useState } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 
-export function MigrationCard({
-  migration,
-  nxConsoleMetadata,
-  isSelected,
-  onSelect,
-  onRunMigration,
-  onFileClick,
-  onViewImplementation,
-  forceIsRunning,
-}: {
-  migration: MigrationDetailsWithId;
-  nxConsoleMetadata: MigrationsJsonMetadata;
-  isSelected?: boolean;
-  onSelect?: (isSelected: boolean) => void;
-  onRunMigration?: () => void;
-  onFileClick: (file: Omit<FileChange, 'content'>) => void;
-  onViewImplementation: () => void;
-  forceIsRunning?: boolean;
-}) {
+export interface MigrationCardHandle {
+  expand: () => void;
+  collapse: () => void;
+  toggle: () => void;
+}
+
+export const MigrationCard = forwardRef<
+  MigrationCardHandle,
+  {
+    migration: MigrationDetailsWithId;
+    nxConsoleMetadata: MigrationsJsonMetadata;
+    isSelected?: boolean;
+    onSelect?: (isSelected: boolean) => void;
+    onRunMigration?: () => void;
+    onFileClick: (file: Omit<FileChange, 'content'>) => void;
+    onViewImplementation: () => void;
+    onViewDocumentation: () => void;
+    forceIsRunning?: boolean;
+  }
+>(function MigrationCard(
+  {
+    migration,
+    nxConsoleMetadata,
+    isSelected,
+    onSelect,
+    onRunMigration,
+    onFileClick,
+    onViewImplementation,
+    onViewDocumentation,
+    forceIsRunning,
+  },
+  ref
+) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      expand: () => setIsExpanded(true),
+      collapse: () => setIsExpanded(false),
+      toggle: () => setIsExpanded((prev) => !prev),
+    }),
+    []
+  );
+
   const migrationResult = nxConsoleMetadata.completedMigrations?.[migration.id];
   const succeeded = migrationResult?.type === 'successful';
   const failed = migrationResult?.type === 'failed';
@@ -46,17 +74,18 @@ export function MigrationCard({
 
   const renderSelectBox = onSelect && isSelected !== undefined;
 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isNxMigration =
+    migration.package.startsWith('@nx') || migration.package.startsWith('nx');
 
   return (
     <div
       key={migration.id}
       className={`my-2 gap-2 rounded-md border p-2 transition-colors ${
         succeeded
-          ? 'border-green-200 bg-green-50/30 dark:border-green-900/30 dark:bg-green-900/10'
+          ? 'border-green-200 bg-green-50/30 text-green-600 dark:border-green-900/30 dark:bg-green-900/10 dark:text-green-500'
           : failed
-          ? 'border-red-200 bg-red-50/30 dark:border-red-900/30 dark:bg-red-900/10'
-          : 'border-slate-200 dark:border-slate-700/60'
+          ? 'border-red-200 bg-red-50/30 text-red-600 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-500'
+          : 'border-slate-200 text-gray-500 dark:border-slate-700/60'
       }`}
     >
       <div className="flex items-center justify-between">
@@ -80,30 +109,21 @@ export function MigrationCard({
               />
             </div>
           )}
-          <div
-            className={`flex flex-col gap-1 ${
-              succeeded
-                ? 'text-green-600 dark:text-green-500'
-                : failed
-                ? 'text-red-600 dark:text-red-500'
-                : 'text-gray-500'
-            }`}
-          >
-            <div className={`flex items-center gap-2 `}>
+          <div className={`flex flex-col gap-1`}>
+            <div
+              className={`flex items-center gap-2 ${
+                isNxMigration ? 'cursor-pointer gap-1 hover:underline' : ''
+              }`}
+              onClick={() => {
+                if (isNxMigration) {
+                  onViewDocumentation();
+                }
+              }}
+            >
               <div>{migration.name}</div>
-              {succeeded ? (
-                <CheckCircleIcon
-                  className={`h-4 w-4 ${
-                    succeeded ? 'text-green-600 dark:text-green-500' : 'hidden'
-                  }`}
-                />
-              ) : failed ? (
-                <ExclamationCircleIcon
-                  className={`h-4 w-4 ${
-                    failed ? 'text-red-600 dark:text-red-500' : 'hidden'
-                  }`}
-                />
-              ) : null}
+              {isNxMigration && (
+                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              )}
             </div>
             <span className="text-sm">{migration.description}</span>
             <div className="flex gap-2">
@@ -124,6 +144,28 @@ export function MigrationCard({
                 <CodeBracketIcon className="h-4 w-4" />
                 View Source
               </span>
+              {failed && (
+                <span
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
+                  onClick={() => {
+                    setIsExpanded(!isExpanded);
+                  }}
+                >
+                  <ExclamationCircleIcon className="h-4 w-4" />
+                  {isExpanded ? 'Hide Errors' : 'View Errors'}
+                </span>
+              )}
+              {succeeded && madeChanges && (
+                <span
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
+                  onClick={() => {
+                    setIsExpanded(!isExpanded);
+                  }}
+                >
+                  <ListBulletIcon className="h-4 w-4" />
+                  {isExpanded ? 'Hide Changes' : 'View Changes'}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -147,32 +189,10 @@ export function MigrationCard({
                   color="green"
                 />
               </div>
-              {isExpanded && (
-                <ul className="flex flex-col gap-2">
-                  {migrationResult?.changedFiles.map((file) => {
-                    return (
-                      <li
-                        className="cursor-pointer hover:underline"
-                        key={`${migration.id}-${file.path}`}
-                        onClick={() => {
-                          onFileClick(file);
-                        }}
-                      >
-                        {file.path}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
             </div>
           )}
           {failed && (
-            <div
-              className="cursor-pointer"
-              onClick={() => {
-                setIsExpanded(!isExpanded);
-              }}
-            >
+            <div>
               <Pill text="Failed" color="red" />
             </div>
           )}
@@ -213,6 +233,27 @@ export function MigrationCard({
           <pre>{migrationResult?.error}</pre>
         </div>
       )}
+      {succeeded && madeChanges && isExpanded && (
+        <div>
+          <div className="my-2 border-t border-slate-200 dark:border-slate-700/60"></div>
+          <span className="pb-2 text-sm font-bold">File Changes</span>
+          <ul className="flex flex-col gap-2">
+            {migrationResult?.changedFiles.map((file) => {
+              return (
+                <li
+                  className="cursor-pointer text-sm hover:underline"
+                  key={`${migration.id}-${file.path}`}
+                  onClick={() => {
+                    onFileClick(file);
+                  }}
+                >
+                  {file.path}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
-}
+});

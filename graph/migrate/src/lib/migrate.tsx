@@ -30,6 +30,7 @@ export interface MigrateUIProps {
   onFinish: (squashCommits: boolean) => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
+  onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }
 
 export function MigrateUI(props: MigrateUIProps) {
@@ -77,6 +78,10 @@ export function MigrateUI(props: MigrateUIProps) {
           onViewImplementation={(migration) =>
             props.onViewImplementation(migration)
           }
+          onViewDocumentation={(migration) =>
+            props.onViewDocumentation(migration)
+          }
+          onFileClick={props.onFileClick}
         />
       ) : (
         <MigrationList
@@ -91,6 +96,9 @@ export function MigrateUI(props: MigrateUIProps) {
           onFileClick={props.onFileClick}
           onViewImplementation={(migration) =>
             props.onViewImplementation(migration)
+          }
+          onViewDocumentation={(migration) =>
+            props.onViewDocumentation(migration)
           }
         />
       )}

@@ -17,6 +17,7 @@ export function MigrationList(props: {
   onRunMany: (migrations: MigrationDetailsWithId[]) => void;
   onFileClick: (file: Omit<FileChange, 'content'>) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
+  onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }) {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
@@ -144,6 +145,9 @@ export function MigrationList(props: {
             onRunMigration={() => props.onRunMigration(migration)}
             onViewImplementation={() => {
               props.onViewImplementation(migration);
+            }}
+            onViewDocumentation={() => {
+              props.onViewDocumentation(migration);
             }}
             onFileClick={(file) => {
               props.onFileClick(file);
