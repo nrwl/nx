@@ -81,10 +81,13 @@ describe('retrieve-workspace-files', () => {
           root: 'project2',
         })
       );
-      await fs.createFile('project3/package.json', JSON.stringify({
-        name: 'project3',
-        root: 'project3',
-      }));
+      await fs.createFile(
+        'project3/package.json',
+        JSON.stringify({
+          name: 'project3',
+          root: 'project3',
+        })
+      );
 
       const mockPlugin = createTestPlugin('test-plugin', '**/project.json');
       const noCreateNodesOption = { name: 'no-create-nodes' };

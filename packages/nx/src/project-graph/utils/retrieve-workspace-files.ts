@@ -158,7 +158,7 @@ export function configurationGlobs(plugins: Array<LoadedNxPlugin>): string[] {
       globPatterns.push(plugin.createNodes[0]);
     } else {
       // if there is no glob in the plugin, add an empty glob so that we can still map the globs by index to the plugin
-      globPatterns.push('')
+      globPatterns.push('');
     }
   }
   return globPatterns;
