@@ -81,19 +81,26 @@ describe('retrieve-workspace-files', () => {
           root: 'project2',
         })
       );
+      await fs.createFile('project3/package.json', JSON.stringify({
+        name: 'project3',
+        root: 'project3',
+      }));
 
       const mockPlugin = createTestPlugin('test-plugin', '**/project.json');
+      const noCreateNodesOption = { name: 'no-create-nodes' };
+      const mockPlugin3 = createTestPlugin('test-plugin-3', '**/package.json');
 
       const result = await retrieveProjectConfigurations(
-        [mockPlugin],
+        [mockPlugin, noCreateNodesOption, mockPlugin3],
         fs.tempDir,
         {}
       );
 
       expect(result.projects).toBeDefined();
-      expect(Object.keys(result.projects)).toHaveLength(2);
+      expect(Object.keys(result.projects)).toHaveLength(3);
       expect(result.projects['project1']).toBeDefined();
       expect(result.projects['project2']).toBeDefined();
+      expect(result.projects['project3']).toBeDefined();
     });
 
     it('multiple plugins should not affect other plugins', async () => {
