@@ -2,10 +2,7 @@
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
 
-{% youtube
-src="https://youtu.be/KjZKFGu3_9I"
-title="Releasing Nx Release"
-width="100%" /%}
+{% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
 Nx provides a set of tools to help you manage your releases called `nx release`.
 
