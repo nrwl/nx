@@ -223,11 +223,16 @@ export function writeCache(
       });
       renameSync(tmpProjectGraphPath, nxProjectGraph);
 
-      writeJsonFile(tmpFileMapPath, cache);
-      renameSync(tmpFileMapPath, nxFileMap);
-
       writeJsonFile(tmpSourceMapPath, sourceMaps);
       renameSync(tmpSourceMapPath, nxSourceMaps);
+
+      // only write the file map if there are no errors
+      // if there were errors, the errors make the filemap invalid
+      // TODO: We should be able to keep the valid part of the filemap if the errors being thrown told us which parts of the filemap were invalid
+      if (errors.length === 0) {
+        writeJsonFile(tmpFileMapPath, cache);
+        renameSync(tmpFileMapPath, nxFileMap);
+      }
       done = true;
     } catch (err: any) {
       if (err instanceof Error) {
