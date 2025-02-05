@@ -14,11 +14,18 @@ global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
 let connected = false;
 let plugin: LoadedNxPlugin;
+let start: number;
 
 const socketPath = process.argv[2];
 
 const server = createServer((socket) => {
   connected = true;
+  const startupTime = Date.now() - start;
+
+  if (startupTime > 5000) {
+    console.warn(`Plugin Worker took ${startupTime}ms to start up.`);
+  }
+
   // This handles cases where the host process was killed
   // after the worker connected but before the worker was
   // instructed to load the plugin.
@@ -206,12 +213,13 @@ const server = createServer((socket) => {
 
 server.listen(socketPath);
 
+start = Date.now();
 setTimeout(() => {
   if (!connected) {
     console.error(
       'The plugin worker is exiting as it was not connected to within 5 seconds.'
     );
-    process.exit(1);
+    // process.exit(1);
   }
 }, 5000).unref();
 
