@@ -1,5 +1,10 @@
 import { ComponentProps, ReactElement, useState } from 'react';
-import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
+import {
+  Button,
+  ButtonLink,
+  SectionDescription,
+  SectionHeading,
+} from '@nx/nx-dev/ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
 import { cx } from '@nx/nx-dev/ui-primitives';
@@ -87,18 +92,15 @@ export function HetznerCloudTestimonial(): ReactElement {
         <SectionHeading
           as="h2"
           variant="subtitle"
+          id="trusted"
           className="scroll-mt-24 text-center font-medium tracking-tight text-slate-950 sm:text-3xl dark:text-white"
         >
-          Nx Enterprise{' '}
-          <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
-            speeds build and test times
-          </span>{' '}
-          as Hetzner Cloud{' '}
-          <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
-            scales up
-          </span>{' '}
-          product offering
+          Trusted by leading OSS projects and Fortune 500 companies.
         </SectionHeading>
+        <SectionDescription as="p" className="mt-2 text-center">
+          We developed Nx to be modular and incrementally adoptable to meet you
+          where you’re at.
+        </SectionDescription>
         <div className="mt-8 md:grid md:grid-cols-2 md:items-center md:gap-10 lg:gap-12">
           <div className="mb-12 block sm:px-6 md:mb-0">
             <div className="relative">
@@ -175,22 +177,14 @@ export function HetznerCloudTestimonial(): ReactElement {
               </figcaption>
 
               <footer className="mt-6 flex items-center gap-6">
-                <Button
-                  title="Watch the customer story"
+                <ButtonLink
+                  href="/enterprise"
+                  title="Learn about Nx Enterprise"
                   variant="secondary"
                   size="small"
-                  onClick={() => {
-                    setIsOpen(true);
-                    sendCustomEvent(
-                      'hetzner-cloud-testimonial-video-click',
-                      'hetzner-cloud-testimonial',
-                      'homepage'
-                    );
-                  }}
                 >
-                  <PlayIcon aria-hidden="true" className="size-5 shrink-0" />
-                  <span>Watch the customer story</span>
-                </Button>
+                  Learn about Nx Enterprise
+                </ButtonLink>
                 <Link
                   href="/customers"
                   prefetch={false}
