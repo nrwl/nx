@@ -54,6 +54,8 @@ import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
 import { TableOfContents } from './lib/tags/table-of-contents.component';
 import { tableOfContents } from './lib/tags/table-of-contents.schema';
+import { Quote } from './lib/tags/quote.component';
+import { quote } from './lib/tags/quote.schema';
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
 
@@ -84,6 +86,7 @@ export const getMarkdocCustomConfig = (
       personas,
       'project-details': projectDetails,
       pill,
+      quote,
       'short-embeds': shortEmbeds,
       'short-video': shortVideo,
       'side-by-side': sideBySide,
@@ -114,6 +117,7 @@ export const getMarkdocCustomConfig = (
     Personas,
     ProjectDetails,
     Pill,
+    Quote,
     ShortEmbeds,
     ShortVideo,
     SideBySide,
