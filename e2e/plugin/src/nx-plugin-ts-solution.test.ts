@@ -77,6 +77,24 @@ describe('Nx Plugin (TS solution)', () => {
     expect(runCLI(`e2e @proj/${plugin}-e2e`)).toContain(
       `Successfully ran target e2e for project @proj/${plugin}-e2e`
     );
+
+    // Check that inferred targets also work
+    updateJson('nx.json', (json) => {
+      json.plugins.push({
+        plugin: '@nx/jest/plugin',
+        include: ['packages/*-e2e/**/*'],
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      });
+      return json;
+    });
+    updateJson(`packages/${plugin}-e2e/package.json`, (json) => {
+      delete json.targets;
+      return json;
+    });
+    expect(() => runCLI(`e2e @proj/${plugin}-e2e`)).not.toThrow();
   }, 90000);
 
   it('should be able to infer projects and targets', async () => {
