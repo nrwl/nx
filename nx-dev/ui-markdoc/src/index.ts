@@ -54,6 +54,7 @@ import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
 import { TableOfContents } from './lib/tags/table-of-contents.component';
 import { tableOfContents } from './lib/tags/table-of-contents.schema';
+import { Testimonial, testimonial } from './lib/tags/testimonial.component';
 import { Quote } from './lib/tags/quote.component';
 import { quote } from './lib/tags/quote.schema';
 import { metrics } from './lib/tags/metrics.schema';
@@ -93,6 +94,7 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
+      testimonial,
       toc: tableOfContents,
       tweet,
       youtube,
@@ -126,6 +128,7 @@ export const getMarkdocCustomConfig = (
     Tab,
     Tabs,
     TableOfContents,
+    Testimonial,
     Tweet,
     YouTube,
     VideoLink,
