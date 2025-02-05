@@ -379,6 +379,41 @@ describe('lib', () => {
           },
         ]
       `);
+      expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {},
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/mylib",
+          "nx": {
+            "targets": {
+              "lint": {
+                "executor": "@nx/eslint:lint",
+              },
+              "test": {
+                "executor": "@nx/jest:jest",
+                "options": {
+                  "jestConfig": "mylib/jest.config.ts",
+                },
+                "outputs": [
+                  "{projectRoot}/test-output/jest/coverage",
+                ],
+              },
+            },
+          },
+          "private": true,
+          "type": "module",
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
       expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",

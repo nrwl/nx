@@ -1,5 +1,5 @@
 {
-  "name": "<%= name %>",
+  "name": "<%= projectName %>",
   "version": "0.0.1",
   "main": "<%= appMain %>"
 }
