@@ -9,6 +9,8 @@ import com.google.gson.Gson
  */
 class NodesPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        project.logger.info("HELLO")
+
         // Register a task
         project.tasks.register("createNodes", CreateNodesTask::class.java) { task ->
             val gradleNodeReport = createNodeForProject(project)
@@ -44,6 +46,7 @@ class NodesPlugin : Plugin<Project> {
         } catch (e: Exception) {
             logger.info("createNodeForProject: get dependencies error ${e.toString()}")
         }
+
 
         try {
             val gradleTargets: GradleTargets = processTargetsForProject(rootProject)

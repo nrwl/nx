@@ -48,8 +48,12 @@ publishing {
     }
 }
 
+
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
+
+    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
 
     testImplementation(kotlin("test"))
 }

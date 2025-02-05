@@ -1,6 +1,7 @@
 package dev.nx.gradle.native
 
 import org.gradle.api.Task
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.file.FileCollection
 import java.io.File
 
@@ -213,24 +214,46 @@ fun getOutputsForTask(
 }
 
 /**
- * Get dependsOn for task
+ * Get dependsOn for task, handling configuration timing safely
  * @param task task to process
  * @return list of dependsOn tasks, null if empty or an error occurred
  */
 fun getDependsOnForTask(task: Task): List<String>? {
-    try {
-        val dependsOn = task.getTaskDependencies().getDependencies(task)
-        if (!dependsOn.isEmpty()) {
-            val dependsOnTasksNames = dependsOn.map { depTask ->
-                val depProject = depTask.getProject()
-                "${depProject.name}:${depTask.name}"
+    return try {
+        // Get the raw dependencies set without forcing evaluation
+        val rawDependencies = task.dependsOn
+
+        // Filter and process only the resolved tasks
+        val resolvedDependencies = rawDependencies.mapNotNull { dep ->
+            when (dep) {
+                // Handle direct task references
+                is Task -> "${dep.project.name}:${dep.name}"
+
+                // Handle task providers (lazy task references)
+                is TaskProvider<*> -> "${dep.get().project.name}:${dep.name}"
+
+                // Handle string task paths
+                is String -> {
+                    // For cross-project task dependencies
+                    if (dep.contains(":")) dep
+                    // For same-project task dependencies
+                    else "${task.project.name}:$dep"
+                }
+
+                // Ignore other dependency types
+                else -> null
             }
-            return dependsOnTasksNames
         }
+
+        // Return null if no dependencies found
+        resolvedDependencies.takeIf { it.isNotEmpty() }
+
     } catch (e: Exception) {
-        task.logger.info("${task}: get dependsOn error ${e.toString()}")
+        // Log the error but don't fail the build
+        task.logger.info("Error getting dependencies for ${task.path}: ${e.message}")
+        task.logger.debug("Stack trace:", e)
+        null
     }
-    return null
 }
 
 /**
