@@ -40,6 +40,7 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const isUsingTsSolutionsConfig = isUsingTsSolutionSetup(tree);
   const normalized: NormalizedOptions = {
     ...options,
     strict: options.strict ?? true,
@@ -49,7 +50,7 @@ export async function normalizeOptions(
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
     prefix: getNpmScope(tree), // we could also allow customizing this
-    projectName: isUsingTsSolutionSetup(tree)
+    projectName: isUsingTsSolutionsConfig
       ? getImportPath(tree, projectName)
       : projectName,
     projectRoot,
@@ -58,13 +59,14 @@ export async function normalizeOptions(
     target: options.target ?? 'es6',
     testEnvironment: options.testEnvironment ?? 'node',
     unitTestRunner: options.unitTestRunner ?? 'jest',
+    isUsingTsSolutionsConfig,
   };
 
   return normalized;
 }
 
 export function toJsLibraryGeneratorOptions(
-  options: LibraryGeneratorOptions
+  options: NormalizedOptions
 ): JsLibraryGeneratorSchema {
   return {
     name: options.name,
@@ -80,8 +82,8 @@ export function toJsLibraryGeneratorOptions(
     tags: options.tags,
     testEnvironment: options.testEnvironment,
     unitTestRunner: options.unitTestRunner,
-    config: options.standaloneConfig ? 'project' : 'workspace',
     setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
+    useProjectJson: !options.isUsingTsSolutionsConfig,
   };
 }
