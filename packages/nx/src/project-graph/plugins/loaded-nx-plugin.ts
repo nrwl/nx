@@ -121,26 +121,19 @@ export class LoadedNxPlugin {
     if (plugin.preTasksExecution) {
       this.preTasksExecution = async (context: PreTasksExecutionContext) => {
         const updates = {};
-        let revokeFn: () => void;
+        let originalEnv = process.env;
         if (isIsolationEnabled() || isDaemonEnabled()) {
-          const { proxy, revoke } = Proxy.revocable<NodeJS.ProcessEnv>(
-            process.env,
-            {
-              set: (target, key: string, value) => {
-                target[key] = value;
-                updates[key] = value;
-                return true;
-              },
-            }
-          );
-          process.env = proxy;
-          revokeFn = revoke;
+          process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
+            set: (target, key: string, value) => {
+              target[key] = value;
+              updates[key] = value;
+              return true;
+            },
+          });
         }
         await plugin.preTasksExecution(this.options, context);
+        process.env = originalEnv;
 
-        if (revokeFn) {
-          revokeFn();
-        }
         return updates;
       };
     }
