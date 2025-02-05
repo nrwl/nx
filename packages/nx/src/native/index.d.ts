@@ -56,6 +56,13 @@ export declare class NxTaskHistory {
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
 }
 
+export declare class RunningTasksService {
+  constructor(db: ExternalObject<NxDbConnection>)
+  getRunningTasks(ids: Array<string>): Array<string>
+  addRunningTask(taskId: string): void
+  removeRunningTask(taskId: string): void
+}
+
 export declare class RustPseudoTerminal {
   constructor()
   runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null): ChildProcess
