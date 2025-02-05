@@ -117,7 +117,7 @@ export function LinkCard({
 }: {
   title: string;
   type: string;
-  icon: string; // `icon` is the link to the SVG file
+  icon: string; // Can be either a component name or a direct image URL
   url: string;
   appearance?: 'default' | 'small';
 }): JSX.Element {
@@ -138,13 +138,20 @@ export function LinkCard({
             }
           )}
         >
-          {icon &&
-            (frameworkIcons[icon as Framework]?.image ||
-              callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
-              callIfFunction(
-                (heroIcons[icon as keyof typeof heroIcons] as any)?.render,
-                { className: 'w-full h-full' }
-              ))}
+          {icon.startsWith('/') ? (
+            <img
+              src={icon}
+              alt={title}
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            frameworkIcons[icon as Framework]?.image ||
+            callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
+            callIfFunction(
+              (heroIcons[icon as keyof typeof heroIcons] as any)?.render,
+              { className: 'w-full h-full' }
+            )
+          )}
         </div>
       )}
       <div
