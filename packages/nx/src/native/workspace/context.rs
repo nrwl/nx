@@ -244,7 +244,7 @@ impl WorkspaceContext {
         let file_data = self.all_file_data();
 
         globs
-            .into_par_iter()
+            .into_iter()
             .map(|glob| {
                 let globbed_files =
                     config_files::glob_files(&file_data, vec![glob], exclude.clone())?;
