@@ -6,11 +6,11 @@ In order to maintain a certain sense of order, we recommend having a small numbe
 
 **Feature libraries:**
 
-Developers should consider feature libraries as libraries that implement smart UI (with access to data sources) for specific business use cases or pages in an application.
+Developers should consider feature libraries as libraries that implement container components (with access to data sources) for specific business use cases or pages in an application.
 
 **UI libraries:**
 
-A UI library contains only presentational components (also called "dumb" components).
+A UI library contains only presentational components.
 
 **Data-access libraries:**
 
@@ -26,7 +26,7 @@ A utility library contains low-level utilities used by many libraries and applic
 
 **What is it?**
 
-A feature library contains a set of files that configure a business use case or a page in an application. Most of the components in such a library are smart components that interact with data sources. This type of library also contains most of the UI logic, form validation code, etc. Feature libraries are almost always app-specific and are often lazy-loaded.
+A feature library contains a set of files that configure a business use case or a page in an application. Most of the components in such a library are container components that interact with data sources. This type of library also contains most of the UI logic, form validation code, etc. Feature libraries are almost always app-specific and are often lazy-loaded.
 
 **Naming Convention**
 
