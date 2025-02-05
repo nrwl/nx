@@ -3,13 +3,15 @@ import {
   getExecutorForTask,
   getExecutorNameForTask,
   removeTasksFromTaskGraph,
+  removeTasksAndDependencies,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
-import { TaskHistory, getTaskHistory } from '../utils/task-history';
+import { getTaskHistory, TaskHistory } from '../utils/task-history';
+import { RunningTasksService } from '../native';
 
 export interface Batch {
   executorName: string;
@@ -17,7 +19,7 @@ export interface Batch {
 }
 
 export class TasksSchedule {
-  private notScheduledTaskGraph = this.taskGraph;
+  private notScheduledTaskGraph;
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
   private reverseProjectGraph = reverse(this.projectGraph);
   private taskHistory: TaskHistory | null = getTaskHistory();
@@ -33,8 +35,22 @@ export class TasksSchedule {
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
+    private readonly runningTasksService: RunningTasksService,
     private readonly options: DefaultTasksRunnerOptions
-  ) {}
+  ) {
+    this.taskGraph = removeTasksAndDependencies(
+      this.taskGraph,
+      this.reverseTaskDeps,
+      new Set(
+        this.runningTasksService.getRunningTasks(
+          Object.entries(this.taskGraph.tasks)
+            .filter(([id, task]) => task.continuous)
+            .map(([id]) => id)
+        )
+      )
+    );
+    this.notScheduledTaskGraph = this.taskGraph;
+  }
 
   public async init() {
     if (this.taskHistory) {

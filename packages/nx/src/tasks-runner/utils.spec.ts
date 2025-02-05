@@ -1,14 +1,17 @@
 import {
+  calculateReverseDeps,
   expandDependencyConfigSyntaxSugar,
   expandWildcardTargetConfiguration,
   getDependencyConfigs,
   getOutputsForTargetAndConfiguration,
   interpolate,
+  removeTasksAndDependencies,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { TaskGraph } from '../config/task-graph';
 
 describe('utils', () => {
   function getNode(build): ProjectGraphProjectNode {
@@ -782,6 +785,381 @@ describe('utils', () => {
 
         Run \`nx repair\` to fix this."
       `);
+    });
+  });
+
+  describe('removeTasksAndDependencies', () => {
+    it('removes tasks', () => {
+      const graph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: {
+              project: 'a',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'b:build': {
+            id: 'b:build',
+            target: {
+              project: 'b',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': ['b:build'],
+          'b:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+        },
+        roots: ['b:build'],
+      };
+
+      const reverse = calculateReverseDeps(graph);
+
+      expect(
+        removeTasksAndDependencies(graph, reverse, new Set(['b:build']))
+      ).toEqual({
+        continuousDependencies: {
+          'a:build': [],
+        },
+        dependencies: {
+          'a:build': [],
+        },
+        roots: ['a:build'],
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: {
+              project: 'a',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+      });
+    });
+    it('removes tasks with no dependencies', () => {
+      const graph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: {
+              project: 'a',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+        },
+        roots: ['a:build'],
+      };
+
+      const reverse = calculateReverseDeps(graph);
+
+      expect(
+        removeTasksAndDependencies(graph, reverse, new Set(['a:build']))
+      ).toEqual({
+        continuousDependencies: {},
+        dependencies: {},
+        roots: [],
+        tasks: {},
+      });
+    });
+    it('should remove specified tasks and their dependencies from the task graph', () => {
+      const taskGraph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'b:build': {
+            id: 'b:build',
+            target: { project: 'b', target: 'build' },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'c:build': {
+            id: 'c:build',
+            target: { project: 'c', target: 'build' },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': ['b:build'],
+          'b:build': ['c:build'],
+          'c:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+          'c:build': [],
+        },
+        roots: ['c:build'],
+      };
+
+      const reverseTaskDeps = calculateReverseDeps(taskGraph);
+      const tasksToRemove = new Set(['b:build']);
+
+      expect(
+        removeTasksAndDependencies(taskGraph, reverseTaskDeps, tasksToRemove)
+      ).toEqual({
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: { project: 'a', target: 'build' },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+        },
+        roots: ['a:build'],
+      });
+    });
+    it('should remove multiple tasks with dependencies', () => {
+      const graph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: {
+              project: 'a',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'b:build': {
+            id: 'b:build',
+            target: {
+              project: 'b',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'c:build': {
+            id: 'c:build',
+            target: {
+              project: 'c',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': ['c:build'],
+          'b:build': ['c:build'],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+        },
+        roots: ['c:build'],
+      };
+
+      const reverse = calculateReverseDeps(graph);
+
+      expect(
+        removeTasksAndDependencies(
+          graph,
+          reverse,
+          new Set(['a:build', 'b:build'])
+        )
+      ).toEqual({
+        continuousDependencies: {},
+        dependencies: {},
+        roots: [],
+        tasks: {},
+      });
+    });
+    it('should remove tasks that are needed only by tasks which are also being removed', () => {
+      const graph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: {
+              project: 'a',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'b:build': {
+            id: 'b:build',
+            target: {
+              project: 'b',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'c:build': {
+            id: 'c:build',
+            target: {
+              project: 'c',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'd:build': {
+            id: 'd:build',
+            target: {
+              project: 'd',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': ['b:build', 'c:build'],
+          'b:build': ['d:build'],
+          'c:build': ['d:build'],
+          'd:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+          'c:build': [],
+          'd:build': [],
+        },
+        roots: ['d:build'],
+      };
+
+      const reverse = calculateReverseDeps(graph);
+
+      expect(
+        removeTasksAndDependencies(graph, reverse, new Set(['a:build']))
+      ).toEqual({
+        continuousDependencies: {},
+        dependencies: {},
+        roots: [],
+        tasks: {},
+      });
+    });
+    it('should keep tasks that are needed', () => {
+      const graph: TaskGraph = {
+        tasks: {
+          'a:build': {
+            id: 'a:build',
+            target: {
+              project: 'a',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'b:build': {
+            id: 'b:build',
+            target: {
+              project: 'b',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'c:build': {
+            id: 'c:build',
+            target: {
+              project: 'c',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+        dependencies: {
+          'a:build': ['c:build'],
+          'b:build': ['c:build'],
+          'c:build': [],
+        },
+        continuousDependencies: {
+          'a:build': [],
+          'b:build': [],
+          'c:build': [],
+        },
+        roots: ['c:build'],
+      };
+
+      const reverse = calculateReverseDeps(graph);
+
+      expect(
+        removeTasksAndDependencies(graph, reverse, new Set(['a:build']))
+      ).toEqual({
+        continuousDependencies: {
+          'b:build': [],
+          'c:build': [],
+        },
+        dependencies: {
+          'b:build': ['c:build'],
+          'c:build': [],
+        },
+        roots: ['c:build'],
+        tasks: {
+          'b:build': {
+            id: 'b:build',
+            target: {
+              project: 'b',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+          'c:build': {
+            id: 'c:build',
+            target: {
+              project: 'c',
+              target: 'build',
+            },
+            overrides: {},
+            parallelism: false,
+            outputs: [],
+          },
+        },
+      });
     });
   });
 });
