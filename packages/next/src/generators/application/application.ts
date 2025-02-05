@@ -32,6 +32,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -92,6 +93,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   updateJestConfig(host, options);
   updateCypressTsConfig(host, options);
   setDefaults(host, options);
+
+  if (options.swc) {
+    const swcTask = configureForSwc(host, options.appProjectRoot);
+    tasks.push(swcTask);
+  }
 
   if (options.customServer) {
     await customServerGenerator(host, {
