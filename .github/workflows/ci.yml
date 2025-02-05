@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-linux
-      NX_DAEMON: 'true'
+      NX_DAEMON: 'false'
       NX_PERF_LOGGING: 'true'
       NX_VERBOSE_LOGGING: 'true'
       NX_NATIVE_LOGGING: 'false'
@@ -25,7 +25,8 @@ jobs:
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
       NX_CLOUD_NO_TIMEOUTS: 'true'
-      
+      NX_CLOUD_SKIP_WORKSPACE_DATA_CACHE: 'true'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -35,6 +36,15 @@ jobs:
       - name: Fetch Master
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
+
+      - name: Set SHAs
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Download Cargo dependencies
+        run: cargo metadata --format-version=1
+
+      - name: Download Cargo dependencies
+        run: cargo metadata --format-version=1
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -47,11 +57,14 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
-      - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
+      - name: Show projects (cold)
+        run: npx nx show projects
+
+      - name: Show affected projects (warm)
+        run: npx nx show projects
 
       - name: Start CI Run
-        run: pnpm nx-cloud start-ci-run --distribute-on="manual" --assignment-rules=".nx/workflows/dynamic-changesets.yaml"
+        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
       - name: Install dependencies
         run: |
@@ -61,13 +74,30 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Check Documentation
         run: pnpm nx documentation
         timeout-minutes: 20
 
-      - name: Close Ci Run
+      - name: Run Checks/Lint/Test/Build
         run: |
-          npx nx-cloud complete-ci-run
+          pids=()
+          
+          pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
+          pids+=($!)
+          
+          pnpm nx-cloud record -- nx sync:check
+          pids+=($!)
+          
+          pnpm nx-cloud record -- nx-cloud conformance:check
+          pids+=($!)
+          
+          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
+          pids+=($!)
+          
+          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
+          pids+=($!)
+          
+          for pid in "${pids[@]}"; do
+            wait "$pid"
+          done
+        timeout-minutes: 100
