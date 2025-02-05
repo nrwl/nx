@@ -1,4 +1,3 @@
-import { output } from '../utils/output';
 import { relative } from 'path';
 import { join } from 'path/posix';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -451,6 +450,9 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
+  if (ids.length === 0) {
+    return graph;
+  }
   const newGraph = removeIdsFromTaskGraph<Task>(graph, ids, graph.tasks);
   return {
     dependencies: newGraph.dependencies,
@@ -491,13 +493,103 @@ function removeIdsFromTaskGraph<T>(
   }
   return {
     mapWithIds: filteredMapWithIds,
-    dependencies: dependencies,
+    dependencies,
     continuousDependencies,
     roots: Object.keys(filteredMapWithIds).filter(
       (k) =>
         dependencies[k].length === 0 && continuousDependencies[k].length === 0
     ),
   };
+}
+
+export function removeTasksAndDependencies(
+  taskGraph: TaskGraph,
+  reverseTaskDeps: TaskGraph['dependencies'],
+  tasksToRemove: Set<string>
+): TaskGraph {
+  let combinedSubgraph: TaskGraph = {
+    tasks: {},
+    dependencies: {},
+    continuousDependencies: {},
+    roots: [],
+  };
+  for (const taskId of tasksToRemove) {
+    const subgraph = getSubgraph(taskGraph, taskId);
+    for (const taskId in subgraph.tasks) {
+      combinedSubgraph.tasks[taskId] ??= subgraph.tasks[taskId];
+      combinedSubgraph.dependencies[taskId] ??= subgraph.dependencies[taskId];
+      combinedSubgraph.continuousDependencies[taskId] ??=
+        subgraph.continuousDependencies[taskId];
+      combinedSubgraph.roots = Array.from(
+        new Set([...combinedSubgraph.roots, ...subgraph.roots])
+      );
+    }
+  }
+
+  const neededTasks: string[] = [];
+
+  const seen: string[] = [];
+  const subgraphTasksCount = Object.keys(combinedSubgraph.tasks).length;
+
+  while (seen.length < subgraphTasksCount) {
+    for (const taskId of combinedSubgraph.roots) {
+      seen.push(taskId);
+      const shouldRemove =
+        !tasksToRemove.has(taskId) &&
+        reverseTaskDeps[taskId].some(
+          (d) => !combinedSubgraph.tasks[d] || neededTasks.includes(d)
+        );
+      if (shouldRemove) {
+        neededTasks.push(taskId);
+        combinedSubgraph = removeTasksFromTaskGraph(combinedSubgraph, [taskId]);
+      }
+    }
+  }
+
+  return removeTasksFromTaskGraph(
+    taskGraph,
+    Object.keys(combinedSubgraph.tasks)
+  );
+}
+
+function getSubgraph(taskGraph: TaskGraph, taskId: string): TaskGraph {
+  const subgraph: TaskGraph = {
+    tasks: {},
+    dependencies: {},
+    continuousDependencies: {},
+    roots: [],
+  };
+
+  function collectDependencies(taskId: string) {
+    if (!taskGraph.tasks[taskId]) return;
+
+    subgraph.tasks[taskId] = taskGraph.tasks[taskId];
+    subgraph.dependencies[taskId] = taskGraph.dependencies[taskId] ?? [];
+    subgraph.continuousDependencies[taskId] =
+      taskGraph.continuousDependencies[taskId] ?? [];
+
+    for (const dep of subgraph.dependencies[taskId]) {
+      if (!subgraph.tasks[dep]) {
+        collectDependencies(dep);
+      }
+    }
+
+    for (const dep of subgraph.continuousDependencies[taskId]) {
+      if (!subgraph.tasks[dep]) {
+        collectDependencies(dep);
+      }
+    }
+  }
+
+  collectDependencies(taskId);
+
+  subgraph.roots = Object.keys(subgraph.tasks).filter(
+    (id) =>
+      subgraph.dependencies[id].length === 0 &&
+      subgraph.continuousDependencies[id].length === 0
+  );
+
+  return subgraph;
 }
 
 export function calculateReverseDeps(
