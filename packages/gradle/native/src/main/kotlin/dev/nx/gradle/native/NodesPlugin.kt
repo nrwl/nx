@@ -20,7 +20,6 @@ class NodesPlugin : Plugin<Project> {
 
             task.setDescription("Create nodes and dependencies for Nx")
             task.setGroup("Nx Custom")
-            task.setGroup("Nx Custom")
 
             // Run task for composite builds
             project.getGradle().includedBuilds.forEach { includedBuild ->
