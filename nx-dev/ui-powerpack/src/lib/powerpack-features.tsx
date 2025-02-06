@@ -207,14 +207,7 @@ export function PowerpackFeatures(): ReactElement {
                   procurement processes
                 </Strong>
                 . Your teams can get started quickly without lengthy
-                negotiations, ensuring a faster go-to-market.{' '}
-                <TextLink
-                  href="https://cloud.nx.app/powerpack/request/trial?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=link&utm_term=free-trial-available-for-enterprises"
-                  title="Get a Powerpack license"
-                >
-                  Free trial available for Enterprises
-                </TextLink>
-                .
+                negotiations, ensuring a faster go-to-market.
               </p>
             </div>
           </div>
@@ -234,7 +227,11 @@ export function PowerpackFeatures(): ReactElement {
                   customers
                 </Strong>
                 , unlocking additional capabilities without needing to manage
-                more tools or onboard a new vendor.
+                more tools or onboard a new vendor.{' '}
+                <TextLink href="/enterprise/trial" title="Nx Enterprise trial">
+                  Request a free trial of Nx Enterprise
+                </TextLink>
+                .
               </p>
             </div>
           </div>
