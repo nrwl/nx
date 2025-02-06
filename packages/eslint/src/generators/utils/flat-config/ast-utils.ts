@@ -75,6 +75,84 @@ function findModuleExports(source: ts.SourceFile): ts.NodeArray<ts.Node> {
   });
 }
 
+export function addPatternsToFlatConfigIgnoresBlock(
+  content: string,
+  ignorePatterns: string[]
+): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
+  if (!exportsArray) {
+    return content;
+  }
+  const changes: StringChange[] = [];
+  for (const node of exportsArray) {
+    if (!isFlatConfigIgnoresBlock(node)) {
+      continue;
+    }
+
+    const start = node.properties.pos + 1; // keep leading line break
+    const data = parseTextToJson(node.getFullText());
+    changes.push({
+      type: ChangeType.Delete,
+      start,
+      length: node.properties.end - start,
+    });
+    data.ignores = Array.from(
+      new Set([...(data.ignores ?? []), ...ignorePatterns])
+    );
+    changes.push({
+      type: ChangeType.Insert,
+      index: start,
+      text:
+        '    ' +
+        JSON.stringify(data, null, 2)
+          .slice(2, -2) // Remove curly braces and start/end line breaks
+          .replaceAll(/\n/g, '\n    '), // Maintain indentation
+    });
+    break;
+  }
+  return applyChangesToString(content, changes);
+}
+
+export function hasFlatConfigIgnoresBlock(content: string): boolean {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
+  if (!exportsArray) {
+    return false;
+  }
+
+  return exportsArray.some(isFlatConfigIgnoresBlock);
+}
+
+function isFlatConfigIgnoresBlock(
+  node: ts.Node
+): node is ts.ObjectLiteralExpression {
+  return (
+    ts.isObjectLiteralExpression(node) &&
+    node.properties.length === 1 &&
+    (node.properties[0].name.getText() === 'ignores' ||
+      node.properties[0].name.getText() === '"ignores"') &&
+    ts.isPropertyAssignment(node.properties[0]) &&
+    ts.isArrayLiteralExpression(node.properties[0].initializer)
+  );
+}
+
 function isOverride(node: ts.Node): boolean {
   return (
     (ts.isObjectLiteralExpression(node) &&

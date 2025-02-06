@@ -240,6 +240,8 @@ exports[`library should generate files 1`] = `
   ],
   "ignorePatterns": [
     "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*",
   ],
   "overrides": [
     {

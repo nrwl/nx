@@ -94,7 +94,11 @@ exports[`application generator should set up project correctly for cypress 3`] =
     "@vue/eslint-config-prettier/skip-formatting",
     "../.eslintrc.json"
   ],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": [
+    "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -300,7 +304,11 @@ exports[`application generator should set up project correctly with given option
     "@vue/eslint-config-prettier/skip-formatting",
     "../.eslintrc.json"
   ],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": [
+    "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
