@@ -515,6 +515,8 @@ const tutorialBaseUrls = {
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
     '/getting-started/tutorials',
+  '/tutorial': '/getting-started/tutorials',
+  '/tutorial/:path*': '/getting-started/tutorials',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
