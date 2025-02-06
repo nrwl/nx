@@ -14,5 +14,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "nx"
-includeBuild("./packages/gradle/native")
+rootProject.name = "native"

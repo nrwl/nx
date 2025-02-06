@@ -15,7 +15,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.0"
 
     id("java-library")
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
+    id("org.jetbrains.kotlin.jvm") version "2.1.10"
 }
 
 repositories {
@@ -51,9 +51,6 @@ publishing {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
-
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin")
-    compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
 
     testImplementation(kotlin("test"))
 }

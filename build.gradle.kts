@@ -1,18 +1,13 @@
-group = "dev.nx"
-
 plugins {
-    // id("dev.nx.gradle.native") version("+")
+    id("dev.nx.gradle.native") version("+")
 }
+
+group = "dev.nx.gradle"
 
 allprojects {
   apply {
       plugin("project-report")
   }
-}
-
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
 }
 
 tasks.register("projectReportAll") {

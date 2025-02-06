@@ -1,5 +1,7 @@
 package dev.nx.gradle.native
 
+import org.gradle.api.tasks.Input
+
 typealias Target = MutableMap<String, Any?>
 
 typealias Targets = MutableMap<String, Target>
@@ -14,7 +16,7 @@ data class GradleTargets(
         var externalNodes: MutableMap<String, ExternalNode>
 )
 
-data class NodeMetadata(val targetGroups: TargetGroups, val technologies: Array<String>, val description: String?)
+data class NodeMetadata(val targetGroups: TargetGroups, val technologies: List<String>, val description: String?)
 
 data class ProjectNode(
         val targets: Targets,
@@ -27,4 +29,10 @@ data class ExternalDepData(val version: String?, val packageName: String, val ha
 
 data class ExternalNode(var type: String?, val name: String, var data: ExternalDepData)
 
-data class GradleNodeReport(var nodes: MutableMap<String, ProjectNode>?, var dependencies: MutableSet<Dependency>?, var externalNodes: MutableMap<String, ExternalNode>?)
+data class GradleNodeReport(
+        @Input
+        var nodes: MutableMap<String, ProjectNode>?,
+        @Input
+        var dependencies: MutableSet<Dependency>?,
+        @Input
+        var externalNodes: MutableMap<String, ExternalNode>?)

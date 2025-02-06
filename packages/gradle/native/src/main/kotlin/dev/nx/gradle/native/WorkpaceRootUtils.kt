@@ -19,12 +19,12 @@ fun workspaceRootInner(
         return candidateRoot
     }
 
-    if (arrayOf("nx.json", "nx", "nx.bat").any { fileExists(dirPath, it) }) {
-        return dir
+    return if (arrayOf("nx.json", "nx", "nx.bat").any { fileExists(dirPath, it) }) {
+        dir
     } else if (fileExists(dirPath, "node_modules${separator}nx${separator}package.json")) {
-        return workspaceRootInner(dirPath.getParent().toString(), dir)
+        workspaceRootInner(dirPath.getParent().toString(), dir)
     } else {
-        return workspaceRootInner(dirPath.getParent().toString(), candidateRoot)
+        workspaceRootInner(dirPath.getParent().toString(), candidateRoot)
     }
 }
 
