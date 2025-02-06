@@ -25,13 +25,10 @@ import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
-import {
-  vitestCoverageIstanbulVersion,
-  vitestCoverageV8Version,
-} from '../../utils/versions';
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
+import { getVitestDependenciesVersionsToInstall } from '../../utils/version-utils';
 
 /**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
@@ -169,7 +166,8 @@ getTestBed().initTestEnvironment(
     updateNxJson(tree, nxJson);
   }
 
-  const coverageProviderDependency = getCoverageProviderDependency(
+  const coverageProviderDependency = await getCoverageProviderDependency(
+    tree,
     schema.coverageProvider
   );
 
@@ -192,7 +190,7 @@ getTestBed().initTestEnvironment(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];`
+      `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];`
     );
   }
 
@@ -342,21 +340,24 @@ function createFiles(
   });
 }
 
-function getCoverageProviderDependency(
+async function getCoverageProviderDependency(
+  tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
 ) {
+  const { vitestCoverageV8, vitestCoverageIstanbul } =
+    await getVitestDependenciesVersionsToInstall(tree);
   switch (coverageProvider) {
     case 'v8':
       return {
-        '@vitest/coverage-v8': vitestCoverageV8Version,
+        '@vitest/coverage-v8': vitestCoverageV8,
       };
     case 'istanbul':
       return {
-        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+        '@vitest/coverage-istanbul': vitestCoverageIstanbul,
       };
     default:
       return {
-        '@vitest/coverage-v8': vitestCoverageV8Version,
+        '@vitest/coverage-v8': vitestCoverageV8,
       };
   }
 }

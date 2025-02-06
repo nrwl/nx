@@ -222,8 +222,8 @@ if (import.meta.vitest) {
   });
 
   it('should have a greeting as the title', () => {
-    const { getByText } = render(<App />);
-    expect(getByText(new RegExp('Welcome plain', 'gi'))).toBeTruthy();
+    const { getAllByText } = render(<App />);
+    expect(getAllByText(new RegExp('Welcome plain', 'gi')).length > 0).toBeTruthy();
   });
 
 }
