@@ -35,6 +35,11 @@ export function Faq(): ReactElement {
         'You can get a trial license immediately. Read more here: https://nx.dev/nx-enterprise/powerpack/free-licenses-and-trials',
     },
     {
+      question: 'Want to use Powerpack for OSS?',
+      answer:
+        'You can apply for a free OSS license here: https://nx.dev/powerpack/special-offer',
+    },
+    {
       question:
         'Only interested in Nx Powerpack because of Custom Tasks Runner deprecation',
       answer:
