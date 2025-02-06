@@ -27,11 +27,8 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { getInstalledJestMajorVersion } from '../utils/version-utils';
-import {
-  getFilesInDirectoryUsingContext,
-  globWithWorkspaceContext,
-} from 'nx/src/utils/workspace-context';
-import { normalize } from 'node:path';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { normalize, sep } from 'node:path';
 
 const pmc = getPackageManagerCommand();
 
@@ -44,7 +41,7 @@ export interface JestPluginOptions {
    */
   ciGroupName?: string;
   /**
-   *  Whether to use jest-config and jest-runtime to load Jest configuration and context.
+   *  Whether to use jest-config and jest-runtime are used to load Jest configuration and context.
    *  Disabling this is much faster but could be less correct since we are using our own config loader
    *  and test matcher instead of Jest's.
    */
@@ -215,13 +212,16 @@ async function buildJestTargets(
     },
   });
 
+  // Not normalizing it here since also affects options for convert-to-inferred.
+  const disableJestRuntime = options.disableJestRuntime !== false;
+
   const cache = (target.cache = true);
   const inputs = (target.inputs = getInputs(
     namedInputs,
     rawConfig.preset,
     projectRoot,
     context.workspaceRoot,
-    options.disableJestRuntime
+    disableJestRuntime
   ));
 
   let metadata: ProjectConfiguration['metadata'];
@@ -229,7 +229,7 @@ async function buildJestTargets(
   const groupName =
     options?.ciGroupName ?? deductGroupNameFromTarget(options?.ciTargetName);
 
-  if (options.disableJestRuntime) {
+  if (disableJestRuntime) {
     const outputs = (target.outputs = getOutputs(
       projectRoot,
       rawConfig.coverageDirectory
@@ -326,15 +326,21 @@ async function buildJestTargets(
       projectRoot,
       context.workspaceRoot
     );
-    const config = await readConfig(
-      {
-        _: [],
-        $0: undefined,
-      },
-      rawConfig,
-      undefined,
-      dirname(absConfigFilePath)
-    );
+    let config;
+    try {
+      config = await readConfig(
+        {
+          _: [],
+          $0: undefined,
+        },
+        rawConfig,
+        undefined,
+        dirname(absConfigFilePath)
+      );
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
 
     const outputs = (target.outputs = getOutputs(
       projectRoot,
@@ -363,8 +369,7 @@ async function buildJestTargets(
       const jestVersion = getInstalledJestMajorVersion()!;
       const specs =
         jestVersion >= 30
-          ? // @ts-expect-error Jest 30+ expects the project config as the second argument
-            await source.getTestPaths(config.globalConfig, config.projectConfig)
+          ? await source.getTestPaths(config.globalConfig, config.projectConfig)
           : await source.getTestPaths(config.globalConfig);
 
       const testPaths = new Set(specs.tests.map(({ path }) => path));
@@ -627,45 +632,35 @@ async function getTestPaths(
     'testMatch',
     presetCache
   );
-  if (testMatch) {
-    return await globWithWorkspaceContext(
-      context.workspaceRoot,
-      testMatch.map((pattern) => join(projectRoot, pattern)),
-      []
-    );
-  } else {
-    const testRegex = await getJestOption<string[]>(
-      rawConfig,
-      absConfigFilePath,
-      'testRegex',
-      presetCache
-    );
-    if (testRegex) {
-      const files: string[] = [];
-      const testRegexes = Array.isArray(rawConfig.testRegex)
-        ? rawConfig.testRegex.map((r: string) => new RegExp(r))
-        : [new RegExp(rawConfig.testRegex)];
-      const projectFiles = await getFilesInDirectoryUsingContext(
-        context.workspaceRoot,
-        projectRoot
-      );
-      for (const file of projectFiles) {
-        if (testRegexes.some((r: RegExp) => r.test(file))) files.push(file);
-      }
-      return files;
-    } else {
-      // Default copied from https://github.com/jestjs/jest/blob/d1a2ed7/packages/jest-config/src/Defaults.ts#L84
-      const defaultTestMatch = [
+
+  let paths = await globWithWorkspaceContext(
+    context.workspaceRoot,
+    (
+      testMatch || [
+        // Default copied from https://github.com/jestjs/jest/blob/d1a2ed7/packages/jest-config/src/Defaults.ts#L84
         '**/__tests__/**/*.?([mc])[jt]s?(x)',
         '**/?(*.)+(spec|test).?([mc])[jt]s?(x)',
-      ];
-      return await globWithWorkspaceContext(
-        context.workspaceRoot,
-        defaultTestMatch.map((pattern) => join(projectRoot, pattern)),
-        []
-      );
-    }
+      ]
+    ).map((pattern) => join(projectRoot, pattern)),
+    []
+  );
+
+  const testRegex = await getJestOption<string[]>(
+    rawConfig,
+    absConfigFilePath,
+    'testRegex',
+    presetCache
+  );
+  if (testRegex) {
+    const testRegexes = Array.isArray(rawConfig.testRegex)
+      ? rawConfig.testRegex.map((r: string) => new RegExp(r))
+      : [new RegExp(rawConfig.testRegex)];
+    paths = paths.filter((path: string) =>
+      testRegexes.some((r: RegExp) => r.test(path))
+    );
   }
+
+  return paths;
 }
 
 async function getJestOption<T = any>(
