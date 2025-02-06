@@ -15,7 +15,10 @@ export function MigrationList(props: {
   nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onRunMany: (migrations: MigrationDetailsWithId[]) => void;
-  onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  onFileClick: (
+    migration: MigrationDetailsWithId,
+    file: Omit<FileChange, 'content'>
+  ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }) {
@@ -150,7 +153,7 @@ export function MigrationList(props: {
               props.onViewDocumentation(migration);
             }}
             onFileClick={(file) => {
-              props.onFileClick(file);
+              props.onFileClick(migration, file);
             }}
           />
         ))}

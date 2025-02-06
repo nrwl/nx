@@ -6,10 +6,12 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { MigrationList } from './migration-list';
 import { AutomaticMigration } from './automatic-migration';
 import { MigrationSettingsPanel } from './migration-settings-panel';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { Tooltip } from '@nx/graph/ui-tooltips';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -24,21 +26,26 @@ export interface MigrateUIProps {
     migrations: MigrationDetailsWithId[],
     configuration: {
       createCommits: boolean;
+      commitPrefix: string;
     }
   ) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
   onCancel: () => void;
   onFinish: (squashCommits: boolean) => void;
-  onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  onFileClick: (
+    migration: MigrationDetailsWithId,
+    file: Omit<FileChange, 'content'>
+  ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }
 
 export function MigrateUI(props: MigrateUIProps) {
-  const [createCommits, setCreateCommits] = useState(true);
   const [squashCommits, setSquashCommits] = useState(true);
 
+  const [createCommits, setCreateCommits] = useState(true);
   const [automaticMode, setAutomaticMode] = useState(true);
+  const [commitPrefix, setCommitPrefix] = useState('');
 
   return (
     <div className="p-2">
@@ -47,17 +54,14 @@ export function MigrateUI(props: MigrateUIProps) {
         <h2 className="text-xl font-semibold">
           Migrating to {props.nxConsoleMetadata.targetVersion}
         </h2>
-        <div className="flex items-center gap-2">
-          <button
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-            onClick={() => setAutomaticMode(!automaticMode)}
-          >
-            {automaticMode
-              ? 'Switch to manual mode'
-              : 'Switch to automatic mode'}
-          </button>
-          <MigrationSettingsPanel />
-        </div>
+        <MigrationSettingsPanel
+          automaticMode={automaticMode}
+          setAutomaticMode={setAutomaticMode}
+          createCommits={createCommits}
+          setCreateCommits={setCreateCommits}
+          commitPrefix={commitPrefix}
+          setCommitPrefix={setCommitPrefix}
+        />
       </div>
       {automaticMode ? (
         <AutomaticMigration
@@ -83,7 +87,10 @@ export function MigrateUI(props: MigrateUIProps) {
             props.onRunMigration(migration, { createCommits })
           }
           onRunMany={(migrations) =>
-            props.onRunMany(migrations, { createCommits })
+            props.onRunMany(migrations, {
+              createCommits,
+              commitPrefix,
+            })
           }
           onFileClick={props.onFileClick}
           onViewImplementation={(migration) =>
@@ -103,26 +110,41 @@ export function MigrateUI(props: MigrateUIProps) {
           >
             Cancel
           </button>
-          <button
-            onClick={() => props.onFinish(squashCommits)}
-            type="button"
-            className="flex w-full items-center rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
-          >
-            Finish
-          </button>
+          <div className="flex">
+            <button
+              onClick={() => props.onFinish(squashCommits)}
+              type="button"
+              className="whitespace-nowrap rounded-l-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+            >
+              {squashCommits
+                ? 'Finish (squash commits)'
+                : 'Finish without squashing commits'}
+            </button>
+            <Tooltip
+              placement="top"
+              openAction="click"
+              content={
+                <span
+                  onClick={() => {
+                    setSquashCommits(!squashCommits);
+                  }}
+                  className="cursor-pointer "
+                >
+                  {squashCommits
+                    ? 'Finish without squashing commits'
+                    : 'Finish (squash commits)'}
+                </span>
+              }
+            >
+              <button
+                type="button"
+                className="flex items-center rounded-r-md border border-l-0 border-blue-500 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+              >
+                <ChevronDownIcon className="h-4 w-4" />
+              </button>
+            </Tooltip>
+          </div>
         </div>
-      </div>
-      <div className="flex items-center justify-end gap-2">
-        <label htmlFor="create-commits">Squash commits</label>
-        <input
-          checked={squashCommits}
-          onChange={(e) => setSquashCommits((e.target as any).checked)}
-          id="squash-commits"
-          name="squash-commits"
-          value="squash-commits"
-          type="checkbox"
-          className={`h-4 w-4`}
-        />
       </div>
     </div>
   );

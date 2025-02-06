@@ -22,7 +22,10 @@ export function AutomaticMigration(props: {
   nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
-  onFileClick: (file: Omit<FileChange, 'content'>) => void;
+  onFileClick: (
+    migration: MigrationDetailsWithId,
+    file: Omit<FileChange, 'content'>
+  ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }) {
@@ -133,7 +136,7 @@ export function AutomaticMigration(props: {
               key={migration.id}
               migration={migration}
               nxConsoleMetadata={props.nxConsoleMetadata}
-              onFileClick={props.onFileClick}
+              onFileClick={(file) => props.onFileClick(migration, file)}
               onViewImplementation={() => {
                 props.onViewImplementation(migration);
               }}
@@ -184,7 +187,7 @@ export function AutomaticMigration(props: {
                       : undefined
                   }
                   type="button"
-                  className="flex items-center rounded-md border border-yellow-500 bg-yellow-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-yellow-600 dark:border-yellow-600 dark:bg-yellow-600 dark:text-white hover:dark:bg-yellow-700"
+                  className="flex items-center rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
                 >
                   Skip
                 </button>
@@ -213,7 +216,9 @@ export function AutomaticMigration(props: {
                   ref={currentMigrationRef}
                   migration={currentMigration}
                   nxConsoleMetadata={props.nxConsoleMetadata}
-                  onFileClick={() => {}}
+                  onFileClick={(file) =>
+                    props.onFileClick(currentMigration, file)
+                  }
                   forceIsRunning={currentMigrationRunning}
                   onViewImplementation={() => {
                     props.onViewImplementation(currentMigration);
@@ -231,7 +236,7 @@ export function AutomaticMigration(props: {
                 key={migration.id}
                 migration={migration}
                 nxConsoleMetadata={props.nxConsoleMetadata}
-                onFileClick={() => {}}
+                onFileClick={(file) => props.onFileClick(migration, file)}
                 onViewImplementation={() => {
                   props.onViewImplementation(migration);
                 }}

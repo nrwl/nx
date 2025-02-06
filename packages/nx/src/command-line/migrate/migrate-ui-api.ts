@@ -1,8 +1,8 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { MigrationDetailsWithId } from '../../config/misc-interfaces';
-import { FileChange } from '../../generators/tree';
+import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
+import type { FileChange } from '../../generators/tree';
 import {
   getImplementationPath as getMigrationImplementationPath,
   nxCliPath,
@@ -27,6 +27,7 @@ export type SuccessfulMigration = {
   type: 'successful';
   name: string;
   changedFiles: Omit<FileChange, 'content'>[];
+  ref: string;
 };
 
 export type FailedMigration = {
@@ -114,6 +115,7 @@ export async function runSingleMigration(
   migration: MigrationDetailsWithId,
   configuration: {
     createCommits: boolean;
+    commitPrefix?: string;
   }
 ) {
   try {
@@ -148,7 +150,7 @@ export async function runSingleMigration(
       migration,
       false,
       configuration.createCommits,
-      'chore: [nx migration] ',
+      configuration.commitPrefix || 'chore: [nx migration] ',
       undefined,
       true
     );
@@ -165,7 +167,8 @@ export async function runSingleMigration(
         fileChanges.map((change) => ({
           path: change.path,
           type: change.type,
-        }))
+        })),
+        gitRefAfter
       )
     );
 
@@ -189,6 +192,11 @@ export async function runSingleMigration(
       workspacePath,
       removeRunningMigration(migration.id)
     );
+
+    execSync('git add migrations.json', {
+      cwd: workspacePath,
+      encoding: 'utf-8',
+    });
   }
 }
 
@@ -224,7 +232,8 @@ export function modifyMigrationsJsonMetadata(
 
 export function addSuccessfulMigration(
   id: string,
-  fileChanges: Omit<FileChange, 'content'>[]
+  fileChanges: Omit<FileChange, 'content'>[],
+  ref: string
 ) {
   return (
     migrationsJsonMetadata: MigrationsJsonMetadata
@@ -239,6 +248,7 @@ export function addSuccessfulMigration(
         type: 'successful',
         name: id,
         changedFiles: fileChanges,
+        ref,
       },
     };
     return copied;
