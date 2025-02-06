@@ -37,20 +37,9 @@ gradlePlugin {
         }
     }
 }
- 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "dev.nx.gradle"
-            artifactId = "native"
-            version = "0.0.1-alpha.2"
-        }
-    }
-}
-
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     testImplementation(kotlin("test"))
 }

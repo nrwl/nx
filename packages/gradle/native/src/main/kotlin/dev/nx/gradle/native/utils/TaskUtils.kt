@@ -60,8 +60,7 @@ fun processTask(
         cwd = cwd.replace(workspaceRoot, ".")
     }
     target["options"] = mapOf(
-            "cwd" to cwd,
-            "args" to "--configuration-cache --parallel --build-cache" // add these args to improve performance
+            "cwd" to cwd
     )
 
     return target

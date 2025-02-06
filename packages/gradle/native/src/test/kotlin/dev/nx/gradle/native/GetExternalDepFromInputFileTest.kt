@@ -1,6 +1,7 @@
 package dev.nx.gradle.native
 
 import dev.nx.gradle.native.utils.getExternalDepFromInputFile
+import dev.nx.gradle.native.data.ExternalNode
 import org.junit.jupiter.api.Assertions.*
 import kotlin.test.Test
 

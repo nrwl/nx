@@ -1,4 +1,4 @@
-import { AggregateCreateNodesError, logger, workspaceRoot } from '@nx/devkit';
+import { AggregateCreateNodesError, logger } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -23,12 +23,12 @@ export async function getCreateNodesLines(
   try {
     createNodesBuffer = await execGradleAsync(gradlewFile, [
       'createNodes',
-      '--hash',
-      gradleConfigHash,
+      '--no-configuration-cache', // disable configuration cache
       '--parallel', // add flags to improve performance
       '--build-cache',
       '--warning-mode',
       'none',
+      process.env.VERBOSE ? '--info' : '',
     ]);
   } catch (e) {
     throw new AggregateCreateNodesError(

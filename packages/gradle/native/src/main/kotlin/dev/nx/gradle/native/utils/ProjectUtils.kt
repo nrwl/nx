@@ -2,9 +2,6 @@ package dev.nx.gradle.native.utils
 
 import dev.nx.gradle.native.data.*
 import org.gradle.api.Project
-import org.gradle.api.artifacts.component.ModuleComponentSelector
-import org.gradle.api.artifacts.component.ProjectComponentSelector
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
 
 /**
  * Loops through a project and populate dependencies and nodes for each target
@@ -42,85 +39,6 @@ fun createNodeForProject(project: Project): GradleNodeReport {
         externalNodes = emptyMap()
     }
     return GradleNodeReport(nodes, dependencies, externalNodes)
-}
-
-fun getDependenciesForProject(project: Project, allProjects: Set<Project>): MutableSet<Dependency> {
-    val dependencies = mutableSetOf<Dependency>()
-    val logger = project.logger
-
-    // Ensure both configurations are accessed explicitly
-    val configurationsToCheck = listOf("compileClasspath", "implementationDependenciesMetadata")
-
-    configurationsToCheck.forEach { configName ->
-        val configuration = project.configurations.findByName(configName)
-        if (configuration != null) {
-            try {
-                configuration.incoming.resolutionResult.allDependencies.forEach { dependencyResult ->
-                    when (dependencyResult) {
-                        is ResolvedDependencyResult -> {
-                            val requested = dependencyResult.requested
-
-                            // If it's a project dependency
-                            if (requested is ProjectComponentSelector) {
-                                val foundProject = allProjects.find { it.path == requested.projectPath }
-                                if (foundProject != null) {
-                                    dependencies.add(
-                                            Dependency(
-                                                    project.projectDir.path,
-                                                    foundProject.projectDir.path,
-                                                    project.buildFile.path
-                                            )
-                                    )
-                                    logger.lifecycle("Found project dependency: ${foundProject.name} in $configName")
-                                }
-                            }
-
-                            // If it's an external module dependency
-                            if (requested is ModuleComponentSelector) {
-                                val dependencyKey = "${requested.group}:${requested.module}:${requested.version}"
-                                dependencies.add(
-                                        Dependency(
-                                                project.projectDir.path,
-                                                dependencyKey,  // External dependencies are identified by coordinates
-                                                project.buildFile.path
-                                        )
-                                )
-                                logger.lifecycle("Found external dependency: $dependencyKey in $configName")
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                logger.warn("Error checking configuration $configName for ${project.name}: ${e.message}")
-            }
-        } else {
-            logger.warn("Configuration $configName not found in project ${project.name}")
-        }
-    }
-
-    // Include subprojects manually
-    project.subprojects.forEach { childProject ->
-        dependencies.add(
-                Dependency(
-                        project.projectDir.path,
-                        childProject.projectDir.path,
-                        project.buildFile.path
-                )
-        )
-    }
-
-    // Include included builds manually
-    project.gradle.includedBuilds.forEach { includedBuild ->
-        dependencies.add(
-                Dependency(
-                        project.projectDir.path,
-                        includedBuild.projectDir.path,
-                        project.buildFile.path
-                )
-        )
-    }
-
-    return dependencies
 }
 
 /**
