@@ -189,6 +189,7 @@ async function main() {
 
     const webinarMarkdown = `---
 title: "${processedWebinar.Title}"
+description: "${processedWebinar.Description}"
 slug: '${slugify(processedWebinar.Title)}'
 authors: [${processedWebinar['Speaker(s)']
       .replace(', and ', ', ')

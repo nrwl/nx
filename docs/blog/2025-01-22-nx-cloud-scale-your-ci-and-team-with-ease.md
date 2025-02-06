@@ -1,5 +1,6 @@
 ---
 title: 'Nx Cloud: Scale Your CI and Team with Ease'
+description: 'Learn how you can attain fast, reliable CI and better coordination across your technical organization with Nx Cloud, and see our new multi-workspace features for organizational scaling in action.'
 slug: 'nx-cloud-scale-your-ci-and-team-with-ease'
 authors: ['Nicole Oliver', 'Rares Matei', 'James Henry']
 tags: [webinar]
