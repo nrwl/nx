@@ -55,9 +55,10 @@ export class BlogApi {
         title: frontmatter.title ?? null,
         description: frontmatter.description ?? null,
         authors: authors.filter((author) =>
-          frontmatter.authors.includes(author.name)
+          frontmatter.authors?.includes(author.name)
         ),
         date: this.calculateDate(file, frontmatter),
+        status: frontmatter.status,
         cover_image: frontmatter.cover_image
           ? `/documentation${frontmatter.cover_image}` // Match the prefix used by markdown parser
           : null,
