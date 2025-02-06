@@ -1,35 +1,35 @@
 package dev.nx.gradle.native
 
+import dev.nx.gradle.native.data.GradleNodeReport
+import dev.nx.gradle.native.utils.createNodeForProject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskProvider
 
-/**
- * A plugin to create nx nodes, dependencies and external nodes
- */
 class NodesPlugin : Plugin<Project> {
-
     override fun apply(project: Project) {
+        project.logger.info("Applying NodesPlugin to ${project.name}")
+
         val gradleNodeReport = project.objects.property(GradleNodeReport::class.java)
 
-        // Initialize and store data in GradleNodeReport safely
-        project.gradle.projectsEvaluated {
-            val report = createNodeForProject(project)
-            gradleNodeReport.set(report)
-        }
+        gradleNodeReport.set(project.provider { createNodeForProject(project) })
 
-        // Register a task
-        project.tasks.register("createNodes", CreateNodesTask::class.java) { task ->
-            task.projectName = project.name
+        val createNodesTask: TaskProvider<CreateNodesTask> =
+                project.tasks.register("createNodes", CreateNodesTask::class.java)
+
+        createNodesTask.configure { task ->
+            task.projectName.set(project.name)
             task.gradleNodeReport.set(gradleNodeReport)
 
             task.description = "Create nodes and dependencies for Nx"
             task.group = "Nx Custom"
 
-            // Run task for composite builds
+            project.logger.info("Registered createNodes for ${project.name}")
+
+            // ✅ Ensure all included builds are also processed
             project.gradle.includedBuilds.forEach { includedBuild ->
                 task.dependsOn(includedBuild.task(":createNodes"))
             }
         }
     }
 }
-

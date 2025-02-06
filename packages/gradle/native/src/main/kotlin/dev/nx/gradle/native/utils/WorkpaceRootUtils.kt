@@ -1,4 +1,4 @@
-package dev.nx.gradle.native
+package dev.nx.gradle.native.utils
 
 import java.io.File
 import java.io.File.separator

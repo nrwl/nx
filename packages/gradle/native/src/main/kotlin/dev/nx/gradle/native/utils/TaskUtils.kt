@@ -1,5 +1,6 @@
-package dev.nx.gradle.native
+package dev.nx.gradle.native.utils
 
+import dev.nx.gradle.native.data.*
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 
@@ -76,8 +77,8 @@ const val testCiTargetGroup = "verification"
 fun addTestCiTargets(
         testFiles: FileCollection,
         projectBuildPath: String,
-        target: Target,
-        targets: Targets,
+        target: NxTarget,
+        targets: NxTargets,
         targetGroups: TargetGroups,
         projectRoot: String,
         workspaceRoot: String
