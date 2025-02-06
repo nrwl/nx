@@ -63,14 +63,14 @@ export function Hero(): ReactElement {
           </a>
         </div>
         <p className="mt-6 text-sm italic">
-          Want to use Powerpack for OSS?
+          Nx Powerpack is included in Nx Enterprise.
           <br />
           <Link
-            href="/powerpack/special-offer"
+            href="/enterprise/trial"
             prefetch={false}
             className="font-semibold underline"
           >
-            Apply for a free OSS license.
+            Request a free trial of Nx Enterprise
           </Link>
         </p>
       </div>
