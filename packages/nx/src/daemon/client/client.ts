@@ -34,7 +34,10 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
-import { HandleGlobMessage } from '../message-types/glob';
+import {
+  HandleGlobMessage,
+  HandleMultiGlobMessage,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   HandleNxWorkspaceFilesMessage,
@@ -333,6 +336,15 @@ export class DaemonClient {
   glob(globs: string[], exclude?: string[]): Promise<string[]> {
     const message: HandleGlobMessage = {
       type: 'GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  multiGlob(globs: string[], exclude?: string[]): Promise<string[][]> {
+    const message: HandleMultiGlobMessage = {
+      type: 'MULTI_GLOB',
       globs,
       exclude,
     };

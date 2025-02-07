@@ -62,6 +62,18 @@ export async function globWithWorkspaceContext(
   }
 }
 
+export async function multiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.multiGlob(globs, exclude);
+  }
+  return daemonClient.multiGlob(globs, exclude);
+}
+
 export async function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
