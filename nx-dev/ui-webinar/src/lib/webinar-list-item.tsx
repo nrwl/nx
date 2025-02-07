@@ -29,9 +29,9 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
       className="border-b border-slate-200 py-5 text-sm last:border-0 dark:border-slate-800 dark:before:bg-slate-800/50"
     >
       <Link href={link} prefetch={false}>
-        <span className="text-balance text-slate-500 sm:w-8/12 dark:text-white">
+        <h3 className="text-balance text-lg text-slate-500 sm:w-8/12 dark:text-white">
           {webinar.title}
-        </span>
+        </h3>
       </Link>
       <span className="my-4 block">
         <time dateTime={webinar.date}>{formattedDate}</time>
@@ -46,7 +46,7 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
       <Link href={link} prefetch={false}>
         <span className="my-4 text-balance text-slate-500 sm:w-8/12 dark:text-white">
           {webinar.status === 'Past - Gated'
-            ? 'Sign up to download the recording'
+            ? 'Sign up to view the recording'
             : 'Watch the recording'}
         </span>
       </Link>

@@ -16,6 +16,9 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
     </div>
   ) : (
     <div className="mx-auto max-w-7xl px-8">
+      <div className="mt-10 border-b-2 border-slate-300 pb-3 text-lg dark:border-slate-700">
+        <h2 className="font-semibold">Upcoming Webinars</h2>
+      </div>
       {webinars
         .filter((w) => w.status === 'Upcoming')
         .map((webinar, index) => {
@@ -43,11 +46,13 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
               <p className="my-4">Presented by {authorsList}</p>
               <p className="my-4">{webinar.description}</p>
               {webinar.registrationUrl && (
-                <CallToAction
-                  title="Register today!"
-                  description="Save your spot"
-                  url={webinar.registrationUrl}
-                ></CallToAction>
+                <div className="max-w-md">
+                  <CallToAction
+                    title="Register today!"
+                    description="Save your spot"
+                    url={webinar.registrationUrl}
+                  ></CallToAction>
+                </div>
               )}
             </div>
           );
