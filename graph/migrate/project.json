@@ -1,0 +1,9 @@
+{
+  "name": "graph-migrate",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/migrate/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project graph-migrate --web",
+  "targets": {}
+}
