@@ -35,7 +35,10 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
 
           return (
             <div className="mt-6 w-full max-w-xl">
-              <BlogEntry post={webinar}></BlogEntry>
+              <BlogEntry
+                post={webinar}
+                overrideLink={webinar.registrationUrl}
+              ></BlogEntry>
               <p className="my-4 font-bold">{dateAndTime}</p>
               <p className="my-4">Presented by {authorsList}</p>
               <p className="my-4">{webinar.description}</p>
