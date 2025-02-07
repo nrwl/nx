@@ -2,10 +2,7 @@ import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
   retrieveProjectConfigurationPaths,
   retrieveProjectConfigurations,
-  getGlobPatternsOfPlugins,
-  retrieveProjectConfigurationsWithoutPluginInference,
 } from './retrieve-workspace-files';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname, join } from 'path';
 import { readFile } from 'fs/promises';
@@ -90,11 +87,10 @@ describe('retrieve-workspace-files', () => {
       );
 
       const mockPlugin = createTestPlugin('test-plugin', '**/project.json');
-      const noCreateNodesOption = { name: 'no-create-nodes' };
       const mockPlugin3 = createTestPlugin('test-plugin-3', '**/package.json');
 
       const result = await retrieveProjectConfigurations(
-        [mockPlugin, noCreateNodesOption, mockPlugin3],
+        [mockPlugin, mockPlugin3],
         fs.tempDir,
         {}
       );
