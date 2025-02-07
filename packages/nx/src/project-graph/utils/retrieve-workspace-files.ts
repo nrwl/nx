@@ -78,7 +78,7 @@ export async function retrieveProjectConfigurations(
     workspaceRoot,
     nxJson,
     pluginConfigFiles,
-    plugins
+    pluginsWithCreateNodes
   );
 }
 
