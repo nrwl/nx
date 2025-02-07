@@ -20,7 +20,11 @@ import {
   useFlatConfig,
 } from '../../utils/flat-config';
 import { getInstalledEslintVersion } from '../../utils/version-utils';
-import { eslint9__eslintVersion, eslintCompat } from '../../utils/versions';
+import {
+  eslint9__eslintVersion,
+  eslintCompat,
+  eslintrcVersion,
+} from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -493,13 +497,19 @@ export function addExtendsToLintConfig(
       return addDependenciesToPackageJson(
         tree,
         {},
-        { '@eslint/compat': eslintCompat },
+        { '@eslint/compat': eslintCompat, '@eslint/eslintrc': eslintrcVersion },
         undefined,
         true
       );
     }
 
-    return () => {};
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@eslint/eslintrc': eslintrcVersion },
+      undefined,
+      true
+    );
   } else {
     const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
       typeof p === 'string' ? p : p.name
