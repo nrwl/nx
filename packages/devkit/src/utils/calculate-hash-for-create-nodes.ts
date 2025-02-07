@@ -5,7 +5,11 @@ import {
   hashArray,
 } from 'nx/src/devkit-exports';
 
-import { hashObject, hashWithWorkspaceContext } from 'nx/src/devkit-internals';
+import {
+  hashMultiGlobWithWorkspaceContext,
+  hashObject,
+  hashWithWorkspaceContext,
+} from 'nx/src/devkit-internals';
 
 export async function calculateHashForCreateNodes(
   projectRoot: string,
@@ -20,4 +24,21 @@ export async function calculateHashForCreateNodes(
     ]),
     hashObject(options),
   ]);
+}
+
+export async function calculateHashesForCreateNodes(
+  projectRoots: string[],
+  options: object,
+  context: CreateNodesContext | CreateNodesContextV2,
+  additionalGlobs: string[] = []
+): Promise<string[]> {
+  return hashMultiGlobWithWorkspaceContext(
+    context.workspaceRoot,
+    projectRoots.map((projectRoot) => [
+      join(projectRoot, '**/*'),
+      ...additionalGlobs,
+    ])
+  ).then((hashes) => {
+    return hashes.map((hash) => hashArray([hash, hashObject(options)]));
+  });
 }

@@ -50,7 +50,12 @@ import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
-import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
+import {
+  HASH_GLOB,
+  HASH_MULTI_GLOB,
+  HandleHashGlobMessage,
+  HandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -381,6 +386,14 @@ export class DaemonClient {
       type: HASH_GLOB,
       globs,
       exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  hashMultiGlob(globGroups: string[][]): Promise<string[]> {
+    const message: HandleHashMultiGlobMessage = {
+      type: HASH_MULTI_GLOB,
+      globGroups: globGroups,
     };
     return this.sendToDaemonViaQueue(message);
   }
