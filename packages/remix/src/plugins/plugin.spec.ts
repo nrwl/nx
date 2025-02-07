@@ -1,8 +1,13 @@
-import { type CreateNodesContext, joinPathFragments } from '@nx/devkit';
+import {
+  type CreateNodesContext,
+  detectPackageManager,
+  joinPathFragments,
+} from '@nx/devkit';
 import { createNodesV2 as createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getLockFileName } from '@nx/js';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -69,6 +74,10 @@ module.exports = {
 };
 `
         );
+        const lockFileName = getLockFileName(
+          detectPackageManager(tempFs.tempDir)
+        );
+        tempFs.createFileSync(lockFileName, '');
         process.chdir(tempFs.tempDir);
       });
 
@@ -116,6 +125,10 @@ module.exports = {
           'my-app/project.json',
           JSON.stringify({ name: 'my-app' })
         );
+        const lockFileName = getLockFileName(
+          detectPackageManager(tempFs.tempDir)
+        );
+        tempFs.createFileSync(lockFileName, '');
 
         tempFs.createFileSync(
           'my-app/remix.config.cjs',
@@ -221,7 +234,7 @@ module.exports = {
         (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
         tempFs.createFileSync(
           'my-app/package.json',
-          JSON.stringify('{"name": "my-app"}')
+          JSON.stringify('{"name": "my-app", "version": "0.0.0"}')
         );
 
         const nodes = await createNodesFunction(
@@ -294,6 +307,10 @@ module.exports = {
           'package.json',
           JSON.stringify('{name: "my-app", type: "module"}')
         );
+        const lockFileName = getLockFileName(
+          detectPackageManager(tempFs.tempDir)
+        );
+        tempFs.createFileSync(lockFileName, '');
         tempFs.createFileSync(
           'vite.config.js',
           `const {defineConfig} = require('vite');
@@ -378,6 +395,11 @@ module.exports = {
             },
           }),
         });
+
+        const lockFileName = getLockFileName(
+          detectPackageManager(tempFs.tempDir)
+        );
+        tempFs.createFileSync(lockFileName, '');
 
         process.chdir(tempFs.tempDir);
       });
