@@ -13,12 +13,12 @@ export function getAppTests(options: NormalizedSchema) {
   it('should have a greeting as the title', () => {
     ${
       options.routing
-        ? 'const { getByText } = render(<BrowserRouter><App /></BrowserRouter>);'
-        : 'const { getByText } = render(<App />);'
+        ? 'const { getAllByText } = render(<BrowserRouter><App /></BrowserRouter>);'
+        : 'const { getAllByText } = render(<App />);'
     }
-    expect(getByText(new RegExp('Welcome ${
+    expect(getAllByText(new RegExp('Welcome ${
       options.projectName
-    }', 'gi'))).toBeTruthy();
+    }', 'gi')).length > 0).toBeTruthy();
   });
 `;
 }
