@@ -56,8 +56,8 @@ import { TableOfContents } from './lib/tags/table-of-contents.component';
 import { tableOfContents } from './lib/tags/table-of-contents.schema';
 import { Quote } from './lib/tags/quote.component';
 import { quote } from './lib/tags/quote.schema';
-// TODO fix this export
-export { GithubRepository } from './lib/tags/github-repository.component';
+import { metrics } from './lib/tags/metrics.schema';
+import { Metrics } from './lib/tags/metrics.component';
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string,
@@ -96,6 +96,7 @@ export const getMarkdocCustomConfig = (
       tweet,
       youtube,
       'video-link': videoLink,
+      metrics,
       // 'svg-animation': svgAnimation,
     },
   },
@@ -128,6 +129,7 @@ export const getMarkdocCustomConfig = (
     YouTube,
     VideoLink,
     VideoPlayer,
+    Metrics,
     // SvgAnimation,
   },
 });
@@ -177,3 +179,6 @@ export const renderMarkdown: (
     treeNode,
   };
 };
+
+export { GithubRepository } from './lib/tags/github-repository.component';
+export { Metrics };

@@ -47,12 +47,14 @@ export default async function BlogPostDetail({
 }: BlogPostDetailProps) {
   const ctaHeaderConfig = [tryNxCloudForFree];
   const blog = await blogApi.getBlogPostBySlug(slug);
+  const allPosts = await blogApi.getBlogs((p) => !!p.published);
+
   return blog ? (
     <>
       {/* This empty div is necessary as app router does not automatically scroll on route changes */}
       <div></div>
       <DefaultLayout headerCTAConfig={ctaHeaderConfig}>
-        <BlogDetails post={blog} />
+        <BlogDetails post={blog} allPosts={allPosts} />
       </DefaultLayout>
     </>
   ) : null;
