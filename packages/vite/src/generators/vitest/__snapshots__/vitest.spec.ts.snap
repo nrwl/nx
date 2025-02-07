@@ -82,7 +82,10 @@ export default defineConfig({
 `;
 
 exports[`vitest generator tsconfig should add vitest.workspace.ts at the root 1`] = `
-"export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];
+"export default [
+  '**/vite.config.{mjs,js,ts,mts}',
+  '**/vitest.config.{mjs,js,ts,mts}',
+];
 "
 `;
 

@@ -105,7 +105,7 @@ export async function initGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
-    tasks.push(checkDependenciesInstalled(tree, schema));
+    tasks.push(await checkDependenciesInstalled(tree, schema));
   }
 
   if (!schema.skipFormat) {
