@@ -55,8 +55,13 @@ import {
   watchOutputFiles,
   watchWorkspace,
 } from './watcher';
-import { handleGlob } from './handle-glob';
-import { GLOB, isHandleGlobMessage } from '../message-types/glob';
+import { handleGlob, handleMultiGlob } from './handle-glob';
+import {
+  GLOB,
+  isHandleGlobMessage,
+  isHandleMultiGlobMessage,
+  MULTI_GLOB,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   isHandleNxWorkspaceFilesMessage,
@@ -238,6 +243,10 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleGlobMessage(payload)) {
     await handleResult(socket, GLOB, () =>
       handleGlob(payload.globs, payload.exclude)
+    );
+  } else if (isHandleMultiGlobMessage(payload)) {
+    await handleResult(socket, MULTI_GLOB, () =>
+      handleMultiGlob(payload.globs, payload.exclude)
     );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
     await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
