@@ -2,7 +2,7 @@ import { TempFs } from '../../internal-testing-utils/temp-fs';
 import {
   retrieveProjectConfigurationPaths,
   retrieveProjectConfigurations,
-  configurationGlobs,
+  getGlobPatternsOfPlugins,
   retrieveProjectConfigurationsWithoutPluginInference,
 } from './retrieve-workspace-files';
 import { NxJsonConfiguration } from '../../config/nx-json';

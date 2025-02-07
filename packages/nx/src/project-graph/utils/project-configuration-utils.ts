@@ -319,7 +319,7 @@ export type ConfigurationResult = {
  * @param workspaceFiles A list of non-ignored workspace files
  * @param plugins The plugins that should be used to infer project configuration
  */
-export async function createProjectConfigurations(
+export async function createProjectConfigurationsWithPlugins(
   root: string = workspaceRoot,
   nxJson: NxJsonConfiguration,
   projectFiles: string[][], // making this parameter allows devkit to pick up newly created projects

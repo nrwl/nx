@@ -5,7 +5,7 @@ import {
 import {
   ConfigurationSourceMaps,
   SourceInformation,
-  createProjectConfigurations,
+  createProjectConfigurationsWithPlugins,
   isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
@@ -1679,16 +1679,17 @@ describe('project-configuration-utils', () => {
     };
 
     it('should create nodes for files matching included patterns only', async () => {
-      const projectConfigurations = await createProjectConfigurations(
-        undefined,
-        {},
-        [['libs/a/project.json', 'libs/b/project.json']],
-        [
-          new LoadedNxPlugin(fakeTagPlugin, {
-            plugin: fakeTagPlugin.name,
-          }),
-        ]
-      );
+      const projectConfigurations =
+        await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          [['libs/a/project.json', 'libs/b/project.json']],
+          [
+            new LoadedNxPlugin(fakeTagPlugin, {
+              plugin: fakeTagPlugin.name,
+            }),
+          ]
+        );
 
       expect(projectConfigurations.projects).toEqual({
         'libs/a': {
@@ -1705,17 +1706,18 @@ describe('project-configuration-utils', () => {
     });
 
     it('should create nodes for files matching included patterns only', async () => {
-      const projectConfigurations = await createProjectConfigurations(
-        undefined,
-        {},
-        [['libs/a/project.json', 'libs/b/project.json']],
-        [
-          new LoadedNxPlugin(fakeTagPlugin, {
-            plugin: fakeTagPlugin.name,
-            include: ['libs/a/**'],
-          }),
-        ]
-      );
+      const projectConfigurations =
+        await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          [['libs/a/project.json', 'libs/b/project.json']],
+          [
+            new LoadedNxPlugin(fakeTagPlugin, {
+              plugin: fakeTagPlugin.name,
+              include: ['libs/a/**'],
+            }),
+          ]
+        );
 
       expect(projectConfigurations.projects).toEqual({
         'libs/a': {
@@ -1727,17 +1729,18 @@ describe('project-configuration-utils', () => {
     });
 
     it('should not create nodes for files matching excluded patterns', async () => {
-      const projectConfigurations = await createProjectConfigurations(
-        undefined,
-        {},
-        [['libs/a/project.json', 'libs/b/project.json']],
-        [
-          new LoadedNxPlugin(fakeTagPlugin, {
-            plugin: fakeTagPlugin.name,
-            exclude: ['libs/b/**'],
-          }),
-        ]
-      );
+      const projectConfigurations =
+        await createProjectConfigurationsWithPlugins(
+          undefined,
+          {},
+          [['libs/a/project.json', 'libs/b/project.json']],
+          [
+            new LoadedNxPlugin(fakeTagPlugin, {
+              plugin: fakeTagPlugin.name,
+              exclude: ['libs/b/**'],
+            }),
+          ]
+        );
 
       expect(projectConfigurations.projects).toEqual({
         'libs/a': {
@@ -1749,7 +1752,7 @@ describe('project-configuration-utils', () => {
     });
 
     it('should normalize targets', async () => {
-      const { projects } = await createProjectConfigurations(
+      const { projects } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
         [['libs/a/project.json'], ['libs/a/project.json']],
@@ -1771,7 +1774,7 @@ describe('project-configuration-utils', () => {
     });
 
     it('should validate that project names are unique', async () => {
-      const error = await createProjectConfigurations(
+      const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
         [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
@@ -1795,7 +1798,7 @@ describe('project-configuration-utils', () => {
     });
 
     it('should validate that projects have a name', async () => {
-      const error = await createProjectConfigurations(
+      const error = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
         [['libs/a/project.json', 'libs/b/project.json', 'libs/c/project.json']],
@@ -1816,7 +1819,7 @@ describe('project-configuration-utils', () => {
     });
 
     it('should correctly set source maps', async () => {
-      const { sourceMaps } = await createProjectConfigurations(
+      const { sourceMaps } = await createProjectConfigurationsWithPlugins(
         undefined,
         {},
         [['libs/a/project.json'], ['libs/a/project.json']],
