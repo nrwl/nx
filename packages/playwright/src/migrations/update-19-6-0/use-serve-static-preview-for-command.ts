@@ -15,6 +15,8 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/loaded-nx-plugin';
 import { retrieveProjectConfigurations } from 'nx/src/project-graph/utils/retrieve-workspace-files';
 import { ProjectConfigurationsError } from 'nx/src/project-graph/error-types';
+import { createNodesV2 as webpackCreateNodesV2 } from '@nx/webpack/src/plugins/plugin';
+import { createNodesV2 as viteCreateNodesV2 } from '@nx/vite/plugin';
 import type { Node } from 'typescript';
 
 export default async function (tree: Tree) {
@@ -127,20 +129,8 @@ export default async function (tree: Tree) {
           ? 'serveStaticTargetName'
           : 'previewTargetName',
         projectToMigrate.configFileType === 'webpack'
-          ? (
-              await getDynamicImportedModule<
-                typeof import('@nx/webpack/src/plugins/plugin')
-              >(
-                '@nx/webpack/src/plugins/plugin',
-                '@nx/webpack should be installed when attempting to setup @nx/playwright with a webpack config file.'
-              )
-            ).createNodesV2
-          : (
-              await getDynamicImportedModule<typeof import('@nx/vite/plugin')>(
-                '@nx/vite/plugin',
-                '@nx/vite should be installed when attempting to setup @nx/playwright with a vite config file.'
-              )
-            ).createNodesV2
+          ? webpackCreateNodesV2
+          : viteCreateNodesV2
       )) ??
       getServeStaticLikeTarget(
         tree,
@@ -244,14 +234,6 @@ export default async function (tree: Tree) {
 
   await addE2eCiTargetDefaults(tree);
   await formatFiles(tree);
-}
-
-async function getDynamicImportedModule<T>(moduleName: string, error: string) {
-  try {
-    return (await import(moduleName)) as T;
-  } catch {
-    throw new Error(error);
-  }
 }
 
 async function getServeStaticTargetNameForConfigFile<T>(

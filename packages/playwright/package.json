@@ -37,23 +37,17 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@nx/devkit": "file:../devkit",
     "@nx/eslint": "file:../eslint",
+    "@nx/webpack": "file:../webpack",
+    "@nx/vite": "file:../vite",
     "@nx/js": "file:../js",
     "tslib": "^2.3.0",
     "minimatch": "9.0.3"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.36.0",
-    "@nx/webpack": "file:../webpack",
-    "@nx/vite": "file:../vite"
+    "@playwright/test": "^1.36.0"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {
-      "optional": true
-    },
-    "@nx/webpack": {
-      "optional": true
-    },
-    "@nx/vite": {
       "optional": true
     }
   },
