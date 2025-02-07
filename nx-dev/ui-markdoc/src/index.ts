@@ -55,8 +55,6 @@ import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
 import { TableOfContents } from './lib/tags/table-of-contents.component';
 import { tableOfContents } from './lib/tags/table-of-contents.schema';
 import { Testimonial, testimonial } from './lib/tags/testimonial.component';
-import { Quote } from './lib/tags/quote.component';
-import { quote } from './lib/tags/quote.schema';
 import { metrics } from './lib/tags/metrics.schema';
 import { Metrics } from './lib/tags/metrics.component';
 export { CallToAction };
@@ -88,7 +86,6 @@ export const getMarkdocCustomConfig = (
       personas,
       'project-details': projectDetails,
       pill,
-      quote,
       'short-embeds': shortEmbeds,
       'short-video': shortVideo,
       'side-by-side': sideBySide,
@@ -121,7 +118,6 @@ export const getMarkdocCustomConfig = (
     Personas,
     ProjectDetails,
     Pill,
-    Quote,
     ShortEmbeds,
     ShortVideo,
     SideBySide,

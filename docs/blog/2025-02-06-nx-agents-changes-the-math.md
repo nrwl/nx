@@ -5,6 +5,13 @@ authors: [Philip Fulcher]
 tags: ['nx cloud', 'customer story']
 cover_image: /blog/images/2025-02-06/header.avif
 description: 'Vattenfall solves their CI runner limitation using Nx Cloud, improving from 4 concurrent PRs to 100.'
+metrics:
+  - value: '4→100'
+    label: 'concurrent PRs on CI'
+  - value: '44%'
+    label: 'reduction in CI runtimes'
+  - value: '> 1 year'
+    label: 'of computation saved every 30 days'
 ---
 
 [Vattenfall](https://group.vattenfall.com/) is a world leader in energy production. With the rapid expansion of Vattenfall’s IT organization over the past few years, they exponentially grew both the size of their development teams and their codebase. As more developers joined and modular frontends proliferated, what started as a performant CI pipeline began showing signs of strain. The increasing complexity of their applications and test suites, combined with their commitment to maintaining high quality standards, created unprecedent demands on their CI infrastructure. Their CI provider had a limit of 100 CI runners in a pool, combined with a limit of one pool. If a single runner per PR would be enough, this would lead to 100 concurrent PR’s. More than enough for most teams. However, their workspace needed 25+ runners to complete in a timely manner. This resulted in only four concurrent PRs available., slowing down their team immensely and blocking important work from making it through CI.
@@ -56,7 +63,7 @@ This increase in concurrent PRs is a big win in and of itself, but it also resul
 
 ### Enabling flaky test detection to avoid PR re-runs
 
-Using Nx Agents has also enabled flaky task retries for them, reducing the number of times that PRs have to be re-run. Tasks that fail only sometimes and only in certain environments are called "flaky tasks." They are enormously time-consuming to identify and debug. **Nx Cloud can **reliably detect flaky tasks and automatically schedule them to be re-run on a different agent\*\*. By re-running flaky tasks until they pass, Nx Cloud ensures that the PR run completes the first time and doesn’t have to be re-run just to get a flaky task to pass.
+Using Nx Agents has also enabled flaky task retries for them, reducing the number of times that PRs have to be re-run. Tasks that fail only sometimes and only in certain environments are called "flaky tasks." They are enormously time-consuming to identify and debug. **Nx Cloud can reliably detect flaky tasks and automatically schedule them to be re-run on a different agent**. By re-running flaky tasks until they pass, Nx Cloud ensures that the PR run completes the first time and doesn’t have to be re-run just to get a flaky task to pass.
 
 ### Unlocking RenovateBot
 

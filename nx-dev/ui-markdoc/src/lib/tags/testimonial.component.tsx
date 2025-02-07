@@ -18,52 +18,6 @@ export const testimonial: Schema = {
   },
 };
 
-// export function Testimonial({children,name,title}: {
-//   title: string;
-//   name: string;
-//   children: ReactNode;
-// }) {
-//     return <div
-
-//     className="not-prose relative overflow-hidden left-1/2 w-dvw max-w-7xl px-6 lg:px-8 -translate-x-1/2
-//     rounded-lg xl:[box-shadow:0_50px_100px_-20px_rgba(50,50,93,0.25),_0_30px_60px_-30px_rgba(0,0,0,0.3)]"
-//   >
-//     <div
-//       className="absolute inset-0 bg-opacity-75 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-105"
-//       style={{
-//         backgroundImage:
-//           "url('https://images.unsplash.com/photo-1511376868136-742c0de8c9a8?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
-//       }}
-//     />
-//     <div className="absolute inset-0 bg-gradient-to-r from-[#186BB7] via-[#186BB7] via-70% to-[#186BB7]/40" />
-
-//     <div className="relative mx-auto grid max-w-2xl grid-cols-1 px-12 py-16 text-white lg:mx-0 lg:max-w-none lg:grid-cols-4">
-//       <div className="col-span-3 flex flex-col">
-//         <figure className="flex flex-auto flex-col justify-between">
-//           <blockquote className="text-pretty text-xl/8">
-//             {children}
-//           </blockquote>
-//           <figcaption className="mt-10 flex items-center gap-x-6">
-//             <img
-//               alt="avatar"
-//               src="/documentation/blog/images/2025-02-06/martijn.avif"
-//               className="size-14 rounded-full bg-slate-50"
-//             />
-//             <div className="text-base">
-//               <div className="font-semibold">
-//                 {name}
-//               </div>
-//               <div className="mt-1">
-//                 {title}
-//               </div>
-//             </div>
-//           </figcaption>
-//         </figure>
-//       </div>
-//     </div>
-//   </div>
-// }
-
 export function Testimonial({
   children,
   name,
@@ -94,10 +48,6 @@ export function Testimonial({
         </svg>
 
         <div className="relative z-10 ">
-          {/* <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-200">
-          Featured client
-        </p> */}
-
           <div className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
             {children}
           </div>
@@ -107,7 +57,7 @@ export function Testimonial({
           <img
             alt={name}
             src={image}
-            className="!m-0 size-12 flex-none rounded-full bg-gray-50"
+            className="!m-0 !size-12 flex-none rounded-full bg-gray-50"
           />
           <div className="flex-auto">
             <div className="text-base font-semibold">{name}</div>
