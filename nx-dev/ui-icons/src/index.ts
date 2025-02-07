@@ -1,3 +1,8 @@
+// AI
+export * from './lib/ai/cursor';
+export * from './lib/ai/github-copilot';
+export * from './lib/ai/intellij-ai';
+
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
 export * from './lib/ci-providers/bitbucket';
