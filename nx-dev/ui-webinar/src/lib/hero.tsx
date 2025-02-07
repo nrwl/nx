@@ -15,13 +15,6 @@ export function Hero(): JSX.Element {
             </SectionHeading>
           </div>
         </div>
-        <div className="hidden lg:col-span-3 lg:col-start-10 lg:block">
-          <img
-            className="aspect[1/1] rounded-lg border-8 border-slate-800/50 object-cover dark:border-white"
-            src="/images/webinar/webinar-hero.avif"
-            alt="A laptop and notebook"
-          />
-        </div>
       </div>
     </div>
   );

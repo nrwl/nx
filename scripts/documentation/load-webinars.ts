@@ -232,7 +232,12 @@ ${
   processedWebinar.Status === 'Upcoming'
     ? `{% call-to-action title="Register today!" url="${processedWebinar['Link to Landing Page']}" description="Save your spot" /%}`
     : ''
-}
+}${
+      processedWebinar.Status !== 'Upcoming' &&
+      !processedWebinar['YouTube Link']
+        ? `{% call-to-action title="Download the recording" url="${processedWebinar['Link to Landing Page']}" description="Sign up to gain access" /%}`
+        : ''
+    }
 `;
 
     writeFileSync(

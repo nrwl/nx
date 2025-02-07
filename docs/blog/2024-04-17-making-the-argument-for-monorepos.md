@@ -12,3 +12,5 @@ status: Past - Gated
 Presented by Miroslav Jonaš
 
 Trying to convince your colleagues to use a monorepo? Already using a monorepo and need to justify that decision? Check out this webinar to learn 7 essential reasons for using monorepos and bust a few myths and misconceptions along the way.
+
+{% call-to-action title="Download the recording" url="https://go.nx.dev/april-webinar" description="Sign up to gain access" /%}

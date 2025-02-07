@@ -13,3 +13,5 @@ status: Past - Gated
 Presented by Rares Matei
 
 Learn how you can streamline your existing CI config to its absolute simplest form, reducing CI times from 30 minutes to ~5 minutes with Nx Agents.
+
+{% call-to-action title="Download the recording" url="https://go.nx.dev/march-webinar" description="Sign up to gain access" /%}
