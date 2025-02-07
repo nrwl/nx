@@ -16,9 +16,6 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
     </div>
   ) : (
     <div className="mx-auto max-w-7xl px-8">
-      <div className="mt-10 border-b-2 border-slate-300 pb-3 text-lg dark:border-slate-700">
-        <h2 className="font-semibold">Upcoming Webinars</h2>
-      </div>
       {webinars
         .filter((w) => w.status === 'Upcoming')
         .map((webinar, index) => {
