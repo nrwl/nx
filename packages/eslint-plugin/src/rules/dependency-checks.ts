@@ -219,6 +219,14 @@ export default ESLintUtils.RuleCreator(
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
         packageRange === 'workspace:*' ||
+        packageRange === 'workspace:~' ||
+        packageRange === 'workspace:^' ||
+        /**
+         * Catalogs can be named, or left unnamed
+         * So just checking up until the : will catch both cases
+         * e.g. catalog:some-catalog or catalog:
+         */
+        packageRange.startsWith('catalog:') ||
         satisfies(npmDependencies[packageName], packageRange, {
           includePrerelease: true,
         })

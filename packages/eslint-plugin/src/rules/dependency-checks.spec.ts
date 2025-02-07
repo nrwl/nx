@@ -1637,6 +1637,118 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(0);
   });
+  it('should not report workspace:^ and workspace:~', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {
+        external1: 'workspace:~',
+        external2: 'workspace:^',
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `/root/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'npm:external2', type: 'static' },
+          ],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, [
+            'npm:external1',
+            'npm:external2',
+          ]),
+          createFile(`libs/liba/package.json`, [
+            'npm:external1',
+            'npm:external2',
+          ]),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
+  it('should not report catalog:', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {
+        external1: 'catalog:',
+        external2: 'catalog:nx',
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `/root/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'npm:external2', type: 'static' },
+          ],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, [
+            'npm:external1',
+            'npm:external2',
+          ]),
+          createFile(`libs/liba/package.json`, [
+            'npm:external1',
+            'npm:external2',
+          ]),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
 
   it('should require swc if @nx/js:swc executor', () => {
     const packageJson = {
