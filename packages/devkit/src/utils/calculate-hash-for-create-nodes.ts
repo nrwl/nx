@@ -30,13 +30,21 @@ export async function calculateHashesForCreateNodes(
   projectRoots: string[],
   options: object,
   context: CreateNodesContext | CreateNodesContextV2,
-  additionalGlobs: string[] = []
+  additionalGlobs: string[][] = []
 ): Promise<string[]> {
+  if (
+    additionalGlobs.length &&
+    additionalGlobs.length !== projectRoots.length
+  ) {
+    throw new Error(
+      'If additionalGlobs is provided, it must be the same length as projectRoots'
+    );
+  }
   return hashMultiGlobWithWorkspaceContext(
     context.workspaceRoot,
-    projectRoots.map((projectRoot) => [
+    projectRoots.map((projectRoot, idx) => [
       join(projectRoot, '**/*'),
-      ...additionalGlobs,
+      ...(additionalGlobs.length ? additionalGlobs[idx] : []),
     ])
   ).then((hashes) => {
     return hashes.map((hash) => hashArray([hash, hashObject(options)]));
