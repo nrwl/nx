@@ -4,6 +4,7 @@ import {
   CiForMonorepos,
   Hero,
   HetznerCloudTestimonial,
+  MonorepoAiSupport,
   SmarterToolsForMonorepos,
   Statistics,
   TeamAndCommunity,
@@ -45,6 +46,9 @@ export default function Index(): JSX.Element {
         </div>
         <div className="mt-32 lg:mt-56">
           <HetznerCloudTestimonial />
+        </div>
+        <div className="mt-32 lg:mt-56">
+          <MonorepoAiSupport />
         </div>
         <div className="mt-32 lg:mt-56">
           <CiForMonorepos />
