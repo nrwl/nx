@@ -8,7 +8,7 @@ cover_image: /blog/images/2025-01-22/Jan-webinar-image.png
 status: Upcoming
 ---
 
-**Jan 21, 2025 - 1-2pm ET/6-7pm UTC**
+**Jan 22, 2025 - 1-2pm ET/6-7pm UTC**
 
 Presented by Nicole Oliver, Rares Matei, and James Henry
 

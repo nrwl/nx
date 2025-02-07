@@ -214,11 +214,17 @@ youtubeUrl: ${processedWebinar['YouTube Link']}`
     }
 ---
 
-**${new Date(processedWebinar.Date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-    })}${processedWebinar.Time ? ` - ${processedWebinar.Time}` : ''}**
+${
+  processedWebinar.Time
+    ? `**${new Date(
+        processedWebinar.Date + ' ' + new Date().toTimeString()
+      ).toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+      })} - ${processedWebinar.Time}**`
+    : ''
+}
 
 ${
   processedWebinar['Speaker(s)']

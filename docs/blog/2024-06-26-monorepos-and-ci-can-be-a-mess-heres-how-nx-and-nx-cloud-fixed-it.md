@@ -8,8 +8,6 @@ tags: [webinar]
 status: Past - Gated
 ---
 
-**Jun 25, 2024**
-
 Presented by Juri Strumpflohner
 
 Continuous Integration (CI) in monorepos can be notoriously slow and unreliable, quickly become a bottleneck for scaling monorepos.
