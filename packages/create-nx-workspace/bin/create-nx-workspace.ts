@@ -461,10 +461,13 @@ async function determinePresetOptions(
   }
 }
 
-async function determineFormatterOptions(args: {
-  formatter?: 'none' | 'prettier';
-  interactive?: boolean;
-}) {
+async function determineFormatterOptions(
+  args: {
+    formatter?: 'none' | 'prettier';
+    interactive?: boolean;
+  },
+  opts?: { preferPrettier?: boolean }
+) {
   if (args.formatter) return args.formatter;
   const reply = await enquirer.prompt<{ prettier: 'Yes' | 'No' }>([
     {
@@ -479,14 +482,17 @@ async function determineFormatterOptions(args: {
           name: 'No',
         },
       ],
-      initial: 1,
+      initial: opts?.preferPrettier ? 0 : 1,
       skip: !args.interactive || isCI(),
     },
   ]);
   return reply.prettier === 'Yes' ? 'prettier' : 'none';
 }
 
-async function determineLinterOptions(args: { interactive?: boolean }) {
+async function determineLinterOptions(
+  args: { interactive?: boolean },
+  opts?: { preferEslint?: boolean }
+) {
   const reply = await enquirer.prompt<{ eslint: 'Yes' | 'No' }>([
     {
       name: 'eslint',
@@ -500,7 +506,7 @@ async function determineLinterOptions(args: { interactive?: boolean }) {
           name: 'No',
         },
       ],
-      initial: 1,
+      initial: opts?.preferEslint ? 0 : 1,
       skip: !args.interactive || isCI(),
     },
   ]);
@@ -723,8 +729,10 @@ async function determineReactOptions(
   }
 
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs);
-    formatter = await determineFormatterOptions(parsedArgs);
+    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
+    formatter = await determineFormatterOptions(parsedArgs, {
+      preferPrettier: true,
+    });
   } else {
     linter = 'eslint';
     formatter = 'prettier';
@@ -831,8 +839,10 @@ async function determineVueOptions(
   }
 
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs);
-    formatter = await determineFormatterOptions(parsedArgs);
+    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
+    formatter = await determineFormatterOptions(parsedArgs, {
+      preferPrettier: true,
+    });
   } else {
     linter = 'eslint';
     formatter = 'prettier';
@@ -1087,8 +1097,10 @@ async function determineNodeOptions(
   });
 
   if (workspaces) {
-    linter = await determineLinterOptions(parsedArgs);
-    formatter = await determineFormatterOptions(parsedArgs);
+    linter = await determineLinterOptions(parsedArgs, { preferEslint: true });
+    formatter = await determineFormatterOptions(parsedArgs, {
+      preferPrettier: true,
+    });
   } else {
     linter = 'eslint';
     formatter = 'prettier';
@@ -1435,13 +1447,13 @@ async function determineUnitTestRunner<T extends 'none' | 'jest' | 'vitest'>(
       ]
         .filter((t) => !options?.exclude || options.exclude !== t.name)
         .sort((a, b) => {
-          if (a.name === 'none') return -1;
-          if (b.name === 'none') return 1;
+          if (a.name === 'none') return 1;
+          if (b.name === 'none') return -1;
           if (options?.preferVitest && a.name === 'vitest') return -1;
           if (options?.preferVitest && b.name === 'vitest') return 1;
           return 0;
         }),
-      initial: 0,
+      initial: 0, // This should be either vite or jest
     },
   ]);
 
