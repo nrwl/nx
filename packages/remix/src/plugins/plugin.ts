@@ -305,6 +305,7 @@ function devTarget(
   isUsingTsSolutionSetup: boolean
 ): TargetConfiguration {
   const devTarget: TargetConfiguration = {
+    continuous: true,
     command:
       remixCompiler === RemixCompiler.IsVte
         ? 'remix vite:dev'
@@ -335,6 +336,7 @@ function startTarget(
 
   const startTarget: TargetConfiguration = {
     dependsOn: [buildTargetName],
+    continuous: true,
     command: `remix-serve ${serverPath}`,
     options: {
       cwd: projectRoot,
