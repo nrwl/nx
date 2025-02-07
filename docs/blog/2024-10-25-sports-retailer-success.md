@@ -2,7 +2,7 @@
 title: Improve your architecture and CI pipeline times with Nx projects
 slug: improve-architecture-and-ci-times-with-projects
 authors: [Philip Fulcher]
-tags: [nx, 'customer story']
+tags: ['customer story']
 cover_image: '/blog/images/2024-10-25/header.avif'
 pinned: true
 description: "US sports retailer's Nx monorepo transformation: CI pipeline times from 1hr to 7-9min, cache hit rates from 20% to 57%."
