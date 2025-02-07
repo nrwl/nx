@@ -4,7 +4,9 @@ description: 'Trying to convince your colleagues to use a monorepo? Already usin
 slug: 'making-the-argument-for-monorepos'
 authors: ['Miroslav Jonaš']
 tags: [webinar]
+cover_image: /blog/images/2024-04-17/april-webinar.png
 status: Past - Gated
+registrationUrl: https://go.nx.dev/april-webinar
 ---
 
 Presented by Miroslav Jonaš

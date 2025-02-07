@@ -202,14 +202,25 @@ tags: [webinar]${
 cover_image: ${cover_image}`
         : ''
     }${
+      processedWebinar['Time']
+        ? `
+time: ${processedWebinar['Time']}`
+        : ''
+    }${
       processedWebinar['Status']
         ? `
 status: ${processedWebinar['Status']}`
         : ''
     }${
-      processedWebinar['YouTube Link']
+      processedWebinar['YouTube Link'] &&
+      processedWebinar['Status'] === 'Past - Ungated'
         ? `
 youtubeUrl: ${processedWebinar['YouTube Link']}`
+        : ''
+    }${
+      processedWebinar['Link to Landing Page']
+        ? `
+registrationUrl: ${processedWebinar['Link to Landing Page']}`
         : ''
     }
 ---
@@ -239,8 +250,8 @@ ${
     ? `{% call-to-action title="Register today!" url="${processedWebinar['Link to Landing Page']}" description="Save your spot" /%}`
     : ''
 }${
-      processedWebinar.Status !== 'Upcoming' &&
-      !processedWebinar['YouTube Link']
+      processedWebinar.Status === 'Past - Gated' &&
+      processedWebinar['Link to Landing Page']
         ? `{% call-to-action title="Download the recording" url="${processedWebinar['Link to Landing Page']}" description="Sign up to gain access" /%}`
         : ''
     }

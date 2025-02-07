@@ -5,7 +5,9 @@ description: "Learn how you can streamline your existing CI config to its absolu
 slug: 'nx-agents-walkthrougheffortlessly-fast-ci-built-for-monorepos'
 authors: ['Rares Matei']
 tags: [webinar]
+cover_image: /blog/images/2024-03-11/march-webinar.png
 status: Past - Gated
+registrationUrl: https://go.nx.dev/march-webinar
 ---
 
 Presented by Rares Matei

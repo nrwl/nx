@@ -5,7 +5,9 @@ Learn how Nx and Nx Cloud's new task-based approach ensures fast, resilient, and
 slug: 'monorepos-and-ci-can-be-a-mess-heres-how-nx-and-nx-cloud-fixed-it'
 authors: ['Juri Strumpflohner']
 tags: [webinar]
+cover_image: /blog/images/2024-06-26/June-Webinar-card.png
 status: Past - Gated
+registrationUrl: https://go.nx.dev/june-webinar
 ---
 
 Presented by Juri Strumpflohner

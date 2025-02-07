@@ -12,22 +12,44 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
     day: '2-digit',
     year: 'numeric',
   });
+  const authorsList = (
+    webinar.authors.length > 1
+      ? webinar.authors.map((a, i) =>
+          i === webinar.authors.length - 1 ? 'and ' + a.name : a.name
+        )
+      : webinar.authors.map((a) => a.name)
+  ).join(', ');
+  const link =
+    (webinar.status === 'Past - Ungated'
+      ? webinar.youtubeUrl
+      : webinar.registrationUrl) || '';
   return (
-    <Link
-      href={`/blog/${webinar.slug}`}
+    <div
       key={webinar.slug}
-      className="relative flex items-center gap-6 border-b border-slate-200 py-5 text-sm before:absolute before:inset-x-[-16px] before:inset-y-[-2px] before:z-[-1] before:rounded-xl before:bg-slate-200 before:opacity-0 last:border-0 before:hover:opacity-100 dark:border-slate-800 dark:before:bg-slate-800/50"
-      prefetch={false}
+      className="border-b border-slate-200 py-5 text-sm last:border-0 dark:border-slate-800 dark:before:bg-slate-800/50"
     >
-      <span className="w-1/2 flex-none text-balance text-slate-500 sm:w-8/12 dark:text-white">
-        {webinar.title}
-      </span>
-      <span className="hidden w-2/12 flex-none sm:inline-block">
+      <Link href={link} prefetch={false}>
+        <span className="text-balance text-slate-500 sm:w-8/12 dark:text-white">
+          {webinar.title}
+        </span>
+      </Link>
+      <span className="my-4 block">
         <time dateTime={webinar.date}>{formattedDate}</time>
       </span>
-      <span className="hidden flex-1 overflow-hidden sm:inline-block">
-        <BlogAuthors authors={webinar.authors} showAuthorDetails={false} />
+      <span className="my-4 block">
+        <span className="inline-block">
+          <BlogAuthors authors={webinar.authors} showAuthorDetails={false} />
+        </span>
+        <span className="mx-2 inline-block">{authorsList}</span>
       </span>
-    </Link>
+      <p className="my-2">{webinar.description}</p>
+      <Link href={link} prefetch={false}>
+        <span className="my-4 text-balance text-slate-500 sm:w-8/12 dark:text-white">
+          {webinar.status === 'Past - Gated'
+            ? 'Sign up to download the recording'
+            : 'Watch the recording'}
+        </span>
+      </Link>
+    </div>
   );
 }
