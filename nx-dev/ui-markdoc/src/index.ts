@@ -58,6 +58,7 @@ import { Quote } from './lib/tags/quote.component';
 import { quote } from './lib/tags/quote.schema';
 import { metrics } from './lib/tags/metrics.schema';
 import { Metrics } from './lib/tags/metrics.component';
+export { CallToAction };
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string,

@@ -141,5 +141,23 @@
     "image": "/blog/images/Nicolas Beaussart.jpeg",
     "twitter": "beaussan",
     "github": "beaussan"
+  },
+  {
+    "name": "Nicole Oliver",
+    "image": "/blog/images/Nicole Oliver.jpeg",
+    "twitter": "nixcodes",
+    "github": "nixallover"
+  },
+  {
+    "name": "Rares Matei",
+    "image": "/blog/images/Rares Matei.jpeg",
+    "twitter": "__rares",
+    "github": "rarmatei"
+  },
+  {
+    "name": "James Henry",
+    "image": "/blog/images/James Henry.jpeg",
+    "twitter": "MrJamesHenry",
+    "github": "JamesHenry"
   }
 ]
