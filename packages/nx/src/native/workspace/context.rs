@@ -3,7 +3,7 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::native::hasher::hash;
+use crate::native::hasher::{self, hash};
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
 use crate::native::types::FileData;
@@ -251,6 +251,29 @@ impl WorkspaceContext {
                 Ok(globbed_files.map(|file| file.file.to_owned()).collect())
             })
             .collect()
+    }
+
+    #[napi]
+    pub fn hash_files_matching_globs(
+        &self,
+        glob_groups: Vec<Vec<String>>,
+    ) -> napi::Result<Vec<String>> {
+        let files = &self.all_file_data();
+        let hashes = glob_groups
+            .into_iter()
+            .map(|globs| {
+                let globbed_files =
+                    config_files::glob_files(files, globs, None)?.collect::<Vec<_>>();
+                let mut hasher = xxh3::Xxh3::new();
+                for file in globbed_files {
+                    hasher.update(file.file.as_bytes());
+                    hasher.update(file.hash.as_bytes());
+                }
+                Ok(hasher.digest().to_string())
+            })
+            .collect::<napi::Result<Vec<_>>>()?;
+
+        Ok(hashes)
     }
 
     #[napi]

@@ -12,3 +12,13 @@ export async function handleHashGlob(
     description: 'handleHashGlob',
   };
 }
+
+export async function handleHashMultiGlob(
+  globs: string[]
+): Promise<HandlerResult> {
+  const files = await hashWithWorkspaceContext(workspaceRoot, globs);
+  return {
+    response: JSON.stringify(files),
+    description: 'handleHashMultiGlob',
+  };
+}
