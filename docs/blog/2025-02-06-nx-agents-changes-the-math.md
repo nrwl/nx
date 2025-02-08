@@ -2,7 +2,7 @@
 title: 'Vattenfall changes the math on concurrent PRs with Nx Agents'
 slug: nx-agents-changes-the-math
 authors: [Philip Fulcher]
-tags: ['nx cloud', 'customer story']
+tags: ['customer story']
 cover_image: /blog/images/2025-02-06/header.avif
 description: 'Vattenfall solves their CI runner limitation using Nx Cloud, improving from 4 concurrent PRs to 100.'
 metrics:
@@ -14,7 +14,7 @@ metrics:
     label: 'of computation saved every 30 days'
 ---
 
-[Vattenfall](https://group.vattenfall.com/) is a world leader in energy production. With the rapid expansion of Vattenfall’s IT organization over the past few years, they exponentially grew both the size of their development teams and their codebase. As more developers joined and modular frontends proliferated, what started as a performant CI pipeline began showing signs of strain. The increasing complexity of their applications and test suites, combined with their commitment to maintaining high quality standards, created unprecedent demands on their CI infrastructure. Their CI provider had a limit of 100 CI runners in a pool, combined with a limit of one pool. If a single runner per PR would be enough, this would lead to 100 concurrent PR’s. More than enough for most teams. However, their workspace needed 25+ runners to complete in a timely manner. This resulted in only four concurrent PRs available., slowing down their team immensely and blocking important work from making it through CI.
+[Vattenfall](https://group.vattenfall.com/), a world leader in energy production, has been rapidly expanding their IT organization over the past few years – exponentially growing both their development teams and their codebase. As more developers joined and modular frontends proliferated, what started as a performant CI pipeline began showing signs of strain. The increasing complexity of their applications and test suites, combined with their commitment to maintaining high quality standards, created unprecedented demands on their CI infrastructure. Their CI provider had a limit of 100 CI runners in a pool, combined with a limit of one pool. If a single runner per PR would be enough, this would lead to 100 concurrent PRs. More than enough for most teams. However, their workspace needed 25+ runners to complete in a timely manner. This resulted in only four concurrent PRs available, slowing down their team immensely and blocking important work from making it through CI.
 
 ## Hitting the limits of CI providers
 
@@ -27,13 +27,6 @@ Now you're in a balancing act of how many runners can be assigned to a PR so tha
 ![Formula for calcuating number of concurrent PRs: "Available Runners" divided by "Runners per PR" equals "Concurrent PRs".](/blog/images/2025-02-06/previous-formula.avif)
 
 ## Nx Agents unlocks concurrency
-
-{% testimonial
-    name="Martijn van der Meij"
-    title="Solution Designer, Vattenfall"
-    image="/documentation/blog/images/2025-02-06/martijn.avif" %}
-Other engineers in other business units are seeing the advantage of Nx, and their managers are talking to our managers about copying the way we work. **They're saying "Nx is solving this problem we didn't even know we had"**
-{% /testimonial %}
 
 Working with our [Nx Enterprise](/enterprise) team, Vattenfall was able to unblock their team with Nx Agents enabling **more concurrent PR runs**. Not only that, but Nx Agents **lowered PR runtimes by 44%** and unlocked other features and tools that had been limited by their number of runners.
 
@@ -69,12 +62,17 @@ Using Nx Agents has also enabled flaky task retries for them, reducing the numbe
 
 RenovateBot helps automate dependency updates by creating pull requests when dependencies need to be updated. Previously, this PR would have consumed more CI runners and would have been yet another blocker on their team for making progress. They had to prioritize the runners for PRs created by engineers rather than allow RenovateBot to run. With the increased concurrency allowed by Nx Agents, they are now able to run RenovateBot on a regular basis.
 
-How much could you accomplish with more PRs running CI concurrently, faster than you've seen before? What would it look like if your engineers stopped pushing PRs at the end of the day, hoping they passed by the time they got back in the morning?
+{% testimonial
+name="Martijn van der Meij"
+title="Solution Designer, Vattenfall"
+image="/documentation/blog/images/2025-02-06/martijn.avif" %}
+Other engineers in other business units are seeing the advantage of Nx, and their managers are talking to our managers about copying the way we work. **They're saying "Nx is solving this problem we didn't even know we had"**
+{% /testimonial %}
 
 ## What could Nx Agents unlock for you?
 
-What's blocking you from getting your product to market faster? What's stopping you from ensuring the quality you want in CI? With Nx Eterprise, you receive expert guidance from day one, ensuring your setup is optimized for maximum efficiency. Whether you're starting fresh, migrating, or scaling your developer platform, we'll work with you to tailor the perfect solution for your team.
+What's blocking you from getting your products to market fast? Let our team figure it out for you! With Nx Enterprise, you receive expert guidance from day one, ensuring your setup is optimized for maximum efficiency. Whether you're starting fresh, migrating, or scaling your developer platform, we'll work with you to tailor the perfect solution for your team.
 
-{% call-to-action title="Explore Nx Cloud for Enterprises" url="/enterprise" icon="nxcloud" description="Learn more about our enterprise offerings or request a free trial of Nx Enterprise" %}
+{% call-to-action title="Get a Free Trial of Nx Enterprise" url="/enterprise" icon="nxcloud" description="Learn more about our enterprise offerings or request a free trial of Nx Enterprise" %}
 
 {% /call-to-action %}
