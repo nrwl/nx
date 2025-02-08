@@ -38,9 +38,12 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addReleaseOptionForPublishableTarget,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
+import { determineEntryFields } from '@nx/react/src/generators/library/lib/determine-entry-fields';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -106,8 +109,8 @@ export async function reactNativeLibraryGeneratorInternal(
   );
   tasks.push(jestTask);
 
-  if (options.publishable || options.buildable) {
-    updateLibPackageNpmScope(host, options);
+  if (options.publishable) {
+    tasks.push(await releaseTasks(host));
   }
 
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
@@ -175,9 +178,16 @@ async function addProject(
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
       name: options.name,
       version: '0.0.1',
-      ...determineEntryFields(options),
+      ...determineEntryFields(
+        options.buildable || options.publishable ? 'rollup' : 'none',
+        options.js
+      ),
       nx: {
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+      peerDependencies: {
+        react: reactVersion,
+        'react-native': reactNativeVersion,
       },
     });
   } else {
@@ -231,6 +241,15 @@ async function addProject(
     },
   };
 
+  if (options.publishable) {
+    await addReleaseOptionForPublishableTarget(
+      host,
+      options.name,
+      project,
+      options.isUsingTsSolutionConfig
+    );
+  }
+
   updateProjectConfiguration(host, options.name, project);
 
   return rollupConfigTask;
@@ -276,10 +295,6 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  if (!options.publishable && !options.buildable) {
-    host.delete(`${options.projectRoot}/package.json`);
-  }
-
   if (options.js) {
     toJS(host);
   }
@@ -287,44 +302,10 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   updateTsConfig(host, options);
 }
 
-function updateLibPackageNpmScope(host: Tree, options: NormalizedSchema) {
-  return updateJson(host, `${options.projectRoot}/package.json`, (json) => {
-    json.name = options.importPath;
-    json.peerDependencies = {
-      react: reactVersion,
-      'react-native': reactNativeVersion,
-    };
-    return json;
-  });
-}
-
 function maybeJs(options: NormalizedSchema, path: string): string {
   return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
     ? path.replace(/\.tsx?$/, '.js')
     : path;
-}
-
-function determineEntryFields(
-  options: NormalizedSchema
-): Pick<PackageJson, 'main' | 'types' | 'exports'> {
-  if (options.buildable) {
-    return {};
-  }
-
-  return {
-    main: options.js ? './src/index.js' : './src/index.ts',
-    types: options.js ? './src/index.js' : './src/index.ts',
-    exports: {
-      '.': options.js
-        ? './src/index.js'
-        : {
-            types: './src/index.ts',
-            import: './src/index.ts',
-            default: './src/index.ts',
-          },
-      './package.json': './package.json',
-    },
-  };
 }
 
 export default reactNativeLibraryGenerator;

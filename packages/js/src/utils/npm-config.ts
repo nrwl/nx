@@ -108,12 +108,9 @@ async function getNpmConfigValue(key: string, cwd: string): Promise<string> {
 async function execAsync(command: string, cwd: string): Promise<string> {
   // Must be non-blocking async to allow spinner to render
   return new Promise<string>((resolve, reject) => {
-    exec(command, { cwd, windowsHide: false }, (error, stdout, stderr) => {
+    exec(command, { cwd, windowsHide: false }, (error, stdout) => {
       if (error) {
         return reject(error);
-      }
-      if (stderr) {
-        return reject(stderr);
       }
       return resolve(stdout.trim());
     });

@@ -492,16 +492,26 @@ describe('lib', () => {
         ]
       `);
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(appTree, 'my-lib/package.json')))
-        .toMatchInlineSnapshot(`
-        [
-          "name",
-          "version",
-          "main",
-          "types",
-          "exports",
-          "nx",
-        ]
+      expect(readJson(appTree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/my-lib",
+          "nx": {},
+          "peerDependencies": {
+            "react": "~18.3.1",
+            "react-native": "~0.76.3",
+          },
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
       `);
       expect(readJson(appTree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
         {
