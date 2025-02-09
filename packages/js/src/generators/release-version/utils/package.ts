@@ -1,5 +1,6 @@
 import { joinPathFragments } from '@nx/devkit';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { DependencyCollection } from './resolve-local-package-dependencies';
 
 export class Package {
   name: string;
@@ -17,7 +18,7 @@ export class Package {
   }
 
   getLocalDependency(depName: string): {
-    collection: 'dependencies' | 'devDependencies' | 'optionalDependencies';
+    collection: DependencyCollection;
     spec: string;
   } | null {
     if (this.packageJson.dependencies?.[depName]) {
@@ -30,6 +31,12 @@ export class Package {
       return {
         collection: 'devDependencies',
         spec: this.packageJson.devDependencies[depName],
+      };
+    }
+    if (this.packageJson.peerDependencies?.[depName]) {
+      return {
+        collection: 'peerDependencies',
+        spec: this.packageJson.peerDependencies[depName],
       };
     }
     if (this.packageJson.optionalDependencies?.[depName]) {

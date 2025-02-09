@@ -12,6 +12,12 @@ import { satisfies } from 'semver';
 import { Package } from './package';
 import { resolveVersionSpec } from './resolve-version-spec';
 
+export type DependencyCollection =
+  | 'dependencies'
+  | 'devDependencies'
+  | 'peerDependencies'
+  | 'optionalDependencies';
+
 export interface LocalPackageDependency extends ProjectGraphDependency {
   /**
    * The rawVersionSpec contains the value of the version spec as it was defined in the package.json
@@ -19,11 +25,7 @@ export interface LocalPackageDependency extends ProjectGraphDependency {
    * workspace reference, and it needs to be be reverted to that original value as part of the release.
    */
   rawVersionSpec: string;
-  dependencyCollection:
-    | 'dependencies'
-    | 'devDependencies'
-    | 'optionalDependencies';
-  // we don't currently manage peer dependencies
+  dependencyCollection: DependencyCollection;
 }
 
 export function resolveLocalPackageDependencies(

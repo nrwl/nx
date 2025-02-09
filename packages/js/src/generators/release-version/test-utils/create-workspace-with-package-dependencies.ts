@@ -1,4 +1,5 @@
 import { ProjectGraph, Tree, writeJson } from '@nx/devkit';
+import { DependencyCollection } from '../utils/resolve-local-package-dependencies';
 
 interface ProjectAndPackageData {
   [projectName: string]: {
@@ -8,10 +9,7 @@ interface ProjectAndPackageData {
     packageJsonPath: string;
     localDependencies: {
       projectName: string;
-      dependencyCollection:
-        | 'dependencies'
-        | 'devDependencies'
-        | 'optionalDependencies';
+      dependencyCollection: DependencyCollection;
       version: string;
     }[];
   };
