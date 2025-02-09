@@ -73,4 +73,26 @@ describe('processGradleDependencies', () => {
     const dependencies = processGradleDependencies(depFilePath);
     expect(Array.from(dependencies)).toEqual([':utilities']);
   });
+
+  it('should process gradle custom dependencies', () => {
+    const depFilePath = join(
+      __dirname,
+      '..',
+      'utils/__mocks__/gradle-custom-dependencies.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([
+      ':spring-boot-project:spring-boot-parent',
+      ':spring-boot-project:spring-boot-actuator',
+      ':spring-boot-project:spring-boot-actuator-autoconfigure',
+      ':spring-boot-project:spring-boot-autoconfigure',
+      ':spring-boot-project:spring-boot-docker-compose',
+      ':spring-boot-project:spring-boot-tools:spring-boot-cli',
+      ':spring-boot-project:spring-boot-tools:spring-boot-loader-tools',
+      ':spring-boot-project:spring-boot-test',
+      ':spring-boot-project:spring-boot-test-autoconfigure',
+      ':spring-boot-project:spring-boot-testcontainers',
+      ':spring-boot-project:spring-boot-devtools',
+    ]);
+  });
 });
