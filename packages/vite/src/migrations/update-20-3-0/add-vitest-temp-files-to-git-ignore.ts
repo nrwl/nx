@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { ignoreViteTempFiles } from '../../utils/ignore-vite-temp-files';
+import { addViteTempFilesToGitIgnore as _addViteTempFilesToGitIgnore } from '../../utils/ignore-vite-temp-files';
 
 export default function addViteTempFilesToGitIgnore(tree: Tree) {
   // need to check if .gitignore exists before adding to it
@@ -22,5 +22,5 @@ export default function addViteTempFilesToGitIgnore(tree: Tree) {
       );
     }
   }
-  ignoreViteTempFiles(tree);
+  _addViteTempFilesToGitIgnore(tree);
 }

@@ -9,20 +9,18 @@ export function ignoreViteTempFiles(
   ignoreViteTempFilesInEslintConfig(tree, projectRoot);
 }
 
-function addViteTempFilesToGitIgnore(tree: Tree): void {
-  const viteTempFilesPattern = `vite.config.*.timestamp*`;
-  const vitestTempFilesPattern = `vitest.config.*.timestamp*`;
-
+export function addViteTempFilesToGitIgnore(tree: Tree): void {
   let gitIgnoreContents = tree.exists('.gitignore')
     ? tree.read('.gitignore', 'utf-8')
     : '';
-  if (!gitIgnoreContents.includes(viteTempFilesPattern)) {
+
+  if (!/^vite\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {
     gitIgnoreContents = stripIndents`${gitIgnoreContents}
-        ${viteTempFilesPattern}`;
+      vite.config.*.timestamp*`;
   }
-  if (!gitIgnoreContents.includes(vitestTempFilesPattern)) {
+  if (!/^vitest\.config\.\*\.timestamp\*$/m.test(gitIgnoreContents)) {
     gitIgnoreContents = stripIndents`${gitIgnoreContents}
-        ${vitestTempFilesPattern}`;
+      vitest.config.*.timestamp*`;
   }
 
   tree.write('.gitignore', gitIgnoreContents);
@@ -35,9 +33,6 @@ function ignoreViteTempFilesInEslintConfig(
   if (!isEslintInstalled(tree)) {
     return;
   }
-
-  const viteTempFilesPattern = `**/vite.config.*.timestamp*`;
-  const vitestTempFilesPattern = `**/vitest.config.*.timestamp*`;
 
   ensurePackage('@nx/eslint', nxVersion);
   const { addIgnoresToLintConfig, isEslintConfigSupported } =
@@ -62,12 +57,12 @@ function ignoreViteTempFilesInEslintConfig(
   const directory = isUsingFlatConfig ? '' : projectRoot ?? '';
 
   addIgnoresToLintConfig(tree, directory, [
-    viteTempFilesPattern,
-    vitestTempFilesPattern,
+    '**/vite.config.*.timestamp*',
+    '**/vitest.config.*.timestamp*',
   ]);
 }
 
-function isEslintInstalled(tree: Tree): boolean {
+export function isEslintInstalled(tree: Tree): boolean {
   try {
     // nx-ignore-next-line
     require('eslint');
