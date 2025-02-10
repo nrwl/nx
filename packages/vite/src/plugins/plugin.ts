@@ -2,6 +2,7 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
@@ -16,7 +17,10 @@ import {
 import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import {
+  calculateHashesForCreateNodes,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
 import { loadViteDynamicImport } from '../utils/executor-utils';
@@ -24,6 +28,8 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { combineGlobPatterns } from 'nx/src/utils/globs';
+import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 
 const pmc = getPackageManagerCommand();
 
@@ -42,7 +48,10 @@ export interface VitePluginOptions {
   buildDepsTargetName?: string;
 }
 
-type ViteTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+type ViteTargets = Pick<
+  ProjectConfiguration,
+  'targets' | 'metadata' | 'projectType'
+>;
 
 function readTargetsCache(cachePath: string): Record<string, ViteTargets> {
   return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
@@ -67,19 +76,92 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
   viteVitestConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options);
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
+    const packageManagerWorkspacesGlob = combineGlobPatterns(
+      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    );
+
+    const { roots: projectRoots, configFiles: validConfigFiles } =
+      configFilePaths.reduce(
+        (acc, configFile) => {
+          const potentialRoot = dirname(configFile);
+          if (
+            checkIfConfigFileShouldBeProject(
+              potentialRoot,
+              packageManagerWorkspacesGlob,
+              context
+            )
+          ) {
+            acc.roots.push(potentialRoot);
+            acc.configFiles.push(configFile);
+          }
+          return acc;
+        },
+        {
+          roots: [],
+          configFiles: [],
+        } as {
+          roots: string[];
+          configFiles: string[];
+        }
+      );
+
+    const lockfile = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      options,
+      context,
+      projectRoots.map((r) => [lockfile])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            isUsingTsSolutionSetup
-          ),
+        async (configFile, _, context, idx) => {
+          const projectRoot = dirname(configFile);
+          // Do not create a project if package.json and project.json isn't there.
+          const siblingFiles = readdirSync(
+            join(context.workspaceRoot, projectRoot)
+          );
+
+          const tsConfigFiles =
+            siblingFiles.filter((p) =>
+              minimatch(p, 'tsconfig*{.json,.*.json}')
+            ) ?? [];
+
+          const hash = hashes[idx];
+          const { projectType, metadata, targets } = (targetsCache[hash] ??=
+            await buildViteTargets(
+              configFile,
+              projectRoot,
+              normalizedOptions,
+              tsConfigFiles,
+              isUsingTsSolutionSetup,
+              context
+            ));
+
+          const project: ProjectConfiguration = {
+            root: projectRoot,
+            targets,
+            metadata,
+          };
+
+          // If project is buildable, then the project type.
+          // If it is not buildable, then leave it to other plugins/project.json to set the project type.
+          if (project.targets[normalizedOptions.buildTargetName]) {
+            project.projectType = projectType;
+          }
+
+          return {
+            projects: {
+              [projectRoot]: project,
+            },
+          };
+        },
         configFilePaths,
         options,
         context
@@ -96,77 +178,62 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
-    return createNodesInternal(
+    const projectRoot = dirname(configFilePath);
+    // Do not create a project if package.json and project.json isn't there.
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+    if (
+      !siblingFiles.includes('package.json') &&
+      !siblingFiles.includes('project.json')
+    ) {
+      return {};
+    }
+
+    const tsConfigFiles =
+      siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ??
+      [];
+
+    const normalizedOptions = normalizeOptions(options);
+
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
+
+    // We do not want to alter how the hash is calculated, so appending the config file path to the hash
+    // to prevent vite/vitest files overwriting the target cache created by the other
+    const hash =
+      (await calculateHashForCreateNodes(
+        projectRoot,
+        { ...normalizedOptions, isUsingTsSolutionSetup },
+        context,
+        [getLockFileName(detectPackageManager(context.workspaceRoot))]
+      )) + configFilePath;
+
+    const { projectType, metadata, targets } = await buildViteTargets(
       configFilePath,
-      options,
-      context,
-      {},
-      _isUsingTsSolutionSetup()
+      projectRoot,
+      normalizedOptions,
+      tsConfigFiles,
+      isUsingTsSolutionSetup,
+      context
     );
+
+    const project: ProjectConfiguration = {
+      root: projectRoot,
+      targets,
+      metadata,
+    };
+
+    // If project is buildable, then the project type.
+    // If it is not buildable, then leave it to other plugins/project.json to set the project type.
+    if (project.targets[normalizedOptions.buildTargetName]) {
+      project.projectType = projectType;
+    }
+
+    return {
+      projects: {
+        [projectRoot]: project,
+      },
+    };
   },
 ];
-
-async function createNodesInternal(
-  configFilePath: string,
-  options: VitePluginOptions,
-  context: CreateNodesContext,
-  targetsCache: Record<string, ViteTargets>,
-  isUsingTsSolutionSetup: boolean
-) {
-  const projectRoot = dirname(configFilePath);
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const tsConfigFiles =
-    siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ?? [];
-
-  const normalizedOptions = normalizeOptions(options);
-
-  // We do not want to alter how the hash is calculated, so appending the config file path to the hash
-  // to prevent vite/vitest files overwriting the target cache created by the other
-  const hash =
-    (await calculateHashForCreateNodes(
-      projectRoot,
-      { ...normalizedOptions, isUsingTsSolutionSetup },
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
-    )) + configFilePath;
-
-  const { isLibrary, ...viteTargets } = await buildViteTargets(
-    configFilePath,
-    projectRoot,
-    normalizedOptions,
-    tsConfigFiles,
-    isUsingTsSolutionSetup,
-    context
-  );
-  targetsCache[hash] ??= viteTargets;
-
-  const { targets, metadata } = targetsCache[hash];
-  const project: ProjectConfiguration = {
-    root: projectRoot,
-    targets,
-    metadata,
-  };
-
-  // If project is buildable, then the project type.
-  // If it is not buildable, then leave it to other plugins/project.json to set the project type.
-  if (project.targets[normalizedOptions.buildTargetName]) {
-    project.projectType = isLibrary ? 'library' : 'application';
-  }
-
-  return {
-    projects: {
-      [projectRoot]: project,
-    },
-  };
-}
 
 async function buildViteTargets(
   configFilePath: string,
@@ -175,7 +242,7 @@ async function buildViteTargets(
   tsConfigFiles: string[],
   isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext
-): Promise<ViteTargets & { isLibrary: boolean }> {
+): Promise<ViteTargets> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -304,7 +371,11 @@ async function buildViteTargets(
   );
 
   const metadata = {};
-  return { targets, metadata, isLibrary: Boolean(viteBuildConfig.build?.lib) };
+  return {
+    targets,
+    metadata,
+    projectType: viteBuildConfig.build?.lib ? 'library' : 'application',
+  };
 }
 
 async function buildTarget(
@@ -537,4 +608,32 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
   options.serveStaticTargetName ??= 'serve-static';
   options.typecheckTargetName ??= 'typecheck';
   return options;
+}
+
+function checkIfConfigFileShouldBeProject(
+  projectRoot: string,
+  packageManagerWorkspacesGlob: string,
+  context: CreateNodesContext | CreateNodesContextV2
+): boolean {
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  if (
+    !siblingFiles.includes('package.json') &&
+    !siblingFiles.includes('project.json')
+  ) {
+    return false;
+  } else if (
+    !siblingFiles.includes('project.json') &&
+    siblingFiles.includes('package.json')
+  ) {
+    const path = joinPathFragments(projectRoot, 'package.json');
+
+    const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
+
+    if (!isPackageJsonProject) {
+      return false;
+    }
+  }
+
+  return true;
 }
