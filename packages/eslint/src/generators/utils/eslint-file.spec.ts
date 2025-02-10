@@ -227,6 +227,9 @@ module.exports = [
           },
         ];"
       `);
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@eslint/compat']).toBeDefined();
+      expect(devDependencies['@eslint/eslintrc']).toBeDefined();
     });
 
     it('should handle mixed multiple incompatible and compatible plugins and add them to extends in the specified order when using eslint v9', () => {
@@ -298,6 +301,9 @@ module.exports = [
           },
         ];"
       `);
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies['@eslint/compat']).toBeDefined();
+      expect(devDependencies['@eslint/eslintrc']).toBeDefined();
     });
 
     it('should not add wrapped plugin for compat in extends when not using eslint v9', () => {

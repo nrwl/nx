@@ -20,7 +20,11 @@ import {
   useFlatConfig,
 } from '../../utils/flat-config';
 import { getInstalledEslintVersion } from '../../utils/version-utils';
-import { eslint9__eslintVersion, eslintCompat } from '../../utils/versions';
+import {
+  eslint9__eslintVersion,
+  eslintCompat,
+  eslintrcVersion,
+} from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -421,14 +425,6 @@ export function addExtendsToLintConfig(
         break;
       }
     }
-    // Check the file extension to determine the format of the config if it is .js we look for the export
-    const eslintConfigFormat = fileName.endsWith('.mjs')
-      ? 'mjs'
-      : fileName.endsWith('.cjs')
-      ? 'cjs'
-      : tree.read(fileName, 'utf-8').includes('module.exports')
-      ? 'cjs'
-      : 'mjs';
 
     let shouldImportEslintCompat = false;
     // assume eslint version is 9 if not found, as it's what we'd be generating by default
@@ -489,17 +485,21 @@ export function addExtendsToLintConfig(
     }
     tree.write(fileName, content);
 
+    const devDependencies = {
+      '@eslint/eslintrc': eslintrcVersion,
+    };
+
     if (shouldImportEslintCompat) {
-      return addDependenciesToPackageJson(
-        tree,
-        {},
-        { '@eslint/compat': eslintCompat },
-        undefined,
-        true
-      );
+      devDependencies['@eslint/compat'] = eslintCompat;
     }
 
-    return () => {};
+    return addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      true
+    );
   } else {
     const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
       typeof p === 'string' ? p : p.name
