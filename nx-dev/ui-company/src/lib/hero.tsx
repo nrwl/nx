@@ -32,7 +32,7 @@ export function Hero(): JSX.Element {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h1" variant="display">
-            We Help You Suceed at Scale
+            We Help You Succeed at Scale
           </SectionHeading>
           <SectionHeading
             as="p"
