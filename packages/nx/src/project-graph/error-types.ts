@@ -280,7 +280,12 @@ export function formatAggregateCreateNodesError(
   const errorBodyLines = [
     `${
       error.errors.length > 1 ? `${error.errors.length} errors` : 'An error'
-    } occurred while processing files for the ${pluginName} plugin.`,
+    } occurred while processing files for the ${pluginName} plugin${
+      error.pluginIndex
+        ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
+        : ''
+    }`,
+    `.`,
   ];
   const errorStackLines = [];
 
