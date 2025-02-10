@@ -107,7 +107,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
         }
       );
 
-    const hashes = calculateHashesForCreateNodes(
+    const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       options,
       context
