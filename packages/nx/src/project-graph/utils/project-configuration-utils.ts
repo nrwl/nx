@@ -16,19 +16,19 @@ import { performance } from 'perf_hooks';
 
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import {
-  MergeNodesError,
-  ProjectConfigurationsError,
-  ProjectsWithNoNameError,
-  MultipleProjectsWithSameNameError,
-  isMultipleProjectsWithSameNameError,
-  isProjectsWithNoNameError,
-  ProjectWithNoNameError,
-  ProjectWithExistingNameError,
-  isProjectWithExistingNameError,
-  isProjectWithNoNameError,
-  isAggregateCreateNodesError,
   AggregateCreateNodesError,
   formatAggregateCreateNodesError,
+  isAggregateCreateNodesError,
+  isMultipleProjectsWithSameNameError,
+  isProjectsWithNoNameError,
+  isProjectWithExistingNameError,
+  isProjectWithNoNameError,
+  MergeNodesError,
+  MultipleProjectsWithSameNameError,
+  ProjectConfigurationsError,
+  ProjectsWithNoNameError,
+  ProjectWithExistingNameError,
+  ProjectWithNoNameError,
 } from '../error-types';
 import { CreateNodesResult } from '../plugins/public-api';
 import { isGlobPattern } from '../../utils/globs';
@@ -377,7 +377,13 @@ export async function createProjectConfigurationsWithPlugins(
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const [
     index,
-    { createNodes: createNodesTuple, include, exclude, name: pluginName },
+    {
+      index: pluginIndex,
+      createNodes: createNodesTuple,
+      include,
+      exclude,
+      name: pluginName,
+    },
   ] of plugins.entries()) {
     const [pattern, createNodes] = createNodesTuple ?? [];
 
@@ -403,8 +409,10 @@ export async function createProjectConfigurationsWithPlugins(
             e
           : // This represents a single plugin erroring out with a hard error.
             new AggregateCreateNodesError([[null, e]], []);
+        if (pluginIndex) {
+          error.pluginIndex = pluginIndex;
+        }
         formatAggregateCreateNodesError(error, pluginName);
-        error.pluginIndex = index;
         // This represents a single plugin erroring out with a hard error.
         errors.push(error);
         // The plugin didn't return partial results, so we return an empty array.
@@ -458,7 +466,7 @@ function mergeCreateNodesResults(
     plugin: string,
     file: string,
     result: CreateNodesResult,
-    index?: number
+    pluginIndex?: number
   ])[][],
   nxJsonConfiguration: NxJsonConfiguration,
   errors: (
@@ -477,7 +485,7 @@ function mergeCreateNodesResults(
   > = {};
 
   for (const result of results.flat()) {
-    const [pluginName, file, nodes, index] = result;
+    const [pluginName, file, nodes, pluginIndex] = result;
 
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
       nodes;
@@ -506,7 +514,7 @@ function mergeCreateNodesResults(
             file,
             pluginName,
             error,
-            pluginIndex: index,
+            pluginIndex,
           })
         );
       }

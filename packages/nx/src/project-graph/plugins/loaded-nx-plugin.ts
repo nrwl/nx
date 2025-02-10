@@ -20,6 +20,7 @@ import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
 
 export class LoadedNxPlugin {
+  index?: number;
   readonly name: string;
   readonly createNodes?: [
     filePattern: string,

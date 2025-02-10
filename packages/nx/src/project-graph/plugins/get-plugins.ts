@@ -159,7 +159,7 @@ async function loadSpecifiedNxPlugins(
   const cleanupFunctions: Array<() => void> = [];
   const ret = [
     await Promise.all(
-      plugins.map(async (plugin) => {
+      plugins.map(async (plugin, index) => {
         const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
         performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
 
@@ -170,6 +170,7 @@ async function loadSpecifiedNxPlugins(
 
         cleanupFunctions.push(cleanup);
         const res = await loadedPluginPromise;
+        res.index = index;
         performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
         performance.measure(
           `Load Nx Plugin: ${pluginPath}`,
