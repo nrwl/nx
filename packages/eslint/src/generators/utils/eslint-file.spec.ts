@@ -120,6 +120,45 @@ describe('@nx/eslint:lint-file', () => {
       ]);
     });
 
+    it('should install necessary dependencies', () => {
+      // mock eslint version
+      jest.spyOn(devkitInternals, 'readModulePackageJson').mockReturnValue({
+        packageJson: { name: 'eslint', version: '9.0.0' },
+        path: '',
+      });
+      tree.write('eslint.config.cjs', 'module.exports = {};');
+      tree.write(
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx"
+    ],
+    rules: {}
+  },
+];`
+      );
+
+      addExtendsToLintConfig(tree, 'apps/demo', {
+        name: 'plugin:playwright/recommend',
+        needCompatFixup: true,
+      });
+
+      expect(readJson(tree, 'package.json').devDependencies)
+        .toMatchInlineSnapshot(`
+        {
+          "@eslint/compat": "^1.1.1",
+          "@eslint/eslintrc": "^2.1.1",
+        }
+      `);
+    });
+
     it('should add extends to flat config', () => {
       tree.write('eslint.config.cjs', 'module.exports = {};');
       tree.write(
