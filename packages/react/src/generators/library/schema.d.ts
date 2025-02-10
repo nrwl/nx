@@ -3,6 +3,7 @@ import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   appProject?: string;
+  /** @deprecated Use bundler instead. */
   buildable?: boolean;
   bundler?: 'none' | 'rollup' | 'vite';
   compiler?: 'babel' | 'swc';
