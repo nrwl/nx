@@ -1,12 +1,12 @@
 import { ensurePackage, readJson, stripIndents, type Tree } from '@nx/devkit';
 import { nxVersion } from './versions';
 
-export function ignoreViteTempFiles(
+export async function ignoreViteTempFiles(
   tree: Tree,
   projectRoot?: string | undefined
-): void {
+): Promise<void> {
   addViteTempFilesToGitIgnore(tree);
-  ignoreViteTempFilesInEslintConfig(tree, projectRoot);
+  await ignoreViteTempFilesInEslintConfig(tree, projectRoot);
 }
 
 export function addViteTempFilesToGitIgnore(tree: Tree): void {
@@ -26,25 +26,23 @@ export function addViteTempFilesToGitIgnore(tree: Tree): void {
   tree.write('.gitignore', gitIgnoreContents);
 }
 
-function ignoreViteTempFilesInEslintConfig(
+async function ignoreViteTempFilesInEslintConfig(
   tree: Tree,
   projectRoot: string | undefined
-): void {
+): Promise<void> {
   if (!isEslintInstalled(tree)) {
     return;
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } =
-    // nx-ignore-next-line
-    require('@nx/eslint/src/generators/utils/eslint-file');
+  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
+    '@nx/eslint/src/generators/utils/eslint-file'
+  );
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } =
-    // nx-ignore-next-line
-    require('@nx/eslint/src/utils/flat-config');
+  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config');
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add
@@ -64,7 +62,6 @@ function ignoreViteTempFilesInEslintConfig(
 
 export function isEslintInstalled(tree: Tree): boolean {
   try {
-    // nx-ignore-next-line
     require('eslint');
     return true;
   } catch {}

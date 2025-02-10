@@ -14,16 +14,14 @@ export default async function (tree: Tree) {
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } =
-    // nx-ignore-next-line
-    require('@nx/eslint/src/generators/utils/eslint-file');
+  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
+    '@nx/eslint/src/generators/utils/eslint-file'
+  );
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } =
-    // nx-ignore-next-line
-    require('@nx/eslint/src/utils/flat-config');
+  const { useFlatConfig } = await import('@nx/eslint/src/utils/flat-config');
   const isUsingFlatConfig = useFlatConfig(tree);
 
   if (isUsingFlatConfig) {

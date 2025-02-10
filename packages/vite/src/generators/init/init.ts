@@ -96,7 +96,7 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
-  ignoreViteTempFiles(tree, schema.projectRoot);
+  await ignoreViteTempFiles(tree, schema.projectRoot);
 
   if (schema.setupPathsPlugin) {
     await setupPathsPlugin(tree, { skipFormat: true });
