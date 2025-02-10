@@ -36,7 +36,7 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
     (options.publishable || options.bundler !== 'none')
   ) {
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: options.name,
+      name: options.importPath ?? options.name,
       version: '0.0.1',
       main: './index.js',
       types: './index.d.ts',
