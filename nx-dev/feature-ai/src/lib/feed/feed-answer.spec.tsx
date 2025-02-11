@@ -1,9 +1,8 @@
 import { normalizeContent } from './feed-answer';
 
-jest.mock('@nx/graph/legacy', () => {
+jest.mock('@nx/graph', () => {
   return {
     Tooltip: jest.fn(() => null),
-    PropertyInfoTooltip: jest.fn(() => null),
     Icon: jest.fn(() => null),
     CopyToClipboardButton: jest.fn(() => null),
     ExpandedTargetsContext: jest.fn(() => null),
