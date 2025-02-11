@@ -116,6 +116,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "dev-serve": {
                     "command": "rsbuild dev",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--mode=development",
@@ -131,6 +132,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "preview-serve": {
                     "command": "rsbuild preview",
+                    "continuous": true,
                     "dependsOn": [
                       "build-something",
                       "^build-something",
