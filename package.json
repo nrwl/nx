@@ -333,7 +333,7 @@
     "@markdoc/markdoc": "0.2.2",
     "@monaco-editor/react": "^4.4.6",
     "@napi-rs/canvas": "^0.1.52",
-    "@nx/graph": "0.3.11",
+    "@nx/graph": "0.3.14",
     "@react-spring/three": "^9.7.3",
     "@react-three/drei": "^9.108.3",
     "@react-three/fiber": "^8.16.8",
