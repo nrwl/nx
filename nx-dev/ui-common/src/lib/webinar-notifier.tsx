@@ -65,10 +65,10 @@ export function WebinarNotifier(): ReactElement | null {
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Learn how to build modern React monorepos with NPM workspaces and
-              TypeScript project references, and see how Nx’s latest features
-              streamline configuration, maintenance, and performance both
-              locally and on CI.
+              Learn how to build modern React applications using platform-native
+              tools like NPM workspaces and TypeScript project references, and
+              see how Nx improves the developer experience all while letting you
+              ship your React apps faster.
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
