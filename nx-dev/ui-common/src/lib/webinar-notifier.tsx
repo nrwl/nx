@@ -11,7 +11,7 @@ import {
 export function WebinarNotifier(): ReactElement | null {
   const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const localStorageKey = 'webinar-january-22-2025--notifier-closed';
+  const localStorageKey = 'webinar-february-26-2025--notifier-closed';
 
   useEffect(() => {
     setIsMounted(true);
@@ -61,18 +61,19 @@ export function WebinarNotifier(): ReactElement | null {
               aria-hidden="true"
               className="size-8 flex-shrink-0"
             />
-            <span>Join our webinar + live Q&A on January 22nd</span>
+            <span>Join our webinar + live Q&A on February 26th</span>
           </motion.h3>
           <motion.div key="live-event" className="mt-4 space-y-4">
             <p className="mb-2 text-sm">
-              Learn how Nx Cloud can help you overcome the performance paradox
-              with fast, reliable CI and better coordination as you scale your
-              organization.
+              Learn how to build modern React monorepos with NPM workspaces and
+              TypeScript project references, and see how Nx’s latest features
+              streamline configuration, maintenance, and performance both
+              locally and on CI.
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
               <a
                 title="Signup"
-                href="https://bit.ly/40t8IMN"
+                href="https://bit.ly/4aRmrRb"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-pink-600 px-2 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:text-black/70 md:px-4"
