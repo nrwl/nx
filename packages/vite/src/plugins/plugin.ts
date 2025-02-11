@@ -28,8 +28,6 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 
 const pmc = getPackageManagerCommand();
 
@@ -80,21 +78,12 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
-    const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
-    );
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFilePaths.reduce(
         (acc, configFile) => {
           const potentialRoot = dirname(configFile);
-          if (
-            checkIfConfigFileShouldBeProject(
-              potentialRoot,
-              packageManagerWorkspacesGlob,
-              context
-            )
-          ) {
+          if (checkIfConfigFileShouldBeProject(potentialRoot, context)) {
             acc.roots.push(potentialRoot);
             acc.configFiles.push(configFile);
           }
@@ -114,7 +103,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     );
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
-      options,
+      { ...normalizedOptions, isUsingTsSolutionSetup },
       context,
       projectRoots.map((r) => [lockfile])
     );
@@ -133,7 +122,11 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
               minimatch(p, 'tsconfig*{.json,.*.json}')
             ) ?? [];
 
-          const hash = hashes[idx];
+          // results from vitest.config.js will be different from results of vite.config.js
+          // but the hash will be the same because it is based on the files under the project root.
+          // Adding the config file path to the hash ensures that the final hash value is different
+          // for different config files.
+          const hash = hashes[idx] + configFile;
           const { projectType, metadata, targets } = (targetsCache[hash] ??=
             await buildViteTargets(
               configFile,
@@ -162,7 +155,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
             },
           };
         },
-        configFilePaths,
+        validConfigFiles,
         options,
         context
       );
@@ -196,16 +189,6 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
 
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
 
-    // We do not want to alter how the hash is calculated, so appending the config file path to the hash
-    // to prevent vite/vitest files overwriting the target cache created by the other
-    const hash =
-      (await calculateHashForCreateNodes(
-        projectRoot,
-        { ...normalizedOptions, isUsingTsSolutionSetup },
-        context,
-        [getLockFileName(detectPackageManager(context.workspaceRoot))]
-      )) + configFilePath;
-
     const { projectType, metadata, targets } = await buildViteTargets(
       configFilePath,
       projectRoot,
@@ -214,7 +197,6 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
       isUsingTsSolutionSetup,
       context
     );
-
     const project: ProjectConfiguration = {
       root: projectRoot,
       targets,
@@ -612,7 +594,6 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  packageManagerWorkspacesGlob: string,
   context: CreateNodesContext | CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
@@ -622,17 +603,6 @@ function checkIfConfigFileShouldBeProject(
     !siblingFiles.includes('project.json')
   ) {
     return false;
-  } else if (
-    !siblingFiles.includes('project.json') &&
-    siblingFiles.includes('package.json')
-  ) {
-    const path = joinPathFragments(projectRoot, 'package.json');
-
-    const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
-
-    if (!isPackageJsonProject) {
-      return false;
-    }
   }
 
   return true;

@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import type { PluginConfiguration } from '../../config/nx-json';
+import { readNxJson, type PluginConfiguration } from '../../config/nx-json';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -17,7 +17,7 @@ import type {
 } from './public-api';
 import { createNodesFromFiles } from './utils';
 import { isIsolationEnabled } from './isolation/enabled';
-import { isDaemonEnabled } from '../../daemon/client/client';
+import { isDaemonEnabled } from '../../daemon/client/enabled';
 
 export class LoadedNxPlugin {
   index?: number;
@@ -123,7 +123,10 @@ export class LoadedNxPlugin {
       this.preTasksExecution = async (context: PreTasksExecutionContext) => {
         const updates = {};
         let originalEnv = process.env;
-        if (isIsolationEnabled() || isDaemonEnabled()) {
+        if (
+          isIsolationEnabled() ||
+          isDaemonEnabled(context.nxJsonConfiguration)
+        ) {
           process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
             set: (target, key: string, value) => {
               target[key] = value;

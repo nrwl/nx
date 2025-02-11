@@ -1,7 +1,6 @@
 import {
   CreateNodesContext,
   CreateNodesContextV2,
-  CreateNodesFunction,
   CreateNodesResult,
 } from './public-api';
 import { AggregateCreateNodesError } from '../error-types';

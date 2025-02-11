@@ -3,7 +3,7 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::native::hasher::{self, hash};
+use crate::native::hasher::hash;
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
 use crate::native::types::FileData;
