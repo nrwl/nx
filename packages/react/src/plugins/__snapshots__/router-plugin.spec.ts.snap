@@ -1,0 +1,367 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/react/react-router-plugin React Router integrated projects should create nodes by default 1`] = `
+[
+  [
+    "acme/react-router.config.js",
+    {
+      "projects": {
+        "acme": {
+          "metadata": {},
+          "root": "acme",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "react-router build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "react-router",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "acme",
+              },
+              "outputs": [
+                "{workspaceRoot}/acme/build/client",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "dev": {
+              "command": "react-router dev",
+              "options": {
+                "cwd": "acme",
+              },
+            },
+            "start": {
+              "command": "react-router-server build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "acme",
+              },
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "pnpm exec tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": "acme",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects acme --includeDependentProjects -- pnpm exec nx build-deps acme",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/react/react-router-plugin React Router integrated projects should create nodes without start target if ssr is false 1`] = `
+[
+  [
+    "acme/react-router.config.js",
+    {
+      "projects": {
+        "acme": {
+          "metadata": {},
+          "root": "acme",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "react-router build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "react-router",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": "acme",
+              },
+              "outputs": [
+                "{workspaceRoot}/acme/build/client",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "dev": {
+              "command": "react-router dev",
+              "options": {
+                "cwd": "acme",
+              },
+            },
+            "start": {
+              "command": "react-router-server build/server/index.js",
+              "dependsOn": [
+                "build",
+              ],
+              "options": {
+                "cwd": "acme",
+              },
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "pnpm exec tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": "acme",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects acme --includeDependentProjects -- pnpm exec nx build-deps acme",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/react/react-router-plugin React Router root project should create nodes by default 1`] = `
+[
+  [
+    "react-router.config.js",
+    {
+      "projects": {
+        ".": {
+          "metadata": {},
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "react-router build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "react-router",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/build/client",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "dev": {
+              "command": "react-router dev",
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "pnpm exec tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects acme --includeDependentProjects -- pnpm exec nx build-deps acme",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
+
+exports[`@nx/react/react-router-plugin React Router root project should create nodes without start target if ssr is false 1`] = `
+[
+  [
+    "react-router.config.js",
+    {
+      "projects": {
+        ".": {
+          "metadata": {},
+          "root": ".",
+          "targets": {
+            "build": {
+              "cache": true,
+              "command": "react-router build",
+              "dependsOn": [
+                "^build",
+              ],
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "react-router",
+                  ],
+                },
+              ],
+              "options": {
+                "cwd": ".",
+              },
+              "outputs": [
+                "{workspaceRoot}/build/client",
+              ],
+            },
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
+            "dev": {
+              "command": "react-router dev",
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "typecheck": {
+              "cache": true,
+              "command": "tsc --noEmit",
+              "inputs": [
+                "production",
+                "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
+              ],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "help": {
+                  "command": "pnpm exec tsc --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true,
+                    },
+                  },
+                },
+                "technologies": [
+                  "typescript",
+                ],
+              },
+              "options": {
+                "cwd": ".",
+              },
+            },
+            "watch-deps": {
+              "command": "pnpm exec nx watch --projects acme --includeDependentProjects -- pnpm exec nx build-deps acme",
+              "dependsOn": [
+                "build-deps",
+              ],
+            },
+          },
+        },
+      },
+    },
+  ],
+]
+`;
