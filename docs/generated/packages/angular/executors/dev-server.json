@@ -150,6 +150,11 @@
           "type": "string",
           "description": "The path to the middleware function. Relative to the workspace root."
         }
+      },
+      "watchDependencies": {
+        "type": "boolean",
+        "description": "Watch buildable dependencies and rebuild when they change.",
+        "default": true
       }
     },
     "additionalProperties": false,
