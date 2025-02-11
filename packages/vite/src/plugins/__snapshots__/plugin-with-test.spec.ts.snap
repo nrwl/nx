@@ -84,6 +84,7 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
             },
             "watch-deps": {
               "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],
