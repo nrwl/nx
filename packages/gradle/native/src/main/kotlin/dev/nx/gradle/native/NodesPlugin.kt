@@ -3,12 +3,19 @@ package dev.nx.gradle.native
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskProvider
+import java.util.Date
 
 class NodesPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.logger.info("Applying NodesPlugin to ${project.name}")
+        project.logger.info("${Date()} Applying NodesPlugin to ${project.name}")
 
-        // Register the task lazily, only configuring execution inputs
+        // Skip applying the plugin inside buildSrc to avoid unnecessary overhead
+        if (project.rootProject.name == "buildSrc") {
+            project.logger.info("${Date()} Skipping NodesPlugin configuration inside buildSrc")
+            return
+        }
+
+        // Lazily register the task without forcing realization
         val createNodesTask: TaskProvider<CreateNodesTask> =
                 project.tasks.register("createNodesLocal", CreateNodesTask::class.java) { task ->
                     task.projectName.set(project.name)
@@ -17,29 +24,41 @@ class NodesPlugin : Plugin<Project> {
                     task.description = "Create nodes and dependencies for Nx"
                     task.group = "Nx Custom"
 
-                    task.logger.info("Registered createNodes for ${project.name}")
-
-                    // Ensure all included builds are processed only once
-                    project.gradle.includedBuilds.distinct().forEach { includedBuild ->
-                        task.dependsOn(includedBuild.task(":createNodesLocal"))
+                    // Avoid logging during configuration phase
+                    task.doFirst {
+                        it.logger.info("${Date()} Running createNodesLocal for ${project.name}")
                     }
                 }
 
-        // Add a finalizer task to ALWAYS print the file path
-        project.tasks.register("createNodes") { task ->
-            task.dependsOn(createNodesTask) // Ensure it runs AFTER createNodesTask
+        // Ensure all included builds are processed only once using lazy evaluation
+        project.gradle.includedBuilds.distinct().forEach { includedBuild ->
+            createNodesTask.configure {
+                it.dependsOn(includedBuild.task(":createNodesLocal"))
+            }
+        }
 
+        // Register a finalizer task lazily
+        project.tasks.register("createNodes").configure { task ->
+            task.dependsOn(createNodesTask) // Ensure it runs AFTER createNodesTask
             task.description = "Print nodes report for Nx"
             task.group = "Nx Custom"
 
-            task.doLast {
-                val outputFile = createNodesTask.get().outputFile
-                println(outputFile.path) // This will run even if createNodesTask is skipped
+            // Use lazy evaluation to avoid realizing the task early
+            val outputFileProvider = createNodesTask.map { it.outputFile }
+
+            task.doFirst {
+                it.logger.info("${Date()} Running createNodes for ${project.name}")
             }
 
-            // Ensure all included builds are processed only once
-            project.gradle.includedBuilds.distinct().forEach { includedBuild ->
-                task.dependsOn(includedBuild.task(":createNodes"))
+            task.doLast {
+                println(outputFileProvider.get().path) // This ensures lazy evaluation
+            }
+        }
+
+        // Ensure all included builds are processed only once using lazy evaluation
+        project.gradle.includedBuilds.distinct().forEach { includedBuild ->
+            project.tasks.named("createNodes").configure {
+                it.mustRunAfter(includedBuild.task(":createNodes"))
             }
         }
     }

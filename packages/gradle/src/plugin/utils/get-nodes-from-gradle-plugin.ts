@@ -112,10 +112,21 @@ export async function populateNodes(
       createNodesLines: Promise<string[]>,
       gradlewFile: string
     ): Promise<string[]> => {
+      const getCreateNodesLinesStart = performance.mark(
+        `${gradlewFile}GetCreateNodesLine:start`
+      );
       const allLines = await createNodesLines;
       const currentLines = await getCreateNodesLines(
         gradlewFile,
         gradleConfigHash
+      );
+      const getCreateNodesLinesEnd = performance.mark(
+        `${gradlewFile}GetCreateNodesLine:end`
+      );
+      performance.measure(
+        `${gradlewFile}GetCreateNodesLine`,
+        getCreateNodesLinesStart.name,
+        getCreateNodesLinesEnd.name
       );
       return [...allLines, ...currentLines];
     },

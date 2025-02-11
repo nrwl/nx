@@ -2,13 +2,14 @@ package dev.nx.gradle.native.utils
 
 import dev.nx.gradle.native.data.*
 import org.gradle.api.Project
+import java.util.Date
 
 /**
  * Loops through a project and populate dependencies and nodes for each target
  */
 fun createNodeForProject(project: Project): GradleNodeReport {
     val logger = project.logger
-    logger.info("createNodeForProject: get nodes and dependencies for ${project.name}")
+    logger.info("${Date()} createNodeForProject: get nodes and dependencies for ${project.name}")
 
     // Initialize dependencies with an empty Set to prevent null issues
     val dependencies: Set<Dependency> = try {
@@ -32,7 +33,7 @@ fun createNodeForProject(project: Project): GradleNodeReport {
         )
         nodes = mapOf(projectRoot to projectNode)
         externalNodes = gradleTargets.externalNodes
-        logger.info("CreateNodes: get nodes and external nodes for $projectRoot")
+        logger.info("${Date()}  CreateNodes: get nodes and external nodes for $projectRoot")
     } catch (e: Exception) {
         logger.info("${project.name}: get nodes error: ${e.message}")
         nodes = emptyMap()
@@ -62,7 +63,7 @@ fun processTargetsForProject(
 
     val logger = project.logger
 
-    logger.info("${project}: process targets")
+    logger.info("${Date()} ${project}: process targets")
 
     var gradleProject = project.buildTreePath
     if (!gradleProject.endsWith(":")) {
@@ -71,7 +72,7 @@ fun processTargetsForProject(
 
     project.tasks.forEach { task ->
         try {
-            logger.info("Processing $task")
+            logger.info("${Date()} Processing $task")
             // add task to target groups
             val group: String? = task.group
             if (!group.isNullOrBlank()) {

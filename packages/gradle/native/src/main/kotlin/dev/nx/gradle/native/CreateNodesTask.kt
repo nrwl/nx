@@ -9,6 +9,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
+import java.util.Date
 
 @CacheableTask
 abstract class CreateNodesTask @Inject constructor(private val projectLayout: ProjectLayout) : DefaultTask() {
@@ -30,17 +31,18 @@ abstract class CreateNodesTask @Inject constructor(private val projectLayout: Pr
 
     @TaskAction
     fun action() {
+        logger.info("${Date()} Apply task action CreateNodesTask for ${projectName.get()}")
         val project = projectRef.get() // Get project reference at execution time
         val report = createNodeForProject(project) // Compute report at execution time
         val reportJson = gson.toJson(report)
 
 
         if (outputFile.exists() && outputFile.readText() == reportJson) {
-            logger.info("No change in the node report for ${projectName.get()}")
+            logger.info("${Date()} No change in the node report for ${projectName.get()}")
             return
         }
 
-        logger.info("Writing node report for ${projectName.get()}")
+        logger.info("${Date()} Writing node report for ${projectName.get()}")
         outputFile.writeText(reportJson)
     }
 }
