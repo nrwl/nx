@@ -5520,6 +5520,36 @@
       }
     },
     "migrations": {
+      "/nx-api/vite/migrations/update-20-5-0-update-resolve-conditions": {
+        "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
+        "file": "generated/packages/vite/migrations/update-20-5-0-update-resolve-conditions.json",
+        "hidden": false,
+        "name": "update-20-5-0-update-resolve-conditions",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-5-0-update-resolve-conditions",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-20-5-0-install-jiti": {
+        "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
+        "file": "generated/packages/vite/migrations/update-20-5-0-install-jiti.json",
+        "hidden": false,
+        "name": "update-20-5-0-install-jiti",
+        "version": "20.5.0-beta.2",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-5-0-install-jiti",
+        "type": "migration"
+      },
       "/nx-api/vite/migrations/update-20-3-0": {
         "description": "Add gitignore entry for temporary vitest config files.",
         "file": "generated/packages/vite/migrations/update-20-3-0.json",

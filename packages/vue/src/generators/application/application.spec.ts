@@ -195,7 +195,7 @@ describe('application generator', () => {
         import { defineConfig } from 'vite';
         import vue from '@vitejs/plugin-vue';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/test',
           server: {
@@ -227,10 +227,10 @@ describe('application generator', () => {
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
-              provider: 'v8',
+              provider: 'v8' as const,
             },
           },
-        });
+        }));
         "
       `);
 

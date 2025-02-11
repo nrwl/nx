@@ -241,14 +241,14 @@ export default App;
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
       expect(results).toContain('Successfully ran target build for project');
       // this should be more modules than build from dist
-      expect(results).toContain('43 modules transformed');
+      expect(results).toContain('38 modules transformed');
     });
 
     it('should build app from libs dist', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=false`);
       expect(results).toContain('Successfully ran target build for project');
       // this should be less modules than building from source
-      expect(results).toContain('41 modules transformed');
+      expect(results).toContain('36 modules transformed');
     });
 
     it('should build app from libs without package.json in lib', () => {
