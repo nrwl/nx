@@ -3,7 +3,7 @@ title: 'Vattenfall changes the math on concurrent PRs with Nx Agents'
 slug: nx-agents-changes-the-math
 authors: [Philip Fulcher]
 tags: ['customer story']
-cover_image: /blog/images/2025-02-06/header.avif
+cover_image: /blog/images/2025-02-12/header.avif
 description: 'Vattenfall solves their CI runner limitation using Nx Cloud, improving from 4 concurrent PRs to 100.'
 metrics:
   - value: '4→100'
@@ -24,7 +24,7 @@ In a world where each PR needs one runner for CI, you can have one concurrent PR
 
 Now you're in a balancing act of how many runners can be assigned to a PR so that it completes faster vs how many PRs can be run at the same time. Your number of concurrent PRs becomes your available runners divided by the number of runners for each PR.
 
-![Formula for calcuating number of concurrent PRs: "Available Runners" divided by "Runners per PR" equals "Concurrent PRs".](/blog/images/2025-02-06/previous-formula.avif)
+![Formula for calcuating number of concurrent PRs: "Available Runners" divided by "Runners per PR" equals "Concurrent PRs".](/blog/images/2025-02-12/previous-formula.avif)
 
 ## Nx Agents unlocks concurrency
 
@@ -34,17 +34,17 @@ Nx Agents makes it quick and easy to enable task distribution in your PR runs wi
 
 When using Nx Agents, the tasks for your PR are now completed by Nx Agents rather than your CI runners. Your CI runner starts, runs your configured Nx commands to collect the tasks that need to be completed, and sends them to Nx Cloud. From there, Nx Agents are spun up and complete the work for each task to report back to the CI runner.
 
-![Illustration showing Nx Agents pulling a task to complete.](/blog/images/2025-02-06/agents.avif)
+![Illustration showing Nx Agents pulling a task to complete.](/blog/images/2025-02-12/agents.avif)
 
 This reduces our concurrency calculation to be 1:1 with our number of runners while still reaping the benefits of parallelism across multiple agents.
 
-![Modified Formula for calcuating number of concurrent PRs: "Runners per PR" is scratched out and replaced by "Nx Cloud" leaving "Available Runners" equals "Concurrent PRs".](/blog/images/2025-02-06/new-formula.avif)
+![Modified Formula for calcuating number of concurrent PRs: "Runners per PR" is scratched out and replaced by "Nx Cloud" leaving "Available Runners" equals "Concurrent PRs".](/blog/images/2025-02-12/new-formula.avif)
 
 ## From 4 concurrent PRs to 100
 
 So, how did Nx Agents help with the concurrent PR runs problem Vattenfall was facing? Our Nx Enterprise team was able to [trial Agents](/enterprise/trial) with them, quickly resulting in huge benefits for their team. They were able to re-enable that 100 PR concurrency by distributing all work to Nx Agents. Their limited pool of 100 runners was again able to handle 100 concurrent PRs, while still retaining the benefits of distributing tasks across Nx Agents. Nx Agents will continue to scale, adding more agents as needed to keep PR runtimes within reason. Concurrent PR runs will continue to match their number of CI runners no matter how many agents they need to distribute tasks.
 
-![Graph showing pipeline improvements before and after Nx Agents. CI pipeline times (in minutes) improve from 70 moinutes to less than 10 minutes. Concurrent PRs improve from 4 to 100.](/blog/images/2025-02-06/pipeline-improvements.avif)
+![Graph showing pipeline improvements before and after Nx Agents. CI pipeline times (in minutes) improve from 70 moinutes to less than 10 minutes. Concurrent PRs improve from 4 to 100.](/blog/images/2025-02-12/pipeline-improvements.avif)
 
 ## Unlocking more than just concurrent PR runs
 
@@ -65,7 +65,7 @@ RenovateBot helps automate dependency updates by creating pull requests when dep
 {% testimonial
 name="Martijn van der Meij"
 title="Solution Designer, Vattenfall"
-image="/documentation/blog/images/2025-02-06/martijn.avif" %}
+image="/documentation/blog/images/2025-02-12/martijn.avif" %}
 Other engineers in other business units are seeing the advantage of Nx, and their managers are talking to our managers about copying the way we work. **They're saying "Nx is solving this problem we didn't even know we had"**
 {% /testimonial %}
 
