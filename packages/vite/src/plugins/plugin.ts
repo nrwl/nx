@@ -28,8 +28,6 @@ import { hashObject } from 'nx/src/hasher/file-hasher';
 import { minimatch } from 'minimatch';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 
 const pmc = getPackageManagerCommand();
 
@@ -80,21 +78,12 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
     const cachePath = join(workspaceDataDirectory, `vite-${optionsHash}.hash`);
     const targetsCache = readTargetsCache(cachePath);
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
-    const packageManagerWorkspacesGlob = combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
-    );
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFilePaths.reduce(
         (acc, configFile) => {
           const potentialRoot = dirname(configFile);
-          if (
-            checkIfConfigFileShouldBeProject(
-              potentialRoot,
-              packageManagerWorkspacesGlob,
-              context
-            )
-          ) {
+          if (checkIfConfigFileShouldBeProject(potentialRoot, context)) {
             acc.roots.push(potentialRoot);
             acc.configFiles.push(configFile);
           }
@@ -612,7 +601,6 @@ function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  packageManagerWorkspacesGlob: string,
   context: CreateNodesContext | CreateNodesContextV2
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
@@ -622,17 +610,6 @@ function checkIfConfigFileShouldBeProject(
     !siblingFiles.includes('project.json')
   ) {
     return false;
-  } else if (
-    !siblingFiles.includes('project.json') &&
-    siblingFiles.includes('package.json')
-  ) {
-    const path = joinPathFragments(projectRoot, 'package.json');
-
-    const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
-
-    if (!isPackageJsonProject) {
-      return false;
-    }
   }
 
   return true;
