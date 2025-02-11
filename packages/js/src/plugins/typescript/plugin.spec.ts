@@ -2164,6 +2164,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
                 "watch-deps": {
                   "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
                   "dependsOn": [
                     "build-deps",
                   ],
@@ -2318,6 +2319,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                 },
                 "watch-deps": {
                   "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                  "continuous": true,
                   "dependsOn": [
                     "build-deps",
                   ],
