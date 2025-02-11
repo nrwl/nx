@@ -11,6 +11,8 @@ import { pipeline } from 'node:stream/promises';
 import { slugify } from '../../nx-dev/feature-package-schema-viewer/src/lib/slugify.utils';
 const notion = new Client({ auth: process.env.NOTION_KEY });
 
+// Instructions to run located here: https://www.notion.so/nxnrwl/17c69f3c238780eb8ef6df32ce48f919?v=db53d7de0cc94f4ab9dfce8e3654f7dc
+
 const BLOG_ROOT = './docs/blog';
 
 interface RichTextProperty {
