@@ -88,7 +88,6 @@ export class TaskOrchestrator {
     private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
-    private readonly threadCount: number,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
     private readonly outputStyle: string
@@ -107,13 +106,15 @@ export class TaskOrchestrator {
 
     performance.mark('task-execution:start');
 
+    const threadCount = getThreadCount(this.options, this.taskGraph);
+
     const threads = [];
 
-    process.stdout.setMaxListeners(this.threadCount + defaultMaxListeners);
-    process.stderr.setMaxListeners(this.threadCount + defaultMaxListeners);
+    process.stdout.setMaxListeners(threadCount + defaultMaxListeners);
+    process.stderr.setMaxListeners(threadCount + defaultMaxListeners);
 
     // initial seeding of the queue
-    for (let i = 0; i < this.threadCount; ++i) {
+    for (let i = 0; i < threadCount; ++i) {
       threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
     }
     await Promise.all(threads);
@@ -376,7 +377,7 @@ export class TaskOrchestrator {
   // endregion Batch
 
   // region Single Task
-  private async applyFromCacheOrRunTask(
+  async applyFromCacheOrRunTask(
     doNotSkipCache: boolean,
     task: Task,
     groupId: number
@@ -441,6 +442,7 @@ export class TaskOrchestrator {
       });
     }
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+    return results[0];
   }
 
   private async runTask(
@@ -616,7 +618,7 @@ export class TaskOrchestrator {
     }
   }
 
-  private async startContinuousTask(task: Task, groupId: number) {
+  async startContinuousTask(task: Task, groupId: number) {
     if (this.runningTasksService.getRunningTasks([task.id]).length) {
       // task is already running, we need to poll and wait for the running task to finish
       do {
@@ -896,4 +898,29 @@ export class TaskOrchestrator {
       })
     );
   }
+}
+
+export function getThreadCount(
+  options: NxArgs & DefaultTasksRunnerOptions,
+  taskGraph: TaskGraph
+) {
+  if (
+    (options as any)['parallel'] === 'false' ||
+    (options as any)['parallel'] === false
+  ) {
+    (options as any)['parallel'] = 1;
+  } else if (
+    (options as any)['parallel'] === 'true' ||
+    (options as any)['parallel'] === true ||
+    (options as any)['parallel'] === undefined ||
+    (options as any)['parallel'] === ''
+  ) {
+    (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
+  }
+
+  const maxParallel =
+    options['parallel'] +
+    Object.values(taskGraph.tasks).filter((t) => t.continuous).length;
+  const totalTasks = Object.keys(taskGraph.tasks).length;
+  return Math.min(maxParallel, totalTasks);
 }
