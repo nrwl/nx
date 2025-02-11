@@ -20,8 +20,10 @@ import { getLockFileName } from '@nx/js';
 import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 import { isUsingTsSolutionSetup as _isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { loadViteDynamicImport } from '../utils/load-vite-dynamic';
+import {
+  clearRequireCache,
+  loadConfigFile,
+} from '@nx/devkit/src/utils/config-utils';
 
 export interface ReactRouterPluginOptions {
   buildTargetName?: string;
@@ -50,7 +52,7 @@ function writeTargetsToCache(
   writeJsonFile(cachePath, results);
 }
 
-export const createNodes: CreateNodesV2<ReactRouterPluginOptions> = [
+export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
   reactRouterConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -117,13 +119,12 @@ async function createNodesInternal(
 
   options = normalizeOptions(options);
 
-  const hash =
-    (await calculateHashForCreateNodes(
-      projectRoot,
-      { ...options, isUsingTsSolutionSetup },
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
-    )) + configFilePath;
+  const hash = await calculateHashForCreateNodes(
+    projectRoot,
+    { ...options, isUsingTsSolutionSetup },
+    context,
+    [getLockFileName(detectPackageManager(context.workspaceRoot))]
+  );
 
   targetsCache[hash] ??= await buildReactRouterTargets(
     configFilePath,
@@ -149,15 +150,6 @@ async function createNodesInternal(
   };
 }
 
-async function getReactRouterConfig(
-  configFilePath: string,
-  context: CreateNodesContext
-) {
-  const resolvedPath = joinPathFragments(context.workspaceRoot, configFilePath);
-
-  return loadConfigFile(resolvedPath);
-}
-
 async function buildReactRouterTargets(
   configFilePath: string,
   projectRoot: string,
@@ -178,6 +170,7 @@ async function buildReactRouterTargets(
     options.buildTargetName,
     projectRoot,
     buildDirectory,
+    serverBuildPath,
     namedInputs,
     isUsingTsSolutionSetup
   );
@@ -219,13 +212,20 @@ async function getBuildTargetConfig(
   buildTargetName: string,
   projectRoot: string,
   buildDirectory: string,
+  serverBuildDirectory: string,
   namedInputs: { [inputName: string]: any[] },
   isUsingTsSolutionSetup: boolean
 ) {
-  const outputs = [
+  const basePath =
     projectRoot === '.'
-      ? joinPathFragments(`{workspaceRoot}`, buildDirectory)
-      : joinPathFragments(`{workspaceRoot}`, projectRoot, buildDirectory),
+      ? `{workspaceRoot}`
+      : joinPathFragments(`{workspaceRoot}`, projectRoot);
+
+  const outputs = [
+    joinPathFragments(basePath, buildDirectory),
+    ...(serverBuildDirectory
+      ? [joinPathFragments(basePath, serverBuildDirectory)]
+      : []),
   ];
 
   const buildTarget: TargetConfiguration = {
@@ -235,7 +235,7 @@ async function getBuildTargetConfig(
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
-      { externalDependencies: ['react-router'] },
+      { externalDependencies: ['@react-router/dev'] },
     ],
     outputs,
     command: 'react-router build',
@@ -253,33 +253,19 @@ async function getBuildPaths(
   context: CreateNodesContext
 ) {
   const configPath = join(context.workspaceRoot, configFilePath);
-  const reactRouterConfig = await getReactRouterConfig(configPath, context);
 
-  try {
-    const importEsbuild = () => new Function('return import("esbuild")')();
-    await importEsbuild();
-  } catch {
-    // do nothing
-  }
-
-  const { resolveConfig } = await loadViteDynamicImport();
-  const viteBuildConfig = (await resolveConfig(
-    {
-      configFile: configPath,
-      mode: 'development',
-    },
-    'build'
-  )) as any;
+  if (require.cache[configPath]) clearRequireCache();
+  const reactRouterConfig = await loadConfigFile(configPath);
 
   const isLibMode =
     reactRouterConfig?.ssr !== undefined && reactRouterConfig.ssr === false;
   return {
-    buildDirectory: viteBuildConfig.build?.outDir ?? 'build/client',
+    buildDirectory: reactRouterConfig?.buildDirectory ?? 'build/client',
     ...(isLibMode
       ? undefined
       : {
-          serverBuildPath: viteBuildConfig.build?.outDir
-            ? join(dirname(viteBuildConfig.build?.outDir), `server`)
+          serverBuildPath: reactRouterConfig?.buildDirectory
+            ? join(dirname(reactRouterConfig.buildDirectory), `server`)
             : 'build/server',
         }),
   };
@@ -310,7 +296,7 @@ async function startTarget(
 
   const startTarget: TargetConfiguration = {
     dependsOn: [buildTargetName],
-    command: `react-router-server ${serverPath}`,
+    command: `react-router-serve ${serverPath}`,
     options: { cwd: projectRoot },
   };
 
