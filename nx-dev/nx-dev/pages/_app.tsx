@@ -7,7 +7,7 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { LiveStreamNotifier, WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { WebinarNotifier } from '@nx/nx-dev/ui-common';
 
 export default function CustomApp({
   Component,
@@ -15,7 +15,7 @@ export default function CustomApp({
 }: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
-  // RR2B ---------
+  // RB2B ---------
   const SCRIPT_ID = 'external-js-script';
   const SCRIPT_BASE_URL = 'https://s3-us-west-2.amazonaws.com/b2bjsstore/b/';
   const SCRIPT_KEY = '0NW1GH7YJ4O4'; //
@@ -106,7 +106,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      {/*<WebinarNotifier />*/}
+      <WebinarNotifier />
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script
