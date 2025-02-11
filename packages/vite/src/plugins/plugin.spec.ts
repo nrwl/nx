@@ -69,6 +69,31 @@ describe('@nx/vite/plugin', () => {
       expect(nodes).toMatchSnapshot();
     });
 
+    it('should not create nodes when react-router.config is present', async () => {
+      tempFs.createFileSync('react-router.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "vite.config.ts",
+            {},
+          ],
+        ]
+      `);
+    });
+
     it('should create nodes when rollupOptions contains input', async () => {
       // Don't need index.html if we're setting inputs
       tempFs.removeFileSync('index.html');
@@ -251,6 +276,31 @@ describe('@nx/vite/plugin', () => {
       );
 
       expect(nodes).toMatchSnapshot();
+    });
+
+    it('should not create nodes when react-router.config is present', async () => {
+      tempFs.createFileSync('my-app/react-router.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['my-app/vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "my-app/vite.config.ts",
+            {},
+          ],
+        ]
+      `);
     });
   });
 

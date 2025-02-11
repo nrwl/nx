@@ -1,6 +1,8 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
+  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   type GeneratorCallback,
@@ -8,7 +10,12 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
-import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
+import {
+  getReactDependenciesVersionsToInstall,
+  isReactRouterInstalled,
+} from '../../utils/version-utils';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodesV2 } from '../../plugins/react-router-plugin';
 
 export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -29,6 +36,38 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
         undefined,
         schema.keepExistingVersions
       )
+    );
+  }
+
+  const nxJson = readNxJson(tree);
+  schema.addPlugin ??=
+    process.env.NX_ADD_PLUGINS !== 'false' &&
+    nxJson.useInferencePlugins !== false;
+
+  const hasReactRouterDependency = await isReactRouterInstalled(tree);
+
+  if (schema.addPlugin && hasReactRouterDependency) {
+    await addPlugin(
+      tree,
+      await createProjectGraphAsync(),
+      '@nx/react/react-router-plugin',
+      createNodesV2,
+      {
+        buildTargetName: ['build', 'react-router:build', 'react-router-build'],
+        devTargetName: ['dev', 'react-router:dev', 'react-router-dev'],
+        startTargetName: ['start', 'react-router-serve', 'react-router-start'],
+        watchDepsTargetName: [
+          'watch-deps',
+          'react-router:watch-deps',
+          'react-router-watch-deps',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'react-router:build-deps',
+          'react-router-build-deps',
+        ],
+      },
+      schema.updatePackageScripts
     );
   }
 
