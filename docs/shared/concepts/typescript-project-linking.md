@@ -133,7 +133,7 @@ The root `tsconfig.base.json` should contain a `compilerOptions` property and no
     // Required compiler options
     "composite": true,
     "declaration": true,
-    "declarationMaps": true
+    "declarationMap": true
     // Other options...
   }
 }
