@@ -1632,7 +1632,7 @@ describe('app', () => {
         linter: Linter.EsLint,
         style: 'none',
         e2eTestRunner: 'none',
-        addPlugin: true,
+        addPlugin: false,
         skipFormat: true,
       });
 
