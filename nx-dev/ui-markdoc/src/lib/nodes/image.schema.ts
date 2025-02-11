@@ -1,9 +1,4 @@
-import {
-  Config,
-  Node,
-  RenderableTreeNodes,
-  Schema,
-} from '@markdoc/markdoc';
+import { Config, Node, RenderableTreeNodes, Schema } from '@markdoc/markdoc';
 import { transformImagePath } from './helpers/transform-image-path';
 import markdoc from '@markdoc/markdoc';
 const { Tag } = markdoc;

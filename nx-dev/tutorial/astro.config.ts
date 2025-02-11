@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export const config = defineConfig({
+  base: '/tutorials',
   devToolbar: {
     enabled: false,
   },

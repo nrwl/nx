@@ -7,3 +7,8 @@
   --tk-background-secondary: rgb(248 250 252);
   --tk-border-primary: #dee5ed;
 }
+
+.markdown-content {
+  max-width: 56rem;
+  margin: 0 auto;
+}

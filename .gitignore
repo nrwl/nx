@@ -21,6 +21,7 @@ jest.debug.config.js
 /graph/client/src/assets/generated-task-inputs
 /graph/client/src/assets/generated-source-maps
 /nx-dev/nx-dev/public/documentation
+/nx-dev/nx-dev/public/tutorials
 /nx-dev/nx-dev/public/images/open-graph
 **/tests/temp-db
 

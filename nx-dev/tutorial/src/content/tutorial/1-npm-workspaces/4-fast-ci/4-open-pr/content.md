@@ -15,11 +15,11 @@ git push origin add-workflow
 
 When you view the PR on GitHub, you will see a comment from Nx Cloud that reports on the status of the CI run.
 
-![Nx Cloud report](/images/github-pr-cloud-report.avif)
+![Nx Cloud report](/tutorials/images/github-pr-cloud-report.avif)
 
 The `See all runs` link goes to a page with the progress and results of tasks that were run in the CI pipeline.
 
-![Run details](/images/nx-cloud-run-details.avif)
+![Run details](/tutorials/images/nx-cloud-run-details.avif)
 
 For more information about how Nx can improve your CI pipeline, check out one of these detailed tutorials:
 
