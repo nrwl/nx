@@ -27,6 +27,7 @@ export type Options = [
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
     useLocalPathsForWorkspaceDependencies?: boolean;
+    runtimeHelpers?: string[];
   }
 ];
 
@@ -61,6 +62,7 @@ export default ESLintUtils.RuleCreator(
           checkVersionMismatches: { type: 'boolean' },
           includeTransitiveDependencies: { type: 'boolean' },
           useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
+          runtimeHelpers: { type: 'array', items: { type: 'string' } },
         },
         additionalProperties: false,
       },
@@ -82,6 +84,7 @@ export default ESLintUtils.RuleCreator(
       ignoredFiles: [],
       includeTransitiveDependencies: false,
       useLocalPathsForWorkspaceDependencies: false,
+      runtimeHelpers: [],
     },
   ],
   create(
@@ -96,6 +99,7 @@ export default ESLintUtils.RuleCreator(
         checkVersionMismatches,
         includeTransitiveDependencies,
         useLocalPathsForWorkspaceDependencies,
+        runtimeHelpers,
       },
     ]
   ) {
@@ -147,6 +151,7 @@ export default ESLintUtils.RuleCreator(
         includeTransitiveDependencies,
         ignoredFiles,
         useLocalPathsForWorkspaceDependencies,
+        runtimeHelpers,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
