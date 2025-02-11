@@ -195,6 +195,7 @@ async function createRspackTargets(
   };
 
   targets[options.serveTargetName] = {
+    continuous: true,
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -203,6 +204,7 @@ async function createRspackTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `rspack serve`,
     options: {
       cwd: projectRoot,
@@ -211,6 +213,7 @@ async function createRspackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: options.buildTargetName,
