@@ -1,3 +1,4 @@
+'use client';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Framework, frameworkIcons } from '@nx/graph/legacy';
 
