@@ -218,9 +218,7 @@ export default ESLintUtils.RuleCreator(
         packageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
-        packageRange === 'workspace:*' ||
-        packageRange === 'workspace:~' ||
-        packageRange === 'workspace:^' ||
+        packageRange.startsWith('workspace:') ||
         /**
          * Catalogs can be named, or left unnamed
          * So just checking up until the : will catch both cases

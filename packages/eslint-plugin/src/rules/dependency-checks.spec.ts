@@ -30,6 +30,8 @@ const rootPackageJson = {
   dependencies: {
     external1: '~16.1.2',
     external2: '^5.2.0',
+    external3: '1.0.0',
+    external4: '1.0.0',
   },
   devDependencies: {
     tslib: '^2.1.0',
@@ -51,6 +53,22 @@ const externalNodes: Record<string, ProjectGraphExternalNode> = {
     data: {
       packageName: 'external2',
       version: '5.5.6',
+    },
+  },
+  'npm:external3': {
+    name: 'npm:external3',
+    type: 'npm',
+    data: {
+      packageName: 'external3',
+      version: '1.0.0',
+    },
+  },
+  'npm:external4': {
+    name: 'npm:external3',
+    type: 'npm',
+    data: {
+      packageName: 'external4',
+      version: '1.0.0',
     },
   },
   'npm:random-external': {
@@ -1581,12 +1599,11 @@ describe('Dependency checks (eslint)', () => {
     `);
   });
 
-  it('should not report * and workspace:*', () => {
+  it('should not report *', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
         external1: '*',
-        external2: 'workspace:*',
       },
     };
 
@@ -1616,33 +1633,24 @@ describe('Dependency checks (eslint)', () => {
         },
         externalNodes,
         dependencies: {
-          liba: [
-            { source: 'liba', target: 'npm:external1', type: 'static' },
-            { source: 'liba', target: 'npm:external2', type: 'static' },
-          ],
+          liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
         },
       },
       {
-        liba: [
-          createFile(`libs/liba/src/main.ts`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-          createFile(`libs/liba/package.json`, [
-            'npm:external1',
-            'npm:external2',
-          ]),
-        ],
+        liba: [createFile(`libs/liba/src/main.ts`, ['npm:external1'])],
       }
     );
     expect(failures.length).toEqual(0);
   });
-  it('should not report workspace:^ and workspace:~', () => {
+
+  it('should not report workspace: protocol', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
         external1: 'workspace:~',
         external2: 'workspace:^',
+        external3: 'workspace:',
+        external4: 'workspace:../external4',
       },
     };
 
@@ -1675,6 +1683,8 @@ describe('Dependency checks (eslint)', () => {
           liba: [
             { source: 'liba', target: 'npm:external1', type: 'static' },
             { source: 'liba', target: 'npm:external2', type: 'static' },
+            { source: 'liba', target: 'npm:external3', type: 'static' },
+            { source: 'liba', target: 'npm:external4', type: 'static' },
           ],
         },
       },
@@ -1683,17 +1693,22 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, [
             'npm:external1',
             'npm:external2',
+            'npm:external3',
+            'npm:external4',
           ]),
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:external2',
+            'npm:external3',
+            'npm:external4',
           ]),
         ],
       }
     );
     expect(failures.length).toEqual(0);
   });
-  it('should not report catalog:', () => {
+
+  it('should not report catalog: protocol', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
