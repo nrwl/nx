@@ -1,0 +1,8 @@
+{
+  "name": "e2e-nx-tui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/nx-tui",
+  "projectType": "application",
+  "implicitDependencies": ["nx"],
+  "// targets": "to see all targets run: nx show project e2e-nx-tui --web"
+}

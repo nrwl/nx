@@ -73,6 +73,24 @@ async function getTerminalOutputLifeCycle(
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
+  if (process.env.NX_TUI === 'true') {
+    const { AppLifeCycle, restoreTerminal } = require('../native');
+
+    const lifeCycle = new AppLifeCycle(projectNames, tasks, nxArgs, overrides);
+
+    const renderIsDone = new Promise<void>((resolve) => {
+      lifeCycle.init(() => {
+        resolve();
+      });
+    }).then(() => {
+      restoreTerminal();
+    });
+    return {
+      lifeCycle,
+      renderIsDone,
+    };
+  }
+
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
   const useDynamicOutput = shouldUseDynamicLifeCycle(

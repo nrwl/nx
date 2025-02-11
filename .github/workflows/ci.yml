@@ -25,6 +25,8 @@ jobs:
       NX_CLOUD_DTE_V2: 'true'
       NX_CLOUD_DTE_SUMMARY: 'true'
       NX_CLOUD_NO_TIMEOUTS: 'true'
+      # NX_BRANCH: 'jhjhjh'
+      GIT_REPOSITORY_URL: 'https://github.com/JamesHenry/nx.git'
       
     steps:
       - name: Checkout
@@ -73,19 +75,7 @@ jobs:
         run: |
           pids=()
 
-          pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx sync:check
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx-cloud conformance:check
-          pids+=($!)
-
-          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
-          pids+=($!)
-
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
+          pnpm nx e2e-ci e2e-nx-tui
           pids+=($!)
 
           for pid in "${pids[@]}"; do

@@ -45,6 +45,10 @@ export class TaskHistoryLifeCycle implements LifeCycle {
     const flakyTasks = await this.taskHistory.getFlakyTasks(
       entries.map(([hash]) => hash)
     );
+    // Do not directly print output when using the TUI
+    if (process.env.NX_TUI === 'true') {
+      return;
+    }
     if (flakyTasks.length > 0) {
       output.warn({
         title: `Nx detected ${

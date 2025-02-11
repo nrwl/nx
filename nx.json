@@ -181,7 +181,10 @@
     }
   },
   "plugins": [
-    "@monodon/rust",
+    {
+      "plugin": "@monodon/rust",
+      "exclude": ["packages/nx/src/native/tui"]
+    },
     {
       "plugin": "@nx/playwright/plugin",
       "options": {

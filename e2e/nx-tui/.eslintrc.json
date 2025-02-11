@@ -1,0 +1,17 @@
+{
+  "extends": ["plugin:playwright/recommended", "../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["src/**/*.{ts,js,tsx,jsx}"],
+      "rules": {
+        "playwright/expect-expect": [
+          "warn",
+          {
+            "assertFunctionNames": ["captureSnapshotWithMasking"]
+          }
+        ]
+      }
+    }
+  ]
+}

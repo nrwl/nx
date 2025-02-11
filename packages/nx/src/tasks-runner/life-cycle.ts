@@ -1,5 +1,7 @@
-import { TaskStatus } from './tasks-runner';
 import { Task } from '../config/task-graph';
+import { RunCommandsOptions } from '../executors/run-commands/run-commands.impl';
+import { RunningTask } from './running-tasks/running-task';
+import { TaskStatus } from './tasks-runner';
 
 /**
  * The result of a completed {@link Task}
@@ -18,6 +20,12 @@ export type TaskResults = Record<string, TaskResult>;
 
 export interface TaskMetadata {
   groupId: number;
+}
+
+interface RustRunningTask extends RunningTask {
+  getResults(): Promise<{ code: number; terminalOutput: string }>;
+  onExit(cb: (code: number, terminalOutput: string) => void): void;
+  kill(signal?: NodeJS.Signals | number): Promise<void> | void;
 }
 
 export interface LifeCycle {
@@ -53,6 +61,11 @@ export interface LifeCycle {
     status: TaskStatus,
     output: string
   ): void;
+
+  __runCommandsForTask?(
+    task: Task,
+    options: RunCommandsOptions
+  ): Promise<RustRunningTask>;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -131,5 +144,23 @@ export class CompositeLifeCycle implements LifeCycle {
         l.printTaskTerminalOutput(task, status, output);
       }
     }
+  }
+
+  async __runCommandsForTask(
+    task: Task,
+    options: RunCommandsOptions
+  ): Promise<RustRunningTask> {
+    // This is clunky...
+    // We have to assume there is is only one life cycle with __runCommandsForTask
+    const lifeCycleWithRunCommandsForTask = this.lifeCycles.find(
+      (l) => l.__runCommandsForTask
+    );
+    if (lifeCycleWithRunCommandsForTask) {
+      return await lifeCycleWithRunCommandsForTask.__runCommandsForTask(
+        task,
+        options
+      );
+    }
+    throw new Error('No life cycle with __runCommandsForTask found');
   }
 }

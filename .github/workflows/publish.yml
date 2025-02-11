@@ -42,7 +42,7 @@ jobs:
   #     we should generate an applicable version number within publish-resolve-data.js and use a custom ref of the PR branch name.
   resolve-required-data:
     name: Resolve Required Data
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'JamesHenry' }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.script.outputs.version }}
@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           # Check out the latest master branch to get its copy of nx-release.ts
-          repository: nrwl/nx
+          repository: JamesHenry/nx
           ref: master
           path: latest-master-checkout
 
@@ -108,15 +108,15 @@ jobs:
           FILE_TO_COMPARE: "scripts/nx-release.ts"
         run: |
           if ! cmp -s "latest-master-checkout/${{ env.FILE_TO_COMPARE }}" "pr-branch-checkout/${{ env.FILE_TO_COMPARE }}"; then
-            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on nrwl/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
+            echo "🛑 Error: The file ${{ env.FILE_TO_COMPARE }} is different on the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} vs latest master on JamesHenry/nx, cancelling workflow. If you did not modify the file, then you likely just need to rebase/merge latest master."
             exit 1
           else
-            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on nrwl/nx."
+            echo "✅ The file ${{ env.FILE_TO_COMPARE }} is identical between the ${{ steps.script.outputs.ref }} branch on ${{ steps.script.outputs.repo }} and latest master on JamesHenry/nx."
           fi
 
   build:
     needs: [ resolve-required-data ]
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'JamesHenry' }}
     strategy:
       fail-fast: false
       matrix:
@@ -288,7 +288,7 @@ jobs:
 
   build-freebsd:
     needs: [ resolve-required-data ]
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'JamesHenry' }}
     runs-on: ubuntu-latest
     name: Build FreeBSD
     timeout-minutes: 45
@@ -351,7 +351,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'JamesHenry' }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:
@@ -365,7 +365,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_CONFIG_PROVENANCE: true
+      NPM_CONFIG_PROVENANCE: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -396,11 +396,11 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
-      - name: Build Wasm
-        run: |
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-23/wasi-sdk-23.0-x86_64-linux.tar.gz
-          tar -xvf wasi-sdk-23.0-x86_64-linux.tar.gz
-          pnpm build:wasm
+      # - name: Build Wasm
+      #   run: |
+      #     wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-23/wasi-sdk-23.0-x86_64-linux.tar.gz
+      #     tar -xvf wasi-sdk-23.0-x86_64-linux.tar.gz
+      #     pnpm build:wasm
       - name: Publish
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
@@ -438,8 +438,8 @@ jobs:
             });
 
   pr_failure_comment:
-    # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
-    if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
+    # Run this job if it is a PR release, running on the JamesHenry origin, and any of the required jobs failed
+    if: ${{ github.repository_owner == 'JamesHenry' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
     needs: [ resolve-required-data, build, build-freebsd, publish ]
     name: (PR Release Failure Only) Create comment for failed PR release
     runs-on: ubuntu-latest
@@ -453,7 +453,7 @@ jobs:
           script: |
             const message = `
               Failed to publish a PR release of this pull request, triggered by @${{ github.triggering_actor }}. 
-              See the failed workflow run at: https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}
+              See the failed workflow run at: https://github.com/JamesHenry/nx/actions/runs/${{ github.run_id }}
             `;
             await github.rest.issues.createComment({
               owner: context.repo.owner,

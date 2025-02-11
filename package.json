@@ -91,7 +91,7 @@
     "@nx/web": "20.5.0-beta.2",
     "@nx/webpack": "20.5.0-beta.2",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "@playwright/test": "^1.36.1",
+    "@playwright/test": "^1.50.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@pnpm/lockfile-types": "^6.0.0",
     "@reduxjs/toolkit": "1.9.0",
@@ -314,6 +314,9 @@
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
     "xstate": "4.34.0",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0",
+    "xterm-addon-serialize": "^0.11.0",
     "yaml": "^2.6.0",
     "yargs": "17.6.2",
     "yargs-parser": "21.1.1"
@@ -392,5 +395,8 @@
       "check-codeowners"
     ]
   },
-  "packageManager": "pnpm@9.8.0"
+  "packageManager": "pnpm@9.8.0",
+  "optionalDependencies": {
+    "node-pty": "^1.0.0"
+  }
 }

@@ -3,7 +3,10 @@ import { performance } from 'perf_hooks';
 import { relative } from 'path';
 import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
-import { runCommands } from '../executors/run-commands/run-commands.impl';
+import {
+  runCommands,
+  normalizeOptions,
+} from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { Cache, DbCache, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -471,20 +474,39 @@ export class TaskOrchestrator {
           const args = getPrintableCommandArgsForTask(task);
           output.logCommand(args.join(' '));
         }
-        const runningTask = await runCommands(
-          {
-            ...combinedOptions,
-            env,
-            usePty:
-              isRunOne &&
-              !this.tasksSchedule.hasTasks() &&
-              this.runningContinuousTasks.size === 0,
-            streamOutput,
-          },
-          {
-            root: workspaceRoot, // only root is needed in runCommands
-          } as any
-        );
+        let runCommandsOptions = {
+          ...combinedOptions,
+          env,
+          usePty:
+            isRunOne &&
+            !this.tasksSchedule.hasTasks() &&
+            this.runningContinuousTasks.size === 0,
+          streamOutput,
+        };
+        const useTui = process.env.NX_TUI === 'true';
+        if (useTui) {
+          // Preprocess options on the JS side before sending to Rust
+          runCommandsOptions = normalizeOptions(runCommandsOptions);
+        }
+
+        if (
+          useTui &&
+          typeof this.options.lifeCycle.__runCommandsForTask !== 'function'
+        ) {
+          throw new Error('Incorrect lifeCycle applied for NX_TUI');
+        }
+
+        const runningTask =
+          // Run the command directly in Rust if the task is continuous and has a single command
+          useTui && task.continuous && runCommandsOptions.commands?.length === 1
+            ? await this.options.lifeCycle.__runCommandsForTask(
+                task,
+                runCommandsOptions
+              )
+            : // Currently always run in JS if there are multiple commands defined for a single task, or if not continuous
+              await runCommands(runCommandsOptions, {
+                root: workspaceRoot, // only root is needed in runCommands
+              } as any);
 
         runningTask.onExit((code, terminalOutput) => {
           if (!streamOutput) {

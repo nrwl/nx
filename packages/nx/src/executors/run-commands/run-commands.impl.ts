@@ -142,7 +142,7 @@ export async function runCommands(
   }
 }
 
-function normalizeOptions(
+export function normalizeOptions(
   options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {

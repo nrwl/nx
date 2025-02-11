@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 
 export const E2E_LOG_PREFIX = `${chalk.reset.inverse.bold.keyword('orange')(
   ' E2E '

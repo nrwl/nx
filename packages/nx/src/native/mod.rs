@@ -11,6 +11,7 @@ mod utils;
 mod walker;
 pub mod workspace;
 mod machine_id;
+pub mod tui;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod pseudo_terminal;
