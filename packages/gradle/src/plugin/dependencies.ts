@@ -44,14 +44,16 @@ export const createDependencies: CreateDependencies = async (
         const targetProjectName = Object.values(context.projects).find(
           (project) => project.root === targetProjectRoot
         )?.name;
-        const dependency: RawProjectGraphDependency = {
-          source: projectName as string,
-          target: targetProjectName as string,
-          type: DependencyType.static,
-          sourceFile: gradleFile,
-        };
-        validateDependency(dependency, context);
-        dependencies.add(dependency);
+        if (targetProjectName) {
+          const dependency: RawProjectGraphDependency = {
+            source: projectName as string,
+            target: targetProjectName as string,
+            type: DependencyType.static,
+            sourceFile: gradleFile,
+          };
+          validateDependency(dependency, context);
+          dependencies.add(dependency);
+        }
       });
     }
     gradleProjectToChildProjects.get(gradleProject)?.forEach((childProject) => {
