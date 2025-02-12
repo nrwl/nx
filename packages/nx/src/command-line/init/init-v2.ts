@@ -1,13 +1,26 @@
 import { existsSync } from 'fs';
 
-import { PackageJson } from '../../utils/package-json';
+import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
-import { output } from '../../utils/output';
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { runNxSync } from '../../utils/child-process';
 import { readJsonFile } from '../../utils/fileutils';
+import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
+import { output } from '../../utils/output';
+import { PackageJson } from '../../utils/package-json';
+import { getPackageManagerCommand } from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
+import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
+import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
+import {
+  configurePlugins,
+  runPackageManagerInstallPlugins,
+} from './configure-plugins';
+import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
+import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
+import { addNxToAngularCliRepo } from './implementation/angular';
+import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
   initCloud,
@@ -15,18 +28,6 @@ import {
   printFinalMessage,
   updateGitIgnore,
 } from './implementation/utils';
-import { prompt } from 'enquirer';
-import { addNxToAngularCliRepo } from './implementation/angular';
-import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
-import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
-import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
-import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
-import {
-  configurePlugins,
-  runPackageManagerInstallPlugins,
-} from './configure-plugins';
 
 export interface InitArgs {
   interactive: boolean;
@@ -82,7 +83,32 @@ export async function initHandler(options: InitArgs): Promise<void> {
   }
 
   const packageJson: PackageJson = readJsonFile('package.json');
-  if (isMonorepo(packageJson)) {
+  const _isTurborepo = existsSync('turbo.json');
+  const _isMonorepo = isMonorepo(packageJson);
+
+  const learnMoreLink = _isTurborepo
+    ? 'https://nx.dev/recipes/adopting-nx/from-turborepo'
+    : _isMonorepo
+    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
+    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
+
+  /**
+   * Turborepo users must have set up individual scripts already, and we keep the transition as minimal as possible.
+   * We log a message during the conversion process in addNxToTurborepo about how they can learn more about the power
+   * of Nx plugins and how it would allow them to infer all the relevant scripts automatically, including all cache
+   * inputs and outputs.
+   */
+  if (_isTurborepo) {
+    await addNxToTurborepo({
+      interactive: options.interactive,
+    });
+    printFinalMessage({
+      learnMoreLink,
+    });
+    return;
+  }
+
+  if (_isMonorepo) {
     await addNxToMonorepo({
       interactive: options.interactive,
       nxCloud: false,
@@ -93,9 +119,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
       nxCloud: false,
     });
   }
-  const learnMoreLink = isMonorepo(packageJson)
-    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
-    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
+
   const useNxCloud =
     options.nxCloud ??
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
