@@ -1,4 +1,5 @@
-import { CopyToClipboardButton, Tooltip } from '@nx/graph/legacy';
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 

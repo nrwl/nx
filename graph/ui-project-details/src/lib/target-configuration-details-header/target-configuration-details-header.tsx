@@ -7,7 +7,8 @@ import {
   EyeIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-import { CopyToClipboardButton, Tooltip } from '@nx/graph/legacy';
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';

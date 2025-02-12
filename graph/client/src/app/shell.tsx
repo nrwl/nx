@@ -18,10 +18,10 @@ import {
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-  Dropdown,
-  Spinner,
-  Tooltip,
-} from '@nx/graph/legacy';
+} from '@nx/graph/legacy/shared';
+import { Dropdown, Spinner } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
+
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal/ui-theme';
 import classNames from 'classnames';
 import { useEffect, useLayoutEffect, useState } from 'react';

@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": ["node"],
-    "lib": ["DOM", "es2019"]
+    "lib": ["DOM", "es2019"],
+    "module": "Preserve",
+    "moduleResolution": "bundler"
   },
   "files": [
     "../../node_modules/@nx/react/typings/cssmodule.d.ts",

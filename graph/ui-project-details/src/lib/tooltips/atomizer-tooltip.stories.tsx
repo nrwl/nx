@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { AtomizerTooltip, AtomizerTooltipProps } from './atomizer-tooltip';
-import { Tooltip } from '@nx/graph/legacy';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 
 const meta: Meta<typeof AtomizerTooltip> = {
   component: AtomizerTooltip,

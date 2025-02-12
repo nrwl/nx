@@ -1,8 +1,8 @@
 import {
-  GraphService,
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/legacy';
+} from '@nx/graph/legacy/shared';
+import { GraphService } from '@nx/graph/legacy/graph';
 import { selectValueByThemeStatic } from '@nx/graph-internal/ui-theme';
 
 let graphService: GraphService;

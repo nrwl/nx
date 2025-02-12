@@ -15,7 +15,8 @@ import type {
 import { useEffect, useMemo } from 'react';
 import { getGraphService } from '../machines/graph.service';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
-import { Dropdown, useRouteConstructor } from '@nx/graph/legacy';
+import { Dropdown } from '@nx/graph/legacy/components';
+import { useRouteConstructor } from '@nx/graph/legacy/shared';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ShowHideAll } from '../ui-components/show-hide-all';
 import { createTaskName } from '../util';

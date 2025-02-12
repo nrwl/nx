@@ -6,7 +6,9 @@
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
-    ]
+    ],
+    "module": "Preserve",
+    "moduleResolution": "bundler"
   },
   "exclude": [
     "jest.config.ts",

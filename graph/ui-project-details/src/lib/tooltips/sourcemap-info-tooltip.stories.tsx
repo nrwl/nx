@@ -3,7 +3,7 @@ import {
   SourcemapInfoToolTip,
   SourcemapInfoToolTipProps,
 } from './sourcemap-info-tooltip';
-import { Tooltip } from '@nx/graph/legacy';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 
 const meta: Meta<typeof SourcemapInfoToolTip> = {
   component: SourcemapInfoToolTip,
