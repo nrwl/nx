@@ -120,6 +120,9 @@ export function normalizeOptions(
     projectRoot: projectNode.data.root,
     root: workspaceRoot,
     runtimeChunk: combinedPluginAndMaybeExecutorOptions.runtimeChunk ?? true,
+    sassImplementation:
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
     scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
     sourceRoot,

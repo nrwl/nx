@@ -128,6 +128,9 @@ export function normalizeOptions(
     target: combinedPluginAndMaybeExecutorOptions.target,
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,
+    sassImplementation:
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
   };
 }
 

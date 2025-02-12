@@ -160,6 +160,10 @@ export interface NxAppRspackPluginOptions {
    */
   runtimeChunk?: boolean;
   /**
+   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
+   */
+  sassImplementation?: 'sass' | 'sass-embedded';
+  /**
    * External scripts that will be included before the main application entry.
    */
   scripts?: Array<ExtraEntryPointClass | string>;
@@ -194,7 +198,11 @@ export interface NxAppRspackPluginOptions {
   /**
    * Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
    */
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   /**
    * External stylesheets that will be included with the application.
    */
