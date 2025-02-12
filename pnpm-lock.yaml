@@ -31,8 +31,8 @@ importers:
         specifier: ^0.1.52
         version: 0.1.55
       '@nx/graph':
-        specifier: 0.3.7
-        version: 0.3.7(@nx/devkit@20.5.0-beta.2(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.26.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        specifier: 0.3.9
+        version: 0.3.9(@nx/devkit@20.5.0-beta.2(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.26.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       '@react-spring/three':
         specifier: ^9.7.3
         version: 9.7.4(@react-three/fiber@8.17.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.166.1))(react@18.3.1)(three@0.166.1)
@@ -5141,8 +5141,8 @@ packages:
       '@zkochan/js-yaml':
         optional: true
 
-  '@nx/graph@0.3.7':
-    resolution: {integrity: sha512-EDOdafvHfzBhTWXGRy1e1teLEXJLZ00vDoLG5x8UcCti38+LGJlhNipUCuufWs9C1dFfjM3dtuOW6za1iV9PSw==}
+  '@nx/graph@0.3.9':
+    resolution: {integrity: sha512-BakC1/f8Z3pjzbf4q1icNSI1Wxl53BEPSFljFJXuKzUSbeNnRFp11TtBs6ZtcFoihgVaYXl9vkpBOjt+ItjP4A==}
     peerDependencies:
       '@nx/devkit': '>= 19 < 21'
       nx: '>= 19 < 21'
@@ -22471,7 +22471,7 @@ snapshots:
       - supports-color
       - verdaccio
 
-  '@nx/graph@0.3.7(@nx/devkit@20.5.0-beta.2(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.26.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
+  '@nx/graph@0.3.9(@nx/devkit@20.5.0-beta.2(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.26.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@nx/devkit': 20.5.0-beta.2(nx@20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       nx: 20.5.0-beta.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))
