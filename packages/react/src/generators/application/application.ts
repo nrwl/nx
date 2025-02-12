@@ -32,7 +32,6 @@ import { initWebpack } from './lib/bundlers/add-webpack';
 import {
   handleStyledJsxForRspack,
   initRspack,
-  setupRspackConfiguration,
 } from './lib/bundlers/add-rspack';
 import {
   initRsbuild,
@@ -125,8 +124,6 @@ export async function applicationGeneratorInternal(
 
   if (options.bundler === 'vite') {
     await setupViteConfiguration(tree, options, tasks);
-  } else if (options.bundler === 'rspack') {
-    await setupRspackConfiguration(tree, options, tasks);
   } else if (options.bundler === 'rsbuild') {
     await setupRsbuildConfiguration(tree, options, tasks);
   }

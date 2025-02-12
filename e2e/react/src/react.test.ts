@@ -8,7 +8,6 @@ import {
   listFiles,
   newProject,
   readFile,
-  readJson,
   runCLI,
   runCLIAsync,
   runE2ETests,
