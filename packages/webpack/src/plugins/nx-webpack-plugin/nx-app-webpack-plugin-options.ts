@@ -182,7 +182,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Generate source maps.
    */
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */
@@ -211,6 +211,10 @@ export interface NxAppWebpackPluginOptions {
    * List of TypeScript Compiler Transformers Plugins.
    */
   transformers?: TransformerEntry[];
+  /**
+   * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
+   */
+  useTsconfigPaths?: boolean;
   /**
    * Generate a separate vendor chunk for 3rd party packages.
    */

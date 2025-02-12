@@ -1,0 +1,1 @@
+export { <%= rootModuleClassName %> as default } from './app/<%= rootModuleFileName.slice(0, -3) %>';

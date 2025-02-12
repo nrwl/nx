@@ -278,6 +278,7 @@ describe('MF Remote App Generator', () => {
 
       @Component({
         selector: 'app-root',
+        standalone: false,
         template: '<router-outlet></router-outlet>'
 
       })
@@ -328,7 +329,7 @@ describe('MF Remote App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.js`, 'utf-8')
       ).toMatchSnapshot();
@@ -377,7 +378,7 @@ describe('MF Remote App Generator', () => {
         tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/src/server.ts`, 'utf-8')).toMatchSnapshot();
       expect(
         tree.read(`test/module-federation.config.ts`, 'utf-8')
       ).toMatchSnapshot();
@@ -398,26 +399,6 @@ describe('MF Remote App Generator', () => {
         tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
-    });
-
-    describe('compat', () => {
-      it('should generate the correct main.server.ts', async () => {
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: {
-            '@angular/core': '15.2.0',
-          },
-        }));
-
-        await generateTestRemoteApplication(tree, {
-          directory: 'test',
-          ssr: true,
-          skipFormat: true,
-        });
-
-        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
-      });
     });
   });
 
@@ -442,5 +423,20 @@ describe('MF Remote App Generator', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual(initialPackageJson);
+  });
+
+  it('should error when an invalid remote name is passed to the remote generator', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await expect(
+      generateTestRemoteApplication(tree, {
+        directory: 'test/my-remote',
+      })
+    ).rejects.toMatchInlineSnapshot(`
+      [Error: Invalid remote name: my-remote. Remote project names must:
+      - Start with a letter, dollar sign ($) or underscore (_)
+      - Followed by any valid character (letters, digits, underscores, or dollar signs)
+      The regular expression used is ^[a-zA-Z_$][a-zA-Z_$0-9]*$.]
+    `);
   });
 });

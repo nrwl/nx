@@ -15,7 +15,7 @@ try {
   const src = process.env.NX_IMPORT_SOURCE;
   const dest = process.env.NX_IMPORT_DESTINATION;
   const files = execSync(`git ls-files -z ${src}`, {
-    windowsHide: true,
+    windowsHide: false,
   })
     .toString()
     .trim()

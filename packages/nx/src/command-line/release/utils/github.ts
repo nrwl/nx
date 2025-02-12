@@ -29,6 +29,7 @@ interface GithubRequestConfig {
   token: string | null;
 }
 
+// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release--parameters
 interface GithubRelease {
   id?: string;
   tag_name: string;
@@ -37,6 +38,7 @@ interface GithubRelease {
   body?: string;
   draft?: boolean;
   prerelease?: boolean;
+  make_latest?: 'legacy' | boolean;
 }
 
 export interface GithubRepoData {
@@ -310,6 +312,8 @@ async function syncGithubRelease(
     name: release.version,
     body: release.body,
     prerelease: release.prerelease,
+    // legacy specifies that the latest release should be determined based on the release creation date and higher semantic version.
+    make_latest: 'legacy',
   };
 
   try {
@@ -367,7 +371,7 @@ async function resolveGithubToken(hostname: string): Promise<string | null> {
         return execSync(`gh auth token`, {
           encoding: 'utf8',
           stdio: 'pipe',
-          windowsHide: true,
+          windowsHide: false,
         }).trim();
       }
     }

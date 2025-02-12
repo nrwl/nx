@@ -10,13 +10,14 @@ import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { writeDaemonJsonProcessCache } from '../cache';
+import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import {
   getFullOsSocketPath,
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
 import {
+  hasRegisteredFileWatcherSockets,
   registeredFileWatcherSockets,
   removeRegisteredFileWatcherSocket,
 } from './file-watching/file-watcher-sockets';
@@ -54,8 +55,13 @@ import {
   watchOutputFiles,
   watchWorkspace,
 } from './watcher';
-import { handleGlob } from './handle-glob';
-import { GLOB, isHandleGlobMessage } from '../message-types/glob';
+import { handleGlob, handleMultiGlob } from './handle-glob';
+import {
+  GLOB,
+  isHandleGlobMessage,
+  isHandleMultiGlobMessage,
+  MULTI_GLOB,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   isHandleNxWorkspaceFilesMessage,
@@ -109,6 +115,16 @@ import {
   isHandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
 import { handleFlushSyncGeneratorChangesToDisk } from './handle-flush-sync-generator-changes-to-disk';
+import {
+  isHandlePostTasksExecutionMessage,
+  isHandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
+import {
+  handleRunPostTasksExecution,
+  handleRunPreTasksExecution,
+} from './handle-tasks-execution-hooks';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -228,6 +244,10 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, GLOB, () =>
       handleGlob(payload.globs, payload.exclude)
     );
+  } else if (isHandleMultiGlobMessage(payload)) {
+    await handleResult(socket, MULTI_GLOB, () =>
+      handleMultiGlob(payload.globs, payload.exclude)
+    );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
     await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
       handleNxWorkspaceFiles(payload.projectRootMap)
@@ -280,6 +300,14 @@ async function handleMessage(socket, data: string) {
         payload.deletedFiles
       )
     );
+  } else if (isHandlePreTasksExecutionMessage(payload)) {
+    await handleResult(socket, PRE_TASKS_EXECUTION, () =>
+      handleRunPreTasksExecution(payload.context)
+    );
+  } else if (isHandlePostTasksExecutionMessage(payload)) {
+    await handleResult(socket, POST_TASKS_EXECUTION, () =>
+      handleRunPostTasksExecution(payload.context)
+    );
   } else {
     await respondWithErrorAndExit(
       socket,
@@ -311,9 +339,9 @@ export async function handleResult(
 }
 
 function handleInactivityTimeout() {
-  if (numberOfOpenConnections > 0) {
+  if (hasRegisteredFileWatcherSockets()) {
     serverLogger.log(
-      `There are ${numberOfOpenConnections} open connections. Reset inactivity timer.`
+      `There are open file watchers. Resetting inactivity timer.`
     );
     resetInactivityTimeout(handleInactivityTimeout);
   } else {
@@ -518,6 +546,17 @@ export async function startServer(): Promise<Server> {
       server.listen(getFullOsSocketPath(), async () => {
         try {
           serverLogger.log(`Started listening on: ${getFullOsSocketPath()}`);
+
+          setInterval(() => {
+            if (getDaemonProcessIdSync() !== process.pid) {
+              return handleServerProcessTermination({
+                server,
+                reason: 'this process is no longer the current daemon (native)',
+                sockets: openSockets,
+              });
+            }
+          }).unref();
+
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 

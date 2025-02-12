@@ -188,20 +188,16 @@ export const AnimatedCurvedBeam: FC<AnimatedCurvedBeamProps> = ({
           animate={animateValue}
           transition={{
             delay,
-            duration,
+            duration: bidirectional ? duration * 2 : duration,
             ease: [0.16, 1, 0.3, 1], // https://easings.net/#easeOutExpo
             repeat: Infinity,
             repeatDelay: 0,
           }}
         >
-          <stop stopColor={gradientStartColor} stopOpacity="0"></stop>
-          <stop stopColor={gradientStartColor}></stop>
-          <stop offset="32.5%" stopColor={gradientStopColor}></stop>
-          <stop
-            offset="100%"
-            stopColor={gradientStopColor}
-            stopOpacity="0"
-          ></stop>
+          <stop stopColor={gradientStartColor} stopOpacity="0" />
+          <stop stopColor={gradientStartColor} />
+          <stop offset="32.5%" stopColor={gradientStopColor} />
+          <stop offset="100%" stopColor={gradientStopColor} stopOpacity="0" />
         </motion.linearGradient>
       </defs>
     </svg>
@@ -361,8 +357,8 @@ export const AnimatedAngledBeam: FC<AnimatedAngledBeamProps> = ({
       <defs>
         <linearGradient id={id} gradientUnits="userSpaceOnUse">
           <stop stopColor={gradientStartColor} stopOpacity="0" offset="0%" />
-          <stop stopColor={gradientStartColor} offset="10%"></stop>
-          <stop stopColor={gradientStopColor} offset="90%"></stop>
+          <stop stopColor={gradientStartColor} offset="10%" />
+          <stop stopColor={gradientStopColor} offset="90%" />
           <stop stopColor={gradientStopColor} stopOpacity="0" offset="100%" />
         </linearGradient>
       </defs>

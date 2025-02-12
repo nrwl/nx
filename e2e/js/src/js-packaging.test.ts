@@ -178,16 +178,6 @@ describe('packaging libs', () => {
       `libs/${swcEsmLib}/src/index.ts`,
       `export * from './lib/${swcEsmLib}.js';`
     );
-    // We also need to update the eslint config file extensions to be explicitly commonjs
-    // TODO: re-evaluate this once we support ESM eslint configs
-    renameFile(
-      `libs/${tscEsmLib}/eslint.config.js`,
-      `libs/${tscEsmLib}/eslint.config.cjs`
-    );
-    renameFile(
-      `libs/${swcEsmLib}/eslint.config.js`,
-      `libs/${swcEsmLib}/eslint.config.cjs`
-    );
 
     // Add additional entry points for `exports` field
     updateJson(join('libs', tscLib, 'project.json'), (json) => {
@@ -214,14 +204,20 @@ describe('packaging libs', () => {
 
     expect(readJson(`dist/libs/${tscLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });
 
     expect(readJson(`dist/libs/${swcLib}/package.json`).exports).toEqual({
       './package.json': './package.json',
-      '.': './src/index.js',
+      '.': {
+        default: './src/index.js',
+        types: './src/index.d.ts',
+      },
       './foo/bar': './src/foo/bar.js',
       './foo/faz': './src/foo/faz.js',
     });

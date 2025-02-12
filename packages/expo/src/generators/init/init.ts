@@ -9,7 +9,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodes } from '../../../plugins/plugin';
 import {
   expoCliVersion,
@@ -28,8 +27,6 @@ export function expoInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'expo', 'init');
-
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -57,6 +54,16 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
           'run-android',
           'expo:run-android',
           'expo-run-android',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'expo:build-deps',
+          'expo-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'expo:watch-deps',
+          'expo-watch-deps',
         ],
       },
 

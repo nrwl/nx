@@ -73,17 +73,21 @@ describe('@nx/vite:init', () => {
               "default",
               "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
               "!{projectRoot}/tsconfig.spec.json",
+              "!{projectRoot}/src/test-setup.[jt]s",
             ],
           },
           "plugins": [
             {
               "options": {
+                "buildDepsTargetName": "build-deps",
                 "buildTargetName": "build",
+                "devTargetName": "dev",
                 "previewTargetName": "preview",
                 "serveStaticTargetName": "serve-static",
                 "serveTargetName": "serve",
                 "testTargetName": "test",
                 "typecheckTargetName": "typecheck",
+                "watchDepsTargetName": "watch-deps",
               },
               "plugin": "@nx/vite/plugin",
             },
@@ -125,6 +129,20 @@ describe('@nx/vite:init', () => {
         plugins: [react(), nxViteTsPaths()],
       });
       "
+    `);
+  });
+
+  it(`should not add multiple instances of the same vite temp file glob to gitignore`, async () => {
+    // ARRANGE
+    tree.write('.gitignore', 'vite.config.*.timestamp*');
+
+    // ACT
+    await initGenerator(tree, {});
+
+    // ASSERT
+    expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+      "vite.config.*.timestamp*
+      vitest.config.*.timestamp*"
     `);
   });
 });

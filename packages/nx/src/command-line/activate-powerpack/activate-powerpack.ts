@@ -26,7 +26,7 @@ async function requirePowerpack(): Promise<any> {
         execSync(
           `${getPackageManagerCommand().addDev} @nx/powerpack-license@latest`,
           {
-            windowsHide: true,
+            windowsHide: false,
           }
         );
 

@@ -3,7 +3,10 @@ import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import {
+  MigrationMetadata,
+  ProcessedPackageMetadata,
+} from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { menusApi } from '../../../lib/menus.api';
@@ -16,10 +19,12 @@ export default function Package({
   overview,
   menu,
   pkg,
+  migrations,
 }: {
   menu: MenuItem[];
   overview: string;
   pkg: ProcessedPackageMetadata;
+  migrations: MigrationMetadata[];
 }): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
 
@@ -55,7 +60,11 @@ export default function Package({
           toggleNav={toggleNav}
         />
         <ScrollableContent resetScrollOnNavigation={true}>
-          <PackageSchemaList pkg={vm.package} overview={overview} />
+          <PackageSchemaList
+            pkg={vm.package}
+            overview={overview}
+            migrations={migrations}
+          />
         </ScrollableContent>
       </main>
     </div>
@@ -77,6 +86,7 @@ function getData(packageName: string): {
   menu: MenuItem[];
   overview: string;
   pkg: ProcessedPackageMetadata;
+  migrations: MigrationMetadata[];
 } {
   const pkg = nxPackagesApi.getPackage([packageName]);
   const documents = new DocumentsApi({
@@ -103,6 +113,11 @@ function getData(packageName: string): {
     menu: menusApi.getMenu('nx-api', 'nx-api'),
     overview: overview,
     pkg,
+    migrations: Object.keys(pkg.migrations).map((migration) => {
+      return nxPackagesApi.getSchemaMetadata(
+        nxPackagesApi.getPackageFileMetadatas(pkg.name, 'migrations')[migration]
+      ) as MigrationMetadata;
+    }),
   };
 }
 

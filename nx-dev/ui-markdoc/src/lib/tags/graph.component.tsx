@@ -103,6 +103,7 @@ export function Graph({
             groupByFolder={false}
             theme={theme}
             projects={parsedProps.projects}
+            composite={parsedProps.composite}
             fileMap={{}}
             workspaceLayout={parsedProps.workspaceLayout}
             dependencies={parsedProps.dependencies}

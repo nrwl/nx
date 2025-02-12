@@ -1,7 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { formatFiles, runTasksInSerial } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import {
   addExportsToBarrelFile,
   addProject,
@@ -30,10 +29,11 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(tree, 'nest', 'library');
-
   const options = await normalizeOptions(tree, rawOptions);
-  await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
+  const jsLibraryTask = await jsLibraryGenerator(
+    tree,
+    toJsLibraryGeneratorOptions(options)
+  );
   const initTask = await initGenerator(tree, rawOptions);
   const depsTask = ensureDependencies(tree);
   deleteFiles(tree, options);
@@ -48,6 +48,7 @@ export async function libraryGeneratorInternal(
 
   return runTasksInSerial(
     ...[
+      jsLibraryTask,
       initTask,
       depsTask,
       () => {

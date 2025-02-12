@@ -8,7 +8,8 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+✔ Which CI provider would you like to use? · skip
+✔ Would you like remote caching to make your build faster? · skip
 ```
 
 ## Install Nx Remix Plugin
@@ -22,10 +23,6 @@ nx add @nx/remix
 ```
 
 ## Generate a Remix Application
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```{% command="nx g @nx/remix:app apps/myapp"  path="~/acme" %}
 NX  Generating @nx/remix:application

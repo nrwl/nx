@@ -1,7 +1,7 @@
-import { builtinModules } from 'node:module';
-import { dirname, join, parse, posix, relative } from 'node:path';
+import { isBuiltin } from 'node:module';
+import { dirname, join, posix, relative } from 'node:path';
 import { clean } from 'semver';
-import {
+import type {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
@@ -10,14 +10,18 @@ import {
   findProjectForPath,
 } from '../../../../project-graph/utils/find-project-for-path';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
-import { PackageJson } from '../../../../utils/package-json';
+import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
+import type { PackageJson } from '../../../../utils/package-json';
 import { workspaceRoot } from '../../../../utils/workspace-root';
+import {
+  getWorkspacePackagesMetadata,
+  matchImportToWildcardEntryPointsToProjectMap,
+} from '../../utils/packages';
 import { resolveRelativeToDir } from '../../utils/resolve-relative-to-dir';
 import {
   getRootTsConfigFileName,
   resolveModuleByImport,
 } from '../../utils/typescript';
-import { getPackageNameFromImportPath } from '../../../../utils/get-package-name-from-import-path';
 
 /**
  * The key is a combination of the package name and the workspace relative directory
@@ -31,21 +35,11 @@ type NpmResolutionCache = Map<string, string | null>;
  */
 const defaultNpmResolutionCache: NpmResolutionCache = new Map();
 
-const builtInModuleSet = new Set<string>([
-  ...builtinModules,
-  ...builtinModules.map((x) => `node:${x}`),
-  // These are missing in the builtinModules list
-  // See: https://github.com/nodejs/node/issues/42785
-  // TODO(v20): We should be safe to use `isBuiltin` function instead of keep the set here (https://nodejs.org/api/module.html#moduleisbuiltinmodulename)
-  'test',
-  'node:test',
-  'node:sea',
-  'node:sqlite',
-]);
+const experimentalNodeModules = new Set(['node:sqlite']);
 
 export function isBuiltinModuleImport(importExpr: string): boolean {
   const packageName = getPackageNameFromImportPath(importExpr);
-  return builtInModuleSet.has(packageName);
+  return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
 }
 
 export class TargetProjectLocator {
@@ -54,6 +48,11 @@ export class TargetProjectLocator {
   private tsConfig = this.getRootTsConfig();
   private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
+  private packagesMetadata: {
+    entryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
+    wildcardEntryPointsToProjectMap: Record<string, ProjectGraphProjectNode>;
+    packageToProjectMap: Record<string, ProjectGraphProjectNode>;
+  };
 
   constructor(
     private readonly nodes: Record<string, ProjectGraphProjectNode>,
@@ -144,6 +143,13 @@ export class TargetProjectLocator {
 
       return this.findProjectOfResolvedModule(resolvedModule);
     } catch {}
+
+    // fall back to see if it's a locally linked workspace project where the
+    // output might not exist yet
+    const localProject = this.findImportInWorkspaceProjects(importExpr);
+    if (localProject) {
+      return localProject;
+    }
 
     // nothing found, cache for later
     this.npmResolutionCache.set(importExpr, null);
@@ -250,6 +256,27 @@ export class TargetProjectLocator {
       return [wildcardPath, this.paths[wildcardPath]];
     }
     return undefined;
+  }
+
+  findImportInWorkspaceProjects(importPath: string): string | null {
+    this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
+
+    if (this.packagesMetadata.entryPointsToProjectMap[importPath]) {
+      return this.packagesMetadata.entryPointsToProjectMap[importPath].name;
+    }
+
+    const project = matchImportToWildcardEntryPointsToProjectMap(
+      this.packagesMetadata.wildcardEntryPointsToProjectMap,
+      importPath
+    );
+
+    return project?.name;
+  }
+
+  findDependencyInWorkspaceProjects(dep: string): string | null {
+    this.packagesMetadata ??= getWorkspacePackagesMetadata(this.nodes);
+
+    return this.packagesMetadata.packageToProjectMap[dep]?.name;
   }
 
   private resolveImportWithTypescript(

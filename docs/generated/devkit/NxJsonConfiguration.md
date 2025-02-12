@@ -23,7 +23,6 @@ Nx.json configuration
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
 - [defaultBase](../../devkit/documents/NxJsonConfiguration#defaultbase): string
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
-- [enableDbCache](../../devkit/documents/NxJsonConfiguration#enabledbcache): boolean
 - [extends](../../devkit/documents/NxJsonConfiguration#extends): string
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
@@ -43,6 +42,7 @@ Nx.json configuration
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
+- [useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
@@ -96,14 +96,6 @@ Default value for --base used by `nx affected` and `nx format`.
 
 Default project. When project isn't provided, the default project
 will be used. Convenient for small workspaces with one main application.
-
----
-
-### enableDbCache
-
-• `Optional` **enableDbCache**: `boolean`
-
-Enable the new experimental db based cache
 
 ---
 
@@ -179,7 +171,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 ---
 
@@ -294,6 +286,14 @@ Set this to false to disable the daemon.
 • `Optional` **useInferencePlugins**: `boolean`
 
 Set this to false to disable adding inference plugins when generating new projects
+
+---
+
+### useLegacyCache
+
+• `Optional` **useLegacyCache**: `boolean`
+
+Use the legacy file system cache instead of the db cache
 
 ---
 

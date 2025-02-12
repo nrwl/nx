@@ -1,20 +1,20 @@
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
-import { minimatch } from 'minimatch';
+import { isAbsolute, join, relative, resolve } from 'path';
 import { existsSync, promises as fsp } from 'node:fs';
 import * as chalk from 'chalk';
-import { load as yamlLoad } from '@zkochan/js-yaml';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'tmp';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 import * as createSpinner from 'ora';
-import { detectPlugins, installPlugins } from '../init/init-v2';
+import { detectPlugins } from '../init/init-v2';
 import { readNxJson } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
+  addPackagePathToWorkspaces,
   detectPackageManager,
   getPackageManagerCommand,
+  getPackageWorkspaces,
   isWorkspacesEnabled,
   PackageManager,
   PackageManagerCommands,
@@ -24,11 +24,15 @@ import { runInstall } from '../init/implementation/utils';
 import { getBaseRef } from '../../utils/command-line-utils';
 import { prepareSourceRepo } from './utils/prepare-source-repo';
 import { mergeRemoteSource } from './utils/merge-remote-source';
+import { minimatch } from 'minimatch';
 import {
-  getPackagesInPackageManagerWorkspace,
-  needsInstall,
-} from './utils/needs-install';
-import { readPackageJson } from '../../project-graph/file-utils';
+  configurePlugins,
+  runPackageManagerInstallPlugins,
+} from '../init/configure-plugins';
+import {
+  checkCompatibleWithPlugins,
+  updatePluginsInNxJson,
+} from '../init/implementation/check-compatible-with-plugins';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -60,7 +64,7 @@ export interface ImportOptions {
 
 export async function importHandler(options: ImportOptions) {
   process.env.NX_RUNNING_NX_IMPORT = 'true';
-  let { sourceRepository, ref, source, destination } = options;
+  let { sourceRepository, ref, source, destination, verbose } = options;
   const destinationGitClient = new GitRepository(process.cwd());
 
   if (await destinationGitClient.hasUncommittedChanges()) {
@@ -219,11 +223,6 @@ export async function importHandler(options: ImportOptions) {
   }
 
   const packageManager = detectPackageManager(workspaceRoot);
-
-  const originalPackageWorkspaces = await getPackagesInPackageManagerWorkspace(
-    packageManager
-  );
-
   const sourceIsNxWorkspace = existsSync(join(sourceGitClient.root, 'nx.json'));
 
   const relativeDestination = relative(
@@ -280,42 +279,46 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
-  // If install fails, we should continue since the errors could be resolved later.
-  let installFailed = false;
-  if (plugins.length > 0) {
-    try {
-      output.log({ title: 'Installing Plugins' });
-      installPlugins(workspaceRoot, plugins, pmc, updatePackageScripts);
+  await handleMissingWorkspacesEntry(
+    packageManager,
+    pmc,
+    relativeDestination,
+    destinationGitClient
+  );
 
-      await destinationGitClient.amendCommit();
-    } catch (e) {
-      installFailed = true;
-      output.error({
-        title: `Install failed: ${e.message || 'Unknown error'}`,
-        bodyLines: [e.stack],
-      });
+  let installed = await runInstallDestinationRepo(
+    packageManager,
+    destinationGitClient
+  );
+  if (installed) {
+    // Check compatibility with existing plugins for the workspace included new imported projects
+    if (nxJson.plugins?.length > 0) {
+      const incompatiblePlugins = await checkCompatibleWithPlugins();
+      if (Object.keys(incompatiblePlugins).length > 0) {
+        updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
+        await destinationGitClient.amendCommit();
+      }
     }
-  } else if (await needsInstall(packageManager, originalPackageWorkspaces)) {
-    try {
-      output.log({
-        title: 'Installing dependencies for imported code',
-      });
-
-      runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
-
-      await destinationGitClient.amendCommit();
-    } catch (e) {
-      installFailed = true;
-      output.error({
-        title: `Install failed: ${e.message || 'Unknown error'}`,
-        bodyLines: [e.stack],
-      });
+    if (plugins.length > 0) {
+      installed = await runPluginsInstall(plugins, pmc, destinationGitClient);
+      if (installed) {
+        const { succeededPlugins } = await configurePlugins(
+          plugins,
+          updatePackageScripts,
+          pmc,
+          workspaceRoot,
+          verbose
+        );
+        if (succeededPlugins.length > 0) {
+          await destinationGitClient.amendCommit();
+        }
+      }
     }
   }
 
   console.log(await destinationGitClient.showStat());
 
-  if (installFailed) {
+  if (installed === false) {
     const pmc = getPackageManagerCommand(packageManager);
     output.warn({
       title: `The import was successful, but the install failed`,
@@ -323,9 +326,23 @@ export async function importHandler(options: ImportOptions) {
         `You may need to run "${pmc.install}" manually to resolve the issue. The error is logged above.`,
       ],
     });
+    if (plugins.length > 0) {
+      output.error({
+        title: `Failed to install plugins`,
+        bodyLines: [
+          'The following plugins were not installed:',
+          ...plugins.map((p) => `- ${chalk.bold(p)}`),
+        ],
+      });
+      output.error({
+        title: `To install the plugins manually`,
+        bodyLines: [
+          'You may need to run commands to install the plugins:',
+          ...plugins.map((p) => `- ${chalk.bold(pmc.exec + ' nx add ' + p)}`),
+        ],
+      });
+    }
   }
-
-  await warnOnMissingWorkspacesEntry(packageManager, pmc, relativeDestination);
 
   if (source != destination) {
     output.warn({
@@ -391,13 +408,71 @@ async function createTemporaryRemote(
   await destinationGitClient.fetch(remoteName);
 }
 
-// If the user imports a project that isn't in NPM/Yarn/PNPM workspaces, then its dependencies
-// will not be installed. We should warn users and provide instructions on how to fix this.
-async function warnOnMissingWorkspacesEntry(
+/**
+ * Run install for the imported code and plugins
+ * @returns true if the install failed
+ */
+async function runInstallDestinationRepo(
+  packageManager: PackageManager,
+  destinationGitClient: GitRepository
+): Promise<boolean> {
+  let installed = true;
+  try {
+    output.log({
+      title: 'Installing dependencies for imported code',
+    });
+    runInstall(workspaceRoot, getPackageManagerCommand(packageManager));
+    await destinationGitClient.amendCommit();
+  } catch (e) {
+    installed = false;
+    output.error({
+      title: `Install failed: ${e.message || 'Unknown error'}`,
+      bodyLines: [e.stack],
+    });
+  }
+  return installed;
+}
+
+async function runPluginsInstall(
+  plugins: string[],
+  pmc: PackageManagerCommands,
+  destinationGitClient: GitRepository
+) {
+  let installed = true;
+  output.log({ title: 'Installing Plugins' });
+  try {
+    runPackageManagerInstallPlugins(workspaceRoot, pmc, plugins);
+    await destinationGitClient.amendCommit();
+  } catch (e) {
+    installed = false;
+    output.error({
+      title: `Install failed: ${e.message || 'Unknown error'}`,
+      bodyLines: [
+        'The following plugins were not installed:',
+        ...plugins.map((p) => `- ${chalk.bold(p)}`),
+        e.stack,
+      ],
+    });
+    output.error({
+      title: `To install the plugins manually`,
+      bodyLines: [
+        'You may need to run commands to install the plugins:',
+        ...plugins.map((p) => `- ${chalk.bold(pmc.exec + ' nx add ' + p)}`),
+      ],
+    });
+  }
+  return installed;
+}
+
+/*
+ * If the user imports a project that isn't in the workspaces entry, we should add that path to the workspaces entry.
+ */
+async function handleMissingWorkspacesEntry(
   pm: PackageManager,
   pmc: PackageManagerCommands,
-  pkgPath: string
-) {
+  pkgPath: string,
+  destinationGitClient: GitRepository
+): Promise<void> {
   if (!isWorkspacesEnabled(pm, workspaceRoot)) {
     output.warn({
       title: `Missing workspaces in package.json`,
@@ -428,39 +503,30 @@ async function warnOnMissingWorkspacesEntry(
             ],
     });
   } else {
-    // Check if the new package is included in existing workspaces entries. If not, warn the user.
-    let workspaces: string[] | null = null;
-
-    if (pm === 'npm' || pm === 'yarn' || pm === 'bun') {
-      const packageJson = readPackageJson();
-      workspaces = packageJson.workspaces;
-    } else if (pm === 'pnpm') {
-      const yamlPath = join(workspaceRoot, 'pnpm-workspace.yaml');
-      if (existsSync(yamlPath)) {
-        const yamlContent = await fsp.readFile(yamlPath, 'utf-8');
-        const yaml = yamlLoad(yamlContent);
-        workspaces = yaml.packages;
-      }
+    let workspaces: string[] = getPackageWorkspaces(pm, workspaceRoot);
+    const isPkgIncluded = workspaces.some((w) => minimatch(pkgPath, w));
+    if (isPkgIncluded) {
+      return;
     }
 
-    if (workspaces) {
-      const isPkgIncluded = workspaces.some((w) => minimatch(pkgPath, w));
-      if (!isPkgIncluded) {
-        const pkgsDir = dirname(pkgPath);
-        output.warn({
-          title: `Project missing in workspaces`,
-          bodyLines:
-            pm === 'npm' || pm === 'yarn' || pm === 'bun'
-              ? [
-                  `The imported project (${pkgPath}) is missing the "workspaces" field in package.json.`,
-                  `Add "${pkgsDir}/*" to workspaces run "${pmc.install}".`,
-                ]
-              : [
-                  `The imported project (${pkgPath}) is missing the "packages" field in pnpm-workspaces.yaml.`,
-                  `Add "${pkgsDir}/*" to packages run "${pmc.install}".`,
-                ],
-        });
-      }
-    }
+    addPackagePathToWorkspaces(pkgPath, pm, workspaces, workspaceRoot);
+    await destinationGitClient.amendCommit();
+    output.success({
+      title: `Project added in workspaces`,
+      bodyLines:
+        pm === 'npm' || pm === 'yarn' || pm === 'bun'
+          ? [
+              `The imported project (${chalk.bold(
+                pkgPath
+              )}) is missing the "workspaces" field in package.json.`,
+              `Added "${chalk.bold(pkgPath)}" to workspaces.`,
+            ]
+          : [
+              `The imported project (${chalk.bold(
+                pkgPath
+              )}) is missing the "packages" field in pnpm-workspaces.yaml.`,
+              `Added "${chalk.bold(pkgPath)}" to packages.`,
+            ],
+    });
   }
 }

@@ -6,7 +6,7 @@ or new projects, and it also contains a set of our recommended setups for using 
 can be found on an Nx workspace.
 
 For an in-depth look on this topic, be sure to check out our blog
-post [Set up Tailwind CSS with Angular in an Nx workspace](https://medium.com/nrwl/set-up-tailwind-css-with-angular-in-an-nx-workspace-6f039a0f4479).
+post [Set up Tailwind CSS with Angular in an Nx workspace](/blog/set-up-tailwind-css-with-angular-in-an-nx-workspace).
 
 ## Generating or adding Tailwind CSS support to Angular projects
 
@@ -423,8 +423,7 @@ to have the following targets:
   "executor": "@nx/angular:package",
   "outputs": ["{workspaceRoot}/dist/libs/lib1"],
   "options": {
-    "project": "libs/lib1/ng-package.json",
-    "tailwindConfig": "libs/lib1/tailwind.config.js"
+    "project": "libs/lib1/ng-package.json"
   },
   "configurations": {
     "production": {

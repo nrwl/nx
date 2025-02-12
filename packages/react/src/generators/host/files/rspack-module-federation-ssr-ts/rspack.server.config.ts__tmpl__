@@ -1,10 +1,10 @@
 import {composePlugins, withNx, withReact} from '@nx/rspack';
-import {withModuleFederationForSSR} from '@nx/rspack/module-federation';
+import {withModuleFederationForSSR} from '@nx/module-federation/rspack';
 
 import baseConfig from './module-federation.config';
 
 const defaultConfig = {
-    ...baseConfig
+  ...baseConfig
 };
 
 // Nx plugins for rspack to build config object from Nx options and context.

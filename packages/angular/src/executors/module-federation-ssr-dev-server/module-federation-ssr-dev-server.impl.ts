@@ -1,3 +1,4 @@
+import { executeSSRDevServerBuilder } from '@angular-devkit/build-angular';
 import { type ExecutorContext, logger } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
@@ -7,14 +8,8 @@ import {
   validateDevRemotes,
 } from '../../builders/utilities/module-federation';
 import type { Schema } from './schema';
-import {
-  getModuleFederationConfig,
-  getRemotes,
-} from '@nx/webpack/src/utils/module-federation';
-import { parseStaticSsrRemotesConfig } from '@nx/webpack/src/utils/module-federation/parse-static-remotes-config';
-import { buildStaticRemotes } from './lib/build-static-remotes';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { startRemotes } from './lib/start-dev-remotes';
-import { startStaticRemotes } from './lib/start-static-remotes';
 import {
   combineAsyncIterables,
   createAsyncIterable,
@@ -24,21 +19,12 @@ import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { normalizeOptions } from './lib/normalize-options';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { startSsrRemoteProxies } from '@nx/webpack/src/utils/module-federation/start-ssr-remote-proxies';
-import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 
 export async function* moduleFederationSsrDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
-  const nxBin = require.resolve('nx/bin/nx');
   const options = normalizeOptions(schema);
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
-  const { executeSSRDevServerBuilder } =
-    angularMajorVersion >= 17
-      ? require('@angular-devkit/build-angular')
-      : require('@nguniversal/builders');
 
   const currIter = eachValueFrom(
     executeSSRDevServerBuilder(
@@ -85,69 +71,15 @@ export async function* moduleFederationSsrDevServerExecutor(
 
   validateDevRemotes({ devRemotes: options.devRemotes }, workspaceProjects);
 
-  const moduleFederationConfig = getModuleFederationConfig(
-    project.targets.build.options.tsConfig,
-    context.root,
-    project.root,
-    'angular'
-  );
-
-  const remoteNames = options.devRemotes.map((r) =>
-    typeof r === 'string' ? r : r.remoteName
-  );
-
-  const remotes = getRemotes(
-    remoteNames,
-    options.skipRemotes,
-    moduleFederationConfig,
-    {
-      projectName: project.name,
-      projectGraph: context.projectGraph,
-      root: context.root,
-    },
-    pathToManifestFile
-  );
-
-  options.staticRemotesPort ??= remotes.staticRemotePort;
-
-  const staticRemotesConfig = parseStaticSsrRemotesConfig(
-    [...remotes.staticRemotes, ...remotes.dynamicRemotes],
-    context
-  );
-
-  const mappedLocationsOfStaticRemotes = await buildStaticRemotes(
-    staticRemotesConfig,
-    nxBin,
-    context,
-    options
-  );
-
-  // Set NX_MF_DEV_REMOTES for the Nx Runtime Library Control Plugin
-  process.env.NX_MF_DEV_REMOTES = JSON.stringify([
-    ...(options.devRemotes ?? []),
-    project.name,
-  ]);
-
-  const devRemotes = await startRemotes(
-    remotes.devRemotes,
-    workspaceProjects,
-    options,
-    context
-  );
-
-  const staticRemotes = startStaticRemotes(
-    staticRemotesConfig,
-    context,
-    options
-  );
-
-  startSsrRemoteProxies(
-    staticRemotesConfig,
-    mappedLocationsOfStaticRemotes,
-    options.ssl
-      ? { pathToCert: options.sslCert, pathToKey: options.sslKey }
-      : undefined
-  );
+  const { remotes, staticRemotesIter, devRemoteIters } =
+    await startRemoteIterators(
+      options,
+      context,
+      startRemotes,
+      pathToManifestFile,
+      'angular',
+      true
+    );
 
   const removeBaseUrlEmission = (iter: AsyncIterable<unknown>) =>
     mapAsyncIterable(iter, (v) => ({
@@ -156,8 +88,8 @@ export async function* moduleFederationSsrDevServerExecutor(
     }));
 
   const combined = combineAsyncIterables(
-    removeBaseUrlEmission(staticRemotes),
-    ...(devRemotes ? devRemotes.map(removeBaseUrlEmission) : []),
+    removeBaseUrlEmission(staticRemotesIter),
+    ...(devRemoteIters ? devRemoteIters.map(removeBaseUrlEmission) : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
         if (!options.isInitialHost) {
@@ -174,7 +106,7 @@ export async function* moduleFederationSsrDevServerExecutor(
           return;
         }
         try {
-          const portsToWaitFor = staticRemotes
+          const portsToWaitFor = staticRemotesIter
             ? [options.staticRemotesPort, ...remotes.remotePorts]
             : [...remotes.remotePorts];
           await Promise.all(
@@ -200,7 +132,7 @@ export async function* moduleFederationSsrDevServerExecutor(
       }
     )
   );
-  let refs = 2 + (devRemotes?.length ?? 0);
+  let refs = 2 + (devRemoteIters?.length ?? 0);
   for await (const result of combined) {
     if (result.success === false) throw new Error('Remotes failed to start');
     if (result.success) refs--;

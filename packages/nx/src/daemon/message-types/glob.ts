@@ -16,3 +16,21 @@ export function isHandleGlobMessage(
     message['type'] === GLOB
   );
 }
+
+export const MULTI_GLOB = 'MULTI_GLOB' as const;
+export type HandleMultiGlobMessage = {
+  type: typeof MULTI_GLOB;
+  globs: string[];
+  exclude?: string[];
+};
+
+export function isHandleMultiGlobMessage(
+  message: unknown
+): message is HandleMultiGlobMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    message['type'] === MULTI_GLOB
+  );
+}

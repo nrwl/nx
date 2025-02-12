@@ -64,7 +64,10 @@ export function createNxJson(
             ]
           : []),
         ...(targets.lint
-          ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.js']
+          ? [
+              '!{projectRoot}/.eslintrc.json',
+              '!{projectRoot}/eslint.config.cjs',
+            ]
           : []),
       ].filter(Boolean),
     },
@@ -85,7 +88,7 @@ export function createNxJson(
             inputs: [
               'default',
               '{workspaceRoot}/.eslintrc.json',
-              '{workspaceRoot}/eslint.config.js',
+              '{workspaceRoot}/eslint.config.cjs',
             ],
             cache: true,
           }

@@ -45,11 +45,16 @@ export function normalizeOptions(
    * --> If so, use that
    * --> If not, use main.ts
    */
-  const parent = !isStandalone
-    ? joinPathFragments(project.sourceRoot, 'app/app.module.ts')
-    : tree.exists(appConfigPath)
-    ? appConfigPath
-    : appMainPath;
+  const ngModulePath = joinPathFragments(
+    project.sourceRoot,
+    'app/app.module.ts'
+  );
+  const parent =
+    !isStandalone && tree.exists(ngModulePath)
+      ? ngModulePath
+      : tree.exists(appConfigPath)
+      ? appConfigPath
+      : appMainPath;
 
   options.directory = options.directory ?? '+state';
 

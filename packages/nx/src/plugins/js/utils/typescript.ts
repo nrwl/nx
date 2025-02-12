@@ -23,7 +23,7 @@ export function readTsConfig(tsConfigPath: string) {
   );
 }
 
-function readTsConfigOptions(tsConfigPath: string) {
+export function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
     tsModule = require('typescript');
   }

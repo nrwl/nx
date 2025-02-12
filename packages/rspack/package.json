@@ -26,23 +26,42 @@
   "dependencies": {
     "@nx/js": "file:../js",
     "@nx/devkit": "file:../devkit",
-    "@nx/eslint": "file:../eslint",
+    "@nx/web": "file:../web",
+    "@nx/module-federation": "file:../module-federation",
     "@phenomnomnominal/tsquery": "~5.0.1",
+    "@rspack/core": "^1.1.5",
+    "@rspack/dev-server": "^1.0.9",
+    "@rspack/plugin-react-refresh": "^1.0.0",
+    "autoprefixer": "^10.4.9",
+    "browserslist": "^4.21.4",
+    "css-loader": "^6.4.0",
+    "enquirer": "~2.3.6",
+    "express": "^4.21.2",
+    "fork-ts-checker-webpack-plugin": "7.2.13",
+    "http-proxy-middleware": "^3.0.3",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
+    "loader-utils": "^2.0.3",
+    "sass": "^1.42.1",
     "sass-loader": "^12.2.0",
-    "stylus-loader": "^7.1.0",
+    "source-map-loader": "^5.0.0",
+    "style-loader": "^3.3.0",
+    "picocolors": "^1.1.0",
+    "postcss-import": "~14.1.0",
     "postcss-loader": "^8.1.1",
-    "@rspack/core": "^1.0.4",
-    "@rspack/plugin-react-refresh": "^1.0.0",
-    "@rspack/plugin-minify": "^0.7.5",
-    "chalk": "~4.1.0"
+    "postcss": "^8.4.38",
+    "tslib": "^2.3.0",
+    "webpack": "^5.80.0",
+    "webpack-node-externals": "^3.0.0"
   },
   "peerDependencies": {
-    "@module-federation/enhanced": "~0.6.0",
-    "@module-federation/node": "~2.5.10"
+    "@module-federation/enhanced": "^0.8.8",
+    "@module-federation/node": "^2.6.21"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

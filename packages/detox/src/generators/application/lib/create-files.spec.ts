@@ -28,6 +28,7 @@ describe('Create Files', () => {
     expect(tree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
     expect(tree.exists('apps/my-app-e2e/tsconfig.json')).toBeTruthy();
     expect(tree.exists('apps/my-app-e2e/tsconfig.e2e.json')).toBeTruthy();
+    expect(tree.exists('apps/my-app-e2e/jest.config.json')).toBeTruthy();
     expect(tree.exists('apps/my-app-e2e/test-setup.ts')).toBeTruthy();
   });
 });

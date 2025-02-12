@@ -53,14 +53,13 @@ export async function addJest(
     const contents = tree.read(setupFile, 'utf-8');
     tree.write(
       setupFile,
-      `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
-globalThis.ngJest = {
-testEnvironmentOptions: {
+      contents.replace(
+        'setupZoneTestEnv();',
+        `setupZoneTestEnv({
   errorOnUnknownElements: true,
-  errorOnUnknownProperties: true,
-},
-};
-${contents}`
+  errorOnUnknownProperties: true
+});`
+      )
     );
   }
 }

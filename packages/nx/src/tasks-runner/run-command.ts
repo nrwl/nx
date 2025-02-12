@@ -34,7 +34,12 @@ import {
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
+import {
+  CompositeLifeCycle,
+  LifeCycle,
+  TaskResult,
+  TaskResults,
+} from './life-cycle';
 import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
@@ -55,6 +60,10 @@ import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
 import type { Observable } from 'rxjs';
 import { printPowerpackLicense } from '../utils/powerpack';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../project-graph/plugins/tasks-execution-hooks';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -177,23 +186,42 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
+      await runPreTasksExecution({
+        workspaceRoot,
+        nxJsonConfiguration: nxJson,
+      });
+
       const taskResults = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
         { nxJson },
-        nxArgs,
+        {
+          ...nxArgs,
+          skipNxCache:
+            nxArgs.skipNxCache ||
+            process.env.NX_SKIP_NX_CACHE === 'true' ||
+            process.env.NX_DISABLE_NX_CACHE === 'true',
+        },
         overrides,
         initiatingProject,
         extraTargetDependencies,
         extraOptions
       );
 
-      return Object.values(taskResults).some(
+      const result = Object.values(taskResults).some(
         (taskResult) =>
           taskResult.status === 'failure' || taskResult.status === 'skipped'
       )
         ? 1
         : 0;
+
+      await runPostTasksExecution({
+        taskResults,
+        workspaceRoot,
+        nxJsonConfiguration: nxJson,
+      });
+
+      return result;
     }
   );
 
@@ -209,7 +237,7 @@ export async function runCommandForTasks(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<{ [id: string]: TaskResult }> {
+): Promise<TaskResults> {
   const projectNames = projectsToRun.map((t) => t.name);
 
   const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(
@@ -304,9 +332,8 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const outOfSyncTitle = 'The workspace is out of sync';
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
-    'You can manually run `nx sync` to update your workspace with the identified changes or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks in interactive environments.';
-  const willErrorOnCiMessage =
-    'Please note that having the workspace out of sync will result in an error in CI.';
+    'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
+  const willErrorOnCiMessage = 'This will result in an error in CI.';
 
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
@@ -492,7 +519,7 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
     const promptConfig = {
       name: 'applyChanges',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to sync the identified changes to get your workspace up to date?',
       choices: [
@@ -523,7 +550,7 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   try {
     const promptConfig = {
       name: 'runTasks',
-      type: 'select',
+      type: 'autocomplete',
       message:
         'Would you like to ignore the sync failures and continue running the tasks?',
       choices: [
@@ -804,7 +831,7 @@ export function getRunner(
         title: `Custom task runners will no longer be supported in Nx 21.`,
         bodyLines: [
           `Use Nx Cloud or the Nx Powerpack caches instead.`,
-          `For more information, see https://nx.dev/features/powerpack/custom-caching`,
+          `For more information, see https://nx.dev/nx-enterprise/powerpack/custom-caching`,
         ],
       });
     }
@@ -913,8 +940,12 @@ export function getRunnerOptions(
 
   return result;
 }
+
 function isCustomRunnerPath(modulePath: string) {
-  return !['nx-cloud', '@nrwl/nx-cloud', defaultTasksRunnerPath].includes(
-    modulePath
-  );
+  return ![
+    'nx-cloud',
+    '@nrwl/nx-cloud',
+    'nx/tasks-runners/default',
+    defaultTasksRunnerPath,
+  ].includes(modulePath);
 }

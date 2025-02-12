@@ -35,7 +35,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   execSync(`pnpm nx copy-native-package-directories nx`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
-    windowsHide: true,
+    windowsHide: false,
   });
 
   // Expected to run as part of the Github `publish` workflow
@@ -45,13 +45,13 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync('find ./build -name "*.node" -delete', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
-      windowsHide: true,
+      windowsHide: false,
     });
 
     execSync('pnpm nx run-many --target=artifacts', {
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
-      windowsHide: true,
+      windowsHide: false,
     });
   }
 
@@ -69,7 +69,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
-      windowsHide: true,
+      windowsHide: false,
     });
   };
 
@@ -79,7 +79,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     isVerboseLogging = true;
 
     execSync('git status --ahead-behind', {
-      windowsHide: true,
+      windowsHide: false,
     });
 
     if (isRelativeVersionKeyword(options.version)) {
@@ -93,7 +93,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
-      windowsHide: true,
+      windowsHide: false,
     });
 
     let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
@@ -113,7 +113,7 @@ const VALID_AUTHORS_FOR_LATEST = [
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
-      windowsHide: true,
+      windowsHide: false,
     });
 
     console.log(
@@ -127,7 +127,7 @@ const VALID_AUTHORS_FOR_LATEST = [
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
-    windowsHide: true,
+    windowsHide: false,
   });
 
   const distTag = determineDistTag(options.version);
@@ -183,14 +183,14 @@ const VALID_AUTHORS_FOR_LATEST = [
   execSync(publishCommand, {
     stdio: [0, 1, 2],
     maxBuffer: LARGE_BUFFER,
-    windowsHide: true,
+    windowsHide: false,
   });
 
   if (!options.dryRun) {
     let version;
     if (['minor', 'major', 'patch'].includes(options.version)) {
       version = execSync(`npm view nx@${distTag} version`, {
-        windowsHide: true,
+        windowsHide: false,
       })
         .toString()
         .trim();
@@ -271,12 +271,12 @@ function parseArgs() {
          */
 
         const currentLatestVersion = execSync('npm view nx@latest version', {
-          windowsHide: true,
+          windowsHide: false,
         })
           .toString()
           .trim();
         const currentNextVersion = execSync('npm view nx@next version', {
-          windowsHide: true,
+          windowsHide: false,
         })
           .toString()
           .trim();
@@ -309,7 +309,7 @@ function parseArgs() {
 
         // Get the current short git sha
         const gitSha = execSync('git rev-parse --short HEAD', {
-          windowsHide: true,
+          windowsHide: false,
         })
           .toString()
           .trim();
@@ -382,7 +382,7 @@ function parseArgs() {
 function getRegistry() {
   return new URL(
     execSync('npm config get registry', {
-      windowsHide: true,
+      windowsHide: false,
     })
       .toString()
       .trim()
@@ -421,7 +421,7 @@ function determineDistTag(
   }
 
   const currentLatestVersion = execSync('npm view nx version', {
-    windowsHide: true,
+    windowsHide: false,
   })
     .toString()
     .trim();

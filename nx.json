@@ -16,7 +16,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
       "{workspaceRoot}/.nx/workflows/agents.yaml",
-      "{workspaceRoot}/.circleci/config.yml"
+      "{workspaceRoot}/.github/workflows/ci.yml"
     ],
     "native": [
       "{projectRoot}/**/*.rs",
@@ -147,7 +147,7 @@
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--**/*": {
+    "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
       "parallelism": false,
       "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
@@ -239,17 +239,57 @@
         "devTargetName": "dev",
         "serveStaticTargetName": "serve-static"
       }
-    }
+    },
+    "@nx/powerpack-enterprise-cloud"
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "cacheDirectory": "/tmp/nx-cache",
-  "bust": 8,
+  "bust": 4,
   "defaultBase": "master",
-  "generators": {
-    "@nx/react": {
-      "library": {}
-    }
+  "conformance": {
+    "rules": [
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "blog/**/*.md"
+        }
+      },
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
+        "projects": [
+          "!.",
+          "!create-nx-*",
+          "!cypress",
+          "!detox",
+          "!devkit",
+          "!esbuild",
+          "!eslint-plugin",
+          "!eslint",
+          "!expo",
+          "!express",
+          "!jest",
+          "!js",
+          "!module-federation",
+          "!nest",
+          "!next",
+          "!node",
+          "!nuxt",
+          "!packages/nx/**",
+          "!plugin",
+          "!react-native",
+          "!react",
+          "!rollup",
+          "!rsbuild",
+          "!rspack",
+          "!storybook",
+          "!vue",
+          "!web",
+          "!webpack",
+          "!workspace"
+        ]
+      }
+    ]
   }
 }

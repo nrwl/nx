@@ -70,7 +70,7 @@ function installDependencies(options: NormalizedOptions) {
 
   execSync(`${options.pmc.addDev} ${dependencies.join(' ')}`, {
     stdio: [0, 1, 2],
-    windowsHide: true,
+    windowsHide: false,
   });
 }
 
@@ -88,7 +88,7 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
   };
   const isCRA5 = /^[^~]?5/.test(deps['react-scripts']);
   const npmVersion = execSync('npm -v', {
-    windowsHide: true,
+    windowsHide: false,
   }).toString();
   // Should remove this check 04/2023 once Node 14 & npm 6 reach EOL
   const npxYesFlagNeeded = !npmVersion.startsWith('6'); // npm 7 added -y flag to npx
@@ -131,11 +131,11 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   execSync(`echo "node_modules" >> .gitignore`, {
     stdio: [0, 1, 2],
-    windowsHide: true,
+    windowsHide: false,
   });
   execSync(`echo "dist" >> .gitignore`, {
     stdio: [0, 1, 2],
-    windowsHide: true,
+    windowsHide: false,
   });
 
   process.chdir('..');
@@ -177,7 +177,7 @@ function createTempWorkspace(options: NormalizedOptions) {
     } ${
       options.addE2e ? '--e2eTestRunner=playwright' : '--e2eTestRunner=none'
     }`,
-    { stdio: [0, 1, 2], windowsHide: true }
+    { stdio: [0, 1, 2], windowsHide: false }
   );
 
   output.log({ title: '👋 Welcome to Nx!' });
@@ -330,7 +330,7 @@ async function addBundler(options: NormalizedOptions) {
 
     execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, {
       stdio: [0, 1, 2],
-      windowsHide: true,
+      windowsHide: false,
     });
   }
 }

@@ -1,26 +1,206 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`app --minimal should create default application without Nx welcome component 1`] = `
-"
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import styles from './app.module.css';
+exports[`app --bundler=rsbuild should generate valid rsbuild config files for @emotion/styled 1`] = `
+"import styled from '@emotion/styled';
+import NxWelcome from "./nx-welcome";
 
-
+const StyledApp = styled.div\`
+    // Your style here
+\`;
 
 export function App() {
+  return (
+    <StyledApp>
+      <NxWelcome title="my-app"/>
+    </StyledApp>
+  );
+}
 
+export default App;
+
+"
+`;
+
+exports[`app --bundler=rsbuild should generate valid rsbuild config files for @emotion/styled 2`] = `
+"import { pluginReact } from '@rsbuild/plugin-react';
+  import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+	html: {
+		template: './src/index.html'
+	},	
+	tools: {
+		swc: {
+			jsc: {
+				experimental: {
+					plugins: [
+						['@swc/plugin-emotion', {}],
+					], 
+				},
+			},
+		},
+	},
+	plugins: [pluginReact(swcReactOptions: {
+		importSource: '@emotion/react',
+	})],
+	
+    source: {
+        entry: {
+            index: './src/main.tsx'
+        },
+        tsconfigPath: './tsconfig.app.json',
+    },
+    server: {
+        port: 4200
+    },
+    output: {
+		copy: [
+		{ from: './src/favicon.ico' },
+		{ from: './src/assets' }],
+	
+        target: 'web',
+        distPath: {
+            root: 'dist',
+        },
+    }
+});
+"
+`;
+
+exports[`app --bundler=rsbuild should generate valid rsbuild config files for styled-components 1`] = `
+"import styled from 'styled-components';
+import NxWelcome from "./nx-welcome";
+
+const StyledApp = styled.div\`
+    // Your style here
+\`;
+
+export function App() {
+  return (
+    <StyledApp>
+      <NxWelcome title="my-app"/>
+    </StyledApp>
+  );
+}
+
+export default App;
+
+"
+`;
+
+exports[`app --bundler=rsbuild should generate valid rsbuild config files for styled-components 2`] = `
+"import { pluginStyledComponents } from '@rsbuild/plugin-styled-components';
+  import { pluginReact } from '@rsbuild/plugin-react';
+  import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+	html: {
+		template: './src/index.html'
+	},	
+	plugins: [
+		pluginReact(),
+		pluginStyledComponents()
+	],
+	
+    source: {
+        entry: {
+            index: './src/main.tsx'
+        },
+        tsconfigPath: './tsconfig.app.json',
+    },
+    server: {
+        port: 4200
+    },
+    output: {
+		copy: [
+		{ from: './src/favicon.ico' },
+		{ from: './src/assets' }],
+	
+        target: 'web',
+        distPath: {
+            root: 'dist',
+        },
+    }
+});
+"
+`;
+
+exports[`app --bundler=rsbuild should generate valid rsbuild config files for styled-jsx 1`] = `
+"import NxWelcome from "./nx-welcome";
+
+export function App() {
   return (
     <div>
-      
+      <style jsx>{\`/** your style here **/\`}</style>
+      <NxWelcome title="my-app"/>
+    </div>
+  );
+}
+
+export default App;
+
+
+"
+`;
+
+exports[`app --bundler=rsbuild should generate valid rsbuild config files for styled-jsx 2`] = `
+"import { pluginReact } from '@rsbuild/plugin-react';
+  import { defineConfig } from '@rsbuild/core';
+
+export default defineConfig({
+	html: {
+		template: './src/index.html'
+	},	
+	tools: {
+		swc: {
+			jsc: {
+				experimental: {
+					plugins: [
+						['@swc/plugin-styled-jsx', {}],
+					], 
+				},
+			},
+		},
+	},
+	plugins: [pluginReact()],
+	
+    source: {
+        entry: {
+            index: './src/main.tsx'
+        },
+        tsconfigPath: './tsconfig.app.json',
+    },
+    server: {
+        port: 4200
+    },
+    output: {
+		copy: [
+		{ from: './src/favicon.ico' },
+		{ from: './src/assets' }],
+	
+        target: 'web',
+        distPath: {
+            root: 'dist',
+        },
+    }
+});
+"
+`;
+
+exports[`app --minimal should create default application without Nx welcome component 1`] = `
+"// Uncomment this line to use CSS modules
+// import styles from './app.module.css';
+
+export function App() {
+  return (
+    <div>
       <h1>
         <span> Hello there, </span>
         Welcome plain 👋
       </h1>
-     
-    </div>);
-
+    </div>
+  );
 }
-
 
 export default App;
 
@@ -36,16 +216,15 @@ if (import.meta.vitest) {
     render = (await import('@testing-library/react')).render;
   });
 
-  
-it('should render successfully', () => {
-  const { baseElement } = render(<App />);
-  expect(baseElement).toBeTruthy();
-});
+  it('should render successfully', () => {
+    const { baseElement } = render(<App />);
+    expect(baseElement).toBeTruthy();
+  });
 
-it('should have a greeting as the title', () => {
-  const { getByText } = render(<App />);
-  expect(getByText(/Welcome plain/gi)).toBeTruthy();
-});
+  it('should have a greeting as the title', () => {
+    const { getAllByText } = render(<App />);
+    expect(getAllByText(new RegExp('Welcome plain', 'gi')).length > 0).toBeTruthy();
+  });
 
 }
  
@@ -53,8 +232,7 @@ it('should have a greeting as the title', () => {
 `;
 
 exports[`app --style @emotion/styled should exclude styles 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -89,7 +267,6 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;
 
@@ -100,7 +277,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
@@ -124,13 +301,12 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 
 exports[`app --style none should exclude styles 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -165,7 +341,6 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;
 
@@ -176,7 +351,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
@@ -200,7 +375,41 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
+"
+`;
+
+exports[`app --style scss should generate scss styles 1`] = `
+"// Uncomment this line to use CSS modules
+// import styles from './app.module.scss';
+import NxWelcome from "./nx-welcome";
+
+export function App() {
+  return (
+    <div>
+      <NxWelcome title="my-app"/>
+    </div>
+  );
+}
+
+export default App;
+
+
+"
+`;
+
+exports[`app --style tailwind should not generate any styles files 1`] = `
+"import NxWelcome from './nx-welcome';
+
+export function App() {
+  return (
+    <div>
+      <NxWelcome title="my-app" />
+    </div>
+  );
+}
+
+export default App;
 "
 `;
 
@@ -211,14 +420,14 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  server:{
+  server: {
     port: 4200,
     host: 'localhost',
   },
-  preview:{
+  preview: {
     port: 4300,
     host: 'localhost',
   },
@@ -243,17 +452,16 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
+      provider: 'v8' as const,
+    },
   },
-});
+}));
 "
 `;
 
 exports[`app not nested should generate files 1`] = `
-"// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import styles from './app.module.css';
-
+"// Uncomment this line to use CSS modules
+// import styles from './app.module.css';
 import NxWelcome from './nx-welcome';
 
 export function App() {
@@ -275,14 +483,14 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
-  server:{
+  server: {
     port: 4200,
     host: 'localhost',
   },
-  preview:{
+  preview: {
     port: 4300,
     host: 'localhost',
   },
@@ -307,18 +515,17 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
-    }
+      provider: 'v8' as const,
+    },
   },
-});
+}));
 "
 `;
 
 exports[`app setup React app with --bundler=vite should setup targets with vite configuration 1`] = `null`;
 
 exports[`app should add custom webpack config 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -353,33 +560,84 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;
 
 exports[`app should create Nx specific template 1`] = `
-"
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import styles from './app.module.css';
-
+"// Uncomment this line to use CSS modules
+// import styles from './app.module.css';
 import NxWelcome from "./nx-welcome";
 
-
-
 export function App() {
-
   return (
     <div>
-      
       <NxWelcome title="my-app"/>
-     
-    </div>);
-
+    </div>
+  );
 }
-
 
 export default App;
 
+
+"
+`;
+
+exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 1`] = `
+"import styled from 'styled-components';
+import NxWelcome from "./nx-welcome";
+
+const StyledApp = styled.div\`
+    // Your style here
+\`;
+
+export function App() {
+  return (
+    <StyledApp>
+      <NxWelcome title="my-app"/>
+    </StyledApp>
+  );
+}
+
+export default App;
+
+"
+`;
+
+exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 2`] = `
+"import NxWelcome from "./nx-welcome";
+
+export function App() {
+  return (
+    <div>
+      <style jsx>{\`/** your style here **/\`}</style>
+      <NxWelcome title="my-app"/>
+    </div>
+  );
+}
+
+export default App;
+
+
+"
+`;
+
+exports[`app should generate valid .babelrc JSON config for CSS-in-JS solutions 3`] = `
+"import styled from '@emotion/styled';
+import NxWelcome from "./nx-welcome";
+
+const StyledApp = styled.div\`
+    // Your style here
+\`;
+
+export function App() {
+  return (
+    <StyledApp>
+      <NxWelcome title="my-app"/>
+    </StyledApp>
+  );
+}
+
+export default App;
 
 "
 `;
@@ -391,7 +649,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
@@ -415,13 +673,12 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 
 exports[`app should setup webpack 1`] = `
-"
-const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+"const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
 
@@ -456,6 +713,5 @@ module.exports = {
     }),
   ],
 };
-
 "
 `;

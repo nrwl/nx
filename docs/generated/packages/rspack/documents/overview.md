@@ -77,18 +77,12 @@ npm add -D @nx/rspack
 
 ### Generate a new project using Rspack
 
-You can generate a [React](/nx-api/react) application or library that uses Rspack. The [`@nx/react:app`](/nx-api/react/generators/application) and [`@nx/react:lib`](/nx-api/react/generators/library) generators accept the `bundler` option, where you can pass `rspack`. This will generate a new application configured to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
+You can generate a [React](/nx-api/react) application that uses Rspack. The [`@nx/react:app`](/nx-api/react/generators/application) generator accepts the `bundler` option, where you can pass `rspack`. This will generate a new application configured to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
 
 To generate a React application using Rspack, run the following:
 
 ```bash
 nx g @nx/react:app my-app --bundler=rspack
-```
-
-To generate a React library using Rspack, run the following:
-
-```bash
-nx g @nx/react:lib my-lib --bundler=rspack
 ```
 
 ### Modify an existing React project to use Rspack

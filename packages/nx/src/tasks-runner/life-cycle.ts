@@ -1,12 +1,20 @@
 import { TaskStatus } from './tasks-runner';
 import { Task } from '../config/task-graph';
 
+/**
+ * The result of a completed {@link Task}
+ */
 export interface TaskResult {
   task: Task;
   status: TaskStatus;
   code: number;
   terminalOutput?: string;
 }
+
+/**
+ * A map of {@link TaskResult} keyed by the ID of the completed {@link Task}s
+ */
+export type TaskResults = Record<string, TaskResult>;
 
 export interface TaskMetadata {
   groupId: number;

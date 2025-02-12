@@ -1,11 +1,17 @@
 import { NormalizedSchema } from './normalize-options';
 import {
   addProjectConfiguration,
+  joinPathFragments,
   ProjectConfiguration,
   readNxJson,
   Tree,
+  writeJson,
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { nextVersion } from '../../../utils/versions';
+import { reactDomVersion, reactVersion } from '@nx/react';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
@@ -56,13 +62,6 @@ export function addProject(host: Tree, options: NormalizedSchema) {
         },
       },
     };
-
-    targets.export = {
-      executor: '@nx/next:export',
-      options: {
-        buildTarget: `${options.projectName}:build:production`,
-      },
-    };
   }
 
   const project: ProjectConfiguration = {
@@ -73,7 +72,26 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-  });
+  if (isUsingTsSolutionSetup(host)) {
+    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
+      name: getImportPath(host, options.name),
+      version: '0.0.1',
+      private: true,
+      dependencies: {
+        next: nextVersion,
+        react: reactVersion,
+        'react-dom': reactDomVersion,
+      },
+      nx: {
+        name: options.name,
+        projectType: 'application',
+        sourceRoot: options.appProjectRoot,
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.projectName, {
+      ...project,
+    });
+  }
 }

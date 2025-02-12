@@ -1,6 +1,7 @@
 name: 🐞 Bug Report
 description: This form is to report unexpected behavior in Nx.
 labels: ["type: bug"]
+type: Bug
 body:
   - type: markdown
     attributes:

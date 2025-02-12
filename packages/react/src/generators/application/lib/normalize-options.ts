@@ -6,6 +6,8 @@ import {
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function normalizeDirectory(options: Schema) {
   options.directory = options.directory?.replace(/\\{1,2}/g, '/');
@@ -56,10 +58,13 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   assertValidStyle(options.style);
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const normalized = {
     ...options,
-    name: names(options.name).fileName,
-    projectName: appProjectName,
+    name: appProjectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(host, appProjectName)
+      : appProjectName,
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
@@ -67,6 +72,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
+    isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;

@@ -55,32 +55,43 @@ describe('Extra Nx Misc Tests', () => {
       const nxJson = readJson('nx.json');
       nxJson.plugins = ['./tools/plugin'];
       updateFile('nx.json', JSON.stringify(nxJson));
+      updateFile('test/project.txt', 'plugin-node');
+      updateFile('test2/project.txt', 'plugin-node2');
+      updateFile('test2/dependencies.txt', 'plugin-node');
       updateFile(
         'tools/plugin.js',
         `
+      const { readFileSync } = require('fs');
+      const { dirname } = require('path');
       module.exports = {
-        processProjectGraph: (graph) => {
-          const Builder = require('@nx/devkit').ProjectGraphBuilder;
-          const builder = new Builder(graph);
-          builder.addNode({
-            name: 'plugin-node',
-            type: 'lib',
-            data: {
-              root: 'test'
+        createNodesV2: ['**/project.txt', (configFiles) => {
+          const results = [];
+          for (const configFile of configFiles) {
+            const name = readFileSync(configFile, 'utf8');
+            results.push([configFile, {
+              projects: {
+                [dirname(configFile)]: {
+                  name: name,
+                }
+              }
+            }]);
+          }
+          
+          return results;
+        }],
+        createDependencies: () => {
+          return [
+            {
+              
+              source: 'plugin-node',
+              /**
+               * The name of a {@link ProjectGraphProjectNode} that the source project depends on
+               */
+              target: 'plugin-node2',
+            
+              type: 'implicit'
             }
-          });
-          builder.addNode({
-            name: 'plugin-node2',
-            type: 'lib',
-            data: {
-              root: 'test2'
-            }
-          });
-          builder.addImplicitDependency(
-            'plugin-node',
-            'plugin-node2'
-          );
-          return builder.getUpdatedProjectGraph();
+          ];
         }
       };
     `

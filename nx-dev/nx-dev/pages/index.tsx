@@ -1,15 +1,20 @@
-import { CallToAction, DefaultLayout, TrustedBy } from '@nx/nx-dev/ui-common';
+import { CallToAction, DefaultLayout } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import {
   CiForMonorepos,
   Hero,
+  HetznerCloudTestimonial,
+  MonorepoAiSupport,
   SmarterToolsForMonorepos,
   Statistics,
   TeamAndCommunity,
   WorkBetterAchieveMoreShipQuicker,
 } from '@nx/nx-dev/ui-home';
+import { contactButton } from '../lib/components/headerCtaConfigs';
 
 export default function Index(): JSX.Element {
+  const headerCTAConfig = [contactButton];
+
   return (
     <>
       <NextSeo
@@ -34,13 +39,16 @@ export default function Index(): JSX.Element {
         }}
       />
       <h1 className="sr-only">Build system with advanced CI capabilities.</h1>
-      <DefaultLayout isHome>
+      <DefaultLayout isHome headerCTAConfig={headerCTAConfig}>
         <Hero />
         <div className="mt-16 lg:-mt-32">
           <Statistics />
         </div>
         <div className="mt-32 lg:mt-56">
-          <TrustedBy />
+          <HetznerCloudTestimonial />
+        </div>
+        <div className="mt-32 lg:mt-56">
+          <MonorepoAiSupport />
         </div>
         <div className="mt-32 lg:mt-56">
           <CiForMonorepos />

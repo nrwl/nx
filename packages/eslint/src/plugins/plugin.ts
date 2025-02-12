@@ -21,7 +21,7 @@ import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
 import {
   baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
+  BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
@@ -34,7 +34,18 @@ export interface EslintPluginOptions {
   extensions?: string[];
 }
 
-const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
+const DEFAULT_EXTENSIONS = [
+  'ts',
+  'cts',
+  'mts',
+  'tsx',
+  'js',
+  'cjs',
+  'mjs',
+  'jsx',
+  'html',
+  'vue',
+];
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const ESLINT_CONFIG_GLOB_V1 = combineGlobPatterns(
   ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`)
@@ -405,7 +416,7 @@ function getProjectUsingESLintConfig(
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
-    baseEsLintFlatConfigFile,
+    ...BASE_ESLINT_CONFIG_FILENAMES,
     ...ESLINT_CONFIG_FILENAMES,
   ].find((f) => existsSync(join(context.workspaceRoot, f)));
 

@@ -7,6 +7,7 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -14,6 +15,7 @@ import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
 import { Schema } from './schema';
+const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
@@ -70,6 +72,7 @@ describe('lib', () => {
   it('should add vite types to tsconfigs', async () => {
     await libraryGenerator(tree, {
       ...defaultSchema,
+      skipFormat: false,
       bundler: 'vite',
       unitTestRunner: 'vitest',
     });
@@ -383,6 +386,8 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, style: 'scss' });
 
       expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeTruthy();
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -408,6 +413,24 @@ describe('lib', () => {
       expect(content).not.toContain('app.scss');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
+
+      expect(content).toMatchSnapshot();
+    });
+  });
+
+  describe('--style tailwind', () => {
+    it('should not generate any styles file when style is tailwind', async () => {
+      await libraryGenerator(tree, { ...defaultSchema, style: 'none' });
+
+      expect(tree.exists('my-lib/src/lib/my-lib.tsx')).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
+      expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
+      expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
+
+      const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -515,7 +538,37 @@ describe('lib', () => {
         buildable: true,
       });
 
-      expect(tree.exists('my-lib/rollup.config.js')).toBeTruthy();
+      expect(tree.read('my-lib/rollup.config.cjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { withNx } = require('@nx/rollup/with-nx');
+        const url = require('@rollup/plugin-url');
+        const svg = require('@svgr/rollup');
+
+        module.exports = withNx(
+          {
+            main: './src/index.ts',
+            outputPath: '../dist/my-lib',
+            tsConfig: './tsconfig.lib.json',
+            compiler: 'babel',
+            external: ["react","react-dom","react/jsx-runtime"],
+            format: ['esm'],
+            assets:[{ input: '.', output: '.', glob: 'README.md'}],
+          }, {
+            // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+            plugins: [
+              svg({
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              }),
+              url({
+                limit: 10000, // 10kB
+              }),
+            ],
+          }
+        );
+        "
+      `);
     });
   });
 
@@ -556,7 +609,7 @@ describe('lib', () => {
         importPath: '@proj/my-lib',
       });
 
-      expect(tree.read('my-lib/rollup.config.js', 'utf-8'))
+      expect(tree.read('my-lib/rollup.config.cjs', 'utf-8'))
         .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
 const url = require('@rollup/plugin-url');
 const svg = require('@svgr/rollup');
@@ -874,4 +927,353 @@ module.exports = withNx(
       });
     }
   );
+
+  describe('TS solution setup', () => {
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*', 'libs/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        directory: 'libs/mylib',
+      });
+
+      expect(tree.read('libs/mylib/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import dts from 'vite-plugin-dts';
+        import * as path from 'path';
+
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../../node_modules/.vite/libs/mylib',
+          plugins: [react(), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          // Configuration for building your library.
+          // See: https://vitejs.dev/guide/build.html#library-mode
+          build: {
+            outDir: './dist',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            lib: {
+              // Could also be a dictionary or array of multiple entry points.
+              entry: 'src/index.ts',
+              name: '@proj/mylib',
+              fileName: 'index',
+              // Change this to the formats you want to support.
+              // Don't forget to update your package.json as well.
+              formats: ['es']
+            },
+            rollupOptions: {
+              // External packages that should not be bundled into your library.
+              external: ['react','react-dom','react/jsx-runtime']
+            },
+          },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: './test-output/vitest/coverage',
+              provider: 'v8' as const,
+            }
+          },
+        }));
+        "
+      `);
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./libs/mylib",
+          },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'libs/mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "type",
+          "main",
+          "module",
+          "types",
+          "exports",
+        ]
+      `);
+      expect(readJson(tree, 'libs/mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'libs/mylib/tsconfig.lib.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/mylib",
+            "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+              "vite/client",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "**/*.spec.ts",
+            "**/*.test.ts",
+            "**/*.spec.tsx",
+            "**/*.test.tsx",
+            "**/*.spec.js",
+            "**/*.test.js",
+            "**/*.spec.jsx",
+            "**/*.test.jsx",
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'libs/mylib/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/vitest",
+            "types": [
+              "vitest/globals",
+              "vitest/importMeta",
+              "vite/client",
+              "node",
+              "vitest",
+            ],
+          },
+          "extends": "../../tsconfig.base.json",
+          "include": [
+            "vite.config.ts",
+            "vite.config.mts",
+            "vitest.config.ts",
+            "vitest.config.mts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should map non-buildable libraries to source', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        directory: 'libs/mylib',
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'none',
+        unitTestRunner: 'none',
+        directory: 'libs/myjslib',
+        js: true,
+      });
+
+      expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/mylib",
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
+      expect(readJson(tree, 'libs/myjslib/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": "./src/index.js",
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.js",
+          "name": "@proj/myjslib",
+          "types": "./src/index.js",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should configure rollup correctly', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        unitTestRunner: 'none',
+        directory: 'libs/mylib',
+      });
+
+      expect(tree.read('libs/mylib/rollup.config.cjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { withNx } = require('@nx/rollup/with-nx');
+        const url = require('@rollup/plugin-url');
+        const svg = require('@svgr/rollup');
+
+        module.exports = withNx(
+          {
+            main: './src/index.ts',
+            outputPath: './dist',
+            tsConfig: './tsconfig.lib.json',
+            compiler: 'babel',
+            external: ["react","react-dom","react/jsx-runtime"],
+            format: ['esm'],
+            assets:[{ input: '.', output: '.', glob: 'README.md'}],
+          }, {
+            // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+            plugins: [
+              svg({
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              }),
+              url({
+                limit: 10000, // 10kB
+              }),
+            ],
+          }
+        );
+        "
+      `);
+    });
+
+    it('should configure files for publishable library', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        directory: 'libs/mylib',
+        publishable: true,
+        importPath: '@acme/mylib',
+      });
+
+      expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "default": "./dist/index.esm.js",
+              "import": "./dist/index.esm.js",
+              "types": "./dist/index.esm.d.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "files": [
+            "dist",
+            "!**/*.tsbuildinfo",
+          ],
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "name": "@acme/mylib",
+          "type": "module",
+          "types": "./dist/index.esm.d.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should add project to workspaces when using TS solution', async () => {
+      tree.write('pnpm-workspace.yaml', `packages:`);
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        unitTestRunner: 'none',
+        directory: 'mylib',
+        name: 'mylib',
+      });
+      const pnpmContent = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const pnpmWorkspaceFile = load(pnpmContent);
+
+      expect(pnpmWorkspaceFile.packages).toEqual(['mylib']);
+    });
+  });
 });

@@ -11,8 +11,8 @@ import {
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 import { CommandModule } from 'yargs';
+import { stripVTControlCharacters } from 'node:util';
 
-const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
 
 export function sortAlphabeticallyFunction(a: string, b: string): number {
@@ -45,7 +45,10 @@ export async function generateMarkdownFile(
   const filePath = join(outputDirectory, `${templateObject.name}.md`);
   outputFileSync(
     filePath,
-    await formatWithPrettier(filePath, stripAnsi(templateObject.template))
+    await formatWithPrettier(
+      filePath,
+      stripVTControlCharacters(templateObject.template)
+    )
   );
 }
 
@@ -148,7 +151,7 @@ export function getCommands(command: any) {
 }
 
 export interface ParsedCommandOption {
-  name: string;
+  name: string[];
   type: string;
   description: string;
   default: string;
@@ -228,7 +231,7 @@ export async function parseCommand(
     deprecated: command.deprecated,
     options:
       Object.keys(builderDescriptions).map((key) => ({
-        name: key,
+        name: [key, ...(builderOptions.alias[key] || [])],
         description: builderDescriptions[key]
           ? builderDescriptions[key].replace('__yargsString__:', '')
           : '',
@@ -256,12 +259,15 @@ export function generateOptionsMarkdown(
   ];
   if (Array.isArray(command.options) && !!command.options.length) {
     command.options
-      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .sort((a, b) => sortAlphabeticallyFunction(a.name[0], b.name[0]))
       .filter(({ hidden }) => !hidden)
       .forEach((option) => {
+        function nameAliases(aliases) {
+          return aliases.map((alias) => code('--' + alias)).join(', ');
+        }
         const name = option.deprecated
-          ? strikethrough(code('--' + option.name))
-          : code('--' + option.name);
+          ? strikethrough(nameAliases(option.name))
+          : nameAliases(option.name);
         let description = formatDescription(
           option.description,
           option.deprecated
@@ -279,9 +285,9 @@ export function generateOptionsMarkdown(
           )}\`)`;
         }
         if (
-          (option.name === 'version' &&
+          (option.name[0] === 'version' &&
             option.description === 'Show version number') ||
-          (option.name === 'help' && option.description === 'Show help')
+          (option.name[0] === 'help' && option.description === 'Show help')
         ) {
           // Add . to the end of the built-in description for consistency with our other descriptions
           description = `${description}.`;

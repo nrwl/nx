@@ -7,6 +7,7 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
+import { WebinarNotifier } from '@nx/nx-dev/ui-common';
 
 export default function CustomApp({
   Component,
@@ -14,12 +15,37 @@ export default function CustomApp({
 }: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
+  // RB2B ---------
+  const SCRIPT_ID = 'external-js-script';
+  const SCRIPT_BASE_URL = 'https://s3-us-west-2.amazonaws.com/b2bjsstore/b/';
+  const SCRIPT_KEY = '0NW1GH7YJ4O4'; //
+  const SCRIPT_URL = `${SCRIPT_BASE_URL}${SCRIPT_KEY}/${SCRIPT_KEY}.js.gz`;
+  useEffect(() => {
+    const handleRouteChange = () => {
+      const existingScript = document.getElementById(SCRIPT_ID);
+      if (existingScript) {
+        existingScript.remove();
+      }
+      const script = document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.src = SCRIPT_URL;
+      script.async = true;
+      document.body.appendChild(script);
+    };
+    router.events.on('routeChangeComplete', handleRouteChange);
+    handleRouteChange();
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router.events, SCRIPT_URL]);
+  // ---------
+
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
       sendPageViewEvent({ gaId: gaMeasurementId, path: url.toString() });
     router.events.on('routeChangeStart', (url) => handleRouteChange(url));
     return () => router.events.off('routeChangeStart', handleRouteChange);
-  }, [router]);
+  }, [router.events, gaMeasurementId]);
   return (
     <>
       <DefaultSeo
@@ -79,6 +105,8 @@ export default function CustomApp({
         Skip to content
       </Link>
       <Component {...pageProps} />
+      {/* <LiveStreamNotifier /> */}
+      <WebinarNotifier />
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script

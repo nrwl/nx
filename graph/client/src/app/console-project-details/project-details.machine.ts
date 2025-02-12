@@ -12,6 +12,7 @@ export interface ProjectDetailsState {
   sourceMap: null | Record<string, string[]>;
   errors?: GraphError[];
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
 }
 
 export type ProjectDetailsEvents = {
@@ -20,6 +21,7 @@ export type ProjectDetailsEvents = {
   sourceMap: Record<string, string[]>;
   connectedToCloud: boolean;
   errors?: GraphError[];
+  disabledTaskSyncGenerators?: string[];
 };
 
 const initialContext: ProjectDetailsState = {
@@ -50,6 +52,7 @@ export const projectDetailsMachine = createMachine<
             ctx.sourceMap = event.sourceMap;
             ctx.connectedToCloud = event.connectedToCloud;
             ctx.errors = event.errors;
+            ctx.disabledTaskSyncGenerators = event.disabledTaskSyncGenerators;
           }),
         ],
       },

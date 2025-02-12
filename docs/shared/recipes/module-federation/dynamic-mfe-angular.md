@@ -41,10 +41,9 @@ To start with, we need to create a new Nx Workspace and add the Nx Angular plugi
 {% tabs %}
 {% tab label="npm" %}
 
-```{% command="npx create-nx-workspace@latest ng-mf" path="~/" %}
+```{% command="npx create-nx-workspace@latest ng-mf --preset=apps" path="~/" %}
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Which stack do you want to use? · none
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 
@@ -60,10 +59,9 @@ npx nx add @nx/angular
 {% /tab %}
 {% tab label="yarn" %}
 
-```{% command="yarn create nx-workspace ng-mf" path="~/" %}
+```{% command="yarn create nx-workspace ng-mf --preset=apps" path="~/" %}
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Which stack do you want to use? · none
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 
@@ -79,10 +77,9 @@ yarn nx add @nx/angular
 {% /tab %}
 {% tab label="pnpm" %}
 
-```{% command="pnpx create-nx-workspace@latest ng-mf" path="~/" %}
+```{% command="pnpx create-nx-workspace@latest ng-mf --preset=apps" path="~/" %}
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Which stack do you want to use? · none
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 

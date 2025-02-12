@@ -48,7 +48,9 @@ describe('Vite Plugin', () => {
 
       beforeAll(() => {
         myApp = uniq('my-app');
-        runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
+        runCLI(
+          `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
+        );
       });
 
       afterEach(() => {
@@ -95,7 +97,7 @@ describe('Vite Plugin', () => {
       beforeEach(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp}`
+          `generate @nx/web:app ${myApp} --bundler=vite --unitTestRunner=vitest --directory=${myApp}`
         );
       });
       it('should build application', async () => {
@@ -187,7 +189,7 @@ describe('Vite Plugin', () => {
         packages: ['@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app}`
+        `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=vitest --no-interactive  --directory=${app}`
       );
 
       // only this project will be directly used from dist
@@ -239,14 +241,14 @@ export default App;
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
       expect(results).toContain('Successfully ran target build for project');
       // this should be more modules than build from dist
-      expect(results).toContain('40 modules transformed');
+      expect(results).toContain('38 modules transformed');
     });
 
     it('should build app from libs dist', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=false`);
       expect(results).toContain('Successfully ran target build for project');
       // this should be less modules than building from source
-      expect(results).toContain('38 modules transformed');
+      expect(results).toContain('36 modules transformed');
     });
 
     it('should build app from libs without package.json in lib', () => {

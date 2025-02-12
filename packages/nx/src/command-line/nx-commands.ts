@@ -123,7 +123,7 @@ function createMissingConformanceCommand(
         bodyLines: [
           `In order to use the \`nx ${command}\` command you must have an active Powerpack license and the \`@nx/powerpack-conformance\` plugin installed.`,
           '',
-          'To learn more, visit https://nx.dev/features/powerpack/conformance',
+          'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
         ],
       });
       process.exit(1);

@@ -1,0 +1,13 @@
+{
+  "name": "19-2-4-set-project-name",
+  "version": "19.2.4-beta.0",
+  "description": "Set project name in nx.json explicitly",
+  "implementation": "/packages/nx/src/migrations/update-19-2-4/set-project-name.ts",
+  "x-repair-skip": true,
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

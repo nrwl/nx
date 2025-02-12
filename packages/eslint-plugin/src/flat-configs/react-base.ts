@@ -1,4 +1,3 @@
-import { fixupPluginRules } from '@eslint/compat';
 import * as importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -19,7 +18,17 @@ import tseslint from 'typescript-eslint';
  * https://github.com/facebook/create-react-app/blob/567f36c9235f1e1fd4a76dc6d1ae00be754ca047/packages/eslint-config-react-app/index.js
  */
 export default tseslint.config({
-  plugins: { import: fixupPluginRules(importPlugin) },
+  files: [
+    '**/*.ts',
+    '**/*.cts',
+    '**/*.mts',
+    '**/*.tsx',
+    '**/*.js',
+    '**/*.cjs',
+    '**/*.mjs',
+    '**/*.jsx',
+  ],
+  plugins: { import: importPlugin },
   languageOptions: {
     globals: {
       ...globals.browser,

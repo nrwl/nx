@@ -1,0 +1,18 @@
+{
+  "name": "20.4.0-@typescript-eslint-package-updates",
+  "version": "20.4.0-beta.1",
+  "requires": { "@typescript-eslint/eslint-plugin": ">8.0.0 <8.19.0" },
+  "packages": {
+    "typescript-eslint": { "version": "^8.19.0" },
+    "@typescript-eslint/parser": { "version": "^8.19.0" },
+    "@typescript-eslint/eslint-plugin": { "version": "^8.19.0" },
+    "@typescript-eslint/utils": { "version": "^8.19.0" }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/eslint",
+  "schema": null,
+  "type": "migration"
+}

@@ -16,6 +16,9 @@ export interface Schema {
   bundler: 'webpack' | 'vite'; // default is webpack
   install: boolean; // default is true
   skipPackageJson?: boolean; //default is false
+  // Internal options
   addPlugin?: boolean;
   nxCloudToken?: string;
+  useTsSolution?: boolean;
+  formatter?: 'prettier' | 'none';
 }

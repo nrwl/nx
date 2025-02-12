@@ -8,19 +8,17 @@
   "properties": {
     "path": {
       "type": "string",
-      "description": "Path where the component will be generated.",
+      "description": "The file path to the component. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Where should the component be generated?",
+      "x-prompt": "What is the component file path?",
       "x-priority": "important"
     },
     "name": {
       "type": "string",
-      "description": "The name of the component.",
-      "x-prompt": "What name would you like to use for the component?",
-      "x-priority": "important"
+      "description": "The component symbol name. Defaults to the last segment of the file path."
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -42,6 +40,10 @@
           {
             "value": "less",
             "label": "LESS              [ https://lesscss.org            ]"
+          },
+          {
+            "value": "tailwind",
+            "label": "tailwind          [ https://tailwindcss.com/       ]"
           },
           {
             "value": "styled-components",
@@ -77,7 +79,7 @@
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
-      "default": false
+      "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
     },
     "skipFormat": {
       "description": "Skip formatting files.",

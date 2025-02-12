@@ -1,7 +1,12 @@
-import { type ProjectConfiguration, type Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  type ProjectConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { getNpmScope } from '../../../utilities/get-import-path';
 import type { NormalizedSchema, Schema } from '../schema';
 import { normalizePathSlashes } from './utils';
+import { getProjectType } from '../../../utils/ts-solution-setup';
 
 export async function normalizeSchema(
   tree: Tree,
@@ -35,7 +40,7 @@ async function determineProjectNameAndRootOptions(
   options: Schema,
   projectConfiguration: ProjectConfiguration
 ): Promise<ProjectNameAndRootOptions> {
-  validateName(options.newProjectName, projectConfiguration);
+  validateName(tree, options.newProjectName, projectConfiguration);
   const projectNameAndRootOptions = getProjectNameAndRootOptions(
     tree,
     options,
@@ -46,6 +51,7 @@ async function determineProjectNameAndRootOptions(
 }
 
 function validateName(
+  tree: Tree,
   name: string | undefined,
   projectConfiguration: ProjectConfiguration
 ): void {
@@ -66,15 +72,26 @@ function validateName(
   const libraryPattern =
     '(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$';
   const appPattern = '^[a-zA-Z][^:]*$';
+  const projectType = getProjectType(
+    tree,
+    projectConfiguration.root,
+    projectConfiguration.projectType
+  );
 
-  if (projectConfiguration.projectType === 'application') {
+  if (projectType === 'application') {
     const validationRegex = new RegExp(appPattern);
     if (!validationRegex.test(name)) {
       throw new Error(
         `The new project name should match the pattern "${appPattern}". The provided value "${name}" does not match.`
       );
     }
-  } else if (projectConfiguration.projectType === 'library') {
+  } else if (
+    getProjectType(
+      tree,
+      projectConfiguration.root,
+      projectConfiguration.projectType
+    ) === 'library'
+  ) {
     const validationRegex = new RegExp(libraryPattern);
     if (!validationRegex.test(name)) {
       throw new Error(

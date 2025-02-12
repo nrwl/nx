@@ -1,4 +1,3 @@
-import { fixupPluginRules } from '@eslint/compat';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
@@ -16,12 +15,32 @@ import tseslint from 'typescript-eslint';
  */
 export default tseslint.config(
   {
+    files: [
+      '**/*.ts',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      '**/*.jsx',
+    ],
     plugins: {
-      'react-hooks': fixupPluginRules(reactHooksPlugin),
+      'react-hooks': reactHooksPlugin,
     },
     rules: reactHooksPlugin.configs.recommended.rules,
   },
   {
+    files: [
+      '**/*.ts',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      '**/*.jsx',
+    ],
     settings: { react: { version: 'detect' } },
     plugins: {
       'jsx-a11y': jsxA11yPlugin,

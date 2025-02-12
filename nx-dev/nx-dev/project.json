@@ -41,6 +41,7 @@
       }
     },
     "build-base": {
+      "parallelism": false,
       "executor": "@nx/next:build",
       "dependsOn": ["copy-docs"],
       "outputs": ["{options.outputPath}"],
@@ -99,6 +100,7 @@
     "deploy-build": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/public/documentation"],
+      "dependsOn": ["@nx/nx-source:documentation"],
       "options": {
         "commands": [
           {
@@ -106,15 +108,11 @@
             "description": "OG images generation"
           },
           {
-            "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
-            "description": "Pre-generate official package metadata"
-          },
-          {
             "command": "nx copy-docs nx-dev",
             "description": "Copy generated docs to build output"
           },
           {
-            "command": "npx ts-node scripts/documentation/plugin-quality-indicators.ts",
+            "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",
             "description": "Fetch plugin data"
           },
           {

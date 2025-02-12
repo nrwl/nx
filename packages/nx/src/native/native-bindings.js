@@ -362,6 +362,7 @@ if (!nativeBinding) {
 }
 
 module.exports.ChildProcess = nativeBinding.ChildProcess
+module.exports.FileLock = nativeBinding.FileLock
 module.exports.HashPlanner = nativeBinding.HashPlanner
 module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache
@@ -371,6 +372,7 @@ module.exports.TaskDetails = nativeBinding.TaskDetails
 module.exports.TaskHasher = nativeBinding.TaskHasher
 module.exports.Watcher = nativeBinding.Watcher
 module.exports.WorkspaceContext = nativeBinding.WorkspaceContext
+module.exports.closeDbConnection = nativeBinding.closeDbConnection
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
 module.exports.EventType = nativeBinding.EventType

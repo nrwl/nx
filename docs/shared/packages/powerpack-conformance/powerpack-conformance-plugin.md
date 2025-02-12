@@ -18,7 +18,7 @@ In order to use `@nx/powerpack-conformance`, you need to have an active Powerpac
 
 ## Set Up @nx/powerpack-conformance
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
    ```shell
@@ -166,50 +166,10 @@ Set the `rule` property to: `@nx/powerpack-conformance/ensure-owners`
 }
 ```
 
-## Custom Conformance Rules
+## Next Steps
 
-To write your own conformance rule, specify a relative path to a TypeScript or JavaScript file as the rule name:
+For more information about the conformance plugin, consult the following articles:
 
-```json {% fileName="nx.json" %}
-{
-  "conformance": {
-    "rules": [
-      {
-        "rule": "./tools/local-conformance-rule.ts"
-      }
-    ]
-  }
-}
-```
-
-The rule definition file should look like this:
-
-```ts {% fileName="tools/local-conformance-rule.ts" %}
-import { createConformanceRule } from '@nx/powerpack-conformance';
-
-const rule = createConformanceRule({
-  name: 'local-conformance-rule-example',
-  category: 'security', // `consistency`, `maintainability`, `reliability` or `security`
-  reporter: 'project-reporter', // `project-reporter` or `project-files-reporter`
-  implementation: async (context) => {
-    const { projectGraph, ruleOptions } = context;
-    // Your rule logic goes here
-    return {
-      severity: 'low', // 'high', 'medium' or 'low'
-      details: {
-        violations: [
-          // Return an empty array if the rule passes
-          {
-            sourceProject: 'my-project',
-            message: 'This is an informative error message.',
-          },
-        ],
-      },
-    };
-  },
-});
-
-export default rule;
-```
-
-Note that the severity of the error is defined by the rule author and can be adjusted based on the specific violations that are found.
+- [Create a Conformance Rule](/nx-api/powerpack-conformance/documents/create-conformance-rule)
+- [Publish Conformance Rules to Nx Cloud](/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud)
+- [Configure Conformance Rules in Nx Cloud](/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud)

@@ -4,14 +4,18 @@ import {
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
+  projectName: string;
   projectRoot: string;
   routePath: string;
   parsedTags: string[];
   appMain: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
@@ -41,15 +45,20 @@ export async function normalizeOptions(
     : [];
   const appMain = options.js ? 'src/index.js' : 'src/index.ts';
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const normalized: NormalizedSchema = {
     ...options,
     fileName: projectName,
     routePath: `/${projectNames.projectSimpleName}`,
     name: projectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(host, projectName)
+      : projectName,
     projectRoot,
     parsedTags,
     importPath,
     appMain,
+    isUsingTsSolutionConfig,
   };
 
   return normalized;

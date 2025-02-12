@@ -5,7 +5,7 @@ export function deduceDefaultBase(): string {
   try {
     return (
       execSync('git config --get init.defaultBranch', {
-        windowsHide: true,
+        windowsHide: false,
       })
         .toString()
         .trim() || nxDefaultBase

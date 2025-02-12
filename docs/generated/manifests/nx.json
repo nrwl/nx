@@ -58,14 +58,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "npm-workspaces-tutorial",
-            "name": "NPM Workspaces Monorepo",
+            "id": "typescript-packages-tutorial",
+            "name": "TypeScript Packages",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/npm-workspaces",
+            "file": "shared/tutorials/typescript-packages",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+            "path": "/getting-started/tutorials/typescript-packages-tutorial",
             "tags": []
           },
           {
@@ -196,14 +196,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "npm-workspaces-tutorial",
-        "name": "NPM Workspaces Monorepo",
+        "id": "typescript-packages-tutorial",
+        "name": "TypeScript Packages",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/npm-workspaces",
+        "file": "shared/tutorials/typescript-packages",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+        "path": "/getting-started/tutorials/typescript-packages-tutorial",
         "tags": []
       },
       {
@@ -277,15 +277,15 @@
     "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/npm-workspaces-tutorial": {
-    "id": "npm-workspaces-tutorial",
-    "name": "NPM Workspaces Monorepo",
+  "/getting-started/tutorials/typescript-packages-tutorial": {
+    "id": "typescript-packages-tutorial",
+    "name": "TypeScript Packages",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/npm-workspaces",
+    "file": "shared/tutorials/typescript-packages",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+    "path": "/getting-started/tutorials/typescript-packages-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {
@@ -437,51 +437,6 @@
         "isExternal": false,
         "path": "/features/manage-releases",
         "tags": ["nx-release"]
-      },
-      {
-        "id": "powerpack",
-        "name": "Powerpack Features",
-        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/index",
-        "itemList": [
-          {
-            "id": "conformance",
-            "name": "Run Language-Agnostic Conformance Rules",
-            "description": "Write and apply rules for your Nx workspace",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/conformance",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/features/powerpack/conformance",
-            "tags": ["conformance"]
-          },
-          {
-            "id": "owners",
-            "name": "Define Code Ownership at the Project Level",
-            "description": "Configure and maintain code owners for projects in an Nx workspace",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/owners",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/features/powerpack/owners",
-            "tags": ["owners"]
-          },
-          {
-            "id": "custom-caching",
-            "name": "Self-Host the Remote Cache",
-            "description": "Host the remote cache without using Nx Cloud",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/custom-caching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/features/powerpack/custom-caching",
-            "tags": ["custom-caching"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/features/powerpack",
-        "tags": []
       },
       {
         "id": "ci-features",
@@ -642,84 +597,6 @@
     "isExternal": false,
     "path": "/features/manage-releases",
     "tags": ["nx-release"]
-  },
-  "/features/powerpack": {
-    "id": "powerpack",
-    "name": "Powerpack Features",
-    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/index",
-    "itemList": [
-      {
-        "id": "conformance",
-        "name": "Run Language-Agnostic Conformance Rules",
-        "description": "Write and apply rules for your Nx workspace",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/conformance",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/powerpack/conformance",
-        "tags": ["conformance"]
-      },
-      {
-        "id": "owners",
-        "name": "Define Code Ownership at the Project Level",
-        "description": "Configure and maintain code owners for projects in an Nx workspace",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/owners",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/powerpack/owners",
-        "tags": ["owners"]
-      },
-      {
-        "id": "custom-caching",
-        "name": "Self-Host the Remote Cache",
-        "description": "Host the remote cache without using Nx Cloud",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/custom-caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/powerpack/custom-caching",
-        "tags": ["custom-caching"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/features/powerpack",
-    "tags": []
-  },
-  "/features/powerpack/conformance": {
-    "id": "conformance",
-    "name": "Run Language-Agnostic Conformance Rules",
-    "description": "Write and apply rules for your Nx workspace",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/conformance",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/powerpack/conformance",
-    "tags": ["conformance"]
-  },
-  "/features/powerpack/owners": {
-    "id": "owners",
-    "name": "Define Code Ownership at the Project Level",
-    "description": "Configure and maintain code owners for projects in an Nx workspace",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/owners",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/powerpack/owners",
-    "tags": ["owners"]
-  },
-  "/features/powerpack/custom-caching": {
-    "id": "custom-caching",
-    "name": "Self-Host the Remote Cache",
-    "description": "Host the remote cache without using Nx Cloud",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/custom-caching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/powerpack/custom-caching",
-    "tags": ["custom-caching"]
   },
   "/features/ci-features": {
     "id": "ci-features",
@@ -914,7 +791,12 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-plugins",
-        "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
+        "tags": [
+          "add",
+          "generate-code",
+          "create-your-own-plugin",
+          "inferred-tasks"
+        ]
       },
       {
         "id": "inferred-tasks",
@@ -950,6 +832,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "common-tasks",
+        "name": "Common Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/common-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/common-tasks",
+        "tags": ["run-tasks"]
+      },
+      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -958,7 +851,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/nx-daemon",
-        "tags": []
+        "tags": ["daemon"]
       },
       {
         "id": "sync-generators",
@@ -969,7 +862,18 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/sync-generators",
-        "tags": []
+        "tags": ["sync"]
+      },
+      {
+        "id": "typescript-project-linking",
+        "name": "TypeScript Project Linking",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/typescript-project-linking",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/typescript-project-linking",
+        "tags": ["project-linking"]
       },
       {
         "id": "turbo-and-nx",
@@ -1196,7 +1100,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-plugins",
-    "tags": ["generate-code", "create-your-own-plugin", "inferred-tasks"]
+    "tags": ["add", "generate-code", "create-your-own-plugin", "inferred-tasks"]
   },
   "/concepts/inferred-tasks": {
     "id": "inferred-tasks",
@@ -1231,6 +1135,17 @@
     "path": "/concepts/executors-and-configurations",
     "tags": ["run-tasks"]
   },
+  "/concepts/common-tasks": {
+    "id": "common-tasks",
+    "name": "Common Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/common-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/common-tasks",
+    "tags": ["run-tasks"]
+  },
   "/concepts/nx-daemon": {
     "id": "nx-daemon",
     "name": "Nx Daemon",
@@ -1240,7 +1155,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/nx-daemon",
-    "tags": []
+    "tags": ["daemon"]
   },
   "/concepts/sync-generators": {
     "id": "sync-generators",
@@ -1251,7 +1166,18 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/sync-generators",
-    "tags": []
+    "tags": ["sync"]
+  },
+  "/concepts/typescript-project-linking": {
+    "id": "typescript-project-linking",
+    "name": "TypeScript Project Linking",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/typescript-project-linking",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/typescript-project-linking",
+    "tags": ["project-linking"]
   },
   "/concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
@@ -1578,17 +1504,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "activate-powerpack",
-            "name": "Activate Powerpack",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/installation/activate-powerpack",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/installation/activate-powerpack",
-            "tags": ["installation"]
-          },
-          {
             "id": "install-non-javascript",
             "name": "Install Nx in a Non-Javascript Repo",
             "description": "",
@@ -1697,7 +1612,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/root-level-scripts",
-            "tags": ["run-tasks"]
+            "tags": ["run-tasks", "exec"]
           },
           {
             "id": "workspace-watching",
@@ -1775,7 +1690,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/adding-to-monorepo",
-            "tags": []
+            "tags": ["init"]
           },
           {
             "id": "from-turborepo",
@@ -1797,7 +1712,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/adding-to-existing-project",
-            "tags": []
+            "tags": ["init"]
           },
           {
             "id": "import-project",
@@ -1808,7 +1723,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/adopting-nx/import-project",
-            "tags": []
+            "tags": ["import"]
           },
           {
             "id": "preserving-git-histories",
@@ -1835,6 +1750,295 @@
         ],
         "isExternal": false,
         "path": "/recipes/adopting-nx",
+        "tags": []
+      },
+      {
+        "id": "nx-release",
+        "name": "Nx Release",
+        "description": "Recipes for releasing with Nx release.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "get-started-with-nx-release",
+            "name": "Get Started with Nx Release",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/get-started-with-nx-release",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/get-started-with-nx-release",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "release-projects-independently",
+            "name": "Release Projects Independently",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/release-projects-independently",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/release-projects-independently",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "updating-version-references",
+            "name": "Updating Version References in Manifest Files (e.g. package.json)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/updating-version-references",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/updating-version-references",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "automatically-version-with-conventional-commits",
+            "name": "Automatically Version with Conventional Commits",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "customize-conventional-commit-types",
+            "name": "Customize Conventional Commit Types",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/customize-conventional-commit-types",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "file-based-versioning-version-plans",
+            "name": "File Based Versioning (Version Plans)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/file-based-versioning-version-plans",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "configure-custom-registries",
+            "name": "Configure Custom Registries",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configure-custom-registries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configure-custom-registries",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "publish-in-ci-cd",
+            "name": "Publish in CI/CD",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/publish-in-ci-cd",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/publish-in-ci-cd",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "automate-github-releases",
+            "name": "Automate GitHub Releases",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automate-github-releases",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automate-github-releases",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "publish-rust-crates",
+            "name": "Publish Rust Crates",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/publish-rust-crates",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/publish-rust-crates",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "update-local-registry-setup",
+            "name": "Update Your Local Registry Setup to use Nx Release",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/update-local-registry-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/update-local-registry-setup",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "configure-changelog-format",
+            "name": "Configure Changelog Format",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configure-changelog-format",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configure-changelog-format",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "build-before-versioning",
+            "name": "Build Before Versioning",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/build-before-versioning",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/build-before-versioning",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "configuration-version-prefix",
+            "name": "Configuring Version Prefix for Dependency Versions",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/configuration-version-prefix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/configuration-version-prefix",
+            "tags": ["nx-release"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nx-release",
+        "tags": []
+      },
+      {
+        "id": "module-federation",
+        "name": "Module Federation",
+        "description": "Advanced guides to utilize Module Federation with Nx.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "create-a-host",
+            "name": "How to create a Module Federation Host Application",
+            "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+            "mediaImage": "",
+            "file": "shared/recipes/module-federation/creating-a-host",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-host",
+            "tags": []
+          },
+          {
+            "id": "create-a-remote",
+            "name": "How to create a Module Federation Remote Application",
+            "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+            "mediaImage": "",
+            "file": "shared/recipes/module-federation/creating-a-remote",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-remote",
+            "tags": []
+          },
+          {
+            "id": "federate-a-module",
+            "name": "How to Federate a Module",
+            "description": "A guide on how to federate a module in your Nx workspace",
+            "mediaImage": "",
+            "file": "shared/recipes/module-federation/federate-a-module",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/federate-a-module",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/module-federation",
+        "tags": []
+      },
+      {
+        "id": "nx-console",
+        "name": "Nx Console",
+        "description": "Checkout all the recipes related to Nx Console.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "console-telemetry",
+            "name": "Telemetry",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-telemetry",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-telemetry",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-project-details",
+            "name": "Project Details View",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-project-details",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-project-details",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-generate-command",
+            "name": "Generate Command",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-generate-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-generate-command",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-run-command",
+            "name": "Run Command",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-run-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-run-command",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-nx-cloud",
+            "name": "Nx Cloud Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-nx-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-nx-cloud",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-troubleshooting",
+            "name": "Troubleshooting",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-troubleshooting",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "tags": ["editor-setup"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nx-console",
         "tags": []
       },
       {
@@ -1960,7 +2164,7 @@
                 "itemList": [],
                 "isExternal": false,
                 "path": "/recipes/angular/migration/angular",
-                "tags": []
+                "tags": ["init"]
               },
               {
                 "id": "angular-multiple",
@@ -2409,51 +2613,6 @@
         "tags": []
       },
       {
-        "id": "module-federation",
-        "name": "Module Federation",
-        "description": "Advanced guides to utilize Module Federation with Nx.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "create-a-host",
-            "name": "How to create a Module Federation Host Application",
-            "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
-            "mediaImage": "",
-            "file": "shared/recipes/module-federation/creating-a-host",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/module-federation/create-a-host",
-            "tags": []
-          },
-          {
-            "id": "create-a-remote",
-            "name": "How to create a Module Federation Remote Application",
-            "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
-            "mediaImage": "",
-            "file": "shared/recipes/module-federation/creating-a-remote",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/module-federation/create-a-remote",
-            "tags": []
-          },
-          {
-            "id": "federate-a-module",
-            "name": "How to Federate a Module",
-            "description": "A guide on how to federate a module in your Nx workspace",
-            "mediaImage": "",
-            "file": "shared/recipes/module-federation/federate-a-module",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/module-federation/federate-a-module",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/module-federation",
-        "tags": []
-      },
-      {
         "id": "enforce-module-boundaries",
         "name": "Enforce Module Boundaries",
         "description": "Configuring the enforce module boundaries rule",
@@ -2539,6 +2698,17 @@
             "tags": []
           },
           {
+            "id": "switch-to-workspaces-project-references",
+            "name": "Switch to Workspaces and TS Project References",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "tags": ["project-linking"]
+          },
+          {
             "id": "enable-tsc-batch-mode",
             "name": "Enable Typescript Batch Mode",
             "description": "",
@@ -2580,7 +2750,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-            "tags": ["automate-updating-dependencies"]
+            "tags": ["automate-updating-dependencies", "add"]
           },
           {
             "id": "define-environment-variables",
@@ -2696,228 +2866,6 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks",
         "tags": []
-      },
-      {
-        "id": "nx-console",
-        "name": "Nx Console",
-        "description": "Checkout all the recipes related to Nx Console.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "console-telemetry",
-            "name": "Telemetry",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-telemetry",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-telemetry",
-            "tags": ["editor-setup"]
-          },
-          {
-            "id": "console-project-details",
-            "name": "Project Details View",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-project-details",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-project-details",
-            "tags": ["editor-setup"]
-          },
-          {
-            "id": "console-generate-command",
-            "name": "Generate Command",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-generate-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-generate-command",
-            "tags": ["editor-setup"]
-          },
-          {
-            "id": "console-run-command",
-            "name": "Run Command",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-run-command",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-run-command",
-            "tags": ["editor-setup"]
-          },
-          {
-            "id": "console-troubleshooting",
-            "name": "Troubleshooting",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-troubleshooting",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-troubleshooting",
-            "tags": ["editor-setup"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/nx-console",
-        "tags": []
-      },
-      {
-        "id": "nx-release",
-        "name": "Nx Release",
-        "description": "Recipes for releasing with Nx release.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "get-started-with-nx-release",
-            "name": "Get Started with Nx Release",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/get-started-with-nx-release",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/get-started-with-nx-release",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "release-projects-independently",
-            "name": "Release Projects Independently",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/release-projects-independently",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/release-projects-independently",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "automatically-version-with-conventional-commits",
-            "name": "Automatically Version with Conventional Commits",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "customize-conventional-commit-types",
-            "name": "Customize Conventional Commit Types",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/customize-conventional-commit-types",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/customize-conventional-commit-types",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "file-based-versioning-version-plans",
-            "name": "File Based Versioning (Version Plans)",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/file-based-versioning-version-plans",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "configure-custom-registries",
-            "name": "Configure Custom Registries",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/configure-custom-registries",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/configure-custom-registries",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "publish-in-ci-cd",
-            "name": "Publish in CI/CD",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/publish-in-ci-cd",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/publish-in-ci-cd",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "automate-github-releases",
-            "name": "Automate GitHub Releases",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/automate-github-releases",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/automate-github-releases",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "publish-rust-crates",
-            "name": "Publish Rust Crates",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/publish-rust-crates",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/publish-rust-crates",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "update-local-registry-setup",
-            "name": "Update Your Local Registry Setup to use Nx Release",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/update-local-registry-setup",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/update-local-registry-setup",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "configure-changelog-format",
-            "name": "Configure Changelog Format",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/configure-changelog-format",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/configure-changelog-format",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "publish-custom-dist-directory",
-            "name": "Publish a Custom Dist Directory",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/publish-custom-dist-directory",
-            "tags": ["nx-release"]
-          },
-          {
-            "id": "build-before-versioning",
-            "name": "Build Before Versioning",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nx-release/build-before-versioning",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-release/build-before-versioning",
-            "tags": ["nx-release"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/nx-release",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -2931,17 +2879,6 @@
     "mediaImage": "",
     "file": "",
     "itemList": [
-      {
-        "id": "activate-powerpack",
-        "name": "Activate Powerpack",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/installation/activate-powerpack",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/installation/activate-powerpack",
-        "tags": ["installation"]
-      },
       {
         "id": "install-non-javascript",
         "name": "Install Nx in a Non-Javascript Repo",
@@ -2968,17 +2905,6 @@
     "isExternal": false,
     "path": "/recipes/installation",
     "tags": []
-  },
-  "/recipes/installation/activate-powerpack": {
-    "id": "activate-powerpack",
-    "name": "Activate Powerpack",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/installation/activate-powerpack",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/installation/activate-powerpack",
-    "tags": ["installation"]
   },
   "/recipes/installation/install-non-javascript": {
     "id": "install-non-javascript",
@@ -3084,7 +3010,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/root-level-scripts",
-        "tags": ["run-tasks"]
+        "tags": ["run-tasks", "exec"]
       },
       {
         "id": "workspace-watching",
@@ -3221,7 +3147,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/root-level-scripts",
-    "tags": ["run-tasks"]
+    "tags": ["run-tasks", "exec"]
   },
   "/recipes/running-tasks/workspace-watching": {
     "id": "workspace-watching",
@@ -3294,7 +3220,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx/adding-to-monorepo",
-        "tags": []
+        "tags": ["init"]
       },
       {
         "id": "from-turborepo",
@@ -3316,7 +3242,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx/adding-to-existing-project",
-        "tags": []
+        "tags": ["init"]
       },
       {
         "id": "import-project",
@@ -3327,7 +3253,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/adopting-nx/import-project",
-        "tags": []
+        "tags": ["import"]
       },
       {
         "id": "preserving-git-histories",
@@ -3365,7 +3291,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-monorepo",
-    "tags": []
+    "tags": ["init"]
   },
   "/recipes/adopting-nx/from-turborepo": {
     "id": "from-turborepo",
@@ -3387,7 +3313,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-existing-project",
-    "tags": []
+    "tags": ["init"]
   },
   "/recipes/adopting-nx/import-project": {
     "id": "import-project",
@@ -3398,7 +3324,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/import-project",
-    "tags": []
+    "tags": ["import"]
   },
   "/recipes/adopting-nx/preserving-git-histories": {
     "id": "preserving-git-histories",
@@ -3420,6 +3346,548 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/manual",
+    "tags": []
+  },
+  "/recipes/nx-release": {
+    "id": "nx-release",
+    "name": "Nx Release",
+    "description": "Recipes for releasing with Nx release.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "get-started-with-nx-release",
+        "name": "Get Started with Nx Release",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/get-started-with-nx-release",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/get-started-with-nx-release",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "release-projects-independently",
+        "name": "Release Projects Independently",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/release-projects-independently",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/release-projects-independently",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "updating-version-references",
+        "name": "Updating Version References in Manifest Files (e.g. package.json)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/updating-version-references",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/updating-version-references",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "automatically-version-with-conventional-commits",
+        "name": "Automatically Version with Conventional Commits",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "customize-conventional-commit-types",
+        "name": "Customize Conventional Commit Types",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/customize-conventional-commit-types",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "file-based-versioning-version-plans",
+        "name": "File Based Versioning (Version Plans)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/file-based-versioning-version-plans",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "configure-custom-registries",
+        "name": "Configure Custom Registries",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configure-custom-registries",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configure-custom-registries",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "publish-in-ci-cd",
+        "name": "Publish in CI/CD",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/publish-in-ci-cd",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/publish-in-ci-cd",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "automate-github-releases",
+        "name": "Automate GitHub Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automate-github-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automate-github-releases",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "publish-rust-crates",
+        "name": "Publish Rust Crates",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/publish-rust-crates",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/publish-rust-crates",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "update-local-registry-setup",
+        "name": "Update Your Local Registry Setup to use Nx Release",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/update-local-registry-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/update-local-registry-setup",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "configure-changelog-format",
+        "name": "Configure Changelog Format",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configure-changelog-format",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configure-changelog-format",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "build-before-versioning",
+        "name": "Build Before Versioning",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/build-before-versioning",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/build-before-versioning",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "configuration-version-prefix",
+        "name": "Configuring Version Prefix for Dependency Versions",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/configuration-version-prefix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/configuration-version-prefix",
+        "tags": ["nx-release"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nx-release",
+    "tags": []
+  },
+  "/recipes/nx-release/get-started-with-nx-release": {
+    "id": "get-started-with-nx-release",
+    "name": "Get Started with Nx Release",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/get-started-with-nx-release",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/get-started-with-nx-release",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/release-projects-independently": {
+    "id": "release-projects-independently",
+    "name": "Release Projects Independently",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/release-projects-independently",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/release-projects-independently",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/updating-version-references": {
+    "id": "updating-version-references",
+    "name": "Updating Version References in Manifest Files (e.g. package.json)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/updating-version-references",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/updating-version-references",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automatically-version-with-conventional-commits": {
+    "id": "automatically-version-with-conventional-commits",
+    "name": "Automatically Version with Conventional Commits",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/customize-conventional-commit-types": {
+    "id": "customize-conventional-commit-types",
+    "name": "Customize Conventional Commit Types",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/customize-conventional-commit-types",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/file-based-versioning-version-plans": {
+    "id": "file-based-versioning-version-plans",
+    "name": "File Based Versioning (Version Plans)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/file-based-versioning-version-plans",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configure-custom-registries": {
+    "id": "configure-custom-registries",
+    "name": "Configure Custom Registries",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configure-custom-registries",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configure-custom-registries",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/publish-in-ci-cd": {
+    "id": "publish-in-ci-cd",
+    "name": "Publish in CI/CD",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/publish-in-ci-cd",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/publish-in-ci-cd",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automate-github-releases": {
+    "id": "automate-github-releases",
+    "name": "Automate GitHub Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automate-github-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automate-github-releases",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/publish-rust-crates": {
+    "id": "publish-rust-crates",
+    "name": "Publish Rust Crates",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/publish-rust-crates",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/publish-rust-crates",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/update-local-registry-setup": {
+    "id": "update-local-registry-setup",
+    "name": "Update Your Local Registry Setup to use Nx Release",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/update-local-registry-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/update-local-registry-setup",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configure-changelog-format": {
+    "id": "configure-changelog-format",
+    "name": "Configure Changelog Format",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configure-changelog-format",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configure-changelog-format",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/build-before-versioning": {
+    "id": "build-before-versioning",
+    "name": "Build Before Versioning",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/build-before-versioning",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/build-before-versioning",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/configuration-version-prefix": {
+    "id": "configuration-version-prefix",
+    "name": "Configuring Version Prefix for Dependency Versions",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/configuration-version-prefix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/configuration-version-prefix",
+    "tags": ["nx-release"]
+  },
+  "/recipes/module-federation": {
+    "id": "module-federation",
+    "name": "Module Federation",
+    "description": "Advanced guides to utilize Module Federation with Nx.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-a-host",
+        "name": "How to create a Module Federation Host Application",
+        "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+        "mediaImage": "",
+        "file": "shared/recipes/module-federation/creating-a-host",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-host",
+        "tags": []
+      },
+      {
+        "id": "create-a-remote",
+        "name": "How to create a Module Federation Remote Application",
+        "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+        "mediaImage": "",
+        "file": "shared/recipes/module-federation/creating-a-remote",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-remote",
+        "tags": []
+      },
+      {
+        "id": "federate-a-module",
+        "name": "How to Federate a Module",
+        "description": "A guide on how to federate a module in your Nx workspace",
+        "mediaImage": "",
+        "file": "shared/recipes/module-federation/federate-a-module",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/federate-a-module",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/module-federation",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-host": {
+    "id": "create-a-host",
+    "name": "How to create a Module Federation Host Application",
+    "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+    "mediaImage": "",
+    "file": "shared/recipes/module-federation/creating-a-host",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-host",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-remote": {
+    "id": "create-a-remote",
+    "name": "How to create a Module Federation Remote Application",
+    "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+    "mediaImage": "",
+    "file": "shared/recipes/module-federation/creating-a-remote",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-remote",
+    "tags": []
+  },
+  "/recipes/module-federation/federate-a-module": {
+    "id": "federate-a-module",
+    "name": "How to Federate a Module",
+    "description": "A guide on how to federate a module in your Nx workspace",
+    "mediaImage": "",
+    "file": "shared/recipes/module-federation/federate-a-module",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/federate-a-module",
+    "tags": []
+  },
+  "/recipes/nx-console": {
+    "id": "nx-console",
+    "name": "Nx Console",
+    "description": "Checkout all the recipes related to Nx Console.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "console-telemetry",
+        "name": "Telemetry",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-telemetry",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-telemetry",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-project-details",
+        "name": "Project Details View",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-project-details",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-project-details",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-generate-command",
+        "name": "Generate Command",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-generate-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-generate-command",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-run-command",
+        "name": "Run Command",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-run-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-run-command",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-nx-cloud",
+        "name": "Nx Cloud Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-nx-cloud",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-troubleshooting",
+        "name": "Troubleshooting",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-troubleshooting",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "tags": ["editor-setup"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nx-console",
+    "tags": []
+  },
+  "/recipes/nx-console/console-telemetry": {
+    "id": "console-telemetry",
+    "name": "Telemetry",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-telemetry",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-telemetry",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-project-details": {
+    "id": "console-project-details",
+    "name": "Project Details View",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-project-details",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-project-details",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-generate-command": {
+    "id": "console-generate-command",
+    "name": "Generate Command",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-generate-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-generate-command",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-run-command": {
+    "id": "console-run-command",
+    "name": "Run Command",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-run-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-run-command",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-nx-cloud": {
+    "id": "console-nx-cloud",
+    "name": "Nx Cloud Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-nx-cloud",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-troubleshooting": {
+    "id": "console-troubleshooting",
+    "name": "Troubleshoot Nx Console Issues",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-troubleshooting",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-troubleshooting",
     "tags": []
   },
   "/recipes/react": {
@@ -3633,7 +4101,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/migration/angular",
-            "tags": []
+            "tags": ["init"]
           },
           {
             "id": "angular-multiple",
@@ -3727,7 +4195,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/migration/angular",
-        "tags": []
+        "tags": ["init"]
       },
       {
         "id": "angular-multiple",
@@ -3754,7 +4222,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/migration/angular",
-    "tags": []
+    "tags": ["init"]
   },
   "/recipes/angular/migration/angular-multiple": {
     "id": "angular-multiple",
@@ -4478,84 +4946,6 @@
     "path": "/recipes/webpack/webpack-plugins",
     "tags": []
   },
-  "/recipes/module-federation": {
-    "id": "module-federation",
-    "name": "Module Federation",
-    "description": "Advanced guides to utilize Module Federation with Nx.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "create-a-host",
-        "name": "How to create a Module Federation Host Application",
-        "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
-        "mediaImage": "",
-        "file": "shared/recipes/module-federation/creating-a-host",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/create-a-host",
-        "tags": []
-      },
-      {
-        "id": "create-a-remote",
-        "name": "How to create a Module Federation Remote Application",
-        "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
-        "mediaImage": "",
-        "file": "shared/recipes/module-federation/creating-a-remote",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/create-a-remote",
-        "tags": []
-      },
-      {
-        "id": "federate-a-module",
-        "name": "How to Federate a Module",
-        "description": "A guide on how to federate a module in your Nx workspace",
-        "mediaImage": "",
-        "file": "shared/recipes/module-federation/federate-a-module",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/federate-a-module",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/module-federation",
-    "tags": []
-  },
-  "/recipes/module-federation/create-a-host": {
-    "id": "create-a-host",
-    "name": "How to create a Module Federation Host Application",
-    "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
-    "mediaImage": "",
-    "file": "shared/recipes/module-federation/creating-a-host",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/create-a-host",
-    "tags": []
-  },
-  "/recipes/module-federation/create-a-remote": {
-    "id": "create-a-remote",
-    "name": "How to create a Module Federation Remote Application",
-    "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
-    "mediaImage": "",
-    "file": "shared/recipes/module-federation/creating-a-remote",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/create-a-remote",
-    "tags": []
-  },
-  "/recipes/module-federation/federate-a-module": {
-    "id": "federate-a-module",
-    "name": "How to Federate a Module",
-    "description": "A guide on how to federate a module in your Nx workspace",
-    "mediaImage": "",
-    "file": "shared/recipes/module-federation/federate-a-module",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/federate-a-module",
-    "tags": []
-  },
   "/recipes/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",
     "name": "Enforce Module Boundaries",
@@ -4686,6 +5076,17 @@
         "tags": []
       },
       {
+        "id": "switch-to-workspaces-project-references",
+        "name": "Switch to Workspaces and TS Project References",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "tags": ["project-linking"]
+      },
+      {
         "id": "enable-tsc-batch-mode",
         "name": "Enable Typescript Batch Mode",
         "description": "",
@@ -4727,7 +5128,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-        "tags": ["automate-updating-dependencies"]
+        "tags": ["automate-updating-dependencies", "add"]
       },
       {
         "id": "define-environment-variables",
@@ -4866,6 +5267,17 @@
     "path": "/recipes/tips-n-tricks/eslint",
     "tags": []
   },
+  "/recipes/tips-n-tricks/switch-to-workspaces-project-references": {
+    "id": "switch-to-workspaces-project-references",
+    "name": "Switch to Workspaces and TS Project References",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+    "tags": ["project-linking"]
+  },
   "/recipes/tips-n-tricks/enable-tsc-batch-mode": {
     "id": "enable-tsc-batch-mode",
     "name": "Enable Typescript Batch Mode",
@@ -4908,7 +5320,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
-    "tags": ["automate-updating-dependencies"]
+    "tags": ["automate-updating-dependencies", "add"]
   },
   "/recipes/tips-n-tricks/define-environment-variables": {
     "id": "define-environment-variables",
@@ -5020,425 +5432,195 @@
     "path": "/recipes/tips-n-tricks/flat-config",
     "tags": ["eslint", "flat config"]
   },
-  "/recipes/nx-console": {
-    "id": "nx-console",
-    "name": "Nx Console",
-    "description": "Checkout all the recipes related to Nx Console.",
+  "/nx-enterprise": {
+    "id": "nx-enterprise",
+    "name": "Enterprise",
+    "description": "Enterprise solutions for the Nx CLI",
     "mediaImage": "",
     "file": "",
     "itemList": [
       {
-        "id": "console-telemetry",
-        "name": "Telemetry",
+        "id": "activate-powerpack",
+        "name": "Activate Powerpack",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/console-telemetry",
+        "file": "shared/recipes/installation/activate-powerpack",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-telemetry",
-        "tags": ["editor-setup"]
+        "path": "/nx-enterprise/activate-powerpack",
+        "tags": ["installation"]
       },
       {
-        "id": "console-project-details",
-        "name": "Project Details View",
-        "description": "",
+        "id": "powerpack",
+        "name": "Powerpack Features",
+        "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
         "mediaImage": "",
-        "file": "shared/recipes/console-project-details",
-        "itemList": [],
+        "file": "shared/features/powerpack/index",
+        "itemList": [
+          {
+            "id": "free-licenses-and-trials",
+            "name": "Free Licenses & Trials",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/free-licenses-and-trials",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+            "tags": []
+          },
+          {
+            "id": "conformance",
+            "name": "Run Language-Agnostic Conformance Rules",
+            "description": "Write and apply rules for your Nx workspace",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/conformance",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/conformance",
+            "tags": ["conformance"]
+          },
+          {
+            "id": "owners",
+            "name": "Define Code Ownership at the Project Level",
+            "description": "Configure and maintain code owners for projects in an Nx workspace",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/owners",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/owners",
+            "tags": ["owners"]
+          },
+          {
+            "id": "custom-caching",
+            "name": "Self-Host the Remote Cache",
+            "description": "Host the remote cache without using Nx Cloud",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/custom-caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/custom-caching",
+            "tags": ["custom-caching"]
+          }
+        ],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-project-details",
-        "tags": ["editor-setup"]
-      },
-      {
-        "id": "console-generate-command",
-        "name": "Generate Command",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-generate-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-generate-command",
-        "tags": ["editor-setup"]
-      },
-      {
-        "id": "console-run-command",
-        "name": "Run Command",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-run-command",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-run-command",
-        "tags": ["editor-setup"]
-      },
-      {
-        "id": "console-troubleshooting",
-        "name": "Troubleshooting",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-troubleshooting",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-troubleshooting",
-        "tags": ["editor-setup"]
+        "path": "/nx-enterprise/powerpack",
+        "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/recipes/nx-console",
+    "path": "/nx-enterprise",
     "tags": []
   },
-  "/recipes/nx-console/console-telemetry": {
-    "id": "console-telemetry",
-    "name": "Telemetry",
+  "/nx-enterprise/activate-powerpack": {
+    "id": "activate-powerpack",
+    "name": "Activate Powerpack",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/console-telemetry",
+    "file": "shared/recipes/installation/activate-powerpack",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-console/console-telemetry",
-    "tags": ["editor-setup"]
+    "path": "/nx-enterprise/activate-powerpack",
+    "tags": ["installation"]
   },
-  "/recipes/nx-console/console-project-details": {
-    "id": "console-project-details",
-    "name": "Project Details View",
-    "description": "",
+  "/nx-enterprise/powerpack": {
+    "id": "powerpack",
+    "name": "Powerpack Features",
+    "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
     "mediaImage": "",
-    "file": "shared/recipes/console-project-details",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-project-details",
-    "tags": ["editor-setup"]
-  },
-  "/recipes/nx-console/console-generate-command": {
-    "id": "console-generate-command",
-    "name": "Generate Command",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-generate-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-generate-command",
-    "tags": ["editor-setup"]
-  },
-  "/recipes/nx-console/console-run-command": {
-    "id": "console-run-command",
-    "name": "Run Command",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-run-command",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-run-command",
-    "tags": ["editor-setup"]
-  },
-  "/recipes/nx-console/console-troubleshooting": {
-    "id": "console-troubleshooting",
-    "name": "Troubleshoot Nx Console Issues",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-troubleshooting",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-troubleshooting",
-    "tags": []
-  },
-  "/recipes/nx-release": {
-    "id": "nx-release",
-    "name": "Nx Release",
-    "description": "Recipes for releasing with Nx release.",
-    "mediaImage": "",
-    "file": "",
+    "file": "shared/features/powerpack/index",
     "itemList": [
       {
-        "id": "get-started-with-nx-release",
-        "name": "Get Started with Nx Release",
+        "id": "free-licenses-and-trials",
+        "name": "Free Licenses & Trials",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/get-started-with-nx-release",
+        "file": "shared/features/powerpack/free-licenses-and-trials",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/get-started-with-nx-release",
-        "tags": ["nx-release"]
+        "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+        "tags": []
       },
       {
-        "id": "release-projects-independently",
-        "name": "Release Projects Independently",
-        "description": "",
+        "id": "conformance",
+        "name": "Run Language-Agnostic Conformance Rules",
+        "description": "Write and apply rules for your Nx workspace",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/release-projects-independently",
+        "file": "shared/features/powerpack/conformance",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/release-projects-independently",
-        "tags": ["nx-release"]
+        "path": "/nx-enterprise/powerpack/conformance",
+        "tags": ["conformance"]
       },
       {
-        "id": "automatically-version-with-conventional-commits",
-        "name": "Automatically Version with Conventional Commits",
-        "description": "",
+        "id": "owners",
+        "name": "Define Code Ownership at the Project Level",
+        "description": "Configure and maintain code owners for projects in an Nx workspace",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+        "file": "shared/features/powerpack/owners",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
-        "tags": ["nx-release"]
+        "path": "/nx-enterprise/powerpack/owners",
+        "tags": ["owners"]
       },
       {
-        "id": "customize-conventional-commit-types",
-        "name": "Customize Conventional Commit Types",
-        "description": "",
+        "id": "custom-caching",
+        "name": "Self-Host the Remote Cache",
+        "description": "Host the remote cache without using Nx Cloud",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+        "file": "shared/features/powerpack/custom-caching",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/customize-conventional-commit-types",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "file-based-versioning-version-plans",
-        "name": "File Based Versioning (Version Plans)",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/file-based-versioning-version-plans",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "configure-custom-registries",
-        "name": "Configure Custom Registries",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/configure-custom-registries",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/configure-custom-registries",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "publish-in-ci-cd",
-        "name": "Publish in CI/CD",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/publish-in-ci-cd",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/publish-in-ci-cd",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "automate-github-releases",
-        "name": "Automate GitHub Releases",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/automate-github-releases",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/automate-github-releases",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "publish-rust-crates",
-        "name": "Publish Rust Crates",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/publish-rust-crates",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/publish-rust-crates",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "update-local-registry-setup",
-        "name": "Update Your Local Registry Setup to use Nx Release",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/update-local-registry-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/update-local-registry-setup",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "configure-changelog-format",
-        "name": "Configure Changelog Format",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/configure-changelog-format",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/configure-changelog-format",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "publish-custom-dist-directory",
-        "name": "Publish a Custom Dist Directory",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/publish-custom-dist-directory",
-        "tags": ["nx-release"]
-      },
-      {
-        "id": "build-before-versioning",
-        "name": "Build Before Versioning",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nx-release/build-before-versioning",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-release/build-before-versioning",
-        "tags": ["nx-release"]
+        "path": "/nx-enterprise/powerpack/custom-caching",
+        "tags": ["custom-caching"]
       }
     ],
     "isExternal": false,
-    "path": "/recipes/nx-release",
+    "path": "/nx-enterprise/powerpack",
     "tags": []
   },
-  "/recipes/nx-release/get-started-with-nx-release": {
-    "id": "get-started-with-nx-release",
-    "name": "Get Started with Nx Release",
+  "/nx-enterprise/powerpack/free-licenses-and-trials": {
+    "id": "free-licenses-and-trials",
+    "name": "Free Licenses & Trials",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/get-started-with-nx-release",
+    "file": "shared/features/powerpack/free-licenses-and-trials",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/get-started-with-nx-release",
-    "tags": ["nx-release"]
+    "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+    "tags": []
   },
-  "/recipes/nx-release/release-projects-independently": {
-    "id": "release-projects-independently",
-    "name": "Release Projects Independently",
-    "description": "",
+  "/nx-enterprise/powerpack/conformance": {
+    "id": "conformance",
+    "name": "Run Language-Agnostic Conformance Rules",
+    "description": "Write and apply rules for your Nx workspace",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/release-projects-independently",
+    "file": "shared/features/powerpack/conformance",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/release-projects-independently",
-    "tags": ["nx-release"]
+    "path": "/nx-enterprise/powerpack/conformance",
+    "tags": ["conformance"]
   },
-  "/recipes/nx-release/automatically-version-with-conventional-commits": {
-    "id": "automatically-version-with-conventional-commits",
-    "name": "Automatically Version with Conventional Commits",
-    "description": "",
+  "/nx-enterprise/powerpack/owners": {
+    "id": "owners",
+    "name": "Define Code Ownership at the Project Level",
+    "description": "Configure and maintain code owners for projects in an Nx workspace",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+    "file": "shared/features/powerpack/owners",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
-    "tags": ["nx-release"]
+    "path": "/nx-enterprise/powerpack/owners",
+    "tags": ["owners"]
   },
-  "/recipes/nx-release/customize-conventional-commit-types": {
-    "id": "customize-conventional-commit-types",
-    "name": "Customize Conventional Commit Types",
-    "description": "",
+  "/nx-enterprise/powerpack/custom-caching": {
+    "id": "custom-caching",
+    "name": "Self-Host the Remote Cache",
+    "description": "Host the remote cache without using Nx Cloud",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/customize-conventional-commit-types",
+    "file": "shared/features/powerpack/custom-caching",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/customize-conventional-commit-types",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/file-based-versioning-version-plans": {
-    "id": "file-based-versioning-version-plans",
-    "name": "File Based Versioning (Version Plans)",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/file-based-versioning-version-plans",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/file-based-versioning-version-plans",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/configure-custom-registries": {
-    "id": "configure-custom-registries",
-    "name": "Configure Custom Registries",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/configure-custom-registries",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/configure-custom-registries",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/publish-in-ci-cd": {
-    "id": "publish-in-ci-cd",
-    "name": "Publish in CI/CD",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/publish-in-ci-cd",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/publish-in-ci-cd",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/automate-github-releases": {
-    "id": "automate-github-releases",
-    "name": "Automate GitHub Releases",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/automate-github-releases",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/automate-github-releases",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/publish-rust-crates": {
-    "id": "publish-rust-crates",
-    "name": "Publish Rust Crates",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/publish-rust-crates",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/publish-rust-crates",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/update-local-registry-setup": {
-    "id": "update-local-registry-setup",
-    "name": "Update Your Local Registry Setup to use Nx Release",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/update-local-registry-setup",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/update-local-registry-setup",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/configure-changelog-format": {
-    "id": "configure-changelog-format",
-    "name": "Configure Changelog Format",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/configure-changelog-format",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/configure-changelog-format",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/publish-custom-dist-directory": {
-    "id": "publish-custom-dist-directory",
-    "name": "Publish a Custom Dist Directory",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/publish-custom-dist-directory",
-    "tags": ["nx-release"]
-  },
-  "/recipes/nx-release/build-before-versioning": {
-    "id": "build-before-versioning",
-    "name": "Build Before Versioning",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nx-release/build-before-versioning",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-release/build-before-versioning",
-    "tags": ["nx-release"]
+    "path": "/nx-enterprise/powerpack/custom-caching",
+    "tags": ["custom-caching"]
   },
   "/showcase": {
     "id": "showcase",
@@ -6533,14 +6715,25 @@
         "tags": []
       },
       {
-        "id": "custom-task-runners",
-        "name": "Custom Task Runners",
+        "id": "legacy-cache",
+        "name": "Legacy Cache",
         "description": "",
         "mediaImage": "",
-        "file": "shared/deprecated/custom-task-runners",
+        "file": "shared/deprecated/legacy-cache",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/custom-task-runners",
+        "path": "/deprecated/legacy-cache",
+        "tags": []
+      },
+      {
+        "id": "custom-tasks-runner",
+        "name": "Custom Tasks Runner",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-tasks-runner",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-tasks-runner",
         "tags": []
       },
       {
@@ -6702,15 +6895,26 @@
     "path": "/deprecated/workspace-generators",
     "tags": []
   },
-  "/deprecated/custom-task-runners": {
-    "id": "custom-task-runners",
-    "name": "Custom Task Runners",
+  "/deprecated/legacy-cache": {
+    "id": "legacy-cache",
+    "name": "Legacy Cache",
     "description": "",
     "mediaImage": "",
-    "file": "shared/deprecated/custom-task-runners",
+    "file": "shared/deprecated/legacy-cache",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/custom-task-runners",
+    "path": "/deprecated/legacy-cache",
+    "tags": []
+  },
+  "/deprecated/custom-tasks-runner": {
+    "id": "custom-tasks-runner",
+    "name": "Custom Tasks Runner",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-tasks-runner",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-tasks-runner",
     "tags": []
   },
   "/deprecated/workspace-executors": {

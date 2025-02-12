@@ -13,7 +13,6 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  TargetConfiguration,
   Tree,
   updateJson,
   updateNxJson,
@@ -49,7 +48,12 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import staticServeConfiguration from '../static-serve/static-serve-configuration';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -57,9 +61,14 @@ interface NormalizedSchema extends Schema {
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
+  isUsingTsSolutionConfig: boolean;
 }
 
 function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
+  const rootTsConfigPath = getRelativePathToRootTsConfig(
+    tree,
+    options.appProjectRoot
+  );
   if (options.bundler === 'vite') {
     generateFiles(
       tree,
@@ -70,13 +79,11 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ...names(options.name),
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-        rootTsConfigPath: getRelativePathToRootTsConfig(
-          tree,
-          options.appProjectRoot
-        ),
+        rootTsConfigPath,
       }
     );
   } else {
+    const rootOffset = offsetFromRoot(options.appProjectRoot);
     generateFiles(
       tree,
       join(__dirname, './files/app-webpack'),
@@ -85,21 +92,21 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ...options,
         ...names(options.name),
         tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-        rootTsConfigPath: getRelativePathToRootTsConfig(
-          tree,
-          options.appProjectRoot
-        ),
+        offsetFromRoot: rootOffset,
+        rootTsConfigPath,
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
               compiler: options.compiler,
               target: 'web',
-              outputPath: joinPathFragments(
-                'dist',
-                options.appProjectRoot != '.'
-                  ? options.appProjectRoot
-                  : options.projectName
-              ),
+              outputPath: options.isUsingTsSolutionConfig
+                ? 'dist'
+                : joinPathFragments(
+                    rootOffset,
+                    'dist',
+                    options.appProjectRoot !== '.'
+                      ? options.appProjectRoot
+                      : options.projectName
+                  ),
               tsConfig: './tsconfig.app.json',
               main: './src/main.ts',
               assets: ['./src/favicon.ico', './src/assets'],
@@ -116,19 +123,36 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       );
     }
   }
-  updateJson(
-    tree,
-    joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
-    (json) => {
-      return {
-        ...json,
-        compilerOptions: {
-          ...(json.compilerOptions || {}),
-          strict: options.strict,
-        },
-      };
-    }
-  );
+  if (options.isUsingTsSolutionConfig) {
+    updateJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+      () => ({
+        extends: rootTsConfigPath,
+        files: [],
+        include: [],
+        references: [
+          {
+            path: './tsconfig.app.json',
+          },
+        ],
+      })
+    );
+  } else {
+    updateJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+      (json) => {
+        return {
+          ...json,
+          compilerOptions: {
+            ...(json.compilerOptions || {}),
+            strict: options.strict,
+          },
+        };
+      }
+    );
+  }
 }
 
 async function setupBundler(tree: Tree, options: NormalizedSchema) {
@@ -161,7 +185,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       addPlugin: options.addPlugin,
     });
     const project = readProjectConfiguration(tree, options.projectName);
-    if (project.targets.build) {
+    if (project.targets?.build) {
       const prodConfig = project.targets.build.configurations.production;
       const buildOptions = project.targets.build.options;
       buildOptions.assets = assets;
@@ -205,6 +229,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   } else if (options.bundler === 'none') {
     const project = readProjectConfiguration(tree, options.projectName);
     addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
+    project.targets ??= {};
     project.targets.build = {
       executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
@@ -221,20 +246,26 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
 }
 
 async function addProject(tree: Tree, options: NormalizedSchema) {
-  const targets: Record<string, TargetConfiguration> = {};
-
-  addProjectConfiguration(
-    tree,
-    options.projectName,
-    {
+  if (options.isUsingTsSolutionConfig) {
+    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
+      name: getImportPath(tree, options.name),
+      version: '0.0.1',
+      private: true,
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
+    });
+  } else {
+    addProjectConfiguration(tree, options.projectName, {
       projectType: 'application',
       root: options.appProjectRoot,
       sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
       tags: options.parsedTags,
-      targets,
-    },
-    options.standaloneConfig
-  );
+      targets: {},
+    });
+  }
 }
 
 function setDefaults(tree: Tree, options: NormalizedSchema) {
@@ -258,15 +289,18 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'web', 'application');
-
   const options = await normalizeOptions(host, schema);
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(host, {
     js: false,
     skipFormat: true,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
@@ -432,14 +466,31 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    addProjectConfiguration(host, options.e2eProjectName, {
-      root: options.e2eProjectRoot,
-      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-      projectType: 'application',
-      targets: {},
-      tags: [],
-      implicitDependencies: [options.projectName],
-    });
+    if (options.isUsingTsSolutionConfig) {
+      writeJson(
+        host,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        {
+          name: options.e2eProjectName,
+          version: '0.0.1',
+          private: true,
+          nx: {
+            projectType: 'application',
+            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+            implicitDependencies: [options.projectName],
+          },
+        }
+      );
+    } else {
+      addProjectConfiguration(host, options.e2eProjectName, {
+        root: options.e2eProjectRoot,
+        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+        projectType: 'application',
+        targets: {},
+        tags: [],
+        implicitDependencies: [options.projectName],
+      });
+    }
     const cypressTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
@@ -493,14 +544,31 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
       typeof import('@nx/playwright')
     >('@nx/playwright', nxVersion);
-    addProjectConfiguration(host, options.e2eProjectName, {
-      root: options.e2eProjectRoot,
-      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-      projectType: 'application',
-      targets: {},
-      tags: [],
-      implicitDependencies: [options.projectName],
-    });
+    if (options.isUsingTsSolutionConfig) {
+      writeJson(
+        host,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        {
+          name: options.e2eProjectName,
+          version: '0.0.1',
+          private: true,
+          nx: {
+            projectType: 'application',
+            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+            implicitDependencies: [options.projectName],
+          },
+        }
+      );
+    } else {
+      addProjectConfiguration(host, options.e2eProjectName, {
+        root: options.e2eProjectRoot,
+        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+        projectType: 'application',
+        targets: {},
+        tags: [],
+        implicitDependencies: [options.projectName],
+      });
+    }
     const playwrightTask = await playwrightConfigGenerator(host, {
       project: options.e2eProjectName,
       skipFormat: true,
@@ -592,7 +660,20 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     )
   );
 
-  if (!schema.skipFormat) {
+  updateTsconfigFiles(
+    host,
+    options.appProjectRoot,
+    'tsconfig.app.json',
+    {
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  if (!options.skipFormat) {
     await formatFiles(host);
   }
 
@@ -622,6 +703,7 @@ async function normalizeOptions(
 
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   const npmScope = getNpmScope(host);
 
@@ -640,12 +722,15 @@ async function normalizeOptions(
     name: names(options.name).fileName,
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',
-    projectName: appProjectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(host, appProjectName)
+      : appProjectName,
     strict: options.strict ?? true,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
+    isUsingTsSolutionConfig,
   };
 }
 
