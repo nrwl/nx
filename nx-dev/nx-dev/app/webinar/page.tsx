@@ -6,6 +6,9 @@ import { Hero, WebinarList } from '@nx/nx-dev/ui-webinar';
 export const metadata: Metadata = {
   title: 'Nx Webinar - Updates from the Nx & Nx Cloud team',
   description: 'Latest webinars from the Nx & Nx Cloud core team',
+  alternates: {
+    canonical: 'https://nx.dev/webinar',
+  },
   openGraph: {
     url: 'https://nx.dev/webinar',
     title: 'Nx Webinar - Updates from the Nx & Nx Cloud team',
