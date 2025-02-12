@@ -14,8 +14,8 @@ while allowing tracking of the full tree of different nested versions
 ### Properties
 
 - [data](../../devkit/documents/ProjectGraphExternalNode#data): Object
-- [name](../../devkit/documents/ProjectGraphExternalNode#name): `npm:${string}`
-- [type](../../devkit/documents/ProjectGraphExternalNode#type): "npm"
+- [name](../../devkit/documents/ProjectGraphExternalNode#name): `npm:${string}` | `cargo:${string}` | `gradle:${string}`
+- [type](../../devkit/documents/ProjectGraphExternalNode#type): "npm" | "cargo" | "gradle"
 
 ## Properties
 
@@ -35,10 +35,10 @@ while allowing tracking of the full tree of different nested versions
 
 ### name
 
-• **name**: \`npm:$\{string}\`
+• **name**: \`npm:$\{string}\` \| \`cargo:$\{string}\` \| \`gradle:$\{string}\`
 
 ---
 
 ### type
 
-• **type**: `"npm"`
+• **type**: `"npm"` \| `"cargo"` \| `"gradle"`

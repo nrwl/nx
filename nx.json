@@ -52,7 +52,11 @@
     ]
   },
   "release": {
-    "projects": ["packages/*", "packages/nx/native-packages/*"],
+    "projects": [
+      "packages/*",
+      "packages/nx/native-packages/*",
+      "packages/gradle/native/*"
+    ],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {

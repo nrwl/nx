@@ -43,6 +43,11 @@
             "output": "/"
           },
           {
+            "input": "packages/gradle",
+            "glob": "**/gradle.properties",
+            "output": "/"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"
