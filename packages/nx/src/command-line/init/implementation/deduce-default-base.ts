@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { deduceDefaultBase as gitInitDefaultBase } from '../../../utils/default-base';
 
 export function deduceDefaultBase() {
