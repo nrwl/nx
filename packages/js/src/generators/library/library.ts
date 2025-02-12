@@ -58,7 +58,6 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
-import setupVerdaccio from '../setup-verdaccio/generator';
 import type {
   Bundler,
   LibraryGeneratorSchema,
