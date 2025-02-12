@@ -363,7 +363,7 @@ export async function createProjectGraphAndSourceMapsAsync(
     } catch (e) {
       handleProjectGraphError(opts, e);
     } finally {
-      lock.unlock();
+      lock?.unlock();
     }
   } else {
     try {
