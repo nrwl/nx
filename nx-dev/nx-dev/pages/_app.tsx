@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
 import { WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { FrontendObservability } from '../lib/components/frontend-observability';
 
 export default function CustomApp({
   Component,
@@ -48,6 +49,7 @@ export default function CustomApp({
   }, [router.events, gaMeasurementId]);
   return (
     <>
+      <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast CI"
         description="Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
