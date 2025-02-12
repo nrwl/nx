@@ -361,6 +361,7 @@ export interface NxSyncConfiguration {
  * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
+  $schema?: string;
   /**
    * Optional (additional) Nx.json configuration file which becomes a base for this one
    */
