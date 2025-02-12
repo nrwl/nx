@@ -37,8 +37,30 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
             }) + (webinar.time ? ' - ' + webinar.time : '');
 
           return (
-            <div className="mx-auto mt-6 w-full max-w-4xl lg:flex lg:max-w-7xl lg:gap-4">
-              <div className="relative flex h-full flex-1 transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg dark:border-slate-800">
+            <div className="mx-auto mt-8 w-full max-w-4xl lg:flex lg:max-w-7xl lg:gap-4">
+              <div className="flex-1">
+                <Link
+                  href={webinar.registrationUrl || `/blog/${webinar.slug}`}
+                  title={webinar.title}
+                  className="text-balance text-2xl font-semibold text-slate-900 dark:text-white"
+                  prefetch={false}
+                >
+                  {webinar.title}
+                </Link>
+                <p className="my-4 font-bold">{dateAndTime}</p>
+                <p className="my-4">Presented by {authorsList}</p>
+                <p className="my-4">{webinar.description}</p>
+                {webinar.registrationUrl && (
+                  <div className="max-w-md">
+                    <CallToAction
+                      title="Register today!"
+                      description="Save your spot"
+                      url={webinar.registrationUrl}
+                    ></CallToAction>
+                  </div>
+                )}
+              </div>
+              <div className="relative hidden h-full flex-1 transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg lg:flex dark:border-slate-800">
                 {webinar.cover_image && (
                   <div className="aspect-[1.7] w-full">
                     <Image
@@ -50,42 +72,6 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
                       height={735}
                     />
                   </div>
-                )}
-                <div className="flex gap-1 p-4">
-                  <div className="flex flex-1 flex-col gap-1 p-4 pl-0">
-                    <BlogAuthors authors={webinar.authors} />
-                    <Link
-                      href={webinar.registrationUrl || `/blog/${webinar.slug}`}
-                      title={webinar.title}
-                      className="text-balance text-lg font-semibold text-slate-900 dark:text-white"
-                      prefetch={false}
-                    >
-                      <span className="absolute inset-0" aria-hidden="true" />
-                      {webinar.title}
-                    </Link>
-                  </div>
-                  <div className="my-auto">
-                    <ButtonLink
-                      href="/nx-cloud"
-                      title="Register today!"
-                      variant="contrast"
-                      size="default"
-                    >
-                      Register today!
-                    </ButtonLink>
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="my-4 font-bold">{dateAndTime}</p>
-                <p className="my-4">Presented by {authorsList}</p>
-                <p className="my-4">{webinar.description}</p>
-                {webinar.registrationUrl && (
-                  <CallToAction
-                    title="Register today!"
-                    description="Save your spot"
-                    url={webinar.registrationUrl}
-                  ></CallToAction>
                 )}
               </div>
             </div>
