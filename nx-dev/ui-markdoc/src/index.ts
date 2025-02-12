@@ -54,8 +54,7 @@ import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
 import { TableOfContents } from './lib/tags/table-of-contents.component';
 import { tableOfContents } from './lib/tags/table-of-contents.schema';
-import { Quote } from './lib/tags/quote.component';
-import { quote } from './lib/tags/quote.schema';
+import { Testimonial, testimonial } from './lib/tags/testimonial.component';
 import { metrics } from './lib/tags/metrics.schema';
 import { Metrics } from './lib/tags/metrics.component';
 export { CallToAction };
@@ -87,12 +86,12 @@ export const getMarkdocCustomConfig = (
       personas,
       'project-details': projectDetails,
       pill,
-      quote,
       'short-embeds': shortEmbeds,
       'short-video': shortVideo,
       'side-by-side': sideBySide,
       tab,
       tabs,
+      testimonial,
       toc: tableOfContents,
       tweet,
       youtube,
@@ -119,13 +118,13 @@ export const getMarkdocCustomConfig = (
     Personas,
     ProjectDetails,
     Pill,
-    Quote,
     ShortEmbeds,
     ShortVideo,
     SideBySide,
     Tab,
     Tabs,
     TableOfContents,
+    Testimonial,
     Tweet,
     YouTube,
     VideoLink,
