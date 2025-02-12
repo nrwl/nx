@@ -5108,6 +5108,16 @@
     ],
     "migrations": [
       {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
         "file": "generated/packages/rspack/migrations/ensure-nx-module-federation-package.json",
         "hidden": false,
@@ -5898,6 +5908,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/webpack",
+        "path": "webpack/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/webpack/migrations/19.7.0-package-updates.json",

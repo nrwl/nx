@@ -245,9 +245,23 @@
           "items": {
             "type": "string"
           }
+        },
+        "sassOptions": {
+          "description": "Options to pass to sass-loader.",
+          "type": "object"
+        },
+        "lessOptions": {
+          "description": "Options to pass to less-loader.",
+          "type": "object"
         }
       },
       "additionalProperties": false
+    },
+    "sassImplementation": {
+      "type": "string",
+      "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
+      "enum": ["sass", "sass-embedded"],
+      "default": "sass"
     },
     "styles": {
       "type": "array",
