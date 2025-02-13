@@ -47,6 +47,66 @@ describe('Remix Application', () => {
       expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     });
 
+    it('should ignore vite temp files', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      await applicationGenerator(tree, {
+        name: 'test',
+        directory: '.',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+        "null
+        .cache
+        build
+        public/build
+        .env
+
+        vite.config.*.timestamp*
+        vitest.config.*.timestamp*"
+      `);
+      expect(tree.read('.eslintrc.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "root": true,
+          "ignorePatterns": [
+            "!**/*",
+            "build",
+            "public/build",
+            "**/vite.config.*.timestamp*",
+            "**/vitest.config.*.timestamp*"
+          ],
+          "plugins": [
+            "@nx"
+          ],
+          "overrides": [
+            {
+              "files": [
+                "*.ts",
+                "*.tsx"
+              ],
+              "extends": [
+                "plugin:@nx/typescript"
+              ],
+              "rules": {}
+            },
+            {
+              "files": [
+                "*.js",
+                "*.jsx"
+              ],
+              "extends": [
+                "plugin:@nx/javascript"
+              ],
+              "rules": {}
+            }
+          ]
+        }
+        "
+      `);
+    });
+
     describe('--unitTestRunner', () => {
       it('should generate the correct files for testing using vitest', async () => {
         // ARRANGE
@@ -175,6 +235,62 @@ describe('Remix Application', () => {
       expect(
         tree.read(`${appDir}/app/routes/_index.tsx`, 'utf-8')
       ).toMatchSnapshot();
+    });
+
+    it('should ignore vite temp files', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      await applicationGenerator(tree, {
+        directory: 'test',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+        "vite.config.*.timestamp*
+        vitest.config.*.timestamp*"
+      `);
+      expect(tree.read(`${appDir}/.eslintrc.json`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": [
+            "../.eslintrc.json"
+          ],
+          "ignorePatterns": [
+            "!**/*",
+            "build",
+            "public/build",
+            "**/vite.config.*.timestamp*",
+            "**/vitest.config.*.timestamp*"
+          ],
+          "overrides": [
+            {
+              "files": [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx"
+              ],
+              "rules": {}
+            },
+            {
+              "files": [
+                "*.ts",
+                "*.tsx"
+              ],
+              "rules": {}
+            },
+            {
+              "files": [
+                "*.js",
+                "*.jsx"
+              ],
+              "rules": {}
+            }
+          ]
+        }
+        "
+      `);
     });
 
     describe('--directory', () => {

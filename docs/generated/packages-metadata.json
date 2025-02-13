@@ -5497,6 +5497,16 @@
         "type": "migration"
       },
       {
+        "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+        "file": "generated/packages/vite/migrations/eslint-ignore-vite-temp-files.json",
+        "hidden": false,
+        "name": "eslint-ignore-vite-temp-files",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "vite/migrations/eslint-ignore-vite-temp-files",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/vite/migrations/20.5.0-package-updates.json",
         "hidden": false,

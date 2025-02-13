@@ -22,7 +22,14 @@ exports[`app generated files content - as-provided - my-app general application 
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
+  "ignorePatterns": [
+    "!**/*",
+    ".nuxt/**",
+    ".output/**",
+    "node_modules",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -416,7 +423,14 @@ exports[`app generated files content - as-provided - myApp general application s
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
+  "ignorePatterns": [
+    "!**/*",
+    ".nuxt/**",
+    ".output/**",
+    "node_modules",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],

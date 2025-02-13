@@ -122,6 +122,9 @@ export async function applicationGeneratorInternal(
     tasks.push(twTask);
   }
 
+  const lintTask = await addLinting(tree, options);
+  tasks.push(lintTask);
+
   if (options.bundler === 'vite') {
     await setupViteConfiguration(tree, options, tasks);
   } else if (options.bundler === 'rsbuild') {
@@ -143,9 +146,6 @@ export async function applicationGeneratorInternal(
       )
     );
   }
-
-  const lintTask = await addLinting(tree, options);
-  tasks.push(lintTask);
 
   const e2eTask = await addE2e(tree, options);
   tasks.push(e2eTask);
