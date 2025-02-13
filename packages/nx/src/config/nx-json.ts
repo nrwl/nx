@@ -2,14 +2,15 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
-import { readJsonFile } from '../utils/fileutils';
-import { PackageManager } from '../utils/package-manager';
-import { workspaceRoot } from '../utils/workspace-root';
-import {
+import type { PackageManager } from '../utils/package-manager';
+import type {
   InputDefinition,
   TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
+
+import { readJsonFile } from '../utils/fileutils';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;

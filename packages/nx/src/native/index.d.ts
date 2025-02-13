@@ -100,6 +100,7 @@ export declare class WorkspaceContext {
    * as the input globs.
    */
   multiGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<Array<string>>
+  hashFilesMatchingGlobs(globGroups: Array<Array<string>>): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles

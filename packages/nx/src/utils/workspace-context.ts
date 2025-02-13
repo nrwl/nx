@@ -86,6 +86,17 @@ export async function hashWithWorkspaceContext(
   return daemonClient.hashGlob(globs, exclude);
 }
 
+export async function hashMultiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globGroups: string[][]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.hashFilesMatchingGlobs(globGroups);
+  }
+  return daemonClient.hashMultiGlob(globGroups);
+}
+
 export async function updateContextWithChangedFiles(
   workspaceRoot: string,
   createdFiles: string[],

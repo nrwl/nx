@@ -11,7 +11,10 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import {
+  calculateHashesForCreateNodes,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -186,10 +189,10 @@ const internalCreateNodesV2 = async (
   configFilePath: string,
   options: EslintPluginOptions,
   context: CreateNodesContextV2,
-  eslintConfigFiles: string[],
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
-  projectsCache: Record<string, CreateNodesResult['projects']>
+  projectsCache: Record<string, CreateNodesResult['projects']>,
+  hashByRoot: Map<string, string>
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
@@ -201,19 +204,7 @@ const internalCreateNodesV2 = async (
   const projects: CreateNodesResult['projects'] = {};
   await Promise.all(
     projectRootsByEslintRoots.get(configDir).map(async (projectRoot) => {
-      const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
-        isSubDir(projectRoot, dirname(eslintConfig))
-      );
-      const hash = await calculateHashForCreateNodes(
-        projectRoot,
-        options,
-        {
-          configFiles: eslintConfigFiles,
-          nxJsonConfiguration: context.nxJsonConfiguration,
-          workspaceRoot: context.workspaceRoot,
-        },
-        [...parentConfigs, join(projectRoot, '.eslintignore')]
-      );
+      const hash = hashByRoot.get(projectRoot);
 
       if (projectsCache[hash]) {
         // We can reuse the projects in the cache.
@@ -280,6 +271,20 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
       options,
       context
     );
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      options,
+      context,
+      projectRoots.map((root) => {
+        const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
+          isSubDir(root, dirname(eslintConfig))
+        );
+        return [...parentConfigs, join(root, '.eslintignore')];
+      })
+    );
+    const hashByRoot = new Map<string, string>(
+      projectRoots.map((r, i) => [r, hashes[i]])
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -287,10 +292,10 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
             configFile,
             options,
             context,
-            eslintConfigFiles,
             projectRootsByEslintRoots,
             lintableFilesPerProjectRoot,
-            targetsCache
+            targetsCache,
+            hashByRoot
           ),
         eslintConfigFiles,
         options,

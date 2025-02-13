@@ -1,6 +1,7 @@
 import {
   CreateNodes,
   CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   getPackageManagerCommand,
@@ -13,7 +14,10 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import {
+  calculateHashesForCreateNodes,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import {
   clearRequireCache,
   loadConfigFile,
@@ -72,17 +76,70 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
 
+    const packageManagerWorkspacesGlob = combineGlobPatterns(
+      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    );
+    options = normalizeOptions(options);
+
+    const { roots: projectRoots, configFiles: validConfigFiles } =
+      configFiles.reduce(
+        (acc, configFile) => {
+          const potentialRoot = dirname(configFile);
+          if (
+            checkIfConfigFileShouldBeProject(
+              configFile,
+              potentialRoot,
+              packageManagerWorkspacesGlob,
+              context
+            )
+          ) {
+            acc.roots.push(potentialRoot);
+            acc.configFiles.push(configFile);
+          }
+          return acc;
+        },
+        {
+          roots: [],
+          configFiles: [],
+        } as {
+          roots: string[];
+          configFiles: string[];
+        }
+      );
+
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      options,
+      context
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
+        async (configFilePath, options, context, idx) => {
+          const projectRoot = projectRoots[idx];
+          const hash = hashes[idx];
+
+          targetsCache[hash] ??= await buildJestTargets(
+            configFilePath,
+            projectRoot,
             options,
             context,
-            targetsCache,
             presetCache
-          ),
-        configFiles,
+          );
+
+          const { targets, metadata } = targetsCache[hash];
+
+          return {
+            projects: {
+              [projectRoot]: {
+                root: projectRoot,
+                targets,
+                metadata,
+              },
+            },
+          };
+        },
+        validConfigFiles,
         options,
         context
       );
@@ -98,35 +155,63 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
  */
 export const createNodes: CreateNodes<JestPluginOptions> = [
   jestConfigGlob,
-  (...args) => {
+  async (configFilePath, options, context) => {
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
 
-    return createNodesInternal(...args, {}, {});
+    const projectRoot = dirname(configFilePath);
+
+    const packageManagerWorkspacesGlob = combineGlobPatterns(
+      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    );
+
+    if (
+      !checkIfConfigFileShouldBeProject(
+        configFilePath,
+        projectRoot,
+        packageManagerWorkspacesGlob,
+        context
+      )
+    ) {
+      return {};
+    }
+
+    options = normalizeOptions(options);
+
+    const { targets, metadata } = await buildJestTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      {}
+    );
+
+    return {
+      projects: {
+        [projectRoot]: {
+          root: projectRoot,
+          targets,
+          metadata,
+        },
+      },
+    };
   },
 ];
 
-async function createNodesInternal(
+function checkIfConfigFileShouldBeProject(
   configFilePath: string,
-  options: JestPluginOptions,
-  context: CreateNodesContext,
-  targetsCache: Record<string, JestTargets>,
-  presetCache: Record<string, unknown>
-) {
-  const projectRoot = dirname(configFilePath);
-
-  const packageManagerWorkspacesGlob = combineGlobPatterns(
-    getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
-  );
-
+  projectRoot: string,
+  packageManagerWorkspacesGlob: string,
+  context: CreateNodesContext | CreateNodesContextV2
+): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
   if (
     !siblingFiles.includes('package.json') &&
     !siblingFiles.includes('project.json')
   ) {
-    return {};
+    return false;
   } else if (
     !siblingFiles.includes('project.json') &&
     siblingFiles.includes('package.json')
@@ -136,7 +221,7 @@ async function createNodesInternal(
     const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
 
     if (!isPackageJsonProject) {
-      return {};
+      return false;
     }
   }
 
@@ -148,31 +233,9 @@ async function createNodesInternal(
     // The `getJestProjectsAsync` function uses the project graph, which leads to a
     // circular dependency. We can skip this since it's no intended to be used for
     // an Nx project.
-    return {};
+    return false;
   }
-
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(projectRoot, options, context);
-  targetsCache[hash] ??= await buildJestTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    presetCache
-  );
-
-  const { targets, metadata } = targetsCache[hash];
-
-  return {
-    projects: {
-      [projectRoot]: {
-        root: projectRoot,
-        targets,
-        metadata,
-      },
-    },
-  };
+  return true;
 }
 
 async function buildJestTargets(
