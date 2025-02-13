@@ -10,10 +10,7 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
-import {
-  getReactDependenciesVersionsToInstall,
-  isReactRouterCliInstalled,
-} from '../../utils/version-utils';
+import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/router-plugin';
 
@@ -44,9 +41,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  const hasReactRouterDependency = await isReactRouterCliInstalled(tree);
-
-  if (schema.addPlugin && hasReactRouterDependency) {
+  if (schema.addPlugin) {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),

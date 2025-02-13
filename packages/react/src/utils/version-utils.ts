@@ -56,16 +56,6 @@ export async function isReact18(tree: Tree) {
   return major(installedReactVersion) === 18;
 }
 
-export async function isReactRouterCliInstalled(tree: Tree) {
-  const pkgJson = readJson(tree, 'package.json');
-  return (
-    pkgJson.dependencies &&
-    pkgJson.dependencies['react-router'] &&
-    pkgJson.devDependencies &&
-    pkgJson.devDependencies['@react-router/dev']
-  );
-}
-
 export function getInstalledReactVersion(tree: Tree): string {
   const pkgJson = readJson(tree, 'package.json');
   const installedReactVersion =

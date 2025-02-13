@@ -8,6 +8,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes by defau
       "projects": {
         "acme": {
           "metadata": {},
+          "projectType": "application",
           "root": "acme",
           "targets": {
             "build": {
@@ -105,6 +106,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes without 
       "projects": {
         "acme": {
           "metadata": {},
+          "projectType": "library",
           "root": "acme",
           "targets": {
             "build": {
