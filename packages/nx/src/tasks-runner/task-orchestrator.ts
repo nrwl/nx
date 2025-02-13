@@ -47,7 +47,6 @@ export class TaskOrchestrator {
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
-    this.runningTasksService,
     this.options
   );
 
@@ -578,6 +577,14 @@ export class TaskOrchestrator {
   }
 
   private async startContinuousTask(task: Task, groupId: number) {
+    if (this.runningTasksService.getRunningTasks([task.id]).length) {
+      // task is already running, we need to poll and wait for the running task to finish
+      do {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } while (this.runningTasksService.getRunningTasks([task.id]).length);
+      return;
+    }
+
     const taskSpecificEnv = await this.processedTasks.get(task.id);
     await this.preRunSteps([task], { groupId });
 
