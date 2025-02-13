@@ -235,6 +235,10 @@ export interface NxAppWebpackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Watch buildable dependencies and rebuild when they change.
+   */
+  watchDependencies?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions
