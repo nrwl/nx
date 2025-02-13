@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: 'Nx Cloud',
   description:
     'Nx Cloud is the end-to-end solution for smart, efficient and maintainable CI.',
+  alternates: {
+    canonical: 'https://nx.dev/nx-cloud',
+  },
   openGraph: {
     url: 'https://nx.dev/nx-cloud',
     title: 'Nx Cloud',

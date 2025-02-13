@@ -98,6 +98,9 @@ export const metadata: Metadata = {
   title: 'Resources',
   description:
     'Explore Nx resources including tutorials, code examples, podcasts, and more.',
+  alternates: {
+    canonical: 'https://nx.dev/resources',
+  },
   openGraph: {
     url: 'https://nx.dev/resources',
     title: 'Nx Resources',

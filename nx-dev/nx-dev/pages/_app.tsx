@@ -75,6 +75,7 @@ export default function CustomApp({
         dangerouslySetAllPagesToNoIndex={
           process.env.NEXT_PUBLIC_NO_INDEX === 'true'
         }
+        canonical={'https://nx.dev' + router.asPath.split('?')[0]}
       />
       <Head>
         <meta name="apple-mobile-web-app-title" content="Nx" />
