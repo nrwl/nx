@@ -88,7 +88,15 @@ describe('@nx/vite/plugin', () => {
         [
           [
             "vite.config.ts",
-            {},
+            {
+              "projects": {
+                ".": {
+                  "metadata": {},
+                  "root": ".",
+                  "targets": {},
+                },
+              },
+            },
           ],
         ]
       `);
@@ -297,7 +305,15 @@ describe('@nx/vite/plugin', () => {
         [
           [
             "my-app/vite.config.ts",
-            {},
+            {
+              "projects": {
+                "my-app": {
+                  "metadata": {},
+                  "root": "my-app",
+                  "targets": {},
+                },
+              },
+            },
           ],
         ]
       `);

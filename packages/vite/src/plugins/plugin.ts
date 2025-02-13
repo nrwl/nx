@@ -222,6 +222,7 @@ async function buildViteTargets(
   projectRoot: string,
   options: VitePluginOptions,
   tsConfigFiles: string[],
+  hasReactRouterConfig: boolean,
   isUsingTsSolutionSetup: boolean,
   context: CreateNodesContext
 ): Promise<ViteTargets> {
@@ -253,6 +254,19 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  // if file is vitest.config or vite.config has definition for test, create target for test
+  if (configFilePath.includes('vitest.config') || hasTest) {
+    targets[options.testTargetName] = await testTarget(
+      namedInputs,
+      testOutputs,
+      projectRoot
+    );
+  }
+
+  if (hasReactRouterConfig) {
+    // If we have a react-router config, we can skip the rest of the targets
+    return { targets, metadata: {}, isLibrary: false };
+  }
   // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
   const hasRemixPlugin =
     viteBuildConfig.plugins &&
@@ -333,15 +347,6 @@ async function buildViteTargets(
         '@nx/js:typescript-sync',
       ];
     }
-  }
-
-  // if file is vitest.config or vite.config has definition for test, create target for test
-  if (configFilePath.includes('vitest.config') || hasTest) {
-    targets[options.testTargetName] = await testTarget(
-      namedInputs,
-      testOutputs,
-      projectRoot
-    );
   }
 
   addBuildAndWatchDepsTargets(
