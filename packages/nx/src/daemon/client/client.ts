@@ -16,7 +16,6 @@ import { getFullOsSocketPath, killSocketOrPath } from '../socket-utils';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
-  isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
 import { FileData, ProjectGraph } from '../../config/project-graph';
@@ -50,7 +49,12 @@ import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
-import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
+import {
+  HASH_GLOB,
+  HASH_MULTI_GLOB,
+  HandleHashGlobMessage,
+  HandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -91,6 +95,7 @@ import {
   POST_TASKS_EXECUTION,
   PRE_TASKS_EXECUTION,
 } from '../message-types/run-tasks-execution-hooks';
+import { isDaemonEnabled } from './enabled';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -136,48 +141,7 @@ export class DaemonClient {
   private _err: FileHandle = null;
 
   enabled() {
-    if (this._enabled === undefined) {
-      const useDaemonProcessOption = this.nxJson?.useDaemonProcess;
-      const env = process.env.NX_DAEMON;
-
-      // env takes precedence
-      // option=true,env=false => no daemon
-      // option=false,env=undefined => no daemon
-      // option=false,env=false => no daemon
-
-      // option=undefined,env=undefined => daemon
-      // option=true,env=true => daemon
-      // option=false,env=true => daemon
-
-      // CI=true,env=undefined => no daemon
-      // CI=true,env=false => no daemon
-      // CI=true,env=true => daemon
-
-      // docker=true,env=undefined => no daemon
-      // docker=true,env=false => no daemon
-      // docker=true,env=true => daemon
-      // WASM => no daemon because file watching does not work
-      if (
-        ((isCI() || isDocker()) && env !== 'true') ||
-        isDaemonDisabled() ||
-        nxJsonIsNotPresent() ||
-        (useDaemonProcessOption === undefined && env === 'false') ||
-        (useDaemonProcessOption === true && env === 'false') ||
-        (useDaemonProcessOption === false && env === undefined) ||
-        (useDaemonProcessOption === false && env === 'false')
-      ) {
-        this._enabled = false;
-      } else if (IS_WASM) {
-        output.warn({
-          title:
-            'The Nx Daemon is unsupported in WebAssembly environments. Some things may be slower than or not function as expected.',
-        });
-        this._enabled = false;
-      } else {
-        this._enabled = true;
-      }
-    }
-    return this._enabled;
+    return isDaemonEnabled(this.nxJson);
   }
 
   reset() {
@@ -381,6 +345,14 @@ export class DaemonClient {
       type: HASH_GLOB,
       globs,
       exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  hashMultiGlob(globGroups: string[][]): Promise<string[]> {
+    const message: HandleHashMultiGlobMessage = {
+      type: HASH_MULTI_GLOB,
+      globGroups: globGroups,
     };
     return this.sendToDaemonViaQueue(message);
   }
@@ -704,27 +676,6 @@ export class DaemonClient {
 }
 
 export const daemonClient = new DaemonClient();
-
-export function isDaemonEnabled() {
-  return daemonClient.enabled();
-}
-
-function isDocker() {
-  try {
-    statSync('/.dockerenv');
-    return true;
-  } catch {
-    try {
-      return readFileSync('/proc/self/cgroup', 'utf8')?.includes('docker');
-    } catch {}
-
-    return false;
-  }
-}
-
-function nxJsonIsNotPresent() {
-  return !hasNxJson(workspaceRoot);
-}
 
 function daemonProcessException(message: string) {
   try {

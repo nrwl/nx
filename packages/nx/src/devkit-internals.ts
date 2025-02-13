@@ -20,7 +20,10 @@ export { stripIndent } from './utils/logger';
 export { readModulePackageJson } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
-export { hashWithWorkspaceContext } from './utils/workspace-context';
+export {
+  hashWithWorkspaceContext,
+  hashMultiGlobWithWorkspaceContext,
+} from './utils/workspace-context';
 export {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
