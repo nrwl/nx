@@ -15,7 +15,7 @@ import {
   isReactRouterInstalled,
 } from '../../utils/version-utils';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
-import { createNodesV2 } from '../../plugins/react-router-plugin';
+import { createNodesV2 } from '../../plugins/router-plugin';
 
 export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -50,7 +50,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
     await addPlugin(
       tree,
       await createProjectGraphAsync(),
-      '@nx/react/react-router-plugin',
+      '@nx/react/router-plugin',
       createNodesV2,
       {
         buildTargetName: ['build', 'react-router:build', 'react-router-build'],
