@@ -1,5 +1,5 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { createNodesV2 } from './react-router-plugin';
+import { createNodesV2 } from './router-plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
