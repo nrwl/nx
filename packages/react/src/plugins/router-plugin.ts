@@ -1,6 +1,6 @@
 import {
-  CreateNodesV2,
-  CreateNodesContext,
+  type CreateNodesV2,
+  type CreateNodesContext,
   detectPackageManager,
   readJsonFile,
   type TargetConfiguration,
@@ -9,13 +9,14 @@ import {
   getPackageManagerCommand,
   joinPathFragments,
   type ProjectConfiguration,
+  type CreateNodesContextV2,
 } from '@nx/devkit';
 
 import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
 import { hashObject } from 'nx/src/devkit-internals';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
@@ -34,15 +35,20 @@ export interface ReactRouterPluginOptions {
   watchDepsTargetName?: string;
 }
 
-type ReactRouterTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+type ReactRouterTargets = Pick<
+  ProjectConfiguration,
+  'targets' | 'metadata' | 'projectType'
+>;
 
 const pmCommand = getPackageManagerCommand();
 const reactRouterConfigBlob = '**/react-router.config.{ts,js,cjs,cts,mjs,mts}';
 
 function readTargetsCache(
   cachePath: string
-): Record<string, Record<string, TargetConfiguration>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+): Record<string, ReactRouterTargets> {
+  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : {};
 }
 
 function writeTargetsToCache(
@@ -56,23 +62,81 @@ export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
   reactRouterConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
+    const normalizedOptions = normalizeOptions(options);
     const cachePath = join(
       workspaceDataDirectory,
       `react-router-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
 
+    const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
+
+    const { roots: projectRoots, configFiles: validConfigFiles } =
+      configFiles.reduce(
+        (acc, configFile) => {
+          const potentialRoot = dirname(configFile);
+          if (checkIfConfigFileShouldBeProject(potentialRoot, context)) {
+            acc.roots.push(potentialRoot);
+            acc.configFiles.push(configFile);
+          }
+          return acc;
+        },
+        {
+          roots: [],
+          configFiles: [],
+        } as {
+          roots: string[];
+          configFiles: string[];
+        }
+      );
+
+    const lockfile = getLockFileName(
+      detectPackageManager(context.workspaceRoot)
+    );
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      { ...normalizedOptions, isUsingTsSolutionSetup },
+      context,
+      projectRoots.map((_) => [lockfile])
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            targetsCache,
-            _isUsingTsSolutionSetup()
-          ),
-        configFiles,
+        async (configFile, _, context, idx) => {
+          const projectRoot = dirname(configFile);
+
+          const siblingFiles = readdirSync(
+            joinPathFragments(context.workspaceRoot, projectRoot)
+          );
+
+          const hash = hashes[idx] + configFile;
+          const { projectType, metadata, targets } = (targetsCache[hash] ??=
+            await buildReactRouterTargets(
+              configFile,
+              projectRoot,
+              normalizedOptions,
+              context,
+              siblingFiles,
+              isUsingTsSolutionSetup
+            ));
+
+          const project: ProjectConfiguration = {
+            root: projectRoot,
+            targets,
+            metadata,
+          };
+
+          if (project.targets[normalizedOptions.buildTargetName]) {
+            project.projectType = projectType;
+          }
+
+          return {
+            projects: {
+              [projectRoot]: project,
+            },
+          };
+        },
+        validConfigFiles,
         options,
         context
       );
@@ -82,74 +146,6 @@ export const createNodesV2: CreateNodesV2<ReactRouterPluginOptions> = [
   },
 ];
 
-function hasRequiredConfigs(files: string[]): boolean {
-  const lowerFiles = files.map((file) => file.toLowerCase());
-
-  // Check if vite.config.{ext} is present
-  const hasViteConfig = lowerFiles.some((file) => {
-    const parts = file.split('.');
-    return parts[0] === 'vite' && parts[1] === 'config' && parts.length > 2;
-  });
-
-  if (!hasViteConfig) return false;
-
-  const hasProjectOrPackageJson =
-    lowerFiles.includes('project.json') || lowerFiles.includes('package.json');
-
-  return hasProjectOrPackageJson;
-}
-
-async function createNodesInternal(
-  configFilePath: string,
-  options: ReactRouterPluginOptions,
-  context: CreateNodesContext,
-  targetsCache: Record<string, ReactRouterTargets>,
-  isUsingTsSolutionSetup: boolean
-) {
-  const projectRoot = dirname(configFilePath);
-  const resolveProjectRoot = joinPathFragments(
-    context.workspaceRoot,
-    projectRoot
-  );
-
-  const siblingFiles = readdirSync(resolveProjectRoot);
-  if (!hasRequiredConfigs(siblingFiles)) {
-    return {};
-  }
-
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    { ...options, isUsingTsSolutionSetup },
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
-
-  targetsCache[hash] ??= await buildReactRouterTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    siblingFiles,
-    isUsingTsSolutionSetup
-  );
-
-  const { targets, metadata } = targetsCache[hash];
-
-  const project: ProjectConfiguration = {
-    root: projectRoot,
-    targets,
-    metadata,
-  };
-
-  return {
-    projects: {
-      [projectRoot]: project,
-    },
-  };
-}
-
 async function buildReactRouterTargets(
   configFilePath: string,
   projectRoot: string,
@@ -157,11 +153,18 @@ async function buildReactRouterTargets(
   context: CreateNodesContext,
   siblingFiles: string[],
   isUsingTsSolutionSetup: boolean
-) {
+): Promise<ReactRouterTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
+  const configPath = join(context.workspaceRoot, configFilePath);
+
+  if (require.cache[configPath]) clearRequireCache();
+  const reactRouterConfig = await loadConfigFile(configPath);
+  const isLibMode =
+    reactRouterConfig?.ssr !== undefined && reactRouterConfig.ssr === false;
+
   const { buildDirectory, serverBuildPath } = await getBuildPaths(
-    configFilePath,
-    context
+    reactRouterConfig,
+    isLibMode
   );
 
   const targets: Record<string, TargetConfiguration> = {};
@@ -204,8 +207,12 @@ async function buildReactRouterTargets(
     options,
     pmCommand
   );
-
-  return { targets, metadata: {} };
+  const metadata = {};
+  return {
+    targets,
+    metadata,
+    projectType: isLibMode ? 'library' : 'application',
+  };
 }
 
 async function getBuildTargetConfig(
@@ -248,17 +255,7 @@ async function getBuildTargetConfig(
   return buildTarget;
 }
 
-async function getBuildPaths(
-  configFilePath: string,
-  context: CreateNodesContext
-) {
-  const configPath = join(context.workspaceRoot, configFilePath);
-
-  if (require.cache[configPath]) clearRequireCache();
-  const reactRouterConfig = await loadConfigFile(configPath);
-
-  const isLibMode =
-    reactRouterConfig?.ssr !== undefined && reactRouterConfig.ssr === false;
+async function getBuildPaths(reactRouterConfig, isLibMode: boolean) {
   return {
     buildDirectory: reactRouterConfig?.buildDirectory ?? 'build/client',
     ...(isLibMode
@@ -359,4 +356,30 @@ function normalizeOptions(options: ReactRouterPluginOptions) {
   options.typecheckTargetName ??= 'typecheck';
 
   return options;
+}
+
+function checkIfConfigFileShouldBeProject(
+  projectRoot: string,
+  context: CreateNodesContext | CreateNodesContextV2
+): boolean {
+  // Do not create a project if package.json and project.json isn't there.
+  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+  return hasRequiredConfigs(siblingFiles);
+}
+
+function hasRequiredConfigs(files: string[]): boolean {
+  const lowerFiles = files.map((file) => file.toLowerCase());
+
+  // Check if vite.config.{ext} is present
+  const hasViteConfig = lowerFiles.some((file) => {
+    const parts = file.split('.');
+    return parts[0] === 'vite' && parts[1] === 'config' && parts.length > 2;
+  });
+
+  if (!hasViteConfig) return false;
+
+  const hasProjectOrPackageJson =
+    lowerFiles.includes('project.json') || lowerFiles.includes('package.json');
+
+  return hasProjectOrPackageJson;
 }

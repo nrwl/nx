@@ -122,6 +122,15 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
               minimatch(p, 'tsconfig*{.json,.*.json}')
             ) ?? [];
 
+          const hasReactRouterConfig = siblingFiles.some((configFile) => {
+            const parts = configFile.split('.');
+            return (
+              parts[0] === 'react-router' &&
+              parts[1] === 'config' &&
+              parts.length > 2
+            );
+          });
+
           // results from vitest.config.js will be different from results of vite.config.js
           // but the hash will be the same because it is based on the files under the project root.
           // Adding the config file path to the hash ensures that the final hash value is different
@@ -133,6 +142,7 @@ export const createNodesV2: CreateNodesV2<VitePluginOptions> = [
               projectRoot,
               normalizedOptions,
               tsConfigFiles,
+              hasReactRouterConfig,
               isUsingTsSolutionSetup,
               context
             ));
@@ -185,6 +195,13 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
       siblingFiles.filter((p) => minimatch(p, 'tsconfig*{.json,.*.json}')) ??
       [];
 
+    const hasReactRouterConfig = siblingFiles.some((configFile) => {
+      const parts = configFile.split('.');
+      return (
+        parts[0] === 'react-router' && parts[1] === 'config' && parts.length > 2
+      );
+    });
+
     const normalizedOptions = normalizeOptions(options);
 
     const isUsingTsSolutionSetup = _isUsingTsSolutionSetup();
@@ -194,6 +211,7 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
       projectRoot,
       normalizedOptions,
       tsConfigFiles,
+      hasReactRouterConfig,
       isUsingTsSolutionSetup,
       context
     );
@@ -265,7 +283,7 @@ async function buildViteTargets(
 
   if (hasReactRouterConfig) {
     // If we have a react-router config, we can skip the rest of the targets
-    return { targets, metadata: {}, isLibrary: false };
+    return { targets, metadata: {}, projectType: 'application' };
   }
   // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
   const hasRemixPlugin =
