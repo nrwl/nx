@@ -12,3 +12,7 @@ Returns information about where apps and libs will be created.
 | :-------- | :------- |
 | `appsDir` | `string` |
 | `libsDir` | `string` |
+
+**`Deprecated`**
+
+Workspace Layout will be removed in Nx v20. Generators should accept the full path via a --directory argument.
