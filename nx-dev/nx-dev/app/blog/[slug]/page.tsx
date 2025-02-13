@@ -18,6 +18,9 @@ export async function generateMetadata(
   return {
     title: `${post.title} | Nx Blog`,
     description: post.description,
+    alternates: {
+      canonical: `https://nx.dev/blog/${slug}`,
+    },
     openGraph: {
       url: `https://nx.dev/blog/${slug}`,
       title: post.title,
