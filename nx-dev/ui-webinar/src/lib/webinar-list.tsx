@@ -1,7 +1,10 @@
 import { WebinarDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
-import { BlogEntry } from '@nx/nx-dev/ui-blog';
+import { BlogAuthors, BlogEntry } from '@nx/nx-dev/ui-blog';
 import { WebinarListItem } from './webinar-list-item';
 import { CallToAction } from '@nx/nx-dev/ui-markdoc';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ButtonLink } from '@nx/nx-dev/ui-common';
 
 export interface WebinarListProps {
   webinars: WebinarDataEntry[];
@@ -34,23 +37,43 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
             }) + (webinar.time ? ' - ' + webinar.time : '');
 
           return (
-            <div className="mt-6 w-full max-w-xl">
-              <BlogEntry
-                post={webinar}
-                overrideLink={webinar.registrationUrl}
-              ></BlogEntry>
-              <p className="my-4 font-bold">{dateAndTime}</p>
-              <p className="my-4">Presented by {authorsList}</p>
-              <p className="my-4">{webinar.description}</p>
-              {webinar.registrationUrl && (
-                <div className="max-w-md">
-                  <CallToAction
-                    title="Register today!"
-                    description="Save your spot"
-                    url={webinar.registrationUrl}
-                  ></CallToAction>
-                </div>
-              )}
+            <div className="mx-auto mt-8 w-full max-w-4xl lg:flex lg:max-w-7xl lg:gap-4">
+              <div className="flex-1">
+                <Link
+                  href={webinar.registrationUrl || `/blog/${webinar.slug}`}
+                  title={webinar.title}
+                  className="text-balance text-2xl font-semibold text-slate-900 dark:text-white"
+                  prefetch={false}
+                >
+                  {webinar.title}
+                </Link>
+                <p className="my-4 font-bold">{dateAndTime}</p>
+                <p className="my-4">Presented by {authorsList}</p>
+                <p className="my-4">{webinar.description}</p>
+                {webinar.registrationUrl && (
+                  <div className="max-w-md">
+                    <CallToAction
+                      title="Register today!"
+                      description="Save your spot"
+                      url={webinar.registrationUrl}
+                    ></CallToAction>
+                  </div>
+                )}
+              </div>
+              <div className="relative hidden h-full flex-1 transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg lg:flex dark:border-slate-800">
+                {webinar.cover_image && (
+                  <div className="aspect-[1.7] w-full">
+                    <Image
+                      quality={100}
+                      className="h-full w-full object-cover"
+                      src={webinar.cover_image}
+                      alt={webinar.title}
+                      width={1400}
+                      height={735}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
