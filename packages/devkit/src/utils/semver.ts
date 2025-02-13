@@ -6,12 +6,9 @@ export function checkAndCleanWithSemver(
 ): string {
   let newVersion = version;
 
-  if (valid(newVersion)) {
+  const isPnpmCatalog = newVersion.startsWith('catalog:');
+  if (valid(newVersion) || isPnpmCatalog) {
     return newVersion;
-  }
-
-  if (version.startsWith('~') || version.startsWith('^')) {
-    newVersion = version.substring(1);
   }
 
   if (!valid(newVersion)) {
