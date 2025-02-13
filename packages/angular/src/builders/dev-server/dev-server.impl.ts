@@ -206,7 +206,8 @@ export function executeDevServerBuilder(
                         new WebpackNxBuildCoordinationPlugin(
                           `nx run-many --target=${
                             parsedBuildTarget.target
-                          } --projects=${workspaceDependencies.join(',')}`
+                          } --projects=${workspaceDependencies.join(',')}`,
+                          { skipWatchingDeps: !options.watchDependencies }
                         )
                       );
                     }
@@ -261,6 +262,7 @@ function getDelegateBuilderOptions(
 
   // delete extra option not supported by the delegate builder
   delete delegateBuilderOptions.buildLibsFromSource;
+  delete delegateBuilderOptions.watchDependencies;
 
   return delegateBuilderOptions;
 }

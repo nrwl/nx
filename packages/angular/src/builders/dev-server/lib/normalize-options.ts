@@ -20,5 +20,6 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
     liveReload: schema.liveReload ?? true,
     open: schema.open ?? false,
     ssl: schema.ssl ?? false,
+    watchDependencies: schema.watchDependencies ?? true,
   };
 }
