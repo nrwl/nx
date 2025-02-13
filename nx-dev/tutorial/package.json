@@ -8,7 +8,7 @@
     "build": "npx astro check && npx astro build",
     "dev": "npx astro dev",
     "preview": "npx astro preview",
-    "serve": "npx astro dev"
+    "serve": "npx astro dev --port 4200"
   },
   "dependencies": {},
   "devDependencies": {}
