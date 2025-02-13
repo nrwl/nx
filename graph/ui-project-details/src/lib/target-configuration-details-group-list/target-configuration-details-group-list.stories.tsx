@@ -3,7 +3,7 @@ import {
   TargetConfigurationGroupList,
   TargetConfigurationGroupListProps,
 } from './target-configuration-details-group-list';
-import { ExpandedTargetsProvider } from '@nx/graph/shared';
+import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
 
 const meta: Meta<typeof TargetConfigurationGroupList> = {
   component: TargetConfigurationGroupList,

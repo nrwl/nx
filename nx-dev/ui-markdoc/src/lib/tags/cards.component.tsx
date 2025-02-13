@@ -4,7 +4,7 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
+import { Framework, frameworkIcons } from '@nx/graph/legacy/icons';
 import * as nxDevIcons from '@nx/nx-dev/ui-icons';
 import * as heroIcons from '@heroicons/react/24/outline';
 

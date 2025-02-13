@@ -11,8 +11,8 @@ import {
   getExternalApiService,
   useEnvironmentConfig,
   useRouteConstructor,
-} from '@nx/graph/shared';
-import { Spinner } from '@nx/graph/ui-components';
+} from '@nx/graph/legacy/shared';
+import { Spinner } from '@nx/graph/legacy/components';
 
 import { ProjectDetails } from '@nx/graph-internal/ui-project-details';
 import { useCallback, useContext, useEffect } from 'react';

@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import { ProjectDetails as ProjectDetailsUi } from '@nx/graph-internal/ui-project-details';
-import { ExpandedTargetsProvider } from '@nx/graph/shared';
+import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
 import { twMerge } from 'tailwind-merge';
 
 export function Loading() {

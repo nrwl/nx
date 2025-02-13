@@ -1,4 +1,4 @@
-import { ExternalApi, getExternalApiService } from '@nx/graph/shared';
+import { ExternalApi, getExternalApiService } from '@nx/graph/legacy/shared';
 import { getRouter } from './get-router';
 import { getProjectGraphService } from './machines/get-services';
 import { getGraphService } from './machines/graph.service';
