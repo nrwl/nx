@@ -522,12 +522,12 @@ function validateCommonDependencyRules(
   d: RawProjectGraphDependency,
   { externalNodes, projects, fileMap }: CreateDependenciesContext
 ) {
-  if (!projects[d.source] && !externalNodes[d.source]) {
+  if (!projects[d.source] && !checkDependencyExist(d.source, externalNodes)) {
     throw new Error(`Source project does not exist: ${d.source}`);
   }
   if (
     !projects[d.target] &&
-    !externalNodes[d.target] &&
+    !checkDependencyExist(d.target, externalNodes) &&
     !('sourceFile' in d && d.sourceFile)
   ) {
     throw new Error(`Target project does not exist: ${d.target}`);
@@ -626,5 +626,25 @@ function getFileData(
   return (
     getProjectFileData(source, sourceFile, fileMap) ??
     getNonProjectFileData(sourceFile, nonProjectFiles)
+  );
+}
+
+/**
+ * Package name might contain external link as a package version
+ * ("@someCompany/package@npm:@someOtherCompany/package@1.0.0"). In that case
+ * we won't be able to find such dependency directly within `externalNodes`.
+ */
+function checkDependencyExist(
+  dependencyNameAndVersion: string,
+  externalNodes: CreateDependenciesContext['externalNodes']
+) {
+  const versionPosition = dependencyNameAndVersion.indexOf('@npm:');
+  const dependencyName = dependencyNameAndVersion.slice(0, versionPosition);
+
+  return (
+    externalNodes[dependencyNameAndVersion] ||
+    (externalNodes[dependencyName] &&
+      externalNodes[dependencyName].data.version ===
+        dependencyNameAndVersion.slice(versionPosition + 1))
   );
 }

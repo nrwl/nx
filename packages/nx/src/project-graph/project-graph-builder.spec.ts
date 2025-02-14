@@ -220,17 +220,74 @@ describe('ProjectGraphBuilder', () => {
         packageName: 'external2',
       },
     });
+    // originated from: npm:react-helmet-async@npm:@slorber/react-helmet-async@*
+    builder.addExternalNode({
+      name: 'npm:external3',
+      type: 'npm',
+      data: {
+        version: 'npm:@company/external3@*',
+        packageName: 'external3',
+      },
+    });
+    builder.addExternalNode({
+      name: 'npm:@company1/external3',
+      type: 'npm',
+      data: {
+        version: 'npm:@company2/external3@*',
+        packageName: '@company1/external3',
+      },
+    });
     builder.addStaticDependency('npm:external', 'npm:external2');
+    builder.addStaticDependency(
+      'npm:external',
+      'npm:external3@npm:@company/external3@*'
+    );
+    builder.addStaticDependency(
+      'npm:external',
+      'npm:@company1/external3@npm:@company2/external3@*'
+    );
+    builder.addStaticDependency(
+      'npm:external3@npm:@company/external3@*',
+      'target'
+    );
+    builder.addStaticDependency(
+      'npm:@company1/external3@npm:@company2/external3@*',
+      'target'
+    );
     builder.addStaticDependency('source', 'npm:external', 'source/index.ts');
     builder.addDynamicDependency('source', 'npm:external2', 'source/second.ts');
     const graph = builder.getUpdatedProjectGraph();
 
     expect(graph.dependencies).toMatchInlineSnapshot(`
       {
+        "npm:@company1/external3@npm:@company2/external3@*": [
+          {
+            "source": "npm:@company1/external3@npm:@company2/external3@*",
+            "target": "target",
+            "type": "static",
+          },
+        ],
         "npm:external": [
           {
             "source": "npm:external",
             "target": "npm:external2",
+            "type": "static",
+          },
+          {
+            "source": "npm:external",
+            "target": "npm:external3@npm:@company/external3@*",
+            "type": "static",
+          },
+          {
+            "source": "npm:external",
+            "target": "npm:@company1/external3@npm:@company2/external3@*",
+            "type": "static",
+          },
+        ],
+        "npm:external3@npm:@company/external3@*": [
+          {
+            "source": "npm:external3@npm:@company/external3@*",
+            "target": "target",
             "type": "static",
           },
         ],
@@ -282,10 +339,34 @@ describe('ProjectGraphBuilder', () => {
 
     expect(updatedGraph.dependencies).toMatchInlineSnapshot(`
       {
+        "npm:@company1/external3@npm:@company2/external3@*": [
+          {
+            "source": "npm:@company1/external3@npm:@company2/external3@*",
+            "target": "target",
+            "type": "static",
+          },
+        ],
         "npm:external": [
           {
             "source": "npm:external",
             "target": "npm:external2",
+            "type": "static",
+          },
+          {
+            "source": "npm:external",
+            "target": "npm:external3@npm:@company/external3@*",
+            "type": "static",
+          },
+          {
+            "source": "npm:external",
+            "target": "npm:@company1/external3@npm:@company2/external3@*",
+            "type": "static",
+          },
+        ],
+        "npm:external3@npm:@company/external3@*": [
+          {
+            "source": "npm:external3@npm:@company/external3@*",
+            "target": "target",
             "type": "static",
           },
         ],
