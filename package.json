@@ -104,7 +104,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-url": "^8.0.2",
     "@rsbuild/core": "1.1.8",
-    "@rspack/core": "1.1.6",
+    "@rspack/core": "1.2.2",
     "@rspack/dev-server": "1.0.9",
     "@rspack/plugin-minify": "^0.7.5",
     "@rspack/plugin-react-refresh": "^1.0.0",
