@@ -1,19 +1,13 @@
 import * as createSpinner from 'ora';
 import { bold } from 'chalk';
+import { execSync } from 'child_process';
 
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../../utils/package-manager';
-import { GitRepository } from '../../utils/git-utils';
 import { output } from '../../utils/output';
-import { flushChanges, FsTree } from '../../generators/tree';
-import {
-  Generator as NxGenerator,
-  GeneratorCallback,
-  GeneratorsJsonEntry,
-} from '../../config/misc-interfaces';
-import { getGeneratorInformation } from '../generate/generator-utils';
+import { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { addDepsToPackageJson, runInstall } from './implementation/utils';
 import { getPluginCapabilities } from '../../utils/plugins';
@@ -40,17 +34,18 @@ export function runPackageManagerInstallPlugins(
  * Installs a plugin by running its init generator. It will change the file system tree passed in.
  * @param plugin The name of the plugin to install
  * @param repoRoot repo root
- * @param verbose verbose
- * @param options options passed to init generator
+ * @param pmc package manager commands
+ * @param updatePackageScripts whether to update package scripts
+ * @param verbose whether to run in verbose mode
  * @returns void
  */
 export async function installPlugin(
   plugin: string,
   repoRoot: string = workspaceRoot,
+  updatePackageScripts: boolean = false,
   verbose: boolean = false,
-  options: { [k: string]: any }
+  pmc: PackageManagerCommands = getPackageManagerCommand()
 ): Promise<void> {
-  const host = new FsTree(repoRoot, verbose, `install ${plugin}`);
   const capabilities = await getPluginCapabilities(repoRoot, plugin, {});
   const generators = capabilities?.generators;
   if (!generators) {
@@ -64,19 +59,16 @@ export async function installPlugin(
     });
     return;
   }
-  const { implementationFactory } = getGeneratorInformation(
-    plugin,
-    initGenerator,
-    repoRoot,
-    {}
+  execSync(
+    `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
+      updatePackageScripts ? '--updatePackageScripts' : ''
+    } ${verbose ? '--verbose' : ''}`,
+    {
+      stdio: [0, 1, 2],
+      cwd: repoRoot,
+      windowsHide: false,
+    }
   );
-
-  const implementation: NxGenerator = implementationFactory();
-  const task: GeneratorCallback | void = await implementation(host, options);
-  flushChanges(repoRoot, host.listChanges());
-  if (task) {
-    await task();
-  }
 }
 
 /**
@@ -87,6 +79,7 @@ export async function installPlugin(
 export async function installPlugins(
   plugins: string[],
   updatePackageScripts: boolean,
+  pmc: PackageManagerCommands,
   repoRoot: string = workspaceRoot,
   verbose: boolean = false
 ): Promise<{
@@ -108,13 +101,7 @@ export async function installPlugins(
   for (const plugin of plugins) {
     try {
       spinner.start('Installing plugin ' + plugin);
-      await installPlugin(plugin, repoRoot, verbose, {
-        keepExistingVersions: true,
-        updatePackageScripts,
-        addPlugin: true,
-        skipFormat: false,
-        skipPackageJson: false,
-      });
+      await installPlugin(plugin, repoRoot, updatePackageScripts, verbose, pmc);
       succeededPlugins.push(plugin);
       spinner.succeed('Installed plugin ' + plugin);
     } catch (e) {
@@ -154,6 +141,7 @@ export async function configurePlugins(
   let { succeededPlugins, failedPlugins } = await installPlugins(
     plugins,
     updatePackageScripts,
+    pmc,
     repoRoot,
     verbose
   );
