@@ -1,10 +1,16 @@
 import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { minimatch } from 'minimatch';
+import { mkdirSync, rmdirSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { PLUGIN_NAME, createNodesV2, type TscPluginOptions } from './plugin';
+
+jest.mock('nx/src/utils/cache-directory', () => ({
+  ...jest.requireActual('nx/src/utils/cache-directory'),
+  workspaceDataDirectory: 'tmp/project-graph-cache',
+}));
 
 describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let context: CreateNodesContext;
@@ -13,6 +19,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let originalCacheProjectGraph: string | undefined;
 
   beforeEach(() => {
+    mkdirSync('tmp/project-graph-cache', { recursive: true });
     tempFs = new TempFs('typescript-plugin');
     context = {
       nxJsonConfiguration: {
@@ -38,6 +45,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     tempFs.cleanup();
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
+    rmdirSync('tmp/project-graph-cache', { recursive: true });
   });
 
   it('should not create nodes for root tsconfig.json files', async () => {
@@ -59,7 +67,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     it('should create a node with a typecheck target for a project level tsconfig.json file by default (when there is a sibling package.json or project.json)', async () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/package.json': `{}`,
       });
       expect(await invokeCreateNodesOnMatchingFiles(context, {}))
@@ -114,7 +122,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       // Sibling project.json
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/project.json': `{}`,
       });
       expect(await invokeCreateNodesOnMatchingFiles(context, {}))
@@ -169,7 +177,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       // Other tsconfigs present
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/tsconfig.spec.json': `{}`,
@@ -229,7 +237,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     it('should create a node with a typecheck target with "--verbose" flag when the "verboseOutput" plugin option is true', async () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/package.json': `{}`,
       });
       expect(
@@ -285,7 +293,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       // Sibling project.json
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/project.json': `{}`,
       });
       expect(
@@ -341,7 +349,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
 
       // Other tsconfigs present
       await applyFilesToTempFsAndContext(tempFs, context, {
-        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
         'libs/my-lib/tsconfig.lib.json': `{}`,
         'libs/my-lib/tsconfig.build.json': `{}`,
         'libs/my-lib/tsconfig.spec.json': `{}`,
@@ -446,6 +454,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       await applyFilesToTempFsAndContext(tempFs, context, {
         'libs/my-lib/tsconfig.json': JSON.stringify({
           compilerOptions: { noEmit: true },
+          files: [],
         }),
         'libs/my-lib/package.json': `{}`,
       });
@@ -506,6 +515,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
         'libs/my-lib/tsconfig.json': JSON.stringify({
           extends: '../../tsconfig.base.json',
+          files: [],
         }),
         'libs/my-lib/package.json': `{}`,
       });
@@ -568,6 +578,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         }),
         'libs/my-lib/tsconfig.lib.json': JSON.stringify({
           compilerOptions: { noEmit: true },
+          files: [],
         }),
         'libs/my-lib/package.json': `{}`,
       });
@@ -641,6 +652,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/foo.ts'],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/package.json': `{}`,
         });
@@ -686,7 +699,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -709,6 +724,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             extends: '../../tsconfig.foo.json',
             include: ['src/**/*.ts'],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/package.json': `{}`,
         });
@@ -757,7 +774,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -781,6 +800,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           'libs/my-lib/tsconfig.json': JSON.stringify({
             extends: '../../tsconfig.foo.json',
             include: ['src/**/*.ts'],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/package.json': `{}`,
         });
@@ -835,7 +856,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -859,23 +882,33 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               { path: './nested-project/tsconfig.json' }, // external project reference in a nested directory
               { path: '../other-lib' }, // external project reference, it causes `dependentTasksOutputFiles` to be set
             ],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
             include: ['src/**/*.ts'],
             exclude: ['src/**/*.spec.ts'],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/tsconfig.spec.json': JSON.stringify({
             include: ['src/**/*.spec.ts'],
             references: [{ path: './tsconfig.lib.json' }],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/cypress/tsconfig.json': JSON.stringify({
             include: ['**/*.ts', '../cypress.config.ts', '../**/*.cy.ts'],
             references: [{ path: '../tsconfig.lib.json' }],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/package.json': `{}`,
           'libs/my-lib/nested-project/package.json': `{}`,
           'libs/my-lib/nested-project/tsconfig.json': JSON.stringify({
             include: ['lib/**/*.ts'], // different pattern that should not be included in my-lib because it's an external project reference
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/other-lib/tsconfig.json': JSON.stringify({
             include: ['**/*.ts'], // different pattern that should not be included because it's an external project
@@ -931,7 +964,10 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                      "{projectRoot}/cypress/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -975,7 +1011,9 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "options": {
                       "cwd": "libs/my-lib/nested-project",
                     },
-                    "outputs": [],
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
                     ],
@@ -2803,6 +2841,8 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/tsconfig.other.json': JSON.stringify({
             include: ['other/**/*.ts', 'src/**/foo.ts'],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
           }),
           'libs/other-lib/tsconfig.json': JSON.stringify({
             include: ['**/*.ts'], // different pattern that should not be included because it's an external project

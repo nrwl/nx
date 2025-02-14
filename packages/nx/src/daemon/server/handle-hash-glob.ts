@@ -1,5 +1,8 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import { hashWithWorkspaceContext } from '../../utils/workspace-context';
+import {
+  hashMultiGlobWithWorkspaceContext,
+  hashWithWorkspaceContext,
+} from '../../utils/workspace-context';
 import { HandlerResult } from './server';
 
 export async function handleHashGlob(
@@ -10,5 +13,15 @@ export async function handleHashGlob(
   return {
     response: JSON.stringify(files),
     description: 'handleHashGlob',
+  };
+}
+
+export async function handleHashMultiGlob(
+  globs: string[][]
+): Promise<HandlerResult> {
+  const files = await hashMultiGlobWithWorkspaceContext(workspaceRoot, globs);
+  return {
+    response: JSON.stringify(files),
+    description: 'handleHashMultiGlob',
   };
 }
