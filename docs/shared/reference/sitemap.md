@@ -34,7 +34,6 @@
     - [Nx Daemon](/concepts/nx-daemon)
     - [Sync Generators](/concepts/sync-generators)
     - [TypeScript Project Linking](/concepts/typescript-project-linking)
-    - [Nx and Turborepo](/concepts/turbo-and-nx)
     - [Buildable and Publishable Libraries](/concepts/buildable-and-publishable-libraries)
     - [Module Federation](/concepts/module-federation)
       - [Module Federation and Nx](/concepts/module-federation/module-federation-and-nx)

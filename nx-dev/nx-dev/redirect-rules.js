@@ -259,7 +259,7 @@ const diataxis = {
   '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
-  '/guides/turbo-and-nx': '/concepts/more-concepts/turbo-and-nx',
+  '/guides/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/guides/why-monorepos': '/concepts/more-concepts/why-monorepos',
   '/guides/adding-assets-react': '/recipes/other/adding-assets-react',
   '/guides/environment-variables': '/reference/environment-variables',
@@ -795,6 +795,7 @@ const conceptUrls = {
     '/nx-api/angular/documents/nx-devkit-angular-devkit',
   '/concepts/more-concepts/incremental-builds':
     '/concepts/more-concepts/buildable-and-publishable-libraries',
+  '/concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
 };
 
 const nested5minuteTutorialUrls = {
@@ -1123,7 +1124,7 @@ const decisionsSection = {
     '/concepts/decisions/project-dependency-rules',
   '/concepts/more-concepts/grouping-libraries':
     '/concepts/decisions/folder-structure',
-  '/concepts/more-concepts/turbo-and-nx': '/concepts/turbo-and-nx',
+  '/concepts/more-concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/concepts/more-concepts/nx-daemon': '/concepts/nx-daemon',
   '/concepts/more-concepts/buildable-and-publishable-libraries':
     '/concepts/buildable-and-publishable-libraries',
