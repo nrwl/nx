@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { existsSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { sep, join } from 'path';
 
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
@@ -15,10 +15,10 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'bun.lockb'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
-    ? 'yarn'
-    : existsSync(join(dir, 'pnpm-lock.yaml'))
-    ? 'pnpm'
-    : 'npm';
+      ? 'yarn'
+      : existsSync(join(dir, 'pnpm-lock.yaml'))
+        ? 'pnpm'
+        : 'npm';
 }
 
 /**
@@ -139,20 +139,20 @@ export function getPackageManagerVersion(
  * Default to 'npm'
  */
 export function detectInvokedPackageManager(): PackageManager {
-  let detectedPackageManager: PackageManager = 'npm';
-  // mainModule is deprecated since Node 14, fallback for older versions
-  const invoker = require.main || process['mainModule'];
-
-  // default to `npm`
-  if (!invoker) {
-    return detectedPackageManager;
-  }
-  for (const pkgManager of packageManagerList) {
-    if (invoker.path.includes(pkgManager)) {
-      detectedPackageManager = pkgManager;
-      break;
+  if (process.env.npm_config_user_agent) {
+    for (const pm of packageManagerList) {
+      if (process.env.npm_config_user_agent.startsWith(`${pm}/`)) {
+        return pm;
+      }
     }
   }
 
-  return detectedPackageManager;
+  if (process.env.npm_execpath) {
+    for (const pm of packageManagerList) {
+      if (process.env.npm_execpath.split(sep).includes(pm)) {
+        return pm;
+      }
+    }
+  }
+  return 'npm';
 }
