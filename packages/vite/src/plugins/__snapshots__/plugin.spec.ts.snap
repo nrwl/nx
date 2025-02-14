@@ -123,6 +123,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             },
             "dev": {
               "command": "vite",
+              "continuous": true,
               "metadata": {
                 "description": "Starts Vite dev server",
                 "help": {
@@ -143,6 +144,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             },
             "my-serve": {
               "command": "vite",
+              "continuous": true,
               "metadata": {
                 "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                 "description": "Starts Vite dev server",
@@ -164,6 +166,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             },
             "preview-site": {
               "command": "vite preview",
+              "continuous": true,
               "dependsOn": [
                 "build-something",
               ],
@@ -186,6 +189,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
               },
             },
             "serve-static": {
+              "continuous": true,
               "executor": "@nx/web:file-server",
               "options": {
                 "buildTarget": "build-something",
@@ -257,6 +261,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             },
             "dev": {
               "command": "vite",
+              "continuous": true,
               "metadata": {
                 "description": "Starts Vite dev server",
                 "help": {
@@ -277,6 +282,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             },
             "preview": {
               "command": "vite preview",
+              "continuous": true,
               "dependsOn": [
                 "build",
               ],
@@ -300,6 +306,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             },
             "serve": {
               "command": "vite",
+              "continuous": true,
               "metadata": {
                 "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                 "description": "Starts Vite dev server",
@@ -320,6 +327,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
               },
             },
             "serve-static": {
+              "continuous": true,
               "executor": "@nx/web:file-server",
               "options": {
                 "buildTarget": "build",
