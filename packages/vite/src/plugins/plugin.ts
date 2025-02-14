@@ -354,6 +354,7 @@ async function buildTarget(
 
 function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `vite`,
     options: {
       cwd: joinPathFragments(projectRoot),
@@ -381,6 +382,7 @@ function serveTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
 
 function previewTarget(projectRoot: string, buildTargetName) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `vite preview`,
     dependsOn: [buildTargetName],
     options: {
@@ -445,6 +447,7 @@ function serveStaticTarget(
   isUsingTsSolutionSetup: boolean
 ) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildTargetName}`,
