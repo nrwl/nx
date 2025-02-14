@@ -74,18 +74,23 @@ export async function getLatestGitTagForPattern(
       alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
       // Check if any glob pattern matches next
       if (!alwaysCheckAllBranches) {
-        alwaysCheckAllBranches =
-          minimatch.match(checkAllBranchesWhen, currentBranch).length > 0;
+        alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
+          const r = minimatch.makeRe(pattern, { dot: true });
+          if (!r) {
+            return false;
+          }
+          return r.test(currentBranch);
+        });
       }
     }
   }
 
+  const defaultGitArgs = ['tag', '--sort', '-v:refname'];
+
   try {
     let tags: string[];
     tags = await execCommand('git', [
-      'tag',
-      '--sort',
-      '-v:refname',
+      ...defaultGitArgs,
       ...(alwaysCheckAllBranches ? [] : ['--merged']),
     ]).then((r) =>
       r
@@ -103,13 +108,12 @@ export async function getLatestGitTagForPattern(
       !alwaysCheckAllBranches
     ) {
       // try again, but include all tags on the repo instead of just --merged ones
-      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-        (r) =>
-          r
-            .trim()
-            .split('\n')
-            .map((t) => t.trim())
-            .filter(Boolean)
+      tags = await execCommand('git', defaultGitArgs).then((r) =>
+        r
+          .trim()
+          .split('\n')
+          .map((t) => t.trim())
+          .filter(Boolean)
       );
     }
 
