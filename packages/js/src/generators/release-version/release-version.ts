@@ -308,7 +308,8 @@ To fix this you will either need to add a package.json file at that location, or
               releaseTagPattern,
               {
                 projectName: project.name,
-              }
+              },
+              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
