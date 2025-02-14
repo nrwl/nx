@@ -119,11 +119,13 @@ describe('application generator', () => {
     ).toMatchInlineSnapshot(`
       {
         "options": {
+          "buildDepsTargetName": "build-deps",
           "buildTargetName": "build",
           "devTargetName": "dev",
           "inspectTargetName": "inspect",
           "previewTargetName": "preview",
           "typecheckTargetName": "typecheck",
+          "watchDepsTargetName": "watch-deps",
         },
         "plugin": "@nx/rsbuild",
       }
@@ -193,7 +195,7 @@ describe('application generator', () => {
         import { defineConfig } from 'vite';
         import vue from '@vitejs/plugin-vue';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/test',
           server: {
@@ -225,10 +227,10 @@ describe('application generator', () => {
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
-              provider: 'v8',
+              provider: 'v8' as const,
             },
           },
-        });
+        }));
         "
       `);
 
@@ -240,6 +242,16 @@ describe('application generator', () => {
           {
             "path": "./test",
           },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'test/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'test/tsconfig.json')).toMatchInlineSnapshot(`

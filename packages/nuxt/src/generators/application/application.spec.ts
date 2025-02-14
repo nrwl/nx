@@ -65,8 +65,21 @@ describe('app', () => {
           ).toMatchSnapshot();
         });
 
-        it('should configure eslint correctly (flat config)', async () => {
-          tree.write('eslint.config.cjs', '');
+        it('should configure eslint correctly (flat config ESM)', async () => {
+          tree.write('eslint.config.mjs', 'export default {};');
+
+          await applicationGenerator(tree, {
+            directory: name,
+            unitTestRunner: 'vitest',
+          });
+
+          expect(
+            tree.read(`${name}/eslint.config.mjs`, 'utf-8')
+          ).toMatchSnapshot();
+        });
+
+        it('should configure eslint correctly (flat config CJS)', async () => {
+          tree.write('eslint.config.cjs', 'module.exports = {};');
 
           await applicationGenerator(tree, {
             directory: name,
@@ -103,7 +116,7 @@ describe('app', () => {
           ).toMatchSnapshot();
           expect(tree.read(`${name}/tsconfig.json`, 'utf-8')).toMatchSnapshot();
           const packageJson = readJson(tree, 'package.json');
-          expect(packageJson.devDependencies['vitest']).toEqual('^1.3.1');
+          expect(packageJson.devDependencies['vitest']).toEqual('^3.0.0');
         });
 
         it('should configure tsconfig and project.json correctly', async () => {
@@ -242,6 +255,16 @@ describe('app', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../tsconfig.base.json",
@@ -259,7 +282,6 @@ describe('app', () => {
       expect(readJson(tree, 'myapp/tsconfig.app.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": true,
             "jsx": "preserve",
             "jsxImportSource": "vue",
             "module": "esnext",
@@ -298,7 +320,6 @@ describe('app', () => {
       expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
         {
           "compilerOptions": {
-            "composite": true,
             "jsx": "preserve",
             "jsxImportSource": "vue",
             "module": "esnext",
@@ -361,11 +382,6 @@ describe('app', () => {
             "src/**/*.test.ts",
             "src/**/*.test.js",
             "src/**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
           ],
         }
       `);

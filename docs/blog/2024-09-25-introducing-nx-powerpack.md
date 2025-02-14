@@ -5,12 +5,13 @@ authors: [Juri Strumpflohner]
 tags: [nx, release]
 cover_image: /blog/images/introducing-powerpack/thumbnail.png
 youtubeUrl: https://youtu.be/KZ0nh2lj8zE
+description: Introducing Nx Powerpack, a paid extension suite for enterprise use cases, ensuring Nx remains open source and existing features are free.
 ---
 
 Today we're introducing our latest product, **Nx Powerpack**, a suite of paid extensions for Nx, specifically designed around common enterprise needs. Now, before anyone draws the wrong conclusions:
 
-- No, we’re **not going to restrict Nx’s license**, lock you in, and then harvest. Nx remains MIT licensed and fully open source.
-- No, we’re **not placing existing features behind a paywall**. Nx Powerpack introduces new features on top of Nx (more about that below).
+- No, we're **not going to restrict Nx's license**, lock you in, and then harvest. Nx remains MIT licensed and fully open source.
+- No, we're **not placing existing features behind a paywall**. Nx Powerpack introduces new features on top of Nx (more about that below).
 - Yes, we still **strongly believe in OSS and our community**, and we will keep improving Nx more than ever; if anything, Powerpack will help us fund our OSS work on Nx core and ensure its long-term sustainability.
 
 ### What about my open-source repo ?
@@ -28,7 +29,7 @@ But now to the fun, technical part! Nx Powerpack is a bundle that - in this very
 - [Self-hosted cache storage](#selfhosted-cache-storage)
 - [Workspace conformance (beta)](#workspace-conformance-beta)
 
-Let’s dive in!
+Let's dive in!
 
 ## Get an Nx Powerpack License
 
@@ -42,9 +43,9 @@ npx nx activate-powerpack <your-license>
 
 ## Codeowners for Monorepos
 
-Setting up Codeowners is highly recommended when designing a monorepo. If you’re not familiar, Codeowners is a common feature of VCS providers (such as GitHub, GitLab, Bitbucket, etc.), allowing you to enforce specific code reviewers to approve PRs. This functionality is especially important in a monorepo, where you manage multiple projects with multiple teams. You want to ensure the right people are reviewing the code being submitted.
+Setting up Codeowners is highly recommended when designing a monorepo. If you're not familiar, Codeowners is a common feature of VCS providers (such as GitHub, GitLab, Bitbucket, etc.), allowing you to enforce specific code reviewers to approve PRs. This functionality is especially important in a monorepo, where you manage multiple projects with multiple teams. You want to ensure the right people are reviewing the code being submitted.
 
-Here’s a simple example of a [GitHub CODEOWNERS definition](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners):
+Here's a simple example of a [GitHub CODEOWNERS definition](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners):
 
 ```plain {% fileName=".github/CODEOWNERS" %}
 /docs/ @doc-owner

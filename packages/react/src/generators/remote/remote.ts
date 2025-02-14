@@ -111,10 +111,10 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   if (options.dynamic) {
     // Dynamic remotes generate with library { type: 'var' } by default.
     // We need to ensure that the remote name is a valid variable name.
-    const isValidRemote = isValidVariable(options.projectName);
+    const isValidRemote = isValidVariable(options.name);
     if (!isValidRemote.isValid) {
       throw new Error(
-        `Invalid remote name provided: ${options.projectName}. ${isValidRemote.message}`
+        `Invalid remote name provided: ${options.name}. ${isValidRemote.message}`
       );
     }
   }
@@ -122,9 +122,9 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   await ensureProjectName(host, options, 'application');
   const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
   const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
-  if (!remoteNameRegex.test(options.projectName)) {
+  if (!remoteNameRegex.test(options.name)) {
     throw new Error(
-      stripIndents`Invalid remote name: ${options.projectName}. Remote project names must:
+      stripIndents`Invalid remote name: ${options.name}. Remote project names must:
       - Start with a letter, dollar sign ($) or underscore (_)
       - Followed by any valid character (letters, digits, underscores, or dollar signs)
       The regular expression used is ${REMOTE_NAME_REGEX}.`
@@ -132,14 +132,14 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   }
   const initAppTask = await applicationGenerator(host, {
     ...options,
-    name: options.projectName,
+    name: options.name,
     skipFormat: true,
     alwaysGenerateProjectJson: true,
   });
   tasks.push(initAppTask);
 
-  if (schema.host) {
-    updateHostWithRemote(host, schema.host, options.projectName);
+  if (options.host) {
+    updateHostWithRemote(host, options.host, options.name);
   }
 
   // Module federation requires bootstrap code to be dynamically imported.
@@ -218,7 +218,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,

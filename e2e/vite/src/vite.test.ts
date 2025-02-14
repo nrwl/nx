@@ -206,6 +206,47 @@ describe('@nx/vite/plugin', () => {
 
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
     });
+
+    it('should not partially match a path mapping', () => {
+      const lib1 = uniq('lib1');
+      const lib2 = uniq('lib2');
+      const lib3 = uniq('lib3');
+      runCLI(
+        `generate @nx/react:library libs/${lib1} --bundler=none --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library libs/${lib2} --bundler=none --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/react:library libs/${lib3} --bundler=none --unitTestRunner=vitest`
+      );
+      updateFile(`libs/${lib1}/src/foo.enum.ts`, `export const foo = 'foo';`);
+      updateFile(`libs/${lib2}/src/bar.enum.ts`, `export const bar = 'bar';`);
+      updateFile(`libs/${lib3}/src/bam.enum.ts`, `export const bam = 'bam';`);
+      updateFile(
+        `libs/${lib1}/src/foo.spec.ts`,
+        `
+          import { foo } from 'match-lib-deep/foo.enum';
+          import { bar } from 'match-lib-top-level';
+          import { bam } from 'match-lib/bam.enum';
+          test('should work', () => {
+            expect(foo).toBeDefined();
+            expect(bar).toBeDefined();
+            expect(bam).toBeDefined();
+          });
+        `
+      );
+      updateJson('tsconfig.base.json', (json) => {
+        json.compilerOptions.paths['match-lib-deep/*'] = [`libs/${lib1}/src/*`];
+        json.compilerOptions.paths['match-lib-top-level'] = [
+          `libs/${lib2}/src/bar.enum.ts`,
+        ];
+        json.compilerOptions.paths['match-lib/*'] = [`libs/${lib3}/src/*`];
+        return json;
+      });
+
+      expect(() => runCLI(`test ${lib1}`)).not.toThrow();
+    });
   });
 
   describe('react with vitest only', () => {

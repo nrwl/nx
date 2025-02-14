@@ -1,0 +1,14 @@
+{
+  "name": "update-19-7-0-remove-eas-pre-install",
+  "version": "19.7.0-beta.4",
+  "cli": "nx",
+  "description": "Remove eas-build-pre-install script from app's package.json",
+  "factory": "./src/migrations/update-19-7-0/remove-eas-pre-install",
+  "implementation": "/packages/expo/src/migrations/update-19-7-0/remove-eas-pre-install.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

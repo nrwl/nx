@@ -13,6 +13,15 @@ export declare class ChildProcess {
   onOutput(callback: (message: string) => void): void
 }
 
+export declare class FileLock {
+  locked: boolean
+  constructor(lockFilePath: string)
+  unlock(): void
+  check(): boolean
+  wait(): Promise<void>
+  lock(): void
+}
+
 export declare class HashPlanner {
   constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
@@ -84,6 +93,14 @@ export declare class WorkspaceContext {
   constructor(workspaceRoot: string, cacheDir: string)
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
+  /**
+   * Performs multiple glob pattern matches against workspace files in parallel
+   * @returns An array of arrays, where each inner array contains the file paths
+   * that matched the corresponding glob pattern in the input. The outer array maintains the same order
+   * as the input globs.
+   */
+  multiGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<Array<string>>
+  hashFilesMatchingGlobs(globGroups: Array<Array<string>>): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles

@@ -301,6 +301,12 @@ Type: `boolean`
 
 Watch for file changes.
 
+##### watchDependencies
+
+Type: `boolean`
+
+Watch for buildable dependencies and rebuild when they change. Default is `true`.
+
 #### Example
 
 ```js

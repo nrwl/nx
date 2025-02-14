@@ -57,16 +57,28 @@ export type {
   CreateMetadata,
   CreateMetadataContext,
   ProjectsMetadata,
+  PreTasksExecution,
+  PreTasksExecutionContext,
+  PostTasksExecution,
+  PostTasksExecutionContext,
 } from './project-graph/plugins';
 
-export { AggregateCreateNodesError } from './project-graph/error-types';
+export {
+  AggregateCreateNodesError,
+  StaleProjectGraphCacheError,
+} from './project-graph/error-types';
 
 export { createNodesFromFiles } from './project-graph/plugins';
 
 /**
- * @category Workspace
+ * @category Tasks
  */
 export type { Task, TaskGraph } from './config/task-graph';
+
+/**
+ * @category Tasks
+ */
+export type { TaskResult, TaskResults } from './tasks-runner/life-cycle';
 
 /**
  * @category Workspace
@@ -248,4 +260,4 @@ export { cacheDir } from './utils/cache-directory';
  */
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
-export { isDaemonEnabled } from './daemon/client/client';
+export { isDaemonEnabled } from './daemon/client/enabled';

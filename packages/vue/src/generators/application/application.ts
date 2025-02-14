@@ -23,7 +23,11 @@ import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
@@ -43,10 +47,18 @@ export async function applicationGeneratorInternal(
       skipFormat: true,
       addTsPlugin: _options.useTsSolution,
       formatter: _options.formatter,
+      platform: 'web',
     })
   );
 
   const options = await normalizeOptions(tree, _options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
   const nxJson = readNxJson(tree);
 
   options.addPlugin ??=
@@ -55,15 +67,14 @@ export async function applicationGeneratorInternal(
 
   if (options.isUsingTsSolutionConfig) {
     writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+      name: options.projectName,
       version: '0.0.1',
       private: true,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: `${options.appProjectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
     });
   } else {
     addProjectConfiguration(tree, options.projectName, {
@@ -103,6 +114,7 @@ export async function applicationGeneratorInternal(
         setParserOptionsProject: options.setParserOptionsProject,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
+        projectName: options.projectName,
       },
       'app'
     )
@@ -123,8 +135,6 @@ export async function applicationGeneratorInternal(
 
   if (options.js) toJS(tree);
 
-  if (!options.skipFormat) await formatFiles(tree);
-
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
       tree,
@@ -142,6 +152,10 @@ export async function applicationGeneratorInternal(
         : undefined
     );
   }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
+
+  if (!options.skipFormat) await formatFiles(tree);
 
   tasks.push(() => {
     logShowProjectCommand(options.projectName);

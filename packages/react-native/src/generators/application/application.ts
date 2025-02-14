@@ -29,6 +29,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -50,6 +51,7 @@ export async function reactNativeApplicationGeneratorInternal(
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
   tasks.push(jsInitTask);
 
@@ -80,13 +82,14 @@ export async function reactNativeApplicationGeneratorInternal(
     options.appProjectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
+    'tsconfig.app.json'
   );
   tasks.push(jestTask);
 
   const webTask = await webConfigurationGenerator(host, {
     ...options,
-    project: options.name,
+    project: options.projectName,
     skipFormat: true,
   });
   tasks.push(webTask);
@@ -151,6 +154,8 @@ export async function reactNativeApplicationGeneratorInternal(
   if (options.useTsSolution) {
     addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
+
+  sortPackageJsonFields(host, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

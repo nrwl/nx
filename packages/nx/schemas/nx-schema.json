@@ -21,6 +21,10 @@
       "additionalProperties": false,
       "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
     },
+    "extends": {
+      "type": "string",
+      "description": "Specifies the base config to extend."
+    },
     "defaultBase": {
       "type": "string",
       "description": "Default --base used by affected logic."
@@ -569,6 +573,13 @@
         "cache": {
           "type": "boolean",
           "description": "Specifies if the given target should be cacheable"
+        },
+        "syncGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of generators to run before the target to ensure the workspace is up to date"
         }
       },
       "additionalProperties": false

@@ -55,6 +55,7 @@ export interface PackageJson {
             require?: string;
             import?: string;
             development?: string;
+            default?: string;
           }
       >;
   dependencies?: Record<string, string>;
@@ -153,9 +154,10 @@ export function buildTargetFromScript(
 let packageManagerCommand: PackageManagerCommands | undefined;
 
 export function getMetadataFromPackageJson(
-  packageJson: PackageJson
+  packageJson: PackageJson,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
-  const { scripts, nx, description, name, exports } = packageJson;
+  const { scripts, nx, description, name, exports, main } = packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
@@ -165,6 +167,8 @@ export function getMetadataFromPackageJson(
     js: {
       packageName: name,
       packageExports: exports,
+      packageMain: main,
+      isInPackageManagerWorkspaces,
     },
   };
 }

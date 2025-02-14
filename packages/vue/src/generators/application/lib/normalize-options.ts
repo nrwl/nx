@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function normalizeOptions(
   host: Tree,
@@ -27,20 +28,24 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+
   const normalized = {
     ...options,
-    projectName: appProjectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(host, appProjectName)
+      : appProjectName,
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
+    isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.style = options.style ?? 'css';
   normalized.routing = normalized.routing ?? false;
   normalized.unitTestRunner ??= 'vitest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'playwright';
-  normalized.isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   normalized.bundler = normalized.bundler ?? 'vite';
 
   return normalized;

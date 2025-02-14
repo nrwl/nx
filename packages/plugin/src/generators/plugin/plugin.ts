@@ -8,14 +8,11 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
 import {
   addSwcDependencies,
   addSwcRegisterDependencies,
@@ -44,11 +41,12 @@ async function addFiles(host: Tree, options: NormalizedSchema) {
 }
 
 function updatePluginConfig(host: Tree, options: NormalizedSchema) {
-  const project = readProjectConfiguration(host, options.name);
+  const project = readProjectConfiguration(host, options.projectName);
 
   if (project.targets.build) {
     if (options.isTsSolutionSetup && options.bundler === 'tsc') {
-      project.targets.build.options.rootDir = project.sourceRoot;
+      project.targets.build.options.rootDir =
+        project.sourceRoot ?? joinPathFragments(project.root, 'src');
       project.targets.build.options.generatePackageJson = false;
     }
 
@@ -72,7 +70,7 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
       );
     }
 
-    updateProjectConfiguration(host, options.name, project);
+    updateProjectConfiguration(host, options.projectName, project);
   }
 }
 
@@ -102,10 +100,20 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       useProjectJson: options.useProjectJson,
       addPlugin: options.addPlugin,
       skipFormat: true,
-      skipWorkspacesWarning: true,
       useTscExecutor: true,
     })
   );
+
+  if (options.isTsSolutionSetup) {
+    updateJson(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      (json) => {
+        delete json.type;
+        return json;
+      }
+    );
+  }
 
   if (options.bundler === 'tsc') {
     tasks.push(addTsLibDependencies(host));
@@ -118,7 +126,8 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         '@nx/devkit': nxVersion,
       },
       {
-        '@nx/jest': nxVersion,
+        [options.unitTestRunner === 'vitest' ? '@nx/vite' : '@nx/jest']:
+          nxVersion,
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
       }
@@ -136,7 +145,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
   if (options.e2eTestRunner !== 'none') {
     tasks.push(
       await e2eProjectGenerator(host, {
-        pluginName: options.name,
+        pluginName: options.projectName,
         projectDirectory: options.projectDirectory,
         pluginOutputPath: joinPathFragments(
           'dist',
@@ -148,31 +157,16 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         linter: options.linter,
         useProjectJson: options.useProjectJson,
         addPlugin: options.addPlugin,
-        skipWorkspacesWarning: true,
       })
     );
   }
 
   if (options.linter === Linter.EsLint && !options.skipLintChecks) {
-    await pluginLintCheckGenerator(host, { projectName: options.name });
+    await pluginLintCheckGenerator(host, { projectName: options.projectName });
   }
 
   if (!options.skipFormat) {
     await formatFiles(host);
-  }
-
-  if (options.isTsSolutionSetup) {
-    const projectPackageManagerWorkspaceState =
-      getProjectPackageManagerWorkspaceState(host, options.projectRoot);
-
-    if (projectPackageManagerWorkspaceState !== 'included') {
-      tasks.push(
-        getProjectPackageManagerWorkspaceStateWarningTask(
-          projectPackageManagerWorkspaceState,
-          host.root
-        )
-      );
-    }
   }
 
   return runTasksInSerial(...tasks);

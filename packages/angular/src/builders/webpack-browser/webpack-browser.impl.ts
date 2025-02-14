@@ -51,12 +51,14 @@ export function executeWebpackBrowserBuilder(
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
   options.buildLibsFromSource ??= true;
+  options.watchDependencies ??= true;
 
   const {
     buildLibsFromSource,
     customWebpackConfig,
     indexHtmlTransformer,
     indexFileTransformer,
+    watchDependencies,
     ...delegateBuilderOptions
   } = options;
 
@@ -124,7 +126,7 @@ export function executeWebpackBrowserBuilder(
                   `nx run-many --target=${
                     context.target.target
                   } --projects=${workspaceDependencies.join(',')}`,
-                  skipInitialRun
+                  { skipInitialRun, skipWatchingDeps: !watchDependencies }
                 )
               );
             }

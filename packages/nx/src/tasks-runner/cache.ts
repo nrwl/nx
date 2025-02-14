@@ -83,6 +83,7 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,
+        skipRemoteCache: options.skipRemoteCache,
       })
     : new Cache(options);
 }
@@ -95,7 +96,12 @@ export class DbCache {
 
   private isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  constructor(private readonly options: { nxCloudRemoteCache: RemoteCache }) {}
+  constructor(
+    private readonly options: {
+      nxCloudRemoteCache: RemoteCache;
+      skipRemoteCache?: boolean;
+    }
+  ) {}
 
   async init() {
     // This should be cheap because we've already loaded
@@ -185,6 +191,16 @@ export class DbCache {
   }
 
   private async _getRemoteCache(): Promise<RemoteCacheV2 | null> {
+    if (this.options.skipRemoteCache) {
+      output.warn({
+        title: 'Remote Cache Disabled',
+        bodyLines: [
+          'Nx will continue running, but nothing will be written or read from the remote cache.',
+        ],
+      });
+      return null;
+    }
+
     const nxJson = readNxJson();
     if (isNxCloudUsed(nxJson)) {
       const options = getCloudOptions();
@@ -270,7 +286,16 @@ export class Cache {
 
   private _currentMachineId: string = null;
 
-  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+  constructor(private readonly options: DefaultTasksRunnerOptions) {
+    if (this.options.skipRemoteCache) {
+      output.warn({
+        title: 'Remote Cache Disabled',
+        bodyLines: [
+          'Nx will continue running, but nothing will be written or read from the remote cache.',
+        ],
+      });
+    }
+  }
 
   removeOldCacheRecords() {
     /**
@@ -315,7 +340,7 @@ export class Cache {
     if (res) {
       await this.assertLocalCacheValidity(task);
       return { ...res, remote: false };
-    } else if (this.options.remoteCache) {
+    } else if (this.options.remoteCache && !this.options.skipRemoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
       await this.options.remoteCache.retrieve(task.hash, this.cachePath);
@@ -370,7 +395,7 @@ export class Cache {
       await writeFile(join(td, 'source'), await this.currentMachineId());
       await writeFile(tdCommit, 'true');
 
-      if (this.options.remoteCache) {
+      if (this.options.remoteCache && !this.options.skipRemoteCache) {
         await this.options.remoteCache.store(task.hash, this.cachePath);
       }
 
@@ -530,17 +555,20 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
   let attempts = 0;
   // Generate a random number between 2 and 4 to raise to the power of attempts
   const baseExponent = Math.random() * 2 + 2;
+  const baseTimeout = 15;
   const _try = async () => {
     try {
       attempts++;
       return await fn();
     } catch (e) {
-      // Max time is 5 * 4^3 = 20480ms
+      // Max time is 15 * (4 + 4² + 4³ + 4⁴ + 4⁵) = 20460ms
       if (attempts === 6) {
         // After enough attempts, throw the error
         throw e;
       }
-      await new Promise((res) => setTimeout(res, baseExponent ** attempts));
+      await new Promise((res) =>
+        setTimeout(res, baseTimeout * baseExponent ** attempts)
+      );
       return await _try();
     }
   };

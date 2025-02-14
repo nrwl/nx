@@ -13,7 +13,7 @@
     "package": {
       "implementation": "./src/executors/package/package.impl",
       "schema": "./src/executors/package/schema.json",
-      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds."
+      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds."
     },
     "browser-esbuild": {
       "implementation": "./src/executors/browser-esbuild/browser-esbuild.impl",

@@ -1,5 +1,15 @@
 'use client';
-import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Disclosure,
+  DisclosureButton,
+  Popover,
+  PopoverButton,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import {
   Bars4Icon,
   ChevronDownIcon,
@@ -39,7 +49,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
 
   const defaultCtaButtons: ButtonLinkProps[] = [
     {
-      href: '/nx-cloud',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud',
       variant: 'primary',
       size: 'small',
       target: '_blank',
@@ -97,7 +107,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -115,7 +125,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -228,7 +238,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
           </div>
         </div>
       </div>
-      <Transition.Root show={isOpen} as={Fragment}>
+      <Transition show={isOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-10"
@@ -238,7 +248,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
           <div className="fixed inset-0 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
               <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
-                <Transition.Child
+                <TransitionChild
                   as={Fragment}
                   enter="transform transition ease-in-out duration-250 sm:duration-500"
                   enterFrom="translate-x-full"
@@ -247,11 +257,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                   leaveFrom="translate-x-0"
                   leaveTo="translate-x-full"
                 >
-                  <Dialog.Panel className="pointer-events-auto w-screen">
+                  <DialogPanel className="pointer-events-auto w-screen">
                     <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl dark:bg-slate-900">
                       <div className="px-4 sm:px-6">
                         <div className="flex items-start justify-between">
-                          <Dialog.Title>
+                          <DialogTitle>
                             <Link
                               href="/"
                               className="flex items-center text-slate-900 dark:text-white"
@@ -269,7 +279,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                               </svg>
                               <span className="sr-only">Nx</span>
                             </Link>
-                          </Dialog.Title>
+                          </DialogTitle>
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
@@ -321,7 +331,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                           <Disclosure as="div">
                             {({ open }) => (
                               <>
-                                <Disclosure.Button
+                                <DisclosureButton
                                   className={cx(
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
@@ -339,7 +349,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                                       'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                                     )}
                                   />
-                                </Disclosure.Button>
+                                </DisclosureButton>
                                 <Disclosure.Panel
                                   as="ul"
                                   className="space-y-1 pb-2"
@@ -399,13 +409,13 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                         </div>
                       </div>
                     </div>
-                  </Dialog.Panel>
-                </Transition.Child>
+                  </DialogPanel>
+                </TransitionChild>
               </div>
             </div>
           </div>
         </Dialog>
-      </Transition.Root>
+      </Transition>
     </div>
   );
 }

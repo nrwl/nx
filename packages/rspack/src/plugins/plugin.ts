@@ -4,30 +4,35 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   ProjectConfiguration,
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { existsSync, readdirSync } from 'fs';
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface RspackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
   serveStaticTargetName?: string;
   previewTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
+
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
@@ -93,17 +98,30 @@ async function createNodesInternal(
     return {};
   }
 
+  let packageJson = {};
+  if (siblingFiles.includes('package.json')) {
+    packageJson = readJsonFile(
+      join(context.workspaceRoot, projectRoot, 'package.json')
+    );
+  }
+
   const normalizedOptions = normalizeOptions(options);
 
   // We do not want to alter how the hash is calculated, so appending the config file path to the hash
   // to prevent vite/vitest files overwriting the target cache created by the other
-  const hash =
-    (await calculateHashForCreateNodes(
-      projectRoot,
-      normalizedOptions,
-      context,
-      [getLockFileName(detectPackageManager(context.workspaceRoot))]
-    )) + configFilePath;
+
+  const nodeHash = hashArray([
+    ...[
+      join(context.workspaceRoot, configFilePath),
+      join(
+        context.workspaceRoot,
+        getLockFileName(detectPackageManager(context.workspaceRoot))
+      ),
+    ].map(hashFile),
+    hashObject(options),
+    hashObject(packageJson),
+  ]);
+  const hash = `${nodeHash}_${configFilePath}`;
 
   targetsCache[hash] ??= await createRspackTargets(
     configFilePath,
@@ -135,7 +153,7 @@ async function createRspackTargets(
 ): Promise<RspackTargets> {
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const rspackConfig = resolveUserDefinedRspackConfig(
+  const rspackConfig = await resolveUserDefinedRspackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
@@ -143,10 +161,12 @@ async function createRspackTargets(
 
   const rspackOptions = await readRspackOptions(rspackConfig);
 
-  const outputPath = normalizeOutputPath(
-    rspackOptions.output?.path,
-    projectRoot
-  );
+  const outputs = [];
+  for (const config of rspackOptions) {
+    if (config.output?.path) {
+      outputs.push(normalizeOutputPath(config.output.path, projectRoot));
+    }
+  }
 
   const targets = {};
 
@@ -171,7 +191,7 @@ async function createRspackTargets(
               externalDependencies: ['@rspack/cli'],
             },
           ],
-    outputs: [outputPath],
+    outputs,
   };
 
   targets[options.serveTargetName] = {
@@ -212,6 +232,14 @@ async function createRspackTargets(
       '@nx/js:typescript-sync',
     ];
   }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return { targets, metadata: {} };
 }

@@ -21,10 +21,10 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
 export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;
-  buildFileToDepsMap: Map<string, string>;
+  buildFileToDepsMap: Map<string, Set<string>>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
-  gradleProjectToTasksMap: Map<string, Set<String>>;
+  gradleProjectToTasksMap: Map<string, Set<string>>;
   gradleProjectToProjectName: Map<string, string>;
   gradleProjectNameToProjectRootMap: Map<string, string>;
   gradleProjectToChildProjects: Map<string, string[]>;
@@ -33,10 +33,10 @@ export interface GradleReport {
 export interface GradleReportJSON {
   hash: string;
   gradleFileToGradleProjectMap: Record<string, string>;
-  buildFileToDepsMap: Record<string, string>;
+  buildFileToDepsMap: Record<string, Set<string>>;
   gradleFileToOutputDirsMap: Record<string, Record<string, string>>;
   gradleProjectToTasksTypeMap: Record<string, Record<string, string>>;
-  gradleProjectToTasksMap: Record<string, Array<String>>;
+  gradleProjectToTasksMap: Record<string, Array<string>>;
   gradleProjectToProjectName: Record<string, string>;
   gradleProjectNameToProjectRootMap: Record<string, string>;
   gradleProjectToChildProjects: Record<string, string[]>;
@@ -220,13 +220,13 @@ export function processProjectReports(
    * Map of Gradle Build File to tasks type map
    */
   const gradleProjectToTasksTypeMap = new Map<string, Map<string, string>>();
-  const gradleProjectToTasksMap = new Map<string, Set<String>>();
+  const gradleProjectToTasksMap = new Map<string, Set<string>>();
   const gradleProjectToProjectName = new Map<string, string>();
   const gradleProjectNameToProjectRootMap = new Map<string, string>();
   /**
    * Map of buildFile to dependencies report path
    */
-  const buildFileToDepsMap = new Map<string, string>();
+  const buildFileToDepsMap = new Map<string, Set<string>>();
   /**
    * Map fo possible output files of each gradle file
    * e.g. {build.gradle.kts: { projectReportDir: '' testReportDir: '' }}
@@ -320,10 +320,13 @@ export function processProjectReports(
           relative(workspaceRoot, absBuildFilePath)
         );
         const buildDir = relative(workspaceRoot, absBuildDirPath);
-        buildFileToDepsMap.set(
-          buildFile,
-          dependenciesMap.get(gradleProject) as string
-        );
+        const depsFile = dependenciesMap.get(gradleProject);
+        if (depsFile) {
+          buildFileToDepsMap.set(
+            buildFile,
+            processGradleDependencies(depsFile)
+          );
+        }
 
         outputDirMap.set('build', `{workspaceRoot}/${buildDir}`);
         outputDirMap.set(
@@ -394,4 +397,44 @@ export function processProjectReports(
     gradleProjectNameToProjectRootMap,
     gradleProjectToChildProjects,
   };
+}
+
+export function processGradleDependencies(depsFile: string): Set<string> {
+  const dependedProjects = new Set<string>();
+  const lines = readFileSync(depsFile).toString().split(newLineSeparator);
+  let inDeps = false;
+  for (const line of lines) {
+    if (
+      line.startsWith('implementationDependenciesMetadata') ||
+      line.startsWith('compileClasspath')
+    ) {
+      inDeps = true;
+      continue;
+    }
+
+    if (inDeps) {
+      if (line === '') {
+        inDeps = false;
+        continue;
+      }
+      const [indents, dep] = line.split('--- ');
+      if (indents === '\\' || indents === '+') {
+        let targetProjectName: string | undefined;
+        if (dep.startsWith('project ')) {
+          targetProjectName = dep
+            .substring('project '.length)
+            .replace(/ \(n\)$/, '')
+            .trim()
+            .split(' ')?.[0];
+        } else if (dep.includes('-> project')) {
+          const [_, projectName] = dep.split('-> project');
+          targetProjectName = projectName.trim().split(' ')?.[0];
+        }
+        if (targetProjectName) {
+          dependedProjects.add(targetProjectName);
+        }
+      }
+    }
+  }
+  return dependedProjects;
 }

@@ -18,6 +18,7 @@ Nx.json configuration
 
 ### Properties
 
+- [$schema](../../devkit/documents/NxJsonConfiguration#$schema): string
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
@@ -46,6 +47,12 @@ Nx.json configuration
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
+
+### $schema
+
+• `Optional` **$schema**: `string`
+
+---
 
 ### affected
 

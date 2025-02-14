@@ -1,5 +1,5 @@
 import type { PluginConfiguration } from '../../config/nx-json';
-import { LoadedNxPlugin } from './internal-api';
+import { LoadedNxPlugin } from './loaded-nx-plugin';
 import { NxPlugin } from './public-api';
 
 export async function loadResolvedNxPluginAsync(
@@ -18,7 +18,10 @@ async function importPluginModule(pluginPath: string): Promise<NxPlugin> {
     m.default &&
     ('createNodes' in m.default ||
       'createNodesV2' in m.default ||
-      'createDependencies' in m.default)
+      'createDependencies' in m.default ||
+      'createMetadata' in m.default ||
+      'preTasksExecution' in m.default ||
+      'postTasksExecution' in m.default)
   ) {
     return m.default;
   }

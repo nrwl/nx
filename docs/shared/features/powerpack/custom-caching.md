@@ -12,11 +12,17 @@ The recommended way to enable the [remote cache](/ci/features/remote-cache) is t
 
 The options range from fully opting in to Nx's management of the remote cache to fully managing the configuration and security of your own remote cache.
 
+## Migrating from Custom Tasks Runners
+
+Many people who are interested in Nx Powerpack have previously used custom task runners. Nx offers a new and simpler extension API designed to meet the same use cases as the now-deprecated custom task runners.
+
+To learn more about migrating from custom task runners, [please refer to this detailed guide](/deprecated/custom-tasks-runner).
+
 ## Setup
 
 All the self-hosted cache storage plugins require an Nx Powerpack license to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
 
-{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of the Nx CLI" url="https://cloud.nx.app/powerpack/purchase" /%}
+{% call-to-action title="Get a License and Activate Powerpack" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
 
 Then, choose the appropriate cache plugin for your situation.
 

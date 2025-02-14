@@ -158,11 +158,13 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --custom-server --linter=eslint --unitTestRunner=jest`
     );
 
+    // Check for custom server files added to source
     checkFilesExist(`${appName}/server/main.ts`);
+    checkFilesExist(`${appName}/.server.swcrc`);
 
     const result = runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/${appName}/server/main.js`);
+    checkFilesExist(`dist/${appName}-server/server/main.js`);
 
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`
@@ -180,7 +182,7 @@ describe('Next.js Applications', () => {
 
     const result = runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/${appName}/server/main.js`);
+    checkFilesExist(`dist/${appName}-server/server/main.js`);
 
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`

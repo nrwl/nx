@@ -1,4 +1,5 @@
 import {
+  CreateNodesContextV2,
   createNodesFromFiles,
   detectPackageManager,
   getPackageManagerCommand,
@@ -10,7 +11,6 @@ import {
   type CreateDependencies,
   type CreateNodes,
   type CreateNodesContext,
-  type CreateNodesResult,
   type CreateNodesV2,
   type NxJsonConfiguration,
   type ProjectConfiguration,
@@ -22,18 +22,20 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import {
   basename,
   dirname,
+  extname,
   join,
   normalize,
   relative,
   resolve,
   sep,
 } from 'node:path';
+import * as posix from 'node:path/posix';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine } from 'typescript';
-import { readTsConfig } from '../../utils/typescript/ts-config';
+import { addBuildAndWatchDepsTargets } from './util';
 
 export interface TscPluginOptions {
   typecheck?:
@@ -46,7 +48,10 @@ export interface TscPluginOptions {
     | {
         targetName?: string;
         configName?: string;
+        buildDepsName?: string;
+        watchDepsName?: string;
       };
+  verboseOutput?: boolean;
 }
 
 interface NormalizedPluginOptions {
@@ -60,24 +65,39 @@ interface NormalizedPluginOptions {
     | {
         targetName: string;
         configName: string;
+        buildDepsName?: string;
+        watchDepsName?: string;
       };
+  verboseOutput: boolean;
 }
 
 type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
+type ParsedTsconfigData = Pick<
+  ParsedCommandLine,
+  'options' | 'projectReferences' | 'raw'
+>;
+type TsconfigCacheData = {
+  data: ParsedTsconfigData;
+  timestamp: number;
+};
 
 const pmc = getPackageManagerCommand();
 
-function readTargetsCache(cachePath: string): Record<string, TscProjectResult> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
+let tsConfigCache: Record<string, TsconfigCacheData>;
+const tsConfigCachePath = join(workspaceDataDirectory, 'tsconfig-files.hash');
+
+function readFromCache<T extends object>(cachePath: string): T {
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile<T>(cachePath)
+      : ({} as T);
+  } catch {
+    return {} as T;
+  }
 }
 
-function writeTargetsToCache(
-  cachePath: string,
-  results?: Record<string, TscProjectResult>
-) {
-  writeJsonFile(cachePath, results);
+function writeToCache<T extends object>(cachePath: string, data: T) {
+  writeJsonFile(cachePath, data, { spaces: 0 });
 }
 
 /**
@@ -95,28 +115,65 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
   tsConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `tsc-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
-    const normalizedOptions = normalizePluginOptions(options);
-    const lockFileName = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
+    const targetsCachePath = join(
+      workspaceDataDirectory,
+      `tsc-${optionsHash}.hash`
     );
+    const targetsCache =
+      readFromCache<Record<string, TscProjectResult>>(targetsCachePath);
+    tsConfigCache =
+      readFromCache<Record<string, TsconfigCacheData>>(tsConfigCachePath);
+    const normalizedOptions = normalizePluginOptions(options);
+    const lockFileHash = hashFile(
+      join(
+        context.workspaceRoot,
+        getLockFileName(detectPackageManager(context.workspaceRoot))
+      )
+    );
+
+    const {
+      configFilePaths: validConfigFilePaths,
+      hashes,
+      projectRoots,
+    } = await resolveValidConfigFilesAndHashes(
+      configFilePaths,
+      optionsHash,
+      lockFileHash,
+      context
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
+        (configFilePath, options, context, idx) => {
+          const projectRoot = projectRoots[idx];
+          const hash = hashes[idx];
+          const cacheKey = `${hash}_${configFilePath}`;
+
+          targetsCache[cacheKey] ??= buildTscTargets(
+            join(context.workspaceRoot, configFilePath),
+            projectRoot,
             options,
-            context,
-            lockFileName,
-            targetsCache
-          ),
-        configFilePaths,
+            context
+          );
+
+          const { targets } = targetsCache[cacheKey];
+
+          return {
+            projects: {
+              [projectRoot]: {
+                projectType: 'library',
+                targets,
+              },
+            },
+          };
+        },
+        validConfigFilePaths,
         normalizedOptions,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      writeToCache(targetsCachePath, targetsCache);
+      writeToCache(tsConfigCachePath, tsConfigCache);
     }
   },
 ];
@@ -127,36 +184,146 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
+
+    const projectRoot = dirname(configFilePath);
+    if (
+      !checkIfConfigFileShouldBeProject(configFilePath, projectRoot, context)
+    ) {
+      return {};
+    }
+
     const normalizedOptions = normalizePluginOptions(options);
-    const lockFileName = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
-    );
-    return createNodesInternal(
-      configFilePath,
+    tsConfigCache =
+      readFromCache<Record<string, TsconfigCacheData>>(tsConfigCachePath);
+
+    const { targets } = buildTscTargets(
+      join(context.workspaceRoot, configFilePath),
+      projectRoot,
       normalizedOptions,
-      context,
-      lockFileName,
-      {}
+      context
     );
+
+    return {
+      projects: {
+        [projectRoot]: {
+          projectType: 'library',
+          targets,
+        },
+      },
+    };
   },
 ];
 
-async function createNodesInternal(
+async function resolveValidConfigFilesAndHashes(
+  configFilePaths: readonly string[],
+  optionsHash: string,
+  lockFileHash: string,
+  context: CreateNodesContext | CreateNodesContextV2
+): Promise<{
+  configFilePaths: string[];
+  hashes: string[];
+  projectRoots: string[];
+}> {
+  const validConfigFilePaths: string[] = [];
+  const hashes: string[] = [];
+  const projectRoots: string[] = [];
+  const fileHashesCache: Record<string, string> = {};
+
+  for await (const configFilePath of configFilePaths) {
+    const projectRoot = dirname(configFilePath);
+    if (
+      !checkIfConfigFileShouldBeProject(configFilePath, projectRoot, context)
+    ) {
+      continue;
+    }
+
+    projectRoots.push(projectRoot);
+    validConfigFilePaths.push(configFilePath);
+    hashes.push(
+      await getConfigFileHash(
+        configFilePath,
+        context.workspaceRoot,
+        projectRoot,
+        optionsHash,
+        lockFileHash,
+        fileHashesCache
+      )
+    );
+  }
+
+  return { configFilePaths: validConfigFilePaths, hashes, projectRoots };
+}
+
+/**
+ * The cache key is composed by:
+ * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
+ *   - current config file
+ *   - config files extended by the current config file (recursively up to the root config file)
+ *   - referenced config files that are internal to the owning Nx project of the current config file,
+ *     or is a shallow external reference of the owning Nx project
+ *   - lock file
+ *   - project's package.json
+ * - hash of the plugin options
+ * - current config file path
+ */
+async function getConfigFileHash(
   configFilePath: string,
-  options: NormalizedPluginOptions,
-  context: CreateNodesContext,
-  lockFileName: string,
-  targetsCache: Record<string, TscProjectResult>
-): Promise<CreateNodesResult> {
-  const projectRoot = dirname(configFilePath);
-  const fullConfigPath = joinPathFragments(
-    context.workspaceRoot,
-    configFilePath
+  workspaceRoot: string,
+  projectRoot: string,
+  optionsHash: string,
+  lockFileHash: string,
+  fileHashesCache: Record<string, string>
+): Promise<string> {
+  const fullConfigPath = join(workspaceRoot, configFilePath);
+
+  const tsConfig = readCachedTsConfig(fullConfigPath, workspaceRoot);
+  const extendedConfigFiles = getExtendedConfigFiles(
+    fullConfigPath,
+    tsConfig,
+    workspaceRoot
+  );
+  const internalReferencedFiles = resolveInternalProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    projectRoot
+  );
+  const externalProjectReferences = resolveShallowExternalProjectReferences(
+    tsConfig,
+    workspaceRoot,
+    projectRoot
   );
 
+  let packageJson = null;
+  try {
+    packageJson = readJsonFile(
+      join(workspaceRoot, projectRoot, 'package.json')
+    );
+  } catch {}
+
+  return hashArray([
+    ...[
+      fullConfigPath,
+      ...extendedConfigFiles.files,
+      ...Object.keys(internalReferencedFiles),
+      ...Object.keys(externalProjectReferences),
+    ].map((file) => {
+      fileHashesCache[file] ??= hashFile(file);
+      return fileHashesCache[file];
+    }),
+    lockFileHash,
+    optionsHash,
+    ...(packageJson ? [hashObject(packageJson)] : []),
+  ]);
+}
+
+function checkIfConfigFileShouldBeProject(
+  configFilePath: string,
+  projectRoot: string,
+  context: CreateNodesContext | CreateNodesContextV2
+): boolean {
   // Do not create a project for the workspace root tsconfig files.
   if (projectRoot === '.') {
-    return {};
+    return false;
   }
 
   // Do not create a project if package.json and project.json isn't there.
@@ -165,7 +332,7 @@ async function createNodesInternal(
     !siblingFiles.includes('package.json') &&
     !siblingFiles.includes('project.json')
   ) {
-    return {};
+    return false;
   }
 
   // Do not create a project if it's not a tsconfig.json and there is no tsconfig.json in the same directory
@@ -173,7 +340,7 @@ async function createNodesInternal(
     basename(configFilePath) !== 'tsconfig.json' &&
     !siblingFiles.includes('tsconfig.json')
   ) {
-    return {};
+    return false;
   }
 
   // Do not create project for Next.js projects since they are not compatible with
@@ -184,61 +351,10 @@ async function createNodesInternal(
     siblingFiles.includes('next.config.mjs') ||
     siblingFiles.includes('next.config.ts')
   ) {
-    return {};
+    return false;
   }
 
-  /**
-   * The cache key is composed by:
-   * - hashes of the content of the relevant files that can affect what's inferred by the plugin:
-   *   - current config file
-   *   - config files extended by the current config file (recursively up to the root config file)
-   *   - referenced config files that are internal to the owning Nx project of the current config file, or is a shallow external reference of the owning Nx project
-   *   - lock file
-   * - hash of the plugin options
-   * - current config file path
-   */
-  const tsConfig = readCachedTsConfig(fullConfigPath);
-  const extendedConfigFiles = getExtendedConfigFiles(fullConfigPath, tsConfig);
-  const internalReferencedFiles = resolveInternalProjectReferences(
-    tsConfig,
-    context.workspaceRoot,
-    projectRoot
-  );
-  const externalProjectReferences = resolveShallowExternalProjectReferences(
-    tsConfig,
-    context.workspaceRoot,
-    projectRoot
-  );
-
-  const nodeHash = hashArray([
-    ...[
-      fullConfigPath,
-      ...extendedConfigFiles.files,
-      ...Object.keys(internalReferencedFiles),
-      ...Object.keys(externalProjectReferences),
-      join(context.workspaceRoot, lockFileName),
-    ].map(hashFile),
-    hashObject(options),
-  ]);
-  const cacheKey = `${nodeHash}_${configFilePath}`;
-
-  targetsCache[cacheKey] ??= buildTscTargets(
-    fullConfigPath,
-    projectRoot,
-    options,
-    context
-  );
-
-  const { targets } = targetsCache[cacheKey];
-
-  return {
-    projects: {
-      [projectRoot]: {
-        projectType: 'library',
-        targets,
-      },
-    },
-  };
+  return true;
 }
 
 function buildTscTargets(
@@ -249,15 +365,9 @@ function buildTscTargets(
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
-  const tsConfig = readCachedTsConfig(configFilePath);
+  const tsConfig = readCachedTsConfig(configFilePath, context.workspaceRoot);
 
-  // TODO: check whether we want to always run with --pretty --verbose, it makes replacing scripts harder
-  // `--verbose` conflicts with `tsc -b --clean`, might be another reason for not using it, it would
-  // prevent users from running the task with `--clean` flag.
-  // Should we consider creating a different optional target for `--clean`?
-  // Should we consider having a plugin option to disable `--pretty` and `--verbose`?
-
-  let internalProjectReferences: Record<string, ParsedCommandLine>;
+  let internalProjectReferences: Record<string, ParsedTsconfigData>;
   // Typecheck target
   if (basename(configFilePath) === 'tsconfig.json' && options.typecheck) {
     internalProjectReferences = resolveInternalProjectReferences(
@@ -272,7 +382,9 @@ function buildTscTargets(
     );
     const targetName = options.typecheck.targetName;
     if (!targets[targetName]) {
-      let command = `tsc --build --emitDeclarationOnly --pretty --verbose`;
+      let command = `tsc --build --emitDeclarationOnly${
+        options.verboseOutput ? ' --verbose' : ''
+      }`;
       if (
         tsConfig.options.noEmit ||
         Object.values(internalProjectReferences).some(
@@ -325,12 +437,7 @@ function buildTscTargets(
   if (
     options.build &&
     basename(configFilePath) === options.build.configName &&
-    isValidPackageJsonBuildConfig(
-      tsConfig,
-      context.workspaceRoot,
-      projectRoot,
-      configFilePath
-    )
+    isValidPackageJsonBuildConfig(tsConfig, context.workspaceRoot, projectRoot)
   ) {
     internalProjectReferences ??= resolveInternalProjectReferences(
       tsConfig,
@@ -341,7 +448,9 @@ function buildTscTargets(
 
     targets[targetName] = {
       dependsOn: [`^${targetName}`],
-      command: `tsc --build ${options.build.configName} --pretty --verbose`,
+      command: `tsc --build ${options.build.configName}${
+        options.verboseOutput ? ' --verbose' : ''
+      }`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: getInputs(
@@ -371,6 +480,17 @@ function buildTscTargets(
         },
       },
     };
+
+    addBuildAndWatchDepsTargets(
+      context.workspaceRoot,
+      projectRoot,
+      targets,
+      {
+        buildDepsTargetName: options.build.buildDepsName,
+        watchDepsTargetName: options.build.watchDepsName,
+      },
+      pmc
+    );
   }
 
   return { targets };
@@ -379,15 +499,19 @@ function buildTscTargets(
 function getInputs(
   namedInputs: NxJsonConfiguration['namedInputs'],
   configFilePath: string,
-  tsConfig: ParsedCommandLine,
-  internalProjectReferences: Record<string, ParsedCommandLine>,
+  tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   projectRoot: string
 ): TargetConfiguration['inputs'] {
   const configFiles = new Set<string>();
   const externalDependencies = ['typescript'];
 
-  const extendedConfigFiles = getExtendedConfigFiles(configFilePath, tsConfig);
+  const extendedConfigFiles = getExtendedConfigFiles(
+    configFilePath,
+    tsConfig,
+    workspaceRoot
+  );
   extendedConfigFiles.files.forEach((configPath) => {
     configFiles.add(configPath);
   });
@@ -395,7 +519,7 @@ function getInputs(
 
   const includePaths = new Set<string>();
   const excludePaths = new Set<string>();
-  const projectTsConfigFiles: [string, ParsedCommandLine][] = [
+  const projectTsConfigFiles: [string, ParsedTsconfigData][] = [
     [configFilePath, tsConfig],
     ...Object.entries(internalProjectReferences),
   ];
@@ -436,6 +560,9 @@ function getInputs(
 
   const inputs: TargetConfiguration['inputs'] = [];
   if (includePaths.size) {
+    if (existsSync(join(workspaceRoot, projectRoot, 'package.json'))) {
+      inputs.push('{projectRoot}/package.json');
+    }
     inputs.push(
       ...Array.from(configFiles).map((p: string) =>
         pathToInputOrOutput(p, workspaceRoot, projectRoot)
@@ -489,8 +616,8 @@ function getInputs(
 
 function getOutputs(
   configFilePath: string,
-  tsConfig: ParsedCommandLine,
-  internalProjectReferences: Record<string, ParsedCommandLine>,
+  tsConfig: ParsedTsconfigData,
+  internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
   projectRoot: string
 ): string[] {
@@ -549,22 +676,44 @@ function getOutputs(
         pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
       );
 
-      if (
-        config.options.tsBuildInfoFile &&
-        !normalize(config.options.tsBuildInfoFile).startsWith(
-          `${normalize(config.options.outDir)}${sep}`
-        )
-      ) {
-        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+      if (config.options.tsBuildInfoFile) {
+        if (
+          !normalize(config.options.tsBuildInfoFile).startsWith(
+            `${normalize(config.options.outDir)}${sep}`
+          )
+        ) {
+          // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+          outputs.add(
+            pathToInputOrOutput(
+              config.options.tsBuildInfoFile,
+              workspaceRoot,
+              projectRoot
+            )
+          );
+        }
+      } else if (config.options.rootDir && config.options.rootDir !== '.') {
+        // If rootDir is set, then the tsbuildinfo file will be outside the outDir so we need to add it.
+        const relativeRootDir = relative(
+          config.options.rootDir,
+          join(workspaceRoot, projectRoot)
+        );
         outputs.add(
           pathToInputOrOutput(
-            config.options.tsBuildInfoFile,
+            joinPathFragments(
+              config.options.outDir,
+              relativeRootDir,
+              `*.tsbuildinfo`
+            ),
             workspaceRoot,
             projectRoot
           )
         );
       }
-    } else if (config.fileNames.length) {
+    } else if (
+      config.raw?.include?.length ||
+      config.raw?.files?.length ||
+      (!config.raw?.include && !config.raw?.files)
+    ) {
       // tsc produce files in place when no outDir or outFile is set
       outputs.add(joinPathFragments('{projectRoot}', '**/*.js'));
       outputs.add(joinPathFragments('{projectRoot}', '**/*.cjs'));
@@ -597,67 +746,55 @@ function getOutputs(
 }
 
 /**
- * Checks whether a `package.json` file has a valid build configuration by ensuring
- * that the `main`, `module`, or `exports` do not include paths from the `rootDir`.
- * Or if `outFile` is defined, it should not be within the `rootDir`.
+ * Validates the build configuration of a `package.json` file by ensuring that paths in the `exports`, `module`,
+ * and `main` fields reference valid output paths within the `outDir` defined in the TypeScript configuration.
+ * Priority is given to the `exports` field, specifically the `.` export if defined. If `exports` is not defined,
+ * the function falls back to validating `main` and `module` fields. If `outFile` is specified, it validates that the file
+ * is located within the output directory.
+ * If no `package.json` file exists, it assumes the configuration is valid.
  *
  * @param tsConfig The TypeScript configuration object.
  * @param workspaceRoot The workspace root path.
  * @param projectRoot The project root path.
- * @param tsConfigPath The path to the TypeScript configuration file.
  * @returns `true` if the package has a valid build configuration; otherwise, `false`.
  */
 function isValidPackageJsonBuildConfig(
-  tsConfig,
+  tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
-  projectRoot: string,
-  tsConfigPath: string
+  projectRoot: string
 ): boolean {
-  if (!existsSync(joinPathFragments(projectRoot, 'package.json'))) {
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  if (!existsSync(packageJsonPath)) {
     // If the package.json file does not exist.
     // Assume it's valid because it would be using `project.json` instead.
     return true;
   }
-  const packageJson = readJsonFile(
-    joinPathFragments(projectRoot, 'package.json')
-  );
+  const packageJson = readJsonFile(packageJsonPath);
 
-  const rootDir = tsConfig.options.rootDir ?? 'src/';
-  if (!tsConfig.options.rootDir) {
-    console.warn(
-      `The 'rootDir' option is not set in the tsconfig file at ${tsConfigPath}. Assuming 'src/' as the root directory.`
-    );
-  }
+  const outDir = tsConfig.options.outFile
+    ? dirname(tsConfig.options.outFile)
+    : tsConfig.options.outDir;
+  const resolvedOutDir = outDir
+    ? resolve(workspaceRoot, projectRoot, outDir)
+    : undefined;
 
-  const isPathWithinSrc = (path: string): boolean => {
-    const resolvedRootDir = resolve(workspaceRoot, projectRoot, rootDir);
-    const pathToCheck = resolve(workspaceRoot, projectRoot, path);
+  const isPathSourceFile = (path: string): boolean => {
+    if (resolvedOutDir) {
+      const pathToCheck = resolve(workspaceRoot, projectRoot, path);
+      return !pathToCheck.startsWith(resolvedOutDir);
+    }
 
-    return pathToCheck.startsWith(resolvedRootDir);
+    const ext = extname(path);
+    // Check that the file extension is a TS file extension. As the source files are in the same directory as the output files.
+    return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
   };
-
-  // If `outFile` is defined, check the validity of the path.
-  if (tsConfig.options.outFile) {
-    if (isPathWithinSrc(tsConfig.options.outFile)) {
-      return false;
-    }
-  }
-
-  const buildPaths = ['main', 'module'];
-  for (const field of buildPaths) {
-    if (packageJson[field] && isPathWithinSrc(packageJson[field])) {
-      return false;
-    }
-  }
-
-  const exports = packageJson?.exports;
 
   // Checks if the value is a path within the `src` directory.
   const containsInvalidPath = (
     value: string | Record<string, string>
   ): boolean => {
     if (typeof value === 'string') {
-      return isPathWithinSrc(value);
+      return isPathSourceFile(value);
     } else if (typeof value === 'object') {
       return Object.entries(value).some(([currentKey, subValue]) => {
         // Skip types field
@@ -665,7 +802,7 @@ function isValidPackageJsonBuildConfig(
           return false;
         }
         if (typeof subValue === 'string') {
-          return isPathWithinSrc(subValue);
+          return isPathSourceFile(subValue);
         }
         return false;
       });
@@ -673,16 +810,32 @@ function isValidPackageJsonBuildConfig(
     return false;
   };
 
-  if (typeof exports === 'string' && isPathWithinSrc(exports)) {
-    return false;
-  }
+  const exports = packageJson?.exports;
 
-  // Check nested exports if `exports` is an object.
-  if (typeof exports === 'object') {
+  // Check the `.` export if `exports` is defined.
+  if (exports) {
+    if (typeof exports === 'string') {
+      return !isPathSourceFile(exports);
+    }
+    if (typeof exports === 'object' && '.' in exports) {
+      return !containsInvalidPath(exports['.']);
+    }
+
+    // Check other exports if `.` is not defined or valid.
     for (const key in exports) {
-      if (containsInvalidPath(exports[key])) {
+      if (key !== '.' && containsInvalidPath(exports[key])) {
         return false;
       }
+    }
+
+    return true;
+  }
+
+  // If `exports` is not defined, fallback to `main` and `module` fields.
+  const buildPaths = ['main', 'module'];
+  for (const field of buildPaths) {
+    if (packageJson[field] && isPathSourceFile(packageJson[field])) {
+      return false;
     }
   }
 
@@ -694,9 +847,16 @@ function pathToInputOrOutput(
   workspaceRoot: string,
   projectRoot: string
 ): string {
-  const pathRelativeToProjectRoot = normalizePath(relative(projectRoot, path));
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(workspaceRoot, path);
+  const pathRelativeToProjectRoot = normalizePath(
+    relative(fullProjectRoot, fullPath)
+  );
   if (pathRelativeToProjectRoot.startsWith('..')) {
-    return joinPathFragments('{workspaceRoot}', relative(workspaceRoot, path));
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, fullPath)
+    );
   }
 
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
@@ -704,7 +864,8 @@ function pathToInputOrOutput(
 
 function getExtendedConfigFiles(
   tsConfigPath: string,
-  tsConfig: ParsedCommandLine
+  tsConfig: ParsedTsconfigData,
+  workspaceRoot: string
 ): {
   files: string[];
   packages: string[];
@@ -727,7 +888,10 @@ function getExtendedConfigFiles(
       break;
     }
     extendedConfigFiles.add(extendedConfigPath.filePath);
-    currentConfig = readCachedTsConfig(extendedConfigPath.filePath);
+    currentConfig = readCachedTsConfig(
+      extendedConfigPath.filePath,
+      workspaceRoot
+    );
     currentConfigPath = extendedConfigPath.filePath;
   }
 
@@ -738,53 +902,56 @@ function getExtendedConfigFiles(
 }
 
 function resolveInternalProjectReferences(
-  tsConfig: ParsedCommandLine,
+  tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
   projectRoot: string,
-  projectReferences: Record<string, ParsedCommandLine> = {}
-): Record<string, ParsedCommandLine> {
-  walkProjectReferences(
-    tsConfig,
-    workspaceRoot,
-    projectRoot,
-    (configPath, config) => {
-      if (isExternalProjectReference(configPath, workspaceRoot, projectRoot)) {
-        return false;
-      } else {
-        projectReferences[configPath] = config;
-      }
+  projectReferences: Record<string, ParsedTsconfigData> = {}
+): Record<string, ParsedTsconfigData> {
+  if (!tsConfig.projectReferences?.length) {
+    return {};
+  }
+
+  for (const ref of tsConfig.projectReferences) {
+    let refConfigPath = ref.path;
+    if (projectReferences[refConfigPath]) {
+      // Already resolved
+      continue;
     }
-  );
+
+    if (!existsSync(refConfigPath)) {
+      // the referenced tsconfig doesn't exist, ignore it
+      continue;
+    }
+
+    if (isExternalProjectReference(refConfigPath, workspaceRoot, projectRoot)) {
+      continue;
+    }
+
+    if (!refConfigPath.endsWith('.json')) {
+      refConfigPath = join(refConfigPath, 'tsconfig.json');
+    }
+    projectReferences[refConfigPath] = readCachedTsConfig(
+      refConfigPath,
+      workspaceRoot
+    );
+
+    resolveInternalProjectReferences(
+      projectReferences[refConfigPath],
+      workspaceRoot,
+      projectRoot,
+      projectReferences
+    );
+  }
+
   return projectReferences;
 }
 
 function resolveShallowExternalProjectReferences(
-  tsConfig: ParsedCommandLine,
+  tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
   projectRoot: string,
-  projectReferences: Record<string, ParsedCommandLine> = {}
-): Record<string, ParsedCommandLine> {
-  walkProjectReferences(
-    tsConfig,
-    workspaceRoot,
-    projectRoot,
-    (configPath, config) => {
-      if (isExternalProjectReference(configPath, workspaceRoot, projectRoot)) {
-        projectReferences[configPath] = config;
-      }
-      return false;
-    }
-  );
-  return projectReferences;
-}
-
-function walkProjectReferences(
-  tsConfig: ParsedCommandLine,
-  workspaceRoot: string,
-  projectRoot: string,
-  visitor: (configPath: string, config: ParsedCommandLine) => void | false, // false stops recursion
-  projectReferences: Record<string, ParsedCommandLine> = {}
-): Record<string, ParsedCommandLine> {
+  projectReferences: Record<string, ParsedTsconfigData> = {}
+): Record<string, ParsedTsconfigData> {
   if (!tsConfig.projectReferences?.length) {
     return projectReferences;
   }
@@ -801,13 +968,14 @@ function walkProjectReferences(
       continue;
     }
 
-    if (!refConfigPath.endsWith('.json')) {
-      refConfigPath = join(refConfigPath, 'tsconfig.json');
-    }
-    const refTsConfig = readCachedTsConfig(refConfigPath);
-    const result = visitor(refConfigPath, refTsConfig);
-    if (result !== false) {
-      walkProjectReferences(refTsConfig, workspaceRoot, projectRoot, visitor);
+    if (isExternalProjectReference(refConfigPath, workspaceRoot, projectRoot)) {
+      if (!refConfigPath.endsWith('.json')) {
+        refConfigPath = join(refConfigPath, 'tsconfig.json');
+      }
+      projectReferences[refConfigPath] = readCachedTsConfig(
+        refConfigPath,
+        workspaceRoot
+      );
     }
   }
 
@@ -816,7 +984,7 @@ function walkProjectReferences(
 
 function hasExternalProjectReferences(
   tsConfigPath: string,
-  tsConfig: ParsedCommandLine,
+  tsConfig: ParsedTsconfigData,
   workspaceRoot: string,
   projectRoot: string,
   seen = new Set<string>()
@@ -845,7 +1013,7 @@ function hasExternalProjectReferences(
     if (!refConfigPath.endsWith('.json')) {
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
-    const refTsConfig = readCachedTsConfig(refConfigPath);
+    const refTsConfig = readCachedTsConfig(refConfigPath, workspaceRoot);
     const result = hasExternalProjectReferences(
       refConfigPath,
       refTsConfig,
@@ -897,24 +1065,44 @@ function getTsConfigDirName(tsConfigPath: string): string {
     : normalize(tsConfigPath);
 }
 
-const tsConfigCache = new Map<string, ParsedCommandLine>();
-function readCachedTsConfig(tsConfigPath: string): ParsedCommandLine {
-  const cacheKey = getTsConfigCacheKey(tsConfigPath);
+function readCachedTsConfig(
+  tsConfigPath: string,
+  workspaceRoot: string
+): ParsedTsconfigData {
+  const relativeTsConfigPath = posix.relative(workspaceRoot, tsConfigPath);
+  const timestamp = statSync(tsConfigPath).mtimeMs;
 
-  if (tsConfigCache.has(cacheKey)) {
-    return tsConfigCache.get(cacheKey)!;
+  if (tsConfigCache[relativeTsConfigPath]?.timestamp === timestamp) {
+    return tsConfigCache[relativeTsConfigPath].data;
   }
 
   const tsConfig = readTsConfig(tsConfigPath);
-  tsConfigCache.set(cacheKey, tsConfig);
+  tsConfigCache[relativeTsConfigPath] = {
+    data: {
+      options: tsConfig.options,
+      projectReferences: tsConfig.projectReferences,
+      raw: tsConfig.raw,
+    },
+    timestamp,
+  };
 
   return tsConfig;
 }
 
-function getTsConfigCacheKey(tsConfigPath: string): string {
-  const timestamp = statSync(tsConfigPath).mtimeMs;
+let ts: typeof import('typescript');
+function readTsConfig(tsConfigPath: string): ParsedCommandLine {
+  if (!ts) {
+    ts = require('typescript');
+  }
+  const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
 
-  return `${tsConfigPath}-${timestamp}`;
+  // read with a custom host that won't read directories which is only used
+  // to identify the filenames included in the program, which we won't use
+  return ts.parseJsonConfigFileContent(
+    readResult.config,
+    { ...ts.sys, readDirectory: () => [] },
+    dirname(tsConfigPath)
+  );
 }
 
 function normalizePluginOptions(
@@ -941,6 +1129,8 @@ function normalizePluginOptions(
   let build: NormalizedPluginOptions['build'] = {
     targetName: defaultBuildTargetName,
     configName: defaultBuildConfigName,
+    buildDepsName: 'build-deps',
+    watchDepsName: 'watch-deps',
   };
   // Build target is not enabled by default
   if (!pluginOptions.build) {
@@ -949,12 +1139,15 @@ function normalizePluginOptions(
     build = {
       targetName: pluginOptions.build.targetName ?? defaultBuildTargetName,
       configName: pluginOptions.build.configName ?? defaultBuildConfigName,
+      buildDepsName: pluginOptions.build.buildDepsName ?? 'build-deps',
+      watchDepsName: pluginOptions.build.watchDepsName ?? 'watch-deps',
     };
   }
 
   return {
     typecheck,
     build,
+    verboseOutput: pluginOptions.verboseOutput ?? false,
   };
 }
 
