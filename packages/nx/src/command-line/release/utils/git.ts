@@ -85,7 +85,14 @@ export async function getLatestGitTagForPattern(
     }
   }
 
-  const defaultGitArgs = ['tag', '--sort', '-v:refname'];
+  const defaultGitArgs = [
+    // Apply git config to take version suffixes into account when sorting, e.g. 1.0.0 is newer than 1.0.0-beta.1
+    '-c',
+    'versionsort.suffix=-',
+    'tag',
+    '--sort',
+    '-v:refname',
+  ];
 
   try {
     let tags: string[];
