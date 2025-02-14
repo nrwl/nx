@@ -245,6 +245,14 @@
           "items": {
             "type": "string"
           }
+        },
+        "sassOptions": {
+          "description": "Options to pass to sass-loader.",
+          "type": "object"
+        },
+        "lessOptions": {
+          "description": "Options to pass to less-loader.",
+          "type": "object"
         }
       },
       "additionalProperties": false

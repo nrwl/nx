@@ -17,6 +17,8 @@ import {
   rspackDevServerVersion,
   rspackPluginMinifyVersion,
   rspackPluginReactRefreshVersion,
+  sassEmbeddedVersion,
+  sassLoaderVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -100,6 +102,10 @@ export async function rspackInitGenerator(
 
   if (schema.style === 'less') {
     devDependencies['less-loader'] = lessLoaderVersion;
+  }
+  if (schema.style === 'scss') {
+    devDependencies['sass-loader'] = sassLoaderVersion;
+    devDependencies['sass-embedded'] = sassEmbeddedVersion;
   }
 
   if (schema.framework !== 'none' || schema.devServer) {
