@@ -455,6 +455,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "dev": {
                       "command": "vite",
+                      "continuous": true,
                       "metadata": {
                         "description": "Starts Vite dev server",
                         "help": {
@@ -475,6 +476,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "preview": {
                       "command": "vite preview",
+                      "continuous": true,
                       "dependsOn": [
                         "build",
                       ],
@@ -498,6 +500,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "serve": {
                       "command": "vite",
+                      "continuous": true,
                       "metadata": {
                         "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
@@ -518,6 +521,7 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "serve-static": {
+                      "continuous": true,
                       "executor": "@nx/web:file-server",
                       "options": {
                         "buildTarget": "build",
