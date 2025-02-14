@@ -31,7 +31,7 @@ export const emotionBabelPlugin = '11.11.0';
 // WARNING: This needs to be in sync with Next.js' dependency or else there might be issues.
 export const styledJsxVersion = '5.1.2';
 
-export const reactRouterDomVersion = '6.11.2';
+export const reactRouterDomVersion = '6.29.0';
 
 export const testingLibraryReactVersion = '16.1.0';
 export const testingLibraryDomVersion = '10.4.0';
