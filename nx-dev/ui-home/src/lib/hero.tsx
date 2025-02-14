@@ -32,7 +32,7 @@ export function Hero(): ReactElement {
             className="mx-auto mt-6 max-w-3xl"
           >
             <Strong>Build system</Strong>, optimized for monorepos, with{' '}
-            <strong>AI-powered</strong> <br className="hidden md:block" />
+            <Strong>AI-powered</Strong> <br className="hidden md:block" />
             architectural awareness and <Strong>advanced CI</Strong>{' '}
             capabilities.
           </SectionHeading>
