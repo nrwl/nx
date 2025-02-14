@@ -261,12 +261,6 @@
               "file": "shared/concepts/typescript-project-linking"
             },
             {
-              "name": "Nx and Turborepo",
-              "id": "turbo-and-nx",
-              "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-              "file": "shared/concepts/turbo-and-nx"
-            },
-            {
               "name": "Buildable and Publishable Libraries",
               "id": "buildable-and-publishable-libraries",
               "file": "shared/concepts/buildable-and-publishable-libraries"
