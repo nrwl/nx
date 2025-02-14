@@ -23,7 +23,8 @@ export function getPublishedVersion(): string {
 }
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'bun.lockb'))
+  return existsSync(join(dir, 'bun.lockb')) ||
+      existsSync(join(dir, 'bun.lock'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
