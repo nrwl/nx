@@ -20,9 +20,8 @@ export async function readRspackOptions(
   const resolveConfig = async (
     config: unknown
   ): Promise<Configuration | Configuration[]> => {
-    let resolvedConfig: Configuration;
     if (isNxRspackComposablePlugin(config)) {
-      resolvedConfig = await config(
+      return await config(
         {},
         {
           // These values are only used during build-time, so passing stubs here just to read out
