@@ -5,7 +5,7 @@ Jump to:
 
 - [Easy Automated Migration Example](#easy-automated-migration-example) - Automated migration from `create-turbo` workspace using `nx init`
 
-**Spoiler alert:** The diff is tiny! Nx is a superset of Turborepo, so it can already do everything Turborepo can do without any extra configuration.
+**Spoiler alert:** The diff is tiny! Nx is a superset of Turborepo, so it can already do everything Turborepo can do without any extra configuration. (learn more about it in our free [video course](/courses/pnpm-nx-next))
 
 ```diff
 .gitignore        | 3 +++ # Ignore the Nx cache
@@ -33,9 +33,9 @@ This isn't just about raw speed - Nx's approach to file restoration means it's b
 
 ### 2. Fast CI
 
-**Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, Nx Cloud (https://nx.app) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote caching, small teams can apply for FREE Nx Powerpack License here: https://nx.app/powerpack
+**Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, [Nx Cloud](/nx-cloud) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote caching, small teams can apply for FREE Nx Powerpack License here: [https://nx.dev/powerpack](https://nx.dev/powerpack)
 
-However, unlike Turborepo, Nx's CI solution (Nx Cloud) goes way beyond just locating a shared cache on a server somewhere.
+However, unlike Turborepo, Nx's CI solution ([Nx Cloud](/nx-cloud)) goes way beyond just locating a shared cache on a server somewhere.
 
 Nx Cloud allows you to ship updates to your users faster and with more confidence than ever before thanks to:
 
@@ -43,8 +43,8 @@ Nx Cloud allows you to ship updates to your users faster and with more confidenc
 - File artifacts automatically collected and distributed
 - Built in support for versioning, changelog generation and publishing via [Nx Release](/features/manage-releases)
 - Finally solving the pain of long-running, flaky e2e tests by:
-  - Automatically splitting up a single e2e test task into multiple tasks that can run in parallel _across multiple machines_ thanks to Atomizer: https://nx.dev/ci/features/split-e2e-tasks
-  - Automatically detects and rerun flaky tasks: https://nx.dev/ci/features/flaky-tasks
+  - Automatically splitting up a single e2e test task into multiple tasks that can run in parallel _across multiple machines_ thanks to [Atomizer](/ci/features/split-e2e-tasks)
+  - Automatically [detects and rerun flaky tasks](/ci/features/flaky-tasks)
 
 This is crucial for scaling large monorepos, as distributed task execution has a significantly higher impact on scalability than computation caching alone. You can scale without caching, but you cannot scale without distribution.
 
@@ -64,7 +64,7 @@ Turborepo forces you to manually annotated your non-JavaScript packages, Nx unde
 
 Being able to visually explore your workspace is crucial for large monorepos:
 
-- **Nx**: Rich, interactive visualizer, both locally via the `nx graph` CLI ([watch demo](https://www.youtube.com/watch?v=UTB5dOJF43o)) and for every pull request via Nx Cloud.
+- **Nx**: Rich, interactive visualizer, both locally via the `nx graph` CLI and for every pull request via Nx Cloud. (More [in the docs](/features/explore-graph))
 - **Turborepo**: Basic graphviz image export
 
 #### IDE/Developer Tools
