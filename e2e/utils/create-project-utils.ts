@@ -258,6 +258,7 @@ export function runCreateWorkspace(
   const pm = getPackageManagerCommand({ packageManager });
 
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -485,6 +486,29 @@ export function runNgNew(
     env: process.env,
     encoding: 'utf-8',
   });
+
+  // ensure angular packages are installed with ~ instead of ^ to prevent
+  // potential failures when new minor versions are released
+  function updateAngularDependencies(dependencies: any): void {
+    Object.keys(dependencies).forEach((key) => {
+      if (key.startsWith('@angular/') || key.startsWith('@angular-devkit/')) {
+        dependencies[key] = dependencies[key].replace(/^\^/, '~');
+      }
+    });
+  }
+  updateJson('package.json', (json) => {
+    updateAngularDependencies(json.dependencies ?? {});
+    updateAngularDependencies(json.devDependencies ?? {});
+    return json;
+  });
+
+  execSync(pmc.install, {
+    cwd: join(e2eCwd, projName),
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    env: process.env,
+    encoding: 'utf-8',
+  });
+
   copySync(tmpProjPath(), tmpBackupNgCliProjPath());
 
   if (isVerboseE2ERun()) {

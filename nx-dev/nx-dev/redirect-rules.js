@@ -259,7 +259,7 @@ const diataxis = {
   '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
-  '/guides/turbo-and-nx': '/concepts/more-concepts/turbo-and-nx',
+  '/guides/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/guides/why-monorepos': '/concepts/more-concepts/why-monorepos',
   '/guides/adding-assets-react': '/recipes/other/adding-assets-react',
   '/guides/environment-variables': '/reference/environment-variables',
@@ -515,6 +515,8 @@ const tutorialBaseUrls = {
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
     '/getting-started/tutorials',
+  '/tutorial': '/getting-started/tutorials',
+  '/tutorial/:path*': '/getting-started/tutorials',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -772,9 +774,9 @@ const conceptUrls = {
   '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/integrated-repo-tutorial':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/tutorials/integrated-repo-tutorial':
@@ -793,11 +795,14 @@ const conceptUrls = {
     '/nx-api/angular/documents/nx-devkit-angular-devkit',
   '/concepts/more-concepts/incremental-builds':
     '/concepts/more-concepts/buildable-and-publishable-libraries',
+  '/concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
 };
 
 const nested5minuteTutorialUrls = {
   '/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
+  '/getting-started/tutorials/npm-workspaces-tutorial':
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':
@@ -998,7 +1003,8 @@ const latestRecipesRefactoring = {
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
-
+  '/nx-api/js/documents/typescript-project-references':
+    '/concepts/typescript-project-linking',
   '/reference/commands': '/reference/nx-commands',
 };
 
@@ -1118,7 +1124,7 @@ const decisionsSection = {
     '/concepts/decisions/project-dependency-rules',
   '/concepts/more-concepts/grouping-libraries':
     '/concepts/decisions/folder-structure',
-  '/concepts/more-concepts/turbo-and-nx': '/concepts/turbo-and-nx',
+  '/concepts/more-concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/concepts/more-concepts/nx-daemon': '/concepts/nx-daemon',
   '/concepts/more-concepts/buildable-and-publishable-libraries':
     '/concepts/buildable-and-publishable-libraries',

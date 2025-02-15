@@ -26,6 +26,11 @@ import {
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { printConfigAndExit } from './utils/print-config';
+import { workspaceRoot } from '../../utils/workspace-root';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../../project-graph/plugins/tasks-execution-hooks';
 
 export interface PublishProjectsResult {
   [projectName: string]: {
@@ -91,6 +96,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -102,6 +108,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     if (filterError) {
       output.error(filterError);
       process.exit(1);
+    }
+    if (
+      filterLog &&
+      process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
+    ) {
+      output.note(filterLog);
     }
 
     /**
@@ -242,6 +254,10 @@ async function runPublishOnProjects(
       ].join('\n')}\n`
     );
   }
+  await runPreTasksExecution({
+    workspaceRoot,
+    nxJsonConfiguration: nxJson,
+  });
 
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
@@ -269,6 +285,11 @@ async function runPublishOnProjects(
       code: taskData.code,
     };
   }
+  await runPostTasksExecution({
+    taskResults: commandResults,
+    workspaceRoot,
+    nxJsonConfiguration: nxJson,
+  });
 
   return publishProjectsResult;
 }

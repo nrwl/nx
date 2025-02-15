@@ -13,7 +13,7 @@
     "@schematics",
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",
-    "chalk",
+    "picocolors",
     "ignore",
     "minimatch",
     "rxjs-for-await",

@@ -164,20 +164,51 @@ describe('Remix Library Generator', () => {
         addPlugin: true,
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'packages/foo/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "main",
+          "types",
+          "exports",
+        ]
+      `);
       expect(readJson(tree, 'packages/foo/package.json'))
         .toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/foo",
-          "nx": {
-            "name": "foo",
-            "projectType": "library",
-            "sourceRoot": "packages/foo/src",
-          },
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
       `);
     });
+
+    it('should generate server entrypoint', async () => {
+      await libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+      });
+
+      expect(tree.exists(`test/src/server.ts`)).toBeTruthy();
+      expect(tree.children(`test/src/lib`).sort()).toMatchInlineSnapshot(`
+        [
+          "test.module.css",
+          "test.spec.tsx",
+          "test.tsx",
+        ]
+      `);
+    }, 25_000);
   });
 });

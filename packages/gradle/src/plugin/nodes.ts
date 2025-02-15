@@ -195,7 +195,7 @@ async function createGradleProject(
     let tasks: GradleTask[] = [];
     tasksSet.forEach((taskName) => {
       tasks.push({
-        type: tasksTypeMap.get(taskName) as string,
+        type: tasksTypeMap?.get(taskName) as string,
         name: taskName,
       });
     });

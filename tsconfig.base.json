@@ -119,6 +119,7 @@
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
       "@nx/nx-dev/ui-video-courses": ["nx-dev/ui-video-courses/src/index.ts"],
+      "@nx/nx-dev/ui-webinar": ["nx-dev/ui-webinar/src/index.ts"],
       "@nx/nx-dev/util-ai": ["nx-dev/util-ai/src/index.ts"],
       "@nx/playwright": ["packages/playwright/index.ts"],
       "@nx/playwright/*": ["packages/playwright/*"],
@@ -132,8 +133,8 @@
       "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
-      "@nx/rsbuild": ["packages/rsbuild/src"],
-      "@nx/rsbuild/*": ["packages/rsbuild/src/*"],
+      "@nx/rsbuild": ["packages/rsbuild/"],
+      "@nx/rsbuild/*": ["packages/rsbuild/*"],
       "@nx/rspack": ["packages/rspack/src"],
       "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],
@@ -152,6 +153,9 @@
       "@nx/webpack/*": ["packages/webpack/*"],
       "@nx/workspace": ["packages/workspace"],
       "@nx/workspace-plugin": ["tools/workspace-plugin/src/index.ts"],
+      "@nx/workspace-plugin/conformance-rules/*": [
+        "tools/workspace-plugin/src/conformance-rules/*"
+      ],
       "@nx/workspace/*": ["packages/workspace/*"],
       "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],
       "create-nx-workspace/*": ["packages/create-nx-workspace/*"],

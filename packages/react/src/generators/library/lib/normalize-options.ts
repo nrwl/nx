@@ -13,7 +13,6 @@ import {
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export async function normalizeOptions(
   host: Tree,
@@ -71,7 +70,7 @@ export async function normalizeOptions(
     bundler,
     fileName,
     routePath: `/${projectNames.projectSimpleName}`,
-    name: projectName,
+    name: isUsingTsSolutionConfig ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,

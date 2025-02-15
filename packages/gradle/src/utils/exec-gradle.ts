@@ -2,6 +2,7 @@ import { AggregateCreateNodesError, workspaceRoot } from '@nx/devkit';
 import { ExecFileOptions, execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { LARGE_BUFFER } from 'nx/src/executors/run-commands/run-commands.impl';
 
 /**
  * For gradle command, it needs to be run from the directory of the gradle binary
@@ -23,12 +24,13 @@ export function execGradleAsync(
   args: ReadonlyArray<string>,
   execOptions: ExecFileOptions = {}
 ): Promise<Buffer> {
-  return new Promise<Buffer>((res, rej) => {
+  return new Promise<Buffer>((res, rej: (stdout: Buffer) => void) => {
     const cp = execFile(gradleBinaryPath, args, {
       cwd: dirname(gradleBinaryPath),
       shell: true,
       windowsHide: true,
       env: process.env,
+      maxBuffer: LARGE_BUFFER,
       ...execOptions,
     });
 
@@ -36,18 +38,15 @@ export function execGradleAsync(
     cp.stdout?.on('data', (data) => {
       stdout += data;
     });
+    cp.stderr?.on('data', (data) => {
+      stdout += data;
+    });
 
     cp.on('exit', (code) => {
       if (code === 0) {
         res(stdout);
       } else {
-        rej(
-          new Error(
-            `Executing Gradle with ${args.join(
-              ' '
-            )} failed with code: ${code}. \nLogs: ${stdout}`
-          )
-        );
+        rej(stdout);
       }
     });
   });

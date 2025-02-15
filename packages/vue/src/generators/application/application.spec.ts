@@ -69,6 +69,69 @@ describe('application generator', () => {
     `);
   });
 
+  it('should set up project correctly for rsbuild', async () => {
+    const nxJson = readNxJson(tree);
+    nxJson.plugins ??= [];
+
+    updateNxJson(tree, nxJson);
+    await applicationGenerator(tree, {
+      ...options,
+      bundler: 'rsbuild',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'playwright',
+      addPlugin: true,
+    });
+
+    expect(tree.read('test/vitest.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/rsbuild.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "import { pluginVue } from '@rsbuild/plugin-vue';
+      import { defineConfig } from '@rsbuild/core';
+
+      export default defineConfig({
+        html: {
+          template: './index.html',
+        },
+        plugins: [pluginVue()],
+
+        source: {
+          entry: {
+            index: './src/main.ts',
+          },
+          tsconfigPath: './tsconfig.app.json',
+        },
+        server: {
+          port: 4200,
+        },
+        output: {
+          target: 'web',
+          distPath: {
+            root: 'dist',
+          },
+        },
+      });
+      "
+    `);
+    expect(listFiles(tree)).toMatchSnapshot();
+    expect(
+      readNxJson(tree).plugins.find(
+        (p) => typeof p !== 'string' && p.plugin === '@nx/rsbuild'
+      )
+    ).toMatchInlineSnapshot(`
+      {
+        "options": {
+          "buildDepsTargetName": "build-deps",
+          "buildTargetName": "build",
+          "devTargetName": "dev",
+          "inspectTargetName": "inspect",
+          "previewTargetName": "preview",
+          "typecheckTargetName": "typecheck",
+          "watchDepsTargetName": "watch-deps",
+        },
+        "plugin": "@nx/rsbuild",
+      }
+    `);
+  });
+
   it('should set up project correctly for cypress', async () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
@@ -132,7 +195,7 @@ describe('application generator', () => {
         import { defineConfig } from 'vite';
         import vue from '@vitejs/plugin-vue';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/test',
           server: {
@@ -164,10 +227,10 @@ describe('application generator', () => {
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
-              provider: 'v8',
+              provider: 'v8' as const,
             },
           },
-        });
+        }));
         "
       `);
 
@@ -179,6 +242,16 @@ describe('application generator', () => {
           {
             "path": "./test",
           },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'test/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
         ]
       `);
       expect(readJson(tree, 'test/tsconfig.json')).toMatchInlineSnapshot(`

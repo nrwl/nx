@@ -20,6 +20,7 @@ import {
 import { editTsConfig } from '../application/lib/create-ts-config';
 import rspackInitGenerator from '../init/init';
 import { ConfigurationSchema } from './schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -27,9 +28,6 @@ export async function configurationGenerator(
 ) {
   const task = await rspackInitGenerator(tree, {
     ...options,
-    // TODO: Crystalize the default rspack.config.js file.
-    // The default setup isn't crystalized so don't add plugin.
-    addPlugin: false,
   });
   const { targets, root, projectType } = readProjectConfiguration(
     tree,
@@ -73,7 +71,7 @@ export async function configurationGenerator(
     if (
       alreadyHasNxRspackTargets.build &&
       (alreadyHasNxRspackTargets.serve ||
-        projectType === 'library' ||
+        getProjectType(tree, options.project, projectType) === 'library' ||
         options.framework === 'nest')
     ) {
       throw new Error(

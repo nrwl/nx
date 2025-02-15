@@ -1,5 +1,10 @@
 'use client';
-import { Dialog, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
@@ -257,10 +262,10 @@ export function SidebarMobile({
   };
 
   return (
-    <Transition.Root show={navIsOpen} as={Fragment}>
+    <Transition show={navIsOpen} as={Fragment}>
       <Dialog as="div" className="relative z-40" onClose={() => void 0}>
         <div className="fixed inset-0 z-40 flex">
-          <Transition.Child
+          <TransitionChild
             as={Fragment}
             enter="transition ease-in-out duration-300 transform"
             enterFrom="-translate-x-full"
@@ -269,7 +274,7 @@ export function SidebarMobile({
             leaveFrom="translate-x-0"
             leaveTo="-translate-x-full"
           >
-            <Dialog.Panel className="relative flex w-full flex-col overflow-y-auto bg-white dark:bg-slate-900">
+            <DialogPanel className="relative flex w-full flex-col overflow-y-auto bg-white dark:bg-slate-900">
               {/*HEADER*/}
               <div className="flex w-full items-center border-b border-slate-200 bg-slate-50 p-4 lg:hidden dark:border-slate-700 dark:bg-slate-800/60">
                 {/*CLOSE BUTTON*/}
@@ -354,10 +359,10 @@ export function SidebarMobile({
                   </nav>
                 </div>
               </div>
-            </Dialog.Panel>
-          </Transition.Child>
+            </DialogPanel>
+          </TransitionChild>
         </div>
       </Dialog>
-    </Transition.Root>
+    </Transition>
   );
 }

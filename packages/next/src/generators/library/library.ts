@@ -17,8 +17,10 @@ import { normalizeOptions } from './lib/normalize-options';
 import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
 import {
   isUsingTsSolutionSetup,
+  addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -160,6 +162,12 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

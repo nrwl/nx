@@ -41,9 +41,9 @@
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "NPM Workspaces Monorepo",
-                  "id": "npm-workspaces-tutorial",
-                  "file": "shared/tutorials/npm-workspaces"
+                  "name": "TypeScript Packages",
+                  "id": "typescript-packages-tutorial",
+                  "file": "shared/tutorials/typescript-packages"
                 },
                 {
                   "name": "React Standalone",
@@ -237,6 +237,12 @@
               "file": "shared/concepts/executors-and-configurations"
             },
             {
+              "name": "Common Tasks",
+              "id": "common-tasks",
+              "tags": ["run-tasks"],
+              "file": "shared/concepts/common-tasks"
+            },
+            {
               "name": "Nx Daemon",
               "id": "nx-daemon",
               "tags": ["daemon"],
@@ -249,10 +255,10 @@
               "file": "shared/concepts/sync-generators"
             },
             {
-              "name": "Nx and Turborepo",
-              "id": "turbo-and-nx",
-              "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-              "file": "shared/concepts/turbo-and-nx"
+              "name": "TypeScript Project Linking",
+              "id": "typescript-project-linking",
+              "tags": ["project-linking"],
+              "file": "shared/concepts/typescript-project-linking"
             },
             {
               "name": "Buildable and Publishable Libraries",
@@ -628,6 +634,12 @@
                   "file": "shared/recipes/console-run-command"
                 },
                 {
+                  "name": "Nx Cloud Integration",
+                  "id": "console-nx-cloud",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-nx-cloud"
+                },
+                {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
                   "tags": ["editor-setup"],
@@ -1001,6 +1013,12 @@
                   "file": "shared/eslint"
                 },
                 {
+                  "name": "Switch to Workspaces and TS Project References",
+                  "id": "switch-to-workspaces-project-references",
+                  "tags": ["project-linking"],
+                  "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+                },
+                {
                   "name": "Enable Typescript Batch Mode",
                   "id": "enable-tsc-batch-mode",
                   "file": "shared/recipes/enable-tsc-batch-mode"
@@ -1100,6 +1118,11 @@
               "description": "Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.",
               "file": "shared/features/powerpack/index",
               "itemList": [
+                {
+                  "name": "Free Licenses & Trials",
+                  "id": "free-licenses-and-trials",
+                  "file": "shared/features/powerpack/free-licenses-and-trials"
+                },
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
                   "description": "Write and apply rules for your Nx workspace",
@@ -1391,6 +1414,11 @@
               "name": "Legacy Cache",
               "id": "legacy-cache",
               "file": "shared/deprecated/legacy-cache"
+            },
+            {
+              "name": "Custom Tasks Runner",
+              "id": "custom-tasks-runner",
+              "file": "shared/deprecated/custom-tasks-runner"
             },
             {
               "name": "Workspace Executors",
@@ -2291,12 +2319,6 @@
               "id": "overview",
               "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
-            },
-            {
-              "name": "Configure TypeScript Project References in an Nx Workspace",
-              "id": "typescript-project-references",
-              "path": "/nx-api/js/typescript-project-references",
-              "file": "shared/packages/js/typescript-project-references"
             }
           ]
         },
@@ -2668,6 +2690,12 @@
               "id": "overview",
               "path": "/nx-api/powerpack-conformance",
               "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+            },
+            {
+              "name": "Create a Conformance Rule",
+              "id": "create-conformance-rule",
+              "path": "/nx-api/powerpack-conformance",
+              "file": "shared/packages/powerpack-conformance/create-conformance-rule"
             }
           ]
         },

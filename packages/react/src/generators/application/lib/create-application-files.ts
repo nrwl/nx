@@ -86,7 +86,10 @@ export async function createApplicationFiles(
       {
         ...templateVariables,
         webpackPluginOptions: hasWebpackPlugin(host)
-          ? createNxWebpackPluginOptions(options)
+          ? createNxWebpackPluginOptions(
+              options,
+              templateVariables.offsetFromRoot
+            )
           : null,
       }
     );
@@ -151,8 +154,20 @@ export async function createApplicationFiles(
       {
         ...templateVariables,
         rspackPluginOptions: hasRspackPlugin(host)
-          ? createNxRspackPluginOptions(options)
+          ? createNxRspackPluginOptions(
+              options,
+              templateVariables.offsetFromRoot
+            )
           : null,
+      }
+    );
+  } else if (options.bundler === 'rsbuild') {
+    generateFiles(
+      host,
+      join(__dirname, '../files/base-rsbuild'),
+      options.appProjectRoot,
+      {
+        ...templateVariables,
       }
     );
   }
@@ -202,17 +217,21 @@ export async function createApplicationFiles(
 }
 
 function createNxWebpackPluginOptions(
-  options: NormalizedSchema
+  options: NormalizedSchema,
+  rootOffset: string
 ): WithNxOptions & WithReactOptions {
   return {
     target: 'web',
     compiler: options.compiler ?? 'babel',
-    outputPath: joinPathFragments(
-      'dist',
-      options.appProjectRoot != '.'
-        ? options.appProjectRoot
-        : options.projectName
-    ),
+    outputPath: options.isUsingTsSolutionConfig
+      ? 'dist'
+      : joinPathFragments(
+          rootOffset,
+          'dist',
+          options.appProjectRoot != '.'
+            ? options.appProjectRoot
+            : options.projectName
+        ),
     index: './src/index.html',
     baseHref: '/',
     main: maybeJs(
@@ -236,16 +255,20 @@ function createNxWebpackPluginOptions(
 }
 
 function createNxRspackPluginOptions(
-  options: NormalizedSchema
+  options: NormalizedSchema,
+  rootOffset: string
 ): WithNxOptions & WithReactOptions {
   return {
     target: 'web',
-    outputPath: joinPathFragments(
-      'dist',
-      options.appProjectRoot != '.'
-        ? options.appProjectRoot
-        : options.projectName
-    ),
+    outputPath: options.isUsingTsSolutionConfig
+      ? 'dist'
+      : joinPathFragments(
+          rootOffset,
+          'dist',
+          options.appProjectRoot != '.'
+            ? options.appProjectRoot
+            : options.projectName
+        ),
     index: './src/index.html',
     baseHref: '/',
     main: maybeJs(

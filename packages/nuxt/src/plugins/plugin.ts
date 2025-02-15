@@ -4,6 +4,7 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
+  getPackageManagerCommand,
   readJsonFile,
   TargetConfiguration,
   workspaceRoot,
@@ -17,9 +18,12 @@ import { getLockFileName } from '@nx/js';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const cachePath = join(workspaceDataDirectory, 'nuxt.hash');
 const targetsCache = readTargetsCache();
+
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(): Record<
   string,
@@ -46,6 +50,8 @@ export interface NuxtPluginOptions {
   serveTargetName?: string;
   serveStaticTargetName?: string;
   buildStaticTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
@@ -119,6 +125,14 @@ async function buildNuxtTargets(
     namedInputs,
     buildOutputs,
     projectRoot
+  );
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
   );
 
   return targets;

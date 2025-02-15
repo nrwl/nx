@@ -29,12 +29,12 @@ export function Hero(): ReactElement {
           <SectionHeading
             as="p"
             variant="subtitle"
-            className="mx-auto mt-6 max-w-4xl"
+            className="mx-auto mt-6 max-w-3xl"
           >
-            <Strong>Build system</Strong>, optimized for monorepos, with plugins
-            for popular frameworks and tools and{' '}
-            <Strong>advanced CI capabilities</Strong> including caching and
-            distribution.
+            <Strong>Build system</Strong>, optimized for monorepos, with{' '}
+            <Strong>AI-powered</Strong> <br className="hidden md:block" />
+            architectural awareness and <Strong>advanced CI</Strong>{' '}
+            capabilities.
           </SectionHeading>
           <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
             <ButtonLink

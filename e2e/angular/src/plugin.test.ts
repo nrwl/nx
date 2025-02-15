@@ -153,10 +153,32 @@ function runNgNew(projectName: string, cwd: string): void {
   const pmc = getPackageManagerCommand({ packageManager });
 
   const command = `${pmc.runUninstalledPackage} @angular/cli@${angularCliVersion} new ${projectName} --package-manager=${packageManager}`;
-  cwd = join(tmpProjPath(), cwd);
-  ensureDirSync(cwd);
+  const fullCwd = join(tmpProjPath(), cwd);
+  ensureDirSync(fullCwd);
   execSync(command, {
-    cwd,
+    cwd: fullCwd,
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    env: process.env,
+    encoding: 'utf-8',
+  });
+
+  // ensure angular packages are installed with ~ instead of ^ to prevent
+  // potential failures when new minor versions are released
+  function updateAngularDependencies(dependencies: any): void {
+    Object.keys(dependencies).forEach((key) => {
+      if (key.startsWith('@angular/') || key.startsWith('@angular-devkit/')) {
+        dependencies[key] = dependencies[key].replace(/^\^/, '~');
+      }
+    });
+  }
+  updateJson(join(cwd, projectName, 'package.json'), (json) => {
+    updateAngularDependencies(json.dependencies ?? {});
+    updateAngularDependencies(json.devDependencies ?? {});
+    return json;
+  });
+
+  execSync(pmc.install, {
+    cwd: join(fullCwd, projectName),
     stdio: isVerbose() ? 'inherit' : 'pipe',
     env: process.env,
     encoding: 'utf-8',

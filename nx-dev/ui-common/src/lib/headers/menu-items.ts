@@ -203,7 +203,7 @@ export const learnItems: MenuItem[] = [
   {
     name: 'Webinars',
     description: null,
-    href: 'https://go.nx.dev/webinar',
+    href: '/webinar',
     icon: ComputerDesktopIcon,
     isNew: false,
     isHighlight: false,

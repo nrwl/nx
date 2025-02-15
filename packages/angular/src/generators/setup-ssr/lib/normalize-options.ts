@@ -33,6 +33,13 @@ export async function normalizeOptions(
     } else {
       options.serverRouting = false;
     }
+  } else if (
+    options.serverRouting !== undefined &&
+    !isUsingApplicationBuilder
+  ) {
+    throw new Error(
+      'Server routing APIs can only be added to a project using `application` builder.'
+    );
   }
 
   const isStandaloneApp = isNgStandaloneApp(tree, options.project);

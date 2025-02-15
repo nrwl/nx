@@ -1,3 +1,8 @@
+// AI
+export * from './lib/ai/cursor';
+export * from './lib/ai/github-copilot';
+export * from './lib/ai/intellij-ai';
+
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
 export * from './lib/ci-providers/bitbucket';
@@ -48,6 +53,7 @@ export * from './lib/customers/paramount';
 export * from './lib/customers/payfit';
 export * from './lib/customers/paylocity';
 export * from './lib/customers/philips';
+export * from './lib/customers/plex';
 export * from './lib/customers/react-query';
 export * from './lib/customers/red-bull';
 export * from './lib/customers/redwood-js';

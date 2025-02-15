@@ -1,0 +1,14 @@
+{
+  "name": "update-19-6-0-turn-module-federation-dts-off",
+  "cli": "nx",
+  "version": "19.6.0-beta.4",
+  "description": "Ensure Module Federation DTS is turned off by default.",
+  "factory": "./src/migrations/update-19-6-0/turn-off-dts-by-default",
+  "implementation": "/packages/react/src/migrations/update-19-6-0/turn-off-dts-by-default.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

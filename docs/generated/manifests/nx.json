@@ -58,14 +58,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "npm-workspaces-tutorial",
-            "name": "NPM Workspaces Monorepo",
+            "id": "typescript-packages-tutorial",
+            "name": "TypeScript Packages",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/npm-workspaces",
+            "file": "shared/tutorials/typescript-packages",
             "itemList": [],
             "isExternal": false,
-            "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+            "path": "/getting-started/tutorials/typescript-packages-tutorial",
             "tags": []
           },
           {
@@ -196,14 +196,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "npm-workspaces-tutorial",
-        "name": "NPM Workspaces Monorepo",
+        "id": "typescript-packages-tutorial",
+        "name": "TypeScript Packages",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/npm-workspaces",
+        "file": "shared/tutorials/typescript-packages",
         "itemList": [],
         "isExternal": false,
-        "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+        "path": "/getting-started/tutorials/typescript-packages-tutorial",
         "tags": []
       },
       {
@@ -277,15 +277,15 @@
     "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/npm-workspaces-tutorial": {
-    "id": "npm-workspaces-tutorial",
-    "name": "NPM Workspaces Monorepo",
+  "/getting-started/tutorials/typescript-packages-tutorial": {
+    "id": "typescript-packages-tutorial",
+    "name": "TypeScript Packages",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/npm-workspaces",
+    "file": "shared/tutorials/typescript-packages",
     "itemList": [],
     "isExternal": false,
-    "path": "/getting-started/tutorials/npm-workspaces-tutorial",
+    "path": "/getting-started/tutorials/typescript-packages-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-standalone-tutorial": {
@@ -832,6 +832,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "common-tasks",
+        "name": "Common Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/common-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/common-tasks",
+        "tags": ["run-tasks"]
+      },
+      {
         "id": "nx-daemon",
         "name": "Nx Daemon",
         "description": "",
@@ -854,15 +865,15 @@
         "tags": ["sync"]
       },
       {
-        "id": "turbo-and-nx",
-        "name": "Nx and Turborepo",
+        "id": "typescript-project-linking",
+        "name": "TypeScript Project Linking",
         "description": "",
-        "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-        "file": "shared/concepts/turbo-and-nx",
+        "mediaImage": "",
+        "file": "shared/concepts/typescript-project-linking",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/turbo-and-nx",
-        "tags": []
+        "path": "/concepts/typescript-project-linking",
+        "tags": ["project-linking"]
       },
       {
         "id": "buildable-and-publishable-libraries",
@@ -1113,6 +1124,17 @@
     "path": "/concepts/executors-and-configurations",
     "tags": ["run-tasks"]
   },
+  "/concepts/common-tasks": {
+    "id": "common-tasks",
+    "name": "Common Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/common-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/common-tasks",
+    "tags": ["run-tasks"]
+  },
   "/concepts/nx-daemon": {
     "id": "nx-daemon",
     "name": "Nx Daemon",
@@ -1135,16 +1157,16 @@
     "path": "/concepts/sync-generators",
     "tags": ["sync"]
   },
-  "/concepts/turbo-and-nx": {
-    "id": "turbo-and-nx",
-    "name": "Nx and Turborepo",
+  "/concepts/typescript-project-linking": {
+    "id": "typescript-project-linking",
+    "name": "TypeScript Project Linking",
     "description": "",
-    "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-    "file": "shared/concepts/turbo-and-nx",
+    "mediaImage": "",
+    "file": "shared/concepts/typescript-project-linking",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/turbo-and-nx",
-    "tags": []
+    "path": "/concepts/typescript-project-linking",
+    "tags": ["project-linking"]
   },
   "/concepts/buildable-and-publishable-libraries": {
     "id": "buildable-and-publishable-libraries",
@@ -1971,6 +1993,17 @@
             "tags": ["editor-setup"]
           },
           {
+            "id": "console-nx-cloud",
+            "name": "Nx Cloud Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-nx-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-nx-cloud",
+            "tags": ["editor-setup"]
+          },
+          {
             "id": "console-troubleshooting",
             "name": "Troubleshooting",
             "description": "",
@@ -2641,6 +2674,17 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/eslint",
             "tags": []
+          },
+          {
+            "id": "switch-to-workspaces-project-references",
+            "name": "Switch to Workspaces and TS Project References",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+            "tags": ["project-linking"]
           },
           {
             "id": "enable-tsc-batch-mode",
@@ -3732,6 +3776,17 @@
         "tags": ["editor-setup"]
       },
       {
+        "id": "console-nx-cloud",
+        "name": "Nx Cloud Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-nx-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-nx-cloud",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "console-troubleshooting",
         "name": "Troubleshooting",
         "description": "",
@@ -3789,6 +3844,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-run-command",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-nx-cloud": {
+    "id": "console-nx-cloud",
+    "name": "Nx Cloud Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-nx-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-nx-cloud",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {
@@ -4988,6 +5054,17 @@
         "tags": []
       },
       {
+        "id": "switch-to-workspaces-project-references",
+        "name": "Switch to Workspaces and TS Project References",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+        "tags": ["project-linking"]
+      },
+      {
         "id": "enable-tsc-batch-mode",
         "name": "Enable Typescript Batch Mode",
         "description": "",
@@ -5167,6 +5244,17 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/eslint",
     "tags": []
+  },
+  "/recipes/tips-n-tricks/switch-to-workspaces-project-references": {
+    "id": "switch-to-workspaces-project-references",
+    "name": "Switch to Workspaces and TS Project References",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+    "tags": ["project-linking"]
   },
   "/recipes/tips-n-tricks/enable-tsc-batch-mode": {
     "id": "enable-tsc-batch-mode",
@@ -5348,6 +5436,17 @@
         "file": "shared/features/powerpack/index",
         "itemList": [
           {
+            "id": "free-licenses-and-trials",
+            "name": "Free Licenses & Trials",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/features/powerpack/free-licenses-and-trials",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+            "tags": []
+          },
+          {
             "id": "conformance",
             "name": "Run Language-Agnostic Conformance Rules",
             "description": "Write and apply rules for your Nx workspace",
@@ -5409,6 +5508,17 @@
     "file": "shared/features/powerpack/index",
     "itemList": [
       {
+        "id": "free-licenses-and-trials",
+        "name": "Free Licenses & Trials",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/powerpack/free-licenses-and-trials",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+        "tags": []
+      },
+      {
         "id": "conformance",
         "name": "Run Language-Agnostic Conformance Rules",
         "description": "Write and apply rules for your Nx workspace",
@@ -5444,6 +5554,17 @@
     ],
     "isExternal": false,
     "path": "/nx-enterprise/powerpack",
+    "tags": []
+  },
+  "/nx-enterprise/powerpack/free-licenses-and-trials": {
+    "id": "free-licenses-and-trials",
+    "name": "Free Licenses & Trials",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/powerpack/free-licenses-and-trials",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
     "tags": []
   },
   "/nx-enterprise/powerpack/conformance": {
@@ -6583,6 +6704,17 @@
         "tags": []
       },
       {
+        "id": "custom-tasks-runner",
+        "name": "Custom Tasks Runner",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/custom-tasks-runner",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/custom-tasks-runner",
+        "tags": []
+      },
+      {
         "id": "workspace-executors",
         "name": "Workspace Executors",
         "description": "",
@@ -6750,6 +6882,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/legacy-cache",
+    "tags": []
+  },
+  "/deprecated/custom-tasks-runner": {
+    "id": "custom-tasks-runner",
+    "name": "Custom Tasks Runner",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/custom-tasks-runner",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/custom-tasks-runner",
     "tags": []
   },
   "/deprecated/workspace-executors": {

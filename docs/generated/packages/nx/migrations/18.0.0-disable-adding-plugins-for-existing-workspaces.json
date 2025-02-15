@@ -1,0 +1,14 @@
+{
+  "name": "18.0.0-disable-adding-plugins-for-existing-workspaces",
+  "cli": "nx",
+  "version": "18.0.0-beta.2",
+  "description": "Updates nx.json to disabled adding plugins when generating projects in an existing Nx workspace",
+  "implementation": "/packages/nx/src/migrations/update-18-0-0/disable-crystal-for-existing-workspaces.ts",
+  "x-repair-skip": true,
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

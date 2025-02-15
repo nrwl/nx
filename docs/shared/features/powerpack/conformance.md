@@ -15,7 +15,7 @@ The plugin also provides the following pre-written rules:
 
 The `@nx/powerpack-conformance` plugin requires an Nx Powerpack license to function. [Activating Powerpack](/nx-enterprise/activate-powerpack) is a simple process.
 
-{% call-to-action title="Buy a Powerpack License" icon="nx" description="Unlock all the features of Nx" url="https://cloud.nx.app/powerpack/purchase" /%}
+{% call-to-action title="Get a License and Activate Powerpack" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
 
 Then, add the Conformance plugin to your workspace.
 

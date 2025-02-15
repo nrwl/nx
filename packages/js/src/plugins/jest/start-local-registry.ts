@@ -54,7 +54,7 @@ export function startLocalRegistry({
 
         process.env.npm_config_registry = registry;
         execSync(
-          `npm config set //${listenAddress}:${port}/:_authToken "secretVerdaccioToken"`,
+          `npm config set //${listenAddress}:${port}/:_authToken "secretVerdaccioToken" --ws=false`,
           {
             windowsHide: false,
           }
@@ -70,9 +70,12 @@ export function startLocalRegistry({
 
         resolve(() => {
           childProcess.kill();
-          execSync(`npm config delete //${listenAddress}:${port}/:_authToken`, {
-            windowsHide: false,
-          });
+          execSync(
+            `npm config delete //${listenAddress}:${port}/:_authToken --ws=false`,
+            {
+              windowsHide: false,
+            }
+          );
         });
         childProcess?.stdout?.off('data', listener);
       }

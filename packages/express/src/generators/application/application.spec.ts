@@ -171,6 +171,16 @@ describe('app', () => {
           },
         ]
       `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(appTree, 'myapp/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "name": "@proj/myapp",
@@ -192,7 +202,7 @@ describe('app', () => {
                   ],
                   "compiler": "tsc",
                   "main": "myapp/src/main.ts",
-                  "outputPath": "dist/myapp",
+                  "outputPath": "myapp/dist",
                   "target": "node",
                   "tsConfig": "myapp/tsconfig.app.json",
                   "webpackConfig": "myapp/webpack.config.js",

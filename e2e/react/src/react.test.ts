@@ -20,7 +20,6 @@ import { join } from 'path';
 
 describe('React Applications', () => {
   let proj: string;
-
   describe('Crystal Supported Tests', () => {
     beforeAll(() => {
       proj = newProject({ packages: ['@nx/react'] });
@@ -28,7 +27,6 @@ describe('React Applications', () => {
     });
 
     afterAll(() => cleanupProject());
-
     it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
@@ -58,64 +56,6 @@ describe('React Applications', () => {
 
       if (runE2ETests()) {
         const e2eResults = runCLI(`e2e ${appName}-e2e`);
-        expect(e2eResults).toContain('Successfully ran target e2e for project');
-        expect(await killPorts()).toBeTruthy();
-      }
-    }, 250_000);
-
-    it('None buildable libs using (useTsSolution = true) should be excluded from js/ts plugin', async () => {
-      const appName = uniq('app');
-      const libName = uniq('lib');
-
-      runCLI(
-        `generate @nx/react:app apps/${appName} --name=${appName} --useTsSolution true --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
-      );
-      runCLI(
-        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
-      );
-
-      const nxJson = JSON.parse(readFile('nx.json'));
-
-      const jsTypescriptPlugin = nxJson.plugins.find(
-        (plugin) => plugin.plugin === '@nx/js/typescript'
-      );
-      expect(jsTypescriptPlugin).toBeDefined();
-
-      expect(jsTypescriptPlugin.exclude.includes(`${libName}/*`)).toBeTruthy();
-    }, 250_000);
-
-    it('should be able to use Rspack to build and test apps', async () => {
-      const appName = uniq('app');
-      const libName = uniq('lib');
-
-      runCLI(
-        `generate @nx/react:app ${appName} --bundler=rspack --unit-test-runner=vitest --no-interactive --skipFormat --linter=eslint`
-      );
-      runCLI(
-        `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat --linter=eslint`
-      );
-
-      // Library generated with Vite
-      checkFilesExist(`${libName}/vite.config.ts`);
-
-      const mainPath = `${appName}/src/main.tsx`;
-      updateFile(
-        mainPath,
-        `
-        import '@${proj}/${libName}';
-        ${readFile(mainPath)}
-      `
-      );
-
-      runCLI(`build ${appName}`, { verbose: true });
-
-      checkFilesExist(`dist/${appName}/index.html`);
-
-      if (runE2ETests()) {
-        // TODO(Colum): investigate why webkit is failing
-        const e2eResults = runCLI(`e2e ${appName}-e2e -- --project=chromium`, {
-          verbose: true,
-        });
         expect(e2eResults).toContain('Successfully ran target e2e for project');
         expect(await killPorts()).toBeTruthy();
       }

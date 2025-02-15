@@ -41,6 +41,18 @@
       "version": "20.2.0-beta.2",
       "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
       "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
+    },
+    "ensure-nx-module-federation-package": {
+      "cli": "nx",
+      "version": "20.3.0-beta.2",
+      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    },
+    "add-mf-env-var-to-target-defaults": {
+      "cli": "nx",
+      "version": "20.4.0-beta.0",
+      "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
     }
   },
   "packageJsonUpdates": {
@@ -182,6 +194,15 @@
         },
         "@module-federation/node": {
           "version": "2.6.11",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.3.0": {
+      "version": "20.3.0-beta.0",
+      "packages": {
+        "@testing-library/react": {
+          "version": "16.1.0",
           "alwaysAddToPackageJson": false
         }
       }

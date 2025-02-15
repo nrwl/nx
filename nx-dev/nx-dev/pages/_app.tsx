@@ -7,7 +7,8 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { LiveStreamNotifier, WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { FrontendObservability } from '../lib/components/frontend-observability';
 
 export default function CustomApp({
   Component,
@@ -15,7 +16,7 @@ export default function CustomApp({
 }: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
-  // RR2B ---------
+  // RB2B ---------
   const SCRIPT_ID = 'external-js-script';
   const SCRIPT_BASE_URL = 'https://s3-us-west-2.amazonaws.com/b2bjsstore/b/';
   const SCRIPT_KEY = '0NW1GH7YJ4O4'; //
@@ -48,6 +49,7 @@ export default function CustomApp({
   }, [router.events, gaMeasurementId]);
   return (
     <>
+      <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast CI"
         description="Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
@@ -75,6 +77,7 @@ export default function CustomApp({
         dangerouslySetAllPagesToNoIndex={
           process.env.NEXT_PUBLIC_NO_INDEX === 'true'
         }
+        canonical={'https://nx.dev' + router.asPath.split('?')[0]}
       />
       <Head>
         <meta name="apple-mobile-web-app-title" content="Nx" />
@@ -106,7 +109,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      {/*<WebinarNotifier />*/}
+      <WebinarNotifier />
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script

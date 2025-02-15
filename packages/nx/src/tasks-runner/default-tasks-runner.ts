@@ -8,7 +8,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { DaemonClient } from '../daemon/client/client';
 import { cacheDir } from '../utils/cache-directory';
-import { readFile, writeFile, mkdir } from 'fs/promises';
+import { readFile, writeFile, mkdir, rename, readdir } from 'fs/promises';
 import { join } from 'path';
 import { CachedResult } from '../native';
 
@@ -38,7 +38,7 @@ export abstract class RemoteCacheV2 {
             ),
           ]);
           return {
-            outputsPath: cacheDirectory,
+            outputsPath: join(cacheDirectory, hash, 'outputs'),
             terminalOutput: terminalOutput ?? oldTerminalOutput,
             code,
           };
@@ -46,8 +46,34 @@ export abstract class RemoteCacheV2 {
           return null;
         }
       },
-      store: async (hash, cacheDirectory, __, code) => {
+      store: async (hash, cacheDirectory, terminalOutput, code) => {
+        // The new db cache places the outputs directly into the cacheDirectory + hash.
+        // old instances of Nx Cloud expect these outputs to be in cacheDirectory + hash + outputs
+        // this ensures that everything that was in the cache directory is moved to the outputs directory
+        const cacheDir = join(cacheDirectory, hash);
+        const outputDir = join(cacheDir, 'outputs');
+        await mkdir(outputDir, { recursive: true });
+        const files = await readdir(cacheDir);
+        await Promise.all(
+          files.map(async (file) => {
+            const filePath = join(cacheDir, file);
+            // we don't want to move these files to the outputs directory because they are not artifacts of the task
+            if (
+              filePath === outputDir ||
+              file === 'code' ||
+              file === 'terminalOutput'
+            ) {
+              return;
+            }
+            await rename(filePath, join(outputDir, file));
+          })
+        );
+
         await writeFile(join(cacheDirectory, hash, 'code'), code.toString());
+        await writeFile(
+          join(cacheDirectory, hash, 'terminalOutput'),
+          terminalOutput
+        );
 
         return cache.store(hash, cacheDirectory);
       },
@@ -75,6 +101,7 @@ export interface DefaultTasksRunnerOptions {
   lifeCycle: LifeCycle;
   captureStderr?: boolean;
   skipNxCache?: boolean;
+  skipRemoteCache?: boolean;
   batch?: boolean;
 }
 
