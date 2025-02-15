@@ -33,7 +33,7 @@ This isn't just about raw speed - Nx's approach to file restoration means it's b
 
 ### 2. Fast CI
 
-**Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, [Nx Cloud](/nx-cloud) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote caching, small teams can apply for FREE Nx Powerpack License here: [https://nx.dev/powerpack](https://nx.dev/powerpack)
+**Just like Turborepo, Nx provides FREE remote caching to small teams, both self-hosted and via its own cloud** (Vercel in the case of Turborepo, [Nx Cloud](/nx-cloud) in the case of Nx). And just like Turborepo, Nx provides paid plans for larger, more sophisticated teams that need a higher level of service. For self-hosted remote caching, small teams can apply for FREE Nx Powerpack License here: [https://nx.dev/powerpack](/powerpack)
 
 However, unlike Turborepo, Nx's CI solution ([Nx Cloud](/nx-cloud)) goes way beyond just locating a shared cache on a server somewhere.
 
