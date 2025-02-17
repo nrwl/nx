@@ -1,6 +1,9 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { processProjectReports } from './get-gradle-report';
+import {
+  processGradleDependencies,
+  processProjectReports,
+} from './get-gradle-report';
 
 describe('processProjectReports', () => {
   it('should process project reports', () => {
@@ -44,5 +47,52 @@ describe('processProjectReports', () => {
     ]);
     expect(report.gradleProjectToProjectName.get('')).toEqual('app');
     expect(report.gradleProjectToChildProjects.get('')).toEqual([]);
+  });
+});
+
+describe('processGradleDependencies', () => {
+  it('should process gradle dependencies with composite build', () => {
+    const depFilePath = join(
+      __dirname,
+      '..',
+      'utils/__mocks__/gradle-composite-dependencies.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([
+      ':my-utils:number-utils',
+      ':my-utils:string-utils',
+    ]);
+  });
+
+  it('should process gradle dependencies with regular build', () => {
+    const depFilePath = join(
+      __dirname,
+      '..',
+      'utils/__mocks__/gradle-dependencies.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([':utilities']);
+  });
+
+  it('should process gradle custom dependencies', () => {
+    const depFilePath = join(
+      __dirname,
+      '..',
+      'utils/__mocks__/gradle-custom-dependencies.txt'
+    );
+    const dependencies = processGradleDependencies(depFilePath);
+    expect(Array.from(dependencies)).toEqual([
+      ':spring-boot-project:spring-boot-parent',
+      ':spring-boot-project:spring-boot-actuator',
+      ':spring-boot-project:spring-boot-actuator-autoconfigure',
+      ':spring-boot-project:spring-boot-autoconfigure',
+      ':spring-boot-project:spring-boot-docker-compose',
+      ':spring-boot-project:spring-boot-tools:spring-boot-cli',
+      ':spring-boot-project:spring-boot-tools:spring-boot-loader-tools',
+      ':spring-boot-project:spring-boot-test',
+      ':spring-boot-project:spring-boot-test-autoconfigure',
+      ':spring-boot-project:spring-boot-testcontainers',
+      ':spring-boot-project:spring-boot-devtools',
+    ]);
   });
 });

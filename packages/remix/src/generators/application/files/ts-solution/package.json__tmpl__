@@ -19,13 +19,8 @@
   "engines": {
     "node": ">=20"
   },
-  "sideEffects": false<% if (isUsingTsSolution) { %>,
+  "sideEffects": false<% if (isUsingTsSolutionConfig && parsedTags?.length) { %>,
   "nx": {
-  <%_ if (name !== projectName) { _%>
-    "name": "<%= name %>",<%_ } _%>
-    "projectType": "application",
-    "sourceRoot": "<%- projectRoot %>"<%_ if (parsedTags?.length) { _%>,
     "tags": <%- JSON.stringify(parsedTags) %>
-    <%_ } _%>
   }<% } %>
 }

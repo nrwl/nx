@@ -32,13 +32,27 @@ describe('Vite - TS solution setup', () => {
     const viteLib = uniq('vite-lib');
     const noBundlerLib = uniq('no-bundler-lib');
 
-    runCLI(`generate @nx/react:app apps/${reactApp} --bundler=vite`);
-    runCLI(`generate @nx/js:lib packages/${esbuildLib} --bundler=esbuild`);
-    runCLI(`generate @nx/js:lib packages/${rollupLib} --bundler=rollup`);
-    runCLI(`generate @nx/js:lib packages/${swcLib} --bundler=swc`);
-    runCLI(`generate @nx/js:lib packages/${tscLib} --bundler=tsc`);
-    runCLI(`generate @nx/js:lib packages/${viteLib} --bundler=vite`);
-    runCLI(`generate @nx/js:lib packages/${noBundlerLib} --bundler=none`);
+    runCLI(
+      `generate @nx/react:app apps/${reactApp} --bundler=vite --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${esbuildLib} --bundler=esbuild --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${rollupLib} --bundler=rollup --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${swcLib} --bundler=swc --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${tscLib} --bundler=tsc --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${viteLib} --bundler=vite --e2eTestRunner=none`
+    );
+    runCLI(
+      `generate @nx/js:lib packages/${noBundlerLib} --bundler=none --e2eTestRunner=none`
+    );
 
     // import all libs from the app
     updateFile(
@@ -87,12 +101,12 @@ ${content}`
 
     // check build
     expect(runCLI(`build ${reactApp}`)).toContain(
-      `Successfully ran target build for project ${reactApp} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${reactApp} and 5 tasks it depends on`
     );
 
     // check typecheck
     expect(runCLI(`typecheck ${reactApp}`)).toContain(
-      `Successfully ran target typecheck for project ${reactApp} and 6 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${reactApp} and 6 tasks it depends on`
     );
   }, 300_000);
 });

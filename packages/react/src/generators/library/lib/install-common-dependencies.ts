@@ -5,6 +5,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
 import {
   babelCoreVersion,
   babelPresetReactVersion,
@@ -13,22 +14,22 @@ import {
   testingLibraryReactVersion,
   tsLibVersion,
   typesNodeVersion,
-  typesReactDomVersion,
-  typesReactVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 
-export function installCommonDependencies(
+export async function installCommonDependencies(
   host: Tree,
   options: NormalizedSchema
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  const reactVersions = await getReactDependenciesVersionsToInstall(host);
+
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {
     '@types/node': typesNodeVersion,
-    '@types/react': typesReactVersion,
-    '@types/react-dom': typesReactDomVersion,
+    '@types/react': reactVersions['@types/react'],
+    '@types/react-dom': reactVersions['@types/react-dom'],
   };
 
   if (options.bundler !== 'vite') {

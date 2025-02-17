@@ -17,7 +17,10 @@ export async function generateMetadata(
 
   return {
     title: `${post.title} | Nx Blog`,
-    description: 'Latest news from the Nx & Nx Cloud core team',
+    description: post.description,
+    alternates: {
+      canonical: `https://nx.dev/blog/${slug}`,
+    },
     openGraph: {
       url: `https://nx.dev/blog/${slug}`,
       title: post.title,
@@ -47,12 +50,14 @@ export default async function BlogPostDetail({
 }: BlogPostDetailProps) {
   const ctaHeaderConfig = [tryNxCloudForFree];
   const blog = await blogApi.getBlogPostBySlug(slug);
+  const allPosts = await blogApi.getBlogs((p) => !!p.published);
+
   return blog ? (
     <>
       {/* This empty div is necessary as app router does not automatically scroll on route changes */}
       <div></div>
       <DefaultLayout headerCTAConfig={ctaHeaderConfig}>
-        <BlogDetails post={blog} />
+        <BlogDetails post={blog} allPosts={allPosts} />
       </DefaultLayout>
     </>
   ) : null;

@@ -2,6 +2,8 @@
 
 This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.
 
+{% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
+
 ## Initialize Nx Release in Your Workspace
 
 ### Install Nx

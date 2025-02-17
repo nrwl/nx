@@ -293,8 +293,7 @@ export function getTranspiler(
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigRaw?: unknown
+  compilerOptions: CompilerOptions
 ): () => void {
   // Function to register transpiler that returns cleanup function
   const transpiler = getTranspiler(compilerOptions);

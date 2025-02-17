@@ -13,6 +13,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -27,6 +28,10 @@ export async function remixLibraryGeneratorInternal(
 ) {
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
   const jsInitTask = await jsInitGenerator(tree, {
     js: options.js,
@@ -59,7 +64,7 @@ export async function remixLibraryGeneratorInternal(
   addTsconfigEntryPoints(tree, options);
 
   if (options.bundler === 'rollup' || options.buildable) {
-    updateBuildableConfig(tree, options.projectName);
+    updateBuildableConfig(tree, options);
   }
 
   updateTsconfigFiles(
@@ -76,9 +81,7 @@ export async function remixLibraryGeneratorInternal(
       : undefined
   );
 
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
-  }
+  sortPackageJsonFields(tree, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

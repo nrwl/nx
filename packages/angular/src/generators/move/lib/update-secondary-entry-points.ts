@@ -10,6 +10,7 @@ import type { MoveImplOptions } from './types';
 
 const libraryExecutors = [
   '@angular-devkit/build-angular:ng-packagr',
+  '@angular/build:ng-packagr',
   '@nx/angular:ng-packagr-lite',
   '@nx/angular:package',
   // TODO(v17): remove when @nrwl/* scope is removed

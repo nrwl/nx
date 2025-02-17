@@ -22,6 +22,7 @@ import {
   readProjectConfigurationsFromRootMap,
 } from './utils/project-configuration-utils';
 import {
+  buildPackageJsonWorkspacesMatcher,
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../plugins/package-json';
@@ -200,6 +201,11 @@ function getProjectsSync(
   ];
   const projectFiles = globWithWorkspaceContextSync(root, patterns);
 
+  const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
+    root,
+    (f) => readJsonFile(join(root, f))
+  );
+
   const rootMap: Record<string, ProjectConfiguration> = {};
   for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
@@ -218,7 +224,8 @@ function getProjectsSync(
         packageJson,
         root,
         projectFile,
-        nxJson
+        nxJson,
+        isInPackageJsonWorkspaces(projectFile)
       );
       if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(

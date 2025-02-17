@@ -26,7 +26,10 @@ export function removeOverridesFromLintConfig(content: string): string {
     ts.ScriptKind.JS
   );
 
-  const exportsArray = findAllBlocks(source);
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return content;
   }
@@ -47,7 +50,19 @@ export function removeOverridesFromLintConfig(content: string): string {
   return applyChangesToString(content, changes);
 }
 
-function findAllBlocks(source: ts.SourceFile): ts.NodeArray<ts.Node> {
+// TODO Change name
+function findExportDefault(source: ts.SourceFile): ts.NodeArray<ts.Node> {
+  return ts.forEachChild(source, function analyze(node) {
+    if (
+      ts.isExportAssignment(node) &&
+      ts.isArrayLiteralExpression(node.expression)
+    ) {
+      return node.expression.elements;
+    }
+  });
+}
+
+function findModuleExports(source: ts.SourceFile): ts.NodeArray<ts.Node> {
   return ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExpressionStatement(node) &&
@@ -58,6 +73,84 @@ function findAllBlocks(source: ts.SourceFile): ts.NodeArray<ts.Node> {
       return node.expression.right.elements;
     }
   });
+}
+
+export function addPatternsToFlatConfigIgnoresBlock(
+  content: string,
+  ignorePatterns: string[]
+): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
+  if (!exportsArray) {
+    return content;
+  }
+  const changes: StringChange[] = [];
+  for (const node of exportsArray) {
+    if (!isFlatConfigIgnoresBlock(node)) {
+      continue;
+    }
+
+    const start = node.properties.pos + 1; // keep leading line break
+    const data = parseTextToJson(node.getFullText());
+    changes.push({
+      type: ChangeType.Delete,
+      start,
+      length: node.properties.end - start,
+    });
+    data.ignores = Array.from(
+      new Set([...(data.ignores ?? []), ...ignorePatterns])
+    );
+    changes.push({
+      type: ChangeType.Insert,
+      index: start,
+      text:
+        '    ' +
+        JSON.stringify(data, null, 2)
+          .slice(2, -2) // Remove curly braces and start/end line breaks
+          .replaceAll(/\n/g, '\n    '), // Maintain indentation
+    });
+    break;
+  }
+  return applyChangesToString(content, changes);
+}
+
+export function hasFlatConfigIgnoresBlock(content: string): boolean {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
+  if (!exportsArray) {
+    return false;
+  }
+
+  return exportsArray.some(isFlatConfigIgnoresBlock);
+}
+
+function isFlatConfigIgnoresBlock(
+  node: ts.Node
+): node is ts.ObjectLiteralExpression {
+  return (
+    ts.isObjectLiteralExpression(node) &&
+    node.properties.length === 1 &&
+    (node.properties[0].name.getText() === 'ignores' ||
+      node.properties[0].name.getText() === '"ignores"') &&
+    ts.isPropertyAssignment(node.properties[0]) &&
+    ts.isArrayLiteralExpression(node.properties[0].initializer)
+  );
 }
 
 function isOverride(node: ts.Node): boolean {
@@ -86,7 +179,9 @@ export function hasOverride(
     true,
     ts.ScriptKind.JS
   );
-  const exportsArray = findAllBlocks(source);
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return false;
   }
@@ -120,6 +215,7 @@ function parseTextToJson(text: string): any {
       .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
       // stringify any require calls to avoid JSON parsing errors, turn them into just the string value being required
       .replace(/require\(['"]([^'"]+)['"]\)/g, '"$1"')
+      .replace(/\(?await import\(['"]([^'"]+)['"]\)\)?/g, '"$1"')
   );
 }
 
@@ -141,7 +237,9 @@ export function replaceOverride(
     true,
     ts.ScriptKind.JS
   );
-  const exportsArray = findAllBlocks(source);
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
     return content;
   }
@@ -174,20 +272,24 @@ export function replaceOverride(
         let updatedData = update(data);
         if (updatedData) {
           updatedData = mapFilePaths(updatedData);
+
+          const parserReplacement =
+            format === 'mjs'
+              ? (parser: string) => `(await import('${parser}'))`
+              : (parser: string) => `require('${parser}')`;
+
           changes.push({
             type: ChangeType.Insert,
             index: start,
-            // NOTE: Indentation added to format without formatting tools like Prettier.
             text:
               '    ' +
               JSON.stringify(updatedData, null, 2)
-                // restore any parser require calls that were stripped during JSON parsing
-                .replace(/"parser": "([^"]+)"/g, (_, parser) => {
-                  return `"parser": require('${parser}')`;
-                })
-                .slice(2, -2) // remove curly braces and start/end line breaks since we are injecting just properties
-                // Append indentation so file is formatted without Prettier
-                .replaceAll(/\n/g, '\n    '),
+                .replace(
+                  /"parser": "([^"]+)"/g,
+                  (_, parser) => `"parser": ${parserReplacement(parser)}`
+                )
+                .slice(2, -2) // Remove curly braces and start/end line breaks
+                .replaceAll(/\n/g, '\n    '), // Maintain indentation
           });
         }
       }
@@ -198,7 +300,12 @@ export function replaceOverride(
 }
 
 /**
- * Adding require statement to the top of the file
+ * Adding import statement to the top of the file
+ * The imports are added based on a few rules:
+ * 1. If it's a default import and matches the variable, return content unchanged.
+ * 2. If it's a named import and the variables are not part of the import object, add them.
+ * 3. If no existing import and variable is a string, add a default import.
+ * 4. If no existing import and variable is an array, add it as an object import.
  */
 export function addImportToFlatConfig(
   content: string,
@@ -214,6 +321,159 @@ export function addImportToFlatConfig(
     ts.ScriptKind.JS
   );
 
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+
+  if (format === 'mjs') {
+    return addESMImportToFlatConfig(source, printer, content, variable, imp);
+  }
+  return addCJSImportToFlatConfig(source, printer, content, variable, imp);
+}
+
+function addESMImportToFlatConfig(
+  source: ts.SourceFile,
+  printer: ts.Printer,
+  content: string,
+  variable: string | string[],
+  imp: string
+): string {
+  let existingImport: ts.ImportDeclaration | undefined;
+
+  ts.forEachChild(source, (node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      node.moduleSpecifier.text === imp
+    ) {
+      existingImport = node;
+    }
+  });
+
+  // Rule 1:
+  if (
+    existingImport &&
+    typeof variable === 'string' &&
+    existingImport.importClause?.name?.getText() === variable
+  ) {
+    return content;
+  }
+
+  // Rule 2:
+  if (
+    existingImport &&
+    existingImport.importClause?.namedBindings &&
+    Array.isArray(variable)
+  ) {
+    const namedImports = existingImport.importClause
+      .namedBindings as ts.NamedImports;
+    const existingElements = namedImports.elements;
+
+    // Filter out variables that are already imported
+    const newVariables = variable.filter(
+      (v) => !existingElements.some((e) => e.name.getText() === v)
+    );
+
+    if (newVariables.length === 0) {
+      return content;
+    }
+
+    const newImportSpecifiers = newVariables.map((v) =>
+      ts.factory.createImportSpecifier(
+        false,
+        undefined,
+        ts.factory.createIdentifier(v)
+      )
+    );
+
+    const lastElement = existingElements[existingElements.length - 1];
+    const insertIndex = lastElement
+      ? lastElement.getEnd()
+      : namedImports.getEnd();
+
+    const insertText = printer.printList(
+      ts.ListFormat.NamedImportsOrExportsElements,
+      ts.factory.createNodeArray(newImportSpecifiers),
+      source
+    );
+
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Insert,
+        index: insertIndex,
+        text: `, ${insertText}`,
+      },
+    ]);
+  }
+
+  // Rule 3:
+  if (!existingImport && typeof variable === 'string') {
+    const defaultImport = ts.factory.createImportDeclaration(
+      undefined,
+      ts.factory.createImportClause(
+        false,
+        ts.factory.createIdentifier(variable),
+        undefined
+      ),
+      ts.factory.createStringLiteral(imp)
+    );
+
+    const insert = printer.printNode(
+      ts.EmitHint.Unspecified,
+      defaultImport,
+      source
+    );
+
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Insert,
+        index: 0,
+        text: `${insert}\n`,
+      },
+    ]);
+  }
+
+  // Rule 4:
+  if (!existingImport && Array.isArray(variable)) {
+    const objectImport = ts.factory.createImportDeclaration(
+      undefined,
+      ts.factory.createImportClause(
+        false,
+        undefined,
+        ts.factory.createNamedImports(
+          variable.map((v) =>
+            ts.factory.createImportSpecifier(
+              false,
+              undefined,
+              ts.factory.createIdentifier(v)
+            )
+          )
+        )
+      ),
+      ts.factory.createStringLiteral(imp)
+    );
+
+    const insert = printer.printNode(
+      ts.EmitHint.Unspecified,
+      objectImport,
+      source
+    );
+
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Insert,
+        index: 0,
+        text: `${insert}\n`,
+      },
+    ]);
+  }
+}
+
+function addCJSImportToFlatConfig(
+  source: ts.SourceFile,
+  printer: ts.Printer,
+  content: string,
+  variable: string | string[],
+  imp: string
+): string {
   const foundBindingVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
     source,
     function analyze(node) {
@@ -322,6 +582,22 @@ export function addImportToFlatConfig(
   ]);
 }
 
+function existsAsNamedOrDefaultImport(
+  node: ts.ImportDeclaration,
+  variable: string | string[]
+) {
+  const isNamed =
+    node.importClause.namedBindings &&
+    ts.isNamedImports(node.importClause.namedBindings);
+  if (Array.isArray(variable)) {
+    return isNamed || variable.includes(node.importClause?.name?.getText());
+  }
+  return (
+    (node.importClause.namedBindings &&
+      ts.isNamedImports(node.importClause.namedBindings)) ||
+    node.importClause?.name?.getText() === variable
+  );
+}
 /**
  * Remove an import from flat config
  */
@@ -338,8 +614,49 @@ export function removeImportFromFlatConfig(
     ts.ScriptKind.JS
   );
 
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  if (format === 'mjs') {
+    return removeImportFromFlatConfigESM(source, content, variable, imp);
+  } else {
+    return removeImportFromFlatConfigCJS(source, content, variable, imp);
+  }
+}
+
+function removeImportFromFlatConfigESM(
+  source: ts.SourceFile,
+  content: string,
+  variable: string,
+  imp: string
+): string {
   const changes: StringChange[] = [];
 
+  ts.forEachChild(source, (node) => {
+    // we can only combine object binding patterns
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      node.moduleSpecifier.text === imp &&
+      node.importClause &&
+      existsAsNamedOrDefaultImport(node, variable)
+    ) {
+      changes.push({
+        type: ChangeType.Delete,
+        start: node.pos,
+        length: node.end - node.pos,
+      });
+    }
+  });
+
+  return applyChangesToString(content, changes);
+}
+
+function removeImportFromFlatConfigCJS(
+  source: ts.SourceFile,
+  content: string,
+  variable: string,
+  imp: string
+): string {
+  const changes: StringChange[] = [];
   ts.forEachChild(source, (node) => {
     // we can only combine object binding patterns
     if (
@@ -367,7 +684,7 @@ export function removeImportFromFlatConfig(
 }
 
 /**
- * Injects new ts.expression to the end of the module.exports array.
+ * Injects new ts.expression to the end of the module.exports or export default array.
  */
 export function addBlockToFlatConfigExport(
   content: string,
@@ -385,6 +702,79 @@ export function addBlockToFlatConfigExport(
     ts.ScriptKind.JS
   );
 
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+
+  // find the export default array statement
+  if (format === 'mjs') {
+    return addBlockToFlatConfigExportESM(
+      content,
+      config,
+      source,
+      printer,
+      options
+    );
+  } else {
+    return addBlockToFlatConfigExportCJS(
+      content,
+      config,
+      source,
+      printer,
+      options
+    );
+  }
+}
+
+function addBlockToFlatConfigExportESM(
+  content: string,
+  config: ts.Expression | ts.SpreadElement,
+  source: ts.SourceFile,
+  printer: ts.Printer,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
+    insertAtTheEnd: true,
+  }
+): string {
+  const exportDefaultStatement = source.statements.find(
+    (statement): statement is ts.ExportAssignment =>
+      ts.isExportAssignment(statement) &&
+      ts.isArrayLiteralExpression(statement.expression)
+  );
+
+  if (!exportDefaultStatement) return content;
+
+  const exportArrayLiteral =
+    exportDefaultStatement.expression as ts.ArrayLiteralExpression;
+
+  const updatedArrayElements = options.insertAtTheEnd
+    ? [...exportArrayLiteral.elements, config]
+    : [config, ...exportArrayLiteral.elements];
+
+  const updatedExportDefault = ts.factory.createExportAssignment(
+    undefined,
+    false,
+    ts.factory.createArrayLiteralExpression(updatedArrayElements, true)
+  );
+
+  // update the existing export default array
+  const updatedStatements = source.statements.map((statement) =>
+    statement === exportDefaultStatement ? updatedExportDefault : statement
+  );
+
+  const updatedSource = ts.factory.updateSourceFile(source, updatedStatements);
+
+  return printer
+    .printFile(updatedSource)
+    .replace(/export default/, '\nexport default');
+}
+
+function addBlockToFlatConfigExportCJS(
+  content: string,
+  config: ts.Expression | ts.SpreadElement,
+  source: ts.SourceFile,
+  printer: ts.Printer,
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
+    insertAtTheEnd: true,
+  }
+): string {
   const exportsArray = ts.forEachChild(source, function analyze(node) {
     if (
       ts.isExpressionStatement(node) &&
@@ -443,34 +833,57 @@ export function removePlugin(
     true,
     ts.ScriptKind.JS
   );
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
   const changes: StringChange[] = [];
+  if (format === 'mjs') {
+    ts.forEachChild(source, function analyze(node) {
+      if (
+        ts.isImportDeclaration(node) &&
+        ts.isStringLiteral(node.moduleSpecifier) &&
+        node.moduleSpecifier.text === pluginImport
+      ) {
+        const importClause = node.importClause;
+
+        if (
+          (importClause && importClause.name) ||
+          (importClause.namedBindings &&
+            ts.isNamedImports(importClause.namedBindings))
+        ) {
+          changes.push({
+            type: ChangeType.Delete,
+            start: node.pos,
+            length: node.end - node.pos,
+          });
+        }
+      }
+    });
+  } else {
+    ts.forEachChild(source, function analyze(node) {
+      if (
+        ts.isVariableStatement(node) &&
+        ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
+        ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
+        node.declarationList.declarations[0].initializer.arguments.length &&
+        ts.isStringLiteral(
+          node.declarationList.declarations[0].initializer.arguments[0]
+        ) &&
+        node.declarationList.declarations[0].initializer.arguments[0].text ===
+          pluginImport
+      ) {
+        changes.push({
+          type: ChangeType.Delete,
+          start: node.pos,
+          length: node.end - node.pos,
+        });
+      }
+    });
+  }
   ts.forEachChild(source, function analyze(node) {
     if (
-      ts.isVariableStatement(node) &&
-      ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
-      ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
-      node.declarationList.declarations[0].initializer.arguments.length &&
-      ts.isStringLiteral(
-        node.declarationList.declarations[0].initializer.arguments[0]
-      ) &&
-      node.declarationList.declarations[0].initializer.arguments[0].text ===
-        pluginImport
+      ts.isExportAssignment(node) &&
+      ts.isArrayLiteralExpression(node.expression)
     ) {
-      changes.push({
-        type: ChangeType.Delete,
-        start: node.pos,
-        length: node.end - node.pos,
-      });
-    }
-  });
-  ts.forEachChild(source, function analyze(node) {
-    if (
-      ts.isExpressionStatement(node) &&
-      ts.isBinaryExpression(node.expression) &&
-      node.expression.left.getText() === 'module.exports' &&
-      ts.isArrayLiteralExpression(node.expression.right)
-    ) {
-      const blockElements = node.expression.right.elements;
+      const blockElements = node.expression.elements;
       blockElements.forEach((element) => {
         if (ts.isObjectLiteralExpression(element)) {
           const pluginsElem = element.properties.find(
@@ -583,7 +996,15 @@ export function removeCompatExtends(
     ts.ScriptKind.JS
   );
   const changes: StringChange[] = [];
-  findAllBlocks(source)?.forEach((node) => {
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
+
+  if (!exportsArray) {
+    return content;
+  }
+
+  exportsArray.forEach((node) => {
     if (
       ts.isSpreadElement(node) &&
       ts.isCallExpression(node.expression) &&
@@ -644,9 +1065,16 @@ export function removePredefinedConfigs(
     true,
     ts.ScriptKind.JS
   );
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
   const changes: StringChange[] = [];
   let removeImport = true;
-  findAllBlocks(source)?.forEach((node) => {
+  const exportsArray =
+    format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
+  if (!exportsArray) {
+    return content;
+  }
+
+  exportsArray.forEach((node) => {
     if (
       ts.isSpreadElement(node) &&
       ts.isElementAccessExpression(node.expression) &&
@@ -709,14 +1137,23 @@ export function addPluginsToExportsBlock(
  * Adds compat if missing to flat config
  */
 export function addFlatCompatToFlatConfig(content: string) {
-  let result = content;
-  result = addImportToFlatConfig(result, 'js', '@eslint/js');
+  const result = addImportToFlatConfig(content, 'js', '@eslint/js');
+  const format = content.includes('export default') ? 'mjs' : 'cjs';
   if (result.includes('const compat = new FlatCompat')) {
     return result;
   }
-  result = addImportToFlatConfig(result, ['FlatCompat'], '@eslint/eslintrc');
-  const index = result.indexOf('module.exports');
-  return applyChangesToString(result, [
+
+  if (format === 'mjs') {
+    return addFlatCompatToFlatConfigESM(result);
+  } else {
+    return addFlatCompatToFlatConfigCJS(result);
+  }
+}
+
+function addFlatCompatToFlatConfigCJS(content: string) {
+  content = addImportToFlatConfig(content, ['FlatCompat'], '@eslint/eslintrc');
+  const index = content.indexOf('module.exports');
+  return applyChangesToString(content, [
     {
       type: ChangeType.Insert,
       index: index - 1,
@@ -729,6 +1166,32 @@ const compat = new FlatCompat({
     },
   ]);
 }
+function addFlatCompatToFlatConfigESM(content: string) {
+  const importsToAdd = [
+    { variable: 'js', module: '@eslint/js' },
+    { variable: ['fileURLToPath'], module: 'url' },
+    { variable: ['dirname'], module: 'path' },
+    { variable: ['FlatCompat'], module: '@eslint/eslintrc' },
+  ];
+
+  for (const { variable, module } of importsToAdd) {
+    content = addImportToFlatConfig(content, variable, module);
+  }
+
+  const index = content.indexOf('export default');
+  return applyChangesToString(content, [
+    {
+      type: ChangeType.Insert,
+      index: index - 1,
+      text: `
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});\n
+`,
+    },
+  ]);
+}
 
 /**
  * Generate node list representing the imports and the exports blocks
@@ -736,16 +1199,25 @@ const compat = new FlatCompat({
  */
 export function createNodeList(
   importsMap: Map<string, string>,
-  exportElements: ts.Expression[]
+  exportElements: ts.Expression[],
+  format: 'mjs' | 'cjs'
 ): ts.NodeArray<
   ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
 > {
   const importsList = [];
 
-  // generateRequire(varName, imp, ts.factory);
   Array.from(importsMap.entries()).forEach(([imp, varName]) => {
-    importsList.push(generateRequire(varName, imp));
+    if (format === 'mjs') {
+      importsList.push(generateESMImport(varName, imp));
+    } else {
+      importsList.push(generateRequire(varName, imp));
+    }
   });
+
+  const exports =
+    format === 'mjs'
+      ? generateESMExport(exportElements)
+      : generateCJSExport(exportElements);
 
   return ts.factory.createNodeArray([
     // add plugin imports
@@ -757,19 +1229,31 @@ export function createNodeList(
       false,
       ts.ScriptKind.JS
     ),
-    // creates:
-    // module.exports = [ ... ];
-    ts.factory.createExpressionStatement(
-      ts.factory.createBinaryExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier('module'),
-          ts.factory.createIdentifier('exports')
-        ),
-        ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-        ts.factory.createArrayLiteralExpression(exportElements, true)
-      )
-    ),
+    exports,
   ]);
+}
+
+function generateESMExport(elements: ts.Expression[]): ts.ExportAssignment {
+  // creates: export default = [...]
+  return ts.factory.createExportAssignment(
+    undefined,
+    false,
+    ts.factory.createArrayLiteralExpression(elements, true)
+  );
+}
+
+function generateCJSExport(elements: ts.Expression[]): ts.ExpressionStatement {
+  // creates: module.exports = [...]
+  return ts.factory.createExpressionStatement(
+    ts.factory.createBinaryExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createIdentifier('module'),
+        ts.factory.createIdentifier('exports')
+      ),
+      ts.factory.createToken(ts.SyntaxKind.EqualsToken),
+      ts.factory.createArrayLiteralExpression(elements, true)
+    )
+  );
 }
 
 export function generateSpreadElement(name: string): ts.SpreadElement {
@@ -831,17 +1315,20 @@ export function stringifyNodeList(
     true,
     ts.ScriptKind.JS
   );
-  return (
-    printer
-      .printList(ts.ListFormat.MultiLine, nodes, resultFile)
-      // add new line before compat initialization
-      .replace(
-        /const compat = new FlatCompat/,
-        '\nconst compat = new FlatCompat'
-      )
-      // add new line before module.exports = ...
-      .replace(/module\.exports/, '\nmodule.exports')
-  );
+  const result = printer
+    .printList(ts.ListFormat.MultiLine, nodes, resultFile)
+    // add new line before compat initialization
+    .replace(
+      /const compat = new FlatCompat/,
+      '\nconst compat = new FlatCompat'
+    );
+
+  if (result.includes('export default')) {
+    return result // add new line before export default = ...
+      .replace(/export default/, '\nexport default');
+  } else {
+    return result.replace(/module.exports/, '\nmodule.exports');
+  }
 }
 
 /**
@@ -868,6 +1355,50 @@ export function generateRequire(
       ],
       ts.NodeFlags.Const
     )
+  );
+}
+
+// Top level imports
+export function generateESMImport(
+  variableName: string | ts.ObjectBindingPattern,
+  imp: string
+): ts.ImportDeclaration {
+  let importClause;
+
+  if (typeof variableName === 'string') {
+    // For single variable import e.g import foo from 'module';
+    importClause = ts.factory.createImportClause(
+      false,
+      ts.factory.createIdentifier(variableName),
+      undefined
+    );
+  } else {
+    // For object binding pattern import e.g import { a, b, c } from 'module';
+    importClause = ts.factory.createImportClause(
+      false,
+      undefined,
+      ts.factory.createNamedImports(
+        variableName.elements.map((element) => {
+          const propertyName = element.propertyName
+            ? ts.isIdentifier(element.propertyName)
+              ? element.propertyName
+              : ts.factory.createIdentifier(element.propertyName.getText())
+            : undefined;
+
+          return ts.factory.createImportSpecifier(
+            false,
+            propertyName,
+            element.name as ts.Identifier
+          );
+        })
+      )
+    );
+  }
+
+  return ts.factory.createImportDeclaration(
+    undefined,
+    importClause,
+    ts.factory.createStringLiteral(imp)
   );
 }
 
@@ -904,7 +1435,8 @@ export function overrideNeedsCompat(
 export function generateFlatOverride(
   _override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
     ignores?: Linter.FlatConfig['ignores'];
-  }
+  },
+  format: 'mjs' | 'cjs'
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
   const override = mapFilePaths(_override);
 
@@ -981,21 +1513,10 @@ export function generateFlatOverride(
           }
           return propertyAssignment;
         } else {
-          // Change parser to require statement.
-          return ts.factory.createPropertyAssignment(
-            'parser',
-            ts.factory.createCallExpression(
-              ts.factory.createIdentifier('require'),
-              undefined,
-              [
-                ts.factory.createStringLiteral(
-                  override['languageOptions']?.['parserOptions']?.parser ??
-                    override['languageOptions']?.parser ??
-                    override.parser
-                ),
-              ]
-            )
-          );
+          // Change parser to import statement.
+          return format === 'mjs'
+            ? generateESMParserImport(override)
+            : generateCJSParserImport(override);
         }
       },
     });
@@ -1097,6 +1618,50 @@ export function generateFlatOverride(
               true
             )
           )
+        ),
+      ]
+    )
+  );
+}
+
+function generateESMParserImport(
+  override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
+    ignores?: Linter.FlatConfig['ignores'];
+  }
+): ts.PropertyAssignment {
+  return ts.factory.createPropertyAssignment(
+    'parser',
+    ts.factory.createAwaitExpression(
+      ts.factory.createCallExpression(
+        ts.factory.createIdentifier('import'),
+        undefined,
+        [
+          ts.factory.createStringLiteral(
+            override['languageOptions']?.['parserOptions']?.parser ??
+              override['languageOptions']?.parser ??
+              override.parser
+          ),
+        ]
+      )
+    )
+  );
+}
+
+function generateCJSParserImport(
+  override: Partial<Linter.ConfigOverride<Linter.RulesRecord>> & {
+    ignores?: Linter.FlatConfig['ignores'];
+  }
+): ts.PropertyAssignment {
+  return ts.factory.createPropertyAssignment(
+    'parser',
+    ts.factory.createCallExpression(
+      ts.factory.createIdentifier('require'),
+      undefined,
+      [
+        ts.factory.createStringLiteral(
+          override['languageOptions']?.['parserOptions']?.parser ??
+            override['languageOptions']?.parser ??
+            override.parser
         ),
       ]
     )

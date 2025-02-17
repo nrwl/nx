@@ -45,10 +45,6 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
-import {
-  TerminalVideo,
-  terminalVideo,
-} from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
@@ -58,8 +54,10 @@ import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 import { VideoPlayer, videoPlayer } from './lib/tags/video-player.component';
 import { TableOfContents } from './lib/tags/table-of-contents.component';
 import { tableOfContents } from './lib/tags/table-of-contents.schema';
-// TODO fix this export
-export { GithubRepository } from './lib/tags/github-repository.component';
+import { Testimonial, testimonial } from './lib/tags/testimonial.component';
+import { metrics } from './lib/tags/metrics.schema';
+import { Metrics } from './lib/tags/metrics.component';
+export { CallToAction };
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string,
@@ -93,11 +91,12 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
-      'terminal-video': terminalVideo,
+      testimonial,
       toc: tableOfContents,
       tweet,
       youtube,
       'video-link': videoLink,
+      metrics,
       // 'svg-animation': svgAnimation,
     },
   },
@@ -125,11 +124,12 @@ export const getMarkdocCustomConfig = (
     Tab,
     Tabs,
     TableOfContents,
-    TerminalVideo,
+    Testimonial,
     Tweet,
     YouTube,
     VideoLink,
     VideoPlayer,
+    Metrics,
     // SvgAnimation,
   },
 });
@@ -179,3 +179,6 @@ export const renderMarkdown: (
     treeNode,
   };
 };
+
+export { GithubRepository } from './lib/tags/github-repository.component';
+export { Metrics };

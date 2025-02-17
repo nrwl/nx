@@ -43,12 +43,13 @@ export function PowerpackFeatures(): ReactElement {
                 Self-hosted cache storage
               </SectionHeading>
               <p className="mt-6 text-pretty text-lg">
-                Use <Strong>Amazon S3</Strong> or a{' '}
+                Use <Strong>Amazon S3</Strong>, <Strong>MinIO</Strong>,{' '}
+                <Strong>GCP</Strong>, <Strong>Azure</Strong> or a{' '}
                 <Strong>shared network drive</Strong> as your remote cache
                 storage, offering a flexible, self-managed solution for faster
                 builds. Nx Powerpack self-hosted cache storage is{' '}
                 <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  href="/nx-enterprise/powerpack/free-licenses-and-trials"
                   title="Get a Powerpack license"
                 >
                   free for small teams
@@ -206,14 +207,7 @@ export function PowerpackFeatures(): ReactElement {
                   procurement processes
                 </Strong>
                 . Your teams can get started quickly without lengthy
-                negotiations, ensuring a faster go-to-market.{' '}
-                <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
-                  title="Get a Powerpack license"
-                >
-                  Free trial available for Enterprises
-                </TextLink>
-                .
+                negotiations, ensuring a faster go-to-market.
               </p>
             </div>
           </div>
@@ -233,7 +227,11 @@ export function PowerpackFeatures(): ReactElement {
                   customers
                 </Strong>
                 , unlocking additional capabilities without needing to manage
-                more tools or onboard a new vendor.
+                more tools or onboard a new vendor.{' '}
+                <TextLink href="/enterprise/trial" title="Nx Enterprise trial">
+                  Request a free trial of Nx Enterprise
+                </TextLink>
+                .
               </p>
             </div>
           </div>

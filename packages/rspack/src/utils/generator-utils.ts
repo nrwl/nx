@@ -9,6 +9,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { type RspackExecutorSchema } from '../executors/rspack/schema';
 import { type ConfigurationSchema } from '../generators/configuration/schema';
 import { type Framework } from '../generators/init/schema';
@@ -171,13 +172,17 @@ export function addOrChangeBuildTarget(
     assets.push(joinPathFragments(project.root, 'src/assets'));
   }
 
+  const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
+
   const buildOptions: RspackExecutorSchema = {
     target: options.target ?? 'web',
-    outputPath: joinPathFragments(
-      'dist',
-      // If standalone project then use the project's name in dist.
-      project.root === '.' ? project.name : project.root
-    ),
+    outputPath: isTsSolutionSetup
+      ? joinPathFragments(project.root, 'dist')
+      : joinPathFragments(
+          'dist',
+          // If standalone project then use the project's name in dist.
+          project.root === '.' ? project.name : project.root
+        ),
     index: joinPathFragments(project.root, 'src/index.html'),
     main: determineMain(tree, options),
     tsConfig: determineTsConfig(tree, options),
@@ -254,7 +259,9 @@ function createConfig(
 
   const defaultConfig = generateDefaultConfig(project, buildOptions);
 
-  if (isWebFramework(options)) {
+  if (options.framework === 'react') {
+    return generateReactConfig(options);
+  } else if (isWebFramework(options)) {
     return generateWebConfig(tree, options, defaultConfig);
   } else if (options.framework === 'nest') {
     return generateNestConfig(tree, options, project, buildOptions);
@@ -336,6 +343,26 @@ module.exports = composePlugins(withNx(), withWeb(${
     return config;
   });
 `;
+}
+
+function generateReactConfig({
+  stylePreprocessorOptions,
+}: ConfigurationWithStylePreprocessorOptions) {
+  return `
+const { composePlugins, withNx, withReact } = require('@nx/rspack');
+
+module.exports = composePlugins(withNx(), withReact(${
+    stylePreprocessorOptions
+      ? `
+  {
+    stylePreprocessorOptions: ${JSON.stringify(stylePreprocessorOptions)},
+  }
+  `
+      : ''
+  }), (config) => {
+  return config;
+});
+    `;
 }
 
 function generateNestConfig(

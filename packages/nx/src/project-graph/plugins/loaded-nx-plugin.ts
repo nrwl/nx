@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import type { PluginConfiguration } from '../../config/nx-json';
+import { readNxJson, type PluginConfiguration } from '../../config/nx-json';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -11,11 +11,16 @@ import type {
   CreateNodesContextV2,
   CreateNodesResult,
   NxPluginV2,
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
   ProjectsMetadata,
 } from './public-api';
 import { createNodesFromFiles } from './utils';
+import { isIsolationEnabled } from './isolation/enabled';
+import { isDaemonEnabled } from '../../daemon/client/enabled';
 
 export class LoadedNxPlugin {
+  index?: number;
   readonly name: string;
   readonly createNodes?: [
     filePattern: string,
@@ -35,6 +40,12 @@ export class LoadedNxPlugin {
     graph: ProjectGraph,
     context: CreateMetadataContext
   ) => Promise<ProjectsMetadata>;
+  readonly preTasksExecution?: (
+    context: PreTasksExecutionContext
+  ) => Promise<NodeJS.ProcessEnv>;
+  readonly postTasksExecution?: (
+    context: PostTasksExecutionContext
+  ) => Promise<void>;
 
   readonly options?: unknown;
   readonly include?: string[];
@@ -107,10 +118,33 @@ export class LoadedNxPlugin {
       this.createMetadata = async (graph, context) =>
         plugin.createMetadata(graph, this.options, context);
     }
+
+    if (plugin.preTasksExecution) {
+      this.preTasksExecution = async (context: PreTasksExecutionContext) => {
+        const updates = {};
+        let originalEnv = process.env;
+        if (
+          isIsolationEnabled() ||
+          isDaemonEnabled(context.nxJsonConfiguration)
+        ) {
+          process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
+            set: (target, key: string, value) => {
+              target[key] = value;
+              updates[key] = value;
+              return true;
+            },
+          });
+        }
+        await plugin.preTasksExecution(this.options, context);
+        process.env = originalEnv;
+
+        return updates;
+      };
+    }
+
+    if (plugin.postTasksExecution) {
+      this.postTasksExecution = async (context: PostTasksExecutionContext) =>
+        plugin.postTasksExecution(this.options, context);
+    }
   }
 }
-
-export type CreateNodesResultWithContext = CreateNodesResult & {
-  file: string;
-  pluginName: string;
-};

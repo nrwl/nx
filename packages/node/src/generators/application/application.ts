@@ -56,9 +56,11 @@ import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
+  addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -244,7 +246,13 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
       ),
       webpackPluginOptions: hasWebpackPlugin(tree)
         ? {
-            outputPath: options.outputPath,
+            outputPath: options.isUsingTsSolutionConfig
+              ? 'dist'
+              : joinPathFragments(
+                  offsetFromRoot(options.appProjectRoot),
+                  'dist',
+                  options.rootProject ? options.name : options.appProjectRoot
+                ),
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
             assets: ['./src/assets'],
@@ -572,10 +580,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     tasks.push(dockerTask);
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
-
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
       tree,
@@ -589,6 +593,18 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
         : undefined
     );
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
+  sortPackageJsonFields(tree, options.appProjectRoot);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   tasks.push(() => {
@@ -624,6 +640,9 @@ async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
+
   return {
     addPlugin,
     ...options,
@@ -637,11 +656,14 @@ async function normalizeOptions(
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,
-    outputPath: joinPathFragments(
-      'dist',
-      options.rootProject ? options.name : appProjectRoot
-    ),
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    outputPath: isUsingTsSolutionConfig
+      ? joinPathFragments(appProjectRoot, 'dist')
+      : joinPathFragments(
+          'dist',
+          options.rootProject ? options.name : appProjectRoot
+        ),
+    isUsingTsSolutionConfig,
+    swcJest,
   };
 }
 

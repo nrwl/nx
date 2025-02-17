@@ -13,6 +13,7 @@ import {
   cleanupPluginTSTranspiler,
   pluginTranspilerIsRegistered,
 } from './transpiler';
+import { isIsolationEnabled } from './isolation/enabled';
 
 /**
  * Stuff for specified NX Plugins.
@@ -97,23 +98,6 @@ export function cleanupPlugins() {
  * Stuff for generic loading
  */
 
-function isIsolationEnabled() {
-  // Explicitly enabled, regardless of further conditions
-  if (process.env.NX_ISOLATE_PLUGINS === 'true') {
-    return true;
-  }
-  if (
-    // Explicitly disabled
-    process.env.NX_ISOLATE_PLUGINS === 'false' ||
-    // Isolation is disabled on WASM builds currently.
-    IS_WASM
-  ) {
-    return false;
-  }
-  // Default value
-  return true;
-}
-
 const loadingMethod = isIsolationEnabled()
   ? loadNxPluginInIsolation
   : loadNxPlugin;
@@ -175,7 +159,7 @@ async function loadSpecifiedNxPlugins(
   const cleanupFunctions: Array<() => void> = [];
   const ret = [
     await Promise.all(
-      plugins.map(async (plugin) => {
+      plugins.map(async (plugin, index) => {
         const pluginPath = typeof plugin === 'string' ? plugin : plugin.plugin;
         performance.mark(`Load Nx Plugin: ${pluginPath} - start`);
 
@@ -186,6 +170,7 @@ async function loadSpecifiedNxPlugins(
 
         cleanupFunctions.push(cleanup);
         const res = await loadedPluginPromise;
+        res.index = index;
         performance.mark(`Load Nx Plugin: ${pluginPath} - end`);
         performance.measure(
           `Load Nx Plugin: ${pluginPath}`,

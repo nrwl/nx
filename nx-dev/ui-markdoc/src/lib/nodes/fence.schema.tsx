@@ -14,6 +14,7 @@ export const fence: Schema = {
     process: { type: 'Boolean', render: false, default: true },
     skipRescope: { type: 'Boolean', default: false },
     enableCopy: { type: 'Boolean', default: true },
+    lineWrap: { type: 'Number', default: 0 },
   },
   transform(node, config) {
     const attributes = node.transformAttributes(config);

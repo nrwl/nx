@@ -202,9 +202,6 @@ export function Footer({
               )}
             </div>
             <div className="flex items-center text-sm">
-              Nx Version <VersionPicker />
-            </div>
-            <div className="flex items-center text-sm">
               Theme <ThemeSwitcher />
             </div>
           </div>

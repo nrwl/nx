@@ -15,12 +15,32 @@ import tseslint from 'typescript-eslint';
  */
 export default tseslint.config(
   {
+    files: [
+      '**/*.ts',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      '**/*.jsx',
+    ],
     plugins: {
       'react-hooks': reactHooksPlugin,
     },
     rules: reactHooksPlugin.configs.recommended.rules,
   },
   {
+    files: [
+      '**/*.ts',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.tsx',
+      '**/*.js',
+      '**/*.cjs',
+      '**/*.mjs',
+      '**/*.jsx',
+    ],
     settings: { react: { version: 'detect' } },
     plugins: {
       'jsx-a11y': jsxA11yPlugin,

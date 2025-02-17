@@ -16,7 +16,7 @@ export function DefaultLayout({
   headerCTAConfig?: ButtonLinkProps[];
 } & PropsWithChildren): JSX.Element {
   return (
-    <div className="w-full overflow-hidden dark:bg-slate-950">
+    <div className="w-full dark:bg-slate-950">
       {!hideHeader && <Header ctaButtons={headerCTAConfig} />}
       <div className="relative isolate">
         <div

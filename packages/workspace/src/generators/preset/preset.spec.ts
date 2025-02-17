@@ -130,7 +130,7 @@ describe('preset', () => {
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-      export default defineConfig({
+      export default defineConfig(() => ({
         root: __dirname,
         cacheDir: '../../node_modules/.vite/apps/vue-preset-monorepo',
         server: {
@@ -162,10 +162,10 @@ describe('preset', () => {
           reporters: ['default'],
           coverage: {
             reportsDirectory: '../../coverage/apps/vue-preset-monorepo',
-            provider: 'v8',
+            provider: 'v8' as const,
           },
         },
-      });
+      }));
       "
     `);
   });
@@ -233,7 +233,7 @@ describe('preset', () => {
 
       module.exports = {
         output: {
-          path: join(__dirname, './dist/react-standalone-preset-webpack'),
+          path: join(__dirname, 'dist/react-standalone-preset-webpack'),
         },
         devServer: {
           port: 4200,
@@ -283,7 +283,7 @@ describe('preset', () => {
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-      export default defineConfig({
+      export default defineConfig(() => ({
         root: __dirname,
         cacheDir: './node_modules/.vite/react-standalone-preset-vite',
         server: {
@@ -315,10 +315,10 @@ describe('preset', () => {
           reporters: ['default'],
           coverage: {
             reportsDirectory: './coverage/react-standalone-preset-vite',
-            provider: 'v8',
+            provider: 'v8' as const,
           },
         },
-      });
+      }));
       "
     `);
   });
@@ -339,7 +339,7 @@ describe('preset', () => {
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-      export default defineConfig({
+      export default defineConfig(() => ({
         root: __dirname,
         cacheDir: './node_modules/.vite/vue-standalone-preset',
         server: {
@@ -371,10 +371,10 @@ describe('preset', () => {
           reporters: ['default'],
           coverage: {
             reportsDirectory: './coverage/vue-standalone-preset',
-            provider: 'v8',
+            provider: 'v8' as const,
           },
         },
-      });
+      }));
       "
     `);
   });

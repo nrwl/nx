@@ -1,0 +1,15 @@
+{
+  "name": "update-angular-cli-version-19-0-0",
+  "cli": "nx",
+  "version": "20.2.0-beta.5",
+  "requires": { "@angular/core": ">=19.0.0" },
+  "description": "Update the @angular/cli package version to ~19.0.0.",
+  "factory": "./src/migrations/update-20-2-0/update-angular-cli",
+  "implementation": "/packages/angular/src/migrations/update-20-2-0/update-angular-cli.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

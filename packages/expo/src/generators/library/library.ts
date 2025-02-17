@@ -40,7 +40,7 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -71,6 +71,10 @@ export async function expoLibraryGeneratorInternal(
     );
   }
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
   if (!options.skipPackageJson) {
@@ -87,7 +91,7 @@ export async function expoLibraryGeneratorInternal(
 
   const lintTask = await addLinting(host, {
     ...options,
-    projectName: options.name,
+    projectName: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
@@ -97,7 +101,7 @@ export async function expoLibraryGeneratorInternal(
   const jestTask = await addJest(
     host,
     options.unitTestRunner,
-    options.name,
+    options.projectName,
     options.projectRoot,
     options.js,
     options.skipPackageJson,
@@ -133,9 +137,7 @@ export async function expoLibraryGeneratorInternal(
       : undefined
   );
 
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);
@@ -166,23 +168,35 @@ async function addProject(
   };
 
   if (options.isUsingTsSolutionConfig) {
-    const packageName = getImportPath(host, options.name);
     const sourceEntry = !options.buildable
       ? options.js
         ? './src/index.js'
         : './src/index.ts'
       : undefined;
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: packageName,
+      name: options.projectName,
       version: '0.0.1',
       main: sourceEntry,
       types: sourceEntry,
-      nx: {
-        name: packageName === options.name ? undefined : options.name,
-        projectType: 'library',
-        sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
+      // For buildable libraries, the entries are configured by the bundler (i.e. Rollup).
+      exports: options.buildable
+        ? undefined
+        : {
+            './package.json': './package.json',
+            '.': options.js
+              ? './src/index.js'
+              : {
+                  types: './src/index.ts',
+                  import: './src/index.ts',
+                  default: './src/index.ts',
+                },
+          },
+
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
     });
   } else {
     addProjectConfiguration(host, options.name, project);
@@ -198,7 +212,7 @@ async function addProject(
   );
   const rollupConfigTask = await configurationGenerator(host, {
     ...options,
-    project: options.name,
+    project: options.projectName,
     skipFormat: true,
   });
 
@@ -226,7 +240,7 @@ async function addProject(
     },
   };
 
-  updateProjectConfiguration(host, options.name, project);
+  updateProjectConfiguration(host, options.projectName, project);
 
   return rollupConfigTask;
 }
@@ -268,7 +282,11 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  if (!options.publishable && !options.buildable) {
+  if (
+    !options.publishable &&
+    !options.buildable &&
+    !options.isUsingTsSolutionConfig
+  ) {
     host.delete(`${options.projectRoot}/package.json`);
   }
 

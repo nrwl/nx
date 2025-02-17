@@ -299,7 +299,12 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         };
       }
     }
-
+    writeCache(
+      g.projectFileMapCache,
+      g.projectGraph,
+      projectConfigurationsResult.sourceMaps,
+      errors
+    );
     if (errors.length > 0) {
       return {
         error: new DaemonProjectGraphError(
@@ -316,7 +321,6 @@ async function processFilesAndCreateAndSerializeProjectGraph(
         serializedSourceMaps: null,
       };
     } else {
-      writeCache(g.projectFileMapCache, g.projectGraph);
       return g;
     }
   } catch (err) {

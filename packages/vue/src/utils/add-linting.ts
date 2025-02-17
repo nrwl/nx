@@ -30,6 +30,7 @@ export async function addLinting(
     skipPackageJson?: boolean;
     rootProject?: boolean;
     addPlugin?: boolean;
+    projectName: string;
   },
   projectType: 'lib' | 'app'
 ) {
@@ -37,7 +38,7 @@ export async function addLinting(
     const tasks: GeneratorCallback[] = [];
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
-      project: options.name,
+      project: options.projectName,
       tsConfigPaths: [
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],

@@ -7,7 +7,12 @@ import {
   SVGProps,
   type ReactElement,
 } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -70,7 +75,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'Scaling 700+ projects: How Nx Enterprise became a no-brainer for Caseware.',
+      'Scaling 700+ projects: How Nx Enterprise became a no-brainer for Caseware',
     metrics: [
       {
         value: 'Massive scale',
@@ -99,7 +104,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'How SiriusXM stays competitive by iterating and getting to market fast.',
+      'How SiriusXM stays competitive by iterating and getting to market fast',
     metrics: [
       {
         value: 'Faster releases',
@@ -130,7 +135,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'From 5 days to 2 hours: How Payfit improved velocity and offloads complexity.',
+      'From 5 days to 2 hours: How Payfit improved velocity and offloads complexity',
     metrics: [
       {
         value: 'From 5 days → 2 hours',
@@ -159,7 +164,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'How UKG reduced build times while scaling development across teams.',
+      'How UKG reduced build times while scaling development across teams',
     metrics: [
       {
         value: 'From 1 day → instant builds',
@@ -377,7 +382,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
           onClose={() => setIsOpen(false)}
           className="relative z-50"
         >
-          <Transition.Child
+          <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
             enterFrom="opacity-0"
@@ -387,11 +392,11 @@ export function CustomerTestimonialCarousel(): ReactElement {
             leaveTo="opacity-0"
           >
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-          </Transition.Child>
+          </TransitionChild>
 
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4">
-              <Transition.Child
+              <TransitionChild
                 as={Fragment}
                 enter="ease-out duration-300"
                 enterFrom="opacity-0 scale-95"
@@ -400,7 +405,7 @@ export function CustomerTestimonialCarousel(): ReactElement {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
+                <DialogPanel className="w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
                   <div className="aspect-video">
                     <iframe
                       width="100%"
@@ -412,8 +417,8 @@ export function CustomerTestimonialCarousel(): ReactElement {
                       className="h-full w-full"
                     />
                   </div>
-                </Dialog.Panel>
-              </Transition.Child>
+                </DialogPanel>
+              </TransitionChild>
             </div>
           </div>
         </Dialog>

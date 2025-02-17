@@ -10,6 +10,7 @@ import {
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
+  detectPackageManager,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -17,6 +18,7 @@ import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import type { RspackPluginOptions } from '../../plugins/plugin';
 import { convertToInferred } from './convert-to-inferred';
+import { getLockFileName } from '@nx/js';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
@@ -248,6 +250,9 @@ describe('convert-to-inferred', () => {
     fs = new TempFs('rspack');
     tree = createTreeWithEmptyWorkspace();
     tree.root = fs.tempDir;
+    const lockFileName = getLockFileName(detectPackageManager(fs.tempDir));
+    fs.createFileSync(lockFileName, '');
+    tree.write(lockFileName, '');
 
     projectGraph = {
       nodes: {},

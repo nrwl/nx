@@ -30,7 +30,10 @@ export async function libraryGeneratorInternal(
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
-  await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
+  const jsLibraryTask = await jsLibraryGenerator(
+    tree,
+    toJsLibraryGeneratorOptions(options)
+  );
   const initTask = await initGenerator(tree, rawOptions);
   const depsTask = ensureDependencies(tree);
   deleteFiles(tree, options);
@@ -45,6 +48,7 @@ export async function libraryGeneratorInternal(
 
   return runTasksInSerial(
     ...[
+      jsLibraryTask,
       initTask,
       depsTask,
       () => {

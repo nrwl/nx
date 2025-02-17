@@ -11,10 +11,16 @@ import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ButtonLink } from '../button';
-import { Popover, Transition } from '@headlessui/react';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
 import { resourceMenuItems } from './menu-items';
 import { SectionsMenu } from './sections-menu';
 import { DiscordIcon } from '../discord-icon';
+import { VersionPicker } from '../version-picker';
 
 function Menu({ tabs }: { tabs: any[] }): ReactElement {
   return (
@@ -181,7 +187,7 @@ export function DocumentationHeader({
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 print:hidden">
-      <div className="mx-auto flex w-full items-center gap-6 lg:px-8 lg:py-4">
+      <div className="mx-auto flex w-full items-center gap-4 lg:px-8 lg:py-4">
         {/*MOBILE MENU*/}
         <div className="flex w-full items-center lg:hidden">
           <button
@@ -206,7 +212,7 @@ export function DocumentationHeader({
           </div>
         </div>
         {/*LOGO*/}
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <Link
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
@@ -224,6 +230,7 @@ export function DocumentationHeader({
               Docs
             </span>
           </Link>
+          <VersionPicker />
         </div>
         {/*SEARCH*/}
         <div className="hidden w-full max-w-[14rem] lg:inline">
@@ -248,7 +255,7 @@ export function DocumentationHeader({
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -266,7 +273,7 @@ export function DocumentationHeader({
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -277,9 +284,9 @@ export function DocumentationHeader({
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1"
                   >
-                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                    <PopoverPanel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
                       <SectionsMenu sections={resourceMenuItems} />
-                    </Popover.Panel>
+                    </PopoverPanel>
                   </Transition>
                 </>
               )}

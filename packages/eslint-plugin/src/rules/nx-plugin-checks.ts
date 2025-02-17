@@ -18,7 +18,7 @@ import {
   getSourceFilePath,
 } from '../utils/runtime-lint-utils';
 
-type Options = [
+export type Options = [
   {
     generatorsJson?: string;
     executorsJson?: string;
@@ -191,15 +191,27 @@ function normalizeOptions(
   let outDir: string;
   const base = { ...DEFAULT_OPTIONS, ...options };
   let runtimeTsConfig: string;
-  try {
-    runtimeTsConfig = require.resolve(
-      path.join(sourceProject.data.root, base.tsConfig)
-    );
-    const tsConfig = readJsonFile(runtimeTsConfig);
-    rootDir = tsConfig.compilerOptions?.rootDir;
-    outDir = tsConfig.compilerOptions?.outDir;
-  } catch {
-    // nothing
+
+  if (sourceProject.data.targets?.build?.executor === '@nx/js:tsc') {
+    rootDir = sourceProject.data.targets.build.options.rootDir;
+    outDir = sourceProject.data.targets.build.options.outputPath;
+  }
+
+  if (!rootDir && !outDir) {
+    try {
+      runtimeTsConfig = require.resolve(
+        path.join(workspaceRoot, sourceProject.data.root, base.tsConfig)
+      );
+      const tsConfig = readJsonFile(runtimeTsConfig);
+      rootDir ??= tsConfig.compilerOptions?.rootDir
+        ? path.join(sourceProject.data.root, tsConfig.compilerOptions.rootDir)
+        : undefined;
+      outDir ??= tsConfig.compilerOptions?.outDir
+        ? path.join(sourceProject.data.root, tsConfig.compilerOptions.outDir)
+        : undefined;
+    } catch {
+      // nothing
+    }
   }
   const pathPrefix =
     sourceProject.data.root !== '.' ? `${sourceProject.data.root}/` : '';
@@ -217,8 +229,8 @@ function normalizeOptions(
     packageJson: base.packageJson
       ? `${pathPrefix}${base.packageJson}`
       : undefined,
-    rootDir: rootDir ? path.join(sourceProject.data.root, rootDir) : undefined,
-    outDir: outDir ? path.join(sourceProject.data.root, outDir) : undefined,
+    rootDir,
+    outDir,
   };
 }
 

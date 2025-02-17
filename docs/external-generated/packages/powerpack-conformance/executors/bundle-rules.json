@@ -8,6 +8,10 @@
     "description": "Compile and bundle one or more Nx Conformance Rules",
     "type": "object",
     "properties": {
+      "rulesDirectory": {
+        "type": "string",
+        "description": "The directory, relative to the workspace root, containing the rule subdirectories to bundle. Defaults to {projectRoot}/src"
+      },
       "outputPath": {
         "type": "string",
         "description": "The output path for the bundled rules to be written to"

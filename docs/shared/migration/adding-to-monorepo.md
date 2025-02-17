@@ -6,7 +6,7 @@ powering Nx underneath. As a result, Lerna gets all the modern features such as 
 on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first-class support for [monorepos](/getting-started/tutorials/npm-workspaces-tutorial). If you have
+Nx has first-class support for [monorepos](/getting-started/tutorials/typescript-packages-tutorial). If you have
 an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/features/run-tasks)
@@ -419,7 +419,7 @@ documentation" url="/concepts/task-pipeline-configuration" /%}
 {% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation"
 url="/reference/nxignore" /%}
 
-{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
-/concepts/turbo-and-nx" /%}
+{% card title="Migrating from Turborepo to Nx" description="Read about Migrating from Turborepo to Nx" url="
+/recipes/adopting-nx/from-turborepo" /%}
 
 {% /cards %}
