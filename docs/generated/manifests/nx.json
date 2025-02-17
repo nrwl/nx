@@ -384,6 +384,17 @@
         "tags": ["cache-task-results"]
       },
       {
+        "id": "enhance-AI",
+        "name": "Enhance Your LLM",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/enhance-AI",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/enhance-AI",
+        "tags": ["AI"]
+      },
+      {
         "id": "explore-graph",
         "name": "Explore Your Workspace",
         "description": "",
@@ -542,6 +553,17 @@
     "isExternal": false,
     "path": "/features/cache-task-results",
     "tags": ["cache-task-results"]
+  },
+  "/features/enhance-AI": {
+    "id": "enhance-AI",
+    "name": "Enhance Your LLM",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/enhance-AI",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/enhance-AI",
+    "tags": ["AI"]
   },
   "/features/explore-graph": {
     "id": "explore-graph",
