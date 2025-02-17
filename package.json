@@ -264,6 +264,7 @@
     "minimatch": "9.0.3",
     "next-sitemap": "^3.1.10",
     "ng-packagr": "19.2.0",
+    "nanospinner": "1.2.2",
     "npm-package-arg": "11.0.1",
     "nuxt": "^3.10.0",
     "nx": "21.0.0-beta.12",

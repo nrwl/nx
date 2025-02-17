@@ -35,7 +35,7 @@ import {
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version-legacy';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import * as ora from 'ora';
+import { createSpinner } from 'nanospinner';
 import { ReleaseType, gt, inc, prerelease } from 'semver';
 import { updateLockFile } from '../../release/utils/update-lock-file';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
@@ -208,13 +208,15 @@ To fix this you will either need to add a package.json file at that location, or
             !currentVersion ||
             options.releaseGroup.projectsRelationship === 'independent'
           ) {
-            const spinner = ora(
+            const spinner = createSpinner(
               `${Array.from(new Array(projectName.length + 3)).join(
                 ' '
-              )}Resolving the current version for tag "${tag}" on ${registry}`
+              )}Resolving the current version for tag "${tag}" on ${registry}`,
+              {
+                color:
+                  color.spinnerColor as (typeof colors)[number]['spinnerColor'],
+              }
             );
-            spinner.color =
-              color.spinnerColor as (typeof colors)[number]['spinnerColor'];
             spinner.start();
 
             try {
