@@ -3783,20 +3783,20 @@ async function invokeCreateNodesOnMatchingFiles(
   pluginOptions: TscPluginOptions
 ) {
   const aggregateProjects: Record<string, any> = {};
-  for (const file of context.configFiles) {
-    const results = await createNodesV2[1]([file], pluginOptions, context);
-    for (const [, nodes] of results) {
-      for (const [projectName, project] of Object.entries(
-        nodes.projects ?? {}
-      )) {
-        if (aggregateProjects[projectName]) {
-          aggregateProjects[projectName].targets = {
-            ...aggregateProjects[projectName].targets,
-            ...project.targets,
-          };
-        } else {
-          aggregateProjects[projectName] = project;
-        }
+  const results = await createNodesV2[1](
+    context.configFiles,
+    pluginOptions,
+    context
+  );
+  for (const [, nodes] of results) {
+    for (const [projectName, project] of Object.entries(nodes.projects ?? {})) {
+      if (aggregateProjects[projectName]) {
+        aggregateProjects[projectName].targets = {
+          ...aggregateProjects[projectName].targets,
+          ...project.targets,
+        };
+      } else {
+        aggregateProjects[projectName] = project;
       }
     }
   }
