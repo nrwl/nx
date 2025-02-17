@@ -672,4 +672,4 @@ Also check out our docs:
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 📹 [Nx Youtube Channel](https://www.youtube.com/nrwl_io)
+- 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
