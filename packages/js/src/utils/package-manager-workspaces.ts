@@ -6,7 +6,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { join } from 'node:path/posix';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -30,7 +30,7 @@ export function getProjectPackageManagerWorkspaceState(
     (path) => readJson(tree, path, { expectComments: true })
   );
   const isIncluded = patterns.some((p) =>
-    minimatch(join(projectRoot, 'package.json'), p)
+    picomatch(p)(join(projectRoot, 'package.json'))
   );
 
   return isIncluded ? 'included' : 'excluded';

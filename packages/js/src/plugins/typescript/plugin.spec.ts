@@ -1,6 +1,6 @@
 import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { mkdirSync, rmdirSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
@@ -3773,7 +3773,7 @@ async function applyFilesToTempFsAndContext(
   await tempFs.createFiles(fileSys);
   // @ts-expect-error update otherwise readonly property for testing
   context.configFiles = Object.keys(fileSys).filter((file) =>
-    minimatch(file, createNodesV2[0], { dot: true })
+    picomatch(createNodesV2[0], { dot: true })(file)
   );
   setupWorkspaceContext(tempFs.tempDir);
 }

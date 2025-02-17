@@ -17,7 +17,7 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import {
   basename,
@@ -548,8 +548,8 @@ function getInputs(
         if (
           !otherFilesInclude.some(
             (includePath) =>
-              minimatch(normalize(includePath), normalize(excludePath)) ||
-              minimatch(normalize(excludePath), normalize(includePath))
+              picomatch(normalize(excludePath))(normalize(includePath)) ||
+              picomatch(normalize(includePath))(normalize(excludePath))
           )
         ) {
           excludePaths.add(excludePath);
