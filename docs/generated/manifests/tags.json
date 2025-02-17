@@ -257,6 +257,15 @@
       "path": "/nx-api/nx/documents/reset"
     }
   ],
+  "AI": [
+    {
+      "description": "",
+      "file": "shared/features/enhance-AI",
+      "id": "enhance-AI",
+      "name": "Enhance Your LLM",
+      "path": "/features/enhance-AI"
+    }
+  ],
   "explore-graph": [
     {
       "description": "",

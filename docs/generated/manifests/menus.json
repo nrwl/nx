@@ -284,6 +284,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Enhance Your LLM",
+            "path": "/features/enhance-AI",
+            "id": "enhance-AI",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Explore Your Workspace",
             "path": "/features/explore-graph",
             "id": "explore-graph",
@@ -395,6 +403,14 @@
         "name": "Cache Task Results",
         "path": "/features/cache-task-results",
         "id": "cache-task-results",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enhance Your LLM",
+        "path": "/features/enhance-AI",
+        "id": "enhance-AI",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

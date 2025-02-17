@@ -52,12 +52,12 @@ export default function CustomApp({
       <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast CI"
-        description="Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
+        description="Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
+            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',

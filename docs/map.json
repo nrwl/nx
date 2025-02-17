@@ -99,6 +99,12 @@
               "file": "shared/features/cache-task-results"
             },
             {
+              "name": "Enhance Your LLM",
+              "id": "enhance-AI",
+              "tags": ["AI"],
+              "file": "shared/features/enhance-AI"
+            },
+            {
               "name": "Explore Your Workspace",
               "id": "explore-graph",
               "tags": ["explore-graph"],

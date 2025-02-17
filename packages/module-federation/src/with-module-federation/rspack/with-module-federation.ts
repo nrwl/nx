@@ -26,7 +26,7 @@ export async function withModuleFederation(
   }
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
-    await getModuleFederationConfig(options);
+    getModuleFederationConfig(options);
   const isGlobal = isVarOrWindow(options.library?.type);
 
   return function makeConfig(

@@ -185,5 +185,5 @@ So keep an eye on our [Twitter](https://twitter.com/nxdevtools), [Youtube](https
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 📹 [Nrwl Youtube Channel](https://www.youtube.com/nrwl_io)
+- 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 🥚 [Free Egghead course](https://egghead.io/courses/scale-react-development-with-nx-4038)
