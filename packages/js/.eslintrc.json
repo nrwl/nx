@@ -12,6 +12,10 @@
             "message": "Please use `tinyglobby` instead."
           },
           {
+            "name": "ora",
+            "message": "Please use `nanospinner` instead."
+          },
+          {
             "name": "fs-extra",
             "message": "Please use equivalent utilities from `node:fs` instead."
           }
