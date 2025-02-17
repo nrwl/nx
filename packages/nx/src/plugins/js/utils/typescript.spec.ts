@@ -1,21 +1,22 @@
 import { readTsConfigOptions } from './typescript';
-import { mkdtemp, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'os';
 import { join } from 'path';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 
-describe.only('readTsConfigOptions', () => {
+describe('readTsConfigOptions', () => {
+  let fs: TempFs;
+  beforeEach(() => {
+    fs = new TempFs('Workspaces');
+  });
+  afterEach(() => {
+    fs.cleanup();
+  });
   it('should handle extends', async () => {
-    const dir = await mkdtemp(join(tmpdir(), 'typescript.spec'));
-    await writeFile(
-      join(dir, 'a.json'),
-      JSON.stringify({ extends: './b.json' })
-    );
-    await writeFile(
-      join(dir, 'b.json'),
-      JSON.stringify({ compilerOptions: { strict: true } })
-    );
+    await fs.createFiles({
+      'a.json': JSON.stringify({ extends: './b.json' }),
+      'b.json': JSON.stringify({ compilerOptions: { strict: true } }),
+    });
 
-    expect(readTsConfigOptions(join(dir, 'a.json'))).toEqual({
+    expect(readTsConfigOptions(join(fs.tempDir, 'a.json'))).toEqual({
       configFilePath: undefined,
       strict: true,
     });

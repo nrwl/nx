@@ -33,18 +33,16 @@ export function readTsConfigOptions(tsConfigPath: string) {
     tsModule.sys.readFile
   );
 
-  // We only care about options, so we don't need to scan the files, and thus
-  // `readDirectory` is stubbed. We do need `readFile` and `fileExists`, though,
-  // in order for base configs referenced in `extends` to be loaded.
-  const host: Partial<ts.ParseConfigHost> = {
+  // We only care about options, so we don't need to scan source files, and thus
+  // `readDirectory` is stubbed for performance.
+  const host = {
+    ...tsModule.sys,
     readDirectory: () => [],
-    readFile: tsModule.sys.readFile,
-    fileExists: tsModule.sys.fileExists,
   };
 
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
-    host as ts.ParseConfigHost,
+    host,
     dirname(tsConfigPath)
   ).options;
 }
