@@ -1,0 +1,10 @@
+{
+  "name": "react-store-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/react-store-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["react-store"],
+  "// targets": "to see all targets run: nx show project react-store-e2e --web",
+  "targets": {}
+}

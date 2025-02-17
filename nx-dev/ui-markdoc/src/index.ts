@@ -176,5 +176,4 @@ export const renderMarkdown: (
   };
 };
 
-export { GithubRepository } from './lib/tags/github-repository.component';
-export { Metrics };
+export { Metrics, VideoLink, GithubRepository };

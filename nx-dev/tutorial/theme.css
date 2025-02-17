@@ -9,6 +9,7 @@
 }
 
 .markdown-content {
+  width: 100%;
   max-width: 56rem;
   margin: 0 auto;
 }
