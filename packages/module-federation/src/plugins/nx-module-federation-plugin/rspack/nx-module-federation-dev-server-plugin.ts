@@ -1,4 +1,9 @@
-import { Compilation, Compiler, RspackPluginInstance } from '@rspack/core';
+import {
+  Compilation,
+  Compiler,
+  DefinePlugin,
+  RspackPluginInstance,
+} from '@rspack/core';
 import * as pc from 'picocolors';
 import {
   logger,
@@ -58,6 +63,10 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
           pathToCert: this._options.devServerConfig.sslCert,
           pathToKey: this._options.devServerConfig.sslCert,
         });
+
+        new DefinePlugin({
+          'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
+        }).apply(compiler);
         callback();
       }
     );
@@ -91,7 +100,6 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
       this._options.devServerConfig.pathToManifestFile = userPathToManifestFile;
     }
 
-    // TODO(colum): Add method for setting dev remotes to runtime plugin
     const { remotes, staticRemotePort } = getRemotes(
       this._options.config,
       projectGraph,
@@ -99,10 +107,19 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
     );
     this._options.devServerConfig.staticRemotesPort ??= staticRemotePort;
 
-    const remotesConfig = parseRemotesConfig(remotes, projectGraph);
+    const remotesConfig = parseRemotesConfig(
+      remotes,
+      workspaceRoot,
+      projectGraph
+    );
     const staticRemotesConfig = await getStaticRemotes(
       remotesConfig.config ?? {}
     );
+    const devRemotes = remotes.filter((r) => !staticRemotesConfig[r]);
+    process.env.NX_MF_DEV_REMOTES = JSON.stringify([
+      ...(devRemotes.length > 0 ? devRemotes : []),
+      project.name,
+    ]);
     return staticRemotesConfig ?? {};
   }
 }
