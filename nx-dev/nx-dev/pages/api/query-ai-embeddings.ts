@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getTokenizedContext } from '../../lib/getTokenizedContext';
-import { CustomError } from '@nx/nx-dev/util-ai';
+import { ChatItem, CustomError } from '@nx/nx-dev/util-ai';
 
 export const config = {
   runtime: 'edge',
@@ -26,15 +26,15 @@ export default async function handler(request: NextRequest) {
       );
     }
 
-    const { input } = await request.json();
-    if (!input) {
-      return new Response(JSON.stringify({ error: 'Input is required' }), {
+    const { messages } = (await request.json()) as { messages: ChatItem[] };
+    if (!messages) {
+      return new Response(JSON.stringify({ error: 'Messages are required' }), {
         status: 400,
         headers: { 'content-type': 'application/json' },
       });
     }
 
-    const context = await getTokenizedContext(input);
+    const context = await getTokenizedContext(messages);
     return new Response(JSON.stringify({ context }), {
       status: 200,
       headers: { 'content-type': 'application/json' },

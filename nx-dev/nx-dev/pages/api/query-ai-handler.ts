@@ -47,7 +47,7 @@ export default async function handler(request: NextRequest) {
 
     const query: string | null = getUserQuery(messages);
 
-    const { contextText, pageSections } = await getTokenizedContext(request);
+    const { contextText, pageSections } = await getTokenizedContext(messages);
 
     const { chatMessages } = initializeChat(
       messages,

@@ -23,15 +23,13 @@ const tokenCountLimit =
     : 500;
 
 export async function getTokenizedContext(
-  request: NextRequest
+  messages: ChatItem[]
 ): Promise<{ contextText: string; pageSections: PageSection[] }> {
   const openai = getOpenAI(openAiKey);
   const supabaseClient: SupabaseClient<any, 'public', any> = getSupabaseClient(
     supabaseUrl,
     supabaseServiceKey
   );
-
-  const { messages } = (await request.json()) as { messages: ChatItem[] };
 
   const query: string | null = getUserQuery(messages);
   const sanitizedQuery = query.trim();
