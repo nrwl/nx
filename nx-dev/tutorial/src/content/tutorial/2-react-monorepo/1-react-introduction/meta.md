@@ -6,5 +6,11 @@ editor:
   fileTree:
     allowEdits: true
 filesystem:
-  watch: ['/*.json', '/packages/*(/!(dist|node_modules))/*']
+  watch:
+    [
+      '/react-monorepo/*.*',
+      '/react-monorepo/apps/*/*.*',
+      '/react-monorepo/apps/*/*/*.*',
+      '/react-monorepo/apps/*/*/*/*.*',
+    ]
 ---
