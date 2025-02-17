@@ -384,6 +384,17 @@
         "tags": ["cache-task-results"]
       },
       {
+        "id": "enhance-AI",
+        "name": "Enhance Your LLM",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/enhance-AI",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/enhance-AI",
+        "tags": ["AI"]
+      },
+      {
         "id": "explore-graph",
         "name": "Explore Your Workspace",
         "description": "",
@@ -542,6 +553,17 @@
     "isExternal": false,
     "path": "/features/cache-task-results",
     "tags": ["cache-task-results"]
+  },
+  "/features/enhance-AI": {
+    "id": "enhance-AI",
+    "name": "Enhance Your LLM",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/enhance-AI",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/enhance-AI",
+    "tags": ["AI"]
   },
   "/features/explore-graph": {
     "id": "explore-graph",
@@ -876,17 +898,6 @@
         "tags": ["project-linking"]
       },
       {
-        "id": "turbo-and-nx",
-        "name": "Nx and Turborepo",
-        "description": "",
-        "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-        "file": "shared/concepts/turbo-and-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/turbo-and-nx",
-        "tags": []
-      },
-      {
         "id": "buildable-and-publishable-libraries",
         "name": "Buildable and Publishable Libraries",
         "description": "",
@@ -1178,17 +1189,6 @@
     "isExternal": false,
     "path": "/concepts/typescript-project-linking",
     "tags": ["project-linking"]
-  },
-  "/concepts/turbo-and-nx": {
-    "id": "turbo-and-nx",
-    "name": "Nx and Turborepo",
-    "description": "",
-    "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-    "file": "shared/concepts/turbo-and-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/turbo-and-nx",
-    "tags": []
   },
   "/concepts/buildable-and-publishable-libraries": {
     "id": "buildable-and-publishable-libraries",

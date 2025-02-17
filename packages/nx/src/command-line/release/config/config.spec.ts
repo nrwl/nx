@@ -279,6 +279,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -290,6 +291,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -465,6 +467,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -476,6 +479,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -654,6 +658,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -665,6 +670,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -874,6 +880,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -885,6 +892,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -1078,6 +1086,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -1089,6 +1098,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -1290,6 +1300,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -1301,6 +1312,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -1503,6 +1515,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -1514,6 +1527,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -1696,6 +1710,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -1707,6 +1722,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -1888,6 +1904,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -1899,6 +1916,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -2080,6 +2098,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@custom/generator",
@@ -2097,6 +2116,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@custom/generator-alternative",
@@ -2108,6 +2128,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -2300,6 +2321,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -2311,6 +2333,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -2497,6 +2520,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -2523,6 +2547,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -2534,6 +2559,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -2718,6 +2744,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -2729,6 +2756,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -2914,6 +2942,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -2927,6 +2956,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -3110,6 +3140,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -3121,6 +3152,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -3305,6 +3337,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -3316,6 +3349,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -3496,6 +3530,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -3507,6 +3542,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -3690,6 +3726,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -3701,6 +3738,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -3899,6 +3937,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -3910,6 +3949,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -4090,6 +4130,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}__{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -4101,6 +4142,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{projectName}__{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -4300,6 +4342,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -4314,6 +4357,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -4486,6 +4530,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -4497,6 +4542,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -4710,6 +4756,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -4721,6 +4768,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -4924,6 +4972,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -4935,6 +4984,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -5116,6 +5166,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -5127,6 +5178,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -5316,6 +5368,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -5327,6 +5380,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -5517,6 +5571,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -5528,6 +5583,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -5795,6 +5851,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -5806,6 +5863,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -6012,6 +6070,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -6023,6 +6082,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -6394,6 +6454,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -6405,6 +6466,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -6584,6 +6646,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -6595,6 +6658,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -6810,6 +6874,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -6821,6 +6886,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -7012,6 +7078,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7023,6 +7090,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -7217,6 +7285,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7228,6 +7297,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -7423,6 +7493,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7434,6 +7505,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -7632,6 +7704,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7643,6 +7716,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -7866,6 +7940,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7881,6 +7956,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7907,6 +7983,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -7918,6 +7995,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -8143,6 +8221,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -8154,6 +8233,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -8376,6 +8456,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -8387,6 +8468,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -8590,6 +8672,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -8601,6 +8684,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -9024,6 +9108,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -9035,6 +9120,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -9395,6 +9481,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -9411,6 +9498,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -9422,6 +9510,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -9590,6 +9679,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -9601,6 +9691,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -9786,6 +9877,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -9800,6 +9892,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -9984,6 +10077,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -9998,6 +10092,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -10181,6 +10276,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": true,
                   "generator": "@nx/js:release-version",
@@ -10195,6 +10291,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": true,
               "generator": "@nx/js:release-version",
@@ -10384,6 +10481,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -10395,6 +10493,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": true,
               "generator": "@nx/js:release-version",
@@ -10581,6 +10680,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": true,
                   "generator": "@nx/js:release-version",
@@ -10596,6 +10696,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": true,
               "generator": "@nx/js:release-version",
@@ -10823,6 +10924,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -10836,6 +10938,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -11021,6 +11124,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11038,6 +11142,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -11223,6 +11328,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11240,6 +11346,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11251,6 +11358,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -11430,6 +11538,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11451,6 +11560,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11462,6 +11572,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -11641,6 +11752,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11656,6 +11768,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11669,6 +11782,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",
@@ -11852,6 +11966,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11867,6 +11982,7 @@ describe('createNxReleaseConfig()', () => {
                 ],
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
                 "version": {
                   "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
@@ -11884,6 +12000,7 @@ describe('createNxReleaseConfig()', () => {
             },
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
             "version": {
               "conventionalCommits": false,
               "generator": "@nx/js:release-version",

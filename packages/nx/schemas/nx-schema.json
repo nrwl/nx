@@ -21,6 +21,10 @@
       "additionalProperties": false,
       "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
     },
+    "extends": {
+      "type": "string",
+      "description": "Specifies the base config to extend."
+    },
     "defaultBase": {
       "type": "string",
       "description": "Default --base used by affected logic."
@@ -169,7 +173,22 @@
                 ]
               },
               "releaseTagPattern": {
-                "type": "string"
+                "type": "string",
+                "description": "Optionally override the git/release tag pattern to use for this group."
+              },
+              "releaseTagPatternCheckAllBranchesWhen": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
               },
               "versionPlans": {
                 "oneOf": [
@@ -243,7 +262,22 @@
           ]
         },
         "releaseTagPattern": {
-          "type": "string"
+          "type": "string",
+          "description": "Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing. It supports interpolating the version as {version} and (if releasing independently or forcing project level version control system releases) the project name as {projectName} within the string. The default releaseTagPattern for fixed/unified releases is: \"v{version}\". The default releaseTagPattern for independent releases at the project level is: \"{projectName}@{version}\""
+        },
+        "releaseTagPatternCheckAllBranchesWhen": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
         }
       }
     },
