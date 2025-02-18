@@ -173,7 +173,7 @@ export declare export function getFilesForOutputs(directory: string, entries: Ar
 
 export declare export function getTransformableOutputs(outputs: Array<string>): Array<string>
 
-export declare export function hashArray(input: Array<string>): string
+export declare export function hashArray(input: Array<string | undefined | null>): string
 
 export interface HashDetails {
   value: string
