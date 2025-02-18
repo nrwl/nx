@@ -11,6 +11,7 @@ export function FrontendObservability() {
     if (!process['browser'] || initialized.current || !version) return;
     initialized.current = true;
     const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
+    console.log({ version, url, vercelEnv });
     const environment =
       vercelEnv === 'production'
         ? 'prod'
