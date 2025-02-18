@@ -1,8 +1,8 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~19.1.0';
-export const angularDevkitVersion = '~19.1.0';
-export const ngPackagrVersion = '~19.1.0';
+export const angularVersion = '~19.2.0-next.3';
+export const angularDevkitVersion = '~19.2.0-next.2';
+export const ngPackagrVersion = '~19.2.0-next.2';
 export const ngrxVersion = '^19.0.0';
 export const rxjsVersion = '~7.8.0';
 export const zoneJsVersion = '~0.15.0';
