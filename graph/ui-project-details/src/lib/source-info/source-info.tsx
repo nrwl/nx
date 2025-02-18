@@ -1,8 +1,6 @@
-import * as uiTooltips from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { SourcemapInfoToolTip } from '../tooltips/sourcemap-info-tooltip';
-
-const { Tooltip } = uiTooltips;
 
 export function SourceInfo(props: {
   data: Array<string>;

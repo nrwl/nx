@@ -2,8 +2,7 @@
 import SyntaxHighlighter, { createElement } from 'react-syntax-highlighter';
 import { JSX, ReactNode, useMemo } from 'react';
 import { twMerge } from 'tailwind-merge';
-import * as uiComponents from '@nx/graph/legacy/components';
-const { CopyToClipboardButton } = uiComponents;
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
 
 export function JsonCodeBlockPreTag({
   children,

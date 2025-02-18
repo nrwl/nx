@@ -1,7 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import * as uiComponents from '@nx/graph/legacy/components';
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -9,7 +9,7 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 
-import * as uiTooltips from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
@@ -18,9 +18,6 @@ import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-he
 import { TargetExecutor } from '../target-executor/target-executor';
 import { AtomizerTooltip } from '../tooltips/atomizer-tooltip';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
-
-const { CopyToClipboardButton } = uiComponents;
-const { Tooltip } = uiTooltips;
 
 export interface TargetConfigurationDetailsHeaderProps {
   isCollasped: boolean;

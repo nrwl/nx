@@ -1,7 +1,5 @@
-import * as uiIcons from '@nx/graph/legacy/icons';
+import { TechnologyIcon } from '@nx/graph/legacy/icons';
 import { HTMLProps } from 'react';
-
-const { TechnologyIcon } = uiIcons;
 
 export interface TargetTechnologiesProps extends HTMLProps<HTMLDivElement> {
   technologies?: string[];
