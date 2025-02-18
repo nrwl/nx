@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { cpSync, mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
+import { mkdirSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import { dirname, join } from 'path';
 import { InitArgs } from '../../init-v1';
 import {
@@ -44,7 +44,7 @@ export async function addNxToCraRepo(options: Options) {
     checkForCustomWebpackSetup();
   }
 
-  output.log({ title: '🐳 Nx initialization' });
+  output.log({ title: '📦 Installing Nx' });
 
   const normalizedOptions = await normalizeOptions(options);
   await reorgnizeWorkspaceStructure(normalizedOptions);
@@ -127,8 +127,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   await addBundler(options);
 
-  output.log({ title: '🧶  Updating .gitignore file' });
-
   execSync(`echo "node_modules" >> .gitignore`, {
     stdio: [0, 1, 2],
     windowsHide: false,
@@ -144,9 +142,6 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
 
   cleanUpUnusedFilesAndAddConfigFiles(options);
 
-  output.log({ title: '🙂 Please be patient, one final step remaining!' });
-
-  output.log({ title: '📦 Installing dependencies' });
   installDependencies(options);
 
   if (options.isVite) {
@@ -180,15 +175,6 @@ function createTempWorkspace(options: NormalizedOptions) {
     { stdio: [0, 1, 2], windowsHide: false }
   );
 
-  output.log({ title: '👋 Welcome to Nx!' });
-
-  output.log({ title: '🧹 Clearing unused files' });
-
-  cpSync(
-    join('temp-workspace', 'apps', options.reactAppName, 'project.json'),
-    'project.json',
-    { recursive: true }
-  );
   rmSync(join('temp-workspace', 'apps', options.reactAppName), {
     recursive: true,
     force: true,
@@ -251,11 +237,8 @@ function moveSync(src: string, dest: string) {
 }
 
 function moveFilesToTempWorkspace(options: NormalizedOptions) {
-  output.log({ title: '🚚 Moving your React app in your new Nx workspace' });
-
   copyPackageJsonDepsFromTempWorkspace();
   const requiredCraFiles = [
-    'project.json',
     'package.json',
     'src',
     'public',
@@ -292,7 +275,6 @@ function moveFilesToTempWorkspace(options: NormalizedOptions) {
 
 async function addBundler(options: NormalizedOptions) {
   if (options.isVite) {
-    output.log({ title: '🧑‍🔧  Setting up Vite' });
     const { addViteCommandsToPackageScripts } = await import(
       './add-vite-commands-to-package-scripts'
     );
@@ -309,7 +291,6 @@ async function addBundler(options: NormalizedOptions) {
     );
     await renameJsToJsx(options.reactAppName, options.isStandalone);
   } else {
-    output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(
       './add-craco-commands-to-package-scripts'
     );
@@ -324,10 +305,6 @@ async function addBundler(options: NormalizedOptions) {
       options.isStandalone
     );
 
-    output.log({
-      title: '🛬 Skip CRA preflight check since Nx manages the monorepo',
-    });
-
     execSync(`echo "SKIP_PREFLIGHT_CHECK=true" > .env`, {
       stdio: [0, 1, 2],
       windowsHide: false,
@@ -336,19 +313,13 @@ async function addBundler(options: NormalizedOptions) {
 }
 
 function copyFromTempWorkspaceToRoot() {
-  output.log({ title: '🚚 Folder restructuring.' });
-
   readdirSync('temp-workspace').forEach((f) => {
     moveSync(join('temp-workspace', f), f);
   });
 }
 
 function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
-  output.log({ title: '🧹  Cleaning up.' });
-
   cleanUpFiles(options.reactAppName, options.isStandalone);
-
-  output.log({ title: "📃 Extend the app's tsconfig.json from the base" });
 
   setupTsConfig(options.reactAppName, options.isStandalone);
 
