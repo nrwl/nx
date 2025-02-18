@@ -206,14 +206,16 @@ const server = createServer((socket) => {
 
 server.listen(socketPath);
 
-setTimeout(() => {
-  if (!connected) {
-    console.error(
-      'The plugin worker is exiting as it was not connected to within 5 seconds.'
-    );
-    process.exit(1);
-  }
-}, 5000).unref();
+if (process.env.NX_PLUGIN_NO_TIMEOUTS !== 'true') {
+  setTimeout(() => {
+    if (!connected) {
+      console.error(
+        'The plugin worker is exiting as it was not connected to within 5 seconds.'
+      );
+      process.exit(1);
+    }
+  }, 5000).unref();
+}
 
 const exitHandler = (exitCode: number) => () => {
   server.close();
