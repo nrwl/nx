@@ -435,6 +435,26 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/update-angular-cli-version-19-2-0-next-2": {
+        "description": "Update the @angular/cli package version to ~19.2.0-next.2.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-19-2-0-next-2.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-19-2-0-next-2",
+        "version": "20.5.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-19-2-0-next-2",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/update-angular-cli-version-19-1-0": {
         "description": "Update the @angular/cli package version to ~19.1.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-19-1-0.json",

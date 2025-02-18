@@ -347,6 +347,15 @@
       },
       "description": "Update the @angular/cli package version to ~19.1.0.",
       "factory": "./src/migrations/update-20-4-0/update-angular-cli"
+    },
+    "update-angular-cli-version-19-2-0-next-2": {
+      "cli": "nx",
+      "version": "20.5.0-beta.4",
+      "requires": {
+        "@angular/core": ">=19.2.0-next.3"
+      },
+      "description": "Update the @angular/cli package version to ~19.2.0-next.2.",
+      "factory": "./src/migrations/update-20-5-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1482,6 +1491,67 @@
         },
         "ng-packagr": {
           "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.5.0": {
+      "version": "20.5.0-beta.4",
+      "x-prompt": "Do you want to update the Angular version to v19.2?",
+      "requires": {
+        "@angular/core": ">=19.1.0 <19.2.0-next.3"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~19.2.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1902.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1902.0-next.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~19.2.0-next.3",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~19.2.0-next.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~19.2.0-next.4",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~19.2.0-next.2",
           "alwaysAddToPackageJson": false
         }
       }
