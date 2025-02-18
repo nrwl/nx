@@ -17,6 +17,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
   let cwd = process.cwd();
   let tempFs: TempFs;
   let originalCacheProjectGraph: string | undefined;
+  let lockFileName: string;
 
   beforeEach(() => {
     mkdirSync('tmp/project-graph-cache', { recursive: true });
@@ -34,9 +35,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     process.chdir(tempFs.tempDir);
     originalCacheProjectGraph = process.env.NX_CACHE_PROJECT_GRAPH;
     process.env.NX_CACHE_PROJECT_GRAPH = 'false';
-    const lockFileName = getLockFileName(
-      detectPackageManager(context.workspaceRoot)
-    );
+    lockFileName = getLockFileName(detectPackageManager(context.workspaceRoot));
     applyFilesToTempFsAndContext(tempFs, context, { [lockFileName]: '' });
   });
 
@@ -46,6 +45,18 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
     process.chdir(cwd);
     process.env.NX_CACHE_PROJECT_GRAPH = originalCacheProjectGraph;
     rmdirSync('tmp/project-graph-cache', { recursive: true });
+  });
+
+  it('should handle missing lock file', async () => {
+    await applyFilesToTempFsAndContext(tempFs, context, {
+      'libs/my-lib/tsconfig.json': JSON.stringify({ files: [] }),
+      'libs/my-lib/package.json': `{}`,
+    });
+    tempFs.removeFileSync(lockFileName);
+
+    await expect(
+      invokeCreateNodesOnMatchingFiles(context, {})
+    ).resolves.not.toThrow();
   });
 
   it('should not create nodes for root tsconfig.json files', async () => {
@@ -3783,20 +3794,20 @@ async function invokeCreateNodesOnMatchingFiles(
   pluginOptions: TscPluginOptions
 ) {
   const aggregateProjects: Record<string, any> = {};
-  for (const file of context.configFiles) {
-    const results = await createNodesV2[1]([file], pluginOptions, context);
-    for (const [, nodes] of results) {
-      for (const [projectName, project] of Object.entries(
-        nodes.projects ?? {}
-      )) {
-        if (aggregateProjects[projectName]) {
-          aggregateProjects[projectName].targets = {
-            ...aggregateProjects[projectName].targets,
-            ...project.targets,
-          };
-        } else {
-          aggregateProjects[projectName] = project;
-        }
+  const results = await createNodesV2[1](
+    context.configFiles,
+    pluginOptions,
+    context
+  );
+  for (const [, nodes] of results) {
+    for (const [projectName, project] of Object.entries(nodes.projects ?? {})) {
+      if (aggregateProjects[projectName]) {
+        aggregateProjects[projectName].targets = {
+          ...aggregateProjects[projectName].targets,
+          ...project.targets,
+        };
+      } else {
+        aggregateProjects[projectName] = project;
       }
     }
   }
