@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
-import { TracingInstrumentation } from '@grafana/faro-web-tracing';
 
 export function FrontendObservability() {
   const initialized = useRef(false);
@@ -25,10 +24,7 @@ export function FrontendObservability() {
         version,
         environment,
       },
-      instrumentations: [
-        ...getWebInstrumentations(),
-        new TracingInstrumentation(),
-      ],
+      instrumentations: [...getWebInstrumentations()],
     });
   }, []);
   return null;
