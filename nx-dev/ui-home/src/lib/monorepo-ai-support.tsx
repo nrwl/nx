@@ -1,4 +1,4 @@
-import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong, TextLink } from '@nx/nx-dev/ui-common';
 import { ReactElement } from 'react';
 import {
   AngularIcon,
@@ -27,21 +27,25 @@ export function MonorepoAiSupport(): ReactElement {
       </SectionHeading>
       <div className="max-w-5xl">
         <SectionHeading as="p" variant="subtitle" className="mt-6">
-          AI-powered coding assistants can edit files, but they’re blind to the
+          AI-powered coding assistants can edit files, but they're blind to the
           bigger picture –{' '}
           <Strong>
-            they don’t understand how your entire codebase fits together
+            they don't understand how your entire codebase fits together
           </Strong>
           . Nx changes that.
         </SectionHeading>
         <SectionHeading as="p" variant="subtitle" className="mt-6">
           With full visibility into your{' '}
           <Strong>
-            monorepo’s project relationships, dependencies, and ownership
+            monorepo's project relationships, dependencies, and ownership
           </Strong>
-          , Nx enables your LLM to move beyond local file changes to make{' '}
-          <Strong>informed architectural decisions</Strong>. Future-proof your
-          development with system-wide intelligence, not just AI-friendly tools.
+          ,{' '}
+          <TextLink href="/features/enhance-AI?utm_source=homepage&utm_medium=website&utm_campaign=homepage_links&utm_content=cta_enhance_ai">
+            Nx enables your LLM to move beyond local file changes
+          </TextLink>{' '}
+          to make <Strong>informed architectural decisions</Strong>.
+          Future-proof your development with system-wide intelligence, not just
+          AI-friendly tools.
         </SectionHeading>
       </div>
 

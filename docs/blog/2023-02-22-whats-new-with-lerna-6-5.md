@@ -124,4 +124,4 @@ You can find [a roadmap for all the features we plan to add in Lerna 7](https://
 - [🧠 Lerna Docs](https://lerna.js.org/)
 - [👩‍💻 Lerna GitHub](https://github.com/lerna/lerna)
 - [💬 Nx Official Discord Server](https://go.nx.dev/community)
-- [📹 Nrwl Youtube Channel](https://www.youtube.com/nrwl_io)
+- [📹 Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)

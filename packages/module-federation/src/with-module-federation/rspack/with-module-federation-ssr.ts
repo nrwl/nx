@@ -14,7 +14,7 @@ export async function withModuleFederationForSSR(
   }
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options, {
+    getModuleFederationConfig(options, {
       isServer: true,
     });
 

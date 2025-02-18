@@ -16,6 +16,7 @@
   - [Features](/features)
     - [Run Tasks](/features/run-tasks)
     - [Cache Task Results](/features/cache-task-results)
+    - [Enhance Your LLM](/features/enhance-AI)
     - [Explore Your Workspace](/features/explore-graph)
     - [Generate Code](/features/generate-code)
     - [Automate Updating Dependencies](/features/automate-updating-dependencies)
