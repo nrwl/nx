@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   getPackageManagerCommand,
   getPublishedVersion,
+  getSelectedPackageManager,
   readFile,
   readJson,
   runCLI,
@@ -21,6 +22,12 @@ import {
 describe('nx init (for React - legacy)', () => {
   let pmc: ReturnType<typeof getPackageManagerCommand>;
 
+  beforeAll(() => {
+    pmc = getPackageManagerCommand({
+      packageManager: getSelectedPackageManager(),
+    });
+  });
+
   it('should convert to an standalone workspace with Vite', () => {
     const appName = 'my-app';
     createReactApp(appName);
@@ -31,7 +38,7 @@ describe('nx init (for React - legacy)', () => {
       } nx@${getPublishedVersion()} init --no-interactive`
     );
 
-    expect(craToNxOutput).toContain('Successfully created the workspace');
+    expect(craToNxOutput).toContain('Done!');
 
     checkFilesDoNotExist(
       'libs/.gitkeep',

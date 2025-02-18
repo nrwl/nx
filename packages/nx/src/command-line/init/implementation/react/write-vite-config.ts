@@ -21,6 +21,17 @@ export function writeViteConfig(
     isStandalone ? 'vite.config.js' : `apps/${appName}/vite.config.js`,
     `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { default as replace } from '@rollup/plugin-replace';
+
+// Match CRA's environment variables.
+// TODO: Replace these with VITE_ prefixed environment variables, and using import.meta.env.VITE_* instead of process.env.REACT_APP_*.
+const craEnvVarRegex = /^REACT_APP/i;
+const craEnvVars = Object.keys(process.env)
+  .filter((key) => craEnvVarRegex.test(key))
+  .reduce((env, key) => {
+    env[\`process.env.\${key}\`] = JSON.stringify(process.env[key]);
+    return env;
+  }, {});
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -39,7 +50,7 @@ export default defineConfig({
     setupFiles: 'src/setupTests.${isJs ? 'js' : 'ts'}',
     css: true,
   },
-  plugins: [react()],
+  plugins: [react(), replace(craEnvVars)],
 });
 `
   );

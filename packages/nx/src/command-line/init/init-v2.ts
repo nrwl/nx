@@ -40,6 +40,7 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
+  force?: boolean;
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
@@ -150,10 +151,18 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '🧐 Checking dependencies' });
 
-  const { plugins, updatePackageScripts } = await detectPlugins(
-    nxJson,
-    options.interactive
-  );
+  let plugins: string[];
+  let updatePackageScripts: boolean;
+
+  if (_isCRA) {
+    plugins = ['@nx/vite'];
+    updatePackageScripts = true;
+  } else {
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, options.interactive);
+    plugins = _plugins;
+    updatePackageScripts = _updatePackageScripts;
+  }
 
   output.log({ title: '📦 Installing Nx' });
 
