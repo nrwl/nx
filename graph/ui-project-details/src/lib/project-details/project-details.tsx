@@ -5,7 +5,7 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { EyeIcon } from '@heroicons/react/24/outline';
-import * as uiTooltips from '@nx/graph/legacy/tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { TagList } from '../tag-list/tag-list';
 import { OwnersList } from '../owners-list/owners-list';
@@ -13,8 +13,6 @@ import { TargetConfigurationGroupList } from '../target-configuration-details-gr
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
-
-const { Tooltip } = uiTooltips;
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
