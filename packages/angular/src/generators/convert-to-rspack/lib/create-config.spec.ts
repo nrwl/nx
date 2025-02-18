@@ -21,16 +21,17 @@ describe('createConfig', () => {
     };
     createConfig(tree, opts);
     expect(tree.read('root/rspack.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "const { createConfig } = require('@ng-rspack/build');
+      "import { resolve } from 'path';
+        import { createConfig }from '@ng-rspack/build';
         
         
-        module.exports = createConfig({
+        export default createConfig({
           root: __dirname,
           index: './src/index.html',
           browser: './src/main.ts',
           
           
-          tsconfigPath: './tsconfig.app.json',
+          tsconfigPath: resolve(__dirname, './tsconfig.app.json'),
           polyfills: ["zone.js"],
           assets: ["./public"],
           styles: ["./src/styles.css"],

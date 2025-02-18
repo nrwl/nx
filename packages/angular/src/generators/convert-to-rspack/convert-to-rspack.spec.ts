@@ -5,6 +5,7 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/src/utils/config-utils';
 
@@ -46,6 +47,7 @@ describe('convert-to-rspack', () => {
         },
       },
     });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
 
     // ACT
     await convertToRspack(tree, { project: 'app' });
@@ -56,14 +58,15 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { createConfig } = require('@ng-rspack/build');
+      "import { resolve } from 'path';
+      import { createConfig } from '@ng-rspack/build';
 
-      module.exports = createConfig({
+      export default createConfig({
         root: __dirname,
         index: './src/index.html',
         browser: './src/main.ts',
 
-        tsconfigPath: './tsconfig.app.json',
+        tsconfigPath: resolve(__dirname, './tsconfig.app.json'),
         polyfills: ['zone.js'],
         assets: ['./src/favicon.ico', './src/assets', './public'],
         styles: ['./src/styles.scss'],
@@ -117,6 +120,7 @@ describe('convert-to-rspack', () => {
         },
       },
     });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
     tree.write(
       'apps/app/module-federation.config.js',
       `
@@ -145,15 +149,17 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { createConfig } = require('@ng-rspack/build');
-      const baseWebpackConfig = require('./webpack.config');
+      "import { resolve } from 'path';
+      import { createConfig } from '@ng-rspack/build';
+      import baseWebpackConfig from './webpack.config';
+      import webpackMerge from 'webpack-merge';
 
       const baseConfig = createConfig({
         root: __dirname,
         index: './src/index.html',
         browser: './src/main.ts',
 
-        tsconfigPath: './tsconfig.app.json',
+        tsconfigPath: resolve(__dirname, './tsconfig.app.json'),
         polyfills: ['zone.js'],
         assets: ['./src/favicon.ico', './src/assets', './public'],
         styles: ['./src/styles.scss'],
@@ -165,7 +171,7 @@ describe('convert-to-rspack', () => {
         skipTypeChecking: false,
       });
 
-      module.exports = baseWebpackConfig(baseConfig);
+      export default webpackMerge(baseConfig[0], baseWebpackConfig);
       "
     `);
   });
@@ -201,6 +207,7 @@ describe('convert-to-rspack', () => {
         },
       },
     });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
     tree.write(
       'apps/app/module-federation.config.js',
       `
@@ -239,16 +246,17 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { createConfig } = require('@ng-rspack/build');
-      const baseWebpackConfig = require('./webpack.config');
-      const webpackMerge = require('webpack-merge');
+      "import { resolve } from 'path';
+      import { createConfig } from '@ng-rspack/build';
+      import baseWebpackConfig from './webpack.config';
+      import webpackMerge from 'webpack-merge';
 
       const baseConfig = createConfig({
         root: __dirname,
         index: './src/index.html',
         browser: './src/main.ts',
 
-        tsconfigPath: './tsconfig.app.json',
+        tsconfigPath: resolve(__dirname, './tsconfig.app.json'),
         polyfills: ['zone.js'],
         assets: ['./src/favicon.ico', './src/assets', './public'],
         styles: ['./src/styles.scss'],
@@ -260,7 +268,7 @@ describe('convert-to-rspack', () => {
         skipTypeChecking: false,
       });
 
-      module.exports = webpackMerge(baseConfig, baseWebpackConfig);
+      export default webpackMerge(baseConfig[0], baseWebpackConfig);
       "
     `);
   });
