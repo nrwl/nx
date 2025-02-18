@@ -13,8 +13,8 @@ pub fn hash_array(input: Vec<Option<String>>) -> String {
         if s.is_none() {
             trace!("Encountered None value in hash_array input: {:?}", input);
         }
-        s.as_ref()
-    }).map(|s| s.as_str()).collect::<Vec<_>>().join(",");
+        s.as_deref()
+    }).collect::<Vec<_>>().join(",");
     let content = joined.as_bytes();
     hash(content)
 }
