@@ -39,6 +39,7 @@
     "metro-config": "~0.80.4",
     "metro-resolver": "~0.80.4",
     "picocolors": "^1.1.0",
+    "semver": "^7.6.3",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
   },

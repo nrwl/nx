@@ -29,8 +29,14 @@ describe('package-manager', () => {
           packageManager: 'pnpm',
         },
       });
-      const packageManager = detectPackageManager();
-      expect(packageManager).toEqual('pnpm');
+      expect(detectPackageManager()).toEqual('pnpm');
+
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'yarn',
+        },
+      });
+      expect(detectPackageManager()).toEqual('yarn');
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
@@ -45,13 +51,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(2, 'yarn.lock');
+      expect(fs.existsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
@@ -66,13 +74,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
 
     it('should detect bun package manager from bun.lockb', () => {
@@ -87,6 +97,8 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return true;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
@@ -94,6 +106,29 @@ describe('package-manager', () => {
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('bun');
       expect(fs.existsSync).toHaveBeenCalledTimes(1);
+    });
+
+    it('should detect bun package manager from bun.lock', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn.lock':
+            return false;
+          case 'pnpm-lock.yaml':
+            return false;
+          case 'package-lock.json':
+            return false;
+          case 'bun.lock':
+            return true;
+          case 'bun.lockb':
+            return false;
+          default:
+            return jest.requireActual('fs').existsSync(p);
+        }
+      });
+      const packageManager = detectPackageManager();
+      expect(packageManager).toEqual('bun');
+      expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
     it('should use npm package manager as default', () => {
@@ -108,13 +143,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
   });
 
