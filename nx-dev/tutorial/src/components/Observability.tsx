@@ -1,17 +1,21 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
+import {
+  NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+  NEXT_PUBLIC_FARO_URL,
+  NEXT_PUBLIC_VERCEL_ENV,
+} from 'astro:env/client';
 
 export function FrontendObservability() {
   const initialized = useRef(false);
   useEffect(() => {
-    const version = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
-    const url = process.env.NEXT_PUBLIC_FARO_URL;
+    const version = NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
+    const url = NEXT_PUBLIC_FARO_URL;
     // Don't initialize if we're not in a deployed environment, e.g. local development
-    if (!process['browser'] || initialized.current || !version) return;
+    if (initialized.current || !version) return;
     initialized.current = true;
-    const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
-    console.log({ version, url, vercelEnv });
+    const vercelEnv = NEXT_PUBLIC_VERCEL_ENV;
     const environment =
       vercelEnv === 'production'
         ? 'prod'
