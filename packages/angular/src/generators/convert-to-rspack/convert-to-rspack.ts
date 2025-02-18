@@ -12,6 +12,16 @@ import type { ConvertToRspackSchema } from './schema';
 import { ngRspackVersion, nxVersion } from '../../utils/versions';
 import { createConfig, CreateConfigOptions } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
+import { updateTsconfig } from './lib/update-tsconfig';
+import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
+
+const SUPPORTED_EXECUTORS = [
+  '@angular-devkit/build-angular:browser',
+  '@angular-devkit/build-angular:dev-server',
+  '@nx/angular:webpack-browser',
+  '@nx/angular:dev-server',
+  '@nx/angular:module-federation-dev-server',
+];
 
 export async function convertToRspack(
   tree: Tree,
@@ -24,8 +34,10 @@ export async function convertToRspack(
   const createConfigOptions: Partial<CreateConfigOptions> = {
     root: project.root,
   };
-  const buildAndServeTargetNames: string[] = [];
+  const buildTargetNames: string[] = [];
   let customWebpackConfigPath: string | undefined;
+
+  validateSupportedBuildExecutor(Object.values(project.targets));
 
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
@@ -52,16 +64,25 @@ export async function convertToRspack(
         target.options.inlineStyleLanguage === undefined
           ? 'css'
           : target.options.inlineStyleLanguage;
+      createConfigOptions.fileReplacements = target.options.fileReplacements;
+      createConfigOptions.stylePreprocessorOptions =
+        target.options.stylePreprocessorOptions;
       if (target.options.customWebpackConfig) {
         customWebpackConfigPath = target.options.customWebpackConfig.path;
       }
       // TODO: Add more options that can be correctly mapped
-      buildAndServeTargetNames.push(targetName);
+      buildTargetNames.push(targetName);
     } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
-      target.executor === '@nx/angular:dev-server'
+      target.executor === '@nx/angular:dev-server' ||
+      target.executor === '@nx/angular:module-federation-dev-server'
     ) {
-      buildAndServeTargetNames.push(targetName);
+      const port = target.options?.port ?? 4200;
+      project[targetName] = {
+        options: {
+          port,
+        },
+      };
     }
   }
 
@@ -75,8 +96,9 @@ export async function convertToRspack(
     customWebpackConfigInfo?.normalizedPathToCustomWebpackConfig,
     customWebpackConfigInfo?.isWebpackConfigFunction
   );
+  updateTsconfig(tree, project.root);
 
-  for (const targetName of buildAndServeTargetNames) {
+  for (const targetName of buildTargetNames) {
     delete project.targets[targetName];
   }
 
