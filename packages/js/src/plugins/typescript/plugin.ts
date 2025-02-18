@@ -133,12 +133,6 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     initializeTsConfigCache(configFilePaths, context.workspaceRoot);
 
     const normalizedOptions = normalizePluginOptions(options);
-    const lockFileHash = hashFile(
-      join(
-        context.workspaceRoot,
-        getLockFileName(detectPackageManager(context.workspaceRoot))
-      )
-    );
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -147,7 +141,6 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     } = await resolveValidConfigFilesAndHashes(
       configFilePaths,
       optionsHash,
-      lockFileHash,
       context
     );
 
@@ -234,13 +227,20 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
 async function resolveValidConfigFilesAndHashes(
   configFilePaths: readonly string[],
   optionsHash: string,
-  lockFileHash: string,
   context: CreateNodesContext | CreateNodesContextV2
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
   projectRoots: string[];
 }> {
+  const lockFileHash =
+    hashFile(
+      join(
+        context.workspaceRoot,
+        getLockFileName(detectPackageManager(context.workspaceRoot))
+      )
+    ) ?? '';
+
   const validConfigFilePaths: string[] = [];
   const hashes: string[] = [];
   const projectRoots: string[] = [];
