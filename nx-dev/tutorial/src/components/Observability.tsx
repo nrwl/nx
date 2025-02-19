@@ -1,6 +1,10 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
+import {
+  getWebInstrumentations,
+  initializeFaro,
+  faro,
+} from '@grafana/faro-web-sdk';
 import {
   NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
   NEXT_PUBLIC_FARO_URL,
@@ -22,15 +26,19 @@ export function FrontendObservability() {
         : vercelEnv === 'preview'
         ? 'staging'
         : 'development';
-    initializeFaro({
-      url,
-      app: {
-        name: 'Nx Dev',
-        version,
-        environment,
-      },
-      instrumentations: [...getWebInstrumentations()],
-    });
+    if (faro.api) {
+      faro.api.setPage({ url: document.location.href });
+    } else {
+      initializeFaro({
+        url,
+        app: {
+          name: 'Nx Dev',
+          version,
+          environment,
+        },
+        instrumentations: [...getWebInstrumentations()],
+      });
+    }
   }, []);
   return null;
 }
