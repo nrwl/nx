@@ -120,7 +120,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   if (_isCRA) {
     await addNxToCraRepo({
       addE2e: false,
-      force: false,
+      force: options.force,
       vite: true,
       integrated: false,
       interactive: options.interactive,

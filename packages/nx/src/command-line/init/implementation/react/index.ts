@@ -50,6 +50,12 @@ export async function addNxToCraRepo(_options: Options) {
   output.note({
     title: `A new ${indexPath} has been created. Compare it to the previous ${oldIndexPath} file and make any changes needed, then delete the previous file.`,
   });
+
+  if (_options.force) {
+    output.note({
+      title: `Using --force converts projects with custom Webpack setup. You will need to manually update your vite.config.js file to match the plugins used in your old Webpack configuration.`,
+    });
+  }
 }
 
 function installDependencies(options: NormalizedOptions) {
