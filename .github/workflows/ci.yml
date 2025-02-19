@@ -34,7 +34,6 @@ jobs:
         run: git fetch origin master:master
         if: ${{ github.event_name == 'pull_request' }}
 
-
       - name: Set SHAs
         uses: nrwl/nx-set-shas@v4
 
@@ -52,7 +51,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.4.1
           run_install: false
 
       - name: Install project dependencies
@@ -134,7 +133,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.4.1
           run_install: false
 
       - name: Install project dependencies
