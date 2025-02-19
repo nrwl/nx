@@ -102,6 +102,10 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(chalk.green('Nx Powerpack'));
 
+    const licenseExpiryDate = new Date(
+      (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
+    );
+
     bodyLines.push(
       `Licensed to ${powerpackLicense.organizationName} for ${
         powerpackLicense.seatCount
@@ -109,12 +113,25 @@ export async function reportHandler() {
         powerpackLicense.workspaceCount === 9999
           ? 'an unlimited number of'
           : powerpackLicense.workspaceCount
-      } workspace${
-        powerpackLicense.workspaceCount > 1 ? 's' : ''
-      } until ${new Date(
-        (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
-      ).toLocaleDateString()}`
+      } workspace${powerpackLicense.workspaceCount > 1 ? 's' : ''}.`
     );
+
+    // license is not expired
+    if (licenseExpiryDate.getTime() >= Date.now()) {
+      bodyLines.push(
+        `License is active until ${licenseExpiryDate.toLocaleDateString()}.`
+      );
+    } else {
+      bodyLines.push(
+        `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
+      );
+      if ('perpetualNxVersion' in powerpackLicense) {
+        bodyLines.push(
+          `Perpetually licensed to use Nx ${powerpackLicense.perpetualNxVersion} and below.`
+        );
+      }
+    }
+
     bodyLines.push('');
 
     padding =
