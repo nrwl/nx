@@ -19,6 +19,26 @@ launch-templates:
           key: 'pnpm-lock.yaml'
           paths: .pnpm-store
           base-branch: 'master'
+
+      - name: Install zip and unzip
+        script: sudo apt-get -yqq install zip unzip
+
+      # TODO: Remove this once the PR to set it on agents by default is merged
+      - name: Set SHELL environment variable
+        script: |
+          # We need $SHELL to be set for the bun installation to correctly link `bunx`
+          echo "SHELL=/usr/bin/bash" >> $NX_CLOUD_ENV
+
+      - name: Install bun
+        script: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
+          echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Check bun
+        script: |
+          bun --version
+
       - name: Install e2e deps
         script: |
           sudo apt-get update
@@ -50,8 +70,6 @@ launch-templates:
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
-      - name: Install zip and unzip
-        script: sudo apt-get -yqq install zip unzip
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
     image: 'ubuntu22.04-node20.11-v10'
@@ -72,6 +90,26 @@ launch-templates:
           key: 'pnpm-lock.yaml'
           paths: .pnpm-store
           base-branch: 'master'
+
+      - name: Install zip and unzip
+        script: sudo apt-get -yqq install zip unzip
+
+      # TODO: Remove this once the PR to set it on agents by default is merged
+      - name: Set SHELL environment variable
+        script: |
+          # We need $SHELL to be set for the bun installation to correctly link `bunx`
+          echo "SHELL=/usr/bin/bash" >> $NX_CLOUD_ENV
+
+      - name: Install bun
+        script: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
+          echo "PATH=$HOME/.bun/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Check bun
+        script: |
+          bun --version
+
       - name: Install e2e deps
         script: |
           sudo apt-get update
@@ -102,6 +140,3 @@ launch-templates:
 
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
-
-      - name: Install zip and unzip
-        script: sudo apt-get -yqq install zip unzip
