@@ -1,7 +1,6 @@
 ---
 type: chapter
 title: Introduction
-template: default
 editor:
   fileTree:
     allowEdits: true

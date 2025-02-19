@@ -1,7 +1,6 @@
 ---
 type: part
 title: TypeScript Packages
-template: default
 editor:
   fileTree:
     allowEdits: true
