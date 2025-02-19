@@ -1,6 +1,9 @@
 ---
 type: part
 title: TypeScript Packages
+meta:
+  title: 'Nx Tutorial: TypeScript Packages'
+  image: /images/nx-media.png
 editor:
   fileTree:
     allowEdits: true
