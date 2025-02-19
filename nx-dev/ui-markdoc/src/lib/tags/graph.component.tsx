@@ -21,14 +21,16 @@ export function Loading() {
  * in the top level of the module for preloading to work, similar to React.lazy.
  */
 const NxProjectGraphViz = dynamic(
-  () => import('@nx/graph/ui-graph').then((module) => module.NxProjectGraphViz),
+  () =>
+    import('@nx/graph/legacy/graph').then((module) => module.NxProjectGraphViz),
   {
     ssr: false,
     loading: () => <Loading />,
   }
 );
 const NxTaskGraphViz = dynamic(
-  () => import('@nx/graph/ui-graph').then((module) => module.NxTaskGraphViz),
+  () =>
+    import('@nx/graph/legacy/graph').then((module) => module.NxTaskGraphViz),
   {
     ssr: false,
     loading: () => <Loading />,

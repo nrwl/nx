@@ -419,7 +419,7 @@ documentation" url="/concepts/task-pipeline-configuration" /%}
 {% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation"
 url="/reference/nxignore" /%}
 
-{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
-/concepts/turbo-and-nx" /%}
+{% card title="Migrating from Turborepo to Nx" description="Read about Migrating from Turborepo to Nx" url="
+/recipes/adopting-nx/from-turborepo" /%}
 
 {% /cards %}

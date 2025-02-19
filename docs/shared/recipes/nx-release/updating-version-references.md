@@ -124,13 +124,13 @@ This package.json is now valid and ready to be published to the registry.
 
 ## Scenario 3: I want to update package versions directly in my source files, but use local dependency references via file/workspace
 
-{% callout type="caution" title="This scenario is only supported when your package manager is pnpm" %}
-pnpm is the only package manager that provides a publish command that supports dynamically swapping the `file:` and `workspace:*` references with the actual version number at publish time.
+{% callout type="caution" title="This scenario is currently only supported when your package manager is pnpm or bun" %}
+pnpm and bun are the only package managers that provide a publish command that both supports dynamically swapping the `file:` and `workspace:*` references with the actual version number at publish time, and provides the customization needed for us to wrap it. `yarn npm publish` does support the replacements but is very limited on customization options.
 {% /callout %}
 
 This is a more advanced scenario because it removes the clean separation of concerns between versioning and publishing. The reason for this is that the `file:` and `workspace:` references simply have to be replaced with actual version numbers before they are written to the registry, otherwise they will break when a user tries to install the package. If versioning does not replace them, publishing needs to.
 
-As mentioned at the start of this recipe, Nx Release intentionally does not manipulate your packages in memory during publishing, so this scenario is only supported when your package manager provides publishing functionality which dynamically swaps the local references. **Currently this is only supported by pnpm.**
+As mentioned at the start of this recipe, Nx Release intentionally does not manipulate your packages in memory during publishing, so this scenario is only supported when your package manager provides publishing functionality which dynamically swaps the local references. **Currently this is only supported by pnpm and bun.**
 
 Let's first look at the default behavior of Nx Release, which is to update the all version references in the source package.json files with the new version number.
 
@@ -190,4 +190,4 @@ Now, that same patch release to the source package.json file will result in the 
 }
 ```
 
-Again, this is not in a valid state to be published to the registry, and so the publishing step will need to handle this. **This is only supported by pnpm**, in which case Nx Release invokes `pnpm publish` instead of `npm publish` behind the scenes during publishing, and you will receive a clear error if you attempt to use such a package.json with another package manager.
+Again, this is not in a valid state to be published to the registry, and so the publishing step will need to handle this. **This is only supported by pnpm and bun**, in which case Nx Release invokes `pnpm publish` or `bun publish` instead of `npm publish` behind the scenes during publishing, and you will receive a clear error if you attempt to use such a package.json with npm or yarn.

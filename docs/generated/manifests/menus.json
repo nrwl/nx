@@ -284,6 +284,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Enhance Your LLM",
+            "path": "/features/enhance-AI",
+            "id": "enhance-AI",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Explore Your Workspace",
             "path": "/features/explore-graph",
             "id": "explore-graph",
@@ -395,6 +403,14 @@
         "name": "Cache Task Results",
         "path": "/features/cache-task-results",
         "id": "cache-task-results",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enhance Your LLM",
+        "path": "/features/enhance-AI",
+        "id": "enhance-AI",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -639,14 +655,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx and Turborepo",
-            "path": "/concepts/turbo-and-nx",
-            "id": "turbo-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Buildable and Publishable Libraries",
             "path": "/concepts/buildable-and-publishable-libraries",
             "id": "buildable-and-publishable-libraries",
@@ -855,14 +863,6 @@
         "name": "TypeScript Project Linking",
         "path": "/concepts/typescript-project-linking",
         "id": "typescript-project-linking",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Turborepo",
-        "path": "/concepts/turbo-and-nx",
-        "id": "turbo-and-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

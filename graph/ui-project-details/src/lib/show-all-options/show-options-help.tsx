@@ -1,12 +1,15 @@
 import { Fragment, ReactNode, useMemo, useState } from 'react';
 import { PlayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Transition } from '@headlessui/react';
-import { getExternalApiService, useEnvironmentConfig } from '@nx/graph/shared';
+import {
+  getExternalApiService,
+  useEnvironmentConfig,
+} from '@nx/graph/legacy/shared';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
 import { TerminalOutput } from '@nx/nx-dev/ui-fence';
-import { Tooltip } from '@nx/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
 
 interface ShowOptionsHelpProps {

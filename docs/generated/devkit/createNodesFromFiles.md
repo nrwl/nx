@@ -10,12 +10,12 @@
 
 #### Parameters
 
-| Name          | Type                                                                       |
-| :------------ | :------------------------------------------------------------------------- |
-| `createNodes` | [`CreateNodesFunction`](../../devkit/documents/CreateNodesFunction)\<`T`\> |
-| `configFiles` | readonly `string`[]                                                        |
-| `options`     | `T`                                                                        |
-| `context`     | [`CreateNodesContextV2`](../../devkit/documents/CreateNodesContextV2)      |
+| Name          | Type                                                                                                                                                                                                                                                                                                     |
+| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createNodes` | (`projectConfigurationFile`: `string`, `options`: `T`, `context`: [`CreateNodesContext`](../../devkit/documents/CreateNodesContext), `idx`: `number`) => [`CreateNodesResult`](../../devkit/documents/CreateNodesResult) \| `Promise`\<[`CreateNodesResult`](../../devkit/documents/CreateNodesResult)\> |
+| `configFiles` | readonly `string`[]                                                                                                                                                                                                                                                                                      |
+| `options`     | `T`                                                                                                                                                                                                                                                                                                      |
+| `context`     | [`CreateNodesContextV2`](../../devkit/documents/CreateNodesContextV2)                                                                                                                                                                                                                                    |
 
 #### Returns
 

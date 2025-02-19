@@ -99,6 +99,12 @@
               "file": "shared/features/cache-task-results"
             },
             {
+              "name": "Enhance Your LLM",
+              "id": "enhance-AI",
+              "tags": ["AI"],
+              "file": "shared/features/enhance-AI"
+            },
+            {
               "name": "Explore Your Workspace",
               "id": "explore-graph",
               "tags": ["explore-graph"],
@@ -259,12 +265,6 @@
               "id": "typescript-project-linking",
               "tags": ["project-linking"],
               "file": "shared/concepts/typescript-project-linking"
-            },
-            {
-              "name": "Nx and Turborepo",
-              "id": "turbo-and-nx",
-              "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-              "file": "shared/concepts/turbo-and-nx"
             },
             {
               "name": "Buildable and Publishable Libraries",

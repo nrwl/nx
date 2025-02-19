@@ -54,11 +54,12 @@ After evaluating Nx and Turborepo, Hetzner Cloud selected Nx for its advanced mo
 
 Beyond modularization, Nx helped consolidate fragmented projects into a single, structured workspace. This reduced the overhead of maintaining multiple repositories and simplified dependency management. Using the [Nx Graph](/features/explore-graph), the team gained visibility into their project relationships, making it easier to coordinate work and optimize collaboration.
 
-{% quote
-  quote="Junior developers were amazed at how fast things became. They'd run tests expecting them to take 20 minutes, and they'd finish in seconds!"
-  author="Pavlo Grosse"
-  title="Senior Software Engineer, Hetzner Cloud"
- /%}
+{% testimonial
+    name="Pavlo Grosse"
+    title="Senior Software Engineer, Hetzner Cloud"
+    image="/documentation/blog/images/articles/pavlo-grosse.avif" %}
+Junior developers were amazed at how fast things became. They'd run tests expecting them to take 20 minutes, and they'd finish in seconds!
+{% /testimonial %}
 
 To tackle the CI performance bottleneck, Hetzner Cloud adopted [Nx Cloud](/ci/features/remote-cache), highly leveraging its [Nx Replay feature](/ci/features/remote-cache), ability to [distribute runs](/ci/features/distribute-task-execution) and re-run [flaky tasks automatically](/ci/features/flaky-tasks). These capabilities allowed them to optimize their CI workflows and eliminate inefficiencies that had previously slowed down development cycles.
 

@@ -12,6 +12,11 @@ function checkLockFiles() {
       'Invalid occurence of "bun.lockb" file. Please remove it and use only "pnpm-lock.yaml"'
     );
   }
+  if (fs.existsSync('bun.lock')) {
+    errors.push(
+      'Invalid occurence of "bun.lockb" file. Please remove it and use only "pnpm-lock.yaml"'
+    );
+  }
   if (fs.existsSync('yarn.lock')) {
     errors.push(
       'Invalid occurence of "yarn.lock" file. Please remove it and use only "pnpm-lock.yaml"'

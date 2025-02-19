@@ -81,7 +81,11 @@ export async function viteConfigurationGeneratorInternal(
     tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
   });
   tasks.push(jsInitTask);
-  const initTask = await initGenerator(tree, { ...schema, skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    ...schema,
+    projectRoot,
+    skipFormat: true,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 

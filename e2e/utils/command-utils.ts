@@ -170,7 +170,8 @@ export function getPackageManagerCommand({
       runNx: `pnpm exec nx`,
       runNxSilent: `pnpm exec nx`,
       runUninstalledPackage: 'pnpm dlx',
-      install: 'pnpm i',
+      // We need to install with --no-frozen-lockfile when running e2e tests because pnpm will pick up the fact we are in CI and default to --frozen-lockfile
+      install: 'pnpm install --no-frozen-lockfile',
       ciInstall: 'pnpm install --frozen-lockfile',
       addProd: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
       addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
@@ -179,7 +180,8 @@ export function getPackageManagerCommand({
       exec: pnpmVersion && gte(pnpmVersion, '6.13.0') ? 'pnpm exec' : 'pnpx',
     },
     bun: {
-      createWorkspace: `bunx create-nx-workspace@${publishedVersion}`,
+      // See note in runCreateWorkspace in create-project-utils.ts for why we don't set @{version} for `bunx create-nx-workspace` right now
+      createWorkspace: `bunx create-nx-workspace`,
       run: (script: string, args: string) => `bun run ${script} -- ${args}`,
       runNx: `bunx nx`,
       runNxSilent: `bunx nx`,

@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: 'Nx Powerpack',
   description:
     'Nx Powerpack is a suite of paid extensions for the Nx CLI specifically designed for enterprises.',
+  alternates: {
+    canonical: 'https://nx.dev/powerpack',
+  },
   openGraph: {
     url: 'https://nx.dev/powerpack',
     title: 'Nx Powerpack',

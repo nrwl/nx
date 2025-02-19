@@ -37,7 +37,7 @@ import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
 import {
   addE2E,
-  addViteTempFilesToGitIgnore,
+  ignoreViteTempFiles,
   normalizeOptions,
   updateUnitTestConfig,
 } from './lib';
@@ -312,7 +312,7 @@ export default {...nxPreset};
 
   tasks.push(await addE2E(tree, options));
 
-  addViteTempFilesToGitIgnore(tree);
+  await ignoreViteTempFiles(tree, options.projectRoot);
 
   updateTsconfigFiles(
     tree,

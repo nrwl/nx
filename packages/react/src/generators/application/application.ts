@@ -32,7 +32,6 @@ import { initWebpack } from './lib/bundlers/add-webpack';
 import {
   handleStyledJsxForRspack,
   initRspack,
-  setupRspackConfiguration,
 } from './lib/bundlers/add-rspack';
 import {
   initRsbuild,
@@ -123,10 +122,11 @@ export async function applicationGeneratorInternal(
     tasks.push(twTask);
   }
 
+  const lintTask = await addLinting(tree, options);
+  tasks.push(lintTask);
+
   if (options.bundler === 'vite') {
     await setupViteConfiguration(tree, options, tasks);
-  } else if (options.bundler === 'rspack') {
-    await setupRspackConfiguration(tree, options, tasks);
   } else if (options.bundler === 'rsbuild') {
     await setupRsbuildConfiguration(tree, options, tasks);
   }
@@ -146,9 +146,6 @@ export async function applicationGeneratorInternal(
       )
     );
   }
-
-  const lintTask = await addLinting(tree, options);
-  tasks.push(lintTask);
 
   const e2eTask = await addE2e(tree, options);
   tasks.push(e2eTask);

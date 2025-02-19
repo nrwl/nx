@@ -53,7 +53,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb'))
+    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
       ? 'yarn'
@@ -185,7 +185,7 @@ export function getPackageManagerCommand(
       };
     },
     bun: () => {
-      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',

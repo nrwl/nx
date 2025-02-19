@@ -153,9 +153,10 @@ export default {
         "
       `);
       expect(tree.read('jest.config.ts', 'utf-8'))
-        .toEqual(`import { getJestProjectsAsync } from '@nx/jest';
+        .toEqual(`import type { Config } from 'jest';
+import { getJestProjectsAsync } from '@nx/jest';
 
-export default async () => ({
+export default async (): Promise<Config> => ({
   projects: await getJestProjectsAsync()
 });`);
       expect(readProjectConfiguration(tree, 'my-project').targets.test)

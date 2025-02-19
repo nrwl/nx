@@ -1,6 +1,7 @@
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TooltipTriggerText } from '../target-configuration-details/tooltip-trigger-text';
+import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 
 export function TargetExecutorTitle({
   commands,

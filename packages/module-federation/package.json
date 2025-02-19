@@ -30,14 +30,15 @@
     "@nx/web": "file:../web",
     "picocolors": "^1.1.0",
     "webpack": "^5.88.0",
-    "@rspack/core": "^1.1.5",
     "@module-federation/enhanced": "^0.8.8",
     "@module-federation/node": "^2.6.21",
     "@module-federation/sdk": "^0.8.8",
     "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@rspack/core": "^1.1.5"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   },

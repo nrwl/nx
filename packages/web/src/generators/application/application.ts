@@ -317,6 +317,25 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   createApplicationFiles(host, options);
 
+  if (options.linter === 'eslint') {
+    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
+      '@nx/eslint',
+      nxVersion
+    );
+    const lintTask = await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      skipFormat: true,
+      setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
+    });
+    tasks.push(lintTask);
+  }
+
   if (options.bundler === 'vite') {
     const { viteConfigurationGenerator, createOrEditViteConfig } =
       ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
@@ -385,25 +404,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     host.delete(
       joinPathFragments(options.appProjectRoot, `src/app/app.element.spec.ts`)
     );
-  }
-
-  if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
-      '@nx/eslint',
-      nxVersion
-    );
-    const lintTask = await lintProjectGenerator(host, {
-      linter: options.linter,
-      project: options.projectName,
-      tsConfigPaths: [
-        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      ],
-      unitTestRunner: options.unitTestRunner,
-      skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
-      addPlugin: options.addPlugin,
-    });
-    tasks.push(lintTask);
   }
 
   const nxJson = readNxJson(host);

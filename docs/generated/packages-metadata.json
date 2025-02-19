@@ -2559,6 +2559,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/js/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/js",
+        "path": "js/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/js/migrations/20.4.0-package-updates.json",
         "hidden": false,
         "name": "20.4.0-package-updates",
@@ -5108,6 +5118,16 @@
     ],
     "migrations": [
       {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
         "file": "generated/packages/rspack/migrations/ensure-nx-module-federation-package.json",
         "hidden": false,
@@ -5494,6 +5514,16 @@
         "version": "20.5.0-beta.3",
         "originalFilePath": "/packages/vite",
         "path": "vite/migrations/update-20-5-0-update-resolve-conditions",
+        "type": "migration"
+      },
+      {
+        "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+        "file": "generated/packages/vite/migrations/eslint-ignore-vite-temp-files.json",
+        "hidden": false,
+        "name": "eslint-ignore-vite-temp-files",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "vite/migrations/eslint-ignore-vite-temp-files",
         "type": "migration"
       },
       {
