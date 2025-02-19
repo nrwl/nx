@@ -27,7 +27,7 @@ launch-templates:
       - name: Set SHELL environment variable
         script: |
           # We need $SHELL to be set for the bun installation to correctly link `bunx`
-          echo "SHELL=/bin/bash" >> $NX_CLOUD_ENV
+          echo "SHELL=/usr/bin/bash" >> $NX_CLOUD_ENV
 
       - name: Install bun
         script: |
@@ -98,7 +98,7 @@ launch-templates:
       - name: Set SHELL environment variable
         script: |
           # We need $SHELL to be set for the bun installation to correctly link `bunx`
-          echo "SHELL=/bin/bash" >> $NX_CLOUD_ENV
+          echo "SHELL=/usr/bin/bash" >> $NX_CLOUD_ENV
 
       - name: Install bun
         script: |
