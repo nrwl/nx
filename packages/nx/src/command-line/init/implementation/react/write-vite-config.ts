@@ -50,7 +50,7 @@ export default defineConfig({
     setupFiles: 'src/setupTests.${isJs ? 'js' : 'ts'}',
     css: true,
   },
-  plugins: [react(), replace(craEnvVars)],
+  plugins: [react(), replace({ values: craEnvVars, preventAssignment: true })],
 });
 `
   );
