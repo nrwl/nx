@@ -52,8 +52,8 @@ describe('nx init (for React - legacy)', () => {
     expect(packageJson.dependencies['redux']).toBeDefined();
     expect(packageJson.name).toEqual(appName);
 
-    const viteConfig = readFile(`vite.config.js`);
-    expect(viteConfig).toContain('port: 4200'); // default port
+    const viteConfig = readFile(`vite.config.mjs`);
+    expect(viteConfig).toContain('port: 3000'); // default port
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/${appName}/index.html`);

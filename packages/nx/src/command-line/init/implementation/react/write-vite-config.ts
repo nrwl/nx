@@ -5,7 +5,7 @@ export function writeViteConfig(
   isStandalone: boolean,
   isJs: boolean
 ) {
-  let port = 4200;
+  let port = 3000;
 
   // Use PORT from .env file if it exists in project.
   if (existsSync(`../.env`)) {
@@ -18,10 +18,11 @@ export function writeViteConfig(
   }
 
   writeFileSync(
-    isStandalone ? 'vite.config.js' : `apps/${appName}/vite.config.js`,
+    isStandalone ? 'vite.config.mjs' : `apps/${appName}/vite.config.mjs`,
     `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { default as replace } from '@rollup/plugin-replace';
+import replace from '@rollup/plugin-replace';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // Match CRA's environment variables.
 // TODO: Replace these with VITE_ prefixed environment variables, and using import.meta.env.VITE_* instead of process.env.REACT_APP_*.
@@ -50,7 +51,11 @@ export default defineConfig({
     setupFiles: 'src/setupTests.${isJs ? 'js' : 'ts'}',
     css: true,
   },
-  plugins: [react(), replace({ values: craEnvVars, preventAssignment: true })],
+  plugins: [
+    react(),
+    replace({ values: craEnvVars, preventAssignment: true }),
+    tsconfigPaths(),
+  ],
 });
 `
   );
