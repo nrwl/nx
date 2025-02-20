@@ -293,8 +293,10 @@ function createEsLintConfiguration(
         '@nx/dependency-checks': [
           'error',
           {
-            // With flat configs, we don't want to include imports in the eslint js/cjs/mjs files to be checked
-            ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
+            // With flat configs, we don't want to include imports in the eslint js/cjs/mjs/ts/cts/mts files to be checked
+            ignoredFiles: [
+              '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
+            ],
           },
         ],
       },
