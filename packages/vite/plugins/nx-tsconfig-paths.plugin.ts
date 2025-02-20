@@ -80,13 +80,14 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
       projectRoot = config.root;
       const projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
       let foundTsConfigPath = getTsConfig(
-        join(
-          workspaceRoot,
-          'tmp',
-          projectRootFromWorkspaceRoot,
-          process.env.NX_TASK_TARGET_TARGET ?? 'build',
-          'tsconfig.generated.json'
-        )
+        process.env.NX_TSCONFIG_PATH ??
+          join(
+            workspaceRoot,
+            'tmp',
+            projectRootFromWorkspaceRoot,
+            process.env.NX_TASK_TARGET_TARGET ?? 'build',
+            'tsconfig.generated.json'
+          )
       );
       if (!foundTsConfigPath) {
         throw new Error(stripIndents`Unable to find a tsconfig in the workspace! 
