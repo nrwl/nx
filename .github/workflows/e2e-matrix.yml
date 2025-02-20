@@ -49,6 +49,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -106,330 +108,93 @@ jobs:
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
 
+  prepare-matrix:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.process-json.outputs.MATRIX }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Load matrix data
+        id: load-matrix-json
+        run: |
+          value=$((jq . .github/workflows/nightly/matrix.json) | jq tostring)
+          echo "matrix=$value" >> $GITHUB_OUTPUT
+
+      - name: Process matrix data
+        id: process-json
+        uses: actions/github-script@v7
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          script: | # Load matrix from file and process the data to the format needed for the matrix
+            const matrixData = JSON.parse(${{ steps.load-matrix-json.outputs.matrix }});
+            const matrix = [];
+
+            function addMatrixCombo(project, nodeVersion, pm, os) {
+              matrix.push({
+                project: project.name,
+                codeowners: project.codeowners,
+                node_version: nodeVersion,
+                package_manager: matrixData.setup[os].package_managers[pm],
+                os: matrixData.setup[os].os,
+                os_name: matrixData.setup[os].os_name,
+                os_timeout: matrixData.setup[os].os_timeout,
+              });
+            }
+
+            function processProject(project, nodeVersion) {
+              for (let os = 0; os < matrixData.setup.length; os++) {
+                for (let pm = 0; pm < matrixData.setup[os].package_managers.length; pm++) {
+                  if (!matrixData.setup[os].excluded || !matrixData.setup[os].excluded.includes(project.name)) {
+                    if (nodeVersion) {
+                      addMatrixCombo(project, nodeVersion, pm, os);
+                    } else {
+                      for (let n = 0; n < matrixData.setup[os].node_versions.length; n++) {
+                        addMatrixCombo(project, matrixData.setup[os].node_versions[n], pm, os);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            // process core projects
+            for (let p = 0; p < matrixData.coreProjects.length; p++) {
+              processProject(matrixData.coreProjects[p]);
+            }
+            // process other projects
+            for (let p = 0; p < matrixData.projects.length; p++) {
+              processProject(matrixData.projects[p], matrixData.nodeTLS);
+            }
+
+            if (matrix.length > 256) {
+              throw new Error('You have exceeded the size of the matrix. GitHub allows only 256 jobs in a matrix. Found ${matrix.length} jobs.');
+            }
+            core.setOutput('MATRIX', { include: matrix });
+
   e2e:
     if: ${{ github.repository_owner == 'nrwl' }}
-    needs: preinstall
+    needs:
+      - preinstall
+      - prepare-matrix
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
     strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
-        node_version:
-          - 18
-          - 20
-          - 22
-          # - 23
-        package_manager:
-          - npm
-          - yarn
-          - pnpm
-        project:
-          - e2e-angular
-          - e2e-cypress
-          - e2e-detox
-          - e2e-esbuild
-          - e2e-eslint
-          - e2e-expo
-          - e2e-gradle
-          - e2e-jest
-          - e2e-js
-          - e2e-lerna-smoke-tests
-          - e2e-next
-          - e2e-node
-          - e2e-nuxt
-          - e2e-nx-init
-          - e2e-nx
-          - e2e-playwright
-          - e2e-plugin
-          - e2e-react
-          - e2e-react-native
-          - e2e-release
-          - e2e-remix
-          - e2e-rollup
-          - e2e-rspack
-          - e2e-storybook
-          - e2e-vite
-          - e2e-vue
-          - e2e-web
-          - e2e-webpack
-          - e2e-workspace-create
-        include:
-          # os short names
-          - os: ubuntu-latest
-            os_name: 'Linux'
-          - os: macos-latest
-            os_name: 'MacOS'
-          - os: windows-latest
-            os_name: 'WinOS'
-          # test timeouts
-          - os: ubuntu-latest
-            os_timeout: 60
-          - os: macos-latest
-            os_timeout: 90
-          - os: windows-latest
-            os_timeout: 180
-          # codeowner groups
-          - project: e2e-angular
-            codeowners: 'S04SS457V38'
-          - project: e2e-cypress
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-detox
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-esbuild
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-expo
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-gradle
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-jest
-            codeowners: 'S04T16BTJJY'
-          - project: e2e-js
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-lerna-smoke-tests
-            codeowners: 'S04TNCVEETS'
-          - project: e2e-eslint
-            codeowners: 'S04SYJGKSCT'
-          - project: e2e-next
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-node
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-nx-init
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-nx
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-plugin
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-release
-            codeowners: 'S04SYHYKGNP'
-          - project: e2e-react
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-react-native
-            codeowners: 'S04TNCNJG5N'
-          - project: e2e-web
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-rollup
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-storybook
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-playwright
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-remix
-            codeowners: 'S04SVQ8H0G5'
-          - project: e2e-rspack
-            codeowners: 'S04SJ6HHP0X'
-          - project: e2e-vite
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-vue
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-nuxt
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-webpack
-            codeowners: 'S04SJ6PL98X'
-          - project: e2e-workspace-create
-            codeowners: 'S04SYHYKGNP'
-        exclude:
-          # exclude react-native tests from ubuntu
-          - os: ubuntu-latest
-            project: e2e-react-native
-          - os: ubuntu-latest
-            project: e2e-detox
-          - os: ubuntu-latest
-            project: e2e-expo
-          - os: windows-latest
-            project: e2e-react-native
-          - os: windows-latest
-            project: e2e-detox
-          - os: windows-latest
-            project: e2e-expo
-          # exclude non-CNW/Lerna tests from non-LTS node versions
-          - node_version: 18
-            project: e2e-angular
-          - node_version: 18
-            project: e2e-cypress
-          - node_version: 18
-            project: e2e-detox
-          - node_version: 18
-            project: e2e-esbuild
-          - node_version: 18
-            project: e2e-expo
-          - node_version: 18
-            project: e2e-gradle
-          - node_version: 18
-            project: e2e-jest
-          - node_version: 18
-            project: e2e-js
-          - node_version: 18
-            project: e2e-eslint
-          - node_version: 18
-            project: e2e-next
-          - node_version: 18
-            project: e2e-node
-          - node_version: 18
-            project: e2e-nuxt
-          - node_version: 18
-            project: e2e-nx-init
-          - node_version: 18
-            project: e2e-nx
-          - node_version: 18
-            project: e2e-plugin
-          - node_version: 18
-            project: e2e-playwright
-          - node_version: 18
-            project: e2e-react
-          - node_version: 18
-            project: e2e-react-native
-          - node_version: 18
-            project: e2e-web
-          - node_version: 18
-            project: e2e-remix
-          - node_version: 18
-            project: e2e-rollup
-          - node_version: 18
-            project: e2e-rspack
-          - node_version: 18
-            project: e2e-storybook
-          - node_version: 18
-            project: e2e-vite
-          - node_version: 18
-            project: e2e-vue
-          - node_version: 18
-            project: e2e-webpack
-          - node_version: 22
-            project: e2e-angular
-          - node_version: 22
-            project: e2e-cypress
-          - node_version: 22
-            project: e2e-detox
-          - node_version: 22
-            project: e2e-esbuild
-          - node_version: 22
-            project: e2e-expo
-          - node_version: 22
-            project: e2e-gradle
-          - node_version: 22
-            project: e2e-jest
-          - node_version: 22
-            project: e2e-js
-          - node_version: 22
-            project: e2e-eslint
-          - node_version: 22
-            project: e2e-next
-          - node_version: 22
-            project: e2e-node
-          - node_version: 22
-            project: e2e-nuxt
-          - node_version: 22
-            project: e2e-nx-init
-          - node_version: 22
-            project: e2e-nx
-          - node_version: 22
-            project: e2e-plugin
-          - node_version: 22
-            project: e2e-playwright
-          - node_version: 22
-            project: e2e-react
-          - node_version: 22
-            project: e2e-react-native
-          - node_version: 22
-            project: e2e-web
-          - node_version: 22
-            project: e2e-remix
-          - node_version: 22
-            project: e2e-rollup
-          - node_version: 22
-            project: e2e-rspack
-          - node_version: 22
-            project: e2e-storybook
-          - node_version: 22
-            project: e2e-vite
-          - node_version: 22
-            project: e2e-vue
-          - node_version: 22
-            project: e2e-webpack
-          # - node_version: 23
-          #   project: e2e-angular
-          # - node_version: 23
-          #   project: e2e-cypress
-          # - node_version: 23
-          #   project: e2e-detox
-          # - node_version: 23
-          #   project: e2e-esbuild
-          # - node_version: 23
-          #   project: e2e-expo
-          # - node_version: 23
-          #   project: e2e-gradle
-          # - node_version: 23
-          #   project: e2e-jest
-          # - node_version: 23
-          #   project: e2e-js
-          # - node_version: 23
-          #   project: e2e-eslint
-          # - node_version: 23
-          #   project: e2e-next
-          # - node_version: 23
-          #   project: e2e-node
-          # - node_version: 23
-          #   project: e2e-nuxt
-          # - node_version: 23
-          #   project: e2e-nx-init
-          # - node_version: 23
-          #   project: e2e-nx
-          # - node_version: 23
-          #   project: e2e-plugin
-          # - node_version: 23
-          #   project: e2e-playwright
-          # - node_version: 23
-          #   project: e2e-react
-          # - node_version: 23
-          #   project: e2e-react-native
-          # - node_version: 23
-          #   project: e2e-web
-          # - node_version: 23
-          #   project: e2e-remix
-          # - node_version: 23
-          #   project: e2e-rollup
-          # - node_version: 23
-          #   project: e2e-rspack
-          # - node_version: 23
-          #   project: e2e-storybook
-          # - node_version: 23
-          #   project: e2e-vite
-          # - node_version: 23
-          #   project: e2e-vue
-          # - node_version: 23
-          #   project: e2e-webpack
-          # run just npm v20 on macos
-          - os: macos-latest
-            package_manager: yarn
-          - os: macos-latest
-            package_manager: pnpm
-          - os: macos-latest
-            node_version: 18
-          - os: macos-latest
-            node_version: 22
-          # - os: macos-latest
-          #   node_version: 23
-          # run just npm v20 on windows
-          - os: windows-latest
-            package_manager: yarn
-          - os: windows-latest
-            package_manager: pnpm
-          - os: windows-latest
-            node_version: 18
-          - os: windows-latest
-            node_version: 22
-          # - os: windows-latest
-          #   node_version: 23
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix)}} # Load matrix from previous job
       fail-fast: false
 
     name: ${{ matrix.os_name }}/${{ matrix.package_manager }}/${{ matrix.node_version }} ${{ join(matrix.project) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Prepare dir for output
         run: mkdir -p outputs
