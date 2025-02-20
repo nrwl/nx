@@ -14,7 +14,7 @@ describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
     {
       name: '@proj/lib',
-      node: { data: { root: 'libs/lib' } } as any,
+      node: { type: 'lib', data: { root: 'libs/lib' } } as any,
       outputs: ['dist/libs/lib'],
     },
   ];
