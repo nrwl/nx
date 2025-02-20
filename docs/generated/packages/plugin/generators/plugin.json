@@ -15,22 +15,16 @@
       }
     ],
     "properties": {
+      "directory": {
+        "type": "string",
+        "description": "A directory where the plugin is placed.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the plugin in?"
+      },
       "name": {
         "type": "string",
         "description": "Plugin name",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the plugin?",
-        "x-priority": "important",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
-      },
-      "directory": {
-        "type": "string",
-        "description": "A directory where the plugin is placed."
-      },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
+        "x-priority": "important"
       },
       "importPath": {
         "type": "string",
@@ -40,14 +34,14 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
-        "default": "eslint"
+        "enum": ["none", "eslint"],
+        "x-priority": "important"
       },
       "unitTestRunner": {
-        "type": "string",
-        "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "jest"
+        "type": "string",
+        "enum": ["none", "jest", "vitest"],
+        "x-priority": "important"
       },
       "tags": {
         "type": "string",
@@ -98,9 +92,13 @@
         "type": "boolean",
         "description": "Generates a boilerplate for publishing the plugin to npm.",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "description": "Create a Nx Plugin.",

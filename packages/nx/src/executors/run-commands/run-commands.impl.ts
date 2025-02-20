@@ -21,19 +21,9 @@ const childProcesses = new Set<ChildProcess | PseudoTtyProcess>();
 
 function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
   unloadDotEnvFile(path, env);
-  const result = loadAndExpandDotEnvFile(path, env, true);
+  const result = loadAndExpandDotEnvFile(path, env);
   if (result.error) {
     throw result.error;
-  }
-}
-
-function loadEnvVars(path?: string, env: Record<string, string> = {}) {
-  if (path) {
-    loadEnvVarsFile(path, env);
-  } else {
-    try {
-      loadEnvVarsFile('.env', env);
-    } catch {}
   }
 }
 
@@ -53,6 +43,7 @@ export interface RunCommandsOptions extends Json {
          */
         description?: string;
         prefix?: string;
+        prefixColor?: string;
         color?: string;
         bgColor?: string;
       }
@@ -127,11 +118,13 @@ export default async function (
   }
 
   if (
-    options.commands.find((c: any) => c.prefix || c.color || c.bgColor) &&
+    options.commands.find(
+      (c: any) => c.prefix || c.prefixColor || c.color || c.bgColor
+    ) &&
     !options.parallel
   ) {
     throw new Error(
-      'ERROR: Bad executor config for run-commands - "prefix", "color" and "bgColor" can only be set when "parallel=true".'
+      'ERROR: Bad executor config for run-commands - "prefix", "prefixColor", "color" and "bgColor" can only be set when "parallel=true".'
     );
   }
 
@@ -327,6 +320,7 @@ async function createProcess(
     color?: string;
     bgColor?: string;
     prefix?: string;
+    prefixColor?: string;
   },
   readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
   color: boolean,
@@ -387,6 +381,7 @@ function nodeProcess(
     color?: string;
     bgColor?: string;
     prefix?: string;
+    prefixColor?: string;
   },
   cwd: string,
   env: Record<string, string>,
@@ -402,6 +397,7 @@ function nodeProcess(
       maxBuffer: LARGE_BUFFER,
       env,
       cwd,
+      windowsHide: false,
     });
 
     childProcesses.add(childProcess);
@@ -447,6 +443,7 @@ function addColorAndPrefix(
   out: string,
   config: {
     prefix?: string;
+    prefixColor?: string;
     color?: string;
     bgColor?: string;
   }
@@ -454,9 +451,14 @@ function addColorAndPrefix(
   if (config.prefix) {
     out = out
       .split('\n')
-      .map((l) =>
-        l.trim().length > 0 ? `${chalk.bold(config.prefix)} ${l}` : l
-      )
+      .map((l) => {
+        let prefixText = config.prefix;
+        if (config.prefixColor && chalk[config.prefixColor]) {
+          prefixText = chalk[config.prefixColor](prefixText);
+        }
+        prefixText = chalk.bold(prefixText);
+        return l.trim().length > 0 ? `${prefixText} ${l}` : l;
+      })
       .join('\n');
   }
   if (config.color && chalk[config.color]) {
@@ -477,25 +479,30 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
+/**
+ * Env variables are processed in the following order:
+ * - env option from executor options
+ * - env file from envFile option if provided
+ * - local env variables
+ */
 function processEnv(
   color: boolean,
   cwd: string,
-  env: Record<string, string>,
+  envOptionFromExecutor: Record<string, string>,
   envFile?: string
 ) {
-  const localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
-  let res = {
+  let localEnv = appendLocalEnv({ cwd: cwd ?? process.cwd() });
+  localEnv = {
     ...process.env,
     ...localEnv,
   };
-  // env file from envFile option takes priority over process env
-  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false') {
-    loadEnvVars(envFile, res);
+
+  if (process.env.NX_LOAD_DOT_ENV_FILES !== 'false' && envFile) {
+    loadEnvVarsFile(envFile, localEnv);
   }
-  // env variables from env option takes priority over everything else
-  res = {
-    ...res,
-    ...env,
+  let res: Record<string, string> = {
+    ...localEnv,
+    ...envOptionFromExecutor,
   };
   // need to override PATH to make sure we are using the local node_modules
   if (localEnv.PATH) res.PATH = localEnv.PATH; // UNIX-like

@@ -29,7 +29,9 @@ describe('Rollup Plugin', () => {
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
@@ -82,7 +84,9 @@ describe('Rollup Plugin', () => {
 
   it('should support additional entry-points', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     runCLI(
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
@@ -131,13 +135,17 @@ describe('Rollup Plugin', () => {
 
   it('should be able to build libs generated with @nx/js:lib --bundler rollup', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
+    runCLI(
+      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup`
+    );
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 
   it('should be able to build libs generated with @nx/js:lib --bundler rollup with a custom rollup.config.{cjs|mjs}', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
+    runCLI(
+      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup`
+    );
     updateFile(
       `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = {
@@ -177,11 +185,13 @@ describe('Rollup Plugin', () => {
     checkFilesExist(`dist/test/index.mjs.js`);
   });
 
-  it('should support array config from rollup.config.js', () => {
+  it('should support array config from rollup.config.cjs', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup --verbose`);
+    runCLI(
+      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup --verbose`
+    );
     updateFile(
-      `libs/${jsLib}/rollup.config.js`,
+      `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = (config) => [{
         ...config,
         output: {
@@ -194,7 +204,7 @@ describe('Rollup Plugin', () => {
       }]`
     );
     updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
       return config;
     });
 
@@ -205,9 +215,11 @@ describe('Rollup Plugin', () => {
 
   it('should always generate package.json even if the plugin is removed from rollup config file (Nx < 19.4 behavior)', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup --verbose`);
+    runCLI(
+      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup --verbose`
+    );
     updateFile(
-      `libs/${jsLib}/rollup.config.js`,
+      `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = (config) => ({
         ...config,
         // Filter out the plugin, but the @nx/rollup:rollup executor should add it back
@@ -215,7 +227,7 @@ describe('Rollup Plugin', () => {
       })`
     );
     updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
       return config;
     });
 

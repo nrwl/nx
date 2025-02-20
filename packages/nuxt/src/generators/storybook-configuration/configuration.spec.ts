@@ -88,14 +88,12 @@ export async function createTestApp(
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: appName,
+    directory: appName,
     js: plainJS,
-    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {
-    name: 'my-component',
-    project: appName,
+    path: `${appName}/src/components/my-component`,
   });
 
   return appTree;

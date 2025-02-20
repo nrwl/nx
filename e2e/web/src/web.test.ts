@@ -26,7 +26,7 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
@@ -35,7 +35,7 @@ describe('Web Components Applications', () => {
     const testResults = await runCLIAsync(`test ${appName}`);
 
     expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
+      `Successfully ran target test for project ${appName}`
     );
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -110,7 +110,7 @@ describe('Web Components Applications', () => {
   it('should emit decorator metadata when --compiler=babel and it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --compiler=babel --no-interactive --unitTestRunner=vitest --linter=eslint`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -175,7 +175,7 @@ describe('Web Components Applications', () => {
   it('should emit decorator metadata when using --compiler=swc', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --compiler=swc --no-interactive --unitTestRunner=vitest --linter=eslint`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -223,7 +223,7 @@ describe('Web Components Applications', () => {
     const appName = uniq('app1');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -285,7 +285,7 @@ describe('CLI - Environment Variables', () => {
       `;
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --compiler=babel --unitTestRunner=vitest --linter=eslint`
     );
 
     const content = readFile(main);
@@ -310,7 +310,7 @@ describe('CLI - Environment Variables', () => {
     const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_PUBLIC_WS_BASE, process.env.NX_PUBLIC_WS_ENV_LOCAL, process.env.NX_PUBLIC_WS_LOCAL_ENV, process.env.NX_PUBLIC_APP_BASE, process.env.NX_PUBLIC_APP_ENV_LOCAL, process.env.NX_PUBLIC_APP_LOCAL_ENV, process.env.NX_PUBLIC_SHARED_ENV];`;
 
     runCLI(
-      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
+      `generate @nx/web:app apps/${appName2} --bundler=webpack --no-interactive --compiler=babel --unitTestRunner=vitest --linter=eslint`
     );
 
     const content2 = readFile(main2);
@@ -351,7 +351,7 @@ describe('index.html interpolation', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app apps/${appName} --bundler=webpack --no-interactive --unitTestRunner=vitest --linter=eslint`
     );
 
     const srcPath = `apps/${appName}/src`;

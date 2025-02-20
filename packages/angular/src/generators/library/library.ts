@@ -30,23 +30,17 @@ import { addJest } from '../utils/add-jest';
 import { setGeneratorDefaults } from './lib/set-generator-defaults';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { UnitTestRunner } from '../../utils/test-runners';
+import { addVitest } from '../utils/add-vitest';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { releaseTasks } from '@nx/js/src/generators/library/utils/add-release-config';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  return await libraryGeneratorInternal(tree, {
-    // provide a default projectNameAndRootFormat to avoid breaking changes
-    // to external generators invoking this one
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'library');
 
-export async function libraryGeneratorInternal(
-  tree: Tree,
-  schema: Schema
-): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
@@ -80,7 +74,7 @@ export async function libraryGeneratorInternal(
     ensureAngularDependencies(tree);
   }
 
-  const project = addProject(tree, libraryOptions);
+  const project = await addProject(tree, libraryOptions);
 
   createFiles(tree, options, project);
   updateTsConfig(tree, libraryOptions);
@@ -119,6 +113,9 @@ export async function libraryGeneratorInternal(
       true
     );
     addBuildableLibrariesPostCssDependencies(tree);
+    if (libraryOptions.publishable) {
+      await releaseTasks(tree);
+    }
   }
 
   addTsConfigPath(tree, libraryOptions.importPath, [
@@ -139,13 +136,23 @@ async function addUnitTestRunner(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (options.unitTestRunner === 'jest') {
-    await addJest(host, {
-      name: options.name,
-      projectRoot: options.projectRoot,
-      skipPackageJson: options.skipPackageJson,
-      strict: options.strict,
-    });
+  switch (options.unitTestRunner) {
+    case UnitTestRunner.Jest:
+      await addJest(host, {
+        name: options.name,
+        projectRoot: options.projectRoot,
+        skipPackageJson: options.skipPackageJson,
+        strict: options.strict,
+      });
+      break;
+    case UnitTestRunner.Vitest:
+      await addVitest(host, {
+        name: options.name,
+        projectRoot: options.projectRoot,
+        skipPackageJson: options.skipPackageJson,
+        strict: options.strict,
+      });
+      break;
   }
 }
 

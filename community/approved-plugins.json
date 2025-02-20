@@ -5,6 +5,11 @@
     "url": "https://github.com/Ahryman40k/nx-vitepress/tree/main/packages/nx-vitepress"
   },
   {
+    "name": "@klerick/nx-angular-mf",
+    "description": "Custom Angular Builder for Microfrontend Architecture",
+    "url": "https://github.com/klerick/nx-angular-mf"
+  },
+  {
     "name": "@nightwatch/nx",
     "description": "The NightwatchJS plugin allows your workspace to use the power of NightwatchJS for E2E and Component Testing on Desktop and Mobile",
     "url": "https://github.com/nightwatchjs/nightwatch-plugin-nx/"
@@ -387,7 +392,7 @@
   {
     "name": "@nx-tools/nx-container",
     "description": "Nx plugin to build OCI containers with Docker, Podman or Kaniko.",
-    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-container"
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/plugins/nx-container"
   },
   {
     "name": "@nxrocks/nx-melos",
@@ -498,5 +503,15 @@
     "name": "nx-github-pages",
     "description": "A small Nx plugin to make deploying static projects to GitHub Pages easy.",
     "url": "https://github.com/agentender/nx-github-pages"
+  },
+  {
+    "name": "nx-solhint",
+    "description": "Solhint generators and inferred tasks for Nx",
+    "url": "https://github.com/juliangsibecas/nx-solhint"
+  },
+  {
+    "name": "nx-foundry",
+    "description": "Foundry generators and inferred tasks for Nx",
+    "url": "https://github.com/juliangsibecas/nx-foundry"
   }
 ]

@@ -17,7 +17,9 @@ describe('Rollup Plugin', () => {
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=rollup`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=rollup`
+    );
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
@@ -25,7 +27,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -59,7 +61,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=swc`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -83,7 +85,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=tsc`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -105,12 +107,14 @@ describe('Rollup Plugin', () => {
 
   it('should support additional entry-points and sourcemaps', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --bundler=none`
+    );
     runCLI(
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=tsc`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -169,7 +173,9 @@ describe('Rollup Plugin', () => {
 
   it('should be able to build libs generated with @nx/js:lib --bundler rollup', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
+    runCLI(
+      `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup`
+    );
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 

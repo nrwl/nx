@@ -3,25 +3,17 @@
   "compilerOptions": {
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "types": [],
-  },
+  },<% if (unitTestRunner === 'vitest') { %>
   "exclude": [
-    "src/**/__tests__/*", 
-    "src/**/*.spec.ts", 
-    "src/**/*.test.ts", 
-    "src/**/*.spec.tsx", 
-    "src/**/*.test.tsx", 
-    "src/**/*.spec.js", 
-    "src/**/*.test.js", 
-    "src/**/*.spec.jsx", 
-    "src/**/*.test.jsx",
+    "src/**/__tests__/*",
     "src/**/*.spec.vue",
     "src/**/*.test.vue"
-    ],
+  ],<% } %>
   "include": [
-    "src/**/*.js", 
-    "src/**/*.jsx", 
-    "src/**/*.ts", 
-    "src/**/*.tsx", 
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "src/**/*.vue"
-    ]
+  ]
 }

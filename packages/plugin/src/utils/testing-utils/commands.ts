@@ -21,6 +21,7 @@ export function runNxCommand(
     const execSyncOptions: ExecOptions = {
       cwd,
       env: { ...process.env, ...opts.env },
+      windowsHide: false,
     };
     if (fileExists(tmpProjPath('package.json'))) {
       const pmc = getPackageManagerCommand(detectPackageManager(cwd));

@@ -8,10 +8,9 @@ describe('Jest root projects', () => {
     beforeAll(() => {
       newProject({
         packages: ['@nx/angular'],
-        unsetProjectNameAndRootFormat: false,
       });
       runCLI(
-        `generate @nx/angular:app ${myapp} --directory . --rootProject --projectNameAndRootFormat as-provided --no-interactive`
+        `generate @nx/angular:app --name=${myapp} --directory . --rootProject --no-interactive --unitTestRunner=jest --linter=eslint`
       );
     });
 
@@ -21,7 +20,7 @@ describe('Jest root projects', () => {
 
     it('should add lib project and tests should still work', async () => {
       runCLI(
-        `generate @nx/angular:lib ${mylib} --projectNameAndRootFormat as-provided --no-interactive`
+        `generate @nx/angular:lib ${mylib} --no-interactive --unitTestRunner=jest --linter=eslint`
       );
 
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();
@@ -33,10 +32,9 @@ describe('Jest root projects', () => {
     beforeAll(() => {
       newProject({
         packages: ['@nx/react'],
-        unsetProjectNameAndRootFormat: false,
       });
       runCLI(
-        `generate @nx/react:app ${myapp} --directory . --rootProject --projectNameAndRootFormat as-provided`
+        `generate @nx/react:app --name=${myapp} --directory . --rootProject --unitTestRunner=jest --linter=eslint`
       );
     });
 
@@ -46,7 +44,7 @@ describe('Jest root projects', () => {
 
     it('should add lib project and tests should still work', async () => {
       runCLI(
-        `generate @nx/react:lib ${mylib} --unitTestRunner=jest --projectNameAndRootFormat as-provided`
+        `generate @nx/react:lib ${mylib} --unitTestRunner=jest --linter=eslint`
       );
 
       expect(() => runCLI(`test ${mylib}`)).not.toThrow();

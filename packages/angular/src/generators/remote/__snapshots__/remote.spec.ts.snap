@@ -1,81 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`MF Remote App Generator --ssr compat should generate the correct main.server.ts 1`] = `
-"import 'zone.js/dist/zone-node';
-
-import { APP_BASE_HREF } from '@angular/common';
-import { ngExpressEngine } from '@nguniversal/express-engine';
-import * as express from 'express';
-import * as cors from 'cors';
-import { existsSync } from 'fs';
-import { join } from 'path';
-
-import bootstrap from './bootstrap.server';
-
-// The Express app is exported so that it can be used by serverless Functions.
-export function app(): express.Express {
-  const server = express();
-  const browserBundles = join(process.cwd(), 'dist/test/browser');
-  const serverBundles = join(process.cwd(), 'dist/test/server');
-
-  server.use(cors());
-  const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
-    ? 'index.original.html'
-    : 'index';
-
-  // Our Universal express-engine (found @ https://github.com/angular/universal/tree/main/modules/express-engine)
-  server.engine(
-    'html',
-    ngExpressEngine({
-      bootstrap
-    })
-  );
-
-  server.set('view engine', 'html');
-  server.set('views', browserBundles);
-
-  // Example Express Rest API endpoints
-  // server.get('/api/**', (req, res) => { });
-  // Serve static files from /browser
-  // serve static files
-  server.get('*.*', express.static(browserBundles, { maxAge: '1y' }));
-  server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
-
-  // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
-    res.render(indexHtml, {
-      req,
-      providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],
-    });
-  });
-
-  return server;
-}
-
-function run(): void {
-  const port = process.env['PORT'] || 4000;
-
-  // Start up the Node server
-  const server = app();
-  server.listen(port, () => {
-    console.log(\`Node Express server listening on http://localhost:\${port}\`);
-
-    /**
-     * DO NOT REMOVE IF USING @nx/angular:module-federation-dev-ssr executor
-     * to serve your Host application with this Remote application.
-     * This message allows Nx to determine when the Remote is ready to be
-     * consumed by the Host.
-     */
-    process.send && process.send('nx.server.ready');
-  });
-}
-
-run();
-
-export default bootstrap;
-"
-`;
-
 exports[`MF Remote App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -127,7 +51,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 4`] = `
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -201,12 +125,15 @@ export default AppServerModule;
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 5`] = `
-"import('./src/main.server');
+"import('./main.server');
 "
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   exposes: {
     './Module': 'test/src/app/remote-entry/entry.module.ts',
@@ -216,7 +143,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -233,6 +160,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 8`] = `
 
 @Component({
   selector: 'app-test-entry',
+  standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}
@@ -284,7 +212,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
     "customWebpackConfig": {
       "path": "test/webpack.server.config.js",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -356,7 +284,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import * as express from 'express';
 import * as cors from 'cors';
 import { existsSync } from 'node:fs';
@@ -429,10 +357,10 @@ export default AppServerModule;
 "
 `;
 
-exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./src/main.server');"`;
+exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./main.server');"`;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 6`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -441,12 +369,15 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 7`] = `
-"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+"import { withModuleFederationForSSR } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -463,6 +394,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 
 @Component({
   selector: 'app-test-entry',
+  standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
@@ -506,7 +438,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
     "customWebpackConfig": {
       "path": "test/webpack.server.config.ts",
     },
-    "main": "test/server.ts",
+    "main": "test/src/server.ts",
     "outputPath": "dist/test/server",
     "tsConfig": "test/tsconfig.server.json",
   },
@@ -534,7 +466,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -547,7 +479,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host 2`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -560,7 +492,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host when --typescriptConfiguration=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -573,7 +505,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with a host when --typescriptConfiguration=true 2`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -586,7 +518,7 @@ export default withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host 1`] = `
-"const { withModuleFederation } = require('@nx/angular/module-federation');
+"const { withModuleFederation } = require('@nx/module-federation/angular');
 const config = require('./module-federation.config');
 
 /**
@@ -599,7 +531,7 @@ module.exports = withModuleFederation(config, { dts: false });
 `;
 
 exports[`MF Remote App Generator should generate a remote mf app with no host when --typescriptConfiguration=true 1`] = `
-"import { withModuleFederation } from '@nx/angular/module-federation';
+"import { withModuleFederation } from '@nx/module-federation/angular';
 import config from './module-federation.config';
 
 /**
@@ -623,7 +555,10 @@ bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components 2`] = `
-"module.exports = {
+"/**
+ * Nx requires a default export of the config to allow correct resolution of the module federation graph.
+ **/
+module.exports = {
   name: 'test',
   exposes: {
     './Routes': 'test/src/app/remote-entry/entry.routes.ts',
@@ -638,7 +573,6 @@ import { CommonModule } from '@angular/common';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [CommonModule, NxWelcomeComponent],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`,
@@ -682,7 +616,7 @@ bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
 `;
 
 exports[`MF Remote App Generator should generate the a remote setup for standalone components when --typescriptConfiguration=true 2`] = `
-"import { ModuleFederationConfig } from '@nx/webpack';
+"import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'test',
@@ -691,6 +625,9 @@ const config: ModuleFederationConfig = {
   },
 };
 
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
 export default config;
 "
 `;
@@ -701,7 +638,6 @@ import { CommonModule } from '@angular/common';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
-  standalone: true,
   imports: [CommonModule, NxWelcomeComponent],
   selector: 'app-test-entry',
   template: \`<app-nx-welcome></app-nx-welcome>\`

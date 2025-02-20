@@ -15,10 +15,10 @@ describe('Next.js Storybook', () => {
       packages: ['@nx/next', '@nx/react'],
     });
     runCLI(
-      `generate @nx/next:app ${appName} --e2eTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/next:app ${appName} --e2eTestRunner=none --no-interactive`
     );
     runCLI(
-      `generate @nx/next:component foo --directory=${appName}/components/foo --nameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/next:component ${appName}/components/foo/foo --no-interactive`
     );
   });
 

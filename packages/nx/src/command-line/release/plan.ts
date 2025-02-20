@@ -1,5 +1,6 @@
 import { prompt } from 'enquirer';
-import { ensureDir, readFileSync, writeFile, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
 import { dirSync } from 'tmp';
@@ -76,7 +77,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     // If no release groups have version plans enabled, it doesn't make sense to use the plan command only to set yourself up for an error at release time
-    if (!releaseGroups.some((group) => group.versionPlans === true)) {
+    if (!releaseGroups.some((group) => !!group.versionPlans)) {
       if (releaseGroups.length === 1) {
         output.warn({
           title: `Version plans are not enabled in your release configuration`,
@@ -299,7 +300,7 @@ async function createVersionPlanFileForBumps(
     printDiff('', versionPlanFileContent, 1);
 
     const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
-    await ensureDir(versionPlansAbsolutePath);
+    await mkdir(versionPlansAbsolutePath, { recursive: true });
     await writeFile(
       join(versionPlansAbsolutePath, versionPlanFileName),
       versionPlanFileContent

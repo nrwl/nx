@@ -5,13 +5,19 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureProjectName(host, options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -22,8 +28,6 @@ export async function normalizeOptions(
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/vue:library',
   });
 
   const fileName = projectNames.projectFileName;
@@ -48,9 +52,14 @@ export async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+
   const normalized = {
     addPlugin,
     ...options,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(host, projectName)
+      : projectName,
     bundler,
     fileName,
     routePath: `/${projectNames.projectFileName}`,
@@ -58,6 +67,7 @@ export async function normalizeOptions(
     projectRoot,
     parsedTags,
     importPath,
+    isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.

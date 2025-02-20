@@ -23,8 +23,7 @@ describe('move', () => {
 
   it('should update jest config when moving down directories', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
 
     await moveGenerator(tree, {
@@ -32,7 +31,6 @@ describe('move', () => {
       importPath: '@proj/shared-mylib',
       updateImportPath: true,
       destination: 'shared/my-lib-new',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const jestConfigPath = 'shared/my-lib-new/jest.config.ts';
@@ -46,8 +44,7 @@ describe('move', () => {
 
   it('should make sure build targets are correct when moving', async () => {
     await libraryGenerator(tree, {
-      name: 'one',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'one',
     });
 
     const myLibConfig = readProjectConfiguration(tree, 'one');
@@ -73,7 +70,6 @@ describe('move', () => {
       newProjectName: 'two',
       updateImportPath: true,
       destination: 'shared/two',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const myLibNewConfig = readProjectConfiguration(tree, 'two');
@@ -93,7 +89,6 @@ describe('move', () => {
     await libraryGenerator(tree, {
       name: 'shared-my-lib',
       directory: 'shared/my-lib',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     await moveGenerator(tree, {
@@ -101,7 +96,6 @@ describe('move', () => {
       importPath: '@proj/mylib',
       updateImportPath: true,
       destination: 'my-lib-new',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     const jestConfigPath = 'my-lib-new/jest.config.ts';
@@ -115,8 +109,7 @@ describe('move', () => {
 
   it('should update $schema path when move', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
 
     let projectJson = readJson(tree, 'my-lib/project.json');
@@ -129,7 +122,6 @@ describe('move', () => {
       importPath: '@proj/shared-mylib',
       updateImportPath: true,
       destination: 'shared/my-lib-new',
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectJson = readJson(tree, 'shared/my-lib-new/project.json');
@@ -138,31 +130,19 @@ describe('move', () => {
     );
   });
 
-  it('should move project correctly when --project-name-and-root-format=derived', async () => {
+  it('should work without tsconfig.base.json (https://github.com/nrwl/nx/issues/28349)', async () => {
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'derived',
+      directory: 'my-lib',
     });
+    tree.delete('tsconfig.base.json');
 
     await moveGenerator(tree, {
       projectName: 'my-lib',
       importPath: '@proj/shared-mylib',
       updateImportPath: true,
       destination: 'shared/my-lib-new',
-      projectNameAndRootFormat: 'derived',
     });
 
-    const projectJson = readJson(tree, 'libs/shared/my-lib-new/project.json');
-    expect(projectJson['$schema']).toEqual(
-      '../../../node_modules/nx/schemas/project-schema.json'
-    );
-    const afterJestConfig = tree.read(
-      'libs/shared/my-lib-new/jest.config.ts',
-      'utf-8'
-    );
-    expect(afterJestConfig).toContain("preset: '../../../jest.preset.js'");
-    expect(afterJestConfig).toContain(
-      "coverageDirectory: '../../../coverage/libs/shared/my-lib-new'"
-    );
+    expect(tree.exists('tsconfig.base.json')).toBeFalsy();
   });
 });

@@ -1,0 +1,15 @@
+{
+  "name": "disable-angular-eslint-prefer-standalone",
+  "cli": "nx",
+  "version": "20.2.0-beta.6",
+  "requires": { "@angular/core": ">=19.0.0" },
+  "description": "Disable the Angular ESLint prefer-standalone rule if not set.",
+  "factory": "./src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone",
+  "implementation": "/packages/angular/src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

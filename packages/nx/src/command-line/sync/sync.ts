@@ -23,12 +23,10 @@ export function syncHandler(options: SyncOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
     const projectGraph = await createProjectGraphAsync();
     const nxJson = readNxJson();
-    const syncGenerators = await collectAllRegisteredSyncGenerators(
-      projectGraph,
-      nxJson
-    );
+    const { globalGenerators, taskGenerators } =
+      await collectAllRegisteredSyncGenerators(projectGraph, nxJson);
 
-    if (!syncGenerators.length) {
+    if (!globalGenerators.length && !taskGenerators.length) {
       output.success({
         title: options.check
           ? 'The workspace is up to date'
@@ -38,6 +36,9 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       return 0;
     }
 
+    const syncGenerators = Array.from(
+      new Set([...globalGenerators, ...taskGenerators])
+    );
     const results = await getSyncGeneratorChanges(syncGenerators);
 
     if (!results.length) {
@@ -46,10 +47,7 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           ? 'The workspace is up to date'
           : 'The workspace is already up to date',
         bodyLines: syncGenerators.map(
-          (generator) =>
-            `The ${chalk.bold(
-              generator
-            )} sync generator didn't identify any files in the workspace that are out of sync.`
+          (generator) => `[${chalk.bold(generator)}]: All files are up to date.`
         ),
       });
       return 0;
@@ -61,7 +59,11 @@ export function syncHandler(options: SyncOptions): Promise<number> {
       anySyncGeneratorsFailed,
     } = processSyncGeneratorResultErrors(results);
     const failedSyncGeneratorsFixMessageLines =
-      getFailedSyncGeneratorsFixMessageLines(results, options.verbose);
+      getFailedSyncGeneratorsFixMessageLines(
+        results,
+        options.verbose,
+        new Set(globalGenerators)
+      );
 
     if (areAllResultsFailures) {
       output.error({
@@ -111,7 +113,11 @@ export function syncHandler(options: SyncOptions): Promise<number> {
         spinner.fail();
         output.error({
           title: 'Failed to sync the workspace',
-          bodyLines: getFlushFailureMessageLines(flushResult, options.verbose),
+          bodyLines: getFlushFailureMessageLines(
+            flushResult,
+            options.verbose,
+            new Set(globalGenerators)
+          ),
         });
 
         return 1;
@@ -124,9 +130,9 @@ export function syncHandler(options: SyncOptions): Promise<number> {
           'Syncing the workspace failed with the following error:',
           '',
           e.message,
-          ...(options.verbose && !!e.stack ? [`\n${e.stack}`] : []),
+          ...(!!e.stack ? [`\n${e.stack}`] : []),
           '',
-          'Please rerun with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
+          'Please report the error at: https://github.com/nrwl/nx/issues/new/choose',
         ],
       });
 

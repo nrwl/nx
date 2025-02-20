@@ -9,6 +9,10 @@ jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
   return {
     ...original,
+    createProjectGraphAsync: jest.fn().mockResolvedValue({
+      dependencies: {},
+      nodes: {},
+    }),
     readCachedProjectGraph: jest.fn().mockImplementation(
       (): ProjectGraph => ({
         dependencies: {},
@@ -107,12 +111,11 @@ describe('hostGenerator', () => {
   describe('bundler=webpack', () => {
     it('should generate host files and configs when --js=true', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         skipFormat: true,
         js: true,
@@ -128,12 +131,11 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs when --js=false', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -147,12 +149,11 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs when --typescriptConfiguration=true', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         skipFormat: true,
         bundler: 'webpack',
@@ -173,12 +174,11 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs when --typescriptConfiguration=false', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -199,12 +199,11 @@ describe('hostGenerator', () => {
     it('should install @nx/web for the file-server executor', async () => {
       const tree = createTreeWithEmptyWorkspace();
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
         bundler: 'webpack',
       });
@@ -215,13 +214,12 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs for SSR', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: false,
         bundler: 'webpack',
       });
@@ -262,13 +260,12 @@ describe('hostGenerator', () => {
 
     it('should generate host files and configs for SSR when --typescriptConfiguration=true', async () => {
       await hostGenerator(tree, {
-        name: 'test',
+        directory: 'test',
         ssr: true,
         style: 'css',
         linter: Linter.None,
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
-        projectNameAndRootFormat: 'as-provided',
         typescriptConfiguration: true,
         bundler: 'webpack',
       });
@@ -307,14 +304,12 @@ describe('hostGenerator', () => {
       ).toMatchSnapshot();
     });
 
-    it('should generate a host and remotes in a directory correctly when using --projectNameAndRootFormat=as-provided', async () => {
+    it('should generate a host and remotes in a directory correctly', async () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await hostGenerator(tree, {
-        name: 'host-app',
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
-        projectNameAndRootFormat: 'as-provided',
         e2eTestRunner: 'none',
         linter: Linter.None,
         style: 'css',
@@ -331,14 +326,12 @@ describe('hostGenerator', () => {
       ).toContain(`'remote1', 'remote2', 'remote3'`);
     });
 
-    it('should generate a host and remotes in a directory correctly when using --projectNameAndRootFormat=as-provided and --typescriptConfiguration=true', async () => {
+    it('should generate a host and remotes in a directory correctly when using --typescriptConfiguration=true', async () => {
       const tree = createTreeWithEmptyWorkspace();
 
       await hostGenerator(tree, {
-        name: 'host-app',
         directory: 'foo/host-app',
         remotes: ['remote1', 'remote2', 'remote3'],
-        projectNameAndRootFormat: 'as-provided',
         e2eTestRunner: 'none',
         linter: Linter.None,
         style: 'css',
@@ -361,10 +354,9 @@ describe('hostGenerator', () => {
 
       await expect(
         hostGenerator(tree, {
-          name: 'myhostapp',
+          directory: 'myhostapp',
           remotes: [remote],
           dynamic: true,
-          projectNameAndRootFormat: 'as-provided',
           e2eTestRunner: 'none',
           linter: Linter.None,
           style: 'css',

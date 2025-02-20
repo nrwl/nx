@@ -93,7 +93,7 @@ Once a Expo configuration file has been identified, the targets are created with
 Add a new application to your workspace with the following command:
 
 ```shell
-nx g @nx/expo:app my-app
+nx g @nx/expo:app apps/my-app
 ```
 
 Start the application by running:
@@ -107,7 +107,7 @@ nx start my-app
 To generate a new library run:
 
 ```shell
-npx nx g @nx/expo:lib your-lib-name
+npx nx g @nx/expo:lib libs/your-lib-name
 ```
 
 ### Generating Components
@@ -115,7 +115,7 @@ npx nx g @nx/expo:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nx/expo:component your-component-name --project=your-lib-name --export
+npx nx g @nx/expo:component libs/your-lib-name/src/your-component-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`

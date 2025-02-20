@@ -6,8 +6,11 @@ import {
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
-import { TargetDependencyConfig } from '../devkit-exports';
 import { output } from '../utils/output';
+import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { findCycles } from './task-graph-utils';
+
+const DUMMY_TASK_TARGET = '__nx_dummy_task__';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -81,10 +84,14 @@ export class ProcessTasks {
       }
     }
 
-    for (const projectName of Object.keys(this.dependencies)) {
-      if (this.dependencies[projectName].length > 1) {
-        this.dependencies[projectName] = [
-          ...new Set(this.dependencies[projectName]).values(),
+    filterDummyTasks(this.dependencies);
+
+    for (const taskId of Object.keys(this.dependencies)) {
+      if (this.dependencies[taskId].length > 0) {
+        this.dependencies[taskId] = [
+          ...new Set(
+            this.dependencies[taskId].filter((d) => d !== taskId)
+          ).values(),
         ];
       }
     }
@@ -99,7 +106,7 @@ export class ProcessTasks {
     projectUsedToDeriveDependencies: string,
     configuration: string,
     overrides: Object
-  ) {
+  ): void {
     const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
     if (this.seen.has(seenKey)) {
       return;
@@ -227,7 +234,15 @@ export class ProcessTasks {
     task: Task,
     taskOverrides: Object | { __overrides_unparsed__: any[] },
     overrides: Object
-  ) {
+  ): void {
+    if (
+      !this.projectGraph.dependencies.hasOwnProperty(
+        projectUsedToDeriveDependencies
+      )
+    ) {
+      return;
+    }
+
     for (const dep of this.projectGraph.dependencies[
       projectUsedToDeriveDependencies
     ]) {
@@ -272,9 +287,28 @@ export class ProcessTasks {
           );
         }
       } else {
-        this.processTask(task, depProject.name, configuration, overrides);
+        // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
+        const dummyId = this.getId(
+          depProject.name,
+          task.target.project +
+            '__' +
+            dependencyConfig.target +
+            DUMMY_TASK_TARGET,
+          undefined
+        );
+        this.dependencies[task.id].push(dummyId);
+        this.dependencies[dummyId] ??= [];
+        const noopTask = this.createDummyTask(dummyId, task);
+        this.processTask(noopTask, depProject.name, configuration, overrides);
       }
     }
+  }
+
+  private createDummyTask(id: string, task: Task): Task {
+    return {
+      ...task,
+      id,
+    };
   }
 
   createTask(
@@ -366,6 +400,7 @@ export function createTaskGraph(
     overrides,
     excludeTaskDependencies
   );
+
   return {
     roots,
     tasks: p.tasks,
@@ -402,4 +437,58 @@ function interpolateOverrides<T = any>(
         : value;
   });
   return interpolatedArgs;
+}
+
+/**
+ * This function is used to filter out the dummy tasks from the dependencies
+ * It will manipulate the dependencies object in place
+ */
+export function filterDummyTasks(dependencies: { [k: string]: string[] }) {
+  const cycles = findCycles({ dependencies });
+  for (const [key, deps] of Object.entries(dependencies)) {
+    if (!key.endsWith(DUMMY_TASK_TARGET)) {
+      const normalizedDeps = [];
+      for (const dep of deps) {
+        normalizedDeps.push(
+          ...getNonDummyDeps(dep, dependencies, cycles, new Set([key]))
+        );
+      }
+
+      dependencies[key] = normalizedDeps;
+    }
+  }
+
+  for (const key of Object.keys(dependencies)) {
+    if (key.endsWith(DUMMY_TASK_TARGET)) {
+      delete dependencies[key];
+    }
+  }
+}
+
+/**
+ * this function is used to get the non dummy dependencies of a task recursively
+ */
+export function getNonDummyDeps(
+  currentTask: string,
+  dependencies: { [k: string]: string[] },
+  cycles?: Set<string>,
+  seen: Set<string> = new Set()
+): string[] {
+  if (seen.has(currentTask)) {
+    return [];
+  }
+  seen.add(currentTask);
+  if (currentTask.endsWith(DUMMY_TASK_TARGET)) {
+    if (cycles?.has(currentTask)) {
+      return [];
+    }
+    // if not a cycle, recursively get the non dummy dependencies
+    return (
+      dependencies[currentTask]?.flatMap((dep) =>
+        getNonDummyDeps(dep, dependencies, cycles, seen)
+      ) ?? []
+    );
+  } else {
+    return [currentTask];
+  }
 }

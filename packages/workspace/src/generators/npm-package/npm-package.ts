@@ -7,15 +7,14 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  type ProjectNameAndRootFormat,
+  ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
-  name: string;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  directory: string;
+  name?: string;
 }
 
 interface NormalizedProjectOptions extends ProjectOptions {
@@ -26,14 +25,13 @@ async function normalizeOptions(
   tree: Tree,
   options: ProjectOptions
 ): Promise<NormalizedProjectOptions> {
+  await ensureProjectName(tree, options, 'library');
   const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
     tree,
     {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/workspace:npm-package',
     }
   );
 
@@ -57,14 +55,7 @@ function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
   generateFiles(tree, join(__dirname, './files'), projectRoot, {});
 }
 
-export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
-  return await npmPackageGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
-
-export async function npmPackageGeneratorInternal(
+export async function npmPackageGenerator(
   tree: Tree,
   _options: ProjectOptions
 ) {

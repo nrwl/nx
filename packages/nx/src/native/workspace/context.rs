@@ -1,11 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
-use napi::bindgen_prelude::External;
-use rayon::prelude::*;
-use tracing::{trace, warn};
 
 use crate::native::hasher::hash;
 use crate::native::logger::enable_logger;
@@ -18,6 +14,10 @@ use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
 use crate::native::workspace::{config_files, types::NxWorkspaceFiles, workspace_files};
+use napi::bindgen_prelude::External;
+use rayon::prelude::*;
+use tracing::{trace, warn};
+use xxhash_rust::xxh3;
 
 #[napi]
 pub struct WorkspaceContext {
@@ -231,6 +231,51 @@ impl WorkspaceContext {
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
+    /// Performs multiple glob pattern matches against workspace files in parallel
+    /// @returns An array of arrays, where each inner array contains the file paths
+    /// that matched the corresponding glob pattern in the input. The outer array maintains the same order
+    /// as the input globs.
+    #[napi]
+    pub fn multi_glob(
+        &self,
+        globs: Vec<String>,
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<Vec<Vec<String>>> {
+        let file_data = self.all_file_data();
+
+        globs
+            .into_iter()
+            .map(|glob| {
+                let globbed_files =
+                    config_files::glob_files(&file_data, vec![glob], exclude.clone())?;
+                Ok(globbed_files.map(|file| file.file.to_owned()).collect())
+            })
+            .collect()
+    }
+
+    #[napi]
+    pub fn hash_files_matching_globs(
+        &self,
+        glob_groups: Vec<Vec<String>>,
+    ) -> napi::Result<Vec<String>> {
+        let files = &self.all_file_data();
+        let hashes = glob_groups
+            .into_iter()
+            .map(|globs| {
+                let globbed_files =
+                    config_files::glob_files(files, globs, None)?.collect::<Vec<_>>();
+                let mut hasher = xxh3::Xxh3::new();
+                for file in globbed_files {
+                    hasher.update(file.file.as_bytes());
+                    hasher.update(file.hash.as_bytes());
+                }
+                Ok(hasher.digest().to_string())
+            })
+            .collect::<napi::Result<Vec<_>>>()?;
+
+        Ok(hashes)
+    }
+
     #[napi]
     pub fn hash_files_matching_glob(
         &self,
@@ -238,13 +283,15 @@ impl WorkspaceContext {
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
         let files = &self.all_file_data();
-        let globbed_files = config_files::glob_files(files, globs, exclude)?;
-        Ok(hash(
-            &globbed_files
-                .map(|file| file.hash.as_bytes())
-                .collect::<Vec<_>>()
-                .concat(),
-        ))
+        let globbed_files = config_files::glob_files(files, globs, exclude)?.collect::<Vec<_>>();
+
+        let mut hasher = xxh3::Xxh3::new();
+        for file in globbed_files {
+            hasher.update(file.file.as_bytes());
+            hasher.update(file.hash.as_bytes());
+        }
+
+        Ok(hasher.digest().to_string())
     }
 
     #[napi]
@@ -278,11 +325,14 @@ impl WorkspaceContext {
             "adding {} updated files to project files",
             updated_files.len()
         );
+
+        let mut updated_projects = HashSet::<&str>::new();
         for updated_file in updated_files.into_iter() {
             let file = updated_file.0;
             let hash = updated_file.1;
-            if let Some(project_files) = find_project_for_path(&file, &project_root_mappings)
-                .and_then(|project| project_files_map.get_mut(project))
+            let project = find_project_for_path(&file, &project_root_mappings);
+            if let Some(project_files) =
+                project.and_then(|project| project_files_map.get_mut(project))
             {
                 trace!("{file:?} was found in a project");
                 if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
@@ -291,6 +341,7 @@ impl WorkspaceContext {
                 } else {
                     trace!("{file:?} was not part of a project, adding to project files");
                     project_files.push(FileData { file, hash });
+                    updated_projects.insert(project.expect("Project already exists"));
                 }
             } else {
                 trace!("{file:?} was not found in any project, updating global files");
@@ -318,6 +369,21 @@ impl WorkspaceContext {
             if global_files.contains_key(deleted_file) {
                 trace!("removing {deleted_file:?} from global files");
                 global_files.remove(deleted_file);
+            }
+        }
+
+        // sort the updated projects after deletion
+        // projects that have deleted files were not added to `updated_projects` set because deletion doesnt change the determinism
+        // but if there were any files deleted from projects, the sort should be faster becaues there potentially could be less files to sort
+        for updated_project in updated_projects {
+            trace!(updated_project, "sorting updated project");
+            if let Some(project_files) = project_files_map.get_mut(updated_project) {
+                // if the project files are less than 500, then parallel sort has too much overhead to actually be faster
+                if cfg!(target_arch = "wasm32") || project_files.len() < 500 {
+                    project_files.sort();
+                } else {
+                    project_files.par_sort();
+                }
             }
         }
 

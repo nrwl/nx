@@ -7,7 +7,7 @@ import { readJson, updateJson } from './json';
 import { readNxJson as readNxJsonFromDisk } from '../../config/nx-json';
 
 /**
- * @deprecated You must pass a {@link Tree}
+ * @deprecated You must pass a {@link Tree}. This will be removed in Nx 21.
  */
 export function readNxJson(): NxJsonConfiguration | null;
 export function readNxJson(tree: Tree): NxJsonConfiguration | null;

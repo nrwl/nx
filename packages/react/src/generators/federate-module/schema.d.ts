@@ -5,7 +5,6 @@ export interface Schema {
   path: string;
   remote: string;
   remoteDirectory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   host?: string;
   linter?: Linter | LinterType;

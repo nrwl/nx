@@ -1,19 +1,19 @@
 import { execSync } from 'child_process';
+import { existsSync } from 'node:fs';
 import { platform } from 'os';
-import * as chalk from 'chalk';
-import { GeneratorCallback, logger } from '@nx/devkit';
-import { existsSync } from 'fs-extra';
 import { join } from 'path';
+import * as pc from 'picocolors';
+import { GeneratorCallback, logger } from '@nx/devkit';
 
 const podInstallErrorMessage = `
-Running ${chalk.bold('pod install')} failed, see above.
+Running ${pc.bold('pod install')} failed, see above.
 Do you have CocoaPods (https://cocoapods.org/) installed?
 
 Check that your XCode path is correct:
-${chalk.bold('sudo xcode-select --print-path')}
+${pc.bold('sudo xcode-select --print-path')}
 
 If the path is wrong, switch the path: (your path may be different)
-${chalk.bold('sudo xcode-select --switch /Applications/Xcode.app')}
+${pc.bold('sudo xcode-select --switch /Applications/Xcode.app')}
 `;
 
 /**
@@ -72,6 +72,7 @@ export function podInstall(
       execSync('touch .xcode.env', {
         cwd: iosDirectory,
         stdio: 'inherit',
+        windowsHide: false,
       });
     }
     const podCommand = [
@@ -82,6 +83,7 @@ export function podInstall(
     execSync(podCommand, {
       cwd: iosDirectory,
       stdio: 'inherit',
+      windowsHide: false,
     });
   } catch (e) {
     logger.error(podInstallErrorMessage);

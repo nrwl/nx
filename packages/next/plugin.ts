@@ -1,1 +1,5 @@
-export { createNodes, NextPluginOptions } from './src/plugins/plugin';
+export {
+  createNodes,
+  createNodesV2,
+  NextPluginOptions,
+} from './src/plugins/plugin';

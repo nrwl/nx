@@ -1,29 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`component Generator --flat should create the component correctly and export it in the entry point 1`] = `
-"import { Component } from '@angular/core';
-
-@Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrl: './example.component.css'
-})
-export class ExampleComponent {}
-"
-`;
-
-exports[`component Generator --flat should create the component correctly and not export it when "export=false" 1`] = `
-"import { Component } from '@angular/core';
-
-@Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrl: './example.component.css'
-})
-export class ExampleComponent {}
-"
-`;
-
 exports[`component Generator --module should import the component correctly to the module file when flat is false 1`] = `
 "
 import { NgModule } from '@angular/core';
@@ -37,23 +13,12 @@ export class LibModule {}
 "
 `;
 
-exports[`component Generator --path should create the component correctly and export it in the entry point 1`] = `
-"import { Component } from '@angular/core';
-
-@Component({
-  selector: 'example',
-  templateUrl: './example.component.html',
-  styleUrl: './example.component.css'
-})
-export class ExampleComponent {}
-"
-`;
-
 exports[`component Generator compat should inline styles when --inline-style=true 1`] = `
 "import { Component } from '@angular/core';
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styles: \`\`
 })
@@ -66,6 +31,7 @@ exports[`component Generator secondary entry points should create the component 
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -83,6 +49,7 @@ exports[`component Generator should create component files correctly: component 
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css',
 })
@@ -132,6 +99,7 @@ exports[`component Generator should create the component correctly and export it
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -150,7 +118,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
@@ -164,6 +131,7 @@ exports[`component Generator should create the component correctly and not expor
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -177,7 +145,6 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'example',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
@@ -191,6 +158,7 @@ exports[`component Generator should create the component correctly and not expor
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
@@ -203,10 +171,59 @@ exports[`component Generator should create the component correctly but not expor
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styleUrl: './example.component.css'
 })
 export class ExampleComponent {}
+"
+`;
+
+exports[`component Generator should handle path with file extension: component 1`] = `
+"import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'example.component',
+  imports: [CommonModule],
+  templateUrl: './example.component.html',
+  styleUrl: './example.component.css',
+})
+export class ExampleComponentComponent {}
+"
+`;
+
+exports[`component Generator should handle path with file extension: component test file 1`] = `
+"import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ExampleComponentComponent } from './example.component';
+
+describe('ExampleComponentComponent', () => {
+  let component: ExampleComponentComponent;
+  let fixture: ComponentFixture<ExampleComponentComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ExampleComponentComponent],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ExampleComponentComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+"
+`;
+
+exports[`component Generator should handle path with file extension: entry point file 1`] = `null`;
+
+exports[`component Generator should handle path with file extension: stylesheet 1`] = `""`;
+
+exports[`component Generator should handle path with file extension: template 1`] = `
+"<p>example.component works!</p>
 "
 `;
 
@@ -215,6 +232,7 @@ exports[`component Generator should inline styles when --inline-style=true 1`] =
 
 @Component({
   selector: 'example',
+  standalone: false,
   templateUrl: './example.component.html',
   styles: \`\`
 })
@@ -227,6 +245,7 @@ exports[`component Generator should inline template when --inline-template=true 
 
 @Component({
   selector: 'example',
+  standalone: false,
   template: \`<p>example works!</p>\`,
   styleUrl: './example.component.css'
 })

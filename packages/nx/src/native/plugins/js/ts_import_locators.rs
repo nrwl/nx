@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::path::Path;
@@ -541,9 +540,12 @@ fn process_file(
     (source_project, file_path): (&String, &String),
 ) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
-    let cm = Arc::<SourceMap>::default()
+    let Ok(cm) = Arc::<SourceMap>::default()
         .load_file(Path::new(file_path))
-        .map_err(|e| anyhow!("Unable to load {}: {}", file_path, e))?;
+        .inspect_err(|e| trace!("Unable to load {}: {}", file_path, e))
+    else {
+        return Ok(None);
+    };
 
     let comments = SingleThreadedComments::default();
 

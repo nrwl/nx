@@ -16,6 +16,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 ### Properties
 
+- [$schema](../../devkit/documents/Workspace#$schema): string
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
@@ -41,10 +42,21 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
+- [useLegacyCache](../../devkit/documents/Workspace#uselegacycache): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
 ## Properties
+
+### $schema
+
+• `Optional` **$schema**: `string`
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[$schema](../../devkit/documents/NxJsonConfiguration#$schema)
+
+---
 
 ### affected
 
@@ -210,7 +222,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 #### Inherited from
 
@@ -357,7 +369,10 @@ Dependencies between different target names across all projects
 
 • `Optional` **tasksRunnerOptions**: `Object`
 
-Available Task Runners
+**`Deprecated`**
+
+Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
+Available Task Runners for Nx to use
 
 #### Index signature
 
@@ -390,6 +405,18 @@ Set this to false to disable adding inference plugins when generating new projec
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins)
+
+---
+
+### useLegacyCache
+
+• `Optional` **useLegacyCache**: `boolean`
+
+Use the legacy file system cache instead of the db cache
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache)
 
 ---
 

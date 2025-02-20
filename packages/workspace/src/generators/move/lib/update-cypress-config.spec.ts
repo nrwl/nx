@@ -31,8 +31,7 @@ describe('updateCypressConfig', () => {
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
-      name: 'my-lib',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-lib',
     });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });

@@ -14,7 +14,7 @@ export function addModuleFederationFiles(
   defaultRemoteManifest: { name: string; port: number }[]
 ) {
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectName),
     ...options,
     static: !options?.dynamic,
     tmpl: '',
@@ -26,7 +26,7 @@ export function addModuleFederationFiles(
     }),
   };
 
-  const projectConfig = readProjectConfiguration(host, options.name);
+  const projectConfig = readProjectConfiguration(host, options.projectName);
   const pathToMFManifest = joinPathFragments(
     projectConfig.sourceRoot,
     'assets/module-federation.manifest.json'
@@ -117,7 +117,10 @@ export function addModuleFederationFiles(
         pathToMFManifest,
         `{
         ${defaultRemoteManifest
-          .map(({ name, port }) => `"${name}": "http://localhost:${port}"`)
+          .map(
+            ({ name, port }) =>
+              `"${name}": "http://localhost:${port}/mf-manifest.json"`
+          )
           .join(',\n')}
           }`
       );

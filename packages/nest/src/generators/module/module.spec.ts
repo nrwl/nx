@@ -1,22 +1,17 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithNestApplication } from '../utils/testing';
-import type { ModuleGeneratorOptions } from './module';
 import { moduleGenerator } from './module';
 
 describe('module generator', () => {
   let tree: Tree;
-  const project = 'api';
-  const options: ModuleGeneratorOptions = {
-    name: 'test',
-    project,
-  };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
+    tree = createTreeWithNestApplication('api');
   });
 
   it('should run successfully', async () => {
-    await expect(moduleGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      moduleGenerator(tree, { path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

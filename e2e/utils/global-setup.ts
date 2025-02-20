@@ -62,11 +62,17 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 function getPublishedVersion(): Promise<string | undefined> {
   return new Promise((resolve) => {
     // Resolve the published nx version from verdaccio
-    exec('npm view nx@latest version', (error, stdout, stderr) => {
-      if (error) {
-        return resolve(undefined);
+    exec(
+      'npm view nx@latest version',
+      {
+        windowsHide: false,
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          return resolve(undefined);
+        }
+        return resolve(stdout.trim());
       }
-      return resolve(stdout.trim());
-    });
+    );
   });
 }

@@ -9,30 +9,30 @@
     "type": "object",
     "description": "Creates a new Angular directive.",
     "additionalProperties": false,
+    "examples": [
+      {
+        "description": "Generate a directive with the exported symbol matching the file name. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo.directive.ts"
+      },
+      {
+        "description": "Generate a directive without providing the file extension. It results in the directive `FooDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo"
+      },
+      {
+        "description": "Generate a directive with the exported symbol different from the file name. It results in the directive `CustomDirective` at `mylib/src/lib/foo.directive.ts`",
+        "command": "nx g @nx/angular:directive mylib/src/lib/foo --name=custom"
+      }
+    ],
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "The file path to the directive. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the directive file path?"
+      },
       "name": {
         "type": "string",
-        "description": "The name of the new directive.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the directive?"
-      },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the directive file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "aliases": ["dir", "path"],
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the directive in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
+        "description": "The directive symbol name. Defaults to the last segment of the file path."
       },
       "prefix": {
         "type": "string",
@@ -63,12 +63,6 @@
         "type": "boolean",
         "default": true
       },
-      "flat": {
-        "type": "boolean",
-        "description": "When true (the default), creates the new files at the top level of the current project.",
-        "default": true,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
-      },
       "module": {
         "type": "string",
         "description": "The filename of the declaring NgModule.",
@@ -85,7 +79,7 @@
         "description": "Skip formatting of files."
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "aliases": ["d"],

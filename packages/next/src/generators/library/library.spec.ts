@@ -1,5 +1,5 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { readJson } from '@nx/devkit';
+import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import libraryGenerator from './library';
@@ -15,20 +15,19 @@ describe('next library', () => {
   > = installedCypressVersion as never;
   it('should use @nx/next images.d.ts file', async () => {
     const baseOptions: Schema = {
-      name: '',
+      directory: '',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     };
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib',
+      directory: 'my-lib',
     });
     const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
       .compilerOptions.types;
@@ -38,25 +37,24 @@ describe('next library', () => {
 
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
     const baseOptions: Schema = {
-      name: '',
+      directory: '',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     };
 
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib',
+      directory: 'my-lib',
     });
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'my-lib2',
+      directory: 'my-lib2',
       style: '@emotion/styled',
     });
 
@@ -72,14 +70,13 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(appTree.read('my-lib/src/index.ts', 'utf-8')).toContain(
@@ -100,14 +97,13 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'my-lib',
+      directory: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
       style: 'css',
       component: false,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(
@@ -116,5 +112,149 @@ describe('next library', () => {
     expect(
       readJson(appTree, 'package.json').devDependencies['cypress']
     ).toBeUndefined();
+  });
+
+  describe('TS solution setup', () => {
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: Linter.EsLint,
+        skipFormat: false,
+        skipTsConfig: false,
+        unitTestRunner: 'jest',
+        style: 'css',
+        component: false,
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./mylib",
+          },
+        ]
+      `);
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'mylib/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "main",
+          "types",
+          "exports",
+          "nx",
+        ]
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.lib.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "out-tsc/mylib",
+            "rootDir": "src",
+            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
+            "types": [
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts",
+              "next",
+              "@nx/next/typings/image.d.ts",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "jest.config.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.js",
+            "src/**/*.test.js",
+            "src/**/*.spec.jsx",
+            "src/**/*.test.jsx",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "src/**/*.js",
+            "src/**/*.jsx",
+            "src/**/*.ts",
+            "src/**/*.tsx",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'mylib/tsconfig.spec.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.lib.json",
+            },
+          ],
+        }
+      `);
+    });
   });
 });

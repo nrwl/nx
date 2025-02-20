@@ -25,7 +25,7 @@ describe('setupSSR', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
@@ -37,7 +37,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.build
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "export { AppServerModule as default } from './app/app.server.module';
@@ -58,15 +58,14 @@ describe('setupSSR', () => {
       expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
         'src/main.ts',
         'src/main.server.ts',
-        'server.ts',
+        'src/server.ts',
       ]);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
         import { ServerModule } from '@angular/platform-server';
-
-        import { AppModule } from './app.module';
         import { AppComponent } from './app.component';
+        import { AppModule } from './app.module';
 
         @NgModule({
           imports: [AppModule, ServerModule],
@@ -81,6 +80,7 @@ describe('setupSSR', () => {
         import {
           BrowserModule,
           provideClientHydration,
+          withEventReplay,
         } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
@@ -90,7 +90,7 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [provideClientHydration()],
+          providers: [provideClientHydration(withEventReplay())],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -103,7 +103,10 @@ describe('setupSSR', () => {
     it('should create the files correctly for ssr when app is standalone', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
 
       // ACT
       await setupSsr(tree, { project: 'app1' });
@@ -112,7 +115,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.build
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
@@ -128,7 +131,7 @@ describe('setupSSR', () => {
       expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
         'src/main.ts',
         'src/main.server.ts',
-        'server.ts',
+        'src/server.ts',
       ]);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -149,7 +152,10 @@ describe('setupSSR', () => {
 
     it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
       const project = readProjectConfiguration(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
@@ -160,7 +166,7 @@ describe('setupSSR', () => {
 
       await setupSsr(tree, { project: 'app1' });
 
-      const serverFileContent = tree.read('app1/server.ts', 'utf-8');
+      const serverFileContent = tree.read('app1/src/server.ts', 'utf-8');
       expect(serverFileContent).toContain(
         `resolve(serverDistFolder, '../public')`
       );
@@ -168,7 +174,10 @@ describe('setupSSR', () => {
 
     it('should remove "outputPath.browser" when it is an empty string', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
       const project = readProjectConfiguration(tree, 'app1');
       project.targets.build.options.outputPath = {
         base: project.targets.build.options.outputPath,
@@ -192,7 +201,7 @@ describe('setupSSR', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         bundler: 'webpack',
         skipFormat: true,
@@ -205,7 +214,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.server
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "export { AppServerModule as default } from './app/app.server.module';
@@ -224,21 +233,22 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about this file see: https://angular.io/config/tsconfig. */
+        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
         {
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
-            "outDir": "../../out-tsc/server",
-            "target": "es2019",
+            "outDir": "../out-tsc/server",
             "types": [
               "node"
             ]
           },
           "files": [
             "src/main.server.ts",
-            "server.ts",
+            "src/server.ts"
           ]
-        }"
+        }
+        "
       `);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -255,12 +265,13 @@ describe('setupSSR', () => {
           ],
           bootstrap: [AppComponent],
         })
-        export class AppServerModule {}"
+        export class AppServerModule {}
+        "
       `);
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
-        import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
@@ -272,7 +283,7 @@ describe('setupSSR', () => {
             BrowserModule,
             RouterModule.forRoot(appRoutes),
           ],
-          providers: [provideClientHydration()],
+          providers: [provideClientHydration(withEventReplay())],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -286,7 +297,7 @@ describe('setupSSR', () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         bundler: 'webpack',
         skipFormat: true,
       });
@@ -298,7 +309,7 @@ describe('setupSSR', () => {
       expect(
         readProjectConfiguration(tree, 'app1').targets.server
       ).toMatchSnapshot();
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/server.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { bootstrapApplication } from '@angular/platform-browser';
@@ -312,21 +323,22 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "/* To learn more about this file see: https://angular.io/config/tsconfig. */
+        "/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+        /* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
         {
           "extends": "./tsconfig.app.json",
           "compilerOptions": {
-            "outDir": "../../out-tsc/server",
-            "target": "es2019",
+            "outDir": "../out-tsc/server",
             "types": [
               "node"
             ]
           },
           "files": [
             "src/main.server.ts",
-            "server.ts",
+            "src/server.ts"
           ]
-        }"
+        }
+        "
       `);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -350,7 +362,7 @@ describe('setupSSR', () => {
     it('should update build target output path', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         bundler: 'webpack',
         skipFormat: true,
@@ -370,7 +382,10 @@ describe('setupSSR', () => {
 
   it('should install the correct dependencies', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
 
     await setupSsr(tree, { project: 'app1', skipFormat: true });
 
@@ -388,7 +403,10 @@ describe('setupSSR', () => {
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
     let initialPackageJson;
     updateJson(tree, 'package.json', (json) => {
       json.dependencies = {};
@@ -413,7 +431,7 @@ describe('setupSSR', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       standalone: false,
       skipFormat: true,
     });
@@ -429,7 +447,7 @@ describe('setupSSR', () => {
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
-      import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
+      import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
       import { appRoutes } from './app.routes';
@@ -441,7 +459,7 @@ describe('setupSSR', () => {
           BrowserModule,
           RouterModule.forRoot(appRoutes),
         ],
-        providers: [provideClientHydration()],
+        providers: [provideClientHydration(withEventReplay())],
         bootstrap: [AppComponent],
       })
       export class AppModule {}
@@ -454,7 +472,7 @@ describe('setupSSR', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       skipFormat: true,
     });
 
@@ -471,10 +489,10 @@ describe('setupSSR', () => {
       "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
-      import { provideClientHydration } from '@angular/platform-browser';
+      import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
       };
       "
     `);
@@ -500,7 +518,7 @@ describe('setupSSR', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
-      name: 'app1',
+      directory: 'app1',
       standalone: false,
       skipFormat: true,
     });
@@ -536,7 +554,10 @@ describe('setupSSR', () => {
 
   it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features when hydration=false', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
 
     await setupSsr(tree, {
       project: 'app1',
@@ -561,59 +582,66 @@ describe('setupSSR', () => {
     it('should install the correct versions when using older versions of Angular', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-      await generateTestApplication(tree, {
-        name: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '16.2.0',
+          '@angular/core': '17.2.0',
         },
       }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        skipFormat: true,
+      });
 
       // ACT
       await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
-      expect(pkgJson.dependencies['@angular/ssr']).toBeUndefined();
+      expect(pkgJson.dependencies['@angular/ssr']).toBe(
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
+      );
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV16.angularVersion
+        backwardCompatibleVersions.angularV17.angularVersion
       );
-      expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-        backwardCompatibleVersions.angularV16.ngUniversalVersion
+      expect(pkgJson.dependencies['@angular/ssr']).toEqual(
+        backwardCompatibleVersions.angularV17.angularDevkitVersion
       );
-      expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
-        backwardCompatibleVersions.angularV16.ngUniversalVersion
+      expect(pkgJson.dependencies['express']).toEqual(
+        backwardCompatibleVersions.angularV17.expressVersion
       );
+      expect(
+        pkgJson.dependencies['@nguniversal/express-engine']
+      ).toBeUndefined();
+      expect(pkgJson.devDependencies['@types/express']).toBe(
+        backwardCompatibleVersions.angularV17.typesExpressVersion
+      );
+      expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
     });
 
-    it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    it('should add hydration correctly for NgModule apps', async () => {
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
+        dependencies: { '@angular/core': '17.2.0' },
       }));
-
       await generateTestApplication(tree, {
-        name: 'app1',
+        directory: 'app1',
         standalone: false,
         skipFormat: true,
       });
 
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
+      await setupSsr(tree, {
+        project: 'app1',
+        hydration: true,
+        skipFormat: true,
+      });
 
-      // ASSERT
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
-        import { BrowserModule } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
@@ -623,9 +651,9 @@ describe('setupSSR', () => {
           declarations: [AppComponent, NxWelcomeComponent],
           imports: [
             BrowserModule,
-            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            RouterModule.forRoot(appRoutes),
           ],
-          providers: [],
+          providers: [provideClientHydration()],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -633,73 +661,49 @@ describe('setupSSR', () => {
       `);
     });
 
-    it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    it('should add hydration correctly to standalone', async () => {
+      const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '^16.2.0' },
-      }));
-
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
-
-      // ACT
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      // ASSERT
-      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/core';
-        import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
-        import { appRoutes } from './app.routes';
-
-        export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
-        };
-        "
-      `);
-    });
-
-    it('should generate a correct server.ts', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          '@angular/core': '16.2.0',
-        },
+        dependencies: { '@angular/core': '17.2.0' },
       }));
       await generateTestApplication(tree, {
-        name: 'app1',
-        standalone: false,
+        directory: 'app1',
         skipFormat: true,
       });
 
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
-
-      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should not set up hydration by default', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          '@angular/core': '16.2.0',
-        },
-      }));
-      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
-
-      await setupSsr(tree, { project: 'app1', skipFormat: true });
+      await setupSsr(tree, {
+        project: 'app1',
+        hydration: true,
+        skipFormat: true,
+      });
 
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { ApplicationConfig } from '@angular/core';
-        import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
+        import { provideRouter } from '@angular/router';
         import { appRoutes } from './app.routes';
+        import { provideClientHydration } from '@angular/platform-browser';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
+          providers: [provideClientHydration(),provideRouter(appRoutes) ]
         };
+        "
+      `);
+
+      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+        import { provideServerRendering } from '@angular/platform-server';
+        import { appConfig } from './app.config';
+
+        const serverConfig: ApplicationConfig = {
+          providers: [
+            provideServerRendering()
+          ]
+        };
+
+        export const config = mergeApplicationConfig(appConfig, serverConfig);
         "
       `);
     });

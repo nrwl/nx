@@ -42,7 +42,6 @@ describe('nx release pre-version command', () => {
 
   beforeAll(() => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -106,7 +105,9 @@ describe('nx release pre-version command', () => {
     // command should succeed because the pre-version command will build the package
     const result4 = runCLI(`release patch -d -g ${groupName} --first-release`);
 
-    expect(result4).toContain('NX   Executing pre-version command');
+    expect(result4).toContain(
+      `NX   Executing release group pre-version command for "${groupName}"`
+    );
 
     updateJson(`nx.json`, (json) => {
       json.release = {

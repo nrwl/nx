@@ -32,6 +32,7 @@ export interface RunOptions {
   nxBail: boolean;
   nxIgnoreCycles: boolean;
   skipNxCache: boolean;
+  skipRemoteCache: boolean;
   cloud: boolean;
   dte: boolean;
   batch: boolean;
@@ -89,6 +90,13 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
         'Rerun the tasks even when the results are available in the cache.',
       type: 'boolean',
       default: false,
+      alias: 'disableNxCache',
+    })
+    .options('skipRemoteCache', {
+      type: 'boolean',
+      describe: 'Disables the remote cache.',
+      default: false,
+      alias: 'disableRemoteCache',
     })
     .options('excludeTaskDependencies', {
       describe: 'Skips running dependent tasks first.',
@@ -96,14 +104,15 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       default: false,
     })
     .option('skipSync', {
+      describe: 'Skips running the sync generators associated with the tasks.',
       type: 'boolean',
-      // TODO(leo): add description and make it visible once it is stable
-      hidden: true,
+      default: false,
     })
     .options('cloud', {
       type: 'boolean',
       hidden: true,
     })
+
     .options('dte', {
       type: 'boolean',
       hidden: true,
@@ -319,4 +328,25 @@ export function parseCSV(args: string[] | string): string[] {
   return items.map((i) =>
     i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i
   );
+}
+
+export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
+  if (args['parallel'] === 'false' || args['parallel'] === false) {
+    return 1;
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === '' ||
+    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    (process.env.NX_PARALLEL && args['parallel'] === undefined)
+  ) {
+    return Number(
+      args['maxParallel'] ||
+        args['max-parallel'] ||
+        process.env.NX_PARALLEL ||
+        3
+    );
+  } else if (args['parallel'] !== undefined) {
+    return Number(args['parallel']);
+  }
 }

@@ -134,6 +134,7 @@ async function printTargetRunHelpInternal(
     } else {
       const cp = exec(helpCommand, {
         env,
+        windowsHide: false,
       });
       cp.on('exit', (code) => {
         process.exit(code);
@@ -189,7 +190,6 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       projectsConfigurations,
       nxJsonConfiguration,
-      workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
       projectName: project,
       targetName: target,
       configurationName: configuration,

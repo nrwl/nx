@@ -71,11 +71,14 @@ impl HashPlanner {
                 let mut inputs: Vec<HashInstruction> = target
                     .unwrap_or(vec![])
                     .into_iter()
-                    .chain(vec![HashInstruction::WorkspaceFileSet(vec![
-                        "{workspaceRoot}/nx.json".to_string(),
-                        "{workspaceRoot}/.gitignore".to_string(),
-                        "{workspaceRoot}/.nxignore".to_string(),
-                    ])])
+                    .chain(vec![
+                        HashInstruction::Environment("NX_CLOUD_ENCRYPTION_KEY".into()),
+                        HashInstruction::WorkspaceFileSet(vec![
+                            "{workspaceRoot}/nx.json".to_string(),
+                            "{workspaceRoot}/.gitignore".to_string(),
+                            "{workspaceRoot}/.nxignore".to_string(),
+                        ]),
+                    ])
                     .chain(self_inputs)
                     .collect();
 
@@ -160,9 +163,11 @@ impl HashPlanner {
             ))
         } else {
             let mut external_deps: Vec<&'a String> = vec![];
+            let mut has_external_deps = false;
             for input in self_inputs {
                 match input {
                     Input::ExternalDependency(deps) => {
+                        has_external_deps = true;
                         for dep in deps.iter() {
                             let external_node_name =
                                 find_external_dependency_node_name(dep, &self.project_graph);
@@ -200,8 +205,10 @@ impl HashPlanner {
                         .map(|s| HashInstruction::External(s.to_string()))
                         .collect(),
                 ))
-            } else {
+            } else if !has_external_deps {
                 Ok(Some(vec![HashInstruction::AllExternalDependencies]))
+            } else {
+                Ok(None)
             }
         }
     }
@@ -325,11 +332,28 @@ impl HashPlanner {
                 file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
             });
 
-        let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
-        // let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
-        let workspace_file_set_inputs = match workspace_file_sets.is_empty() {
-            true => vec![],
-            false => vec![workspace_file_set_inputs(workspace_file_sets)],
+        let project_inputs = if project_file_sets.is_empty() {
+            vec![
+                HashInstruction::ProjectConfiguration(project_name.to_string()),
+                HashInstruction::TsConfiguration(project_name.to_string()),
+            ]
+        } else {
+            vec![
+                HashInstruction::ProjectFileSet(
+                    project_name.to_string(),
+                    project_file_sets.iter().map(|f| f.to_string()).collect(),
+                ),
+                HashInstruction::ProjectConfiguration(project_name.to_string()),
+                HashInstruction::TsConfiguration(project_name.to_string()),
+            ]
+        };
+
+        let workspace_file_set_inputs = if workspace_file_sets.is_empty() {
+            vec![]
+        } else {
+            vec![HashInstruction::WorkspaceFileSet(
+                workspace_file_sets.iter().map(|f| f.to_string()).collect(),
+            )]
         };
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
             Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
@@ -337,7 +361,7 @@ impl HashPlanner {
             _ => None,
         });
 
-        project_file_set_inputs
+        project_inputs
             .into_iter()
             .chain(workspace_file_set_inputs)
             .chain(runtime_and_env_inputs)
@@ -421,19 +445,4 @@ fn find_external_dependency_node_name<'a>(
         }
         None
     }
-}
-
-fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<HashInstruction> {
-    vec![
-        HashInstruction::ProjectFileSet(
-            project_name.to_string(),
-            file_sets.iter().map(|f| f.to_string()).collect(),
-        ),
-        HashInstruction::ProjectConfiguration(project_name.to_string()),
-        HashInstruction::TsConfiguration(project_name.to_string()),
-    ]
-}
-
-fn workspace_file_set_inputs(file_sets: Vec<&str>) -> HashInstruction {
-    HashInstruction::WorkspaceFileSet(file_sets.iter().map(|f| f.to_string()).collect())
 }

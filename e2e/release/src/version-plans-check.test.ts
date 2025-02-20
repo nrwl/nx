@@ -52,7 +52,6 @@ describe('nx release version plans check command', () => {
 
   beforeEach(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 

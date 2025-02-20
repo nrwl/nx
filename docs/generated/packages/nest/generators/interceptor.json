@@ -1,6 +1,6 @@
 {
   "name": "interceptor",
-  "factory": "./src/generators/interceptor/interceptor#interceptorGeneratorInternal",
+  "factory": "./src/generators/interceptor/interceptor",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxNestInterceptorGenerator",
@@ -8,29 +8,22 @@
     "description": "Nest Interceptor Options Schema.",
     "cli": "nx",
     "type": "object",
+    "examples": [
+      {
+        "description": "Generate the interceptor `FooInterceptor` at `myapp/src/app/foo.interceptor.ts`",
+        "command": "nx g @nx/nest:interceptor myapp/src/app/foo.interceptor.ts"
+      },
+      {
+        "description": "Generate the interceptor without providing the file extension. It results in the interceptor `FooInterceptor` at `myapp/src/app/foo.interceptor.ts`",
+        "command": "nx g @nx/nest:interceptor myapp/src/app/foo"
+      }
+    ],
     "properties": {
-      "name": {
-        "description": "The name of the interceptor.",
+      "path": {
+        "description": "The file path to the interceptor. Relative to the current working directory.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use?"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "project": {
-        "description": "The Nest project to target.",
-        "type": "string",
-        "$default": { "$source": "projectName" },
-        "alias": "p",
-        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. It will be removed in Nx v20."
-      },
-      "directory": {
-        "description": "Directory where the generated files are placed. when `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. otherwise, it will be relative to the workspace root.",
-        "type": "string",
-        "aliases": ["dir", "path"]
+        "x-prompt": "What is the interceptor file path?"
       },
       "skipFormat": {
         "description": "Skip formatting files.",
@@ -44,12 +37,6 @@
         "enum": ["jest", "none"],
         "default": "jest"
       },
-      "flat": {
-        "description": "Flag to indicate if a directory is created.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20.",
-        "type": "boolean",
-        "default": true
-      },
       "language": {
         "description": "Nest interceptor language.",
         "type": "string",
@@ -57,11 +44,11 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "description": "Run the `interceptor` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/interceptor/interceptor#interceptorGeneratorInternal.ts",
+  "implementation": "/packages/nest/src/generators/interceptor/interceptor.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/interceptor/schema.json",

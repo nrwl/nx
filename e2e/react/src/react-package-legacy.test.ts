@@ -66,7 +66,7 @@ describe('Build React libraries and apps', () => {
       );
     };
 
-    runCLI(`generate @nx/react:app ${app} `);
+    runCLI(`generate @nx/react:app apps/${app} --no-interactive`);
     updateJson('nx.json', (json) => ({
       ...json,
       generators: {
@@ -80,13 +80,13 @@ describe('Build React libraries and apps', () => {
     }));
     // generate buildable libs
     runCLI(
-      `generate @nx/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest --skipFormat`
+      `generate @nx/react:library libs/${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest --skipFormat`
     );
     runCLI(
-      `generate @nx/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest --skipFormat`
+      `generate @nx/react:library libs/${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest --skipFormat`
     );
     runCLI(
-      `generate @nx/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest --skipFormat`
+      `generate @nx/react:library libs/${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest --skipFormat`
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -185,7 +185,7 @@ export async function h() { return 'c'; }
       const libName = uniq('lib');
 
       runCLI(
-        `generate @nx/react:lib ${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive --unitTestRunner=jest`
+        `generate @nx/react:lib libs/${libName} --bundler=rollup --importPath=@${proj}/${libName} --no-interactive --unitTestRunner=jest`
       );
 
       const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;

@@ -7,7 +7,11 @@ export function getNpmPackageVersion(
       `npm view ${packageName}${
         packageVersion ? '@' + packageVersion : ''
       } version --json`,
-      { stdio: ['pipe', 'pipe', 'ignore'] }
+      {
+        stdio: ['pipe', 'pipe', 'ignore'],
+
+        windowsHide: false,
+      }
     );
 
     if (version) {

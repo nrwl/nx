@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "Preset",
+  "title": "Standalone React and rspack preset",
+  "description": "React + Rspack preset generator.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-priority": "important"
+    },
+    "framework": {
+      "type": "string",
+      "description": "The framework to use for the application.",
+      "enum": ["none", "react", "web", "nest"],
+      "alias": ["uiFramework"],
+      "x-priority": "important",
+      "default": "react"
+    },
+    "less": {
+      "type": "boolean",
+      "description": "Use less for styling."
+    },
+    "sass": {
+      "type": "boolean",
+      "description": "Use sass for styling."
+    },
+    "stylus": {
+      "type": "boolean",
+      "description": "Use stylus for styling."
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "description": "The unit test runner to use.",
+      "enum": ["none", "jest"],
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "description": "The e2e test runner to use.",
+      "enum": ["none", "cypress"],
+      "default": "cypress"
+    },
+    "directory": {
+      "type": "string",
+      "description": "The directory to nest the app under."
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the project (used for linting).",
+      "alias": "t"
+    },
+    "monorepo": {
+      "type": "boolean",
+      "description": "Creates an integrated monorepo.",
+      "default": false,
+      "aliases": ["integrated"]
+    },
+    "rootProject": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "default": true
+    }
+  },
+  "required": ["name"]
+}

@@ -8,10 +8,7 @@ export interface AddOptions {
   __overrides_unparsed__: string[];
 }
 
-export const yargsAddCommand: CommandModule<
-  Record<string, unknown>,
-  AddOptions
-> = {
+export const yargsAddCommand: CommandModule<{}, AddOptions> = {
   command: 'add <packageSpecifier>',
   describe: 'Install a plugin and initialize it.',
   builder: (yargs) =>

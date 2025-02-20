@@ -108,8 +108,7 @@ const fixBabelConfigurationIfNeeded = (
   ).find((k) => {
     const targetConfig = projectData.projectNode.data.targets[k];
     return (
-      (targetConfig.executor === '@nx/webpack:webpack' ||
-        targetConfig.executor === '@nrwl/webpack:webpack') &&
+      targetConfig.executor === '@nx/webpack:webpack' &&
       targetConfig.options?.babelUpwardRootMode
     );
   });

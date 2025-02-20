@@ -18,7 +18,7 @@ describe('Jest', () => {
 
   it('should support multiple `coverageReporters` when using @nx/jest:jest executor', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`, {
+    runCLI(`generate @nx/js:lib libs/${mylib} --unitTestRunner=jest`, {
       env: {
         NX_ADD_PLUGINS: 'false',
       },

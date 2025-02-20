@@ -45,7 +45,10 @@ import {
 import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
-  await libraryGenerator(tree, { name: schema.name });
+  await libraryGenerator(tree, {
+    name: schema.name,
+    directory: `libs/${schema.name}`,
+  });
   const libraryRoot = readProjectConfiguration(tree, schema.name).root;
   generateFiles(
     tree, // the virtual file system

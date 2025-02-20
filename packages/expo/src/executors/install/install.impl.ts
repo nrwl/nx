@@ -42,8 +42,14 @@ export async function installAndUpdatePackageJson(
       ? options.packages.split(',')
       : options.packages ?? [];
 
-  // Use force in case there are any unmet peer dependencies.
-  await installAsync(packages, createInstallOptions(options), ['--force']);
+  await installAsync(
+    packages,
+    {
+      fix: options.fix,
+      check: options.check,
+    },
+    createInstallOptions({ force: options.force })
+  );
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -78,7 +84,7 @@ function createInstallOptions(options: ExpoInstallOptions) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
       }
-    } else {
+    } else if (v !== undefined) {
       acc.push(`--${names(k).fileName}`, v);
     }
 

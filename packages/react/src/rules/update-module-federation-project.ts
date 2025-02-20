@@ -8,6 +8,7 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../utils/versions';
 import { maybeJs } from '../utils/maybe-js';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function updateModuleFederationProject(
   host: Tree,
@@ -26,7 +27,7 @@ export function updateModuleFederationProject(
   if (options.bundler === 'rspack') {
     projectConfig.targets.build.executor = '@nx/rspack:rspack';
     projectConfig.targets.build.options = {
-      ...projectConfig.targets.build.options,
+      ...(projectConfig.targets.build.options ?? {}),
       main: maybeJs(
         { js: options.js, useJsx: true },
         `${options.appProjectRoot}/src/main.ts`
@@ -37,23 +38,27 @@ export function updateModuleFederationProject(
       target: 'web',
     };
 
+    projectConfig.targets.build.configurations ??= {};
+
     projectConfig.targets.build.configurations.production = {
-      ...projectConfig.targets.build.configurations.production,
+      ...(projectConfig.targets.build.configurations?.production ?? {}),
       rspackConfig: `${options.appProjectRoot}/rspack.config.prod.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
       }`,
     };
   } else {
     projectConfig.targets.build.options = {
-      ...projectConfig.targets.build.options,
+      ...(projectConfig.targets.build.options ?? {}),
       main: maybeJs(options, `${options.appProjectRoot}/src/main.ts`),
       webpackConfig: `${options.appProjectRoot}/webpack.config.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
       }`,
     };
 
+    projectConfig.targets.build.configurations ??= {};
+
     projectConfig.targets.build.configurations.production = {
-      ...projectConfig.targets.build.configurations.production,
+      ...(projectConfig.targets.build.configurations?.production ?? {}),
       webpackConfig: `${options.appProjectRoot}/webpack.config.prod.${
         options.typescriptConfiguration && !options.js ? 'ts' : 'js'
       }`,
@@ -120,6 +125,12 @@ export function updateModuleFederationProject(
       },
     },
   };
+
+  // Typechecks must be performed first before build and serve to generate remote d.ts files.
+  if (isUsingTsSolutionSetup(host)) {
+    projectConfig.targets.build.dependsOn = ['^build', 'typecheck'];
+    projectConfig.targets.serve.dependsOn = ['typecheck'];
+  }
 
   updateProjectConfiguration(host, options.projectName, projectConfig);
 }

@@ -23,9 +23,10 @@ const isPrettierAvailable =
  * related plugins and rules below.
  */
 export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : []),
+  {
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+  },
   {
     languageOptions: {
       parser: tseslint.parser,
@@ -39,7 +40,7 @@ export default tseslint.config(
     plugins: { '@typescript-eslint': tseslint.plugin },
   },
   {
-    files: ['**/*.js', '**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],
     rules: {
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -59,7 +60,7 @@ export default tseslint.config(
        * previously defined v5 of `@typescript-eslint`. v6 of `@typescript-eslint`
        * changed how configurations are defined.
        *
-       * TODO(v20): re-evalute these deviations from @typescript-eslint/recommended in v20 of Nx
+       * TODO(eslint): re-evalute these deviations from @typescript-eslint/recommended in v20 of Nx
        */
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/adjacent-overload-signatures': 'error',
@@ -74,9 +75,13 @@ export default tseslint.config(
        * During the migration to use ESLint v9 and typescript-eslint v8 for new workspaces,
        * this rule would have created a lot of noise, so we are disabling it by default for now.
        *
-       * TODO(v20): we should make this part of what we re-evaluate in v20
+       * TODO(eslint): we should make this part of what we re-evaluate in v20
        */
       '@typescript-eslint/no-require-imports': 'off',
     },
-  }
+  },
+  /**
+   * We include it last so it overrides the conflicting rules from the configuration blocks above.
+   */
+  ...(isPrettierAvailable ? [require('eslint-config-prettier')] : [])
 );

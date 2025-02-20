@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#expoComponentGeneratorInternal",
+  "factory": "./src/generators/component/component",
   "schema": {
     "cli": "nx",
     "$id": "NxExpoComponent",
@@ -9,32 +9,37 @@
     "type": "object",
     "examples": [
       {
-        "command": "g @nx/expo:component my-component --project=mylib",
-        "description": "Generate a component in the mylib library"
+        "description": "Generate a component with the exported symbol matching the file name. It results in the component `Foo` at `mylib/src/foo.tsx`",
+        "command": "nx g @nx/expo:component mylib/src/foo.tsx"
       },
       {
-        "command": "g @nx/expo:component my-component --project=mylib --classComponent",
-        "description": "Generate a class component in the mylib library"
+        "description": "Generate a component with the exported symbol different from the file name. It results in the component `Custom` at `mylib/src/foo.tsx`",
+        "command": "nx g @nx/expo:component mylib/src/foo.tsx --name=custom"
+      },
+      {
+        "description": "Generate a component without the providing the file extension. It results in the component `Foo` at `mylib/src/foo.tsx`",
+        "command": "nx g @nx/expo:component mylib/src/foo"
+      },
+      {
+        "description": "Generate a class component at `mylib/src/foo.tsx`",
+        "command": "nx g @nx/expo:component mylib/src/foo --classComponent"
       }
     ],
     "properties": {
-      "project": {
+      "path": {
         "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
+        "description": "The file path to the component. Relative to the current working directory.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the component file path?"
       },
       "name": {
         "type": "string",
-        "description": "The name of the component.",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the component?"
+        "description": "The component symbol name. Defaults to the last segment of the file path."
       },
       "js": {
         "type": "boolean",
         "description": "Generate JavaScript files rather than TypeScript files.",
-        "default": false
+        "x-deprecated": "Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21."
       },
       "skipFormat": {
         "description": "Skip formatting files.",
@@ -47,35 +52,12 @@
         "description": "When true, does not create \"spec.ts\" test files for the new component.",
         "default": false
       },
-      "directory": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
-        "x-priority": "important"
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
-      "flat": {
-        "type": "boolean",
-        "description": "Create component at the source root rather than its own directory.",
-        "default": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19."
-      },
       "export": {
         "type": "boolean",
         "description": "When true, the component is exported from the project index.ts (if it exists).",
         "alias": "e",
         "default": false,
         "x-prompt": "Should this component be exported in the project?"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case component file name (e.g. App.tsx).",
-        "alias": "P",
-        "default": false,
-        "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
       },
       "classComponent": {
         "type": "boolean",
@@ -84,12 +66,12 @@
         "default": false
       }
     },
-    "required": ["name"],
+    "required": ["path"],
     "presets": []
   },
   "description": "Create a component",
   "aliases": ["c"],
-  "implementation": "/packages/expo/src/generators/component/component#expoComponentGeneratorInternal.ts",
+  "implementation": "/packages/expo/src/generators/component/component.ts",
   "hidden": false,
   "path": "/packages/expo/src/generators/component/schema.json",
   "type": "generator"

@@ -19,7 +19,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   it('should convert a standalone webpack and jest react project to a monorepo (legacy)', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
-      `generate @nx/react:app ${reactApp} --rootProject=true --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive`,
+      `generate @nx/react:app --name=${reactApp} --directory="." --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive --linter=eslint`,
       {
         env: {
           NX_ADD_PLUGINS: 'false',

@@ -7,14 +7,18 @@
   "examplesFile": "../../../docs/generators/create-package-examples.md",
   "type": "object",
   "properties": {
+    "directory": {
+      "type": "string",
+      "description": "A directory where the app is placed.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
     "name": {
       "type": "string",
       "description": "The package name of cli, e.g. `create-framework-package`. Note this must be a valid NPM name to be published.",
       "pattern": "create-.+|^@.+/create(?:-.+)?",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
       "x-priority": "important"
     },
     "project": {
@@ -29,24 +33,13 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "default": "jest"
-    },
-    "directory": {
-      "type": "string",
-      "description": "A directory where the app is placed."
-    },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
+      "enum": ["none", "jest", "vitest"],
+      "description": "Test runner to use for unit tests."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
-      "default": "eslint"
+      "enum": ["none", "eslint"]
     },
     "tags": {
       "type": "string",
@@ -69,7 +62,11 @@
       "type": "string",
       "description": "The name of the e2e project.",
       "x-prompt": "What is the name of the e2e project? Leave blank to skip e2e tests"
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
-  "required": ["name", "project"]
+  "required": ["directory", "name", "project"]
 }

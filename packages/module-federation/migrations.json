@@ -1,0 +1,25 @@
+{
+  "packageJsonUpdates": {
+    "20.4.0": {
+      "version": "20.4.0-beta.0",
+      "packages": {
+        "@module-federation/enhanced": {
+          "version": "^0.8.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/runtime": {
+          "version": "^0.8.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/sdk": {
+          "version": "^0.8.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@module-federation/node": {
+          "version": "^2.6.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

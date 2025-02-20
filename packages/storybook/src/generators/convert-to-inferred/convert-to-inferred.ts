@@ -7,12 +7,12 @@ import {
 } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
 import {
-  migrateProjectExecutorsToPluginV1,
+  migrateProjectExecutorsToPlugin,
   NoTargetsToMigrateError,
 } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
-import { createNodes } from '../../plugins/plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 import { storybookVersion } from '../../utils/versions';
 
 interface Schema {
@@ -23,11 +23,11 @@ interface Schema {
 export async function convertToInferred(tree: Tree, options: Schema) {
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
-  const migratedProjects = await migrateProjectExecutorsToPluginV1(
+  const migratedProjects = await migrateProjectExecutorsToPlugin(
     tree,
     projectGraph,
     '@nx/storybook/plugin',
-    createNodes,
+    createNodesV2,
     {
       buildStorybookTargetName: 'build-storybook',
       serveStorybookTargetName: 'storybook',
@@ -36,14 +36,14 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     },
     [
       {
-        executors: ['@nx/storybook:build', '@nrwl/storybook:build'],
+        executors: ['@nx/storybook:build'],
         postTargetTransformer: buildPostTargetTransformer(migrationLogs),
         targetPluginOptionMapper: (targetName) => ({
           buildStorybookTargetName: targetName,
         }),
       },
       {
-        executors: ['@nx/storybook:storybook', '@nrwl/storybook:storybook'],
+        executors: ['@nx/storybook:storybook'],
         postTargetTransformer: servePostTargetTransformer(migrationLogs),
         targetPluginOptionMapper: (targetName) => ({
           serveStorybookTargetName: targetName,

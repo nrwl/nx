@@ -1,6 +1,9 @@
 import * as rollup from 'rollup';
 
-// TODO(v20): This should be deprecated and removed in v22.
+// TODO(v22): Remove this in Nx 22 and migrate to explicit rollup.config.cjs files.
+/**
+ * @deprecated Use `withNx` function from `@nx/rollup/with-nx` in your rollup.config.cjs file instead. Use `nx g @nx/rollup:convert-to-inferred` to generate the rollup.config.cjs file if it does not exist.
+ */
 function getRollupOptions(options: rollup.RollupOptions) {
   const extraGlobals = {
     react: 'React',

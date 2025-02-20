@@ -1,7 +1,8 @@
 import type { Tree } from '@nx/devkit';
-import type { NormalizedSchema, Schema } from '../schema';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { names } from '@nx/devkit';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { validateClassName } from '../../utils/validations';
+import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -15,19 +16,17 @@ export async function normalizeOptions(
     filePath,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
-    artifactType: options.type,
-    callingGenerator: '@nx/angular:scam',
     name: options.name,
-    directory: options.directory ?? options.path,
-    flat: options.flat,
-    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-    project: options.project,
+    path: options.path,
     suffix: options.type ?? 'component',
+    allowedFileExtensions: ['ts'],
+    fileExtension: 'ts',
   });
 
   const { className } = names(name);
   const { className: suffixClassName } = names(options.type);
   const symbolName = `${className}${suffixClassName}`;
+  validateClassName(symbolName);
 
   return {
     ...options,

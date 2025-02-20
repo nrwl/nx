@@ -1,41 +1,43 @@
-import { prompt } from 'enquirer';
-import { join, relative } from 'path';
-import { names } from '../utils/names';
-
 import {
   getProjects,
   joinPathFragments,
-  logger,
   normalizePath,
-  output,
-  ProjectConfiguration,
-  Tree,
   workspaceRoot,
+  type ProjectConfiguration,
+  type Tree,
 } from 'nx/src/devkit-exports';
-
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from 'nx/src/devkit-internals';
+import { join, relative } from 'path';
 
-export type NameAndDirectoryFormat = 'as-provided' | 'derived';
+const DEFAULT_ALLOWED_JS_FILE_EXTENSIONS = ['js', 'cjs', 'mjs', 'jsx'];
+const DEFAULT_ALLOWED_TS_FILE_EXTENSIONS = ['ts', 'cts', 'mts', 'tsx'];
+const DEFAULT_ALLOWED_FILE_EXTENSIONS = [
+  ...DEFAULT_ALLOWED_JS_FILE_EXTENSIONS,
+  ...DEFAULT_ALLOWED_TS_FILE_EXTENSIONS,
+  'vue',
+];
+
 export type ArtifactGenerationOptions = {
-  artifactType: string;
-  callingGenerator: string | null;
-  name: string;
-  directory?: string;
-  disallowPathInNameForDerived?: boolean;
-  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
-  fileName?: string;
-  flat?: boolean;
-  nameAndDirectoryFormat?: NameAndDirectoryFormat;
-  pascalCaseDirectory?: boolean;
-  pascalCaseFile?: boolean;
-  project?: string;
+  path: string;
+  name?: string;
+  fileExtension?: string;
   suffix?: string;
-  derivedDirectory?: string;
+  allowedFileExtensions?: string[];
+
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
+  js?: boolean;
+  /**
+   * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.
+   */
+  jsOptionName?: string;
 };
 
+export type FileExtensionType = 'js' | 'ts' | 'other';
 export type NameAndDirectoryOptions = {
   /**
    * Normalized artifact name.
@@ -50,6 +52,14 @@ export type NameAndDirectoryOptions = {
    */
   fileName: string;
   /**
+   * Normalized file extension.
+   */
+  fileExtension: string;
+  /**
+   * Normalized file extension type.
+   */
+  fileExtensionType: FileExtensionType;
+  /**
    * Normalized full file path of the artifact.
    */
   filePath: string;
@@ -59,328 +69,87 @@ export type NameAndDirectoryOptions = {
   project: string;
 };
 
-type NameAndDirectoryFormats = {
-  'as-provided': NameAndDirectoryOptions;
-  derived: NameAndDirectoryOptions | undefined;
-};
-
 export async function determineArtifactNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
-): Promise<
-  NameAndDirectoryOptions & {
-    nameAndDirectoryFormat: NameAndDirectoryFormat;
-  }
-> {
-  if (
-    !options.nameAndDirectoryFormat &&
-    (process.env.NX_INTERACTIVE !== 'true' || !isTTY())
-  ) {
-    options.nameAndDirectoryFormat = 'derived';
-  }
-
-  const formats = getNameAndDirectoryOptionFormats(tree, options);
-  const format =
-    options.nameAndDirectoryFormat ?? (await determineFormat(formats, options));
+): Promise<NameAndDirectoryOptions> {
+  const normalizedOptions = getNameAndDirectoryOptions(tree, options);
 
   validateResolvedProject(
-    tree,
-    formats[format]?.project,
-    options,
-    formats[format]?.directory
+    normalizedOptions.project,
+    normalizedOptions.directory
   );
 
-  if (format === 'derived' && options.callingGenerator) {
-    logDeprecationMessage(options, formats);
-  }
-
-  return {
-    ...formats[format],
-    nameAndDirectoryFormat: format,
-  };
+  return normalizedOptions;
 }
 
-async function determineFormat(
-  formats: NameAndDirectoryFormats,
-  options: ArtifactGenerationOptions
-): Promise<NameAndDirectoryFormat> {
-  if (!formats.derived) {
-    return 'as-provided';
-  }
-
-  const asProvidedDescription = `As provided: ${formats['as-provided'].filePath}`;
-  const asProvidedSelectedValue = formats['as-provided'].filePath;
-  const derivedDescription = `Derived:     ${formats['derived'].filePath}`;
-  const derivedSelectedValue = formats['derived'].filePath;
-
-  if (asProvidedSelectedValue === derivedSelectedValue) {
-    return 'as-provided';
-  }
-
-  const result = await prompt<{ format: NameAndDirectoryFormat }>({
-    type: 'select',
-    name: 'format',
-    message: `Where should the ${options.artifactType} be generated?`,
-    choices: [
-      {
-        message: asProvidedDescription,
-        name: asProvidedSelectedValue,
-      },
-      {
-        message: derivedDescription,
-        name: derivedSelectedValue,
-      },
-    ],
-    initial: 0,
-  }).then(({ format }) =>
-    format === asProvidedSelectedValue ? 'as-provided' : 'derived'
-  );
-
-  return result;
-}
-
-function logDeprecationMessage(
-  options: ArtifactGenerationOptions,
-  formats: NameAndDirectoryFormats
-) {
-  logger.warn(`
-In Nx 20, generating a ${options.artifactType} will no longer support providing a project and deriving the directory.
-Please provide the exact directory in the future.
-Example: nx g ${options.callingGenerator} ${formats['derived'].artifactName} --directory ${formats['derived'].directory}
-NOTE: The example above assumes the command is being run from the workspace root. If the command is being run from a subdirectory, the directory option should be adjusted accordingly.
-`);
-}
-
-function getNameAndDirectoryOptionFormats(
-  tree: Tree,
-  options: ArtifactGenerationOptions
-): NameAndDirectoryFormats {
-  const directory = options.directory
-    ? normalizePath(options.directory.replace(/^\.?\//, ''))
-    : undefined;
-  const fileExtension = options.fileExtension ?? 'ts';
-  const { name: extractedName, directory: extractedDirectory } =
-    extractNameAndDirectoryFromName(options.name);
-
-  if (extractedDirectory && directory) {
-    throw new Error(
-      `You can't specify both a directory (${options.directory}) and a name with a directory path (${options.name}). ` +
-        `Please specify either a directory or a name with a directory path.`
-    );
-  }
-
-  const asProvidedOptions = getAsProvidedOptions(tree, {
-    ...options,
-    directory: directory ?? extractedDirectory,
-    fileExtension,
-    name: extractedName,
-  });
-
-  if (!options.project) {
-    validateResolvedProject(
-      tree,
-      asProvidedOptions.project,
-      options,
-      asProvidedOptions.directory
-    );
-  }
-
-  if (options.nameAndDirectoryFormat === 'as-provided') {
-    return {
-      'as-provided': asProvidedOptions,
-      derived: undefined,
-    };
-  }
-
-  if (options.disallowPathInNameForDerived && options.name.includes('/')) {
-    if (!options.nameAndDirectoryFormat) {
-      output.warn({
-        title: `The provided name "${options.name}" contains a path and this is not supported by the "${options.callingGenerator}" when using the "derived" format.`,
-        bodyLines: [
-          `The generator will try to generate the ${options.artifactType} using the "as-provided" format at "${asProvidedOptions.filePath}".`,
-        ],
-      });
-
-      return {
-        'as-provided': asProvidedOptions,
-        derived: undefined,
-      };
-    }
-
-    throw new Error(
-      `The provided name "${options.name}" contains a path and this is not supported by the "${options.callingGenerator}" when using the "derived" format. ` +
-        `Please provide a name without a path or use the "as-provided" format.`
-    );
-  }
-
-  const derivedOptions = getDerivedOptions(
-    tree,
-    {
-      ...options,
-      directory,
-      fileExtension,
-      name: extractedName,
-    },
-    asProvidedOptions,
-    !options.disallowPathInNameForDerived && extractedDirectory
-      ? extractedDirectory
-      : undefined
-  );
-
-  return {
-    'as-provided': asProvidedOptions,
-    derived: derivedOptions,
-  };
-}
-
-function getAsProvidedOptions(
+function getNameAndDirectoryOptions(
   tree: Tree,
   options: ArtifactGenerationOptions
 ): NameAndDirectoryOptions {
+  const path = options.path
+    ? normalizePath(options.path.replace(/^\.?\//, ''))
+    : undefined;
+  let { name: extractedName, directory } =
+    extractNameAndDirectoryFromPath(path);
   const relativeCwd = getRelativeCwd();
 
-  let asProvidedDirectory: string;
-  if (options.directory) {
-    // append the directory to the current working directory if it doesn't start with it
-    if (
-      options.directory === relativeCwd ||
-      options.directory.startsWith(`${relativeCwd}/`)
-    ) {
-      asProvidedDirectory = options.directory;
-    } else {
-      asProvidedDirectory = joinPathFragments(relativeCwd, options.directory);
-    }
-  } else {
-    asProvidedDirectory = relativeCwd;
+  // append the directory to the current working directory if it doesn't start with it
+  if (directory !== relativeCwd && !directory.startsWith(`${relativeCwd}/`)) {
+    directory = joinPathFragments(relativeCwd, directory);
   }
-  const asProvidedProject = findProjectFromPath(tree, asProvidedDirectory);
 
-  const asProvidedFileName =
-    options.fileName ??
-    (options.suffix ? `${options.name}.${options.suffix}` : options.name);
-  const asProvidedFilePath = joinPathFragments(
-    asProvidedDirectory,
-    `${asProvidedFileName}.${options.fileExtension}`
+  const project = findProjectFromPath(tree, directory);
+
+  let fileName = extractedName;
+  let fileExtension: string = options.fileExtension ?? 'ts';
+
+  const allowedFileExtensions =
+    options.allowedFileExtensions ?? DEFAULT_ALLOWED_FILE_EXTENSIONS;
+  const fileExtensionRegex = new RegExp(
+    `\\.(${allowedFileExtensions.join('|')})$`
+  );
+  const fileExtensionMatch = fileName.match(fileExtensionRegex);
+
+  if (fileExtensionMatch) {
+    fileExtension = fileExtensionMatch[1];
+    fileName = fileName.replace(fileExtensionRegex, '');
+    extractedName = fileName;
+  } else if (options.suffix) {
+    fileName = `${fileName}.${options.suffix}`;
+  }
+
+  const filePath = joinPathFragments(directory, `${fileName}.${fileExtension}`);
+  const fileExtensionType = getFileExtensionType(fileExtension);
+
+  validateFileExtension(
+    fileExtension,
+    allowedFileExtensions,
+    options.js,
+    options.jsOptionName
   );
 
   return {
-    artifactName: options.name,
-    directory: asProvidedDirectory,
-    fileName: asProvidedFileName,
-    filePath: asProvidedFilePath,
-    project: asProvidedProject,
-  };
-}
-
-function getDerivedOptions(
-  tree: Tree,
-  options: ArtifactGenerationOptions,
-  asProvidedOptions: NameAndDirectoryOptions,
-  extractedDirectory: string | undefined
-): NameAndDirectoryOptions | undefined {
-  const projects = getProjects(tree);
-  if (options.project && !projects.has(options.project)) {
-    throw new Error(
-      `The provided project "${options.project}" does not exist! Please provide an existing project name.`
-    );
-  }
-
-  const projectName = options.project ?? asProvidedOptions.project;
-  const project = projects.get(projectName);
-  const derivedName = options.name;
-  const baseDirectory = options.directory
-    ? names(options.directory).fileName
-    : joinPathFragments(
-        project.sourceRoot ?? joinPathFragments(project.root, 'src'),
-        project.projectType === 'application' ? 'app' : 'lib',
-        extractedDirectory ?? ''
-      );
-  const derivedDirectory =
-    typeof options.derivedDirectory === 'string'
-      ? joinPathFragments(
-          project.sourceRoot ?? project.root,
-          options.derivedDirectory,
-          options.flat
-            ? ''
-            : options.pascalCaseDirectory
-            ? names(derivedName).className
-            : names(derivedName).fileName
-        )
-      : options.flat
-      ? normalizePath(baseDirectory)
-      : joinPathFragments(
-          baseDirectory,
-          options.pascalCaseDirectory
-            ? names(derivedName).className
-            : names(derivedName).fileName
-        );
-
-  if (
-    options.directory &&
-    !isDirectoryUnderProjectRoot(derivedDirectory, project.root)
-  ) {
-    if (!options.nameAndDirectoryFormat) {
-      output.warn({
-        title: `The provided directory "${options.directory}" is not under the provided project root "${project.root}".`,
-        bodyLines: [
-          `The generator will try to generate the ${options.artifactType} using the "as-provided" format.`,
-          `With the "as-provided" format, the "project" option is ignored and the ${options.artifactType} will be generated at "${asProvidedOptions.filePath}" (<cwd>/<provided directory>).`,
-        ],
-      });
-
-      return undefined;
-    }
-
-    throw new Error(
-      `The provided directory "${options.directory}" is not under the provided project root "${project.root}". ` +
-        `Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory.`
-    );
-  }
-
-  let derivedFileName = options.fileName;
-  if (!derivedFileName) {
-    derivedFileName = options.suffix
-      ? `${derivedName}.${options.suffix}`
-      : derivedName;
-    derivedFileName = options.pascalCaseFile
-      ? names(derivedFileName).className
-      : names(derivedFileName).fileName;
-  }
-  const derivedFilePath = joinPathFragments(
-    derivedDirectory,
-    `${derivedFileName}.${options.fileExtension}`
-  );
-
-  return {
-    artifactName: derivedName,
-    directory: derivedDirectory,
-    fileName: derivedFileName,
-    filePath: derivedFilePath,
-    project: projectName,
+    artifactName: options.name ?? extractedName,
+    directory,
+    fileName,
+    fileExtension,
+    fileExtensionType,
+    filePath,
+    project,
   };
 }
 
 function validateResolvedProject(
-  tree: Tree,
   project: string | undefined,
-  options: ArtifactGenerationOptions,
   normalizedDirectory: string
 ): void {
   if (project) {
     return;
   }
 
-  if (options.directory) {
-    throw new Error(
-      `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
-        `Please make sure to navigate to a location or provide a directory that exists under a project root.`
-    );
-  }
-
   throw new Error(
-    `The current working directory "${
-      getRelativeCwd() || '.'
-    }" does not exist under any project root. ` +
+    `The provided directory resolved relative to the current working directory "${normalizedDirectory}" does not exist under any project root. ` +
       `Please make sure to navigate to a location or provide a directory that exists under a project root.`
   );
 }
@@ -395,26 +164,6 @@ function findProjectFromPath(tree: Tree, path: string): string | null {
     createProjectRootMappingsFromProjectConfigurations(projectConfigurations);
 
   return findProjectForPath(path, projectRootMappings);
-}
-
-function isDirectoryUnderProjectRoot(
-  directory: string,
-  projectRoot: string
-): boolean {
-  const normalizedDirectory = joinPathFragments(workspaceRoot, directory);
-  const normalizedProjectRoot = joinPathFragments(
-    workspaceRoot,
-    projectRoot
-  ).replace(/\/$/, '');
-
-  return (
-    normalizedDirectory === normalizedProjectRoot ||
-    normalizedDirectory.startsWith(`${normalizedProjectRoot}/`)
-  );
-}
-
-function isTTY(): boolean {
-  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }
 
 export function getRelativeCwd(): string {
@@ -434,13 +183,63 @@ function getCwd(): string {
     : process.cwd();
 }
 
-function extractNameAndDirectoryFromName(rawName: string): {
+function extractNameAndDirectoryFromPath(path: string): {
   name: string;
-  directory: string | undefined;
+  directory: string;
 } {
-  const parsedName = normalizePath(rawName).split('/');
-  const name = parsedName.pop();
-  const directory = parsedName.length ? parsedName.join('/') : undefined;
+  // Remove trailing slash
+  path = path.replace(/\/$/, '');
+
+  const parsedPath = normalizePath(path).split('/');
+  const name = parsedPath.pop();
+  const directory = parsedPath.join('/');
 
   return { name, directory };
+}
+
+function getFileExtensionType(fileExtension: string): FileExtensionType {
+  if (DEFAULT_ALLOWED_JS_FILE_EXTENSIONS.includes(fileExtension)) {
+    return 'js';
+  }
+
+  if (DEFAULT_ALLOWED_TS_FILE_EXTENSIONS.includes(fileExtension)) {
+    return 'ts';
+  }
+
+  return 'other';
+}
+
+function validateFileExtension(
+  fileExtension: string,
+  allowedFileExtensions: string[],
+  js: boolean | undefined,
+  jsOptionName: string | undefined
+): FileExtensionType {
+  const fileExtensionType = getFileExtensionType(fileExtension);
+
+  if (!allowedFileExtensions.includes(fileExtension)) {
+    throw new Error(
+      `The provided file path has an extension (.${fileExtension}) that is not supported by this generator.
+The supported extensions are: ${allowedFileExtensions
+        .map((ext) => `.${ext}`)
+        .join(', ')}.`
+    );
+  }
+
+  if (js !== undefined) {
+    jsOptionName = jsOptionName ?? 'js';
+
+    if (js && fileExtensionType === 'ts') {
+      throw new Error(
+        `The provided file path has an extension (.${fileExtension}) that conflicts with the provided "--${jsOptionName}" option.`
+      );
+    }
+    if (!js && fileExtensionType === 'js') {
+      throw new Error(
+        `The provided file path has an extension (.${fileExtension}) that conflicts with the provided "--${jsOptionName}" option.`
+      );
+    }
+  }
+
+  return fileExtensionType;
 }

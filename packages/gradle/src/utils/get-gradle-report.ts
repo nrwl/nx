@@ -4,7 +4,9 @@ import { join, relative } from 'node:path';
 import {
   AggregateCreateNodesError,
   normalizePath,
+  readJsonFile,
   workspaceRoot,
+  writeJsonFile,
 } from '@nx/devkit';
 
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -15,19 +17,124 @@ import {
   fileSeparator,
   newLineSeparator,
 } from './get-project-report-lines';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
 export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;
-  buildFileToDepsMap: Map<string, string>;
+  buildFileToDepsMap: Map<string, Set<string>>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
+  gradleProjectToTasksMap: Map<string, Set<string>>;
   gradleProjectToProjectName: Map<string, string>;
   gradleProjectNameToProjectRootMap: Map<string, string>;
   gradleProjectToChildProjects: Map<string, string[]>;
 }
 
+export interface GradleReportJSON {
+  hash: string;
+  gradleFileToGradleProjectMap: Record<string, string>;
+  buildFileToDepsMap: Record<string, Set<string>>;
+  gradleFileToOutputDirsMap: Record<string, Record<string, string>>;
+  gradleProjectToTasksTypeMap: Record<string, Record<string, string>>;
+  gradleProjectToTasksMap: Record<string, Array<string>>;
+  gradleProjectToProjectName: Record<string, string>;
+  gradleProjectNameToProjectRootMap: Record<string, string>;
+  gradleProjectToChildProjects: Record<string, string[]>;
+}
+
+function readGradleReportCache(
+  cachePath: string,
+  hash: string
+): GradleReport | undefined {
+  const gradleReportJson: Partial<GradleReportJSON> = existsSync(cachePath)
+    ? readJsonFile(cachePath)
+    : undefined;
+  if (!gradleReportJson || gradleReportJson.hash !== hash) {
+    return;
+  }
+  let results: GradleReport = {
+    gradleFileToGradleProjectMap: new Map(
+      Object.entries(gradleReportJson['gradleFileToGradleProjectMap'])
+    ),
+    buildFileToDepsMap: new Map(
+      Object.entries(gradleReportJson['buildFileToDepsMap'])
+    ),
+    gradleFileToOutputDirsMap: new Map(
+      Object.entries(gradleReportJson['gradleFileToOutputDirsMap']).map(
+        ([key, value]) => [key, new Map(Object.entries(value))]
+      )
+    ),
+    gradleProjectToTasksTypeMap: new Map(
+      Object.entries(gradleReportJson['gradleProjectToTasksTypeMap']).map(
+        ([key, value]) => [key, new Map(Object.entries(value))]
+      )
+    ),
+    gradleProjectToTasksMap: new Map(
+      Object.entries(gradleReportJson['gradleProjectToTasksMap']).map(
+        ([key, value]) => [key, new Set(value)]
+      )
+    ),
+    gradleProjectToProjectName: new Map(
+      Object.entries(gradleReportJson['gradleProjectToProjectName'])
+    ),
+    gradleProjectNameToProjectRootMap: new Map(
+      Object.entries(gradleReportJson['gradleProjectNameToProjectRootMap'])
+    ),
+    gradleProjectToChildProjects: new Map(
+      Object.entries(gradleReportJson['gradleProjectToChildProjects'])
+    ),
+  };
+  return results;
+}
+
+export function writeGradleReportToCache(
+  cachePath: string,
+  results: GradleReport
+) {
+  let gradleReportJson: GradleReportJSON = {
+    hash: gradleCurrentConfigHash,
+    gradleFileToGradleProjectMap: Object.fromEntries(
+      results.gradleFileToGradleProjectMap
+    ),
+    buildFileToDepsMap: Object.fromEntries(results.buildFileToDepsMap),
+    gradleFileToOutputDirsMap: Object.fromEntries(
+      Array.from(results.gradleFileToOutputDirsMap).map(([key, value]) => [
+        key,
+        Object.fromEntries(value),
+      ])
+    ),
+    gradleProjectToTasksTypeMap: Object.fromEntries(
+      Array.from(results.gradleProjectToTasksTypeMap).map(([key, value]) => [
+        key,
+        Object.fromEntries(value),
+      ])
+    ),
+    gradleProjectToTasksMap: Object.fromEntries(
+      Array.from(results.gradleProjectToTasksMap).map(([key, value]) => [
+        key,
+        Array.from(value),
+      ])
+    ),
+    gradleProjectToProjectName: Object.fromEntries(
+      results.gradleProjectToProjectName
+    ),
+    gradleProjectNameToProjectRootMap: Object.fromEntries(
+      results.gradleProjectNameToProjectRootMap
+    ),
+    gradleProjectToChildProjects: Object.fromEntries(
+      results.gradleProjectToChildProjects
+    ),
+  };
+
+  writeJsonFile(cachePath, gradleReportJson);
+}
+
 let gradleReportCache: GradleReport;
 let gradleCurrentConfigHash: string;
+let gradleReportCachePath: string = join(
+  workspaceDataDirectory,
+  'gradle-report.hash'
+);
 
 export function getCurrentGradleReport() {
   if (!gradleReportCache) {
@@ -63,7 +170,14 @@ export async function populateGradleReport(
   const gradleConfigHash = await hashWithWorkspaceContext(workspaceRoot, [
     gradleConfigAndTestGlob,
   ]);
-  if (gradleReportCache && gradleConfigHash === gradleCurrentConfigHash) {
+  gradleReportCache ??= readGradleReportCache(
+    gradleReportCachePath,
+    gradleConfigHash
+  );
+  if (
+    gradleReportCache &&
+    (!gradleCurrentConfigHash || gradleConfigHash === gradleCurrentConfigHash)
+  ) {
     return;
   }
 
@@ -91,6 +205,7 @@ export async function populateGradleReport(
   );
   gradleCurrentConfigHash = gradleConfigHash;
   gradleReportCache = processProjectReports(projectReportLines);
+  writeGradleReportToCache(gradleReportCachePath, gradleReportCache);
 }
 
 export function processProjectReports(
@@ -105,12 +220,13 @@ export function processProjectReports(
    * Map of Gradle Build File to tasks type map
    */
   const gradleProjectToTasksTypeMap = new Map<string, Map<string, string>>();
+  const gradleProjectToTasksMap = new Map<string, Set<string>>();
   const gradleProjectToProjectName = new Map<string, string>();
   const gradleProjectNameToProjectRootMap = new Map<string, string>();
   /**
    * Map of buildFile to dependencies report path
    */
-  const buildFileToDepsMap = new Map<string, string>();
+  const buildFileToDepsMap = new Map<string, Set<string>>();
   /**
    * Map fo possible output files of each gradle file
    * e.g. {build.gradle.kts: { projectReportDir: '' testReportDir: '' }}
@@ -159,6 +275,7 @@ export function processProjectReports(
           absBuildFilePath: string,
           absBuildDirPath: string;
         const outputDirMap = new Map<string, string>();
+        const tasks = new Set<string>();
         for (const line of propertyReportLines) {
           if (line.startsWith('name: ')) {
             projectName = line.substring('name: '.length);
@@ -190,6 +307,10 @@ export function processProjectReports(
               `{workspaceRoot}/${relative(workspaceRoot, dirPath)}`
             );
           }
+          if (line.includes(': task ')) {
+            const [task] = line.split(': task ');
+            tasks.add(task);
+          }
         }
 
         if (!projectName || !absBuildFilePath || !absBuildDirPath) {
@@ -199,10 +320,13 @@ export function processProjectReports(
           relative(workspaceRoot, absBuildFilePath)
         );
         const buildDir = relative(workspaceRoot, absBuildDirPath);
-        buildFileToDepsMap.set(
-          buildFile,
-          dependenciesMap.get(gradleProject) as string
-        );
+        const depsFile = dependenciesMap.get(gradleProject);
+        if (depsFile) {
+          buildFileToDepsMap.set(
+            buildFile,
+            processGradleDependencies(depsFile)
+          );
+        }
 
         outputDirMap.set('build', `{workspaceRoot}/${buildDir}`);
         outputDirMap.set(
@@ -217,6 +341,7 @@ export function processProjectReports(
           gradleProject,
           dirname(buildFile)
         );
+        gradleProjectToTasksMap.set(gradleProject, tasks);
       }
       if (line.endsWith('taskReport')) {
         const gradleProject = line.substring(
@@ -267,8 +392,49 @@ export function processProjectReports(
     buildFileToDepsMap,
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
+    gradleProjectToTasksMap,
     gradleProjectToProjectName,
     gradleProjectNameToProjectRootMap,
     gradleProjectToChildProjects,
   };
+}
+
+export function processGradleDependencies(depsFile: string): Set<string> {
+  const dependedProjects = new Set<string>();
+  const lines = readFileSync(depsFile).toString().split(newLineSeparator);
+  let inDeps = false;
+  for (const line of lines) {
+    if (
+      line.startsWith('implementationDependenciesMetadata') ||
+      line.startsWith('compileClasspath')
+    ) {
+      inDeps = true;
+      continue;
+    }
+
+    if (inDeps) {
+      if (line === '') {
+        inDeps = false;
+        continue;
+      }
+      const [indents, dep] = line.split('--- ');
+      if (indents === '\\' || indents === '+') {
+        let targetProjectName: string | undefined;
+        if (dep.startsWith('project ')) {
+          targetProjectName = dep
+            .substring('project '.length)
+            .replace(/ \(n\)$/, '')
+            .trim()
+            .split(' ')?.[0];
+        } else if (dep.includes('-> project')) {
+          const [_, projectName] = dep.split('-> project');
+          targetProjectName = projectName.trim().split(' ')?.[0];
+        }
+        if (targetProjectName) {
+          dependedProjects.add(targetProjectName);
+        }
+      }
+    }
+  }
+  return dependedProjects;
 }

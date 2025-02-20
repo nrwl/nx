@@ -189,6 +189,7 @@ const binaryExtensions = new Set([
   '.resources',
   '.rgb',
   '.rip',
+  '.riv',
   '.rlc',
   '.rmf',
   '.rmvb',

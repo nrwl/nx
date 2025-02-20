@@ -20,9 +20,10 @@ import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-
 const nxAngularLegacyVersionMap: Record<number, string> = {
   14: '~17.0.0',
   15: '~19.0.0',
+  16: '~20.1.0',
 };
 // min major angular version supported in latest Nx
-const minMajorAngularVersionSupported = 16;
+const minMajorAngularVersionSupported = 17;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
 // version when packages were rescoped from @nrwl/* to @nx/*
@@ -106,7 +107,10 @@ export async function getLegacyMigrationFunctionIfApplicable(
     );
 
     output.log({ title: '📝 Setting up workspace' });
-    execSync(`${pmc.exec} ${legacyMigrationCommand}`, { stdio: [0, 1, 2] });
+    execSync(`${pmc.exec} ${legacyMigrationCommand}`, {
+      stdio: [0, 1, 2],
+      windowsHide: false,
+    });
 
     if (useNxCloud) {
       output.log({ title: '🛠️ Setting up Nx Cloud' });
@@ -146,7 +150,7 @@ async function installDependencies(
   }
   writeJsonFile(`package.json`, json);
 
-  execSync(pmc.install, { stdio: [0, 1, 2] });
+  execSync(pmc.install, { stdio: [0, 1, 2], windowsHide: false });
 }
 
 async function resolvePackageVersion(

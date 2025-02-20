@@ -1,16 +1,48 @@
-import type { Tree } from '@nx/devkit';
+import { readProjectConfiguration, type Tree } from '@nx/devkit';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
-import type { Schema } from '../schema';
+import type { NormalizedGeneratorOptions, Schema } from '../schema';
 
-export function normalizeOptions(tree: Tree, options: Schema) {
-  const isStandaloneApp = isNgStandaloneApp(tree, options.project);
+export async function normalizeOptions(
+  tree: Tree,
+  options: Schema
+): Promise<NormalizedGeneratorOptions> {
+  const { targets } = readProjectConfiguration(tree, options.project);
+  const isUsingApplicationBuilder =
+    targets.build.executor === '@angular-devkit/build-angular:application' ||
+    targets.build.executor === '@angular/build:application' ||
+    targets.build.executor === '@nx/angular:application';
 
-  let hydration = options.hydration;
-  if (hydration === undefined) {
+  if (options.serverRouting === undefined && isUsingApplicationBuilder) {
     const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    hydration = angularMajorVersion >= 17;
+
+    if (angularMajorVersion >= 19) {
+      options.serverRouting = await promptWhenInteractive<{
+        serverRouting: boolean;
+      }>(
+        {
+          type: 'confirm',
+          name: 'serverRouting',
+          message:
+            'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
+          initial: false,
+        },
+        { serverRouting: false }
+      ).then(({ serverRouting }) => serverRouting);
+    } else {
+      options.serverRouting = false;
+    }
+  } else if (
+    options.serverRouting !== undefined &&
+    !isUsingApplicationBuilder
+  ) {
+    throw new Error(
+      'Server routing APIs can only be added to a project using `application` builder.'
+    );
   }
+
+  const isStandaloneApp = isNgStandaloneApp(tree, options.project);
 
   return {
     project: options.project,
@@ -22,6 +54,8 @@ export function normalizeOptions(tree: Tree, options: Schema) {
     rootModuleClassName: options.rootModuleClassName ?? 'AppServerModule',
     skipFormat: options.skipFormat ?? false,
     standalone: options.standalone ?? isStandaloneApp,
-    hydration,
+    hydration: options.hydration ?? true,
+    serverRouting: options.serverRouting,
+    isUsingApplicationBuilder,
   };
 }

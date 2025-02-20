@@ -13,7 +13,7 @@
     "package": {
       "implementation": "./src/executors/package/package.impl",
       "schema": "./src/executors/package/schema.json",
-      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds."
+      "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds."
     },
     "browser-esbuild": {
       "implementation": "./src/executors/browser-esbuild/browser-esbuild.impl",
@@ -33,7 +33,7 @@
     "application": {
       "implementation": "./src/executors/application/application.impl",
       "schema": "./src/executors/application/schema.json",
-      "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities. _Note: this is only supported in Angular versions >= 17.0.0_."
+      "description": "Builds an Angular application using [esbuild](https://esbuild.github.io/) with integrated SSR and prerendering capabilities."
     },
     "extract-i18n": {
       "implementation": "./src/executors/extract-i18n/extract-i18n.impl",

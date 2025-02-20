@@ -26,7 +26,7 @@ describe('lint-checks generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await pluginGenerator(tree, {
-      name: 'plugin',
+      directory: 'plugin',
       importPath: '@acme/plugin',
       compiler: 'tsc',
       linter: Linter.EsLint,
@@ -37,13 +37,13 @@ describe('lint-checks generator', () => {
     });
     await generatorGenerator(tree, {
       name: 'my-generator',
-      project: 'plugin',
+      path: 'plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
       skipLintChecks: true,
     });
     await executorGenerator(tree, {
       name: 'my-executor',
-      project: 'plugin',
+      path: 'plugin/src/executors/my-executor',
       unitTestRunner: 'jest',
       includeHasher: false,
       skipLintChecks: true,

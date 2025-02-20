@@ -18,6 +18,7 @@ Nx.json configuration
 
 ### Properties
 
+- [$schema](../../devkit/documents/NxJsonConfiguration#$schema): string
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
@@ -42,9 +43,16 @@ Nx.json configuration
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
+- [useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
+
+### $schema
+
+• `Optional` **$schema**: `string`
+
+---
 
 ### affected
 
@@ -170,7 +178,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 ---
 
@@ -261,7 +269,10 @@ Dependencies between different target names across all projects
 
 • `Optional` **tasksRunnerOptions**: `Object`
 
-Available Task Runners
+**`Deprecated`**
+
+Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
+Available Task Runners for Nx to use
 
 #### Index signature
 
@@ -282,6 +293,14 @@ Set this to false to disable the daemon.
 • `Optional` **useInferencePlugins**: `boolean`
 
 Set this to false to disable adding inference plugins when generating new projects
+
+---
+
+### useLegacyCache
+
+• `Optional` **useLegacyCache**: `boolean`
+
+Use the legacy file system cache instead of the db cache
 
 ---
 

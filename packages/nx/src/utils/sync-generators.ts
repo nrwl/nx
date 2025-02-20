@@ -42,6 +42,8 @@ export type SyncGeneratorRunSuccessResult = {
 type SerializableSimpleError = {
   message: string;
   stack: string | undefined;
+  title?: string;
+  bodyLines?: string[];
 };
 
 export type SyncGeneratorRunErrorResult = {
@@ -65,6 +67,13 @@ type FlushSyncGeneratorChangesFailure = {
 export type FlushSyncGeneratorChangesResult =
   | FlushSyncGeneratorChangesSuccess
   | FlushSyncGeneratorChangesFailure;
+
+export class SyncError extends Error {
+  constructor(public title: string, public bodyLines?: string[]) {
+    super(title);
+    this.name = this.constructor.name;
+  }
+}
 
 export async function getSyncGeneratorChanges(
   generators: string[]
@@ -103,12 +112,20 @@ export async function flushSyncGeneratorChanges(
 export async function collectAllRegisteredSyncGenerators(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration
-): Promise<string[]> {
+): Promise<{
+  globalGenerators: string[];
+  taskGenerators: string[];
+}> {
   if (!daemonClient.enabled()) {
-    return [
-      ...collectEnabledTaskSyncGeneratorsFromProjectGraph(projectGraph, nxJson),
-      ...collectRegisteredGlobalSyncGenerators(),
-    ];
+    return {
+      globalGenerators: [...collectRegisteredGlobalSyncGenerators()],
+      taskGenerators: [
+        ...collectEnabledTaskSyncGeneratorsFromProjectGraph(
+          projectGraph,
+          nxJson
+        ),
+      ],
+    };
   }
 
   return await daemonClient.getRegisteredSyncGenerators();
@@ -154,7 +171,7 @@ export async function runSyncGenerator(
   } catch (e) {
     return {
       generatorName: generatorSpecifier,
-      error: { message: e.message, stack: e.stack },
+      error: toSerializableError(e),
     };
   }
 }
@@ -251,17 +268,10 @@ export function getSyncGeneratorSuccessResultsMessageLines(
     }
 
     messageLines.push(
-      `The ${chalk.bold(
-        result.generatorName
-      )} sync generator identified ${chalk.bold(result.changes.length)} file${
-        result.changes.length === 1 ? '' : 's'
-      } in the workspace that ${
-        result.changes.length === 1 ? 'is' : 'are'
-      } out of sync${result.outOfSyncMessage ? ':' : '.'}`
+      `[${chalk.bold(result.generatorName)}]: ${
+        result.outOfSyncMessage ?? `Some files are out of sync.`
+      }`
     );
-    if (result.outOfSyncMessage) {
-      messageLines.push(result.outOfSyncMessage);
-    }
   }
 
   return messageLines;
@@ -269,26 +279,40 @@ export function getSyncGeneratorSuccessResultsMessageLines(
 
 export function getFailedSyncGeneratorsFixMessageLines(
   results: SyncGeneratorRunResult[],
-  verbose: boolean
+  verbose: boolean,
+  globalGeneratorSet: Set<string> = new Set()
 ): string[] {
   const messageLines: string[] = [];
-  const generators: string[] = [];
+  const globalGenerators: string[] = [];
+  const taskGenerators: string[] = [];
+  let isFirst = true;
   for (const result of results) {
     if ('error' in result) {
+      if (!isFirst && verbose) {
+        messageLines.push('');
+      }
+      isFirst = false;
       messageLines.push(
-        `The ${chalk.bold(
-          result.generatorName
-        )} sync generator reported the following error:
-${chalk.bold(result.error.message)}${
-          verbose && result.error.stack ? '\n' + result.error.stack : ''
-        }`
+        `[${chalk.bold(result.generatorName)}]: ${errorToString(
+          result.error,
+          verbose
+        )}`
       );
-      generators.push(result.generatorName);
+
+      if (globalGeneratorSet.has(result.generatorName)) {
+        globalGenerators.push(result.generatorName);
+      } else {
+        taskGenerators.push(result.generatorName);
+      }
     }
   }
 
   messageLines.push(
-    ...getFailedSyncGeneratorsMessageLines(generators, verbose)
+    ...getFailedSyncGeneratorsMessageLines(
+      taskGenerators,
+      globalGenerators,
+      verbose
+    )
   );
 
   return messageLines;
@@ -296,24 +320,38 @@ ${chalk.bold(result.error.message)}${
 
 export function getFlushFailureMessageLines(
   result: FlushSyncGeneratorChangesFailure,
-  verbose: boolean
+  verbose: boolean,
+  globalGeneratorSet: Set<string> = new Set()
 ): string[] {
   const messageLines: string[] = [];
-  const generators: string[] = [];
+  const globalGenerators: string[] = [];
+  const taskGenerators: string[] = [];
+  let isFirst = true;
   for (const failure of result.generatorFailures) {
+    if (!isFirst && verbose) {
+      messageLines.push('');
+    }
+    isFirst = false;
     messageLines.push(
-      `The ${chalk.bold(
-        failure.generator
-      )} sync generator failed to apply its changes with the following error:
-${chalk.bold(failure.error.message)}${
-        verbose && failure.error.stack ? '\n' + failure.error.stack : ''
-      }`
+      `[${chalk.bold(failure.generator)}]: ${errorToString(
+        failure.error,
+        verbose
+      )}`
     );
-    generators.push(failure.generator);
+
+    if (globalGeneratorSet.has(failure.generator)) {
+      globalGenerators.push(failure.generator);
+    } else {
+      taskGenerators.push(failure.generator);
+    }
   }
 
   messageLines.push(
-    ...getFailedSyncGeneratorsMessageLines(generators, verbose)
+    ...getFailedSyncGeneratorsMessageLines(
+      taskGenerators,
+      globalGenerators,
+      verbose
+    )
   );
 
   if (result.generalFailure) {
@@ -328,13 +366,11 @@ ${chalk.bold(failure.error.message)}${
       ...[
         '',
         result.generalFailure.message,
-        ...(verbose && !!result.generalFailure.stack
+        ...(!!result.generalFailure.stack
           ? [`\n${result.generalFailure.stack}`]
           : []),
         '',
-        verbose
-          ? 'Please report the error at: https://github.com/nrwl/nx/issues/new/choose'
-          : 'Please run with `--verbose` and report the error at: https://github.com/nrwl/nx/issues/new/choose',
+        'Please report the error at: https://github.com/nrwl/nx/issues/new/choose',
       ]
     );
   }
@@ -412,7 +448,7 @@ async function flushSyncGeneratorChangesToDisk(
     } catch (e) {
       generatorFailures.push({
         generator: result.generatorName,
-        error: { message: e.message, stack: e.stack },
+        error: toSerializableError(e),
       });
     }
   }
@@ -434,7 +470,7 @@ async function flushSyncGeneratorChangesToDisk(
   } catch (e) {
     return {
       generatorFailures,
-      generalFailure: { message: e.message, stack: e.stack },
+      generalFailure: toSerializableError(e),
     };
   }
 
@@ -444,29 +480,84 @@ async function flushSyncGeneratorChangesToDisk(
 }
 
 function getFailedSyncGeneratorsMessageLines(
-  generators: string[],
+  taskGenerators: string[],
+  globalGenerators: string[],
   verbose: boolean
 ): string[] {
   const messageLines: string[] = [];
 
-  if (generators.length === 1) {
+  if (taskGenerators.length + globalGenerators.length === 1) {
     messageLines.push(
       '',
       verbose
         ? 'Please check the error above and address the issue.'
-        : 'Please check the error above and address the issue. You can provide the `--verbose` flag to get more details.',
-      `If needed, you can disable the failing sync generator by setting \`sync.disabledTaskSyncGenerators: ["${generators[0]}"]\` in your \`nx.json\`.`
+        : 'Please check the error above and address the issue. You can provide the `--verbose` flag to get more details.'
     );
-  } else if (generators.length > 1) {
-    const generatorsString = generators.map((g) => `"${g}"`).join(', ');
+    if (taskGenerators.length === 1) {
+      messageLines.push(
+        `If needed, you can disable the failing sync generator by setting \`sync.disabledTaskSyncGenerators: ["${taskGenerators[0]}"]\` in your \`nx.json\`.`
+      );
+    } else {
+      messageLines.push(
+        `If needed, you can remove the failing global sync generator "${globalGenerators[0]}" from the \`sync.globalGenerators\` array in your \`nx.json\`.`
+      );
+    }
+  } else if (taskGenerators.length + globalGenerators.length > 1) {
     messageLines.push(
       '',
       verbose
         ? 'Please check the errors above and address the issues.'
-        : 'Please check the errors above and address the issues. You can provide the `--verbose` flag to get more details.',
-      `If needed, you can disable the failing sync generators by setting \`sync.disabledTaskSyncGenerators: [${generatorsString}]\` in your \`nx.json\`.`
+        : 'Please check the errors above and address the issues. You can provide the `--verbose` flag to get more details.'
     );
+    if (taskGenerators.length > 0) {
+      const generatorsString = taskGenerators.map((g) => `"${g}"`).join(', ');
+      messageLines.push(
+        `If needed, you can disable the failing task sync generators by setting \`sync.disabledTaskSyncGenerators: [${generatorsString}]\` in your \`nx.json\`.`
+      );
+    }
+    if (globalGenerators.length > 0) {
+      const lastGenerator = globalGenerators.pop();
+      const generatorsString =
+        globalGenerators.length > 0
+          ? `${globalGenerators
+              .map((g) => `"${g}"`)
+              .join(', ')} and "${lastGenerator}"`
+          : `"${lastGenerator}"`;
+      messageLines.push(
+        `If needed, you can remove the failing global sync generators ${generatorsString} from the \`sync.globalGenerators\` array in your \`nx.json\`.`
+      );
+    }
   }
 
   return messageLines;
+}
+
+function errorToString(error: SerializableSimpleError, verbose: boolean) {
+  if (error.title) {
+    let message = `${chalk.red(error.title)}`;
+    if (error.bodyLines?.length) {
+      message += `
+
+  ${error.bodyLines
+    .map((bodyLine) => `${bodyLine.split('\n').join('\n  ')}`)
+    .join('\n  ')}`;
+
+      return message;
+    }
+  }
+
+  return `${chalk.red(error.message)}${
+    verbose && error.stack ? '\n  ' + error.stack : ''
+  }`;
+}
+
+function toSerializableError(error: Error): SerializableSimpleError {
+  return error instanceof SyncError
+    ? {
+        title: error.title,
+        bodyLines: error.bodyLines,
+        message: error.message,
+        stack: error.stack,
+      }
+    : { message: error.message, stack: error.stack };
 }

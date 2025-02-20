@@ -8,7 +8,8 @@ import {
   useState,
 } from 'react';
 import { ProjectDetails as ProjectDetailsUi } from '@nx/graph-internal/ui-project-details';
-import { ExpandedTargetsProvider } from '@nx/graph/shared';
+import { ExpandedTargetsProvider } from '@nx/graph/legacy/shared';
+import { twMerge } from 'tailwind-merge';
 
 export function Loading() {
   return (
@@ -110,7 +111,7 @@ export function ProjectDetails({
       )}
       <div
         id="project-details-container"
-        className="not-prose overflow-y-auto"
+        className={twMerge('not-prose', height && 'overflow-y-auto')}
         style={{ height }}
         ref={elementRef}
       >

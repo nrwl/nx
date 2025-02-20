@@ -40,7 +40,7 @@ import {
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
-import { gitAdd, gitTag } from './utils/git';
+import { gitAdd, gitPush, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
@@ -86,10 +86,10 @@ export interface ReleaseVersionGeneratorSchema {
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
   deleteVersionPlans?: boolean;
   /**
-   * 'auto' allows users to opt into dependents being updated (a patch version bump) when a dependency is versioned.
-   * This is only applicable to independently released projects.
+   * 'auto' is the default and will cause dependents to be updated (a patch version bump) when a dependency is versioned.
+   * This is only applicable to independently released projects. 'never' will cause dependents to not be updated.
    */
-  updateDependents?: 'never' | 'auto';
+  updateDependents?: 'auto' | 'never';
   /**
    * Whether or not to completely omit project logs when that project has no applicable changes. This can be useful for
    * large monorepos which have a large number of projects, especially when only a subset are released together.
@@ -180,6 +180,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
     const {
       error: filterError,
+      filterLog,
       releaseGroups,
       releaseGroupToFilteredProjects,
     } = filterReleaseGroups(
@@ -192,6 +193,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       output.error(filterError);
       process.exit(1);
     }
+    if (
+      filterLog &&
+      process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG !== 'true'
+    ) {
+      output.note(filterLog);
+    }
+
     if (!args.specifier) {
       const rawVersionPlans = await readRawVersionPlans();
       await setResolvedVersionPlansOnGroups(
@@ -370,6 +378,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
       }
 
+      if (args.gitPush ?? nxReleaseConfig.version.git.push) {
+        output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+        await gitPush({
+          gitRemote: args.gitRemote,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
+      }
+
       return {
         // An overall workspace version cannot be relevant when filtering to independent projects
         workspaceVersion: undefined,
@@ -383,10 +400,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
 
-      runPreVersionCommand(releaseGroup.version.groupPreVersionCommand, {
-        dryRun: args.dryRun,
-        verbose: args.verbose,
-      });
+      runPreVersionCommand(
+        releaseGroup.version.groupPreVersionCommand,
+        {
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        },
+        releaseGroup
+      );
 
       const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
@@ -524,6 +545,15 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           verbose: args.verbose,
         });
       }
+    }
+
+    if (args.gitPush ?? nxReleaseConfig.version.git.push) {
+      output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+      await gitPush({
+        gitRemote: args.gitRemote,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
     }
 
     return {
@@ -727,13 +757,18 @@ function resolveGeneratorData({
 }
 function runPreVersionCommand(
   preVersionCommand: string,
-  { dryRun, verbose }: { dryRun: boolean; verbose: boolean }
+  { dryRun, verbose }: { dryRun: boolean; verbose: boolean },
+  releaseGroup?: ReleaseGroupWithName
 ) {
   if (!preVersionCommand) {
     return;
   }
 
-  output.logSingleLine(`Executing pre-version command`);
+  output.logSingleLine(
+    releaseGroup
+      ? `Executing release group pre-version command for "${releaseGroup.name}"`
+      : `Executing pre-version command`
+  );
   if (verbose) {
     console.log(`Executing the following pre-version command:`);
     console.log(preVersionCommand);
@@ -753,6 +788,7 @@ function runPreVersionCommand(
       maxBuffer: LARGE_BUFFER,
       stdio,
       env,
+      windowsHide: false,
     });
   } catch (e) {
     const title = verbose

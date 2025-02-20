@@ -49,7 +49,7 @@ describe('Vite Plugin', () => {
       beforeAll(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+          `generate @nx/react:app ${myApp} --bundler=vite --unitTestRunner=vitest`
         );
       });
 
@@ -97,7 +97,7 @@ describe('Vite Plugin', () => {
       beforeEach(() => {
         myApp = uniq('my-app');
         runCLI(
-          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+          `generate @nx/web:app ${myApp} --bundler=vite --unitTestRunner=vitest --directory=${myApp}`
         );
       });
       it('should build application', async () => {
@@ -189,22 +189,22 @@ describe('Vite Plugin', () => {
         packages: ['@nx/react'],
       });
       runCLI(
-        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app} --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=vitest --no-interactive  --directory=${app}`
       );
 
       // only this project will be directly used from dist
       runCLI(
-        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable`
       );
 
       runCLI(
-        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib} --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib}`
       );
 
       // because the default js lib builds as cjs it cannot be loaded from dist
       // so the paths plugin should always resolve to the libs source
       runCLI(
-        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js --projectNameAndRootFormat=as-provided`
+        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js`
       );
       const buildableLibCmp = names(`${lib}-buildable`).className;
       const nonBuildableLibCmp = names(lib).className;
@@ -241,14 +241,14 @@ export default App;
       const results = runCLI(`build ${app} --buildLibsFromSource=true`);
       expect(results).toContain('Successfully ran target build for project');
       // this should be more modules than build from dist
-      expect(results).toContain('40 modules transformed');
+      expect(results).toContain('38 modules transformed');
     });
 
     it('should build app from libs dist', () => {
       const results = runCLI(`build ${app} --buildLibsFromSource=false`);
       expect(results).toContain('Successfully ran target build for project');
       // this should be less modules than building from source
-      expect(results).toContain('38 modules transformed');
+      expect(results).toContain('36 modules transformed');
     });
 
     it('should build app from libs without package.json in lib', () => {
@@ -275,7 +275,9 @@ export default App;
       const lib = uniq('my-default-lib');
       beforeAll(() => {
         proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
       });
 
       it('should collect coverage when --coverage is set', () => {
@@ -316,7 +318,9 @@ export default App;
       });
 
       it('should be able to run tests', async () => {
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
         expect(exists(tmpProjPath(`libs/${lib}/vite.config.ts`))).toBeTruthy();
 
         const result = await runCLIAsync(`test ${lib}`);
@@ -333,7 +337,9 @@ export default App;
       }, 100_000);
 
       it('should collect coverage', () => {
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
         updateFile(`libs/${lib}/vite.config.ts`, () => {
           return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
@@ -383,7 +389,9 @@ export default App;
       it('should not delete the project directory when coverage is enabled', async () => {
         // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
         // from the @nx/vite:test executor options, vite will delete the project root directory
-        runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
+        runCLI(
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
+        );
         updateFile(`libs/${lib}/vite.config.ts`, () => {
           return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -438,7 +446,7 @@ export default defineConfig({
 
       it('should be able to run tests with inSourceTests set to true', async () => {
         runCLI(
-          `generate @nx/react:lib ${lib} --unitTestRunner=vitest --inSourceTests`
+          `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest --inSourceTests`
         );
         expect(
           exists(tmpProjPath(`libs/${lib}/src/lib/${lib}.spec.tsx`))
@@ -465,7 +473,6 @@ export default defineConfig({
   describe('ESM-only apps', () => {
     beforeAll(() => {
       newProject({
-        unsetProjectNameAndRootFormat: false,
         packages: ['@nx/react'],
       });
     });

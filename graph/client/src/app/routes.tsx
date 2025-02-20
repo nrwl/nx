@@ -14,7 +14,7 @@ import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 import { ProjectDetailsPage } from '@nx/graph-internal/project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';
@@ -84,6 +84,7 @@ const projectDetailsLoader = async (
   sourceMap: Record<string, string[]>;
   errors?: GraphError[];
   connectedToCloud?: boolean;
+  disabledTaskSyncGenerators?: string[];
 }> => {
   const workspaceData = await workspaceDataLoader(selectedWorkspaceId);
   const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
@@ -104,6 +105,7 @@ const projectDetailsLoader = async (
     sourceMap: sourceMaps[project.data.root],
     errors: workspaceData.errors,
     connectedToCloud: workspaceData.connectedToCloud,
+    disabledTaskSyncGenerators: workspaceData.disabledTaskSyncGenerators,
   };
 };
 

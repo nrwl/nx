@@ -13,16 +13,14 @@ describe('component', () => {
     appRouterProjectName = 'my-app-router';
     tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
-      name: projectName,
+      directory: projectName,
       style: 'css',
       appDir: false,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     await applicationGenerator(tree, {
-      name: appRouterProjectName,
+      directory: appRouterProjectName,
       style: 'css',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 
@@ -30,7 +28,7 @@ describe('component', () => {
     it('should generate component in pages directory', async () => {
       await pageGenerator(tree, {
         name: 'hello',
-        project: projectName,
+        path: 'my-app/pages/hello',
         style: 'css',
       });
 
@@ -41,8 +39,7 @@ describe('component', () => {
     it('should support dynamic routes and directories', async () => {
       await pageGenerator(tree, {
         name: '[dynamic]',
-        directory: 'posts',
-        project: projectName,
+        path: 'my-app/pages/posts/[dynamic]',
         style: 'css',
       });
 
@@ -52,10 +49,6 @@ describe('component', () => {
       expect(
         tree.exists('my-app/pages/posts/[dynamic]/index.module.css')
       ).toBeTruthy();
-
-      const content = tree
-        .read('my-app/pages/posts/[dynamic]/index.tsx')
-        .toString();
     });
   });
 
@@ -63,9 +56,8 @@ describe('component', () => {
     it('should generate component in app directory', async () => {
       await pageGenerator(tree, {
         name: 'about',
-        directory: `${appRouterProjectName}/app/about`,
+        path: `${appRouterProjectName}/app/about`,
         style: 'css',
-        nameAndDirectoryFormat: 'as-provided',
       });
 
       expect(
@@ -79,8 +71,7 @@ describe('component', () => {
     it('should support dynamic routes and directories', async () => {
       await pageGenerator(tree, {
         name: '[dynamic]',
-        project: appRouterProjectName,
-        directory: 'posts',
+        path: `${appRouterProjectName}/app/posts/[dynamic]`,
         style: 'css',
       });
 

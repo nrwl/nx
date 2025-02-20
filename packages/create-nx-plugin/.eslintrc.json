@@ -15,7 +15,15 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {}
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "chalk",
+            "message": "Please use `picocolors` in place of `chalk` for rendering terminal colors"
+          }
+        ]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],

@@ -39,8 +39,8 @@ Once those criteria are met, you can submit your plugin by following the steps b
 - Fork the [Nx repo](https://github.com/nrwl/nx/fork) (if you haven't already)
 - Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description
 - Use the following commit message template: `chore(core): nx plugin submission [PLUGIN_NAME]`
-- push your changes, and run `yarn submit-plugin`
+- push your changes, and run `pnpm submit-plugin`
 
-> The `yarn submit-plugin` command automatically opens the GitHub pull request process with the correct template.
+> The `pnpm submit-plugin` command automatically opens the GitHub pull request process with the correct template.
 
 We will then verify the plugin, offer suggestions or merge the pull request!

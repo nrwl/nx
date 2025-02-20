@@ -34,6 +34,13 @@
       "id": "console-run-command",
       "name": "Run Command",
       "path": "/recipes/nx-console/console-run-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-nx-cloud",
+      "id": "console-nx-cloud",
+      "name": "Nx Cloud Integration",
+      "path": "/recipes/nx-console/console-nx-cloud"
     }
   ],
   "run-tasks": [
@@ -57,6 +64,13 @@
       "id": "executors-and-configurations",
       "name": "Executors and Configurations",
       "path": "/concepts/executors-and-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/common-tasks",
+      "id": "common-tasks",
+      "name": "Common Tasks",
+      "path": "/concepts/common-tasks"
     },
     {
       "description": "",
@@ -243,6 +257,15 @@
       "path": "/nx-api/nx/documents/reset"
     }
   ],
+  "AI": [
+    {
+      "description": "",
+      "file": "shared/features/enhance-AI",
+      "id": "enhance-AI",
+      "name": "Enhance Your LLM",
+      "path": "/features/enhance-AI"
+    }
+  ],
   "explore-graph": [
     {
       "description": "",
@@ -278,6 +301,13 @@
       "id": "dep-graph",
       "name": "graph",
       "path": "/nx-api/nx/documents/dep-graph"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/show",
+      "id": "show",
+      "name": "show",
+      "path": "/nx-api/nx/documents/show"
     }
   ],
   "generate-code": [
@@ -492,6 +522,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/updating-version-references",
+      "id": "updating-version-references",
+      "name": "Updating Version References in Manifest Files (e.g. package.json)",
+      "path": "/recipes/nx-release/updating-version-references"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
@@ -555,17 +592,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-      "id": "publish-custom-dist-directory",
-      "name": "Publish a Custom Dist Directory",
-      "path": "/recipes/nx-release/publish-custom-dist-directory"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/nx-release/build-before-versioning",
       "id": "build-before-versioning",
       "name": "Build Before Versioning",
       "path": "/recipes/nx-release/build-before-versioning"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/configuration-version-prefix",
+      "id": "configuration-version-prefix",
+      "name": "Configuring Version Prefix for Dependency Versions",
+      "path": "/recipes/nx-release/configuration-version-prefix"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -582,13 +619,6 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
     }
   ],
   "inferred-tasks": [
@@ -626,6 +656,29 @@
       "id": "project-graph-plugins",
       "name": "Infer Tasks or Projects",
       "path": "/extending-nx/recipes/project-graph-plugins"
+    }
+  ],
+  "add": [
+    {
+      "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+      "id": "keep-nx-versions-in-sync",
+      "name": "Keep Nx Versions in Sync",
+      "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/add",
+      "id": "add",
+      "name": "add",
+      "path": "/nx-api/nx/documents/add"
     }
   ],
   "create-your-own-plugin": [
@@ -679,34 +732,66 @@
       "path": "/nx-api/angular/documents/nx-devkit-angular-devkit"
     }
   ],
-  "repository-types": [
+  "daemon": [
     {
       "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
+      "file": "shared/concepts/daemon",
+      "id": "nx-daemon",
+      "name": "Nx Daemon",
+      "path": "/concepts/nx-daemon"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/daemon",
+      "id": "daemon",
+      "name": "daemon",
+      "path": "/nx-api/nx/documents/daemon"
+    }
+  ],
+  "sync": [
+    {
+      "description": "",
+      "file": "shared/concepts/sync-generators",
+      "id": "sync-generators",
+      "name": "Sync Generators",
+      "path": "/concepts/sync-generators"
     },
     {
       "description": "",
-      "file": "shared/recipes/repo-types/package-based-in-integrated",
-      "id": "package-based-in-integrated",
-      "name": "Add a Package-based Project in an Integrated Repo",
-      "path": "/recipes/tips-n-tricks/package-based-in-integrated"
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/sync",
+      "id": "sync",
+      "name": "sync",
+      "path": "/nx-api/nx/documents/sync"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/sync-check",
+      "id": "sync-check",
+      "name": "sync:check",
+      "path": "/nx-api/nx/documents/sync-check"
+    }
+  ],
+  "project-linking": [
+    {
+      "description": "",
+      "file": "shared/concepts/typescript-project-linking",
+      "id": "typescript-project-linking",
+      "name": "TypeScript Project Linking",
+      "path": "/concepts/typescript-project-linking"
     },
     {
       "description": "",
-      "file": "shared/recipes/repo-types/integrated-in-package-based",
-      "id": "integrated-in-package-based",
-      "name": "Add an Integrated Project in a Package-based Repo",
-      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/repo-types/standalone-to-integrated",
-      "id": "standalone-to-integrated",
-      "name": "Convert from a Standalone Repository to an Integrated Repository",
-      "path": "/recipes/tips-n-tricks/standalone-to-integrated"
+      "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+      "id": "switch-to-workspaces-project-references",
+      "name": "Switch to Workspaces and TS Project References",
+      "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references"
     }
   ],
   "module-federation": [
@@ -834,6 +919,36 @@
       "id": "update-global-installation",
       "name": "Update Your Global Nx Installation",
       "path": "/recipes/installation/update-global-installation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/activate-powerpack",
+      "id": "activate-powerpack",
+      "name": "Activate Powerpack",
+      "path": "/nx-enterprise/activate-powerpack"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/create-nx-workspace",
+      "id": "create-nx-workspace",
+      "name": "create-nx-workspace",
+      "path": "/nx-api/nx/documents/create-nx-workspace"
+    }
+  ],
+  "exec": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/root-level-scripts",
+      "id": "root-level-scripts",
+      "name": "Run Root-Level NPM Scripts with Nx",
+      "path": "/recipes/running-tasks/root-level-scripts"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/exec",
+      "id": "exec",
+      "name": "exec",
+      "path": "/nx-api/nx/documents/exec"
     }
   ],
   "workspace-watching": [
@@ -850,6 +965,52 @@
       "id": "watch",
       "name": "watch",
       "path": "/nx-api/nx/documents/watch"
+    }
+  ],
+  "init": [
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-monorepo",
+      "id": "adding-to-monorepo",
+      "name": "NPM/Yarn/PNPM workspaces",
+      "path": "/recipes/adopting-nx/adding-to-monorepo"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/adding-to-existing-project",
+      "id": "adding-to-existing-project",
+      "name": "Add to any Project",
+      "path": "/recipes/adopting-nx/adding-to-existing-project"
+    },
+    {
+      "description": "",
+      "file": "shared/migration/migration-angular",
+      "id": "angular",
+      "name": "Migrating from Angular CLI",
+      "path": "/recipes/angular/migration/angular"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/init",
+      "id": "init",
+      "name": "init",
+      "path": "/nx-api/nx/documents/init"
+    }
+  ],
+  "import": [
+    {
+      "description": "",
+      "file": "shared/migration/import-project",
+      "id": "import-project",
+      "name": "Import an Existing Project into an Nx Workspace",
+      "path": "/recipes/adopting-nx/import-project"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/import",
+      "id": "import",
+      "name": "import",
+      "path": "/nx-api/nx/documents/import"
     }
   ],
   "environment-variables": [
@@ -1106,6 +1267,47 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "conformance": [
+    {
+      "description": "Write and apply rules for your Nx workspace",
+      "file": "shared/features/powerpack/conformance",
+      "id": "conformance",
+      "name": "Run Language-Agnostic Conformance Rules",
+      "path": "/nx-enterprise/powerpack/conformance"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+      "id": "configure-conformance-rules-in-nx-cloud",
+      "name": "Configure Conformance Rules in Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+      "id": "publish-conformance-rules-to-nx-cloud",
+      "name": "Publish Conformance Rules to Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
+    }
+  ],
+  "owners": [
+    {
+      "description": "Configure and maintain code owners for projects in an Nx workspace",
+      "file": "shared/features/powerpack/owners",
+      "id": "owners",
+      "name": "Define Code Ownership at the Project Level",
+      "path": "/nx-enterprise/powerpack/owners"
+    }
+  ],
+  "custom-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/features/powerpack/custom-caching",
+      "id": "custom-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/nx-enterprise/powerpack/custom-caching"
+    }
+  ],
   "database": [
     {
       "description": "",
@@ -1191,13 +1393,36 @@
       "path": "/ci/features/remote-cache"
     }
   ],
-  "on-premise": [
+  "login": [
     {
-      "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/features/nx-enterprise-on-prem",
-      "id": "on-premise",
-      "name": "Set up Nx Cloud On-Premise",
-      "path": "/ci/recipes/enterprise/on-premise/on-premise"
+      "description": "",
+      "file": "nx-cloud/recipes/personal-access-tokens",
+      "id": "personal-access-tokens",
+      "name": "Personal Access Tokens",
+      "path": "/ci/recipes/security/personal-access-tokens"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/login",
+      "id": "login",
+      "name": "login",
+      "path": "/nx-api/nx/documents/login"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/logout",
+      "id": "logout",
+      "name": "logout",
+      "path": "/nx-api/nx/documents/logout"
+    }
+  ],
+  "single-tenant": [
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/single-tenant/overview",
+      "id": "overview",
+      "name": "Single Tenant Nx Cloud Hosting",
+      "path": "/ci/recipes/enterprise/single-tenant/overview"
     }
   ],
   "docker": [

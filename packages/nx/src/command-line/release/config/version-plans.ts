@@ -1,6 +1,6 @@
-import { readFileSync, readdirSync } from 'fs';
-import { pathExists, stat } from 'fs-extra';
 import { exec } from 'node:child_process';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import { join } from 'path';
 import { RELEASE_TYPES, ReleaseType } from 'semver';
 import { workspaceRoot } from '../../../utils/workspace-root';
@@ -54,8 +54,7 @@ const versionPlansDirectory = join('.nx', 'version-plans');
 
 export async function readRawVersionPlans(): Promise<RawVersionPlan[]> {
   const versionPlansPath = getVersionPlansAbsolutePath();
-  const versionPlansPathExists = await pathExists(versionPlansPath);
-  if (!versionPlansPathExists) {
+  if (!existsSync(versionPlansPath)) {
     return [];
   }
 
@@ -323,6 +322,9 @@ async function getCommitForVersionPlanFile(
   return new Promise((resolve) => {
     exec(
       `git log --diff-filter=A --pretty=format:"%s|%h|%an|%ae|%b" -n 1 -- ${rawVersionPlan.absolutePath}`,
+      {
+        windowsHide: false,
+      },
       (error, stdout, stderr) => {
         if (error) {
           if (isVerbose) {

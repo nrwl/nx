@@ -22,10 +22,9 @@ describe('action', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      path: 'example',
-      project: 'demo',
+      path: 'apps/demo/app/routes/example.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -38,19 +37,11 @@ describe('action', () => {
     {
       path: 'apps/demo/app/routes/example.tsx',
     },
-    {
-      path: 'example',
-    },
-    {
-      path: 'example.tsx',
-    },
   ].forEach((config) => {
     describe(`Generating action using path ${config.path}`, () => {
       beforeEach(async () => {
         await actionGenerator(tree, {
           path: config.path,
-          // path: 'apps/demo/app/routes/example.tsx',
-          project: 'demo',
         });
       });
       it('should add imports', async () => {
@@ -77,25 +68,5 @@ describe('action', () => {
         expect(content).toMatch(useActionData);
       });
     });
-  });
-
-  it('--nameAndDirectoryFormat=as-provided', async () => {
-    // ACT
-    await actionGenerator(tree, {
-      path: 'apps/demo/app/routes/example.tsx',
-    });
-    // ASSERT
-    const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-    const useActionData = `const actionMessage = useActionData<typeof action>();`;
-    const actionFunction = `export const action = async ({ request }: ActionFunctionArgs)`;
-    expect(content).toMatch(`import { json } from '@remix-run/node';`);
-    expect(content).toMatch(
-      `import type { ActionFunctionArgs } from '@remix-run/node';`
-    );
-    expect(content).toMatch(
-      `import { useActionData } from '@remix-run/react';`
-    );
-    expect(content).toMatch(useActionData);
-    expect(content).toMatch(actionFunction);
   });
 });

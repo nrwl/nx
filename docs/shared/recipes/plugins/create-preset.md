@@ -34,7 +34,7 @@ npx create-nx-plugin my-org --pluginName my-plugin
 To create our preset inside of our plugin we can run
 
 ```shell
-nx generate @nx/plugin:generator --name=preset --project=happynrwl
+nx generate @nx/plugin:generator packages/happynrwl/src/generators/preset
 ```
 
 {% callout type="warning" title="Double check" %}

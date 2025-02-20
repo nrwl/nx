@@ -1,25 +1,22 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type { TargetConfiguration } from '@nx/devkit';
-import { CopyToClipboardButton } from '@nx/graph/ui-components';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
   EyeIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
-
-import {
-  AtomizerTooltip,
-  PropertyInfoTooltip,
-  Tooltip,
-} from '@nx/graph/ui-tooltips';
+import { CopyToClipboardButton } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { twMerge } from 'tailwind-merge';
 import { Pill } from '../pill';
 import { TargetTechnologies } from '../target-technologies/target-technologies';
 import { SourceInfo } from '../source-info/source-info';
 import { getDisplayHeaderFromTargetConfiguration } from '../utils/get-display-header-from-target-configuration';
 import { TargetExecutor } from '../target-executor/target-executor';
+import { AtomizerTooltip } from '../tooltips/atomizer-tooltip';
+import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
 
 export interface TargetConfigurationDetailsHeaderProps {
   isCollasped: boolean;
@@ -150,6 +147,17 @@ export const TargetConfigurationDetailsHeader = ({
                 </span>
               </Tooltip>
             )}
+            {(targetConfiguration as any).continuous && (
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="continuous" />) as any}
+              >
+                <span className="inline-flex">
+                  <Pill text="Continuous" color="grey" />
+                </span>
+              </Tooltip>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -166,9 +174,6 @@ export const TargetConfigurationDetailsHeader = ({
               data-tooltip={isCollasped ? false : 'View in Task Graph'}
               data-tooltip-align-right
               onClick={(e) => {
-                if (isCollasped) {
-                  return;
-                }
                 e.stopPropagation();
                 onViewInTaskGraph({ projectName, targetName });
               }}

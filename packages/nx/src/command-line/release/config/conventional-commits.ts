@@ -94,5 +94,12 @@ export const DEFAULT_CONVENTIONAL_COMMITS_CONFIG: NxReleaseConfig['conventionalC
           hidden: true,
         },
       },
+      __INVALID__: {
+        semverBump: 'none',
+        changelog: {
+          title: 'Invalid based on conventional commits specification',
+          hidden: true,
+        },
+      },
     },
   };

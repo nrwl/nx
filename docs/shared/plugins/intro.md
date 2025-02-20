@@ -21,7 +21,7 @@ npx create-nx-plugin my-plugin
 
 ```shell {% title="Add a plugin to an existing workspace" %}
 npx nx add @nx/plugin
-npx nx g plugin my-plugin
+npx nx g plugin tools/my-plugin
 ```
 
 {% /side-by-side %}
@@ -37,8 +37,8 @@ You can follow along with one of the step by step tutorials below that is focuse
 
 {% cards cols="2" %}
 
-{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="office" /%}
-{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="tool" /%}
+{% link-card title="Enforce Best Practices in Your Repository" type="tutorial" url="/extending-nx/tutorials/organization-specific-plugin" icon="BuildingOfficeIcon" /%}
+{% link-card title="Integrate a Tool Into an Nx Repository" type="tutorial" url="/extending-nx/tutorials/tooling-plugin" icon="WrenchScrewdriverIcon" /%}
 
 {% /cards %}
 
@@ -47,7 +47,7 @@ You can follow along with one of the step by step tutorials below that is focuse
 Wire up a new generator with this terminal command:
 
 ```shell
-npx nx g generator library-with-readme --directory=my-plugin/src/generators/library-with-readme
+npx nx g generator my-plugin/src/generators/library-with-readme
 ```
 
 ### Understand the Generator Functionality

@@ -1,7 +1,8 @@
+import { writeFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'path';
 import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
 import { fileExists } from '@nx/workspace/src/utilities/fileutils';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { sync as globSync } from 'glob';
 
 import { ReactNativeStorybookOptions } from './schema';
@@ -9,7 +10,6 @@ import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
-import { writeFileSync } from 'fs-extra';
 import { PackageJson } from 'nx/src/utils/package-json';
 
 /**
@@ -25,8 +25,8 @@ export default async function* reactNativeStorybookExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   logger.info(
-    `${chalk.bold.cyan(
-      'info'
+    `${pc.bold(
+      pc.cyan('info')
     )} To see your Storybook stories on the device, you should start your mobile app for the <platform> of your choice (typically ios or android).`
   );
 
@@ -78,7 +78,7 @@ export function runCliStorybook(
   });
 
   if (storiesFiles.length === 0) {
-    logger.warn(`${chalk.bold.yellow('warn')} No stories found.`);
+    logger.warn(`${pc.bold(pc.yellow('warn'))} No stories found.`);
   }
 
   const newContents = `// Auto-generated file created by nx

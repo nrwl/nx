@@ -38,8 +38,9 @@ describe('Next.js Webpack', () => {
       }
     );
 
+    checkFilesExist(`${appName}/next.config.js`);
     updateFile(
-      `apps/${appName}/next.config.js`,
+      `${appName}/next.config.js`,
       `
         const { withNx } = require('@nx/next');
         const nextConfig = {
@@ -88,11 +89,11 @@ describe('Next.js Webpack', () => {
     delete process.env.NODE_ENV;
     const result = runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/apps/${appName}/next.config.js`);
+    checkFilesExist(`dist/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
 
     updateFile(
-      `apps/${appName}/next.config.js`,
+      `${appName}/next.config.js`,
       `
         const { withNx } = require('@nx/next');
         // Not including "nx" entry should still work.
@@ -103,15 +104,15 @@ describe('Next.js Webpack', () => {
     );
     rmDist();
     runCLI(`build ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/next.config.js`);
+    checkFilesExist(`dist/${appName}/next.config.js`);
 
     // Make sure withNx works with run-commands.
-    updateJson(join('apps', appName, 'project.json'), (json) => {
+    updateJson(join(appName, 'project.json'), (json) => {
       json.targets.build = {
         command: 'npx next build',
         outputs: [`{projectRoot}/.next`],
         options: {
-          cwd: `apps/${appName}`,
+          cwd: `${appName}`,
         },
       };
       return json;
@@ -119,6 +120,6 @@ describe('Next.js Webpack', () => {
     expect(() => {
       runCLI(`build ${appName}`);
     }).not.toThrow();
-    checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+    checkFilesExist(`dist/${appName}/.next/build-manifest.json`);
   }, 300_000);
 });

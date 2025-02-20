@@ -20,10 +20,9 @@ describe('Storybook generators and executors for monorepos', () => {
   beforeAll(async () => {
     proj = newProject({
       packages: ['@nx/react'],
-      unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --no-interactive`
     );
     runCLI(
       `generate @nx/react:storybook-configuration ${reactStorybookApp} --generateStories --no-interactive --bundler=webpack`
@@ -59,7 +58,7 @@ describe('Storybook generators and executors for monorepos', () => {
     // This test makes sure path resolution works
     it('should build a React based storybook that references another lib and uses rollup', () => {
       runCLI(
-        `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --no-interactive`
       );
 
       // create a component in the first lib to reference the cmp from the 2nd lib

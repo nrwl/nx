@@ -16,6 +16,7 @@ export const compositeGraphStateConfig: ProjectGraphStateNodeConfig = {
         dependencies: ctx.dependencies,
         fileMap: ctx.fileMap,
         affectedProjects: ctx.affectedProjects,
+        touchedProjects: [],
         workspaceLayout: ctx.workspaceLayout,
         groupByFolder: ctx.groupByFolder,
         selectedProjects: ctx.selectedProjects,
@@ -25,15 +26,66 @@ export const compositeGraphStateConfig: ProjectGraphStateNodeConfig = {
     ),
   ],
   exit: [
-    send(() => ({ type: 'notifyGraphDisableCompositeGraph' }), {
-      to: (ctx) => ctx.graphActor,
-    }),
     assign((ctx) => {
       ctx.compositeGraph.enabled = false;
       ctx.compositeGraph.context = undefined;
     }),
+    send(
+      (ctx) => ({
+        type: 'notifyGraphUpdateGraph',
+        projects: ctx.projects,
+        dependencies: ctx.dependencies,
+        fileMap: ctx.fileMap,
+        affectedProjects: ctx.affectedProjects,
+        touchedProjects: [],
+        workspaceLayout: ctx.workspaceLayout,
+        groupByFolder: ctx.groupByFolder,
+        selectedProjects: ctx.selectedProjects,
+        composite: ctx.compositeGraph,
+      }),
+      {
+        to: (ctx) => ctx.graphActor,
+      }
+    ),
   ],
   on: {
+    selectAll: {
+      actions: [
+        assign((ctx, event) => {
+          if (event.type !== 'selectAll') return;
+          ctx.compositeGraph.enabled = true;
+          ctx.compositeGraph.context = null;
+        }),
+        send((ctx) => ({
+          type: 'enableCompositeGraph',
+          context: ctx.compositeGraph.context,
+        })),
+      ],
+    },
+    deselectAll: {
+      actions: [
+        assign((ctx, event) => {
+          if (event.type !== 'deselectAll') return;
+          ctx.compositeGraph.enabled = true;
+        }),
+        send(
+          () => ({
+            type: 'notifyGraphHideAllProjects',
+          }),
+          { to: (context) => context.graphActor }
+        ),
+      ],
+    },
+    selectAffected: {
+      actions: [
+        send(
+          () => ({
+            type: 'notifyGraphShowAffectedProjects',
+          }),
+          { to: (context) => context.graphActor }
+        ),
+      ],
+    },
     focusProject: {
       actions: [
         assign((ctx, event) => {
@@ -112,6 +164,7 @@ export const compositeGraphStateConfig: ProjectGraphStateNodeConfig = {
           if (event.type !== 'enableCompositeGraph') return;
           ctx.compositeGraph.enabled = true;
           ctx.compositeGraph.context = event.context || undefined;
+          ctx.focusedProject = null;
         }),
         send(
           (ctx, event) => ({

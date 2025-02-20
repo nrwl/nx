@@ -17,8 +17,7 @@ describe('updateStorybookConfig', () => {
 
   it('should handle storybook config not existing', async () => {
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
@@ -43,8 +42,7 @@ describe('updateStorybookConfig', () => {
     const storybookMainPath = 'namespace/my-destination/.storybook/main.js';
 
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookMainPath, storybookMain);
@@ -72,8 +70,7 @@ describe('updateStorybookConfig', () => {
     const storybookWebpackConfigPath =
       'namespace/my-destination/.storybook/webpack.config.js';
     await libraryGenerator(tree, {
-      name: 'my-source',
-      projectNameAndRootFormat: 'as-provided',
+      directory: 'my-source',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
@@ -113,8 +110,7 @@ describe('updateStorybookConfig', () => {
         'namespace/my-destination/.storybook/nested/main.js';
 
       await libraryGenerator(tree, {
-        name: 'my-source',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-source',
       });
       const projectConfig = readProjectConfiguration(tree, 'my-source');
       tree.write(storybookMainPath, storybookMain);
@@ -157,8 +153,7 @@ describe('updateStorybookConfig', () => {
         'namespace/my-destination/.storybook/nested/webpack.config.js';
 
       await libraryGenerator(tree, {
-        name: 'my-source',
-        projectNameAndRootFormat: 'as-provided',
+        directory: 'my-source',
       });
       const projectConfig = readProjectConfiguration(tree, 'my-source');
       tree.write(storybookWebpackConfigPath, storybookWebpackConfig);

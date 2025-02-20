@@ -1,23 +1,17 @@
 import type { Tree } from '@nx/devkit';
 import { createTreeWithNestApplication } from '../utils/testing';
-import type { ClassGeneratorOptions } from './class';
 import { classGenerator } from './class';
 
 describe('class generator', () => {
   let tree: Tree;
-  const project = 'api';
-  const options: ClassGeneratorOptions = {
-    name: 'test',
-    project,
-    unitTestRunner: 'jest',
-  };
 
   beforeEach(() => {
-    tree = createTreeWithNestApplication(project);
-    jest.clearAllMocks();
+    tree = createTreeWithNestApplication('api');
   });
 
   it('should run successfully', async () => {
-    await expect(classGenerator(tree, options)).resolves.not.toThrowError();
+    await expect(
+      classGenerator(tree, { path: 'api/test' })
+    ).resolves.not.toThrow();
   });
 });

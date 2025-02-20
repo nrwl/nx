@@ -1,8 +1,12 @@
 import { readNxJson, type Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { type NxRemixGeneratorSchema } from '../schema';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
-import { RemixPluginOptions } from '../../../plugins/plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { type NxRemixGeneratorSchema } from '../schema';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -10,23 +14,24 @@ export interface NormalizedSchema extends NxRemixGeneratorSchema {
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<NormalizedSchema> {
-  const { projectName, projectRoot, projectNameAndRootFormat } =
-    await determineProjectNameAndRootOptions(tree, {
+  await ensureProjectName(tree, options, 'application');
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
       rootProject: options.rootProject,
-      callingGenerator: '@nx/remix:application',
-    });
+    }
+  );
   options.rootProject = projectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -40,13 +45,18 @@ export async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     linter: options.linter ?? Linter.EsLint,
-    projectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectRoot,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
+    useTsSolution: options.useTsSolution ?? isUsingTsSolutionConfig,
+    isUsingTsSolutionConfig,
   };
 }

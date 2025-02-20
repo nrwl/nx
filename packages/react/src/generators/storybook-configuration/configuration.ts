@@ -14,23 +14,11 @@ import {
 import { nxVersion, reactViteVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(katerina): Nx 19 -> remove Cypress
-  ensurePackage('@nx/cypress', nxVersion);
-  const { getE2eProjectName } = await import(
-    '@nx/cypress/src/utils/project-name'
-  );
   const projectConfig = readProjectConfiguration(host, schema.project);
-  const cypressProject = getE2eProjectName(
-    schema.project,
-    projectConfig.root,
-    schema.cypressDirectory
-  );
+
   await storiesGenerator(host, {
     project: schema.project,
-    generateCypressSpecs:
-      schema.configureCypress && schema.generateCypressSpecs,
     js: schema.js,
-    cypressProject,
     ignorePaths: schema.ignorePaths,
     skipFormat: true,
     interactionTests: schema.interactionTests ?? true,
@@ -66,9 +54,8 @@ export async function storybookConfigurationGeneratorInternal(
 
   if (
     findWebpackConfig(host, projectConfig.root) ||
-    projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
-    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup' ||
-    projectConfig.targets['build']?.executor === '@nx/expo:build'
+    projectConfig.targets?.['build']?.executor === '@nx/rollup:rollup' ||
+    projectConfig.targets?.['build']?.executor === '@nx/expo:build'
   ) {
     uiFramework = '@storybook/react-webpack5';
   }
@@ -85,10 +72,8 @@ export async function storybookConfigurationGeneratorInternal(
 
   const installTask = await configurationGenerator(host, {
     project: schema.project,
-    configureCypress: schema.configureCypress,
     js: schema.js,
     linter: schema.linter,
-    cypressDirectory: schema.cypressDirectory,
     tsConfiguration: schema.tsConfiguration ?? true, // default is true
     interactionTests: schema.interactionTests ?? true, // default is true
     configureStaticServe: schema.configureStaticServe,

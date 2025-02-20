@@ -1,4 +1,5 @@
 import { copySync, ensureDirSync, moveSync, removeSync } from 'fs-extra';
+import * as isCI from 'is-ci';
 import {
   createFile,
   directoryExists,
@@ -15,24 +16,22 @@ import {
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
-import * as isCI from 'is-ci';
 
+import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'child_process';
-
-import { performance, PerformanceMeasure } from 'perf_hooks';
-import { logError, logInfo } from './log-utils';
+import { execSync, ExecSyncOptions } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { performance, PerformanceMeasure } from 'node:perf_hooks';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   getPackageManagerCommand,
   runCLI,
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output, readJsonFile } from '@nx/devkit';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { logError, logInfo } from './log-utils';
 
 let projName: string;
 
@@ -56,6 +55,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
@@ -74,13 +74,13 @@ type NxPackage = (typeof nxPackages)[number];
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
-  unsetProjectNameAndRootFormat = true,
   packages,
+  preset = 'apps',
 }: {
   name?: string;
   packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
-  unsetProjectNameAndRootFormat?: boolean;
   readonly packages?: Array<NxPackage>;
+  preset?: string;
 } = {}): string {
   const newProjectStart = performance.mark('new-project:start');
   try {
@@ -89,12 +89,15 @@ export function newProject({
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
 
-    if (!directoryExists(tmpBackupProjPath())) {
+    // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
+    const backupPath = tmpBackupProjPath(packageManager);
+
+    if (!directoryExists(backupPath)) {
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
       runCreateWorkspace(projScope, {
-        preset: 'apps',
+        preset,
         packageManager,
       });
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
@@ -103,14 +106,6 @@ export function newProject({
         createNxWorkspaceStart.name,
         createNxWorkspaceEnd.name
       );
-
-      if (unsetProjectNameAndRootFormat) {
-        console.warn(
-          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
-        );
-        createFile('apps/.gitkeep');
-        createFile('libs/.gitkeep');
-      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
@@ -139,12 +134,12 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
+      moveSync(`${e2eCwd}/proj`, backupPath);
     }
     projName = name;
 
     const projectDirectory = tmpProjPath();
-    copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
+    copySync(backupPath, projectDirectory);
 
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
@@ -231,6 +226,8 @@ export function runCreateWorkspace(
     docker,
     nextAppDir,
     nextSrcDir,
+    linter = 'eslint',
+    formatter = 'prettier',
     e2eTestRunner,
     ssr,
     framework,
@@ -250,7 +247,9 @@ export function runCreateWorkspace(
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
+    linter?: 'none' | 'eslint';
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+    formatter?: 'prettier' | 'none';
     ssr?: boolean;
     framework?: string;
     prefix?: string;
@@ -260,7 +259,11 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
+  // Needed for bun workarounds, see below
+  const registry = execSync('npm config get registry').toString().trim();
+
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
+
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -300,6 +303,14 @@ export function runCreateWorkspace(
     command += ` --package-manager=${packageManager}`;
   }
 
+  if (linter) {
+    command += ` --linter=${linter}`;
+  }
+
+  if (formatter) {
+    command += ` --formatter=${formatter}`;
+  }
+
   if (e2eTestRunner) {
     command += ` --e2eTestRunner=${e2eTestRunner}`;
   }
@@ -324,6 +335,51 @@ export function runCreateWorkspace(
     command += ` --prefix=${prefix}`;
   }
 
+  if (packageManager === 'bun') {
+    /**
+     * `bunx` does not seem to work well at all with custom registries, I tried many combinations of flags and config files.
+     *
+     * The only viable workaround currently seems to be to write a package.json and a bunfig.toml in the e2e directory,
+     * install create-nx-workspace using `bun install` (which _does_ seem to respect the registry settings), and _then_
+     * run `bunx create-nx-workspace` (but without the version number added with @{version}).
+     */
+    writeFileSync(
+      join(cwd, 'bunfig.toml'),
+      // Also set up a dedicated cache directory to hopefully avoid conflicts with the global cache
+      `
+[install]
+cache = ".bun-cache"
+registry = "${registry}"
+`.trim()
+    );
+    writeFileSync(
+      join(cwd, 'package.json'),
+      `
+{
+  "private": true,
+  "name": "only-here-to-make-bunx-happy"
+}
+    `
+    );
+    const output = execSync('bun install create-nx-workspace', {
+      cwd,
+      stdio: 'pipe',
+      env: {
+        CI: 'true',
+        ...process.env,
+      },
+      encoding: 'utf-8',
+    });
+    const publishedVersion = getPublishedVersion();
+    // Ensure that it installed the version published for the e2e tests
+    if (!output.includes(publishedVersion)) {
+      console.error(output);
+      throw new Error(
+        `bunx create-nx-workspace did not install the version published for the e2e tests: ${publishedVersion}, in ${cwd}`
+      );
+    }
+  }
+
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
@@ -344,10 +400,32 @@ export function runCreateWorkspace(
       });
     }
 
+    if (packageManager === 'bun') {
+      // We also have to add an explicit bunfig.toml in the workspace itself as bun does not seem to use the setting applied by the local registry logic
+      // (via `npm set config registry`), unlike all other package managers.
+      updateFile(
+        'bunfig.toml',
+        `
+[install]
+registry = { url = "${registry}", token = "secretVerdaccioToken" }
+`.trim()
+      );
+    }
+
     return create;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
+  } finally {
+    // Clean up files related to bun workarounds
+    if (packageManager === 'bun') {
+      removeSync(join(cwd, 'bunfig.toml'));
+      removeSync(join(cwd, 'package.json'));
+      removeSync(join(cwd, '.bun-cache'));
+      removeSync(join(cwd, 'node_modules'));
+      removeSync(join(cwd, 'bun.lock'));
+      removeSync(join(cwd, 'bun.lockb'));
+    }
   }
 }
 
@@ -369,7 +447,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip`;
+  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip --no-interactive`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
@@ -480,6 +558,29 @@ export function runNgNew(
     env: process.env,
     encoding: 'utf-8',
   });
+
+  // ensure angular packages are installed with ~ instead of ^ to prevent
+  // potential failures when new minor versions are released
+  function updateAngularDependencies(dependencies: any): void {
+    Object.keys(dependencies).forEach((key) => {
+      if (key.startsWith('@angular/') || key.startsWith('@angular-devkit/')) {
+        dependencies[key] = dependencies[key].replace(/^\^/, '~');
+      }
+    });
+  }
+  updateJson('package.json', (json) => {
+    updateAngularDependencies(json.dependencies ?? {});
+    updateAngularDependencies(json.devDependencies ?? {});
+    return json;
+  });
+
+  execSync(pmc.install, {
+    cwd: join(e2eCwd, projName),
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    env: process.env,
+    encoding: 'utf-8',
+  });
+
   copySync(tmpProjPath(), tmpBackupNgCliProjPath());
 
   if (isVerboseE2ERun()) {
@@ -527,7 +628,6 @@ export function newLernaWorkspace({
       const overrides = {
         ...json.overrides,
         nx: nxVersion,
-        '@nrwl/devkit': nxVersion,
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {

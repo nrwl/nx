@@ -26,7 +26,7 @@ describe('@nx/detox (legacy)', () => {
 
   it('should create files and run lint command for react-native apps', async () => {
     runCLI(
-      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false`
+      `generate @nx/react-native:app apps/${appName} --e2eTestRunner=detox --linter=eslint --install=false`
     );
     checkFilesExist(`apps/${appName}-e2e/.detoxrc.json`);
     checkFilesExist(`apps/${appName}-e2e/tsconfig.json`);
@@ -43,7 +43,7 @@ describe('@nx/detox (legacy)', () => {
   it('should create files and run lint command for expo apps', async () => {
     const expoAppName = uniq('myapp');
     runCLI(
-      `generate @nx/expo:app ${expoAppName} --e2eTestRunner=detox --linter=eslint`
+      `generate @nx/expo:app apps/${expoAppName} --e2eTestRunner=detox --linter=eslint`
     );
     checkFilesExist(`apps/${expoAppName}-e2e/.detoxrc.json`);
     checkFilesExist(`apps/${expoAppName}-e2e/tsconfig.json`);
@@ -61,7 +61,7 @@ describe('@nx/detox (legacy)', () => {
     const appName = uniq('app1');
 
     runCLI(
-      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false --project-name-and-root-format=as-provided --interactive=false`
+      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false --interactive=false`
     );
 
     // check files are generated without the layout directory ("apps/") and

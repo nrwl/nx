@@ -24,11 +24,6 @@
         "type": "string",
         "description": "the directory where the plugin is placed."
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
-      },
       "pluginOutputPath": {
         "type": "string",
         "description": "the output path of the plugin after it builds.",
@@ -38,8 +33,7 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint", "none"],
-        "default": "eslint"
+        "enum": ["none", "eslint"]
       },
       "minimal": {
         "type": "boolean",
@@ -51,6 +45,10 @@
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["pluginName", "npmPackageName"],

@@ -75,7 +75,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
     it('should build a React based storybook that references another lib and uses Vite', () => {
       runCLI(
-        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --no-interactive`
       );
 
       // create a component and a story in the first lib to reference the cmp from the 2nd lib

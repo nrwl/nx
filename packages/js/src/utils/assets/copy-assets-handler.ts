@@ -1,9 +1,16 @@
 import { minimatch } from 'minimatch';
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
 import * as pathPosix from 'node:path/posix';
 import * as path from 'node:path';
-import * as fse from 'fs-extra';
 import ignore from 'ignore';
-import * as fg from 'fast-glob';
+import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
 import { logger } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
@@ -34,14 +41,14 @@ interface AssetEntry {
 
 export const defaultFileEventHandler = (events: FileEvent[]) => {
   const dirs = new Set(events.map((event) => path.dirname(event.dest)));
-  dirs.forEach((d) => fse.ensureDirSync(d));
+  dirs.forEach((d) => mkdirSync(d, { recursive: true }));
   events.forEach((event) => {
     if (event.type === 'create' || event.type === 'update') {
-      if (fse.lstatSync(event.src).isFile()) {
-        fse.copyFileSync(event.src, event.dest);
+      if (lstatSync(event.src).isFile()) {
+        copyFileSync(event.src, event.dest);
       }
     } else if (event.type === 'delete') {
-      fse.removeSync(event.dest);
+      rmSync(event.dest, { recursive: true, force: true });
     } else {
       logger.error(`Unknown file event: ${event.type}`);
     }
@@ -66,10 +73,10 @@ export class CopyAssetsHandler {
     this.ignore = ignore();
     const gitignore = pathPosix.join(opts.rootDir, '.gitignore');
     const nxignore = pathPosix.join(opts.rootDir, '.nxignore');
-    if (fse.existsSync(gitignore))
-      this.ignore.add(fse.readFileSync(gitignore).toString());
-    if (fse.existsSync(nxignore))
-      this.ignore.add(fse.readFileSync(nxignore).toString());
+    if (existsSync(gitignore))
+      this.ignore.add(readFileSync(gitignore).toString());
+    if (existsSync(nxignore))
+      this.ignore.add(readFileSync(nxignore).toString());
 
     this.assetGlobs = opts.assets.map((f) => {
       let isGlob = false;
@@ -108,10 +115,11 @@ export class CopyAssetsHandler {
       this.assetGlobs.map(async (ag) => {
         const pattern = this.normalizeAssetPattern(ag);
 
-        // fast-glob only supports Unix paths
-        const files = await fg(pattern.replace(/\\/g, '/'), {
+        // globbing only supports Unix paths
+        const files = await globSync(pattern.replace(/\\/g, '/'), {
           cwd: this.rootDir,
           dot: true, // enable hidden files
+          expandDirectories: false,
         });
 
         this.callback(this.filesToEvent(files, ag));
@@ -123,10 +131,11 @@ export class CopyAssetsHandler {
     this.assetGlobs.forEach((ag) => {
       const pattern = this.normalizeAssetPattern(ag);
 
-      // fast-glob only supports Unix paths
-      const files = fg.sync(pattern.replace(/\\/g, '/'), {
+      // globbing only supports Unix paths
+      const files = globSync(pattern.replace(/\\/g, '/'), {
         cwd: this.rootDir,
         dot: true, // enable hidden files
+        expandDirectories: false,
       });
 
       this.callback(this.filesToEvent(files, ag));

@@ -1,0 +1,20 @@
+{
+  "extends": "<%= tsConfigPath %>",
+  "compilerOptions": {
+    "outDir": "out-tsc/cypress",
+    "allowJs": true,
+    "types": ["cypress", "node"],
+    "sourceMap": false
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.js",
+    "<%= offsetFromProjectRoot %>cypress.config.ts",
+    "<%= offsetFromProjectRoot %>**/*.cy.ts",
+    <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.tsx",<%_ } _%>
+    "<%= offsetFromProjectRoot %>**/*.cy.js",
+    <%_ if (jsx) { _%>"<%= offsetFromProjectRoot %>**/*.cy.jsx",<%_ } _%>
+    "<%= offsetFromProjectRoot %>**/*.d.ts"
+  ],
+  "exclude": ["out-tsc", "test-output"<% if (linter === 'eslint') { %>, "eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"<% } %>]
+}

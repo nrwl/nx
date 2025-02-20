@@ -17,18 +17,25 @@ import {
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import { ProjectDetailsHeader } from './project-details-header';
 
 export function ProjectDetailsPage() {
-  const { project, sourceMap, hash, errors, connectedToCloud } =
-    useRouteLoaderData('selectedProjectDetails') as {
-      hash: string;
-      project: ProjectGraphProjectNode;
-      sourceMap: Record<string, string[]>;
-      errors?: GraphError[];
-      connectedToCloud?: boolean;
-    };
+  const {
+    project,
+    sourceMap,
+    hash,
+    errors,
+    connectedToCloud,
+    disabledTaskSyncGenerators,
+  } = useRouteLoaderData('selectedProjectDetails') as {
+    hash: string;
+    project: ProjectGraphProjectNode;
+    sourceMap: Record<string, string[]>;
+    errors?: GraphError[];
+    connectedToCloud?: boolean;
+    disabledTaskSyncGenerators?: string[];
+  };
 
   const { environment, watch, appConfig } = useEnvironmentConfig();
 
@@ -65,6 +72,7 @@ export function ProjectDetailsPage() {
             sourceMap={sourceMap}
             errors={errors}
             connectedToCloud={connectedToCloud}
+            disabledTaskSyncGenerators={disabledTaskSyncGenerators}
           ></ProjectDetailsWrapper>
         </div>
       </div>

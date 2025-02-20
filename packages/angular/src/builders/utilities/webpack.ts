@@ -2,6 +2,7 @@ import { merge } from 'webpack-merge';
 import { registerTsProject } from '@nx/js/src/internal';
 import { workspaceRoot } from '@nx/devkit';
 import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
 
 export async function mergeCustomWebpackConfig(
   baseWebpackConfig: any,
@@ -20,13 +21,46 @@ export async function mergeCustomWebpackConfig(
   // then await will just resolve that object.
   const config = await customWebpackConfiguration;
 
-  // The extra Webpack configuration file can export a synchronous or asynchronous function,
-  // for instance: `module.exports = async config => { ... }`.
+  let newConfig: any;
   if (typeof config === 'function') {
-    return config(baseWebpackConfig, options, target);
+    // The extra Webpack configuration file can export a synchronous or asynchronous function,
+    // for instance: `module.exports = async config => { ... }`.
+    newConfig = await config(baseWebpackConfig, options, target);
   } else {
-    return merge(baseWebpackConfig, config);
+    newConfig = merge(baseWebpackConfig, config);
   }
+
+  // license-webpack-plugin will at times try to scan the monorepo's root package.json
+  // This will result in an error being thrown
+  // Ensure root package.json is excluded
+  const licensePlugin = newConfig.plugins.find(
+    (p) => p.constructor.name === 'LicenseWebpackPlugin'
+  );
+  if (licensePlugin) {
+    let rootPackageJsonName: string;
+    const pathToRootPackageJson = join(
+      newConfig.context.root ?? workspaceRoot,
+      'package.json'
+    );
+    if (existsSync(pathToRootPackageJson)) {
+      try {
+        const rootPackageJson = JSON.parse(
+          readFileSync(pathToRootPackageJson, 'utf-8')
+        );
+        rootPackageJsonName = rootPackageJson.name;
+        licensePlugin.pluginOptions.excludedPackageTest = (pkgName: string) => {
+          if (!rootPackageJsonName) {
+            return false;
+          }
+          return pkgName === rootPackageJsonName;
+        };
+      } catch {
+        // do nothing
+      }
+    }
+  }
+
+  return newConfig;
 }
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {

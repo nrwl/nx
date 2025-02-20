@@ -6,6 +6,9 @@ import { Hero, PodcastList } from '@nx/nx-dev/ui-podcast';
 export const metadata: Metadata = {
   title: 'Nx Podcast - Updates from the Nx & Nx Cloud team',
   description: 'Latest podcasts from the Nx & Nx Cloud core team',
+  alternates: {
+    canonical: 'https://nx.dev/podcast',
+  },
   openGraph: {
     url: 'https://nx.dev/podcast',
     title: 'Nx Podcast - Updates from the Nx & Nx Cloud team',
@@ -20,7 +23,7 @@ export const metadata: Metadata = {
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };

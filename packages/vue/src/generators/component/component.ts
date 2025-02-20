@@ -1,19 +1,14 @@
-import { formatFiles, generateFiles, toJS, Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  generateFiles,
+  joinPathFragments,
+  Tree,
+} from '@nx/devkit';
 import { join } from 'path';
 import { addExportsToBarrel, normalizeOptions } from './lib/utils';
 import { NormalizedSchema, ComponentGeneratorSchema } from './schema';
 
 export async function componentGenerator(
-  host: Tree,
-  schema: ComponentGeneratorSchema
-) {
-  return componentGeneratorInternal(host, {
-    nameAndDirectoryFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function componentGeneratorInternal(
   host: Tree,
   schema: ComponentGeneratorSchema
 ) {
@@ -28,27 +23,22 @@ export async function componentGeneratorInternal(
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
+  const specExt = options.js ? 'js' : 'ts';
   generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
+    isTs: !options.js,
+    specExt,
     tmpl: '',
   });
 
-  for (const c of host.listChanges()) {
-    let deleteFile = false;
-
-    if (
-      (options.skipTests || options.inSourceTests) &&
-      /.*spec.ts/.test(c.path)
-    ) {
-      deleteFile = true;
-    }
-
-    if (deleteFile) {
-      host.delete(c.path);
-    }
+  if (options.skipTests || options.inSourceTests) {
+    host.delete(
+      joinPathFragments(
+        options.directory,
+        `${options.fileName}.spec.${specExt}`
+      )
+    );
   }
-
-  if (options.js) toJS(host);
 }
 
 export default componentGenerator;

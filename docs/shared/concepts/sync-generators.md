@@ -15,7 +15,77 @@ Nx does this in different ways, depending on whether the task is being run on a 
 
 On a developer machine, the sync generator is run in `--dry-run` mode and if files would be changed by the generator, the user is prompted to run the generator or skip it. This prompt can be disabled by setting the `sync.applyChanges` property to `true` or `false` in the `nx.json` file.
 
-In CI, the sync generator is run in `--dry-run` mode and if files would be changed by the generator, the task fails with an error provided by the sync generator. The sync generator can be skipped in CI by passing the `--skip-sync` flag when executing the task or you can skip an individual sync generator by adding that generator to the `sync.disabledTaskSyncGenerators` in `nx.json`.
+```json {% fileName="nx.json" highlightLines=["4-6"] %}
+{
+  "$schema": "packages/nx/schemas/nx-schema.json",
+  ...
+  "sync": {
+    "applyChanges": true
+  }
+}
+```
+
+{% callout type="warning" title="Opting out of automatic sync" %}
+If you set `sync.applyChanges` to `false`, then developers must run `nx sync` manually before pushing changes. Otherwise, CI may fail due to the workspace being out of sync.
+{% /callout %}
+
+In CI, the sync generator is run in `--dry-run` mode and if files would be changed by the generator, the task fails with an error provided by the sync generator. The sync generator can be skipped in CI by passing the `--skip-sync` flag when executing the task, or you can skip an individual sync generator by adding that generator to the `sync.disabledTaskSyncGenerators` in `nx.json`.
+
+```json {% fileName="nx.json" highlightLines=["4-6"] %}
+{
+  "$schema": "packages/nx/schemas/nx-schema.json",
+  ...
+  "sync": {
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  }
+}
+
+```
+
+Use the project details view to **find registered sync generators** for a given task.
+
+```shell
+nx show project <name>
+```
+
+The above command opens up the project details view, and the registered sync generators are under the **Sync Generators** for each target. Most sync generators are inferred when using an [inference plugin](/concepts/inferred-tasks). For example, the `@nx/js/typescript` plugin registers the `@nx/js:typescript-sync` generator on `build` and `typecheck` targets.
+
+{% project-details title="Project Details View" expandedTargets="build" %}
+
+```json
+{
+  "project": {
+    "name": "foo",
+    "data": {
+      "root": " packages/foo",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "dependsOn": ["^build"],
+          "cache": true,
+          "inputs": [
+            "{workspaceRoot}/tsconfig.base.json",
+            "{projectRoot}/tsconfig.lib.json",
+            "{projectRoot}/src/**/*.ts"
+          ],
+          "outputs": ["{workspaceRoot}/packages/foo/dist"],
+          "syncGenerators": ["@nx/js:typescript-sync"],
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "tsc --build tsconfig.lib.json --pretty --verbose"
+          }
+        }
+      }
+    }
+  },
+  "sourceMap": {
+    "targets": ["packages/foo/tsconfig.ts", "@nx/js/typescript"],
+    "targets.build": ["packages/foo/tsconfig.ts", "@nx/js/typescript"]
+  }
+}
+```
+
+{% /project-details %}
 
 Task sync generators can be thought of like the `dependsOn` property, but for generators instead of task dependencies.
 

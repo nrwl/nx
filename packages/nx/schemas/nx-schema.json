@@ -21,6 +21,10 @@
       "additionalProperties": false,
       "deprecated": "Use `defaultBase` instead. Support for setting `defaultBase` in `affected` will be removed in Nx 20."
     },
+    "extends": {
+      "type": "string",
+      "description": "Specifies the base config to extend."
+    },
     "defaultBase": {
       "type": "string",
       "description": "Default --base used by affected logic."
@@ -89,6 +93,10 @@
       "type": "string",
       "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
     },
+    "neverConnectToCloud": {
+      "type": "boolean",
+      "description": "Set this to true to disable all connections to Nx Cloud."
+    },
     "parallel": {
       "type": "number",
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
@@ -152,25 +160,7 @@
                 ]
               },
               "version": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
-                  },
-                  {
-                    "allOf": [
-                      {
-                        "not": {
-                          "required": ["git"]
-                        }
-                      },
-                      {
-                        "not": {
-                          "required": ["preVersionCommand"]
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "$ref": "#/definitions/NxReleaseGroupVersionConfiguration"
               },
               "changelog": {
                 "oneOf": [
@@ -183,7 +173,22 @@
                 ]
               },
               "releaseTagPattern": {
-                "type": "string"
+                "type": "string",
+                "description": "Optionally override the git/release tag pattern to use for this group."
+              },
+              "releaseTagPatternCheckAllBranchesWhen": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
               },
               "versionPlans": {
                 "oneOf": [
@@ -257,7 +262,22 @@
           ]
         },
         "releaseTagPattern": {
-          "type": "string"
+          "type": "string",
+          "description": "Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing. It supports interpolating the version as {version} and (if releasing independently or forcing project level version control system releases) the project name as {projectName} within the string. The default releaseTagPattern for fixed/unified releases is: \"v{version}\". The default releaseTagPattern for independent releases at the project level is: \"{projectName}@{version}\""
+        },
+        "releaseTagPatternCheckAllBranchesWhen": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "By default, we will try and resolve the latest match for the releaseTagPattern from the current branch, falling back to all branches if no match is found on the current branch. Setting this to true will cause us to ALWAYS check all branches for the latest match. Setting it to false will cause us to ONLY check the current branch for the latest match. Setting it to an array of strings will cause us to check all branches WHEN the current branch is one of the strings in the array. Glob patterns are supported."
         }
       }
     },
@@ -583,6 +603,13 @@
         "cache": {
           "type": "boolean",
           "description": "Specifies if the given target should be cacheable"
+        },
+        "syncGenerators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of generators to run before the target to ensure the workspace is up to date"
         }
       },
       "additionalProperties": false
@@ -675,9 +702,32 @@
         },
         "preVersionCommand": {
           "type": "string",
-          "description": "A command to run after validation of nx release configuration, but before versioning begins. Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+          "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
         }
-      }
+      },
+      "additionalProperties": false
+    },
+    "NxReleaseGroupVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "groupPreVersionCommand": {
+          "type": "string",
+          "description": "A command to run after validation of nx release configuration AND after the release.version.preVersionCommand (if any), but before versioning begins for this specific group. Useful for preparing build artifacts for the group. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+        }
+      },
+      "additionalProperties": false
     },
     "NxReleaseChangelogConfiguration": {
       "type": "object",
@@ -691,6 +741,9 @@
             {
               "type": "boolean",
               "enum": [false]
+            },
+            {
+              "$ref": "#/definitions/CreateReleaseProviderConfiguration"
             }
           ]
         },
@@ -723,6 +776,24 @@
           "$ref": "#/definitions/ChangelogRenderOptions"
         }
       }
+    },
+    "CreateReleaseProviderConfiguration": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["github-enterprise-server"]
+        },
+        "hostname": {
+          "type": "string",
+          "description": "The hostname of the VCS provider instance, e.g. github.example.com"
+        },
+        "apiBaseUrl": {
+          "type": "string",
+          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3`"
+        }
+      },
+      "required": ["provider", "hostname"]
     },
     "NxReleaseVersionPlansConfiguration": {
       "type": "object",

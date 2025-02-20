@@ -1,5 +1,5 @@
 import { prompt } from 'enquirer';
-import { removeSync } from 'fs-extra';
+import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -90,6 +90,27 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       });
     }
 
+    const {
+      error: filterError,
+      filterLog,
+      releaseGroups,
+      releaseGroupToFilteredProjects,
+    } = filterReleaseGroups(
+      projectGraph,
+      nxReleaseConfig,
+      args.projects,
+      args.groups
+    );
+    if (filterError) {
+      output.error(filterError);
+      process.exit(1);
+    }
+    if (filterLog) {
+      output.note(filterLog);
+    }
+    // Do not repeat the filter log in the release subcommands
+    process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = 'true';
+
     const rawVersionPlans = await readRawVersionPlans();
 
     if (args.specifier && rawVersionPlans.length > 0) {
@@ -109,6 +130,17 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       (shouldCommit || userProvidedReleaseConfig.git?.stageChanges) ?? false;
     const shouldTag = userProvidedReleaseConfig.git?.tag ?? true;
 
+    const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
+      nxReleaseConfig.changelog.workspaceChangelog
+    );
+    // If the workspace or any of the release groups specify that a github release should be created, we need to push the changes to the remote
+    const shouldPush =
+      (shouldCreateWorkspaceRelease ||
+        releaseGroups.some((group) =>
+          shouldCreateGitHubRelease(group.changelog)
+        )) ??
+      false;
+
     const versionResult: NxReleaseVersionResult = await releaseVersion({
       ...args,
       stageChanges: shouldStage,
@@ -124,24 +156,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       stageChanges: shouldStage,
       gitCommit: false,
       gitTag: false,
+      gitPush: false,
       createRelease: false,
       deleteVersionPlans: false,
     });
-
-    const {
-      error: filterError,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
 
     await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
@@ -162,7 +180,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
         group.resolvedVersionPlans.forEach((plan) => {
           if (!args.dryRun) {
-            removeSync(plan.absolutePath);
+            rmSync(plan.absolutePath, { recursive: true, force: true });
             if (args.verbose) {
               console.log(`Removing ${plan.relativePath}`);
             }
@@ -230,28 +248,32 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
     }
 
-    const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
-      nxReleaseConfig.changelog.workspaceChangelog
-    );
-
     let hasPushedChanges = false;
-    let latestCommit: string | undefined;
-
-    if (shouldCreateWorkspaceRelease && changelogResult.workspaceChangelog) {
-      output.logSingleLine(`Pushing to git remote`);
-
-      // Before we can create/update the release we need to ensure the commit exists on the remote
+    if (shouldPush) {
+      output.logSingleLine(`Pushing to git remote "origin"`);
       await gitPush({
         dryRun: args.dryRun,
         verbose: args.verbose,
       });
-
       hasPushedChanges = true;
+    }
+
+    let latestCommit: string | undefined;
+
+    if (shouldCreateWorkspaceRelease && changelogResult.workspaceChangelog) {
+      if (!hasPushedChanges) {
+        throw new Error(
+          'It is not possible to create a github release for the workspace without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config'
+        );
+      }
 
       output.logSingleLine(`Creating GitHub Release`);
 
       latestCommit = await getCommitHash('HEAD');
       await createOrUpdateGithubRelease(
+        nxReleaseConfig.changelog.workspaceChangelog
+          ? nxReleaseConfig.changelog.workspaceChangelog.createRelease
+          : false,
         changelogResult.workspaceChangelog.releaseVersion,
         changelogResult.workspaceChangelog.contents,
         latestCommit,
@@ -279,15 +301,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           }
 
           if (!hasPushedChanges) {
-            output.logSingleLine(`Pushing to git remote`);
-
-            // Before we can create/update the release we need to ensure the commit exists on the remote
-            await gitPush({
-              dryRun: args.dryRun,
-              verbose: args.verbose,
-            });
-
-            hasPushedChanges = true;
+            throw new Error(
+              'It is not possible to create a github release for the project without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config'
+            );
           }
 
           output.logSingleLine(`Creating GitHub Release`);
@@ -297,6 +313,9 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           }
 
           await createOrUpdateGithubRelease(
+            releaseGroup.changelog
+              ? releaseGroup.changelog.createRelease
+              : false,
             changelog.releaseVersion,
             changelog.contents,
             latestCommit,

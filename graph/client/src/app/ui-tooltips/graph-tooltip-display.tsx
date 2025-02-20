@@ -12,9 +12,12 @@ import {
   ProjectNodeTooltipActions,
   TaskNodeTooltip,
   Tooltip,
-} from '@nx/graph/ui-tooltips';
+} from '@nx/graph/legacy/tooltips';
 import { TaskNodeActions } from './task-node-actions';
-import { getExternalApiService, useRouteConstructor } from '@nx/graph/shared';
+import {
+  getExternalApiService,
+  useRouteConstructor,
+} from '@nx/graph/legacy/shared';
 import { useNavigate } from 'react-router-dom';
 import { useCallback } from 'react';
 
@@ -41,17 +44,16 @@ export function TooltipDisplay() {
           });
           break;
         case 'focus-node': {
-          const to =
-            action.tooltipNodeType === 'compositeNode'
-              ? routeConstructor(
-                  {
-                    pathname: `/projects`,
-                    search: `?composite=true&compositeContext=${action.id}`,
-                  },
-                  false
-                )
-              : routeConstructor(`/projects/${action.id}`, true);
-          navigate(to);
+          if (action.tooltipNodeType === 'compositeNode') {
+            navigate(
+              routeConstructor(
+                { pathname: `/projects`, search: `?composite=${action.id}` },
+                true
+              )
+            );
+          } else {
+            navigate(routeConstructor(`/projects/${action.id}`, true));
+          }
           break;
         }
         case 'collapse-node':
@@ -81,7 +83,12 @@ export function TooltipDisplay() {
           navigate(
             routeConstructor(
               `/projects/trace/${encodeURIComponent(start)}/${action.id}`,
-              true
+              (searchParams) => {
+                if (searchParams.has('composite')) {
+                  searchParams.delete('composite');
+                }
+                return searchParams;
+              }
             )
           );
           break;

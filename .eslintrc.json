@@ -9,7 +9,21 @@
   "extends": ["plugin:storybook/recommended"],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off",
-    "no-restricted-imports": ["error", "create-nx-workspace"],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "create-nx-workspace",
+            "message": "Please import utils from nx or @nx/devkit instead."
+          },
+          {
+            "name": "node-fetch",
+            "message": "Please default to native fetch instead of 'node-fetch'."
+          }
+        ]
+      }
+    ],
     "@typescript-eslint/no-restricted-imports": [
       "error",
       {
@@ -63,6 +77,24 @@
           }
         ],
         "@nx/workspace/valid-command-object": "error"
+      }
+    },
+    {
+      "files": ["pnpm-lock.yaml"],
+      "parser": "./tools/eslint-rules/raw-file-parser.js",
+      "rules": {
+        "@nx/workspace/ensure-pnpm-lock-version": [
+          "error",
+          {
+            "version": "9.0"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "@angular-eslint/prefer-standalone": "off"
       }
     }
   ]

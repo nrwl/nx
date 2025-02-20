@@ -6,41 +6,33 @@
   "cli": "nx",
   "additionalProperties": false,
   "description": "Creates an Angular pipe.",
+  "examples": [
+    {
+      "description": "Generate a pipe with the exported symbol matching the file name. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+      "command": "nx g @nx/angular:pipe mylib/src/lib/foo.pipe.ts"
+    },
+    {
+      "description": "Generate a pipe without providing the file extension. It results in the pipe `FooPipe` at `mylib/src/lib/foo.pipe.ts`",
+      "command": "nx g @nx/angular:pipe mylib/src/lib/foo"
+    },
+    {
+      "description": "Generate a pipe with the exported symbol different from the file name. It results in the pipe `CustomPipe` at `mylib/src/lib/foo.pipe.ts`",
+      "command": "nx g @nx/angular:pipe mylib/src/lib/foo --name=custom"
+    }
+  ],
   "properties": {
-    "name": {
+    "path": {
       "type": "string",
-      "description": "The name of the pipe.",
+      "description": "The file path to the pipe. Relative to the current working directory.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the pipe?"
+      "x-prompt": "What is the pipe file path?"
     },
-    "directory": {
+    "name": {
       "type": "string",
-      "description": "The directory at which to create the pipe file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-      "aliases": ["dir", "path"],
-      "x-priority": "important"
-    },
-    "nameAndDirectoryFormat": {
-      "description": "Whether to generate the pipe in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
-    "project": {
-      "type": "string",
-      "description": "The name of the project.",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-dropdown": "projects",
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-    },
-    "flat": {
-      "type": "boolean",
-      "default": true,
-      "description": "When true (the default) creates files at the top level of the project.",
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v20."
+      "description": "The pipe symbol name. Defaults to the last segment of the file path."
     },
     "skipTests": {
       "type": "boolean",
@@ -73,5 +65,5 @@
       "description": "Skip formatting of files."
     }
   },
-  "required": ["name"]
+  "required": ["path"]
 }

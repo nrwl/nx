@@ -97,6 +97,27 @@ export class DocumentsApi {
       name: document.name,
       mediaImage: document.mediaImage || '',
       relatedDocuments: this.getRelatedDocuments(document.tags),
+      parentDocuments: path.map((segment, index): RelatedDocument => {
+        const parentPath = path.slice(0, index + 1).join('/');
+        const parentDocument =
+          this.manifest[this.getManifestKey(parentPath)] || null;
+        if (!parentDocument) {
+          return {
+            id: segment,
+            name: '',
+            description: '',
+            file: '',
+            path: '/' + path.slice(0, index + 1).join('/'),
+          };
+        }
+        return {
+          id: parentDocument.id,
+          name: parentDocument.name,
+          description: parentDocument.description,
+          file: parentDocument.file,
+          path: parentDocument.path,
+        };
+      }),
       tags: document.tags,
     };
   }

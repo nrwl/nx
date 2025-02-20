@@ -14,6 +14,8 @@ export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
     {
       buildTargetName: ['build', 'nuxt:build', 'nuxt-build'],
       serveTargetName: ['serve', 'nuxt:serve', 'nuxt-serve'],
+      buildDepsTargetName: ['build-deps', 'nuxt:build-deps', 'nuxt-build-deps'],
+      watchDepsTargetName: ['watch-deps', 'nuxt:watch-deps', 'nuxt-watch-deps'],
     },
     schema.updatePackageScripts
   );

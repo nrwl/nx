@@ -32,10 +32,10 @@ describe('@nx/workspace:infer-targets', () => {
     // default case, everything is generated with crystal, everything should be skipped
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app ${remixApp} --dir apps --unitTestRunner jest --e2eTestRunner=playwright --projectNameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
-    const output = runCLI(`generate infer-targets --no-interactive`);
+    const output = runCLI(`generate infer-targets --no-interactive --verbose`);
 
     expect(output).toContain('@nx/remix:convert-to-inferred - Skipped');
     expect(output).toContain('@nx/playwright:convert-to-inferred - Skipped');
@@ -60,7 +60,7 @@ describe('@nx/workspace:infer-targets', () => {
       return json;
     });
 
-    const output2 = runCLI(`generate infer-targets --no-interactive`);
+    const output2 = runCLI(`generate infer-targets --no-interactive --verbose`);
 
     expect(output2).toContain('@nx/remix:convert-to-inferred - Success');
     expect(output2).toContain('@nx/eslint:convert-to-inferred - Success');
@@ -70,7 +70,7 @@ describe('@nx/workspace:infer-targets', () => {
     // default case, everything is generated with crystal, relevant plugins should be skipped
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app ${remixApp} --dir apps --unitTestRunner jest --e2eTestRunner=playwright --projectNameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     const output = runCLI(
@@ -116,7 +116,7 @@ describe('@nx/workspace:infer-targets', () => {
     // even if we make sure there are executors for remix & remix-e2e, only remix conversions will run with --project option
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app ${remixApp} --dir apps --unitTestRunner jest --e2eTestRunner=playwright --projectNameAndDirectoryFormat=as-provided --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     updateJson('nx.json', (json) => {
@@ -167,7 +167,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
-      `generate @nx/react:app ${reactApp} --rootProject=true --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/react:app --name=${reactApp} --directory="." --rootProject=true --linter eslint --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
     );
 
     runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive');
@@ -226,7 +226,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name=${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest`
       );
 
       updateFile(
@@ -244,7 +244,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name=${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -258,9 +258,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -272,7 +270,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
@@ -365,7 +363,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --importPath=${importPath} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name=${lib1}-data-access --directory=${lib1}/data-access --importPath=${importPath} --unitTestRunner=jest`
       );
 
       updateFile(
@@ -383,7 +381,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name=${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -397,9 +395,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -411,7 +407,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
@@ -490,150 +486,11 @@ describe('Workspace Tests', () => {
       );
     });
 
-    it('should work for custom workspace layouts with --project-name-and-root-format=derived', async () => {
-      const lib1 = uniq('mylib');
-      const lib2 = uniq('mylib');
-      const lib3 = uniq('mylib');
-
-      let nxJson = readJson('nx.json');
-      nxJson.workspaceLayout = { libsDir: 'packages' };
-      updateFile('nx.json', JSON.stringify(nxJson));
-
-      runCLI(
-        `generate @nx/js:lib ${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=derived`
-      );
-
-      updateFile(
-        `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
-        `export function fromLibOne() { console.log('This is completely pointless'); }`
-      );
-
-      updateFile(
-        `packages/${lib1}/data-access/src/index.ts`,
-        `export * from './lib/${lib1}-data-access.ts'`
-      );
-
-      /**
-       * Create a library which imports a class from lib1
-       */
-
-      runCLI(
-        `generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=derived`
-      );
-
-      updateFile(
-        `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
-        `import { fromLibOne } from '@${proj}/${lib1}/data-access';
-
-        export const fromLibTwo = () => fromLibOne();`
-      );
-
-      /**
-       * Create a library which has an implicit dependency on lib1
-       */
-
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=derived`
-      );
-      updateFile(join('packages', lib3, 'project.json'), (content) => {
-        const data = JSON.parse(content);
-        data.implicitDependencies = [`${lib1}-data-access`];
-        return JSON.stringify(data, null, 2);
-      });
-
-      /**
-       * Now try to move lib1
-       */
-
-      const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --project-name-and-root-format=derived`
-      );
-
-      expect(moveOutput).toContain(`DELETE packages/${lib1}/data-access`);
-      expect(exists(`packages/${lib1}/data-access`)).toBeFalsy();
-
-      const newPath = `packages/shared/${lib1}/data-access`;
-      const newName = `shared-${lib1}-data-access`;
-
-      const readmePath = `${newPath}/README.md`;
-      expect(moveOutput).toContain(`CREATE ${readmePath}`);
-      checkFilesExist(readmePath);
-
-      const jestConfigPath = `${newPath}/jest.config.ts`;
-      expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
-      checkFilesExist(jestConfigPath);
-      const jestConfig = readFile(jestConfigPath);
-      expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
-      expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
-
-      const tsConfigPath = `${newPath}/tsconfig.json`;
-      expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
-      checkFilesExist(tsConfigPath);
-
-      const tsConfigLibPath = `${newPath}/tsconfig.lib.json`;
-      expect(moveOutput).toContain(`CREATE ${tsConfigLibPath}`);
-      checkFilesExist(tsConfigLibPath);
-      const tsConfigLib = readJson(tsConfigLibPath);
-      expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
-      );
-
-      const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
-      expect(moveOutput).toContain(`CREATE ${tsConfigSpecPath}`);
-      checkFilesExist(tsConfigSpecPath);
-      const tsConfigSpec = readJson(tsConfigSpecPath);
-      expect(tsConfigSpec.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
-      );
-
-      const indexPath = `${newPath}/src/index.ts`;
-      expect(moveOutput).toContain(`CREATE ${indexPath}`);
-      checkFilesExist(indexPath);
-
-      const rootClassPath = `${newPath}/src/lib/${lib1}-data-access.ts`;
-      expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
-      checkFilesExist(rootClassPath);
-
-      expect(moveOutput).toContain('UPDATE tsconfig.base.json');
-      const rootTsConfig = readJson('tsconfig.base.json');
-      expect(
-        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
-      ).toBeUndefined();
-      expect(
-        rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared/${lib1}/data-access`
-        ]
-      ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
-
-      const projects = runCLI('show projects').split('\n');
-      expect(projects).not.toContain(`${lib1}-data-access`);
-      const project = readJson(join(newPath, 'project.json'));
-      expect(project).toBeTruthy();
-      expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.tags).toEqual([]);
-
-      /**
-       * Check that the import in lib2 has been updated
-       */
-      const lib2FilePath = `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`;
-      const lib2File = readFile(lib2FilePath);
-      expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
-      );
-
-      nxJson = readJson('nx.json');
-      delete nxJson.workspaceLayout;
-      updateFile('nx.json', JSON.stringify(nxJson));
-    });
-
     it('should work when moving a lib to a subfolder', async () => {
       const lib1 = uniq('lib1');
       const lib2 = uniq('lib2');
       const lib3 = uniq('lib3');
-      runCLI(
-        `generate @nx/js:lib ${lib1} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib1} --unitTestRunner=jest`);
 
       updateFile(
         `${lib1}/src/lib/${lib1}.ts`,
@@ -647,7 +504,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name=${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -661,9 +518,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [lib1];
@@ -675,7 +530,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access --newProjectName=${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access --newProjectName=${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/project.json`);
@@ -763,7 +618,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name=${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest`
       );
       let rootTsConfig = readJson('tsconfig.base.json');
       expect(
@@ -788,7 +643,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib --name${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -802,9 +657,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -816,7 +669,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
@@ -880,14 +733,16 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('myliba');
       const lib2 = uniq('mylibb');
 
-      runCLI(`generate @nx/js:lib ${lib1} --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib1} --unitTestRunner=jest --directory=libs/${lib1}`
+      );
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
 
       /**
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib2} --unitTestRunner=jest`);
+      runCLI(`generate @nx/js:lib libs/${lib2} --unitTestRunner=jest`);
       updateFile(join('libs', lib2, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [lib1];

@@ -1,25 +1,31 @@
-import { type Tree, readNxJson } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { readNxJson, type Tree } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { NxRemixGeneratorSchema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface RemixLibraryOptions extends NxRemixGeneratorSchema {
   projectName: string;
   projectRoot: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<RemixLibraryOptions> {
-  const { projectName, projectRoot, projectNameAndRootFormat } =
-    await determineProjectNameAndRootOptions(tree, {
+  await ensureProjectName(tree, options, 'application');
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/remix:library',
-    });
+    }
+  );
 
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -27,14 +33,14 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const importPath = options.importPath ?? getImportPath(tree, projectRoot);
-
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     unitTestRunner: options.unitTestRunner ?? 'vitest',
-    importPath,
-    projectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectRoot,
-    projectNameAndRootFormat,
+    isUsingTsSolutionConfig,
   };
 }

@@ -1,4 +1,4 @@
-import { joinPathFragments, type Tree } from '@nx/devkit';
+import { joinPathFragments, names, type Tree } from '@nx/devkit';
 import { componentGenerator } from '../../component/component';
 import { addChildren } from './add-children';
 import { addLoadChildren } from './add-load-children';
@@ -10,14 +10,15 @@ export async function addStandaloneComponent(
 ) {
   await componentGenerator(tree, {
     ...componentOptions,
-    name: componentOptions.name,
-    directory: joinPathFragments(
+    name: names(libraryOptions.name).className,
+    path: joinPathFragments(
       libraryOptions.projectRoot,
       'src',
       'lib',
-      componentOptions.flat ? '' : componentOptions.name
+      componentOptions.flat
+        ? `${componentOptions.name}`
+        : `${componentOptions.name}/${componentOptions.name}`
     ),
-    nameAndDirectoryFormat: 'as-provided',
     standalone: true,
     export: true,
     skipFormat: true,

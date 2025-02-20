@@ -1,21 +1,26 @@
 import type { Metadata } from 'next';
 import {
-  StandardPlans,
-  ComparablePlans,
-  Oss,
   Faq,
+  Oss,
+  CreditPricing,
+  PlansDisplay,
+  TrialCallout,
 } from '@nx/nx-dev/ui-pricing';
 import {
+  CallToAction,
+  DefaultLayout,
   Testimonials,
   TrustedBy,
-  DefaultLayout,
-  CallToAction,
 } from '@nx/nx-dev/ui-common';
+import { gotoAppButton } from '../../lib/components/headerCtaConfigs';
 
 export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
   description:
     "Distribute everything, don't waste time waiting on CI. Use Nx Cloud's distributed task execution and caching features to release faster. Save time and money.",
+  alternates: {
+    canonical: 'https://nx.dev/pricing',
+  },
   openGraph: {
     url: 'https://nx.dev/pricing',
     title: 'Nx Cloud - Available Plans',
@@ -30,29 +35,32 @@ export const metadata: Metadata = {
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };
 
 export default function PricingPage() {
   return (
-    <DefaultLayout>
-      <StandardPlans />
+    <DefaultLayout headerCTAConfig={[gotoAppButton]}>
+      <PlansDisplay />
       <div className="mt-18 lg:mt-32">
         <TrustedBy utmSource="pricingpage" utmCampaign="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <ComparablePlans />
+        <TrialCallout pageId="pricing" />
       </div>
       <div className="mt-32 lg:mt-56">
-        <Testimonials />
+        <CreditPricing />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <Faq />
       </div>
       <div className="mt-32 lg:mt-56">
         <Oss />
       </div>
       <div className="mt-32 lg:mt-56">
-        <Faq />
+        <Testimonials />
       </div>
       <div className="mt-32 lg:mt-56">
         <CallToAction

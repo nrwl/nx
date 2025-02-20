@@ -4,7 +4,9 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Framework, frameworkIcons } from '@nx/graph/ui-icons';
+import { Framework, frameworkIcons } from '@nx/graph/legacy/icons';
+import * as nxDevIcons from '@nx/nx-dev/ui-icons';
+import * as heroIcons from '@heroicons/react/24/outline';
 
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
@@ -99,6 +101,13 @@ export function Cards({
   );
 }
 
+function callIfFunction(fn: any, props: { [key: string]: string } = {}) {
+  if (typeof fn === 'function') {
+    return fn(props);
+  }
+  return fn;
+}
+
 export function LinkCard({
   title,
   type,
@@ -108,7 +117,7 @@ export function LinkCard({
 }: {
   title: string;
   type: string;
-  icon: string; // `icon` is the link to the SVG file
+  icon: string; // Can be either a component name or a direct image URL
   url: string;
   appearance?: 'default' | 'small';
 }): JSX.Element {
@@ -116,7 +125,7 @@ export function LinkCard({
     <Link
       key={title}
       href={url}
-      className="no-prose relative col-span-1 flex flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      className="no-prose relative col-span-1 mx-auto flex w-full max-w-md flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
       style={{ textDecorationLine: 'none' }}
       prefetch={false}
     >
@@ -129,7 +138,20 @@ export function LinkCard({
             }
           )}
         >
-          {icon && frameworkIcons[icon as Framework]?.image}
+          {icon.startsWith('/') ? (
+            <img
+              src={icon}
+              alt={title}
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            frameworkIcons[icon as Framework]?.image ||
+            callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
+            callIfFunction(
+              (heroIcons[icon as keyof typeof heroIcons] as any)?.render,
+              { className: 'w-full h-full' }
+            )
+          )}
         </div>
       )}
       <div

@@ -18,7 +18,6 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
-    projectNameAndRootFormat: 'derived',
     ...rawOptions,
   });
 }
