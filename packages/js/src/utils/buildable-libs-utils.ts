@@ -19,6 +19,7 @@ import { output } from 'nx/src/utils/output';
 import { dirname, join, relative, extname, resolve } from 'path';
 import type * as ts from 'typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
+import { randomUUID } from 'crypto';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -443,7 +444,7 @@ export function createTmpTsConfig(
     'tmp',
     projectRoot,
     process.env.NX_TASK_TARGET_TARGET ?? 'build',
-    'tsconfig.generated.json'
+    `tsconfig.generated.${randomUUID()}.json`
   );
   if (tsconfigPath === tmpTsConfigPath) {
     return tsconfigPath;
