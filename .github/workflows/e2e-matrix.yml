@@ -621,6 +621,7 @@ jobs:
             });
             result += `\`\`\``;
             core.setOutput('SLACK_MESSAGE', trimSpace(result));
+            console.log(trimSpace(result));
 
             function humanizeDuration(num) {
               let res = '';
