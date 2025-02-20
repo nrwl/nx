@@ -46,29 +46,14 @@
                   "file": "shared/tutorials/typescript-packages"
                 },
                 {
-                  "name": "React Standalone",
-                  "id": "react-standalone-tutorial",
-                  "file": "shared/tutorials/react-standalone"
-                },
-                {
                   "name": "React Monorepo",
                   "id": "react-monorepo-tutorial",
                   "file": "shared/tutorials/react-monorepo"
                 },
                 {
-                  "name": "Angular Standalone",
-                  "id": "angular-standalone-tutorial",
-                  "file": "shared/tutorials/angular-standalone"
-                },
-                {
                   "name": "Angular Monorepo",
                   "id": "angular-monorepo-tutorial",
                   "file": "shared/tutorials/angular-monorepo"
-                },
-                {
-                  "name": "Vue Standalone",
-                  "id": "vue-standalone-tutorial",
-                  "file": "shared/tutorials/vue-standalone"
                 },
                 {
                   "name": "Gradle Monorepo",

@@ -64,8 +64,6 @@ Someone whose main focus is on improving their single application will be most i
 
 {% cards %}
 {% card title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" type="video" url="https://youtu.be/qEaVzh-oBBc" /%}
-{% card title="Tutorial: React Standalone Tutorial" description="Walkthrough for creating a React standalone application with Nx" type="documentation" url="/getting-started/tutorials/react-standalone-tutorial" /%}
-{% card title="Tutorial: Angular Standalone Tutorial" description="Walkthrough for creating an Angular standalone application with Nx" type="documentation" url="/getting-started/tutorials/angular-standalone-tutorial" /%}
 {% /cards %}
 
 ## How to Choose
