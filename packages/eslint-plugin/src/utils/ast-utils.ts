@@ -111,7 +111,6 @@ function hasMemberExport(exportedMember, filePath) {
 export function getRelativeImportPath(
   exportedMember: string,
   filePath: string,
-  basePath: string,
   visitedPaths = new Set<string>()
 ) {
   if (visitedPaths.has(filePath)) {
@@ -280,7 +279,6 @@ export function getRelativeImportPath(
           const relativeImportPath = getRelativeImportPath(
             exportedMember,
             childFilePath,
-            basePath,
             visitedPaths
           );
           if (relativeImportPath) {
