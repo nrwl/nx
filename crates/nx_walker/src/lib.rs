@@ -1,12 +1,11 @@
-mod utils;
 
 use ignore::WalkBuilder;
 use nx_glob::NxGlobSet;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-
-use crate::utils::{get_mod_time, Normalize};
+use nx_utils::get_mod_time;
+use nx_utils::path::ToNormalizedString;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
 pub struct NxFile {

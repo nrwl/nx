@@ -19,6 +19,7 @@ nx_cache = { path = "crates/nx_cache" }
 nx_terminal = { path = "crates/nx_terminal" }
 nx_watch = { path = "crates/nx_watch" }
 nx_machine = { path = "crates/nx_machine" }
+nx_utils = { path = "crates/nx_utils"}
 
 anyhow = "1.0.95"
 colored = "2"
@@ -78,6 +79,7 @@ assert_fs = "1.0.10"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"
 tempfile = "3.13.0"
+tokio = "1.38.0"
 
 [profile.release]
 lto = true

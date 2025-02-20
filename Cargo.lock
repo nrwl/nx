@@ -73,9 +73,9 @@ checksum = "8901269c6307e8d93993578286ac0edf7f195079ffff5ebdeea6a59ffb7e36bc"
 
 [[package]]
 name = "anyhow"
-version = "1.0.81"
+version = "1.0.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0952808a6c2afd1aa8947271f3a60f1a6763c7b912d210184c5149b5cf147247"
+checksum = "6b964d184e89d9b6b67dd2715bc8e74cf3107fb2b529990c90cf517326150bf4"
 
 [[package]]
 name = "assert_fs"
@@ -375,7 +375,7 @@ dependencies = [
  "bitflags 2.6.0",
  "crossterm_winapi",
  "libc",
- "mio",
+ "mio 0.8.11",
  "parking_lot",
  "signal-hook",
  "signal-hook-mio",
@@ -963,12 +963,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hermit-abi"
-version = "0.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
-
-[[package]]
 name = "home"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1130,9 +1124,9 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.161"
+version = "0.2.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e9489c2807c139ffd9c1794f4af0ebe86a828db53ecdc7fea2111d0fed085d1"
+checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
 
 [[package]]
 name = "libloading"
@@ -1273,6 +1267,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2886843bf800fba2e3377cff24abf6379b4c4d5c6681eaf9ea5b0d15090450bd"
+dependencies = [
+ "libc",
+ "wasi",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "napi"
 version = "2.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1401,7 +1406,7 @@ dependencies = [
  "kqueue",
  "libc",
  "log",
- "mio",
+ "mio 0.8.11",
  "walkdir",
  "windows-sys 0.48.0",
 ]
@@ -1453,16 +1458,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num_cpus"
-version = "1.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
-dependencies = [
- "hermit-abi",
- "libc",
-]
-
-[[package]]
 name = "num_threads"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1484,29 +1479,27 @@ dependencies = [
  "dunce",
  "fs4",
  "fs_extra",
- "globset",
  "hashbrown 0.14.5",
  "ignore",
  "ignore-files 2.1.0",
  "itertools",
  "machine-uid",
- "mio",
+ "mio 0.8.11",
  "napi",
  "napi-build",
  "napi-derive",
-"nom",
-"once_cell",
-"nx_cache",
-"nx_db",
-"nx_glob",
-"nx_hasher",
-"nx_machine",
-"nx_project_graph",
-"nx_tasks",
-"nx_terminal",
-"nx_walker",
-"nx_watch",
-"nx_workspace",
+ "nx_cache",
+ "nx_db",
+ "nx_glob",
+ "nx_hasher",
+ "nx_machine",
+ "nx_project_graph",
+ "nx_tasks",
+ "nx_terminal",
+ "nx_utils",
+ "nx_walker",
+ "nx_watch",
+ "nx_workspace",
  "parking_lot",
  "portable-pty",
  "rayon",
@@ -1517,7 +1510,6 @@ dependencies = [
  "swc_ecma_ast",
  "swc_ecma_dep_graph",
  "swc_ecma_parser",
- "swc_ecma_visit",
  "tempfile",
  "thiserror",
  "tokio",
@@ -1640,13 +1632,17 @@ dependencies = [
  "anyhow",
  "assert_fs",
  "crossterm",
- "mio",
+ "mio 0.8.11",
  "parking_lot",
  "portable-pty",
  "tempfile",
  "tracing",
  "winapi",
 ]
+
+[[package]]
+name = "nx_utils"
+version = "0.1.0"
 
 [[package]]
 name = "nx_walker"
@@ -1656,6 +1652,7 @@ dependencies = [
  "crossbeam-channel",
  "ignore",
  "nx_glob",
+ "nx_utils",
  "rayon",
  "serde",
  "serde_json",
@@ -2286,7 +2283,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29ad2e15f37ec9a6cc544097b78a1ec90001e9f71b81338ca39f430adaca99af"
 dependencies = [
  "libc",
- "mio",
+ "mio 0.8.11",
  "signal-hook",
 ]
 
@@ -2683,26 +2680,25 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.38.0"
+version = "1.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba4f4a02a7a80d6f274636f0aa95c7e383b912d41fe721a31f29e29698585a4a"
+checksum = "3d61fa4ffa3de412bfea335c6ecff681de2b609ba3c77ef3e00e521813a9ed9e"
 dependencies = [
  "backtrace",
  "bytes",
  "libc",
- "mio",
- "num_cpus",
+ "mio 1.0.3",
  "pin-project-lite",
  "signal-hook-registry",
  "tokio-macros",
- "windows-sys 0.48.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
 name = "tokio-macros"
-version = "2.3.0"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f5ae998a069d4b5aba8ee9dad856af7d520c3699e6159b185c2acd48155d39a"
+checksum = "6e06d43f1345a3bcd39f6a56dbb7dcab2ba47e68e8ac134855e7e2bdbaf8cab8"
 dependencies = [
  "proc-macro2",
  "quote",

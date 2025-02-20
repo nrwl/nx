@@ -20,6 +20,7 @@ nx_project_graph = { workspace = true }
 nx_cache = { workspace = true }
 nx_terminal = { workspace = true }
 nx_watch = { workspace = true }
+nx_utils = { workspace = true}
 anyhow = { workspace = true }
 colored = { workspace = true }
 crossbeam-channel = { workspace = true }

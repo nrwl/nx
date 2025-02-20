@@ -11,6 +11,7 @@ rayon = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 nx_glob = { workspace = true }
+nx_utils = { workspace = true}
 crossbeam-channel = { workspace = true }
 
 [dev-dependencies]

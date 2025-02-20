@@ -1,17 +1,7 @@
-use crate::native::{utils::normalize_trait::Normalize, types::FileData};
+use crate::native::{ types::FileData};
 use std::path::{Path, PathBuf};
 
-impl Normalize for Path {
-    fn to_normalized_string(&self) -> String {
-        normalize_nx_path(self)
-    }
-}
 
-impl Normalize for PathBuf {
-    fn to_normalized_string(&self) -> String {
-        normalize_nx_path(self)
-    }
-}
 
 fn normalize_nx_path<P>(path: P) -> String
 where

@@ -7,6 +7,16 @@ pub fn hash(content: &[u8]) -> String {
     xxh3::xxh3_64(content).to_string()
 }
 
+pub fn hash_array_optional(input: Vec<Option<String>>) -> String {
+    let joined = input.iter().filter_map(|s| {
+        if s.is_none() {
+            trace!("Encountered None value in hash_array input: {:?}", input);
+        }
+        s.as_deref()
+    }).collect::<Vec<_>>().join(",");
+    hash(joined.as_bytes())
+}
+
 /// Hash an array of strings by joining them with commas and hashing the result
 pub fn hash_array(input: Vec<String>) -> String {
     let joined = input.join(",");
@@ -94,5 +104,12 @@ mod tests {
         let content = hash_file(test_file_path);
 
         assert_eq!(content.unwrap(), "6193209363630369380");
+    }
+
+    #[test]
+    fn it_hashes_an_array() {
+        // Resilient to None values (e.g. null values passed from the JS side)
+        let content = hash_array_optional(vec![Some("foo".to_string()), None, Some("bar".to_string())]);
+        assert_eq!(content, "10292076446133652019");
     }
 }

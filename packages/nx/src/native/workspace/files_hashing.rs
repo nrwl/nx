@@ -89,8 +89,7 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
 mod tests {
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
-
-    use crate::native::utils::get_mod_time;
+    use nx_utils::get_mod_time;
     use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
 
     fn setup_fs() -> TempDir {
@@ -140,7 +139,7 @@ mod tests {
                     get_mod_time(&temp.child("modified.txt").metadata().unwrap()) - 10,
                 ),
             ),
-            // this file is does not exist on the fs, aka it was deleted
+            // this file does not exist on the fs, aka it was deleted
             (
                 String::from("baz/qux.txt"),
                 NxFileHashed(String::from("hash5"), 0),

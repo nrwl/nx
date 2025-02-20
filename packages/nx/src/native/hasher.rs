@@ -1,78 +1,11 @@
 #[napi]
 pub fn hash_array(input: Vec<Option<String>>) -> String {
-    let joined = input.iter().filter_map(|s| {
-        if s.is_none() {
-            trace!("Encountered None value in hash_array input: {:?}", input);
-        }
-        s.as_deref()
-    }).collect::<Vec<_>>().join(",");
-    let content = joined.as_bytes();
-    hash(content)
+    nx_hasher::hash_array_optional(input)
 }
 
 #[napi]
 pub fn hash_file(file: String) -> Option<String> {
-    hash_file_path(file)
+    nx_hasher::hash_file(file)
 }
 
-#[inline]
-pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
-    let path = path.as_ref();
-    trace!("Reading {:?} to hash", path);
-    let Ok(content) = std::fs::read(path) else {
-        trace!("Failed to read file: {:?}", path);
-        return None;
-    };
-    trace!("Hashing {:?}", path);
-    let hash = hash(&content);
-    trace!("Hashed file {:?} - {:?}", path, hash);
 
-    Some(hash)
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::native::hasher::{hash_file, hash_array};
-    use assert_fs::prelude::*;
-    use assert_fs::TempDir;
-
-    ///
-    /// Setup a temporary directory to do testing in
-    ///
-    fn setup_fs() -> TempDir {
-        let temp = TempDir::new().unwrap();
-        temp.child("test.txt").write_str("content").unwrap();
-        temp.child("foo.txt").write_str("content1").unwrap();
-        temp.child("bar.txt").write_str("content2").unwrap();
-        temp.child("baz")
-            .child("qux.txt")
-            .write_str("content@qux")
-            .unwrap();
-        temp.child("node_modules")
-            .child("node-module-dep")
-            .write_str("content")
-            .unwrap();
-        temp
-    }
-
-    #[test]
-    fn it_hashes_a_file() {
-        // handle non existent files
-        let content = hash_file("".into());
-        assert!(content.is_none());
-
-        let temp_dir = setup_fs();
-
-        let test_file_path = temp_dir.display().to_string() + "/test.txt";
-        let content = hash_file(test_file_path);
-
-        assert_eq!(content.unwrap(), "6193209363630369380");
-    }
-
-    #[test]
-    fn it_hashes_an_array() {
-        // Resilient to None values (e.g. null values passed from the JS side)
-        let content = hash_array(vec![Some("foo".to_string()), None, Some("bar".to_string())]);
-        assert_eq!(content, "10292076446133652019");
-    }
-}
