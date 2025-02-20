@@ -365,7 +365,7 @@ export class TaskOrchestrator {
   // endregion Batch
 
   // region Single Task
-  private async applyFromCacheOrRunTask(
+  async applyFromCacheOrRunTask(
     doNotSkipCache: boolean,
     task: Task,
     groupId: number
@@ -429,6 +429,7 @@ export class TaskOrchestrator {
       });
     }
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+    return results[0];
   }
 
   private async runTask(
@@ -567,7 +568,7 @@ export class TaskOrchestrator {
     }
   }
 
-  private async startContinuousTask(task: Task, groupId: number) {
+  async startContinuousTask(task: Task, groupId: number) {
     const taskSpecificEnv = await this.processedTasks.get(task.id);
     await this.preRunSteps([task], { groupId });
 
