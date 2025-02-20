@@ -37,7 +37,7 @@
     "css-loader": "^6.4.0",
     "enquirer": "~2.3.6",
     "express": "^4.21.2",
-    "fork-ts-checker-webpack-plugin": "7.2.13",
+    "ts-checker-rspack-plugin": "^1.1.1",
     "http-proxy-middleware": "^3.0.3",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
