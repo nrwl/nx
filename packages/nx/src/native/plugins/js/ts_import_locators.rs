@@ -713,7 +713,7 @@ fn find_imports(
 #[cfg(test)]
 mod find_imports {
     use super::*;
-    use crate::native::glob::build_glob_set;
+    use nx_glob::NxGlobSet;
     use crate::native::walker::nx_walker;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
@@ -1481,7 +1481,7 @@ import(myTag`react@${version}`);
         ancestors.next();
         let root = PathBuf::from(ancestors.next().unwrap());
 
-        let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
+        let glob = NxGlobSet::new(&["**/*.[jt]s"]).unwrap();
         let files = nx_walker(root.clone(), true)
             .filter(|file| glob.is_match(&file.full_path))
             .map(|file| file.full_path)

@@ -2,7 +2,8 @@ use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-use crate::native::glob::{build_glob_set, contains_glob_pattern, glob_transform::partition_glob};
+use nx_glob::{contains_glob_pattern, partition_glob};
+use nx_glob::NxGlobSet;
 use crate::native::logger::enable_logger;
 use crate::native::utils::Normalize;
 use crate::native::walker::{nx_walker, nx_walker_sync};
@@ -58,7 +59,7 @@ where
 
     trace!(?negated_globs, ?regular_globs, "Expanding globs");
 
-    let glob_set = build_glob_set(&regular_globs)?;
+    let glob_set = NxGlobSet::new(&regular_globs)?;
     let found_paths = nx_walker_sync(directory, Some(&negated_globs))
         .filter_map(|path| {
             if glob_set.is_match(&path) {
@@ -122,7 +123,7 @@ pub fn get_files_for_outputs(
         let partitioned_globs = partition_globs_into_map(globs)?;
         for (root, patterns) in partitioned_globs {
             let root_path = directory.join(&root);
-            let glob_set = build_glob_set(&patterns)?;
+            let glob_set = NxGlobSet::new(&patterns)?;
             trace!("walking directory: {:?}", root_path);
 
             let found_paths: Vec<String> = nx_walker(&root_path, false)

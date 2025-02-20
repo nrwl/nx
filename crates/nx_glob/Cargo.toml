@@ -1,0 +1,12 @@
+[package]
+name = "nx_glob"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+globset = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+itertools = { workspace = true }
+nom = { workspace = true }

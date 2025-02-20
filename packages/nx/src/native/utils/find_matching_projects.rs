@@ -1,7 +1,7 @@
-use crate::native::glob::{build_glob_set, NxGlobSet};
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use hashbrown::HashSet;
 use std::collections::HashMap;
+use nx_glob::NxGlobSet;
 
 struct ProjectPattern<'a> {
     exclude: bool,
@@ -162,7 +162,7 @@ fn add_matching_projects_by_name<'a>(
 
     get_matching_strings(
         pattern.value,
-        &build_glob_set(&[pattern.value])?,
+        &NxGlobSet::new(&[pattern.value])?,
         project_names,
     )
     .iter()
@@ -182,7 +182,7 @@ fn add_matching_projects_by_directory<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
-    let glob = build_glob_set(&[pattern.value])?;
+    let glob = NxGlobSet::new(&[pattern.value])?;
     for project_name in project_names {
         let Some(root) = projects.get(*project_name).map(|p| p.root.as_str()) else {
             continue;
@@ -206,7 +206,7 @@ fn add_matching_projects_by_tag<'a>(
     pattern: &ProjectPattern,
     matched_projects: &mut HashSet<&'a str>,
 ) -> anyhow::Result<()> {
-    let glob = build_glob_set(&[pattern.value])?;
+    let glob = NxGlobSet::new(&[pattern.value])?;
     for project_name in project_names {
         let project_tags = projects
             .get(*project_name)

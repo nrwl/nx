@@ -1,6 +1,5 @@
 use rayon::prelude::*;
-
-use crate::native::glob::build_glob_set;
+use nx_glob::NxGlobSet;
 use crate::native::types::FileData;
 
 /// Get workspace config files based on provided globs
@@ -9,14 +8,14 @@ pub(super) fn glob_files(
     globs: Vec<String>,
     exclude: Option<Vec<String>>,
 ) -> napi::Result<impl ParallelIterator<Item = &FileData>> {
-    let globs = build_glob_set(&globs)?;
+    let globs = NxGlobSet::new(&globs)?;
 
     let exclude_glob_set = match exclude {
         Some(exclude) => {
             if exclude.is_empty() {
                 None
             } else {
-                Some(build_glob_set(&exclude)?)
+                Some(NxGlobSet::new(&exclude)?)
             }
         }
         None => None,

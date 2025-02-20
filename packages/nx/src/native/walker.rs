@@ -2,11 +2,11 @@ use ignore::WalkBuilder;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
-use crate::native::glob::build_glob_set;
 
 use crate::native::logger::enable_logger;
 use crate::native::utils::{get_mod_time, Normalize};
 use walkdir::WalkDir;
+use nx_glob::NxGlobSet;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
 pub struct NxFile {
@@ -40,7 +40,7 @@ where
         base_ignores.extend(additional_ignores.iter().map(|s| format!("**/{}", s)));
     };
 
-    let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
+    let ignore_glob_set = NxGlobSet::new(&base_ignores).expect("Should be valid globs");
 
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
@@ -164,7 +164,7 @@ where
 {
     let directory: PathBuf = directory.as_ref().into();
 
-    let ignore_glob_set = build_glob_set(&[
+    let ignore_glob_set = NxGlobSet::new(&[
         "**/node_modules",
         "**/.git",
         "**/.nx/cache",

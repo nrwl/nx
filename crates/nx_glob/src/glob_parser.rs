@@ -1,4 +1,4 @@
-use crate::native::glob::glob_group::GlobGroup;
+use crate::glob_group::GlobGroup;
 use nom::branch::alt;
 use nom::bytes::complete::{is_not, tag, take_till, take_until, take_while};
 use nom::combinator::{eof, map, map_parser};
@@ -198,8 +198,8 @@ pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup>>)> {
 
 #[cfg(test)]
 mod test {
-    use crate::native::glob::glob_group::GlobGroup;
-    use crate::native::glob::glob_parser::{parse_glob, special_char_with_no_group};
+    use crate::glob_group::GlobGroup;
+    use crate::glob_parser::{parse_glob, special_char_with_no_group};
 
     #[test]
     fn invalid_groups() {

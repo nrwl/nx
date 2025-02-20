@@ -1,9 +1,76 @@
-
 [workspace]
-resolver = '2'
+resolver = "2"
 members = [
-	'packages/nx',
+    "crates/*",
+    "packages/nx",
 ]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+nx_glob = { path = "crates/nx_glob" }
+
+anyhow = "1.0.95"
+colored = "2"
+crossbeam-channel = '0.5'
+dashmap = { version = "5.5.3", features = ["rayon"] }
+dunce = "1"
+fs_extra = "1.3.0"
+hashbrown = { version = "0.14.5", features = ["rayon", "rkyv"] }
+ignore = '0.4'
+itertools = "0.10.5"
+globset = "0.4.10"
+once_cell = "1.18.0"
+parking_lot = { version = "0.12.1", features = ["send_guard"] }
+napi = { version = '2.16.0', default-features = false, features = [
+    'anyhow',
+    'napi4',
+    'tokio_rt',
+] }
+napi-derive = '2.16.0'
+nom = '7.1.3'
+regex = "1.9.1"
+rayon = "1.7.0"
+rkyv = { version = "0.7", features = ["validation"] }
+thiserror = "1.0.40"
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+walkdir = '2.3.3'
+xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
+swc_common = "0.31.16"
+swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
+swc_ecma_visit = "0.93.0"
+swc_ecma_ast = "0.107.0"
+
+#windows dependencies
+winapi = { version = "0.3", features = ["fileapi"] }
+
+#unix dependencies
+mio = "0.8"
+
+#non-wasm dependencies
+portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
+crossterm = "0.27.0"
+ignore-files = "2.1.0"
+fs4 = "0.12.0"
+rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
+watchexec = "3.0.1"
+watchexec-events = "2.0.1"
+watchexec-filterer-ignore = "3.0.0"
+watchexec-signals = "2.1.0"
+machine-uid = "0.5.2"
+
+# build dependencies
+napi-build = '2.1.3'
+assert_fs = "1.0.10"
+# This is only used for unit tests
+swc_ecma_dep_graph = "0.109.1"
+tempfile = "3.13.0"
 
 [profile.release]
 lto = true
+
+

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::*;
 use tracing::{trace, trace_span};
 
-use crate::native::glob::build_glob_set;
+use nx_glob::NxGlobSet;
 use crate::native::types::FileData;
 
 pub fn hash_project_files(
@@ -41,8 +41,8 @@ fn collect_files<'a>(
         })
         .collect::<Vec<_>>();
     let now = std::time::Instant::now();
-    let glob_set = build_glob_set(&globs)?;
-    trace!("build_glob_set for {:?}", now.elapsed());
+    let glob_set = NxGlobSet::new(&globs)?;
+    trace!("build glob set for {:?}", now.elapsed());
 
     project_file_map.get(project_name).map_or_else(
         || Err(anyhow!("project {} not found", project_name)),

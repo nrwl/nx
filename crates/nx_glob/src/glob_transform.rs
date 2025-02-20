@@ -1,5 +1,5 @@
-use crate::native::glob::glob_group::GlobGroup;
-use crate::native::glob::glob_parser::parse_glob;
+use crate::glob_group::GlobGroup;
+use crate::glob_parser::parse_glob;
 use itertools::Itertools;
 use std::collections::HashSet;
 use itertools::Either::{Left, Right};

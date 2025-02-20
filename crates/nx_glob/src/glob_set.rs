@@ -1,20 +1,16 @@
-mod glob_group;
-mod glob_parser;
-pub mod glob_transform;
-
-use crate::native::glob::glob_transform::convert_glob;
+use crate::glob_transform::convert_glob;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::fmt::Debug;
 use std::path::Path;
 use tracing::trace;
 
-pub struct NxGlobSetBuilder {
+struct NxGlobSetBuilder {
     included_globs: GlobSetBuilder,
     excluded_globs: GlobSetBuilder,
 }
 
 impl NxGlobSetBuilder {
-    pub fn new<S: AsRef<str>>(globs: &[S]) -> anyhow::Result<Self> {
+     fn new<S: AsRef<str>>(globs: &[S]) -> anyhow::Result<Self> {
         let mut glob_set_builder = NxGlobSetBuilder {
             included_globs: GlobSetBuilder::new(),
             excluded_globs: GlobSetBuilder::new(),
@@ -27,7 +23,7 @@ impl NxGlobSetBuilder {
         Ok(glob_set_builder)
     }
 
-    pub fn add(&mut self, glob: &str) -> anyhow::Result<&mut NxGlobSetBuilder> {
+     fn add(&mut self, glob: &str) -> anyhow::Result<&mut NxGlobSetBuilder> {
         let negated = glob.starts_with('!');
         let glob_string = glob.strip_prefix('!').unwrap_or(glob).to_string();
 
@@ -51,7 +47,7 @@ impl NxGlobSetBuilder {
         Ok(self)
     }
 
-    pub fn build(&self) -> anyhow::Result<NxGlobSet> {
+     fn build(&self) -> anyhow::Result<NxGlobSet> {
         Ok(NxGlobSet {
             excluded_globs: self.excluded_globs.build()?,
             included_globs: self.included_globs.build()?,
@@ -64,7 +60,31 @@ pub struct NxGlobSet {
     included_globs: GlobSet,
     excluded_globs: GlobSet,
 }
+
 impl NxGlobSet {
+    pub fn new<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<Self> {
+        let result = globs
+            .iter()
+            .flat_map(|s| potential_glob_split(s.as_ref()))
+            .map(|glob| {
+                if glob.contains('!')
+                    || glob.contains('|')
+                    || glob.contains('(')
+                    || glob.contains("{,")
+                {
+                    convert_glob(glob)
+                } else {
+                    Ok(vec![glob.to_string()])
+                }
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?
+            .concat();
+
+        trace!(?globs, ?result, "converted globs");
+
+        NxGlobSetBuilder::new(&result)?.build()
+    }
+
     pub fn is_match<P: AsRef<Path>>(&self, path: P) -> bool {
         if self.included_globs.is_empty() {
             !self.excluded_globs.is_match(path.as_ref())
@@ -77,7 +97,7 @@ impl NxGlobSet {
     }
 }
 
-fn potential_glob_split(
+pub fn potential_glob_split(
     glob: &str,
 ) -> itertools::Either<std::str::Split<char>, std::iter::Once<&str>> {
     use itertools::Either::*;
@@ -88,88 +108,53 @@ fn potential_glob_split(
     }
 }
 
-pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<NxGlobSet> {
-    let result = globs
-        .iter()
-        .flat_map(|s| potential_glob_split(s.as_ref()))
-        .map(|glob| {
-            if glob.contains('!') || glob.contains('|') || glob.contains('(') || glob.contains("{,")
-            {
-                convert_glob(glob)
-            } else {
-                Ok(vec![glob.to_string()])
-            }
-        })
-        .collect::<anyhow::Result<Vec<_>>>()?
-        .concat();
-
-    trace!(?globs, ?result, "converted globs");
-
-    NxGlobSetBuilder::new(&result)?.build()
-}
-
-pub(crate) fn contains_glob_pattern(value: &str) -> bool {
-    value.contains('!')
-        || value.contains('?')
-        || value.contains('@')
-        || value.contains('+')
-        || value.contains('*')
-        || value.contains('|')
-        || value.contains(',')
-        || value.contains('{')
-        || value.contains('}')
-        || value.contains('[')
-        || value.contains(']')
-        || value.contains('(')
-        || value.contains(')')
-}
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::glob_set::NxGlobSet;
 
     #[test]
     fn should_work_with_simple_globs() {
-        let glob_set = build_glob_set(&["**/*"]).unwrap();
+        let glob_set = NxGlobSet::new(&["**/*"]).unwrap();
         assert!(glob_set.is_match("packages/nx/package.json"));
 
-        let glob_set = build_glob_set(&["!test/*.spec.ts"]).unwrap();
+        let glob_set = NxGlobSet::new(&["!test/*.spec.ts"]).unwrap();
         assert!(!glob_set.is_match("test/file.spec.ts"));
         assert!(glob_set.is_match("test/file.ts"));
 
-        let glob_set = build_glob_set(&["test/*.spec.ts"]).unwrap();
+        let glob_set = NxGlobSet::new(&["test/*.spec.ts"]).unwrap();
         assert!(glob_set.is_match("test/file.spec.ts"));
         assert!(!glob_set.is_match("test/file.ts"));
     }
 
     #[test]
     fn should_detect_package_json() {
-        let glob_set = build_glob_set(&["packages/*/package.json"]).unwrap();
+        let glob_set = NxGlobSet::new(&["packages/*/package.json"]).unwrap();
         assert!(glob_set.is_match("packages/nx/package.json"))
     }
 
     #[test]
     fn should_not_detect_deeply_nested_package_json() {
-        let glob_set = build_glob_set(&["packages/*/package.json"]).unwrap();
+        let glob_set = NxGlobSet::new(&["packages/*/package.json"]).unwrap();
         assert!(!glob_set.is_match("packages/nx/test-files/package.json"))
     }
 
     #[test]
     fn should_detect_deeply_nested_package_json() {
-        let glob_set = build_glob_set(&["packages/**/package.json"]).unwrap();
+        let glob_set = NxGlobSet::new(&["packages/**/package.json"]).unwrap();
         assert!(glob_set.is_match("packages/nx/test-files/package.json"))
     }
 
     #[test]
     fn should_detect_node_modules() {
-        let glob_set = build_glob_set(&["**/node_modules"]).unwrap();
+        let glob_set = NxGlobSet::new(&["**/node_modules"]).unwrap();
         assert!(glob_set.is_match("node_modules"));
         assert!(glob_set.is_match("packages/nx/node_modules"));
     }
 
     #[test]
     fn should_not_detect_root_plugin_configs() {
-        let glob_set = build_glob_set(&["*/**/Cargo.toml"]).unwrap();
+        let glob_set = NxGlobSet::new(&["*/**/Cargo.toml"]).unwrap();
         assert!(glob_set.is_match("packages/a/Cargo.toml"));
         assert!(glob_set.is_match("a/Cargo.toml"));
         assert!(!glob_set.is_match("Cargo.toml"))
@@ -177,20 +162,20 @@ mod test {
 
     #[test]
     fn should_handle_negated_globs() {
-        let glob_set = build_glob_set(&["!nested/ignore/", "nested/"]).unwrap();
+        let glob_set = NxGlobSet::new(&["!nested/ignore/", "nested/"]).unwrap();
         assert!(!glob_set.is_match("file.map"));
         assert!(!glob_set.is_match("nested/ignore/file.js"));
         assert!(!glob_set.is_match("another-nested/nested/file.ts"));
         assert!(glob_set.is_match("nested/file.js"));
         assert!(glob_set.is_match("nested/nested/file.ts"));
 
-        let glob_set = build_glob_set(&["nested/", "!nested/*.{css,map}"]).unwrap();
+        let glob_set = NxGlobSet::new(&["nested/", "!nested/*.{css,map}"]).unwrap();
         assert!(glob_set.is_match("nested/file.js"));
         assert!(glob_set.is_match("nested/file.ts"));
         assert!(!glob_set.is_match("nested/file.css"));
         assert!(!glob_set.is_match("nested/file.map"));
 
-        let glob_set = build_glob_set(&["!nested/**/ignore/", "nested/**"]).unwrap();
+        let glob_set = NxGlobSet::new(&["!nested/**/ignore/", "nested/**"]).unwrap();
         assert!(glob_set.is_match("nested/nested/file.js"));
         assert!(!glob_set.is_match("nested/ignore/file.ts"));
         assert!(!glob_set.is_match("nested/nested/ignore/file.ts"));
@@ -198,7 +183,7 @@ mod test {
 
     #[test]
     fn should_handle_multiple_globs() {
-        let glob_set = build_glob_set(&["nested/", "doesnt-exist/"]).unwrap();
+        let glob_set = NxGlobSet::new(&["nested/", "doesnt-exist/"]).unwrap();
         assert!(glob_set.is_match("nested/file.js"));
         assert!(!glob_set.is_match("file.js"));
     }
@@ -206,7 +191,7 @@ mod test {
     #[test]
     fn should_handle_complex_patterns() {
         let glob_set =
-            build_glob_set(&["dist/!(cache|cache2)/**/!(README|LICENSE).(txt|md)"]).unwrap();
+            NxGlobSet::new(&["dist/!(cache|cache2)/**/!(README|LICENSE).(txt|md)"]).unwrap();
 
         // matches
         assert!(glob_set.is_match("dist/nested/file.txt"));
@@ -222,7 +207,7 @@ mod test {
         assert!(!glob_set.is_match("dist/LICENSE.md"));
         assert!(!glob_set.is_match("dist/README.txt"));
 
-        let glob_set = build_glob_set(&["dist/*.(js|ts)"]).unwrap();
+        let glob_set = NxGlobSet::new(&["dist/*.(js|ts)"]).unwrap();
         // matches
         assert!(glob_set.is_match("dist/file.js"));
         assert!(glob_set.is_match("dist/file.ts"));
@@ -230,13 +215,13 @@ mod test {
         assert!(!glob_set.is_match("dist/file.txt"));
         assert!(!glob_set.is_match("dist/nested/file.js"));
 
-        let glob_set = build_glob_set(&["dist/**/!(main).(js|ts)"]).unwrap();
+        let glob_set = NxGlobSet::new(&["dist/**/!(main).(js|ts)"]).unwrap();
         // matches
         assert!(glob_set.is_match("dist/file.js"));
         //no matches
         assert!(!glob_set.is_match("dist/main.js"));
 
-        let glob_set = build_glob_set(&["dist/!(main|cache)/"]).unwrap();
+        let glob_set = NxGlobSet::new(&["dist/!(main|cache)/"]).unwrap();
         // matches
         assert!(glob_set.is_match("dist/nested/"));
         // no matches
@@ -245,7 +230,7 @@ mod test {
         assert!(!glob_set.is_match("dist/cache/"));
         assert!(!glob_set.is_match("dist/main/"));
 
-        let glob_set = build_glob_set(&["**/*.spec.ts{,.snap}"]).unwrap();
+        let glob_set = NxGlobSet::new(&["**/*.spec.ts{,.snap}"]).unwrap();
         // matches
         assert!(glob_set.is_match("src/file.spec.ts"));
         assert!(glob_set.is_match("src/file.spec.ts.snap"));
@@ -255,7 +240,7 @@ mod test {
 
     #[test]
     fn should_handle_negative_globs_with_one_directory() {
-        let glob_set = build_glob_set(&["packages/!(package-a)*"]).unwrap();
+        let glob_set = NxGlobSet::new(&["packages/!(package-a)*"]).unwrap();
 
         // matches
         assert!(glob_set.is_match("packages/package-b"));
@@ -266,7 +251,7 @@ mod test {
         assert!(!glob_set.is_match("packages/package-a-b/nested"));
         assert!(!glob_set.is_match("packages/package-b/nested"));
 
-        let glob_set = build_glob_set(&["packages/!(package-a)*/package.json"]).unwrap();
+        let glob_set = NxGlobSet::new(&["packages/!(package-a)*/package.json"]).unwrap();
         assert!(glob_set.is_match("packages/package-b/package.json"));
         assert!(glob_set.is_match("packages/package-c/package.json"));
         assert!(!glob_set.is_match("packages/package-a/package.json"));
@@ -275,7 +260,7 @@ mod test {
 
     #[test]
     fn should_handle_complex_extglob_patterns() {
-        let glob_set = build_glob_set(&["**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
+        let glob_set = NxGlobSet::new(&["**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
         // matches
         assert!(glob_set.is_match("packages/package-a/spec.jsx.snap"));
         assert!(glob_set.is_match("packages/package-a/spec.js.snap"));
@@ -315,14 +300,14 @@ mod test {
         assert!(!glob_set.is_match("packages/package-a/spec.js.snapx"));
         assert!(!glob_set.is_match("packages/package-a/file.ts"));
 
-        let glob_set = build_glob_set(&["**/!(*.module).ts"]).unwrap();
+        let glob_set = NxGlobSet::new(&["**/!(*.module).ts"]).unwrap();
         //matches
         assert!(glob_set.is_match("test.ts"));
         assert!(glob_set.is_match("nested/comp.test.ts"));
         //no matches
         assert!(!glob_set.is_match("test.module.ts"));
 
-        let glob_set = build_glob_set(&["**/*.*(component,module).ts?(x)"]).unwrap();
+        let glob_set = NxGlobSet::new(&["**/*.*(component,module).ts?(x)"]).unwrap();
         //matches
         assert!(glob_set.is_match("test.component.ts"));
         assert!(glob_set.is_match("test.module.ts"));
@@ -343,18 +328,18 @@ mod test {
 
     #[test]
     fn supports_brace_expansion() {
-        let glob_set = build_glob_set(&["{packages,apps}/*"]).unwrap();
+        let glob_set = NxGlobSet::new(&["{packages,apps}/*"]).unwrap();
         assert!(glob_set.is_match("packages/package-a"));
         assert!(glob_set.is_match("apps/app-a"));
         assert!(!glob_set.is_match("apps/app-a/nested"));
 
-        let glob_set = build_glob_set(&["{package-lock.json,yarn.lock,pnpm-lock.yaml}"]).unwrap();
+        let glob_set = NxGlobSet::new(&["{package-lock.json,yarn.lock,pnpm-lock.yaml}"]).unwrap();
         assert!(glob_set.is_match("package-lock.json"));
         assert!(glob_set.is_match("yarn.lock"));
         assert!(glob_set.is_match("pnpm-lock.yaml"));
 
         let glob_set =
-            build_glob_set(&["{packages/!(package-a)*/package.json,packages/*/package.json}"])
+            NxGlobSet::new(&["{packages/!(package-a)*/package.json,packages/*/package.json}"])
                 .unwrap();
         assert!(glob_set.is_match("packages/package-b/package.json"));
         assert!(glob_set.is_match("packages/package-c/package.json"));
@@ -363,7 +348,7 @@ mod test {
 
     #[test]
     fn should_handle_invalid_group_globs() {
-        let glob_set = build_glob_set(&[
+        let glob_set = NxGlobSet::new(&[
             "libs/**/*",
             "!libs/**/?(*.)+spec.ts?(.snap)",
             "!libs/tsconfig.spec.json",
