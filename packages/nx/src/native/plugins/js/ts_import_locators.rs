@@ -19,8 +19,7 @@ use swc_ecma_parser::token::Keyword::{
 use swc_ecma_parser::token::Word::{Ident, Keyword};
 use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
 use swc_ecma_parser::{Syntax, Tokens, TsConfig};
-
-use crate::native::logger::enable_logger;
+use nx_logger::enable_logger;
 
 #[napi]
 #[derive(Debug)]

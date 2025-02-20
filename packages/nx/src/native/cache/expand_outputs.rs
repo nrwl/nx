@@ -2,10 +2,10 @@ use hashbrown::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-use crate::native::logger::enable_logger;
-use crate::native::utils::Normalize;
 use nx_glob::NxGlobSet;
 use nx_glob::{contains_glob_pattern, partition_glob};
+use nx_logger::enable_logger;
+use nx_utils::path::ToNormalizedString;
 use nx_walker::{nx_walker, nx_walker_sync};
 
 #[napi]

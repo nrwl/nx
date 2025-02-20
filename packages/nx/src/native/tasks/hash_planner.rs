@@ -1,4 +1,4 @@
-use crate::native::logger::enable_logger;
+use nx_logger::enable_logger;
 use crate::native::tasks::{
     dep_outputs::get_dep_output,
     types::{HashInstruction, TaskGraph},

@@ -88,7 +88,7 @@ where
 /// - `NX_NATIVE_LOGGING=nx=trace` - enable all logs for the `nx` (this) crate
 /// - `NX_NATIVE_LOGGING=nx::native::tasks::hashers::hash_project_files=trace` - enable all logs for the `hash_project_files` module
 /// - `NX_NATIVE_LOGGING=[{project_name=project}]` - enable logs that contain the project in its span
-pub(crate) fn enable_logger() {
+pub fn enable_logger() {
     let env_filter =
         EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("ERROR"));
     _ = tracing_subscriber::fmt()

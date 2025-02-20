@@ -3,10 +3,9 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
 use crate::native::types::FileData;
-use crate::native::utils::{path::get_child_files, Normalize, NxCondvar, NxMutex};
+use crate::native::utils::{path::get_child_files,  NxCondvar, NxMutex};
 use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
 use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
@@ -18,6 +17,8 @@ use nx_hasher::hash;
 use rayon::prelude::*;
 use tracing::{trace, warn};
 use xxhash_rust::xxh3;
+use nx_utils::path::ToNormalizedString;
+use nx_logger::enable_logger;
 
 #[napi]
 pub struct WorkspaceContext {

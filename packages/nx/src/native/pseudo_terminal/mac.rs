@@ -5,7 +5,8 @@ use tracing::trace;
 use super::child_process::ChildProcess;
 use super::os;
 use super::pseudo_terminal::{create_pseudo_terminal, run_command};
-use crate::native::logger::enable_logger;
+
+use nx_logger::enable_logger;
 
 #[napi]
 pub struct RustPseudoTerminal {}
