@@ -2,14 +2,15 @@
 title: 'Step-by-Step Guide to Creating an Expo Monorepo with Nx'
 slug: 'step-by-step-guide-to-creating-an-expo-monorepo-with-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-24/1*IpM0kZdUNXoDWV4r8J5xXQ.png'
+cover_image: '/blog/images/2023-08-24/IpM0kZdUNXoDWV4r8J5xXQ.png'
 tags: [nx, tutorial]
+description: A comprehensive tutorial on building a multi-app Expo monorepo using Nx, featuring shared UI components, navigation setup, and deployment configurations, demonstrated through the creation of two mobile apps.
 ---
 
 This blog will show you how to create an Expo monorepo with Nx. In this example, you will be creating two Expo apps in a monorepo with `@nx/expo`: one shows random facts about cats, and the other shows random facts about dogs.
 
-![](/blog/images/2023-08-24/1*ZObpn_5XsfYX-My6d9n4Zw.avif)
-![](/blog/images/2023-08-24/1*S6bzPlLbnM_Li_0Rh7mmWw.avif)
+![](/blog/images/2023-08-24/ZObpn_5XsfYX-My6d9n4Zw.avif)
+![](/blog/images/2023-08-24/S6bzPlLbnM_Li_0Rh7mmWw.avif)
 _Left: cats, right: dogs_
 
 As shown in the above screenshots, these two apps have the same branding and reuse all components.
@@ -25,7 +26,7 @@ Github repo: [xiongemi/nx-expo-monorepo](https://github.com/xiongemi/nx-expo-mon
 
 ## Creating an Nx Workspace
 
-To create a new Nx workspace, run the command `npx create-nx-workspace <workspace name>` in the terminal. In this example, let’s name it `nx-expo-monorepo`:
+To create a new Nx workspace, run the command `npx create-nx-workspace <workspace name>` in the terminal. In this example, let's name it `nx-expo-monorepo`:
 
 ```
 ✔ Where would you like to create your workspace? · create-nx-monorepo
@@ -42,7 +43,7 @@ This will create an [integrated](/deprecated/integrated-vs-package-based) repo. 
 
 Now, your Nx workspace should have cats and cats-e2e under the `apps` folder and an empty libs folder:
 
-![](/blog/images/2023-08-24/1*9yWjfR4oV5B0KFSdNgCH0g.avif)
+![](/blog/images/2023-08-24/9yWjfR4oV5B0KFSdNgCH0g.avif)
 
 ### Existing Nx Workspace
 
@@ -67,7 +68,7 @@ npx nx generate @nx/expo:app cats
 
 Alternatively, if you use Visual Studio Code as your code editor, you can also create apps using [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console):
 
-![](/blog/images/2023-08-24/1*WB17bHQ4p3nXJYWJ_IHGaw.avif)
+![](/blog/images/2023-08-24/WB17bHQ4p3nXJYWJ_IHGaw.avif)
 
 ## Install Tech Stacks
 
@@ -109,7 +110,7 @@ npx nx generate @nx/expo:lib ui
 
 Now under the `libs` folder, a `ui` folder has been created:
 
-![](/blog/images/2023-08-24/1*evR014EchmXEWHJfJnbJRg.avif)
+![](/blog/images/2023-08-24/evR014EchmXEWHJfJnbJRg.avif)
 _ui folder_
 
 To create a component in the `ui` library, run:
@@ -120,7 +121,7 @@ npx nx generate @nx/expo:component carousel --project=ui --export
 
 You can see that a `carousel` folder has been created in the `libs/ui/src/lib` folder:
 
-![](/blog/images/2023-08-24/1*s_zYPQv0QVg5-juNRXmedw.avif)
+![](/blog/images/2023-08-24/s_zYPQv0QVg5-juNRXmedw.avif)
 _carousel folder_
 
 Next, modify this component to display the content with props passed in:
@@ -190,7 +191,7 @@ export default App;
 
 Run the app with`nx start cats`, and you should be able to see the app on the simulator:
 
-![](/blog/images/2023-08-24/1*1hFA_7uBgU2GpFofNtHBiQ.avif)
+![](/blog/images/2023-08-24/1hFA_7uBgU2GpFofNtHBiQ.avif)
 _Page on the simulator (left: iOS, right: Android)_
 
 ## Add Another App
@@ -203,11 +204,11 @@ npx nx generate @nx/expo:app dogs
 
 Alternatively, if you use Visual Studio Code as your code editor, you can also create apps using [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console):
 
-![](/blog/images/2023-08-24/1*8ut9KSAOn-UBBNxHJMtVXQ.avif)
+![](/blog/images/2023-08-24/8ut9KSAOn-UBBNxHJMtVXQ.avif)
 
 Under the apps folder, there should be `cats/`, `dogs/` and their e2es.
 
-![](/blog/images/2023-08-24/1*juth4jstENJ4h1AvIibujA.avif)
+![](/blog/images/2023-08-24/juth4jstENJ4h1AvIibujA.avif)
 _apps folder_
 
 You can reuse the UI library in the Dogs app in `apps/dogs/src/app/App.tsx` with the below code:
@@ -285,7 +286,7 @@ npx nx build cats --profile=preview
 
 You can view your build status at [https://expo.dev/](https://expo.dev/):
 
-![](/blog/images/2023-08-24/1*pQxTgypzL10_SmI71jaWVQ.avif)
+![](/blog/images/2023-08-24/pQxTgypzL10_SmI71jaWVQ.avif)
 
 If you want to create a build locally using your own infrastructure:
 
@@ -316,7 +317,7 @@ You can manually upload the build bundle binary to the app store, or you can sub
 
 First, in `app.json` under the project `apps/cats/app.json`, you need to make sure`ios.bundleIdentifier` and `android.package` keys are correct:
 
-![](/blog/images/2023-08-24/1*j9TAZZgqplZCcjD4hiWNpg.avif)
+![](/blog/images/2023-08-24/j9TAZZgqplZCcjD4hiWNpg.avif)
 _app.json_
 
 To submit your app to the app stores, run:
@@ -327,7 +328,7 @@ npx nx submit cats
 
 Nx will prompt you to choose the platform to which you want to submit:
 
-![](/blog/images/2023-08-24/1*PcBvY1SJCHZyOnJI1hskAQ.avif)
+![](/blog/images/2023-08-24/PcBvY1SJCHZyOnJI1hskAQ.avif)
 
 Or you can also specify the platform directly in the initial command:
 
@@ -344,9 +345,9 @@ It will then ask you to choose which binary to submit from one of the following 
 - Path to an .apk or .aab or .ipa archive on your local filesystem.
 - URL to the app archive.
 
-Alternatively, you can submit your app on the [expo.dev](https://expo.dev/) site. Go to your build, under options, choose “Submit to an app store”:
+Alternatively, you can submit your app on the [expo.dev](https://expo.dev/) site. Go to your build, under options, choose "Submit to an app store":
 
-![](/blog/images/2023-08-24/1*yQlEmKOy3TXdWPCk9ILiZA.avif)
+![](/blog/images/2023-08-24/yQlEmKOy3TXdWPCk9ILiZA.avif)
 
 ## Summary
 

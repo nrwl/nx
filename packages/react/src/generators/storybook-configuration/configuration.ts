@@ -54,8 +54,8 @@ export async function storybookConfigurationGeneratorInternal(
 
   if (
     findWebpackConfig(host, projectConfig.root) ||
-    projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
-    projectConfig.targets['build']?.executor === '@nx/expo:build'
+    projectConfig.targets?.['build']?.executor === '@nx/rollup:rollup' ||
+    projectConfig.targets?.['build']?.executor === '@nx/expo:build'
   ) {
     uiFramework = '@storybook/react-webpack5';
   }

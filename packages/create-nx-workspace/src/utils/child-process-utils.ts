@@ -19,7 +19,7 @@ export function spawnAndWait(command: string, args: string[], cwd: string) {
         ESLINT_USE_FLAT_CONFIG: process.env.ESLINT_USE_FLAT_CONFIG ?? 'true',
       },
       shell: true,
-      windowsHide: true,
+      windowsHide: false,
     });
 
     childProcess.on('exit', (code) => {
@@ -36,7 +36,7 @@ export function execAndWait(command: string, cwd: string) {
   return new Promise<{ code: number; stdout: string }>((res, rej) => {
     exec(
       command,
-      { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: true },
+      { cwd, env: { ...process.env, NX_DAEMON: 'false' }, windowsHide: false },
       (error, stdout, stderr) => {
         if (error) {
           const logFile = join(cwd, 'error.log');

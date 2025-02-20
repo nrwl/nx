@@ -43,13 +43,12 @@
     "@nx/workspace": "file:../workspace",
     "@zkochan/js-yaml": "0.0.7",
     "babel-plugin-const-enum": "^1.0.1",
-    "babel-plugin-macros": "^2.8.0",
+    "babel-plugin-macros": "^3.1.0",
     "babel-plugin-transform-typescript-metadata": "^0.3.1",
     "chalk": "^4.1.0",
     "columnify": "^1.6.0",
     "detect-port": "^1.5.1",
     "enquirer": "~2.3.6",
-    "fast-glob": "3.2.7",
     "ignore": "^5.0.4",
     "js-tokens": "^4.0.0",
     "jsonc-parser": "3.2.0",
@@ -59,12 +58,13 @@
     "ora": "5.3.0",
     "semver": "^7.5.3",
     "source-map-support": "0.5.19",
+    "tinyglobby": "^0.2.10",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "verdaccio": "^5.0.4"
+    "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
     "verdaccio": {

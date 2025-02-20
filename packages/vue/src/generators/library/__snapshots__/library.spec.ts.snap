@@ -9,7 +9,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
   plugins: [
@@ -41,7 +41,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -56,10 +56,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -100,7 +100,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
   plugins: [
@@ -132,7 +132,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -147,10 +147,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -174,19 +174,20 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "@vitejs/plugin-vue": "^4.5.0",
-    "@vitest/coverage-v8": "^1.0.4",
-    "@vitest/ui": "^1.3.1",
+    "@vitest/coverage-v8": "^3.0.5",
+    "@vitest/ui": "^3.0.0",
     "@vue/eslint-config-prettier": "7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
     "@vue/test-utils": "^2.4.1",
     "eslint": "~8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-vue": "^9.16.1",
+    "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
-    "typescript": "~5.5.2",
-    "vite": "^5.0.0",
-    "vitest": "^1.3.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0",
     "vue-tsc": "^2.0.0",
   },
   "name": "@proj/source",
@@ -205,7 +206,9 @@ exports[`library should add vue, vite and vitest to package.json 2`] = `
     "src/**/*.spec.vue",
     "src/**/*.test.vue",
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -237,6 +240,8 @@ exports[`library should generate files 1`] = `
   ],
   "ignorePatterns": [
     "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*",
   ],
   "overrides": [
     {
@@ -261,7 +266,9 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
   "src/**/*.spec.vue",
   "src/**/*.test.vue",
   "vite.config.ts",
+  "vite.config.mts",
   "vitest.config.ts",
+  "vitest.config.mts",
   "src/**/*.test.ts",
   "src/**/*.spec.ts",
   "src/**/*.test.tsx",
@@ -273,9 +280,9 @@ exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 ]
 `;
 
-exports[`library should support eslint flat config 1`] = `
+exports[`library should support eslint flat config CJS 1`] = `
 "const vue = require('eslint-plugin-vue');
-const baseConfig = require('../eslint.config.js');
+const baseConfig = require('../eslint.config.cjs');
 
 module.exports = [
   ...baseConfig,
@@ -283,12 +290,41 @@ module.exports = [
   {
     files: ['**/*.vue'],
     languageOptions: {
-      parserOptions: { parser: require('@typescript-eslint/parser') },
+      parserOptions: {
+        parser: require('@typescript-eslint/parser'),
+      },
     },
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
-    rules: { 'vue/multi-word-component-names': 'off' },
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+];
+"
+`;
+
+exports[`library should support eslint flat config ESM 1`] = `
+"import vue from 'eslint-plugin-vue';
+import baseConfig from '../eslint.config.mjs';
+
+export default [
+  ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
   },
 ];
 "

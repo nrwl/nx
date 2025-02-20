@@ -27,6 +27,7 @@ export interface Schema {
 export interface NormalizedSchema extends Schema {
   js: boolean;
   name: string;
+  projectName: string;
   linter: Linter | LinterType;
   fileName: string;
   projectRoot: string;
@@ -35,4 +36,5 @@ export interface NormalizedSchema extends Schema {
   appMain?: string;
   appSourceRoot?: string;
   unitTestRunner?: 'vitest' | 'none';
+  isUsingTsSolutionConfig: boolean;
 }

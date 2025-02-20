@@ -2,17 +2,18 @@
 title: 'Evergreen Tooling — More than Just CodeMods'
 slug: 'evergreen-tooling-more-than-just-codemods'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-07-26/1*CPiI60mSguYXJzPfAHMbEQ.png'
+cover_image: '/blog/images/2023-07-26/CPiI60mSguYXJzPfAHMbEQ.png'
 tags: [nx]
+description: Nx's evergreen tooling approach automates migrations, updates code like a database, and uses plugins for seamless JavaScript ecosystem upgrades with backward compatibility and reduced maintenance.
 ---
 
-As developers we always want to use the latest shiny tools. There’s a new bundler? Let’s try! A new code editor, I’m in! For your side-project: for sure! At work: nah, not really. Keeping your tooling up to date with the rather fast moving JS ecosystem can be a major challenge. Nx provides a mechanism that can help mitigate that, by providing a command to upgrade your tooling automatically:
+As developers we always want to use the latest shiny tools. There's a new bundler? Let's try! A new code editor, I'm in! For your side-project: for sure! At work: nah, not really. Keeping your tooling up to date with the rather fast moving JS ecosystem can be a major challenge. Nx provides a mechanism that can help mitigate that, by providing a command to upgrade your tooling automatically:
 
 ```shell
 npx nx migrate latest
 ```
 
-**Prefer a video? I’ve got you covered!**
+**Prefer a video? I've got you covered!**
 
 {% youtube src="https://www.youtube.com/watch?v=Ss6MfcXi0jE" /%}
 
@@ -42,7 +43,7 @@ Updating tooling is never easy, but the Nx team aims at making it “easier” a
 
 The “why” is pretty straightforward. From the perspective of an open-source project, you want users to adopt the latest version as quickly as possible. This minimizes the maintenance work involved in supporting older versions, which can be a real headache. Looking at how Nx manages it, it seems to be successful in this regard ([Source](https://www.craigory.dev/npm-burst/?package=nx)):
 
-![](/blog/images/2023-07-26/0*M7X1nddld2oBJ736.avif)
+![](/blog/images/2023-07-26/M7X1nddld2oBJ736.avif)
 
 The distribution of Nx installs by version demonstrates the effectiveness of this approach. For instance, v16.5, which accounts for 19.7% of all versions, has already been adopted by many users, despite [its recent release](/changelog). The latest major accounts for 34.7% already and 41.4% are on the previous v15, a large majority of which is on the latest 15.9 minor. Hence, v16 & v15 make up 3/4 of all Nx installs.
 
@@ -145,7 +146,7 @@ It leverages the utility functions provided by the `@nx/devkit` package to read 
 
 Nx’s modular design helps as each plugin is responsible for a particular area and can thus contribute according migration scripts. To give you some context. There is the [nx package](https://www.npmjs.com/package/nx) at the core — which you can use nicely in combination with a [PNPM workspaces repo](/blog/setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx) to speed things up — and then there are plugins built on top.
 
-![](/blog/images/2023-07-26/0*LNYWLmdgxQ07bqyt.avif)
+![](/blog/images/2023-07-26/LNYWLmdgxQ07bqyt.avif)
 
 _(Source:_ [_/getting-started/why-nx_](/getting-started/why-nx)_)_
 

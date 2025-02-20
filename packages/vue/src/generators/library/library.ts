@@ -2,14 +2,15 @@ import {
   addProjectConfiguration,
   formatFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { vueInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -22,15 +23,22 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(tree, 'vue', 'library');
-
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
   const options = await normalizeOptions(tree, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -39,15 +47,35 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  addProjectConfiguration(tree, options.name, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'library',
-    tags: options.parsedTags,
-    targets: {},
-  });
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
-  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  if (options.isUsingTsSolutionConfig) {
+    writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: getImportPath(tree, options.name),
+      version: '0.0.1',
+      private: true,
+      ...determineEntryFields(options),
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+      nx: options.parsedTags?.length
+        ? {
+            tags: options.parsedTags,
+          }
+        : undefined,
+    });
+  } else {
+    addProjectConfiguration(tree, options.name, {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'library',
+      tags: options.parsedTags,
+      targets: {},
+    });
+  }
+
   tasks.push(
     await vueInitGenerator(tree, {
       ...options,
@@ -86,14 +114,17 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  if (options.publishable || options.bundler !== 'none') {
+  if (
+    !options.isUsingTsSolutionConfig &&
+    (options.publishable || options.bundler !== 'none')
+  ) {
     updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
       json.name = options.importPath;
       return json;
     });
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -105,7 +136,32 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.js) toJS(tree);
 
+  if (options.isUsingTsSolutionConfig) {
+    updateTsconfigFiles(
+      tree,
+      options.projectRoot,
+      'tsconfig.lib.json',
+      {
+        jsx: 'preserve',
+        jsxImportSource: 'vue',
+        module: 'esnext',
+        moduleResolution: 'bundler',
+        resolveJsonModule: true,
+      },
+      options.linter === 'eslint'
+        ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+        : undefined
+    );
+  }
+
+  sortPackageJsonFields(tree, options.projectRoot);
+
   if (!options.skipFormat) await formatFiles(tree);
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(tree, true));
+  }
 
   tasks.push(() => {
     logShowProjectCommand(options.name);

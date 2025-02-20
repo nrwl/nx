@@ -19,7 +19,7 @@ In order to use `@nx/powerpack-s3-cache`, you need to have an active Powerpack l
 
 ### 1. Install the Package
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already
 2. Install the package
 
 ```shell
@@ -47,6 +47,34 @@ There are four different ways to authenticate with AWS. They will be attempted i
 | `AWS_CREDENTIAL_EXPIRATION` | The expiration time of the credentials contained in the environment variables described above. This value must be in a format compatible with the [ISO-8601 standard](https://en.wikipedia.org/wiki/ISO_8601) and is only needed when you are using temporary credentials. |
 
 Both the `AWS_ACCESS_KEY_ID` and the `AWS_SECRET_ACCESS_KEY` environment variables are required to use the environment variable authentication method.
+
+Here's an example of using OICD in GitHub Actions to set the environment variables in CI:
+
+```yaml {% fileName=".github/workflows/ci.yml" %}
+name: CI
+...
+permissions:
+  id-token: write
+  ...
+
+jobs:
+  main:
+    env:
+      NX_POWERPACK_LICENSE: ${{ secrets.NX_POWERPACK_LICENSE }}
+    runs-on: ubuntu-latest
+    steps:
+        ...
+
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::123456789123:role/GhAIBucketUserRole
+          aws-region: us-east-1
+
+        ...
+
+      - run: pnpm exec nx affected -t lint test build
+```
 
 #### INI Config Files
 
@@ -94,5 +122,61 @@ Regardless of how you manage your AWS authentication, you need to configure your
 | **Property**      | **Description**                                                                   |
 | ----------------- | --------------------------------------------------------------------------------- |
 | **region**        | The id of the AWS region to use                                                   |
-| **bucket**        | The name of the AWS bucket to use                                                 |
+| **bucket**        | The name of the S3 bucket to use                                                  |
 | **encryptionKey** | Nx encryption key used to encrypt and decrypt artifacts from the cache (optional) |
+
+#### S3 Compatible Providers
+
+To use `@nx/powerpack-s3-cache` with S3 compatible providers ([MinIO](https://min.io/product/s3-compatibility), [LocalStack](https://www.localstack.cloud), [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces), [Cloudflare](https://www.cloudflare.com/developer-platform/solutions/s3-compatible-object-storage), etc..), `endpoint` will need to be provided. Some providers also need to have `forcePathStyle` set to true in the configuration.
+
+Below is an example on how to connect to MinIO:
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "endpoint": "https://play.min.io",
+    "forcePathStyle": true,
+    "accessKeyId": "abc1234",
+    "secretAccessKey": "4321cba"
+  }
+}
+```
+
+| **Property**        | **Description**                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------- |
+| **region**          | The id of the S3 compatible storage region to use                                                         |
+| **bucket**          | The name of the S3 compatible storage bucket to use                                                       |
+| **forcePathStyle**  | Changes the way artifacts are uploaded. Usually used for S3 compatible providers (MinIO, LocalStack, etc) |
+| **endpoint**        | The custom endpoint to upload artifacts to. If endpoint is not defined, the default AWS endpoint is used  |
+| **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
+| **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |
+
+# Cache Modes
+
+By default, Nx will try to write and read from the remote cache while running locally. This means that permissions must be set for users who are expected to access the remote cache.
+
+Nx will only show warnings when the remote cache is not writable. You can disable these warnings by setting `localMode` to `read-only` or `no-cache` in the `nx.json` file.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "localMode": "read-only"
+  }
+}
+```
+
+The cache mode in CI can also be configured by setting `ciMode` to `read-only` or `no-cache` in the `nx.json` file. Or setting `NX_POWERPACK_CACHE_MODE` to `read-only` or `no-cache` in the CI environment.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "ciMode": "read-only"
+  }
+}
+```

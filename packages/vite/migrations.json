@@ -19,9 +19,52 @@
       "version": "19.6.0-beta.0",
       "description": "Add dependsOn: [build] to preview targets using preview-server",
       "implementation": "./src/migrations/update-19-6-0/add-depends-on-for-preview"
+    },
+    "update-20-0-4": {
+      "version": "20.0.4-beta.0",
+      "description": "Add gitignore entry for temporary vite config files.",
+      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+    },
+    "update-20-0-6": {
+      "version": "20.0.6-beta.0",
+      "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
+      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+    },
+    "update-20-3-0": {
+      "version": "20.3.0-beta.2",
+      "description": "Add gitignore entry for temporary vitest config files.",
+      "implementation": "./src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore"
+    },
+    "update-20-5-0-install-jiti": {
+      "version": "20.5.0-beta.2",
+      "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
+      "implementation": "./src/migrations/update-20-5-0/install-jiti"
+    },
+    "update-20-5-0-update-resolve-conditions": {
+      "version": "20.5.0-beta.3",
+      "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
+      "implementation": "./src/migrations/update-20-5-0/update-resolve-conditions"
+    },
+    "eslint-ignore-vite-temp-files": {
+      "version": "20.5.0-beta.3",
+      "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+      "implementation": "./src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
     }
   },
   "packageJsonUpdates": {
+    "20.5.0": {
+      "version": "20.5.0-beta.3",
+      "packages": {
+        "vite": {
+          "version": "^6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-dts": {
+          "version": "~4.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "18.1.0": {
       "version": "18.1.0-beta.1",
       "packages": {

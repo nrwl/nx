@@ -19,7 +19,7 @@ In order to use `@nx/powerpack-shared-fs-cache`, you need to have an active Powe
 
 ### 1. Install the Package
 
-1. [Activate Powerpack](/recipes/installation/activate-powerpack) if you haven't already
+1. [Activate Powerpack](/nx-enterprise/activate-powerpack) if you haven't already. It only takes a minute.
 2. Install the package
 
 ```shell

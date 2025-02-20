@@ -1,0 +1,15 @@
+{
+  "name": "update-angular-ssr-imports-to-use-node-entry-point",
+  "cli": "nx",
+  "version": "20.2.0-beta.5",
+  "requires": { "@angular/core": ">=19.0.0" },
+  "description": "Update '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.",
+  "factory": "./src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point",
+  "implementation": "/packages/angular/src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

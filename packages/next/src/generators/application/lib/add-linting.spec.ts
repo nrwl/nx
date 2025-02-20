@@ -96,16 +96,16 @@ describe('updateEslint', () => {
   });
 
   it('should update the flat config', async () => {
-    tree.write('eslint.config.js', `module.exports = []`);
+    tree.write('eslint.config.cjs', `module.exports = []`);
 
     await addLinting(tree, schema);
 
-    expect(tree.read(`${schema.appProjectRoot}/eslint.config.js`, 'utf-8'))
+    expect(tree.read(`${schema.appProjectRoot}/eslint.config.cjs`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const js = require("@eslint/js");
       const nx = require("@nx/eslint-plugin");
-      const baseConfig = require("../eslint.config.js");
+      const baseConfig = require("../eslint.config.cjs");
 
       const compat = new FlatCompat({
         baseDirectory: __dirname,
@@ -117,7 +117,11 @@ describe('updateEslint', () => {
 
           ...baseConfig,
           ...nx.configs["flat/react-typescript"],
-          { ignores: [".next/**/*"] }
+          {
+              ignores: [
+                  ".next/**/*"
+              ]
+          }
       ];
       "
     `);

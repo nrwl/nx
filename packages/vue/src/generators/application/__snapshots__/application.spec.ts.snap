@@ -46,7 +46,7 @@ import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
   server: {
@@ -78,10 +78,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -94,7 +94,11 @@ exports[`application generator should set up project correctly for cypress 3`] =
     "@vue/eslint-config-prettier/skip-formatting",
     "../.eslintrc.json"
   ],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": [
+    "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -109,14 +113,12 @@ exports[`application generator should set up project correctly for cypress 3`] =
 
 exports[`application generator should set up project correctly for cypress 4`] = `
 "import { describe, it, expect } from 'vitest';
-
 import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, {});
-
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
@@ -125,7 +127,6 @@ describe('App', () => {
 
 exports[`application generator should set up project correctly for cypress 5`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -134,7 +135,7 @@ export default defineConfig({
       cypressDir: 'src',
       bundler: 'vite',
       webServerCommands: {
-        default: 'npx nx run test:serve',
+        default: 'npx nx run test:dev',
         production: 'npx nx run test:preview',
       },
       ciWebServerCommand: 'npx nx run test:preview',
@@ -144,6 +145,69 @@ export default defineConfig({
   },
 });
 "
+`;
+
+exports[`application generator should set up project correctly for rsbuild 1`] = `
+"import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../node_modules/.vite/test',
+  plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), vue()],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/test',
+      provider: 'v8' as const,
+    },
+  },
+}));
+"
+`;
+
+exports[`application generator should set up project correctly for rsbuild 3`] = `
+[
+  ".eslintignore",
+  ".eslintrc.json",
+  ".gitignore",
+  ".prettierignore",
+  ".prettierrc",
+  ".vscode/extensions.json",
+  "nx.json",
+  "package.json",
+  "test-e2e/.eslintrc.json",
+  "test-e2e/playwright.config.ts",
+  "test-e2e/project.json",
+  "test-e2e/src/example.spec.ts",
+  "test-e2e/tsconfig.json",
+  "test/.eslintrc.json",
+  "test/index.html",
+  "test/project.json",
+  "test/rsbuild.config.ts",
+  "test/src/app/App.spec.ts",
+  "test/src/app/App.vue",
+  "test/src/app/NxWelcome.vue",
+  "test/src/main.ts",
+  "test/src/styles.css",
+  "test/src/vue-shims.d.ts",
+  "test/tsconfig.app.json",
+  "test/tsconfig.json",
+  "test/tsconfig.spec.json",
+  "test/vitest.config.ts",
+  "tsconfig.base.json",
+  "vitest.workspace.ts",
+]
 `;
 
 exports[`application generator should set up project correctly with given options 1`] = `
@@ -192,7 +256,7 @@ import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
   server: {
@@ -224,10 +288,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -240,7 +304,11 @@ exports[`application generator should set up project correctly with given option
     "@vue/eslint-config-prettier/skip-formatting",
     "../.eslintrc.json"
   ],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": [
+    "!**/*",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -255,14 +323,12 @@ exports[`application generator should set up project correctly with given option
 
 exports[`application generator should set up project correctly with given options 4`] = `
 "import { describe, it, expect } from 'vitest';
-
 import { mount } from '@vue/test-utils';
 import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
     const wrapper = mount(App, {});
-
     expect(wrapper.text()).toContain('Welcome test 👋');
   });
 });
@@ -272,7 +338,6 @@ describe('App', () => {
 exports[`application generator should set up project correctly with given options 5`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
@@ -346,6 +411,7 @@ exports[`application generator should set up project correctly with given option
 [
   ".eslintignore",
   ".eslintrc.json",
+  ".gitignore",
   ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
@@ -364,6 +430,7 @@ exports[`application generator should set up project correctly with given option
   "test/src/app/NxWelcome.vue",
   "test/src/main.ts",
   "test/src/styles.css",
+  "test/src/vue-shims.d.ts",
   "test/tsconfig.app.json",
   "test/tsconfig.json",
   "test/tsconfig.spec.json",

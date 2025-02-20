@@ -1,0 +1,21 @@
+{
+  "name": "20.2.0-analog-package-updates",
+  "version": "20.2.0-beta.7",
+  "packages": {
+    "@analogjs/vitest-angular": {
+      "version": "~1.10.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@analogjs/vite-plugin-angular": {
+      "version": "~1.10.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration"
+}

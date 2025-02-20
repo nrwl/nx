@@ -14,6 +14,7 @@
 - [remoteCache](../../devkit/documents/DefaultTasksRunnerOptions#remotecache): RemoteCache
 - [runtimeCacheInputs](../../devkit/documents/DefaultTasksRunnerOptions#runtimecacheinputs): string[]
 - [skipNxCache](../../devkit/documents/DefaultTasksRunnerOptions#skipnxcache): boolean
+- [skipRemoteCache](../../devkit/documents/DefaultTasksRunnerOptions#skipremotecache): boolean
 
 ## Properties
 
@@ -74,3 +75,9 @@
 ### skipNxCache
 
 • `Optional` **skipNxCache**: `boolean`
+
+---
+
+### skipRemoteCache
+
+• `Optional` **skipRemoteCache**: `boolean`

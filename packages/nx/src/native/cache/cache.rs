@@ -5,11 +5,12 @@ use std::time::Instant;
 use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::params;
 use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
 use crate::native::cache::file_ops::_copy;
+use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 
 #[napi(object)]
@@ -25,7 +26,7 @@ pub struct NxCache {
     pub cache_directory: String,
     workspace_root: PathBuf,
     cache_path: PathBuf,
-    db: External<Connection>,
+    db: External<NxDbConnection>,
     link_task_details: bool,
 }
 
@@ -35,7 +36,7 @@ impl NxCache {
     pub fn new(
         workspace_root: String,
         cache_path: String,
-        db_connection: External<Connection>,
+        db_connection: External<NxDbConnection>,
         link_task_details: Option<bool>,
     ) -> anyhow::Result<Self> {
         let cache_path = PathBuf::from(&cache_path);
@@ -48,7 +49,7 @@ impl NxCache {
             workspace_root: PathBuf::from(workspace_root),
             cache_directory: cache_path.to_normalized_string(),
             cache_path,
-            link_task_details: link_task_details.unwrap_or(true)
+            link_task_details: link_task_details.unwrap_or(true),
         };
 
         r.setup()?;
@@ -58,33 +59,26 @@ impl NxCache {
 
     fn setup(&self) -> anyhow::Result<()> {
         let query = if self.link_task_details {
-            "BEGIN;
-                CREATE TABLE IF NOT EXISTS cache_outputs (
+            "CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (hash) REFERENCES task_details (hash)
-                );
-                COMMIT;
+              );
             "
         } else {
-            "BEGIN;
-                CREATE TABLE IF NOT EXISTS cache_outputs (
+            "CREATE TABLE IF NOT EXISTS cache_outputs (
                     hash    TEXT PRIMARY KEY NOT NULL,
                     code   INTEGER NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-                COMMIT;
-            "
+                "
         };
 
-        self.db
-            .execute_batch(
-                query,
-            )
-            .map_err(anyhow::Error::from)
+        self.db.execute(query, []).map_err(anyhow::Error::from)?;
+        Ok(())
     }
 
     #[napi]
@@ -118,8 +112,7 @@ impl NxCache {
                     })
                 },
             )
-            .optional()
-            .map_err(anyhow::Error::new)?;
+            .map_err(|e| anyhow::anyhow!("Unable to get {}: {:?}", &hash, e))?;
         trace!("GET {} {:?}", &hash, start.elapsed());
         Ok(r)
     }
@@ -144,7 +137,7 @@ impl NxCache {
         create_dir_all(&task_dir)?;
 
         // Write the terminal outputs into a file
-        let task_outputs_path: _ = self.get_task_outputs_path_internal(&hash);
+        let task_outputs_path = self.get_task_outputs_path_internal(&hash);
         trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
         write(task_outputs_path, terminal_output)?;
 
@@ -161,7 +154,6 @@ impl NxCache {
             }
         }
 
-        trace!("Recording to cache: {:?}", &hash);
         self.record_to_cache(hash, code)?;
         Ok(())
     }
@@ -172,6 +164,11 @@ impl NxCache {
         hash: String,
         result: CachedResult,
     ) -> anyhow::Result<()> {
+        trace!(
+            "applying remote cache results: {:?} ({})",
+            &hash,
+            &result.outputs_path
+        );
         let terminal_output = result.terminal_output;
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
@@ -191,10 +188,9 @@ impl NxCache {
     }
 
     fn record_to_cache(&self, hash: String, code: i16) -> anyhow::Result<()> {
+        trace!("Recording to cache: {}, {}", &hash, code);
         self.db.execute(
-            "INSERT INTO cache_outputs
-                (hash, code)
-                VALUES (?1, ?2)",
+            "INSERT OR REPLACE INTO cache_outputs (hash, code) VALUES (?1, ?2)",
             params![hash, code],
         )?;
         Ok(())
@@ -241,7 +237,7 @@ impl NxCache {
 
                 Ok(vec![
                     self.cache_path.join(&hash),
-                    self.get_task_outputs_path_internal(&hash).into(),
+                    self.get_task_outputs_path_internal(&hash),
                 ])
             })?
             .filter_map(anyhow::Result::ok)
@@ -258,19 +254,17 @@ impl NxCache {
         // Checks that the number of cache records in the database
         // matches the number of cache directories on the filesystem.
         // If they don't match, it means that the cache is out of sync.
-        let cache_records_exist = self.db.query_row(
-            "SELECT EXISTS (SELECT 1 FROM cache_outputs)",
-            [],
-            |row| {
+        let cache_records_exist = self
+            .db
+            .query_row("SELECT EXISTS (SELECT 1 FROM cache_outputs)", [], |row| {
                 let exists: bool = row.get(0)?;
                 Ok(exists)
-            },
-        )?;
+            })?
+            .unwrap_or(false);
 
         if !cache_records_exist {
             let hash_regex = Regex::new(r"^\d+$").expect("Hash regex is invalid");
-            let fs_entries = std::fs::read_dir(&self.cache_path)
-                .map_err(anyhow::Error::from)?;
+            let fs_entries = std::fs::read_dir(&self.cache_path).map_err(anyhow::Error::from)?;
 
             for entry in fs_entries {
                 let entry = entry?;

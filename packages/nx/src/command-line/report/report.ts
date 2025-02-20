@@ -106,11 +106,13 @@ export async function reportHandler() {
       `Licensed to ${powerpackLicense.organizationName} for ${
         powerpackLicense.seatCount
       } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
-        powerpackLicense.workspaceCount
+        powerpackLicense.workspaceCount === 9999
+          ? 'an unlimited number of'
+          : powerpackLicense.workspaceCount
       } workspace${
         powerpackLicense.workspaceCount > 1 ? 's' : ''
       } until ${new Date(
-        powerpackLicense.expiresAt * 1000
+        (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
       ).toLocaleDateString()}`
     );
     bodyLines.push('');

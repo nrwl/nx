@@ -1,6 +1,12 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { readJson, readProjectConfiguration } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application.impl';
 import libraryGenerator from './library.impl';
@@ -20,7 +26,7 @@ describe('Remix Library Generator', () => {
     // ASSERT
     const tsconfig = readJson(tree, 'tsconfig.base.json');
     expect(tree.exists(`test/src/server.ts`));
-    expect(tree.children(`test/src/lib`)).toMatchSnapshot();
+    expect(tree.children(`test/src/lib`).sort()).toMatchSnapshot();
     expect(tsconfig.compilerOptions.paths).toMatchSnapshot();
   }, 25_000);
 
@@ -128,5 +134,81 @@ describe('Remix Library Generator', () => {
     expect(project.targets.build.options.outputPath).toEqual(`test/dist`);
     expect(pkgJson.main).toEqual('./dist/index.cjs.js');
     expect(pkgJson.typings).toEqual('./dist/index.d.ts');
+  });
+  describe('TS solution setup', () => {
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should generate valid package.json', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/foo',
+        style: 'css',
+        addPlugin: true,
+      });
+
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'packages/foo/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "main",
+          "types",
+          "exports",
+        ]
+      `);
+      expect(readJson(tree, 'packages/foo/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/foo",
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
+      `);
+    });
+
+    it('should generate server entrypoint', async () => {
+      await libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+      });
+
+      expect(tree.exists(`test/src/server.ts`)).toBeTruthy();
+      expect(tree.children(`test/src/lib`).sort()).toMatchInlineSnapshot(`
+        [
+          "test.module.css",
+          "test.spec.tsx",
+          "test.tsx",
+        ]
+      `);
+    }, 25_000);
   });
 });

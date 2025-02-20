@@ -182,7 +182,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Generate source maps.
    */
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */
@@ -212,6 +212,10 @@ export interface NxAppWebpackPluginOptions {
    */
   transformers?: TransformerEntry[];
   /**
+   * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
+   */
+  useTsconfigPaths?: boolean;
+  /**
    * Generate a separate vendor chunk for 3rd party packages.
    */
   vendorChunk?: boolean;
@@ -231,6 +235,10 @@ export interface NxAppWebpackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Watch buildable dependencies and rebuild when they change.
+   */
+  watchDependencies?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions

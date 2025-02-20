@@ -1,4 +1,4 @@
-import { connectToNxDb, ExternalObject } from '../native';
+import { closeDbConnection, connectToNxDb, ExternalObject } from '../native';
 import { workspaceDataDirectory } from './cache-directory';
 import { version as NX_VERSION } from '../../package.json';
 
@@ -16,6 +16,13 @@ export function getDbConnection(
     connectToNxDb(opts.directory, NX_VERSION, opts.dbName)
   );
   return connection;
+}
+
+export function removeDbConnections() {
+  for (const connection of dbConnectionMap.values()) {
+    closeDbConnection(connection);
+  }
+  dbConnectionMap.clear();
 }
 
 function getEntryOrSet<TKey, TVal>(

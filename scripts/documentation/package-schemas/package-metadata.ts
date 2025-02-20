@@ -2,7 +2,7 @@ import {
   convertToDocumentMetadata,
   DocumentMetadata,
 } from '@nx/nx-dev/models-document';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { readJsonSync } from 'fs-extra';
 import { sync } from 'glob';
 import { join, resolve } from 'path';
@@ -21,9 +21,9 @@ function createSchemaMetadata(
     folderName: string;
     root: string;
   },
-  type: 'executor' | 'generator'
+  type: 'executor' | 'generator' | 'migration'
 ): SchemaMetadata {
-  const path = join(paths.root, data.schema);
+  const path = join(paths.root, data?.schema || '');
 
   // "factory" is for Angular support, this is the same as "implementation"
   if (!data['implementation'] && data['factory'])
@@ -35,7 +35,9 @@ function createSchemaMetadata(
     aliases: data.aliases ?? [],
     description: data.description ?? '',
     hidden: data.hidden ?? false,
-    implementation: join(paths.root, data.implementation) + '.ts',
+    implementation: data.implementation
+      ? join(paths.root, data.implementation) + '.ts'
+      : '',
     path, // Switching property for less confusing naming conventions
     schema: data.schema
       ? readJsonSync(join(paths.absoluteRoot, paths.root, data.schema))
@@ -60,10 +62,11 @@ function getSchemaList(
   collectionEntries: string[]
 ): SchemaMetadata[] {
   const targetPath = join(paths.absoluteRoot, paths.root, collectionFileName);
-  // We assume the type of the collection of schema is the name of the collection file (executors or generators)
+  // We assume the type of the collection of schema is the name of the collection file (executors, generators or migrations)
   const type = collectionFileName.replace('.json', '').replace('s', '') as
     | 'executor'
-    | 'generator';
+    | 'generator'
+    | 'migration';
   try {
     const metadata: SchemaMetadata[] = [];
     const collectionFile = readJsonSync(targetPath, 'utf8');
@@ -125,6 +128,9 @@ export function findPackageMetadataList(
       const folderName = folderPath.substring(packagesDir.length + 1);
 
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
+      if (!existsSync(join(folderPath, 'package.json'))) {
+        return null;
+      }
       const packageJson = readJsonSync(
         join(folderPath, 'package.json'),
         'utf8'
@@ -163,6 +169,15 @@ export function findPackageMetadataList(
               },
               'generators.json',
               ['generators']
+            ),
+            migrations: getSchemaList(
+              {
+                absoluteRoot,
+                folderName,
+                root: relativeFolderPath,
+              },
+              'migrations.json',
+              ['generators', 'packageJsonUpdates']
             ),
             executors: getSchemaList(
               {

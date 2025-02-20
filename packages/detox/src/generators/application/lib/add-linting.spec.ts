@@ -20,6 +20,7 @@ describe('Add Linting', () => {
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
       linter: Linter.EsLint,
+      isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
   });
@@ -36,6 +37,7 @@ describe('Add Linting', () => {
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
       linter: Linter.EsLint,
+      isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
 
@@ -54,6 +56,7 @@ describe('Add Linting', () => {
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
       linter: Linter.None,
+      isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');

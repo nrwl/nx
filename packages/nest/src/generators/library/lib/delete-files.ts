@@ -23,7 +23,11 @@ export function deleteFiles(tree: Tree, options: NormalizedOptions): void {
     );
   }
 
-  if (!options.buildable && !options.publishable) {
+  if (
+    !options.buildable &&
+    !options.publishable &&
+    !options.isUsingTsSolutionsConfig
+  ) {
     tree.delete(joinPathFragments(options.projectRoot, 'package.json'));
   }
 }

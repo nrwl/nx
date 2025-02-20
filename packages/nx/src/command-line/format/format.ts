@@ -1,10 +1,10 @@
 import { exec, execSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as yargs from 'yargs';
-import { FileData, calculateFileChanges } from '../../project-graph/file-utils';
+import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import {
-  NxArgs,
   getProjectRoots,
+  NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
@@ -52,7 +52,7 @@ export async function format(
   const patterns = (await getPatterns({ ...args, ...nxArgs } as any)).map(
     // prettier removes one of the \
     // prettier-ignore
-    (p) => `"${p.replace(/\$/g, "\\\$")}"`
+    (p) => `"${p.replace(/\$/g, '\\\$')}"`
   );
 
   // Chunkify the patterns array to prevent crashing the windows terminal
@@ -60,7 +60,9 @@ export async function format(
 
   switch (command) {
     case 'write':
-      sortTsConfig();
+      if (nxArgs.sortRootTsconfigPaths) {
+        sortTsConfig();
+      }
       addRootConfigFiles(chunkList, nxArgs);
       chunkList.forEach((chunk) => write(chunk));
       break;
@@ -154,7 +156,9 @@ async function getPatternsFromApps(
   allWorkspaceFiles: FileData[],
   projectGraph: ProjectGraph
 ): Promise<string[]> {
-  const graph = await createProjectGraphAsync({ exitOnError: true });
+  const graph = await createProjectGraphAsync({
+    exitOnError: true,
+  });
   const affectedGraph = await filterAffected(
     graph,
     calculateFileChanges(affectedFiles, allWorkspaceFiles)
@@ -211,7 +215,7 @@ function write(patterns: string[]) {
       )}`,
       {
         stdio: [0, 1, 2],
-        windowsHide: true,
+        windowsHide: false,
       }
     );
 
@@ -222,7 +226,7 @@ function write(patterns: string[]) {
         )} --parser json`,
         {
           stdio: [0, 1, 2],
-          windowsHide: true,
+          windowsHide: false,
         }
       );
     }
@@ -239,7 +243,7 @@ async function check(patterns: string[]): Promise<string[]> {
   return new Promise((resolve) => {
     exec(
       `node "${prettierPath}" --list-different ${patterns.join(' ')}`,
-      { encoding: 'utf-8', windowsHide: true },
+      { encoding: 'utf-8', windowsHide: false },
       (error, stdout) => {
         if (error) {
           // The command failed so there are files with different formatting. Prettier writes them to stdout, newline separated.
@@ -266,6 +270,7 @@ function sortTsConfig() {
 }
 
 let prettierPath: string;
+
 function getPrettierPath() {
   if (prettierPath) {
     return prettierPath;

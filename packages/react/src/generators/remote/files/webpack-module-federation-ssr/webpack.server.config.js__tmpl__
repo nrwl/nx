@@ -1,11 +1,11 @@
 const {composePlugins, withNx} = require('@nx/webpack');
 const {withReact} = require('@nx/react');
-const {withModuleFederationForSSR} = require('@nx/react/module-federation');
+const {withModuleFederationForSSR} = require('@nx/module-federation/webpack');
 
 const baseConfig = require("./module-federation.server.config");
 
 const defaultConfig = {
-    ...baseConfig,
+  ...baseConfig,
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.

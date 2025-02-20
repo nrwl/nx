@@ -696,6 +696,70 @@ To fix this you will either need to add a package.json file at that location, or
             }
           `);
         });
+
+        it('should update dependents with a prepatch when creating a pre-release version', async () => {
+          expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+            '0.0.1'
+          );
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            ).version
+          ).toEqual('0.0.1');
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            ).version
+          ).toEqual('0.0.1');
+
+          await releaseVersionGenerator(tree, {
+            projects: Object.values(projectGraph.nodes), // version all projects
+            projectGraph,
+            currentVersionResolver: 'disk',
+            specifier: 'prepatch',
+            preid: 'alpha',
+            releaseGroup: createReleaseGroup('independent'),
+          });
+
+          expect(readJson(tree, 'libs/my-lib/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-alpha.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-alpha.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+        });
       });
     });
   });
@@ -1754,6 +1818,139 @@ Valid values are: "auto", "", "~", "^", "="`,
             },
             "name": "package-b",
             "version": "2.0.0",
+          }
+        `);
+      });
+
+      it('should not double patch transitive dependents that are already direct dependents', async () => {
+        projectGraph = createWorkspaceWithPackageDependencies(tree, {
+          '@slateui/core': {
+            projectRoot: 'packages/core',
+            packageName: '@slateui/core',
+            version: '1.0.0',
+            packageJsonPath: 'packages/core/package.json',
+            localDependencies: [],
+          },
+          // buttons depends on core
+          '@slateui/buttons': {
+            projectRoot: 'packages/buttons',
+            packageName: '@slateui/buttons',
+            version: '1.0.0',
+            packageJsonPath: 'packages/buttons/package.json',
+            localDependencies: [
+              {
+                projectName: '@slateui/core',
+                dependencyCollection: 'dependencies',
+                version: '1.0.0',
+              },
+            ],
+          },
+          // forms depends on both core and buttons, making it both a direct and transitive dependent of core
+          '@slateui/forms': {
+            projectRoot: 'packages/forms',
+            packageName: '@slateui/forms',
+            version: '1.0.0',
+            packageJsonPath: 'packages/forms/package.json',
+            localDependencies: [
+              {
+                projectName: '@slateui/core',
+                dependencyCollection: 'dependencies',
+                version: '1.0.0',
+              },
+              {
+                projectName: '@slateui/buttons',
+                dependencyCollection: 'dependencies',
+                version: '1.0.0',
+              },
+            ],
+          },
+        });
+
+        expect(
+          await releaseVersionGenerator(tree, {
+            projects: [projectGraph.nodes['@slateui/core']],
+            releaseGroup: createReleaseGroup('independent'),
+            projectGraph,
+            // Bump core to 2.0.0, which will cause buttons and forms to be patched to 1.0.1
+            // This prevents a regression against an issue where forms would end up being patched twice to 1.0.2 in this scenario
+            specifier: '2.0.0',
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "callback": [Function],
+            "data": {
+              "@slateui/buttons": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "@slateui/forms",
+                    "target": "@slateui/buttons",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "1.0.1",
+              },
+              "@slateui/core": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "@slateui/buttons",
+                    "target": "@slateui/core",
+                    "type": "static",
+                  },
+                  {
+                    "dependencyCollection": "dependencies",
+                    "rawVersionSpec": "1.0.0",
+                    "source": "@slateui/forms",
+                    "target": "@slateui/core",
+                    "type": "static",
+                  },
+                ],
+                "newVersion": "2.0.0",
+              },
+              "@slateui/forms": {
+                "currentVersion": "1.0.0",
+                "dependentProjects": [],
+                "newVersion": "1.0.1",
+              },
+            },
+          }
+        `);
+
+        expect(readJson(tree, 'packages/core/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "name": "@slateui/core",
+            "version": "2.0.0",
+          }
+        `);
+
+        expect(readJson(tree, 'packages/buttons/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "@slateui/core": "2.0.0",
+            },
+            "name": "@slateui/buttons",
+            "version": "1.0.1",
+          }
+        `);
+
+        expect(readJson(tree, 'packages/forms/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "@slateui/buttons": "1.0.1",
+              "@slateui/core": "2.0.0",
+            },
+            "name": "@slateui/forms",
+            "version": "1.0.1",
           }
         `);
       });

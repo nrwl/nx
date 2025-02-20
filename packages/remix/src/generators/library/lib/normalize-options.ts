@@ -3,12 +3,14 @@ import {
   determineProjectNameAndRootOptions,
   ensureProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import type { NxRemixGeneratorSchema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface RemixLibraryOptions extends NxRemixGeneratorSchema {
   projectName: string;
   projectRoot: string;
+  isUsingTsSolutionConfig: boolean;
 }
 
 export async function normalizeOptions(
@@ -31,13 +33,14 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const importPath = options.importPath ?? getImportPath(tree, projectRoot);
-
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     unitTestRunner: options.unitTestRunner ?? 'vitest',
-    importPath,
-    projectName,
+    projectName: isUsingTsSolutionConfig
+      ? getImportPath(tree, projectName)
+      : projectName,
     projectRoot,
+    isUsingTsSolutionConfig,
   };
 }

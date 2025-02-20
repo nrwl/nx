@@ -9,6 +9,7 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { basename, dirname, extname, relative } from 'path';
 import type { Identifier, SourceFile, Statement } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
+import { getInstalledAngularVersionInfo } from '../version-utils';
 import type { EntryPoint } from './entry-point';
 import { getModuleDeclaredComponents } from './module-info';
 
@@ -117,13 +118,29 @@ function getStandaloneComponents(tree: Tree, filePath: string): string[] {
   }
   const fileContent = tree.read(filePath, 'utf-8');
   const ast = tsquery.ast(fileContent);
-  const components = tsquery<Identifier>(
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  if (angularMajorVersion < 19) {
+    // in angular 18 and below, standalone: false is the default, so only
+    // components with standalone: true are considered standalone
+    const components = tsquery<Identifier>(
+      ast,
+      'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=standalone]) > TrueKeyword) > Identifier',
+      { visitAllChildren: true }
+    );
+
+    return components.map((component) => component.getText());
+  }
+
+  // in angular 19 and above, standalone: true is the default, so all components
+  // except those with standalone: false are considered standalone
+  const standaloneComponentNodes = tsquery<Identifier>(
     ast,
-    'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression PropertyAssignment:has(Identifier[name=standalone]) > TrueKeyword) > Identifier',
+    'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression:not(:has(PropertyAssignment:has(Identifier[name=standalone]) > FalseKeyword))) > Identifier',
     { visitAllChildren: true }
   );
 
-  return components.map((component) => component.getText());
+  return standaloneComponentNodes.map((component) => component.getText());
 }
 
 function getComponentImportPath(
@@ -244,7 +261,7 @@ function getComponentInfoFromDir(
 
   const componentImportPathChildren: string[] = [];
   visitNotIgnoredFiles(tree, dir, (filePath) => {
-    componentImportPathChildren.push(filePath);
+    componentImportPathChildren.push(normalizePath(filePath));
   });
 
   for (const candidateFile of componentImportPathChildren) {

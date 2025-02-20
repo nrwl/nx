@@ -25,7 +25,7 @@ import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate, useNavigation } from 'react-router-dom';
-import { useRouteConstructor } from '@nx/graph/shared';
+import { useRouteConstructor } from '@nx/graph/legacy/shared';
 import { CompositeNode } from '../interfaces';
 import { useMemo } from 'react';
 

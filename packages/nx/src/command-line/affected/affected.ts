@@ -53,7 +53,9 @@ export async function affected(
 
   await connectToNxCloudIfExplicitlyAsked(nxArgs);
 
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const projectGraph = await createProjectGraphAsync({
+    exitOnError: true,
+  });
   const projects = await getAffectedGraphNodes(nxArgs, projectGraph);
 
   try {

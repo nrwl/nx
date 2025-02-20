@@ -1,13 +1,19 @@
 import { getProjects, logger, names, Tree } from '@nx/devkit';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  type FileExtensionType,
+} from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { Schema } from '../schema';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'js'> {
   directory: string;
   projectSourceRoot: string;
   fileName: string;
   className: string;
   filePath: string;
+  fileExtension: string;
+  fileExtensionType: FileExtensionType;
   projectName: string;
 }
 
@@ -20,22 +26,27 @@ export async function normalizeOptions(
     directory,
     fileName,
     filePath,
+    fileExtension,
+    fileExtensionType,
     project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(host, {
     path: options.path,
     name: options.name,
-    fileExtension: 'tsx',
+    allowedFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
+    fileExtension: options.js ? 'js' : 'tsx',
+    js: options.js,
   });
-
-  assertValidOptions({ name, directory });
 
   const project = getProjects(host).get(projectName);
 
   const { className } = names(name);
 
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(host, root, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
@@ -50,23 +61,9 @@ export async function normalizeOptions(
     className,
     fileName,
     filePath,
+    fileExtension,
+    fileExtensionType,
     projectSourceRoot,
     projectName,
   };
-}
-
-function assertValidOptions(options: { name: string; directory: string }) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the component name. Did you mean to use the --path option (e.g. \`nx g c ${suggestion}/${name} \`)?`
-      );
-    }
-  });
 }

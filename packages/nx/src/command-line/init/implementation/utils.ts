@@ -19,6 +19,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { printSuccessMessage } from '../../../nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud';
 import { repoUsesGithub } from '../../../nx-cloud/utilities/url-shorten';
 import { connectWorkspaceToCloud } from '../../connect/connect-to-nx-cloud';
+import { deduceDefaultBase } from './deduce-default-base';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -60,44 +61,127 @@ export function createNxJsonFile(
     delete nxJson.targetDefaults;
   }
 
-  nxJson.defaultBase ??= deduceDefaultBase();
+  const defaultBase = deduceDefaultBase();
+  // Do not add defaultBase if it is inferred to be the Nx default value of main
+  if (defaultBase !== 'main') {
+    nxJson.defaultBase ??= defaultBase;
+  }
   writeJsonFile(nxJsonPath, nxJson);
 }
 
-function deduceDefaultBase() {
-  try {
-    execSync(`git rev-parse --verify main`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-      windowsHide: true,
-    });
-    return 'main';
-  } catch {
-    try {
-      execSync(`git rev-parse --verify dev`, {
-        stdio: ['ignore', 'ignore', 'ignore'],
-        windowsHide: true,
-      });
-      return 'dev';
-    } catch {
-      try {
-        execSync(`git rev-parse --verify develop`, {
-          stdio: ['ignore', 'ignore', 'ignore'],
-          windowsHide: true,
-        });
-        return 'develop';
-      } catch {
-        try {
-          execSync(`git rev-parse --verify next`, {
-            stdio: ['ignore', 'ignore', 'ignore'],
-            windowsHide: true,
-          });
-          return 'next';
-        } catch {
-          return 'master';
-        }
-      }
+export function createNxJsonFromTurboJson(
+  turboJson: Record<string, any>
+): NxJsonConfiguration {
+  const nxJson: NxJsonConfiguration = {
+    $schema: './node_modules/nx/schemas/nx-schema.json',
+  };
+
+  // Handle global dependencies
+  if (turboJson.globalDependencies?.length > 0) {
+    nxJson.namedInputs = {
+      sharedGlobals: turboJson.globalDependencies.map(
+        (dep) => `{workspaceRoot}/${dep}`
+      ),
+      default: ['{projectRoot}/**/*', 'sharedGlobals'],
+    };
+  }
+
+  // Handle global env vars
+  if (turboJson.globalEnv?.length > 0) {
+    nxJson.namedInputs = nxJson.namedInputs || {};
+    nxJson.namedInputs.sharedGlobals = nxJson.namedInputs.sharedGlobals || [];
+    nxJson.namedInputs.sharedGlobals.push(
+      ...turboJson.globalEnv.map((env) => ({ env }))
+    );
+    nxJson.namedInputs.default = nxJson.namedInputs.default || [];
+    if (!nxJson.namedInputs.default.includes('{projectRoot}/**/*')) {
+      nxJson.namedInputs.default.push('{projectRoot}/**/*');
+    }
+    if (!nxJson.namedInputs.default.includes('sharedGlobals')) {
+      nxJson.namedInputs.default.push('sharedGlobals');
     }
   }
+
+  // Handle task configurations
+  if (turboJson.tasks) {
+    nxJson.targetDefaults = {};
+
+    for (const [taskName, taskConfig] of Object.entries(turboJson.tasks)) {
+      // Skip project-specific tasks (containing #)
+      if (taskName.includes('#')) continue;
+
+      const config = taskConfig as any;
+      nxJson.targetDefaults[taskName] = {};
+
+      // Handle dependsOn
+      if (config.dependsOn?.length > 0) {
+        nxJson.targetDefaults[taskName].dependsOn = config.dependsOn;
+      }
+
+      // Handle inputs
+      if (config.inputs?.length > 0) {
+        nxJson.targetDefaults[taskName].inputs = config.inputs
+          .map((input) => {
+            if (input === '$TURBO_DEFAULT$') {
+              return '{projectRoot}/**/*';
+            }
+            // Don't add projectRoot if it's already there or if it's an env var
+            if (
+              input.startsWith('{projectRoot}/') ||
+              input.startsWith('{env.') ||
+              input.startsWith('$')
+            )
+              return input;
+            return `{projectRoot}/${input}`;
+          })
+          .map((input) => {
+            // Don't add projectRoot if it's already there or if it's an env var
+            if (
+              input.startsWith('{projectRoot}/') ||
+              input.startsWith('{env.') ||
+              input.startsWith('$')
+            )
+              return input;
+            return `{projectRoot}/${input}`;
+          });
+      }
+
+      // Handle outputs
+      if (config.outputs?.length > 0) {
+        nxJson.targetDefaults[taskName].outputs = config.outputs.map(
+          (output) => {
+            // Don't add projectRoot if it's already there
+            if (output.startsWith('{projectRoot}/')) return output;
+            // Handle negated patterns by adding projectRoot after the !
+            if (output.startsWith('!')) {
+              return `!{projectRoot}/${output.slice(1)}`;
+            }
+            return `{projectRoot}/${output}`;
+          }
+        );
+      }
+
+      // Handle cache setting - true by default in Turbo
+      nxJson.targetDefaults[taskName].cache = config.cache !== false;
+    }
+  }
+
+  /**
+   * The fact that cacheDir was in use suggests the user had a reason for deviating from the default.
+   * We can't know what that reason was, nor if it would still be applicable in Nx, but we can at least
+   * improve discoverability of the relevant Nx option by explicitly including it with its default value.
+   */
+  if (turboJson.cacheDir) {
+    nxJson.cacheDirectory = '.nx/cache';
+  }
+
+  const defaultBase = deduceDefaultBase();
+  // Do not add defaultBase if it is inferred to be the Nx default value of main
+  if (defaultBase !== 'main') {
+    nxJson.defaultBase ??= defaultBase;
+  }
+
+  return nxJson;
 }
 
 export function addDepsToPackageJson(
@@ -144,7 +228,11 @@ export function runInstall(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
-  execSync(pmc.install, { stdio: [0, 1, 2], cwd: repoRoot, windowsHide: true });
+  execSync(pmc.install, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+    windowsHide: false,
+  });
 }
 
 export async function initCloud(
@@ -155,6 +243,7 @@ export async function initCloud(
     | 'nx-init-monorepo'
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
+    | 'nx-init-turborepo'
 ) {
   const token = await connectWorkspaceToCloud({
     installationSource,

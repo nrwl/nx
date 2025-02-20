@@ -1,0 +1,38 @@
+{
+  "name": "19.6.0-package-updates",
+  "version": "19.6.0-beta.1",
+  "packages": {
+    "@storybook/core-server": {
+      "version": "^8.2.8",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/angular": {
+      "version": "^8.2.8",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/react": {
+      "version": "^8.2.8",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-essentials": {
+      "version": "^8.2.8",
+      "alwaysAddToPackageJson": false
+    },
+    "@storybook/addon-interactions": {
+      "version": "^8.2.8",
+      "alwaysAddToPackageJson": true
+    },
+    "storybook": { "version": "^8.2.8", "alwaysAddToPackageJson": true },
+    "@storybook/test-runner": {
+      "version": "^0.19.0",
+      "alwaysAddToPackageJson": false
+    }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/storybook",
+  "schema": null,
+  "type": "migration"
+}

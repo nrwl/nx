@@ -56,10 +56,10 @@ describe('configurationGenerator', () => {
   it('should support --main option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      main: './src/index.ts',
+      main: './libs/mypkg/src/index.ts',
     });
 
-    const rollupConfig = tree.read('libs/mypkg/rollup.config.js', 'utf-8');
+    const rollupConfig = tree.read('libs/mypkg/rollup.config.cjs', 'utf-8');
 
     expect(rollupConfig)
       .toEqual(`const { withNx } = require('@nx/rollup/with-nx');
@@ -85,10 +85,10 @@ module.exports = withNx(
   it('should support --tsConfig option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
-      tsConfig: './tsconfig.custom.json',
+      tsConfig: 'libs/mypkg/tsconfig.custom.json',
     });
 
-    const rollupConfig = tree.read('libs/mypkg/rollup.config.js', 'utf-8');
+    const rollupConfig = tree.read('libs/mypkg/rollup.config.cjs', 'utf-8');
 
     expect(rollupConfig)
       .toEqual(`const { withNx } = require('@nx/rollup/with-nx');

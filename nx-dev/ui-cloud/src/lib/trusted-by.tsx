@@ -8,9 +8,11 @@ import {
   StorybookIcon,
   VmwareIcon,
 } from '@nx/nx-dev/ui-icons';
-export function TrustedBy(): JSX.Element {
+import { ReactElement } from 'react';
+
+export function TrustedBy(): ReactElement {
   return (
-    <section className="">
+    <section id="trust" className="scroll-mt-24">
       <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
         <h2 className="text-center text-lg font-medium leading-8 text-slate-400">
           Startups and Fortune 500 companies trust Nx Cloud

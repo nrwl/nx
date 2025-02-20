@@ -33,15 +33,13 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "default": "jest"
+      "enum": ["none", "jest", "vitest"],
+      "description": "Test runner to use for unit tests."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
-      "default": "eslint"
+      "enum": ["none", "eslint"]
     },
     "tags": {
       "type": "string",
@@ -64,6 +62,10 @@
       "type": "string",
       "description": "The name of the e2e project.",
       "x-prompt": "What is the name of the e2e project? Leave blank to skip e2e tests"
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["directory", "name", "project"]

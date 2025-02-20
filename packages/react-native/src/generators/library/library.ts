@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -13,6 +14,7 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 
 import {
@@ -32,7 +34,13 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -48,7 +56,13 @@ export async function reactNativeLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react-native', 'library');
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -57,13 +71,6 @@ export async function reactNativeLibraryGeneratorInternal(
     );
   }
 
-  const tasks: GeneratorCallback[] = [];
-
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(jsInitTask);
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
@@ -71,12 +78,12 @@ export async function reactNativeLibraryGeneratorInternal(
     tasks.push(ensureDependencies(host));
   }
 
+  createFiles(host, options);
+
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {
     tasks.push(addProjectTask);
   }
-
-  createFiles(host, options);
 
   const lintTask = await addLinting(host, {
     ...options,
@@ -94,7 +101,8 @@ export async function reactNativeLibraryGeneratorInternal(
     options.projectRoot,
     options.js,
     options.skipPackageJson,
-    options.addPlugin
+    options.addPlugin,
+    'tsconfig.lib.json'
   );
   tasks.push(jestTask);
 
@@ -102,7 +110,7 @@ export async function reactNativeLibraryGeneratorInternal(
     updateLibPackageNpmScope(host, options);
   }
 
-  if (!options.skipTsConfig) {
+  if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
         options.projectRoot,
@@ -111,9 +119,33 @@ export async function reactNativeLibraryGeneratorInternal(
       ),
     ]);
   }
+  updateTsconfigFiles(
+    host,
+    options.projectRoot,
+    'tsconfig.lib.json',
+    {
+      jsx: 'react-jsx',
+      module: 'esnext',
+      moduleResolution: 'bundler',
+    },
+    options.linter === 'eslint'
+      ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
+      : undefined
+  );
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);
+  }
+
+  // Always run install to link packages.
+  if (options.isUsingTsSolutionConfig) {
+    tasks.push(() => installPackagesTask(host, true));
   }
 
   tasks.push(() => {
@@ -135,7 +167,22 @@ async function addProject(
     targets: {},
   };
 
-  addProjectConfiguration(host, options.name, project);
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
+  );
+  if (options.isUsingTsSolutionConfig) {
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: options.name,
+      version: '0.0.1',
+      ...determineEntryFields(options),
+      nx: {
+        tags: options.parsedTags?.length ? options.parsedTags : undefined,
+      },
+    });
+  } else {
+    addProjectConfiguration(host, options.name, project);
+  }
 
   if (!options.publishable && !options.buildable) {
     return () => {};
@@ -151,13 +198,24 @@ async function addProject(
     skipFormat: true,
   });
 
+  updateJson(host, packageJsonPath, (json) => {
+    if (json.type === 'module') {
+      // The @nx/rollup:configuration generator can set the type to 'module' which would
+      // potentially break this library.
+      delete json.type;
+    }
+    return json;
+  });
+
   const external = ['react/jsx-runtime', 'react-native', 'react', 'react-dom'];
 
   project.targets.build = {
     executor: '@nx/rollup:rollup',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: `dist/${options.projectRoot}`,
+      outputPath: options.isUsingTsSolutionConfig
+        ? `${options.projectRoot}/dist`
+        : `dist/${options.projectRoot}`,
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       project: `${options.projectRoot}/package.json`,
       entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
@@ -179,6 +237,10 @@ async function addProject(
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  if (options.isUsingTsSolutionConfig) {
+    return;
+  }
+
   updateJson(
     tree,
     joinPathFragments(options.projectRoot, 'tsconfig.json'),
@@ -240,6 +302,29 @@ function maybeJs(options: NormalizedSchema, path: string): string {
   return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
     ? path.replace(/\.tsx?$/, '.js')
     : path;
+}
+
+function determineEntryFields(
+  options: NormalizedSchema
+): Pick<PackageJson, 'main' | 'types' | 'exports'> {
+  if (options.buildable) {
+    return {};
+  }
+
+  return {
+    main: options.js ? './src/index.js' : './src/index.ts',
+    types: options.js ? './src/index.js' : './src/index.ts',
+    exports: {
+      '.': options.js
+        ? './src/index.js'
+        : {
+            types: './src/index.ts',
+            import: './src/index.ts',
+            default: './src/index.ts',
+          },
+      './package.json': './package.json',
+    },
+  };
 }
 
 export default reactNativeLibraryGenerator;

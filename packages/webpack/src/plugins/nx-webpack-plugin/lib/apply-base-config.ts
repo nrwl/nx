@@ -19,6 +19,7 @@ import { createLoaderFromCompiler } from './compiler-loaders';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -51,7 +52,7 @@ export function applyBaseConfig(
   applyNxIndependentConfig(options, config);
 
   // Some of the options only work during actual tasks, not when reading the webpack config during CreateNodes.
-  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+  if (global.NX_GRAPH_CREATION) return;
 
   applyNxDependentConfig(options, config, { useNormalizedEntry });
 }
@@ -86,11 +87,7 @@ function applyNxIndependentConfig(
     options.target === 'node' && options.watch ? { type: 'memory' } : undefined;
 
   config.devtool =
-    options.sourceMap === 'hidden'
-      ? 'hidden-source-map'
-      : options.sourceMap
-      ? 'source-map'
-      : false;
+    options.sourceMap === true ? 'source-map' : options.sourceMap;
 
   config.output = {
     ...config.output,
@@ -141,6 +138,7 @@ function applyNxIndependentConfig(
       IGNORED_WEBPACK_WARNINGS.some((r) =>
         typeof x === 'string' ? r.test(x) : r.test(x.message)
       ),
+    ...(config.ignoreWarnings ?? []),
   ];
 
   config.optimization = {
@@ -233,9 +231,16 @@ function applyNxDependentConfig(
     root: options.root,
   };
 
-  plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
+  const isUsingTsSolution = isUsingTsSolutionSetup();
+  options.useTsconfigPaths ??= !isUsingTsSolution;
 
-  if (!options?.skipTypeChecking) {
+  // If the project is using ts solutions setup, the paths are not in tsconfig and we should not use the plugin's paths.
+  if (options.useTsconfigPaths) {
+    plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
+  }
+
+  // New TS Solution already has a typecheck target
+  if (!options?.skipTypeChecking && !isUsingTsSolution) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({

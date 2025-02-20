@@ -163,6 +163,15 @@ describe('Angular Projects', () => {
   }, 1000000);
 
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {
+    // disable the prefer-standalone rule for app1 which is not standalone
+    let app1EslintConfig = readFile(`${app1}/eslint.config.mjs`);
+    app1EslintConfig = app1EslintConfig.replace(
+      `'@angular-eslint/directive-selector': [`,
+      `'@angular-eslint/prefer-standalone': 'off',
+      '@angular-eslint/directive-selector': [`
+    );
+    updateFile(`${app1}/eslint.config.mjs`, app1EslintConfig);
+
     // check apps and lib pass linting for initial generated code
     runCLI(`run-many --target lint --projects=${app1},${lib1} --parallel`);
 
@@ -380,6 +389,7 @@ describe('Angular Projects', () => {
 
       @Component({
         selector: 'app-root',
+        standalone: false,
         templateUrl: './app.component.html',
       })
       export class AppComponent {
@@ -568,4 +578,21 @@ describe('Angular Projects', () => {
       runCLI(`server ${webpackApp} --output-hashing none`)
     ).toThrow();
   }, 500_000);
+
+  it('should generate apps and libs with vitest', async () => {
+    const app = uniq('app');
+    const lib = uniq('lib');
+
+    runCLI(
+      `generate @nx/angular:app ${app} --unit-test-runner=vitest --no-interactive`
+    );
+    runCLI(
+      `generate @nx/angular:lib ${lib} --unit-test-runner=vitest --no-interactive`
+    );
+
+    // Make sure we are using vitest
+    checkFilesExist(`${app}/vite.config.mts`, `${lib}/vite.config.mts`);
+
+    runCLI(`run-many --target test --projects=${app},${lib} --parallel`);
+  });
 });

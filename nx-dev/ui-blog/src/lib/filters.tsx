@@ -4,7 +4,13 @@ import { FC, Fragment, SVGProps, useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
-import { Menu, Transition } from '@headlessui/react';
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from '@headlessui/react';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { BlogPostDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
 
@@ -102,7 +108,7 @@ export function Filters({
       {/* MOBILE */}
       <div className="relative lg:hidden">
         <Menu as="div" className="inline-block text-left">
-          <Menu.Button
+          <MenuButton
             className="inline-flex w-full justify-center rounded-md border border-slate-400 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             aria-label="Select filter topic"
           >
@@ -111,7 +117,7 @@ export function Filters({
               className="-mr-1 ml-2 h-5 w-5 text-violet-200 hover:text-violet-100"
               aria-hidden="true"
             />
-          </Menu.Button>
+          </MenuButton>
           <Transition
             as={Fragment}
             enter="transition ease-out duration-100"
@@ -121,13 +127,13 @@ export function Filters({
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items
+            <MenuItems
               as="ul"
               className="absolute right-0 z-[31] mt-2 flex w-56 origin-top-right flex-col gap-4 rounded-md bg-white p-4 shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-slate-800 dark:text-white"
               aria-label="Filter topics"
             >
               {filters.map((filter) => (
-                <Menu.Item as="li" className="text-lg" key={filter.value}>
+                <MenuItem as="li" className="text-lg" key={filter.value}>
                   <Link
                     className={cx('flex items-center gap-2')}
                     href={updateFilter(filter.value)}
@@ -141,9 +147,9 @@ export function Filters({
                     )}
                     {filter.label}
                   </Link>
-                </Menu.Item>
+                </MenuItem>
               ))}
-            </Menu.Items>
+            </MenuItems>
           </Transition>
         </Menu>
       </div>

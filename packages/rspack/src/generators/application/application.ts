@@ -1,5 +1,4 @@
 import { ensurePackage, formatFiles, runTasksInSerial, Tree } from '@nx/devkit';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { version as nxVersion } from 'nx/package.json';
 import configurationGenerator from '../configuration/configuration';
 import rspackInitGenerator from '../init/init';
@@ -10,14 +9,9 @@ export default async function (
   tree: Tree,
   _options: ApplicationGeneratorSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'rspack', 'application');
-
   const tasks = [];
   const initTask = await rspackInitGenerator(tree, {
     ..._options,
-    // TODO: Crystalize the default rspack.config.js file.
-    // The default setup isn't crystalized so don't add plugin.
-    addPlugin: false,
   });
   tasks.push(initTask);
 

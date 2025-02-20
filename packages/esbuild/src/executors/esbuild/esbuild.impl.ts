@@ -18,7 +18,10 @@ import {
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
-import { EsBuildExecutorOptions } from './schema';
+import {
+  EsBuildExecutorOptions,
+  NormalizedEsBuildExecutorOptions,
+} from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   buildEsbuildOptions,
@@ -130,7 +133,10 @@ export async function* esbuildExecutor(
                       name: 'nx-watch-plugin',
                       setup(build: esbuild.PluginBuild) {
                         build.onEnd(async (result: esbuild.BuildResult) => {
-                          if (!options.skipTypeCheck) {
+                          if (
+                            !options.skipTypeCheck ||
+                            options.isTsSolutionSetup
+                          ) {
                             const { errors } = await runTypeCheck(
                               options,
                               context
@@ -177,7 +183,7 @@ export async function* esbuildExecutor(
     );
   } else {
     // Run type-checks first and bail if they don't pass.
-    if (!options.skipTypeCheck) {
+    if (!options.skipTypeCheck || options.isTsSolutionSetup) {
       const { errors } = await runTypeCheck(options, context);
       if (errors.length > 0) {
         yield { success: false };
@@ -213,7 +219,7 @@ export async function* esbuildExecutor(
 }
 
 function getTypeCheckOptions(
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const { watch, tsConfig, outputPath } = options;
@@ -239,11 +245,15 @@ function getTypeCheckOptions(
     typeCheckOptions.cacheDir = cacheDir;
   }
 
+  if (options.isTsSolutionSetup && options.skipTypeCheck) {
+    typeCheckOptions.ignoreDiagnostics = true;
+  }
+
   return typeCheckOptions;
 }
 
 async function runTypeCheck(
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const { errors, warnings } = await _runTypeCheck(

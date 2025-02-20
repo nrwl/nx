@@ -8,7 +8,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-lib',
   plugins: [
@@ -39,7 +39,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -54,10 +54,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-lib',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -87,7 +87,9 @@ exports[`@nx/vite:configuration js library with --bundler=vite should add build 
   "include": ["src/**/*.ts"],
   "exclude": [
     "vite.config.ts",
+    "vite.config.mts",
     "vitest.config.ts",
+    "vitest.config.mts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -176,7 +178,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
   plugins: [
@@ -208,14 +210,14 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
-});
+}));
 "
 `;
 
@@ -228,7 +230,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
   plugins: [
@@ -260,7 +262,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -275,16 +277,17 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
 exports[`@nx/vite:configuration library mode should set up non buildable library which already has vite.config.ts correctly 1`] = `
 "import dts from 'vite-plugin-dts';
 import * as path from 'path';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -306,7 +309,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -331,7 +334,7 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-vitest',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
 });
@@ -345,7 +348,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
   server: {
@@ -369,7 +372,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 
@@ -395,11 +398,10 @@ exports[`@nx/vite:configuration transform React app to use Vite should move inde
 exports[`@nx/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
-
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
   server: {
@@ -423,7 +425,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 
@@ -453,7 +455,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
   server: {
@@ -485,9 +487,9 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;

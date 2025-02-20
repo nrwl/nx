@@ -16,6 +16,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 ### Properties
 
+- [$schema](../../devkit/documents/Workspace#$schema): string
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
@@ -46,6 +47,16 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
 ## Properties
+
+### $schema
+
+• `Optional` **$schema**: `string`
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[$schema](../../devkit/documents/NxJsonConfiguration#$schema)
+
+---
 
 ### affected
 
@@ -211,7 +222,7 @@ Named inputs targets can refer to reduce duplication
 
 • `Optional` **neverConnectToCloud**: `boolean`
 
-Set this to false to disable connection to Nx Cloud
+Set this to true to disable connection to Nx Cloud
 
 #### Inherited from
 
@@ -360,7 +371,7 @@ Dependencies between different target names across all projects
 
 **`Deprecated`**
 
-Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
 Available Task Runners for Nx to use
 
 #### Index signature

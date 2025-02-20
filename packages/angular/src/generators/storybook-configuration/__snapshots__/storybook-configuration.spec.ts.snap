@@ -33,7 +33,6 @@ export default config;
 exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestButtonComponent } from './test-button.component';
-
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
@@ -71,7 +70,6 @@ export const Heading: Story = {
 exports[`StorybookConfiguration generator should configure storybook with interaction tests and install dependencies 2`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';
 import { TestOtherComponent } from './test-other.component';
-
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 

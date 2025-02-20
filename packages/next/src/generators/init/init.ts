@@ -7,25 +7,34 @@ import {
   readNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import {
+  getReactDependenciesVersionsToInstall,
+  isReact18,
+} from '@nx/react/src/utils/version-utils';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
-import { nextVersion, nxVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
+import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils';
 import type { InitSchema } from './schema';
 
-function updateDependencies(host: Tree, schema: InitSchema) {
+async function updateDependencies(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(removeDependenciesFromPackageJson(host, ['@nx/next'], []));
+
+  const versions = await getNextDependenciesVersionsToInstall(
+    host,
+    await isReact18(host)
+  );
+  const reactVersions = await getReactDependenciesVersionsToInstall(host);
 
   tasks.push(
     addDependenciesToPackageJson(
       host,
       {
-        next: nextVersion,
-        react: reactVersion,
-        'react-dom': reactDomVersion,
+        next: versions.next,
+        react: reactVersions.react,
+        'react-dom': reactVersions['react-dom'],
       },
       {
         '@nx/next': nxVersion,
@@ -46,8 +55,6 @@ export async function nextInitGeneratorInternal(
   host: Tree,
   schema: InitSchema
 ) {
-  assertNotUsingTsSolutionSetup(host, 'next', 'init');
-
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -55,12 +62,12 @@ export async function nextInitGeneratorInternal(
 
   schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
-    const { createNodes } = await import('../../plugins/plugin');
-    await addPluginV1(
+    const { createNodesV2 } = await import('../../plugins/plugin');
+    await addPlugin(
       host,
       await createProjectGraphAsync(),
       '@nx/next/plugin',
-      createNodes,
+      createNodesV2,
       {
         startTargetName: ['start', 'next:start', 'next-start'],
         buildTargetName: ['build', 'next:build', 'next-build'],
@@ -69,6 +76,16 @@ export async function nextInitGeneratorInternal(
           'serve-static',
           'next:serve-static',
           'next-serve-static',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'next:build-deps',
+          'next-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'next:watch-deps',
+          'next-watch-deps',
         ],
       },
       schema.updatePackageScripts
@@ -79,7 +96,7 @@ export async function nextInitGeneratorInternal(
 
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
-    installTask = updateDependencies(host, schema);
+    installTask = await updateDependencies(host, schema);
   }
 
   return installTask;

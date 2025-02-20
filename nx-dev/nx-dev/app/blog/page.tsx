@@ -3,10 +3,17 @@ import { blogApi } from '../../lib/blog.api';
 import { BlogContainer } from '@nx/nx-dev/ui-blog';
 import { DefaultLayout } from '@nx/nx-dev/ui-common';
 import { Suspense } from 'react';
+import {
+  requestFreeTrial,
+  tryNxCloudForFree,
+} from '../../lib/components/headerCtaConfigs';
 
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
   description: 'Latest news from the Nx & Nx Cloud core team',
+  alternates: {
+    canonical: 'https://nx.dev/blog',
+  },
   openGraph: {
     url: 'https://nx.dev/blog',
     title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
@@ -21,7 +28,7 @@ export const metadata: Metadata = {
         type: 'image/jpeg',
       },
     ],
-    siteName: 'NxDev',
+    siteName: 'Nx',
     type: 'website',
   },
 };
@@ -34,11 +41,13 @@ async function getBlogTags() {
 }
 
 export default async function BlogIndex() {
+  const ctaHeaderConfig = [tryNxCloudForFree];
+
   const blogs = await getBlogs();
   const tags = await getBlogTags();
   return (
     <Suspense>
-      <DefaultLayout>
+      <DefaultLayout headerCTAConfig={ctaHeaderConfig}>
         <BlogContainer blogPosts={blogs} tags={tags} />
       </DefaultLayout>
     </Suspense>

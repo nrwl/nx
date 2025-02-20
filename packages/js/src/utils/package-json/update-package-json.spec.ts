@@ -156,7 +156,11 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
+          '.': {
+            default: './src/index.js',
+            import: './src/index.js',
+            types: './src/index.d.ts',
+          },
           './package.json': './package.json',
         },
       });
@@ -185,7 +189,10 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         type: 'commonjs',
         exports: {
-          '.': './src/index.cjs',
+          '.': {
+            default: './src/index.cjs',
+            types: './src/index.d.ts',
+          },
           './package.json': './package.json',
         },
       });
@@ -220,7 +227,10 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
+          '.': {
+            default: './src/index.js',
+            types: './src/index.d.ts',
+          },
           './foo': './src/foo.js',
           './bar': './src/bar.js',
           './package.json': './package.json',
@@ -258,7 +268,11 @@ describe('getUpdatedPackageJsonContent', () => {
         types: './src/index.d.ts',
         version: '0.0.1',
         exports: {
-          '.': './src/index.js',
+          '.': {
+            default: './src/index.js',
+            import: './src/index.js',
+            types: './src/index.d.ts',
+          },
           './foo': './src/foo.js',
           './bar': './src/bar.js',
           './package.json': './package.json',
@@ -298,6 +312,7 @@ describe('getUpdatedPackageJsonContent', () => {
           '.': {
             import: './src/index.js',
             default: './src/index.cjs',
+            types: './src/index.d.ts',
           },
           './foo': {
             import: './src/foo.js',
@@ -351,6 +366,7 @@ describe('getUpdatedPackageJsonContent', () => {
         '.': {
           import: './src/index.js',
           default: './src/index.cjs',
+          types: './src/index.d.ts',
         },
         './package.json': './package.json',
         './custom': './custom.js',
@@ -383,7 +399,42 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       type: 'module',
       exports: {
-        '.': './src/index.cjs',
+        '.': {
+          default: './src/index.cjs',
+          types: './src/index.d.ts',
+        },
+        './package.json': './package.json',
+      },
+    });
+  });
+
+  it('should handle outputFileName correctly', () => {
+    expect(
+      getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          generateExportsField: true,
+          outputFileName: 'src/index.js',
+        }
+      )
+    ).toEqual({
+      name: 'test',
+      main: './src/index.js',
+      types: './src/index.d.ts',
+      version: '0.0.1',
+      type: 'commonjs',
+      exports: {
+        '.': {
+          default: './src/index.js',
+          types: './src/index.d.ts',
+        },
         './package.json': './package.json',
       },
     });

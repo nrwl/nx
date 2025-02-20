@@ -66,8 +66,6 @@ const schemaUrls = {
     '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
-  '/react/component-cypress-spec':
-    '/packages/react/generators/component-cypress-spec',
   '/react/component-story': '/packages/react/generators/component-story',
   '/react/library': '/packages/react/generators/library',
   '/react/redux': '/packages/react/generators/redux',
@@ -261,7 +259,7 @@ const diataxis = {
   '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
-  '/guides/turbo-and-nx': '/concepts/more-concepts/turbo-and-nx',
+  '/guides/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/guides/why-monorepos': '/concepts/more-concepts/why-monorepos',
   '/guides/adding-assets-react': '/recipes/other/adding-assets-react',
   '/guides/environment-variables': '/reference/environment-variables',
@@ -385,6 +383,9 @@ const recipesUrls = {
   '/recipes/nx-console/console-project-pane': '/getting-started/editor-setup',
   '/recipes/nx-console/console-add-dependency-command':
     '/getting-started/editor-setup',
+  // This one was folded into a more holistic recipe around managing version reference updates
+  '/recipes/nx-release/publish-custom-dist-directory':
+    '/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files',
 };
 
 /**
@@ -429,45 +430,60 @@ const nxCloudUrls = {
   '/core-features/distribute-task-execution':
     '/ci/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
-  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/on-premise',
+  '/nx-cloud/private-cloud': '/ci/recipes/enterprise/single-tenant',
   '/nx-cloud/private-cloud/get-started':
-    '/ci/recipes/enterprise/on-premise/on-premise',
-  '/ci/features/on-premise': '/ci/recipes/enterprise/on-premise/on-premise',
+    '/ci/recipes/enterprise/single-tenant/overview',
+  '/ci/recipes/enterprise/on-premise/on-premise':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/features/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/nx-cloud/private-cloud/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/nx-cloud/private-cloud/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
-  '/ci/recipes/on-premise': '/ci/recipes/enterprise/on-premise',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise': 'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-single-admin':
-    '/ci/recipes/enterprise/on-premise/auth-single-admin',
-  '/ci/recipes/on-premise/auth-github':
-    '/ci/recipes/enterprise/on-premise/auth-github',
-  '/ci/recipes/on-premise/ami-setup':
-    '/ci/recipes/enterprise/on-premise/ami-setup',
-  '/ci/recipes/on-premise/auth-gitlab':
-    '/ci/recipes/enterprise/on-premise/auth-gitlab',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-single-admin':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/ami-setup':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/advanced-config':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-github': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-github':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/ami-setup': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-gitlab': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-gitlab':
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-bitbucket':
-    '/ci/recipes/enterprise/on-premise/auth-bitbucket',
-  '/ci/recipes/on-premise/auth-saml':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-bitbucket-data-center':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/on-premise/auth-saml': 'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/auth-saml':
+    'https://github.com/nrwl/nx-cloud-helm',
+  '/ci/recipes/enterprise/on-premise/custom-github-app':
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/enterprise/on-premise/auth-saml-managed':
-    '/ci/recipes/enterprise/on-premise/auth-saml',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/ci/recipes/on-premise/advanced-config':
-    '/ci/recipes/enterprise/on-premise/advanced-config',
+    'https://github.com/nrwl/nx-cloud-helm',
   '/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
@@ -488,6 +504,7 @@ const nxCloudUrls = {
   '/ci/recipes/set-up/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
   '/ci/intro/connect-to-cloud': '/ci/intro/connect-to-nx-cloud',
   '/pricing/special-offer': 'https://forms.gle/FBzvsspz1o63fDAz6',
+  '/powerpack/special-offer': 'https://forms.gle/mWjQo6Vrv5Kt6WYh9',
 };
 
 /**
@@ -498,6 +515,8 @@ const tutorialBaseUrls = {
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
     '/getting-started/tutorials',
+  '/tutorial': '/getting-started/tutorials',
+  '/tutorial/:path*': '/getting-started/tutorials',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -755,9 +774,9 @@ const conceptUrls = {
   '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/integrated-repo-tutorial':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/tutorials/integrated-repo-tutorial':
@@ -776,11 +795,14 @@ const conceptUrls = {
     '/nx-api/angular/documents/nx-devkit-angular-devkit',
   '/concepts/more-concepts/incremental-builds':
     '/concepts/more-concepts/buildable-and-publishable-libraries',
+  '/concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
 };
 
 const nested5minuteTutorialUrls = {
   '/tutorials/package-based-repo-tutorial':
-    '/getting-started/tutorials/npm-workspaces-tutorial',
+    '/getting-started/tutorials/typescript-packages-tutorial',
+  '/getting-started/tutorials/npm-workspaces-tutorial':
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':
@@ -860,6 +882,10 @@ const missingAndCatchAllRedirects = {
   // Nx Console
   '/nx-console': '/using-nx/console',
   '/packages/:path*': '/nx-api/:path*',
+};
+
+const marketing = {
+  '/conf': 'https://monorepo.world',
 };
 
 const movePluginFeaturesToCore = {
@@ -977,7 +1003,8 @@ const latestRecipesRefactoring = {
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
-
+  '/nx-api/js/documents/typescript-project-references':
+    '/concepts/typescript-project-linking',
   '/reference/commands': '/reference/nx-commands',
 };
 
@@ -1081,6 +1108,7 @@ const removedDeprecatedUrls = {
     '/recipes/storybook/overview-react', // 417 views: mostly people searching "React Storybook" is matching this outdated page that was for Nx 12.7
   '/deprecated/storybook/upgrade-storybook-v6-react':
     '/recipes/storybook/overview-react', // 80 views
+  '/deprecated/custom-task-runners': '/deprecated/legacy-cache',
 };
 
 const decisionsSection = {
@@ -1096,7 +1124,7 @@ const decisionsSection = {
     '/concepts/decisions/project-dependency-rules',
   '/concepts/more-concepts/grouping-libraries':
     '/concepts/decisions/folder-structure',
-  '/concepts/more-concepts/turbo-and-nx': '/concepts/turbo-and-nx',
+  '/concepts/more-concepts/turbo-and-nx': '/recipes/adopting-nx/from-turborepo',
   '/concepts/more-concepts/nx-daemon': '/concepts/nx-daemon',
   '/concepts/more-concepts/buildable-and-publishable-libraries':
     '/concepts/buildable-and-publishable-libraries',
@@ -1139,6 +1167,16 @@ const featurePagesUpdate = {
   '/ci/features/ai-features': '/ci/concepts/ai-features',
 };
 
+const enterpriseNxSection = {
+  '/features/powerpack': '/nx-enterprise/powerpack',
+  '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
+  '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
+  '/features/powerpack/custom-caching':
+    '/nx-enterprise/powerpack/custom-caching',
+  '/recipes/installation/activate-powerpack':
+    '/nx-enterprise/activate-powerpack',
+};
+
 /**
  * Public export API
  */
@@ -1171,4 +1209,6 @@ module.exports = {
   blogPosts,
   decisionsSection,
   featurePagesUpdate,
+  marketing,
+  enterpriseNxSection,
 };

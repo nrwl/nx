@@ -22,6 +22,7 @@ import {
   readProjectConfigurationsFromRootMap,
 } from './utils/project-configuration-utils';
 import {
+  buildPackageJsonWorkspacesMatcher,
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../plugins/package-json';
@@ -125,7 +126,7 @@ function defaultReadFileAtRevision(
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
           stdio: ['pipe', 'pipe', 'ignore'],
-          windowsHide: true,
+          windowsHide: false,
         })
           .toString()
           .trim();
@@ -168,9 +169,9 @@ export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(workspaceRoot, filePath), 'utf-8');
 }
 
-export function readPackageJson(): any {
+export function readPackageJson(root: string = workspaceRoot): any {
   try {
-    return readJsonFile(`${workspaceRoot}/package.json`);
+    return readJsonFile(`${root}/package.json`);
   } catch {
     return {}; // if package.json doesn't exist
   }
@@ -200,6 +201,11 @@ function getProjectsSync(
   ];
   const projectFiles = globWithWorkspaceContextSync(root, patterns);
 
+  const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
+    root,
+    (f) => readJsonFile(join(root, f))
+  );
+
   const rootMap: Record<string, ProjectConfiguration> = {};
   for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
@@ -218,7 +224,8 @@ function getProjectsSync(
         packageJson,
         root,
         projectFile,
-        nxJson
+        nxJson,
+        isInPackageJsonWorkspaces(projectFile)
       );
       if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(
