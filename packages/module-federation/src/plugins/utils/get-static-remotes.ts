@@ -1,8 +1,10 @@
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { StaticRemoteConfig } from '../../utils';
+import { DevRemoteFindOptions } from '../models';
 
 export async function getStaticRemotes(
-  remotesConfig: Record<string, StaticRemoteConfig>
+  remotesConfig: Record<string, StaticRemoteConfig>,
+  devRemoteFindOptions?: DevRemoteFindOptions
 ) {
   const remotes = Object.keys(remotesConfig);
   const findStaticRemotesPromises: Promise<string | undefined>[] = [];
@@ -10,8 +12,8 @@ export async function getStaticRemotes(
     findStaticRemotesPromises.push(
       new Promise<string>((resolve, reject) => {
         waitForPortOpen(remotesConfig[remote].port, {
-          retries: 5,
-          retryDelay: 1000,
+          retries: devRemoteFindOptions?.retries ?? 3,
+          retryDelay: devRemoteFindOptions?.retryDelay ?? 1000,
         }).then(
           (res) => {
             resolve(undefined);

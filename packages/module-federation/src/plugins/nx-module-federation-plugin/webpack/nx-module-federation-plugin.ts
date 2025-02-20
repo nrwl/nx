@@ -1,4 +1,4 @@
-import { Compiler, RspackPluginInstance } from '@rspack/core';
+import { Compiler, WebpackPluginInstance } from 'webpack';
 import {
   ModuleFederationConfig,
   NxModuleFederationConfigOverride,
@@ -7,7 +7,7 @@ import { getModuleFederationConfig } from '../../../with-module-federation/rspac
 import { NxModuleFederationDevServerConfig } from '../../models';
 import { NxModuleFederationDevServerPlugin } from './nx-module-federation-dev-server-plugin';
 
-export class NxModuleFederationPlugin implements RspackPluginInstance {
+export class NxModuleFederationPlugin implements WebpackPluginInstance {
   constructor(
     private _options: {
       config: ModuleFederationConfig;
@@ -32,20 +32,22 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     const sharedDependencies = config.sharedDependencies;
     const mappedRemotes = config.mappedRemotes;
 
-    new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)({
-      name: this._options.config.name.replace(/-/g, '_'),
-      filename: 'remoteEntry.js',
-      exposes: this._options.config.exposes,
-      remotes: mappedRemotes,
-      shared: {
-        ...(sharedDependencies ?? {}),
-      },
-      ...(this.configOverride ? this.configOverride : {}),
-      runtimePlugins: this.configOverride
-        ? this.configOverride.runtimePlugins ?? []
-        : [],
-      virtualRuntimeEntry: true,
-    }).apply(compiler);
+    new (require('@module-federation/enhanced/webpack').ModuleFederationPlugin)(
+      {
+        name: this._options.config.name.replace(/-/g, '_'),
+        filename: 'remoteEntry.js',
+        exposes: this._options.config.exposes,
+        remotes: mappedRemotes,
+        shared: {
+          ...(sharedDependencies ?? {}),
+        },
+        ...(this.configOverride ? this.configOverride : {}),
+        runtimePlugins: this.configOverride
+          ? this.configOverride.runtimePlugins ?? []
+          : [],
+        virtualRuntimeEntry: true,
+      }
+    ).apply(compiler);
 
     if (sharedLibraries) {
       sharedLibraries.getReplacementPlugin().apply(compiler as any);
