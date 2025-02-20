@@ -1,23 +1,6 @@
 use crate::native::types::FileData;
 use std::path::Path;
 
-
-fn normalize_nx_path<P>(path: P) -> String
-where
-    P: AsRef<Path>,
-{
-    if path.as_ref() == Path::new("") {
-        return ".".into();
-    }
-
-    // convert back-slashes in Windows paths, since the js expects only forward-slash path separators
-    if cfg!(windows) {
-        path.as_ref().display().to_string().replace('\\', "/")
-    } else {
-        path.as_ref().display().to_string()
-    }
-}
-
 pub fn get_child_files<P: AsRef<Path>>(directory: P, files: Vec<FileData>) -> Vec<String> {
     files
         .into_iter()
@@ -54,13 +37,9 @@ mod test {
             FileData {
                 file: "foo-other/not-child".into(),
                 hash: "123".into(),
-            }
+            },
         ];
         let child_files = get_child_files(&directory, files);
-        assert_eq!(child_files, [
-            "foo/bar",
-            "foo/baz",
-            "foo/child/bar",
-        ]);
+        assert_eq!(child_files, ["foo/bar", "foo/baz", "foo/child/bar",]);
     }
 }
