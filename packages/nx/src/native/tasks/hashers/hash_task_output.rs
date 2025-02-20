@@ -24,5 +24,5 @@ pub fn hash_task_output(workspace_root: &str, glob: &str, outputs: &[String]) ->
             )
         })
         .collect::<Vec<_>>();
-    Ok(hash_array(hashes.into_iter().map(Some).collect()))
+    Ok(hash_array(hashes))
 }

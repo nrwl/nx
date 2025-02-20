@@ -33,12 +33,12 @@ itertools = "0.10.5"
 globset = "0.4.10"
 once_cell = "1.18.0"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
-napi = { version = '2.16.0', default-features = false, features = [
+napi = { version = '2.16.16', default-features = false, features = [
     'anyhow',
     'napi4',
     'tokio_rt',
 ] }
-napi-derive = '2.16.0'
+napi-derive = '2.16.13'
 nom = '7.1.3'
 regex = "1.9.1"
 rayon = "1.7.0"
@@ -74,7 +74,7 @@ watchexec-signals = "2.1.0"
 machine-uid = "0.5.2"
 
 # build dependencies
-napi-build = '2.1.3'
+napi-build = '2.1.4'
 assert_fs = "1.0.10"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"

@@ -1,6 +1,5 @@
-use crate::native::{ types::FileData};
-use std::path::{Path, PathBuf};
-
+use crate::native::types::FileData;
+use std::path::Path;
 
 
 fn normalize_nx_path<P>(path: P) -> String
