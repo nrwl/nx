@@ -55,14 +55,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "React Standalone",
-                "path": "/getting-started/tutorials/react-standalone-tutorial",
-                "id": "react-standalone-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Monorepo",
                 "path": "/getting-started/tutorials/react-monorepo-tutorial",
                 "id": "react-monorepo-tutorial",
@@ -71,25 +63,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular Standalone",
-                "path": "/getting-started/tutorials/angular-standalone-tutorial",
-                "id": "angular-standalone-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Angular Monorepo",
                 "path": "/getting-started/tutorials/angular-monorepo-tutorial",
                 "id": "angular-monorepo-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Vue Standalone",
-                "path": "/getting-started/tutorials/vue-standalone-tutorial",
-                "id": "vue-standalone-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -155,14 +131,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "React Standalone",
-            "path": "/getting-started/tutorials/react-standalone-tutorial",
-            "id": "react-standalone-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Monorepo",
             "path": "/getting-started/tutorials/react-monorepo-tutorial",
             "id": "react-monorepo-tutorial",
@@ -171,25 +139,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Angular Standalone",
-            "path": "/getting-started/tutorials/angular-standalone-tutorial",
-            "id": "angular-standalone-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Angular Monorepo",
             "path": "/getting-started/tutorials/angular-monorepo-tutorial",
             "id": "angular-monorepo-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Vue Standalone",
-            "path": "/getting-started/tutorials/vue-standalone-tutorial",
-            "id": "vue-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -214,14 +166,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "React Standalone",
-        "path": "/getting-started/tutorials/react-standalone-tutorial",
-        "id": "react-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "React Monorepo",
         "path": "/getting-started/tutorials/react-monorepo-tutorial",
         "id": "react-monorepo-tutorial",
@@ -230,25 +174,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Angular Standalone",
-        "path": "/getting-started/tutorials/angular-standalone-tutorial",
-        "id": "angular-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Angular Monorepo",
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "id": "angular-monorepo-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Vue Standalone",
-        "path": "/getting-started/tutorials/vue-standalone-tutorial",
-        "id": "vue-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
