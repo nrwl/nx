@@ -21,7 +21,7 @@ Problem: A task is being executed when you expect it to be replayed from the cac
 
 - Make sure your repo is [connected to Nx Cloud](/ci/features/remote-cache)
 - Click on the run details link that is printed in the terminal after you run a task
-- Click on the task with cache miss that you want to investigate 
+- Click on the task with cache miss that you want to investigate
 - Click the "Compare to similar tasks" link in the top right corner of the task details
 - Select one of the similar tasks from the list in the "Compare to" section (or paste a URL of another run)
 - Nx Cloud will compare the input details of both tasks and will highlight all the differences
