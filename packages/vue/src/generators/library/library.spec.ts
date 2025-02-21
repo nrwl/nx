@@ -577,7 +577,6 @@ module.exports = [
         [
           "name",
           "version",
-          "private",
           "module",
           "types",
           "exports",

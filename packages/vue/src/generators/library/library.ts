@@ -4,10 +4,11 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
-  updateJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
@@ -23,13 +24,17 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { determineEntryFields } from './lib/determine-entry-fields';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addReleaseConfigForNonTsSolution,
+  addReleaseConfigForTsSolution,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -38,14 +43,14 @@ export function libraryGenerator(tree: Tree, schema: Schema) {
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
-
   const options = await normalizeOptions(tree, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
+
+  tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
 
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
@@ -55,9 +60,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.isUsingTsSolutionConfig) {
     writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+      name: options.projectName,
       version: '0.0.1',
-      private: true,
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
       nx: options.parsedTags?.length
@@ -67,7 +71,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         : undefined,
     });
   } else {
-    addProjectConfiguration(tree, options.name, {
+    addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,
       sourceRoot: joinPathFragments(options.projectRoot, 'src'),
       projectType: 'library',
@@ -114,16 +118,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  if (
-    !options.isUsingTsSolutionConfig &&
-    (options.publishable || options.bundler !== 'none')
-  ) {
-    updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
-      json.name = options.importPath;
-      return json;
-    });
-  }
-
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
@@ -155,6 +149,25 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   sortPackageJsonFields(tree, options.projectRoot);
+
+  if (options.publishable) {
+    const projectConfig = readProjectConfiguration(tree, options.projectName);
+    if (options.isUsingTsSolutionConfig) {
+      await addReleaseConfigForTsSolution(
+        tree,
+        options.projectName,
+        projectConfig
+      );
+    } else {
+      await addReleaseConfigForNonTsSolution(
+        tree,
+        options.projectName,
+        projectConfig
+      );
+    }
+    updateProjectConfiguration(tree, options.projectName, projectConfig);
+    tasks.push(await releaseTasks(tree));
+  }
 
   if (!options.skipFormat) await formatFiles(tree);
 

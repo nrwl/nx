@@ -58,7 +58,7 @@ export async function normalizeOptions(
     addPlugin,
     ...options,
     projectName: isUsingTsSolutionConfig
-      ? getImportPath(host, projectName)
+      ? importPath ?? getImportPath(host, projectName)
       : projectName,
     bundler,
     fileName,
