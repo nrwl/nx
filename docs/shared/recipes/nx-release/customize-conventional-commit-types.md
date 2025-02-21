@@ -148,3 +148,28 @@ If you want to use custom, non-standard conventional commit types, you can defin
   }
 }
 ```
+
+## Including Invalid Commits in the Changelog
+
+Nx only includes commits in the changelog that match either the [default conventional commit types](https://github.com/nrwl/nx/blob/master/packages/nx/src/command-line/release/config/conventional-commits.ts) or types you've [added to your configuration](#defining-non-standard-commit-types).
+
+You can configure Nx to include non-matching commits by adding the special `__INVALID__` type.
+
+This can also be useful in cases where you don't use the Conventional Commits standard but still want a changelog to be generated with the contents of each commit message.
+
+```json {% fileName="nx.json" %}
+{
+  "release": {
+    "conventionalCommits": {
+      "types": {
+        "__INVALID__": {
+          "semverBump": "paths", // Note: the default is "none"
+          "changelog": {
+            "title": "Uncategorized changes"
+          }
+        }
+      }
+    }
+  }
+}
+```
