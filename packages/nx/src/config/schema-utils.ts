@@ -1,8 +1,11 @@
 import { existsSync } from 'fs';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
-import { registerPluginTSTranspiler } from '../project-graph/plugins';
+import {
+  pluginTranspilerIsRegistered,
+  registerPluginTSTranspiler,
+} from '../project-graph/plugins';
 import { normalizePath } from '../utils/path';
 import type { ProjectConfiguration } from './workspace-json-project-json';
 
@@ -27,7 +30,7 @@ export function getImplementationFactory<T>(
       packageName,
       projects
     );
-    if (extname(modulePath) === '.ts') {
+    if (pluginTranspilerIsRegistered()) {
       registerPluginTSTranspiler();
     }
     const module = require(modulePath);
