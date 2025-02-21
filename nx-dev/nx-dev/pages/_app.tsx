@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
 import { WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { FrontendObservability } from '../lib/components/frontend-observability';
 
 export default function CustomApp({
   Component,
@@ -48,14 +49,15 @@ export default function CustomApp({
   }, [router.events, gaMeasurementId]);
   return (
     <>
+      <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast CI"
-        description="Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
+        description="Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
+            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -75,6 +77,7 @@ export default function CustomApp({
         dangerouslySetAllPagesToNoIndex={
           process.env.NEXT_PUBLIC_NO_INDEX === 'true'
         }
+        canonical={'https://nx.dev' + router.asPath.split('?')[0]}
       />
       <Head>
         <meta name="apple-mobile-web-app-title" content="Nx" />

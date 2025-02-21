@@ -561,6 +561,11 @@
         "type": "boolean",
         "description": "Read buildable libraries from source instead of building them separately.",
         "default": true
+      },
+      "watchDependencies": {
+        "type": "boolean",
+        "description": "Watch buildable dependencies and rebuild when they change.",
+        "default": true
       }
     },
     "additionalProperties": false,

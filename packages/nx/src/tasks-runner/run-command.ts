@@ -828,10 +828,9 @@ export function getRunner(
   try {
     if (isCustomRunnerPath(modulePath)) {
       output.warn({
-        title: `Custom task runners will no longer be supported in Nx 21.`,
+        title: `Custom task runners will be replaced by a new API starting with Nx 21.`,
         bodyLines: [
-          `Use Nx Cloud or the Nx Powerpack caches instead.`,
-          `For more information, see https://nx.dev/nx-enterprise/powerpack/custom-caching`,
+          `For more information, see https://nx.dev/deprecated/custom-tasks-runner`,
         ],
       });
     }

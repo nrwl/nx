@@ -15,10 +15,6 @@ What will you learn?
 - how to modularize your codebase and impose architectural constraints for better maintainability
 - [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
-{% callout type="info" title="Looking for an Angular standalone app?" %}
-Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for an Angular standalone app setup then check out our [Angular standalone app tutorial](/getting-started/tutorials/angular-standalone-tutorial).
-{% /callout %}
-
 ## Nx CLI vs. Angular CLI
 
 Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/why-nx#how-does-nx-work). As a result, adopting Nx as an Angular user is relatively straightforward. Your existing code, including builders and schematics, will still work as before, but you'll also have access to all the benefits Nx offers.

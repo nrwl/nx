@@ -55,14 +55,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "React Standalone",
-                "path": "/getting-started/tutorials/react-standalone-tutorial",
-                "id": "react-standalone-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "React Monorepo",
                 "path": "/getting-started/tutorials/react-monorepo-tutorial",
                 "id": "react-monorepo-tutorial",
@@ -71,25 +63,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular Standalone",
-                "path": "/getting-started/tutorials/angular-standalone-tutorial",
-                "id": "angular-standalone-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Angular Monorepo",
                 "path": "/getting-started/tutorials/angular-monorepo-tutorial",
                 "id": "angular-monorepo-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Vue Standalone",
-                "path": "/getting-started/tutorials/vue-standalone-tutorial",
-                "id": "vue-standalone-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -155,14 +131,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "React Standalone",
-            "path": "/getting-started/tutorials/react-standalone-tutorial",
-            "id": "react-standalone-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "React Monorepo",
             "path": "/getting-started/tutorials/react-monorepo-tutorial",
             "id": "react-monorepo-tutorial",
@@ -171,25 +139,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Angular Standalone",
-            "path": "/getting-started/tutorials/angular-standalone-tutorial",
-            "id": "angular-standalone-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Angular Monorepo",
             "path": "/getting-started/tutorials/angular-monorepo-tutorial",
             "id": "angular-monorepo-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Vue Standalone",
-            "path": "/getting-started/tutorials/vue-standalone-tutorial",
-            "id": "vue-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -214,14 +166,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "React Standalone",
-        "path": "/getting-started/tutorials/react-standalone-tutorial",
-        "id": "react-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "React Monorepo",
         "path": "/getting-started/tutorials/react-monorepo-tutorial",
         "id": "react-monorepo-tutorial",
@@ -230,25 +174,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Angular Standalone",
-        "path": "/getting-started/tutorials/angular-standalone-tutorial",
-        "id": "angular-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Angular Monorepo",
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "id": "angular-monorepo-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Vue Standalone",
-        "path": "/getting-started/tutorials/vue-standalone-tutorial",
-        "id": "vue-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -279,6 +207,14 @@
             "name": "Cache Task Results",
             "path": "/features/cache-task-results",
             "id": "cache-task-results",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Enhance Your LLM",
+            "path": "/features/enhance-AI",
+            "id": "enhance-AI",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -395,6 +331,14 @@
         "name": "Cache Task Results",
         "path": "/features/cache-task-results",
         "id": "cache-task-results",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enhance Your LLM",
+        "path": "/features/enhance-AI",
+        "id": "enhance-AI",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -639,14 +583,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx and Turborepo",
-            "path": "/concepts/turbo-and-nx",
-            "id": "turbo-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Buildable and Publishable Libraries",
             "path": "/concepts/buildable-and-publishable-libraries",
             "id": "buildable-and-publishable-libraries",
@@ -855,14 +791,6 @@
         "name": "TypeScript Project Linking",
         "path": "/concepts/typescript-project-linking",
         "id": "typescript-project-linking",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Turborepo",
-        "path": "/concepts/turbo-and-nx",
-        "id": "turbo-and-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

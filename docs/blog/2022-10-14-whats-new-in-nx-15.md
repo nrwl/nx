@@ -181,7 +181,6 @@ It is an ongoing process, and we have a lot of content to cover! We follow the [
 
 Besides the two new [package-based](/getting-started/tutorials/typescript-packages-tutorial) and [integrated style tutorials](/getting-started/tutorials/react-monorepo-tutorial) we also have two brand new reworked tutorials
 
-- [/getting-started/tutorials/react-standalone-tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [/getting-started/tutorials](/getting-started/tutorials)
 
 Stay tuned for more updates to come.
@@ -257,5 +256,5 @@ npx nx migrate --run-migrations
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 📹 [Nrwl Youtube Channel](https://www.youtube.com/nrwl_io)
+- 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 🥚 [Free Egghead course](https://egghead.io/courses/scale-react-development-with-nx-4038)

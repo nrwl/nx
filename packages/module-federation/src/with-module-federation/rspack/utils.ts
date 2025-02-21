@@ -55,19 +55,14 @@ export function getFunctionDeterminateRemoteUrl(isServer = false) {
   };
 }
 
-export async function getModuleFederationConfig(
+export function getModuleFederationConfig(
   mfConfig: ModuleFederationConfig,
   options: {
     isServer: boolean;
     determineRemoteUrl?: (remote: string) => string;
   } = { isServer: false }
 ) {
-  let projectGraph: ProjectGraph;
-  try {
-    projectGraph = readCachedProjectGraph();
-  } catch (e) {
-    projectGraph = await createProjectGraphAsync();
-  }
+  const projectGraph = readCachedProjectGraph();
 
   const project = projectGraph.nodes[mfConfig.name]?.data;
 

@@ -659,7 +659,13 @@ export default defineConfig({
 exports[`Remix Application Standalone Project Repo should create the application correctly 5`] = `
 "{
   "root": true,
-  "ignorePatterns": ["!**/*", "build", "public/build"],
+  "ignorePatterns": [
+    "!**/*",
+    "build",
+    "public/build",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "plugins": ["@nx"],
   "overrides": [
     {

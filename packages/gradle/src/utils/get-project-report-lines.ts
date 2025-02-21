@@ -1,4 +1,4 @@
-import { AggregateCreateNodesError, logger } from '@nx/devkit';
+import { AggregateCreateNodesError, logger, output } from '@nx/devkit';
 import { execGradleAsync } from './exec-gradle';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -36,6 +36,7 @@ export async function getProjectReportLines(
   try {
     projectReportBuffer = await execGradleAsync(gradlewFile, [
       'projectReportAll',
+      process.env.NX_VERBOSE_LOGGING === 'true' ? '--info' : '',
     ]);
   } catch (e: Buffer | Error | any) {
     if (e.toString()?.includes('ERROR: JAVA_HOME')) {
@@ -85,8 +86,17 @@ export async function getProjectReportLines(
       );
     }
   }
-  return projectReportBuffer
+  const projectReportLines = projectReportBuffer
     .toString()
     .split(newLineSeparator)
     .filter((line) => line.trim() !== '');
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    output.log({
+      title: `Successfully ran projectReportAll or projectRerport task using ${gradlewFile}`,
+      bodyLines: projectReportLines,
+    });
+  }
+
+  return projectReportLines;
 }

@@ -14,6 +14,7 @@ import {
   baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
   BASE_ESLINT_CONFIG_FILENAMES,
+  ESLINT_FLAT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import {
   eslintFlatConfigFilenames,
@@ -29,12 +30,14 @@ import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
   addImportToFlatConfig,
+  addPatternsToFlatConfigIgnoresBlock,
   addPluginsToExportsBlock,
   generateAst,
   generateFlatOverride,
   generateFlatPredefinedConfig,
   generatePluginExtendsElement,
   generatePluginExtendsElementWithCompatFixup,
+  hasFlatConfigIgnoresBlock,
   hasOverride,
   overrideNeedsCompat,
   removeOverridesFromLintConfig,
@@ -609,15 +612,25 @@ export function addIgnoresToLintConfig(
       }
     }
 
-    const block = generateAst<ts.ObjectLiteralExpression>({
-      ignores: ignorePatterns.map((path) => mapFilePath(path)),
-    });
-    tree.write(
-      fileName,
-      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), block)
-    );
+    if (!fileName) {
+      return;
+    }
+
+    let content = tree.read(fileName, 'utf8');
+    if (hasFlatConfigIgnoresBlock(content)) {
+      content = addPatternsToFlatConfigIgnoresBlock(content, ignorePatterns);
+      tree.write(fileName, content);
+    } else {
+      const block = generateAst<ts.ObjectLiteralExpression>({
+        ignores: ignorePatterns.map((path) => mapFilePath(path)),
+      });
+      tree.write(fileName, addBlockToFlatConfigExport(content, block));
+    }
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
+    if (!tree.exists(fileName)) {
+      return;
+    }
     updateJson(tree, fileName, (json) => {
       const ignoreSet = new Set([
         ...(json.ignorePatterns ?? []),

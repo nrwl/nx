@@ -306,6 +306,8 @@ export async function createNxReleaseConfig(
       (workspaceProjectsRelationship === 'independent'
         ? defaultIndependentReleaseTagPattern
         : defaultFixedReleaseTagPattern),
+    releaseTagPatternCheckAllBranchesWhen:
+      userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
     conventionalCommits: DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
     versionPlans: (userConfig.versionPlans ||
       false) as NxReleaseConfig['versionPlans'],
@@ -340,6 +342,8 @@ export async function createNxReleaseConfig(
       groupProjectsRelationship === 'independent'
         ? defaultIndependentReleaseTagPattern
         : WORKSPACE_DEFAULTS.releaseTagPattern,
+    releaseTagPatternCheckAllBranchesWhen:
+      userConfig.releaseTagPatternCheckAllBranchesWhen ?? undefined,
     versionPlans: false,
   };
 
@@ -567,6 +571,10 @@ export async function createNxReleaseConfig(
         (projectsRelationship === 'independent'
           ? defaultIndependentReleaseTagPattern
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
+      releaseTagPatternCheckAllBranchesWhen:
+        releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
+        userConfig.releaseTagPatternCheckAllBranchesWhen ??
+        undefined,
       versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
     };
 
@@ -628,6 +636,8 @@ export async function createNxReleaseConfig(
     nxReleaseConfig: {
       projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
       releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
+      releaseTagPatternCheckAllBranchesWhen:
+        WORKSPACE_DEFAULTS.releaseTagPatternCheckAllBranchesWhen,
       git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,

@@ -44,6 +44,11 @@
       "version": "20.5.0-beta.3",
       "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
       "implementation": "./src/migrations/update-20-5-0/update-resolve-conditions"
+    },
+    "eslint-ignore-vite-temp-files": {
+      "version": "20.5.0-beta.3",
+      "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+      "implementation": "./src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
     }
   },
   "packageJsonUpdates": {

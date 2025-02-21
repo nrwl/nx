@@ -2,14 +2,15 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
-import { readJsonFile } from '../utils/fileutils';
-import { PackageManager } from '../utils/package-manager';
-import { workspaceRoot } from '../utils/workspace-root';
-import {
+import type { PackageManager } from '../utils/package-manager';
+import type {
   InputDefinition,
   TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
+
+import { readJsonFile } from '../utils/fileutils';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -250,6 +251,15 @@ export interface NxReleaseConfiguration {
        */
       releaseTagPattern?: string;
       /**
+       * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+       * falling back to all branches if no match is found on the current branch.
+       *
+       * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+       * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+       * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+       */
+      releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+      /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
        */
@@ -316,6 +326,15 @@ export interface NxReleaseConfiguration {
    * The default releaseTagPattern for independent releases at the project level is: "{projectName}@{version}"
    */
   releaseTagPattern?: string;
+  /**
+   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+   * falling back to all branches if no match is found on the current branch.
+   *
+   * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+   * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+   * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+   */
+  releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
   /**
    * Enable and configure automatic git operations as part of the release
    */
@@ -398,7 +417,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * @deprecated Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+   * @deprecated Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
    * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {

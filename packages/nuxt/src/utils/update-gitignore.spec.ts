@@ -13,7 +13,7 @@ describe('update gitignore', () => {
     tree.write(
       '.gitignore',
       `
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
 dist
@@ -44,7 +44,7 @@ node_modules
     tree.write(
       '.gitignore',
       `
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
 dist

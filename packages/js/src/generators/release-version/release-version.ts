@@ -308,7 +308,8 @@ To fix this you will either need to add a package.json file at that location, or
               releaseTagPattern,
               {
                 projectName: project.name,
-              }
+              },
+              options.releaseGroup.releaseTagPatternCheckAllBranchesWhen
             );
             if (!latestMatchingGitTag) {
               if (options.fallbackCurrentVersionResolver === 'disk') {
@@ -618,7 +619,7 @@ To fix this you will either need to add a package.json file at that location, or
       const allDependentProjects = Object.values(localPackageDependencies)
         .flat()
         .filter((localPackageDependency) => {
-          return localPackageDependency.target === project.name;
+          return localPackageDependency.target === projectName;
         });
 
       const includeTransitiveDependents =
@@ -642,10 +643,14 @@ To fix this you will either need to add a package.json file at that location, or
       const dependentProjectsOutsideCurrentBatch = [];
       // Track circular dependencies using value of project1:project2
       const circularDependencies = new Set<string>();
+      const projectsDependOnCurrentProject =
+        localPackageDependencies[projectName]?.map(
+          (localPackageDependencies) => localPackageDependencies.target
+        ) ?? [];
 
       for (const dependentProject of allDependentProjects) {
         // Track circular dependencies (add both directions for easy look up)
-        if (dependentProject.target === projectName) {
+        if (projectsDependOnCurrentProject.includes(dependentProject.source)) {
           circularDependencies.add(
             `${dependentProject.source}:${dependentProject.target}`
           );

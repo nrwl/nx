@@ -15,10 +15,6 @@ What will you learn?
 - how to modularize your codebase and impose architectural constraints for better maintainability
 - [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
-{% callout type="info" title="Looking for a React standalone app?" %}
-Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for a React standalone app setup then check out our [React standalone app tutorial](/getting-started/tutorials/react-standalone-tutorial).
-{% /callout %}
-
 ## Why Use an Nx Monorepo?
 
 In this tutorial, we'll set up a monorepo that is configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.

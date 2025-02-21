@@ -335,8 +335,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     } else {
       let workspaceChangelogFromRef =
         args.from ||
-        (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))
-          ?.tag;
+        (
+          await getLatestGitTagForPattern(
+            nxReleaseConfig.releaseTagPattern,
+            {},
+            nxReleaseConfig.releaseTagPatternCheckAllBranchesWhen
+          )
+        )?.tag;
       if (!workspaceChangelogFromRef) {
         if (useAutomaticFromRef) {
           workspaceChangelogFromRef = await getFirstGitCommit();
@@ -540,7 +545,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
                   {
                     projectName: project.name,
                     releaseGroupName: releaseGroup.name,
-                  }
+                  },
+                  releaseGroup.releaseTagPatternCheckAllBranchesWhen
                 )
               )?.tag;
 
@@ -689,8 +695,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         } else {
           let fromRef =
             args.from ||
-            (await getLatestGitTagForPattern(releaseGroup.releaseTagPattern))
-              ?.tag;
+            (
+              await getLatestGitTagForPattern(
+                releaseGroup.releaseTagPattern,
+                {},
+                releaseGroup.releaseTagPatternCheckAllBranchesWhen
+              )
+            )?.tag;
           if (!fromRef) {
             if (useAutomaticFromRef) {
               fromRef = await getFirstGitCommit();
