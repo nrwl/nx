@@ -226,7 +226,7 @@ Now if you look at the project details view, the outputs for the build target wi
 
 You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
 
-## Adding Another Application
+## Add Another Application
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=259" /%}
 
@@ -311,7 +311,7 @@ As you can see, it generates a new application in the `apps/inventory/` folder. 
 npx nx g @nx/react:app apps/inventory
 ```
 
-## Sharing Code with Local Libraries
+## Share Code with Local Libraries
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=324" /%}
 
@@ -346,7 +346,7 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 - better scalability in CI by enabling independent test/lint/build commands for each library
 - better scalability in your teams by allowing different teams to work on separate libraries
 
-### Creating Local Libraries
+### Create Local Libraries
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=366" /%}
 
@@ -405,7 +405,7 @@ Each of these libraries
 - has a dedicated `index.ts` file which is the "public API" of the library
 - is mapped in the `tsconfig.base.json` at the root of the workspace
 
-### Importing Libraries into the React Applications
+### Import Libraries into the React Applications
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=456" /%}
 
@@ -557,7 +557,7 @@ export function App() {
 export default App;
 ```
 
-## Visualizing your Project Structure
+## Visualize your Project Structure
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=530" /%}
 
@@ -680,7 +680,7 @@ More conveniently, we can also run tasks in parallel using the following syntax:
 npx nx run-many -t test
 ```
 
-### Caching
+### Cache Tasks
 
 One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
 
@@ -701,7 +701,7 @@ Nx read the output from the cache instead of running the command for 10 out of 1
 
 Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
-### Testing Affected Projects
+### Test Affected Projects
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=614" /%}
 
@@ -835,7 +835,7 @@ npx nx graph --affected
 
 {% /graph %}
 
-## Building the Apps for Deployment
+## Build the Apps for Deployment
 
 {% video-link link="https://youtu.be/gc4N7kxiA50?t=713" /%}
 
