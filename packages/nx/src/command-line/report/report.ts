@@ -102,19 +102,42 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(chalk.green('Nx Powerpack'));
 
-    bodyLines.push(
-      `Licensed to ${powerpackLicense.organizationName} for ${
-        powerpackLicense.seatCount
-      } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
-        powerpackLicense.workspaceCount === 9999
-          ? 'an unlimited number of'
-          : powerpackLicense.workspaceCount
-      } workspace${
-        powerpackLicense.workspaceCount > 1 ? 's' : ''
-      } until ${new Date(
-        (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
-      ).toLocaleDateString()}`
+    const licenseExpiryDate = new Date(
+      (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
     );
+
+    // license is not expired
+    if (licenseExpiryDate.getTime() >= Date.now()) {
+      bodyLines.push(
+        `Licensed to ${powerpackLicense.organizationName} for ${
+          powerpackLicense.seatCount
+        } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
+          powerpackLicense.workspaceCount === 9999
+            ? 'an unlimited number of'
+            : powerpackLicense.workspaceCount
+        } workspace${
+          powerpackLicense.workspaceCount > 1 ? 's' : ''
+        } until ${licenseExpiryDate.toLocaleDateString()}`
+      );
+    } else {
+      bodyLines.push(
+        `Licensed to ${powerpackLicense.organizationName} for ${
+          powerpackLicense.seatCount
+        } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
+          powerpackLicense.workspaceCount === 9999
+            ? 'an unlimited number of'
+            : powerpackLicense.workspaceCount
+        } workspace${
+          powerpackLicense.workspaceCount > 1 ? 's' : ''
+        }. Expired on ${licenseExpiryDate.toLocaleDateString()}`
+      );
+      if ('perpetualNxVersion' in powerpackLicense) {
+        bodyLines.push(
+          `Perpetually licensed to use Nx versions up to and including ${powerpackLicense.perpetualNxVersion}`
+        );
+      }
+    }
+
     bodyLines.push('');
 
     padding =
