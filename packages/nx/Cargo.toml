@@ -9,18 +9,19 @@ crate-type = ['cdylib']
 
 
 [dependencies]
+nx_core = { workspace = true }
 nx_glob = { workspace = true }
 nx_walker = { workspace = true }
 nx_db = { workspace = true }
 nx_hasher = { workspace = true }
-nx_logger = { workspace = true}
+nx_logger = { workspace = true }
 nx_tasks = { workspace = true }
 nx_workspace = { workspace = true }
 nx_project_graph = { workspace = true }
 nx_cache = { workspace = true }
 nx_terminal = { workspace = true }
 nx_watch = { workspace = true }
-nx_utils = { workspace = true}
+nx_utils = { workspace = true }
 anyhow = { workspace = true }
 crossbeam-channel = { workspace = true }
 dashmap = { workspace = true }

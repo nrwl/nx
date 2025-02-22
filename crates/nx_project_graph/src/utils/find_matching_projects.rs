@@ -1,6 +1,6 @@
-use crate::native::project_graph::types::{Project, ProjectGraph};
-use hashbrown::HashSet;
 use std::collections::HashMap;
+use hashbrown::HashSet;
+use nx_core::types::project_graph::{Project, ProjectGraph};
 use nx_glob::NxGlobSet;
 
 struct ProjectPattern<'a> {

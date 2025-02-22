@@ -1,5 +1,6 @@
-use crate::native::types::JsInputs;
 use std::collections::HashMap;
+use napi_derive::napi;
+use crate::types::inputs::JsInputs;
 
 #[napi(object)]
 /// Stripped version of the NxJson interface for use in rust

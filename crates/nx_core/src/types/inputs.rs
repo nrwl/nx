@@ -1,5 +1,6 @@
 use napi::bindgen_prelude::Either7;
 use napi::Either;
+use napi_derive::napi;
 
 #[napi(object)]
 pub struct InputsInput {
@@ -34,7 +35,7 @@ pub struct DepsOutputsInput {
     pub transitive: Option<bool>,
 }
 
-pub(crate) type JsInputs = Either7<
+pub type JsInputs = Either7<
     InputsInput,
     String,
     FileSetInput,
@@ -88,7 +89,7 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
 }
 
 #[derive(Debug)]
-pub(crate) enum Input<'a> {
+pub enum Input<'a> {
     Inputs {
         input: &'a str,
         dependencies: bool,

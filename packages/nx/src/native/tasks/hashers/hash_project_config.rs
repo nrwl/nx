@@ -2,10 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::*;
 use itertools::Itertools;
+use nx_core::types::inputs::Input;
+use nx_core::types::project_graph::Project;
 use nx_hasher::hash;
-
-use crate::native::project_graph::types::Project;
-use crate::native::types::Input;
 
 pub fn hash_project_config(
     project_name: &str,
@@ -66,7 +65,7 @@ pub fn hash_project_config(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::project_graph::types::Target;
+    use nx_core::types::project_graph::{Project, Target};
     use std::collections::HashMap;
 
     #[test]

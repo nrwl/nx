@@ -1,8 +1,10 @@
-use crate::native::project_graph::types::Project;
-use std::collections::HashMap;
-
 mod find_project_for_path;
 pub use find_project_for_path::*;
+mod find_matching_projects;
+pub use find_matching_projects::*;
+
+use nx_core::types::project_graph::Project;
+use std::collections::HashMap;
 
 pub type ProjectRootMappings = HashMap<String, String>;
 pub fn create_project_root_mappings(nodes: &HashMap<String, Project>) -> ProjectRootMappings {

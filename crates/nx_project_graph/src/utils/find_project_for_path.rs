@@ -1,4 +1,4 @@
-use crate::native::project_graph::utils::{normalize_project_root, ProjectRootMappings};
+use crate::utils::{normalize_project_root, ProjectRootMappings};
 use std::path::Path;
 
 pub fn find_project_for_path<P: AsRef<Path>>(
@@ -33,10 +33,10 @@ pub fn find_project_for_path<P: AsRef<Path>>(
 
 #[cfg(test)]
 mod test {
-    use crate::native::project_graph::types::Project;
-    use crate::native::project_graph::utils::{
-        create_project_root_mappings, find_project_for_path,
-    };
+
+    use crate::utils::create_project_root_mappings;
+    use crate::utils::find_project_for_path::find_project_for_path;
+    use nx_core::types::project_graph::Project;
     use std::collections::HashMap;
 
     #[test]

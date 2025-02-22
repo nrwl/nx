@@ -1,23 +1,20 @@
-use crate::native::tasks::{
-    dep_outputs::get_dep_output,
-    types::{HashInstruction, TaskGraph},
-};
-use crate::native::types::{Input, NxJson};
-use crate::native::{
-    project_graph::types::ProjectGraph,
-    tasks::{inputs::SplitInputs, types::Task},
-};
-use napi::bindgen_prelude::External;
-use nx_logger::enable_logger;
-use rayon::prelude::*;
-use std::collections::HashMap;
-use tracing::trace;
-
 use crate::native::tasks::inputs::{
     expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
 use crate::native::tasks::utils;
-use crate::native::utils::find_matching_projects;
+use crate::native::tasks::{
+    dep_outputs::get_dep_output,
+    types::{HashInstruction, TaskGraph},
+};
+use crate::native::tasks::{inputs::SplitInputs, types::Task};
+use nx_core::types::inputs::Input;
+use nx_core::types::nx_json::NxJson;
+use nx_core::types::project_graph::ProjectGraph;
+use nx_logger::enable_logger;
+use rayon::prelude::*;
+use std::collections::HashMap;
+use napi::bindgen_prelude::External;
+use tracing::trace;
 
 #[napi]
 pub struct HashPlanner {
@@ -171,7 +168,7 @@ impl HashPlanner {
                             let Some(external_node_name) = external_node_name else {
                                 if self.project_graph.nodes.contains_key(dep) {
                                     let deps = self.project_graph.dependencies.get(project_name);
-                                    if deps.is_some_and(|deps| deps.contains(dep)) {
+                                    if deps.is_some_and(|deps| deps.contains(&dep.to_string())) {
                                         anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node and is already a dependency. Please remove it from the externalDependency inputs.")
                                     } else {
                                         anyhow::bail!("The externalDependency '{dep}' for '{project_name}:{target_name}' is not an external node. If you believe this is a dependency, add an implicitDependency to '{project_name}'")
@@ -405,7 +402,7 @@ impl HashPlanner {
             let Input::Projects { input, projects } = project else {
                 continue;
             };
-            let projects = find_matching_projects(projects, &self.project_graph)?;
+            let projects = nx_project_graph::utils::find_matching_projects(projects, &self.project_graph)?;
             for project in projects {
                 let named_inputs =
                     get_named_inputs(&self.nx_json, &self.project_graph.nodes[project]);

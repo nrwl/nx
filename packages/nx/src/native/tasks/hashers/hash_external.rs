@@ -3,9 +3,8 @@ use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
+use nx_core::types::project_graph::ExternalNode;
 use nx_hasher::{hash, hash_array};
-
-use crate::native::project_graph::types::ExternalNode;
 
 pub fn hash_external(
     external_name: &str,
@@ -46,8 +45,8 @@ pub fn hash_all_externals<S: AsRef<str>>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::native::project_graph::types::ExternalNode;
     use dashmap::DashMap;
+    use nx_core::types::project_graph::ExternalNode;
     use std::sync::Arc;
 
     fn get_external_nodes_map() -> HashMap<String, ExternalNode> {

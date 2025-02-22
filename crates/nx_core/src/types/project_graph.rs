@@ -1,4 +1,5 @@
-use crate::native::types::JsInputs;
+use crate::types::inputs::JsInputs;
+use napi_derive::napi;
 use std::collections::HashMap;
 
 #[napi(object)]

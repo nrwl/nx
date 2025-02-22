@@ -2,8 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::*;
 use nx_hasher::hash;
-
-use crate::native::project_graph::utils::find_project_for_path;
+use nx_project_graph::utils::find_project_for_path;
 
 pub fn hash_tsconfig_selectively(
     project_name: &str,
@@ -42,10 +41,10 @@ fn remove_other_project_paths(
 
 #[cfg(test)]
 mod test {
+   
+    use nx_core::types::project_graph::Project;
+    use nx_project_graph::utils::create_project_root_mappings;
     use std::collections::HashMap;
-
-    use crate::native::project_graph::types::Project;
-    use crate::native::project_graph::utils::create_project_root_mappings;
 
     use super::*;
 

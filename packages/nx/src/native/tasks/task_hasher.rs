@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::native::project_graph::{types::ProjectGraph, utils::create_project_root_mappings};
 use crate::native::{
     tasks::hashers::{
         hash_all_externals, hash_env, hash_external, hash_project_config, hash_project_files,
@@ -15,11 +14,11 @@ use crate::native::{
 use anyhow::anyhow;
 use dashmap::DashMap;
 use napi::bindgen_prelude::{Buffer, External};
+use nx_core::types::project_graph::ProjectGraph;
 use nx_hasher::hash;
+use nx_project_graph::utils::{ProjectRootMappings, create_project_root_mappings};
 use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
-
-use crate::native::project_graph::utils::ProjectRootMappings;
 
 #[napi(object)]
 #[derive(Debug)]

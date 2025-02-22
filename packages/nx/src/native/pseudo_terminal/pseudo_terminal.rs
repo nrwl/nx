@@ -255,8 +255,16 @@ mod tests {
         let pseudo_terminal = create_pseudo_terminal().unwrap();
         while i < 10 {
             println!("Running {}", i);
-            let cp1 =
-                run_command(&pseudo_terminal, String::from("whoami"), None, None, None).unwrap();
+            let cp1 = run_command(
+                &pseudo_terminal,
+                String::from("whoami"),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
             cp1.wait_receiver.recv().unwrap();
             i += 1;
         }
