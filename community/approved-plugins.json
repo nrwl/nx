@@ -513,5 +513,10 @@
     "name": "nx-foundry",
     "description": "Foundry generators and inferred tasks for Nx",
     "url": "https://github.com/juliangsibecas/nx-foundry"
+  },
+  {
+    "name": "@unpowerpacking/codeowners",
+    "description": "A simple plugin to sync CodeOwners in your repo",
+    "url": "https://github.com/Jordan-Hall/nx-oss-plugin"
   }
 ]
