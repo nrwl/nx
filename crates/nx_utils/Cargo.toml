@@ -5,4 +5,6 @@ license.workspace = true
 version.workspace = true
 
 [dependencies]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 machine-uid = { workspace = true }

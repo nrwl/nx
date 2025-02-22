@@ -131,6 +131,7 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
         printing_rx,
     })
 }
+
 pub fn run_command(
     pseudo_terminal: &PseudoTerminal,
     command: String,

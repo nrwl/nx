@@ -1,21 +1,28 @@
+use napi_derive::napi;
 use std::collections::HashMap;
-
 use tracing::trace;
 
+use crate::pseudo_terminal::child_process::ChildProcess;
+use crate::pseudo_terminal::{create_pseudo_terminal, os, run_command, PseudoTerminal};
 use nx_logger::enable_logger;
-use nx_pty::pseudo_terminal::child_process::ChildProcess;
-use nx_pty::pseudo_terminal::{create_pseudo_terminal, os, run_command};
 
+#[napi]
+pub struct RustPseudoTerminal {
+    pseudo_terminal: PseudoTerminal,
+}
 
-
-pub struct RustPseudoTerminal {}
-
+#[napi]
 impl RustPseudoTerminal {
+    #[napi(constructor)]
     pub fn new() -> napi::Result<Self> {
         enable_logger();
-        Ok(Self {})
+
+        let pseudo_terminal = create_pseudo_terminal()?;
+
+        Ok(Self { pseudo_terminal })
     }
 
+    #[napi]
     pub fn run_command(
         &self,
         command: String,
@@ -25,9 +32,8 @@ impl RustPseudoTerminal {
         quiet: Option<bool>,
         tty: Option<bool>,
     ) -> napi::Result<ChildProcess> {
-        let pseudo_terminal = create_pseudo_terminal()?;
         run_command(
-            &pseudo_terminal,
+            &self.pseudo_terminal,
             command,
             command_dir,
             js_env,
@@ -39,7 +45,7 @@ impl RustPseudoTerminal {
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
     /// this makes it possible to be backwards compatible with the old implementation
-    #[allow(clippy::too_many_arguments)]
+    #[napi]
     pub fn fork(
         &self,
         id: String,

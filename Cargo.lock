@@ -1472,8 +1472,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert_fs",
- "crossbeam-channel",
- "crossterm",
  "dashmap",
  "dunce",
  "fs4",
@@ -1482,7 +1480,6 @@ dependencies = [
  "ignore",
  "ignore-files 2.1.0",
  "itertools",
- "machine-uid",
  "mio 0.8.11",
  "napi",
  "napi-build",
@@ -1502,7 +1499,6 @@ dependencies = [
  "nx_watch",
  "nx_workspace",
  "parking_lot",
- "portable-pty",
  "rayon",
  "regex",
  "rkyv",
@@ -1511,9 +1507,7 @@ dependencies = [
  "swc_ecma_ast",
  "swc_ecma_dep_graph",
  "swc_ecma_parser",
- "tempfile",
  "thiserror",
- "tokio",
  "tracing",
  "tracing-subscriber",
  "watchexec",
@@ -1558,6 +1552,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "fs4",
+ "napi",
+ "napi-derive",
+ "nx_logger",
+ "nx_utils",
  "rusqlite",
  "tempfile",
  "tracing",
@@ -1594,6 +1592,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nx_napi"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.53",
+]
+
+[[package]]
 name = "nx_project_graph"
 version = "0.1.0"
 dependencies = [
@@ -1613,6 +1620,7 @@ dependencies = [
  "mio 0.8.11",
  "napi",
  "napi-derive",
+ "nx_logger",
  "portable-pty",
  "tracing",
  "winapi",

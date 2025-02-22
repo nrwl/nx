@@ -15,7 +15,6 @@ nx_walker = { workspace = true }
 nx_db = { workspace = true }
 nx_hasher = { workspace = true }
 nx_logger = { workspace = true }
-nx_pty = { workspace = true }
 nx_tasks = { workspace = true }
 nx_workspace = { workspace = true }
 nx_project_graph = { workspace = true }
@@ -24,7 +23,6 @@ nx_terminal = { workspace = true }
 nx_watch = { workspace = true }
 nx_utils = { workspace = true }
 anyhow = { workspace = true }
-crossbeam-channel = { workspace = true }
 dashmap = { workspace = true }
 dunce = { workspace = true }
 fs_extra = { workspace = true }
@@ -53,8 +51,7 @@ mio = { workspace = true }
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-portable-pty = { workspace = true }
-crossterm = { workspace = true }
+nx_pty = { workspace = true }
 ignore-files = { workspace = true }
 fs4 = { workspace = true }
 rusqlite = { workspace = true }
@@ -62,7 +59,7 @@ watchexec = { workspace = true }
 watchexec-events = { workspace = true }
 watchexec-filterer-ignore = { workspace = true }
 watchexec-signals = { workspace = true }
-machine-uid = { workspace = true }
+
 
 
 [build-dependencies]
@@ -72,6 +69,3 @@ napi-build = { workspace = true }
 assert_fs = { workspace = true }
 # This is only used for unit tests
 swc_ecma_dep_graph = { workspace = true }
-tempfile = { workspace = true }
-# We only explicitly use tokio for async tests
-tokio = { workspace = true }

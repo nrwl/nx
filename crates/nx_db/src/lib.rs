@@ -1,5 +1,6 @@
 pub mod connection;
 mod initialize;
+pub mod napi;
 
 use std::fs::create_dir_all;
 use std::path::PathBuf;
@@ -9,7 +10,7 @@ use tracing::{trace, trace_span};
 use connection::NxDbConnection;
 
 /// Connect to the Nx database
-pub fn connect_to_nx_db(
+pub fn open_db_connection(
     cache_dir: String,
     nx_version: String,
     db_name: Option<String>,

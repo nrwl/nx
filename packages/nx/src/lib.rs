@@ -4,3 +4,9 @@
 extern crate napi_derive;
 
 pub mod native;
+
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use nx_pty::napi::*;
+#[cfg(not(target_arch = "wasm32"))]
+pub use nx_db::napi::*;
