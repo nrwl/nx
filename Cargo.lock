@@ -1547,12 +1547,9 @@ name = "nx_db"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "assert_fs",
  "fs4",
- "parking_lot",
  "rusqlite",
  "tempfile",
- "thiserror",
  "tracing",
 ]
 
