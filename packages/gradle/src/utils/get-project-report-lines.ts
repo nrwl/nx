@@ -22,17 +22,7 @@ export async function getProjectReportLines(
 ): Promise<string[]> {
   let projectReportBuffer: Buffer;
 
-  // if there is no build.gradle or build.gradle.kts file, we cannot run the projectReport nor projectReportAll task
-  if (
-    !existsSync(join(dirname(gradlewFile), 'build.gradle')) &&
-    !existsSync(join(dirname(gradlewFile), 'build.gradle.kts'))
-  ) {
-    logger.warn(
-      `Could not find build file near ${gradlewFile}. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks.`
-    );
-    return [];
-  }
-
+  // Attempt to run projectReport or projectReportAll task, regardless of build.gradle or build.gradle.kts location
   try {
     projectReportBuffer = await execGradleAsync(gradlewFile, [
       'projectReportAll',
