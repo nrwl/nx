@@ -334,9 +334,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.5.12"
+version = "0.5.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab3db02a9c5b5121e1e42fbdb1aeb65f5e02624cc58c43f2884c6ccac0b82f95"
+checksum = "06ba6d68e24814cb8de6bb986db8222d3a027d15872cabc0d18817bc3c0e4471"
 dependencies = [
  "crossbeam-utils",
 ]
@@ -1494,6 +1494,7 @@ dependencies = [
  "nx_hasher",
  "nx_logger",
  "nx_project_graph",
+ "nx_pty",
  "nx_tasks",
  "nx_terminal",
  "nx_utils",
@@ -1600,6 +1601,21 @@ dependencies = [
  "hashbrown 0.14.5",
  "nx_core",
  "nx_glob",
+]
+
+[[package]]
+name = "nx_pty"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossbeam-channel",
+ "crossterm",
+ "mio 0.8.11",
+ "napi",
+ "napi-derive",
+ "portable-pty",
+ "tracing",
+ "winapi",
 ]
 
 [[package]]

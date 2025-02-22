@@ -1,11 +1,10 @@
+use nx_pty::pseudo_terminal::{create_pseudo_terminal, os, run_command, PseudoTerminal};
 use std::collections::HashMap;
 
-use tracing::trace;
-
-use super::child_process::ChildProcess;
-use super::os;
-use super::pseudo_terminal::{create_pseudo_terminal, run_command, PseudoTerminal};
 use nx_logger::enable_logger;
+
+use nx_pty::pseudo_terminal::child_process::ChildProcess;
+use tracing::trace;
 
 #[napi]
 pub struct RustPseudoTerminal {
@@ -65,6 +64,13 @@ impl RustPseudoTerminal {
         );
 
         trace!("nx_fork command: {}", &command);
-        self.run_command(command, command_dir, js_env, exec_argv, Some(quiet), Some(true))
+        self.run_command(
+            command,
+            command_dir,
+            js_env,
+            exec_argv,
+            Some(quiet),
+            Some(true),
+        )
     }
 }

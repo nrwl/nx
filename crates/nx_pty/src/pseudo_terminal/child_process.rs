@@ -5,6 +5,7 @@ use napi::{
     },
     Env, JsFunction,
 };
+use napi_derive::napi;
 use portable_pty::ChildKiller;
 
 pub enum ChildProcessMessage {

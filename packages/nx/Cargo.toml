@@ -15,6 +15,7 @@ nx_walker = { workspace = true }
 nx_db = { workspace = true }
 nx_hasher = { workspace = true }
 nx_logger = { workspace = true }
+nx_pty = { workspace = true }
 nx_tasks = { workspace = true }
 nx_workspace = { workspace = true }
 nx_project_graph = { workspace = true }

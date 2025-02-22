@@ -1,3 +1,9 @@
+#[cfg_attr(windows, path = "pseudo_terminal/command/windows.rs")]
+#[cfg_attr(not(windows), path = "pseudo_terminal/command/unix.rs")]
+pub mod os;
+
+pub mod child_process;
+
 use std::{
     collections::HashMap,
     io::{Read, Write},
@@ -8,6 +14,7 @@ use std::{
     time::Instant,
 };
 
+use crate::pseudo_terminal::child_process::ChildProcess;
 use anyhow::anyhow;
 use crossbeam_channel::{bounded, unbounded, Receiver};
 use crossterm::{
@@ -16,10 +23,7 @@ use crossterm::{
     tty::IsTty,
 };
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
-use tracing::log::trace;
-
-use super::os;
-use crate::native::pseudo_terminal::child_process::ChildProcess;
+use tracing::trace;
 
 pub struct PseudoTerminal {
     pub pty_pair: PtyPair,

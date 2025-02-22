@@ -2,24 +2,20 @@ use std::collections::HashMap;
 
 use tracing::trace;
 
-use super::child_process::ChildProcess;
-use super::os;
-use super::pseudo_terminal::{create_pseudo_terminal, run_command};
-
 use nx_logger::enable_logger;
+use nx_pty::pseudo_terminal::child_process::ChildProcess;
+use nx_pty::pseudo_terminal::{create_pseudo_terminal, os, run_command};
 
-#[napi]
+
+
 pub struct RustPseudoTerminal {}
 
-#[napi]
 impl RustPseudoTerminal {
-    #[napi(constructor)]
     pub fn new() -> napi::Result<Self> {
         enable_logger();
         Ok(Self {})
     }
 
-    #[napi]
     pub fn run_command(
         &self,
         command: String,
@@ -43,7 +39,6 @@ impl RustPseudoTerminal {
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
     /// this makes it possible to be backwards compatible with the old implementation
-    #[napi]
     #[allow(clippy::too_many_arguments)]
     pub fn fork(
         &self,

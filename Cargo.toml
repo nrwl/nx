@@ -21,6 +21,7 @@ nx_watch = { path = "crates/nx_watch" }
 nx_utils = { path = "crates/nx_utils" }
 nx_logger = { path = "crates/nx_logger" }
 nx_core = { path = "crates/nx_core" }
+nx_pty = { path = "crates/nx_pty"}
 
 anyhow = "1.0.95"
 colored = "2"

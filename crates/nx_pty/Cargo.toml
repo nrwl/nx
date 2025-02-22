@@ -1,0 +1,21 @@
+[package]
+name = "nx_pty"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+napi = { workspace = true }
+napi-derive = { workspace = true }
+portable-pty = { workspace = true }
+anyhow = { workspace = true }
+crossbeam-channel = { workspace = true }
+crossterm = { workspace = true }
+tracing = { workspace = true }
+
+[target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
+mio = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+winapi = { workspace = true }
+
