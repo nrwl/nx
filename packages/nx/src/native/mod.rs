@@ -1,6 +1,5 @@
 pub mod cache;
 pub mod hasher;
-mod machine_id;
 pub mod metadata;
 pub mod plugins;
 pub mod project_graph;

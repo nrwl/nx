@@ -1635,6 +1635,9 @@ dependencies = [
 [[package]]
 name = "nx_utils"
 version = "0.1.0"
+dependencies = [
+ "machine-uid",
+]
 
 [[package]]
 name = "nx_walker"

@@ -5,3 +5,4 @@ license.workspace = true
 version.workspace = true
 
 [dependencies]
+machine-uid = { workspace = true }

@@ -16,7 +16,7 @@ pub fn connect_to_nx_db(
     machine_id: String,
 ) -> anyhow::Result<NxDbConnection> {
     let cache_dir_buf = PathBuf::from(cache_dir);
-    let mut db_file_name = db_name.unwrap_or_else(|| machine_id);
+    let mut db_file_name = db_name.unwrap_or(machine_id);
 
     if db_file_name.is_empty() {
         trace!("Invalid db file name, using fallback name");

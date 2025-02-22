@@ -1,10 +1,10 @@
-use crate::native::machine_id::get_machine_id;
 use napi::bindgen_prelude::External;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 
 use nx_db::connection::NxDbConnection;
 use nx_logger::enable_logger;
+use nx_utils::machine_id::get_machine_id;
 
 #[napi]
 pub fn connect_to_nx_db(
