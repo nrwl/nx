@@ -146,6 +146,7 @@ function getEsBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
+    continuous: true,
     executor: '@nx/js:node',
     defaultConfiguration: 'development',
     // Run build, which includes dependency on "^build" by default, so the first run
@@ -298,10 +299,18 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
 
 function addProxy(tree: Tree, options: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, options.frontendProject);
-  if (projectConfig.targets && projectConfig.targets.serve) {
+  if (
+    projectConfig.targets &&
+    ['serve', 'dev'].find((t) => !!projectConfig.targets[t])
+  ) {
+    const targetName = ['serve', 'dev'].find((t) => !!projectConfig.targets[t]);
+    projectConfig.targets[targetName].dependsOn = [
+      ...(projectConfig.targets[targetName].dependsOn ?? []),
+      `${options.name}:serve`,
+    ];
     const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
-    projectConfig.targets.serve.options = {
-      ...projectConfig.targets.serve.options,
+    projectConfig.targets[targetName].options = {
+      ...projectConfig.targets[targetName].options,
       proxyConfig: pathToProxyFile,
     };
 
