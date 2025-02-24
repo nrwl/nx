@@ -55,7 +55,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "React-Focused TypeScript Monorepo",
+                "name": "React Monorepo",
                 "path": "/getting-started/tutorials/react-monorepo-tutorial",
                 "id": "react-monorepo-tutorial",
                 "isExternal": false,
@@ -131,7 +131,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "React-Focused TypeScript Monorepo",
+            "name": "React Monorepo",
             "path": "/getting-started/tutorials/react-monorepo-tutorial",
             "id": "react-monorepo-tutorial",
             "isExternal": false,
@@ -166,7 +166,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "React-Focused TypeScript Monorepo",
+        "name": "React Monorepo",
         "path": "/getting-started/tutorials/react-monorepo-tutorial",
         "id": "react-monorepo-tutorial",
         "isExternal": false,

@@ -49,7 +49,7 @@ Someone who appreciates the structure and consistency of an integrated repositor
 - [Automate updating dependencies](/features/automate-updating-dependencies) of the entire toolchain
 
 {% cards %}
-{% card title="Tutorial: React-Focused TypeScript Monorepo" description="Create a React monorepo with Nx" type="documentation" url="/getting-started/tutorials/react-monorepo-tutorial" /%}
+{% card title="Tutorial: React Monorepo" description="Create a React monorepo with Nx" type="documentation" url="/getting-started/tutorials/react-monorepo-tutorial" /%}
 {% card title="Tutorial: Angular Monorepo" description="Create an Angular monorepo with Nx" type="documentation" url="/getting-started/tutorials/angular-monorepo-tutorial" /%}
 {% /cards %}
 

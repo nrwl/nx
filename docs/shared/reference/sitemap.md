@@ -7,7 +7,7 @@
     - [Editor Setup](/getting-started/editor-setup)
     - [Tutorials](/getting-started/tutorials)
       - [TypeScript Monorepo](/getting-started/tutorials/typescript-packages-tutorial)
-      - [React-Focused TypeScript Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
+      - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
       - [Gradle Monorepo](/getting-started/tutorials/gradle-tutorial)
   - [Features](/features)

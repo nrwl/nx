@@ -70,7 +70,7 @@
           },
           {
             "id": "react-monorepo-tutorial",
-            "name": "React-Focused TypeScript Monorepo",
+            "name": "React Monorepo",
             "description": "",
             "mediaImage": "",
             "file": "shared/tutorials/react-monorepo",
@@ -175,7 +175,7 @@
       },
       {
         "id": "react-monorepo-tutorial",
-        "name": "React-Focused TypeScript Monorepo",
+        "name": "React Monorepo",
         "description": "",
         "mediaImage": "",
         "file": "shared/tutorials/react-monorepo",
@@ -224,7 +224,7 @@
   },
   "/getting-started/tutorials/react-monorepo-tutorial": {
     "id": "react-monorepo-tutorial",
-    "name": "React-Focused TypeScript Monorepo",
+    "name": "React Monorepo",
     "description": "",
     "mediaImage": "",
     "file": "shared/tutorials/react-monorepo",

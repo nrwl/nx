@@ -46,7 +46,7 @@
                   "file": "shared/tutorials/typescript-packages"
                 },
                 {
-                  "name": "React-Focused TypeScript Monorepo",
+                  "name": "React Monorepo",
                   "id": "react-monorepo-tutorial",
                   "file": "shared/tutorials/react-monorepo"
                 },

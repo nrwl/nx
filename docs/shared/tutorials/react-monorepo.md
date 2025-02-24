@@ -1,5 +1,5 @@
 ---
-title: 'React-Focused TypeScript Monorepo Tutorial'
+title: 'React Monorepo Tutorial'
 description: In this tutorial you'll create a frontend-focused workspace with Nx.
 ---
 
