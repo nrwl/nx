@@ -223,6 +223,7 @@ describe('app', () => {
                     "buildTarget": "myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
