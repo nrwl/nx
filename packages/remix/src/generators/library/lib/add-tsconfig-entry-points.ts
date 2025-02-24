@@ -27,13 +27,14 @@ export function addTsconfigEntryPoints(
   );
 
   const baseTsConfig = getRootTsConfigPathInTree(tree);
-  // Use same logic as `determineProjectNameAndRootOptions` to get the import path
-  const importPath = resolveImportPath(tree, options.name, projectRoot);
   updateJson(tree, baseTsConfig, (json) => {
-    if (json.compilerOptions.paths && json.compilerOptions.paths[importPath]) {
-      json.compilerOptions.paths[joinPathFragments(importPath, 'server')] = [
-        serverFilePath,
-      ];
+    if (
+      json.compilerOptions.paths &&
+      json.compilerOptions.paths[options.importPath]
+    ) {
+      json.compilerOptions.paths[
+        joinPathFragments(options.importPath, 'server')
+      ] = [serverFilePath];
     }
 
     return json;

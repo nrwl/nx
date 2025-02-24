@@ -1,4 +1,3 @@
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -24,7 +23,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { configurationGenerator } from '@nx/jest';
 import {
@@ -66,6 +65,7 @@ export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   parsedTags: string[];
   outputPath: string;
+  importPath: string;
   isUsingTsSolutionConfig: boolean;
 }
 
@@ -208,7 +208,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 
   if (options.isUsingTsSolutionConfig) {
     writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+      name: options.importPath,
       version: '0.0.1',
       private: true,
       nx: {
@@ -618,14 +618,17 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
 
   options.bundler = options.bundler ?? 'esbuild';
@@ -651,6 +654,7 @@ async function normalizeOptions(
       ? names(options.frontendProject).fileName
       : undefined,
     appProjectRoot,
+    importPath,
     parsedTags,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',

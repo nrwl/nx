@@ -1,12 +1,11 @@
 import { readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { type NxRemixGeneratorSchema } from '../schema';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -21,16 +20,14 @@ export async function normalizeOptions(
   tree: Tree,
   options: NxRemixGeneratorSchema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(tree, options, 'application');
-  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
-    tree,
-    {
+  await ensureRootProjectName(options, 'application');
+  const { projectName, projectRoot, importPath } =
+    await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
       rootProject: options.rootProject,
-    }
-  );
+    });
   options.rootProject = projectRoot === '.';
   const nxJson = readNxJson(tree);
   const addPluginDefault =
@@ -49,9 +46,8 @@ export async function normalizeOptions(
   return {
     ...options,
     linter: options.linter ?? Linter.EsLint,
-    projectName: isUsingTsSolutionConfig
-      ? getImportPath(tree, projectName)
-      : projectName,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     e2eProjectName,
     e2eProjectRoot,

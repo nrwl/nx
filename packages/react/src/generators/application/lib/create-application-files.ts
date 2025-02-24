@@ -1,7 +1,6 @@
 import {
   generateFiles,
   joinPathFragments,
-  names,
   offsetFromRoot,
   toJS,
   Tree,
@@ -59,7 +58,7 @@ export async function createApplicationFiles(
   );
   const appTests = getAppTests(options);
   const templateVariables = {
-    ...names(options.name),
+    ...options.names,
     ...options,
     js: !!options.js, // Ensure this is defined in template
     tmpl: '',

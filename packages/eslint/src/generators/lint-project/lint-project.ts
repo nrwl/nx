@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   createProjectGraphAsync,
   formatFiles,
   GeneratorCallback,
@@ -38,6 +39,7 @@ import {
   BASE_ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
+import { jsoncEslintParserVersion } from '../../utils/versions';
 import { setupRootEsLint } from './setup-root-eslint';
 import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -165,13 +167,29 @@ export async function lintProjectGeneratorInternal(
   // additionally, the companion e2e app would have `rootProject: true`
   // so we need to check for the root path as well
   if (!options.rootProject || projectConfig.root !== '.') {
+    const addDependencyChecks =
+      options.addPackageJsonDependencyChecks ||
+      isBuildableLibraryProject(tree, projectConfig);
     createEsLintConfiguration(
       tree,
       options,
       projectConfig,
       options.setParserOptionsProject,
-      options.rootProject
+      options.rootProject,
+      addDependencyChecks
     );
+
+    if (addDependencyChecks) {
+      tasks.push(
+        addDependenciesToPackageJson(
+          tree,
+          {},
+          { 'jsonc-eslint-parser': jsoncEslintParserVersion },
+          undefined,
+          true
+        )
+      );
+    }
   }
 
   // Buildable libs need source analysis enabled for linting `package.json`.
@@ -201,7 +219,8 @@ function createEsLintConfiguration(
   options: LintProjectOptions,
   projectConfig: ProjectConfiguration,
   setParserOptionsProject: boolean,
-  rootProject: boolean
+  rootProject: boolean,
+  addDependencyChecks: boolean
 ) {
   // we are only extending root for non-standalone projects or their complementary e2e apps
   const extendedRootConfig = rootProject ? undefined : findEslintFile(tree);
@@ -223,10 +242,6 @@ function createEsLintConfiguration(
       );
     }
   }
-
-  const addDependencyChecks =
-    options.addPackageJsonDependencyChecks ||
-    isBuildableLibraryProject(tree, projectConfig);
 
   const overrides: Linter.ConfigOverride<Linter.RulesRecord>[] = useFlatConfig(
     tree

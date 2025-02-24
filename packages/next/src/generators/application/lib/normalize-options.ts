@@ -1,7 +1,7 @@
 import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
@@ -10,6 +10,7 @@ import { Schema } from '../schema';
 export interface NormalizedSchema extends Schema {
   projectName: string;
   appProjectRoot: string;
+  importPath: string;
   outputPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
@@ -23,14 +24,17 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
 
   const nxJson = readNxJson(host);
@@ -43,7 +47,7 @@ export async function normalizeOptions(
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
-  const name = names(options.name).fileName;
+  const name = names(appProjectName).fileName;
 
   const outputPath = joinPathFragments(
     'dist',
@@ -83,5 +87,6 @@ export async function normalizeOptions(
     style: options.style || 'css',
     styledModule,
     unitTestRunner: options.unitTestRunner || 'jest',
+    importPath,
   };
 }

@@ -3,6 +3,7 @@ import {
   cleanupProject,
   createFile,
   newProject,
+  readJson,
   renameFile,
   runCLI,
   uniq,
@@ -265,4 +266,25 @@ describe('Nx Plugin (TS solution)', () => {
     expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
     expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
   });
+
+  it('should respect and support generating plugins with a name different than the import path', async () => {
+    const plugin = uniq('plugin');
+
+    runCLI(
+      `generate @nx/plugin:plugin packages/${plugin} --name=${plugin} --linter=eslint --publishable`
+    );
+
+    const packageJson = readJson(`packages/${plugin}/package.json`);
+    expect(packageJson.nx.name).toBe(plugin);
+
+    expect(runCLI(`build ${plugin}`)).toContain(
+      `Successfully ran target build for project ${plugin}`
+    );
+    expect(runCLI(`typecheck ${plugin}`)).toContain(
+      `Successfully ran target typecheck for project ${plugin}`
+    );
+    expect(runCLI(`lint ${plugin}`)).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
+  }, 90000);
 });

@@ -7,17 +7,16 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -57,9 +56,8 @@ export async function normalizeOptions(
   const normalized = {
     addPlugin,
     ...options,
-    projectName: isUsingTsSolutionConfig
-      ? getImportPath(host, projectName)
-      : projectName,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     bundler,
     fileName,
     routePath: `/${projectNames.projectFileName}`,

@@ -1,7 +1,7 @@
 import { names, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -10,14 +10,17 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
@@ -29,9 +32,10 @@ export async function normalizeOptions(
 
   const normalized = {
     ...options,
-    name: names(options.name).fileName,
+    name: names(appProjectName).fileName,
     projectName: appProjectName,
     appProjectRoot,
+    importPath,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,

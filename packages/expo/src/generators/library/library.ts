@@ -41,6 +41,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -173,8 +174,8 @@ async function addProject(
         ? './src/index.js'
         : './src/index.ts'
       : undefined;
-    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: options.projectName,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       main: sourceEntry,
       types: sourceEntry,
@@ -191,13 +192,21 @@ async function addProject(
                   default: './src/index.ts',
                 },
           },
+    };
 
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-    });
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(host, options.name, project);
   }

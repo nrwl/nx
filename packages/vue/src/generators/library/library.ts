@@ -23,13 +23,13 @@ import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { relative } from 'path';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { determineEntryFields } from './lib/determine-entry-fields';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -54,18 +54,27 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       private: true,
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(tree, options.name, {
       root: options.projectRoot,

@@ -38,7 +38,6 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
@@ -83,6 +82,10 @@ export async function reactNativeLibraryGeneratorInternal(
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {
     tasks.push(addProjectTask);
+  }
+
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   const lintTask = await addLinting(host, {
@@ -133,10 +136,6 @@ export async function reactNativeLibraryGeneratorInternal(
       : undefined
   );
 
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
-
   sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
@@ -172,14 +171,25 @@ async function addProject(
     'package.json'
   );
   if (options.isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: options.name,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       ...determineEntryFields(options),
-      nx: {
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+    };
+
+    if (options.name !== options.importPath) {
+      packageJson.nx = { name: options.name };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(host, options.name, project);
   }

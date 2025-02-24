@@ -1,7 +1,7 @@
 import { readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { LinterType } from '@nx/eslint';
 import {
@@ -10,16 +10,14 @@ import {
 } from '@nx/js/src/utils/generator-prompts';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Schema } from '../schema';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
-  name: string;
   projectName: string;
   fileName: string;
   projectRoot: string;
   projectDirectory: string;
   parsedTags: string[];
-  npmPackageName: string;
+  importPath: string;
   bundler: 'swc' | 'tsc';
   publishable: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
@@ -48,18 +46,15 @@ export async function normalizeOptions(
       process.env.NX_ADD_PLUGINS !== 'false' &&
       nxJson.useInferencePlugins !== false);
 
-  await ensureProjectName(host, options, 'application');
-  const {
-    projectName,
-    projectRoot,
-    importPath: npmPackageName,
-  } = await determineProjectNameAndRootOptions(host, {
-    name: options.name,
-    projectType: 'library',
-    directory: options.directory,
-    importPath: options.importPath,
-    rootProject: options.rootProject,
-  });
+  await ensureRootProjectName(options, 'library');
+  const { projectName, projectRoot, importPath } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'library',
+      directory: options.directory,
+      importPath: options.importPath,
+      rootProject: options.rootProject,
+    });
   options.rootProject = projectRoot === '.';
 
   const projectDirectory = projectRoot;
@@ -72,14 +67,14 @@ export async function normalizeOptions(
     ...options,
     bundler: options.compiler ?? 'tsc',
     fileName: projectName,
-    name: projectName,
-    projectName: isTsSolutionSetup
-      ? getImportPath(host, projectName)
-      : projectName,
+    projectName:
+      isTsSolutionSetup && !options.name && !options.useProjectJson
+        ? importPath
+        : projectName,
     projectRoot,
     projectDirectory,
     parsedTags,
-    npmPackageName,
+    importPath,
     publishable: options.publishable ?? false,
     linter,
     unitTestRunner,

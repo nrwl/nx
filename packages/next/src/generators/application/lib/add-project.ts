@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { nextVersion } from '../../../utils/versions';
 import { reactDomVersion, reactVersion } from '@nx/react';
 
@@ -74,7 +73,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   if (isUsingTsSolutionSetup(host)) {
     writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(host, options.name),
+      name: options.importPath,
       version: '0.0.1',
       private: true,
       dependencies: {

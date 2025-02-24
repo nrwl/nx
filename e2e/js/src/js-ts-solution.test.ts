@@ -3,6 +3,7 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
   newProject,
+  readJson,
   runCLI,
   runCommand,
   uniq,
@@ -178,6 +179,30 @@ ${content}`
     );
     expect(runCLI(`test ${viteParentLib}`)).toContain(
       `Successfully ran target test for project @proj/${viteParentLib}`
+    );
+  }, 300_000);
+
+  it('should respect and support generating libraries with a name different than the import path', () => {
+    const lib1 = uniq('lib1');
+
+    runCLI(
+      `generate @nx/js:lib packages/${lib1} --name=${lib1} --linter=eslint --unitTestRunner=jest`
+    );
+
+    const packageJson = readJson(`packages/${lib1}/package.json`);
+    expect(packageJson.nx.name).toBe(lib1);
+
+    expect(runCLI(`build ${lib1}`)).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
+    expect(runCLI(`typecheck ${lib1}`)).toContain(
+      `Successfully ran target typecheck for project ${lib1}`
+    );
+    expect(runCLI(`lint ${lib1}`)).toContain(
+      `Successfully ran target lint for project ${lib1}`
+    );
+    expect(runCLI(`test ${lib1}`)).toContain(
+      `Successfully ran target test for project ${lib1}`
     );
   }, 300_000);
 });
