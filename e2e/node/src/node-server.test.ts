@@ -193,7 +193,9 @@ describe('Node Applications + webpack', () => {
       return config;
     });
 
-    runCLI(`serve ${nodeApp1} --watch=false`);
+    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
+      output.includes('Hello World')
+    );
 
     checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
     checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
