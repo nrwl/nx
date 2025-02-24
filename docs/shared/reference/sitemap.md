@@ -6,7 +6,7 @@
     - [Why Nx?](/getting-started/why-nx)
     - [Editor Setup](/getting-started/editor-setup)
     - [Tutorials](/getting-started/tutorials)
-      - [TypeScript Packages](/getting-started/tutorials/typescript-packages-tutorial)
+      - [TypeScript Monorepo](/getting-started/tutorials/typescript-packages-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
       - [Gradle Monorepo](/getting-started/tutorials/gradle-tutorial)
