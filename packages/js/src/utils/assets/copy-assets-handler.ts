@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import {
   copyFileSync,
   existsSync,
@@ -169,8 +169,8 @@ export class CopyAssetsHandler {
       const pathFromRoot = path.relative(this.rootDir, event.path);
       for (const ag of this.assetGlobs) {
         if (
-          minimatch(pathFromRoot, ag.pattern) &&
-          !ag.ignore?.some((ig) => minimatch(pathFromRoot, ig)) &&
+          picomatch(ag.pattern)(pathFromRoot) &&
+          !ag.ignore?.some((ig) => picomatch(ig)(pathFromRoot)) &&
           !this.ignore.ignores(pathFromRoot)
         ) {
           const relPath = path.relative(ag.input, pathFromRoot);
@@ -192,7 +192,7 @@ export class CopyAssetsHandler {
   private filesToEvent(files: string[], assetGlob: AssetEntry): FileEvent[] {
     return files.reduce((acc, src) => {
       if (
-        !assetGlob.ignore?.some((ig) => minimatch(src, ig)) &&
+        !assetGlob.ignore?.some((ig) => picomatch(ig)(src)) &&
         !this.ignore.ignores(src)
       ) {
         const relPath = path.relative(assetGlob.input, src);
