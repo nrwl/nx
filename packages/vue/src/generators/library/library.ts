@@ -35,6 +35,7 @@ import {
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/src/generators/library/utils/add-release-config';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
   return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
@@ -59,17 +60,26 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: options.projectName,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,

@@ -17,10 +17,7 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  resolveImportPath,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
@@ -129,7 +126,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       {
-        name: resolveImportPath(host, options.projectName, options.projectRoot),
+        name: options.projectName,
         version: '0.0.1',
         private: true,
       }

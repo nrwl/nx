@@ -1,38 +1,28 @@
-import { Tree, extractLayoutDirectory, names, readNxJson } from '@nx/devkit';
+import { Tree, names, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-
-export function normalizeDirectory(options: Schema) {
-  options.directory = options.directory?.replace(/\\{1,2}/g, '/');
-  const { projectDirectory } = extractLayoutDirectory(options.directory);
-  return projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-}
-
-export function normalizeProjectName(options: Schema) {
-  return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
-}
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema<T>> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
 
   const nxJson = readNxJson(host);
   const addPlugin =
@@ -61,10 +51,12 @@ export async function normalizeOptions<T extends Schema = Schema>(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const normalized = {
     ...options,
-    name: appProjectName,
-    projectName: isUsingTsSolutionConfig
-      ? getImportPath(host, appProjectName)
-      : appProjectName,
+    projectName:
+      isUsingTsSolutionConfig &&
+      !options.name &&
+      !options.alwaysGenerateProjectJson
+        ? importPath
+        : appProjectName,
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,
@@ -72,6 +64,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
+    names: names(appProjectName),
     isUsingTsSolutionConfig,
   } as NormalizedSchema;
 

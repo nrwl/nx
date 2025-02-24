@@ -2,14 +2,14 @@ import { names, Tree } from '@nx/devkit';
 import { ApplicationGeneratorSchema, NormalizedSchema } from '../schema';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export async function normalizeOptions(
   host: Tree,
   options: ApplicationGeneratorSchema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
       ...options,
@@ -25,7 +25,7 @@ export async function normalizeOptions(
   const normalized = {
     ...options,
     rootProject,
-    name: names(options.name).fileName,
+    name: names(appProjectName).fileName,
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectName,

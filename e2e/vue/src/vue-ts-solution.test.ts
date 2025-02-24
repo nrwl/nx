@@ -1,17 +1,14 @@
 import {
   cleanupProject,
-  getSelectedPackageManager,
   newProject,
+  readJson,
   runCLI,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
 
-describe('Vue Plugin', () => {
+describe('Vue (TS solution)', () => {
   let proj: string;
-
-  const pm = getSelectedPackageManager();
 
   beforeAll(() => {
     proj = newProject({
@@ -56,5 +53,29 @@ describe('Vue Plugin', () => {
     expect(() => runCLI(`lint @proj/${lib}`)).not.toThrow();
     expect(() => runCLI(`test @proj/${lib}`)).not.toThrow();
     expect(() => runCLI(`build @proj/${lib}`)).not.toThrow();
+  }, 300_000);
+
+  it('should respect and support generating libraries with a name different than the import path', async () => {
+    const lib = uniq('lib');
+
+    runCLI(
+      `generate @nx/vue:library packages/${lib} --name=${lib} --bundler=vite --unitTestRunner=vitest --linter=eslint`
+    );
+
+    const packageJson = readJson(`packages/${lib}/package.json`);
+    expect(packageJson.nx.name).toBe(lib);
+
+    expect(runCLI(`build ${lib}`)).toContain(
+      `Successfully ran target build for project ${lib}`
+    );
+    expect(runCLI(`typecheck ${lib}`)).toContain(
+      `Successfully ran target typecheck for project ${lib}`
+    );
+    expect(runCLI(`lint ${lib}`)).toContain(
+      `Successfully ran target lint for project ${lib}`
+    );
+    expect(runCLI(`test ${lib}`)).toContain(
+      `Successfully ran target test for project ${lib}`
+    );
   }, 300_000);
 });

@@ -30,7 +30,7 @@ import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -96,7 +96,10 @@ export function addModuleFederationFiles(
 export async function remoteGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
-    ...(await normalizeOptions<Schema>(host, schema)),
+    ...(await normalizeOptions<Schema>(host, {
+      ...schema,
+      alwaysGenerateProjectJson: true,
+    })),
     // when js is set to true, we want to use the js configuration
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
@@ -111,20 +114,20 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   if (options.dynamic) {
     // Dynamic remotes generate with library { type: 'var' } by default.
     // We need to ensure that the remote name is a valid variable name.
-    const isValidRemote = isValidVariable(options.name);
+    const isValidRemote = isValidVariable(options.projectName);
     if (!isValidRemote.isValid) {
       throw new Error(
-        `Invalid remote name provided: ${options.name}. ${isValidRemote.message}`
+        `Invalid remote name provided: ${options.projectName}. ${isValidRemote.message}`
       );
     }
   }
 
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
   const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
-  if (!remoteNameRegex.test(options.name)) {
+  if (!remoteNameRegex.test(options.projectName)) {
     throw new Error(
-      stripIndents`Invalid remote name: ${options.name}. Remote project names must:
+      stripIndents`Invalid remote name: ${options.projectName}. Remote project names must:
       - Start with a letter, dollar sign ($) or underscore (_)
       - Followed by any valid character (letters, digits, underscores, or dollar signs)
       The regular expression used is ${REMOTE_NAME_REGEX}.`
@@ -132,14 +135,14 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   }
   const initAppTask = await applicationGenerator(host, {
     ...options,
-    name: options.name,
+    name: options.projectName,
     skipFormat: true,
     alwaysGenerateProjectJson: true,
   });
   tasks.push(initAppTask);
 
   if (options.host) {
-    updateHostWithRemote(host, options.host, options.name);
+    updateHostWithRemote(host, options.host, options.projectName);
   }
 
   // Module federation requires bootstrap code to be dynamically imported.

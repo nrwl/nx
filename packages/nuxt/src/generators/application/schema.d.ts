@@ -21,6 +21,7 @@ export interface Schema {
 export interface NormalizedSchema extends Schema {
   projectName: string;
   appProjectRoot: string;
+  importPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];

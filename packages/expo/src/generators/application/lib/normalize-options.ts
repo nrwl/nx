@@ -1,7 +1,7 @@
 import { names, readNxJson, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Schema } from '../schema';
@@ -10,6 +10,7 @@ export interface NormalizedSchema extends Schema {
   className: string;
   projectName: string;
   appProjectRoot: string;
+  importPath: string;
   lowerCaseName: string;
   parsedTags: string[];
   rootProject: boolean;
@@ -22,11 +23,12 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const {
     projectName: appProjectName,
     names: projectNames,
     projectRoot: appProjectRoot,
+    importPath,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
@@ -38,7 +40,7 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const { className } = names(options.name);
+  const { className } = names(appProjectName);
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
@@ -57,6 +59,7 @@ export async function normalizeOptions(
     displayName: options.displayName || className,
     projectName: appProjectName,
     appProjectRoot,
+    importPath,
     parsedTags,
     rootProject,
     e2eProjectName,

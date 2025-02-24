@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);

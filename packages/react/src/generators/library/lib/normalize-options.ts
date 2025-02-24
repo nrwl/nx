@@ -8,7 +8,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
@@ -20,7 +20,7 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -70,7 +70,7 @@ export async function normalizeOptions(
     bundler,
     fileName,
     routePath: `/${projectNames.projectSimpleName}`,
-    name: isUsingTsSolutionConfig ? importPath : projectName,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,

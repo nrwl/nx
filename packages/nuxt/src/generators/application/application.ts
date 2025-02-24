@@ -32,7 +32,6 @@ import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
@@ -68,7 +67,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   if (options.isUsingTsSolutionConfig) {
     writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+      name: options.importPath,
       version: '0.0.1',
       private: true,
       nx: {
