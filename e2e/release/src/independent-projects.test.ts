@@ -191,6 +191,7 @@ describe('nx release - independent projects', () => {
         {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
         {project-name} 📄 Using the provided version specifier "999.9.9-package.3".
         {project-name} ✍️  New version 999.9.9-package.3 written to {project-name}/package.json
+        {project-name} ✍️  Applying new version 999.9.9-package.3 to 1 package which depends on {project-name}
 
 
         "name": "@proj/{project-name}",

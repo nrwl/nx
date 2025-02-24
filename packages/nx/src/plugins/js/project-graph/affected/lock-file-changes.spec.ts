@@ -42,6 +42,7 @@ describe('getTouchedProjectsFromLockFile', () => {
     'pnpm-lock.yaml',
     'pnpm-lock.yml',
     'bun.lockb',
+    'bun.lock',
   ].forEach((lockFile) => {
     describe(`"${lockFile}"`, () => {
       it(`should not return changes when "${lockFile}" is not touched`, () => {

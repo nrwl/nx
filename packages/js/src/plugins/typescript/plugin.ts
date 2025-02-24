@@ -18,7 +18,7 @@ import {
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import picomatch = require('picomatch');
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import {
   basename,
   dirname,
@@ -34,7 +34,7 @@ import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import type { ParsedCommandLine } from 'typescript';
+import type { ParsedCommandLine, System } from 'typescript';
 import { addBuildAndWatchDepsTargets } from './util';
 
 export interface TscPluginOptions {
@@ -75,16 +75,24 @@ type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
 type ParsedTsconfigData = Pick<
   ParsedCommandLine,
   'options' | 'projectReferences' | 'raw'
->;
+> & {
+  extendedConfigFile: { filePath: string; externalPackage?: string } | null;
+};
 type TsconfigCacheData = {
   data: ParsedTsconfigData;
-  timestamp: number;
+  hash: string;
+  extendedFilesHash: string;
 };
 
 const pmc = getPackageManagerCommand();
 
 let tsConfigCache: Record<string, TsconfigCacheData>;
 const tsConfigCachePath = join(workspaceDataDirectory, 'tsconfig-files.hash');
+let cache: {
+  fileHashes: Record<string, string>;
+  rawFiles: Record<string, string>;
+  isExternalProjectReference: Record<string, boolean>;
+};
 
 function readFromCache<T extends object>(cachePath: string): T {
   try {
@@ -121,15 +129,10 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     );
     const targetsCache =
       readFromCache<Record<string, TscProjectResult>>(targetsCachePath);
-    tsConfigCache =
-      readFromCache<Record<string, TsconfigCacheData>>(tsConfigCachePath);
+    cache = { fileHashes: {}, rawFiles: {}, isExternalProjectReference: {} };
+    initializeTsConfigCache(configFilePaths, context.workspaceRoot);
+
     const normalizedOptions = normalizePluginOptions(options);
-    const lockFileHash = hashFile(
-      join(
-        context.workspaceRoot,
-        getLockFileName(detectPackageManager(context.workspaceRoot))
-      )
-    );
 
     const {
       configFilePaths: validConfigFilePaths,
@@ -138,7 +141,6 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
     } = await resolveValidConfigFilesAndHashes(
       configFilePaths,
       optionsHash,
-      lockFileHash,
       context
     );
 
@@ -173,7 +175,10 @@ export const createNodesV2: CreateNodesV2<TscPluginOptions> = [
       );
     } finally {
       writeToCache(targetsCachePath, targetsCache);
-      writeToCache(tsConfigCachePath, tsConfigCache);
+      writeToCache(
+        tsConfigCachePath,
+        toRelativePaths(tsConfigCache, context.workspaceRoot)
+      );
     }
   },
 ];
@@ -193,14 +198,19 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
     }
 
     const normalizedOptions = normalizePluginOptions(options);
-    tsConfigCache =
-      readFromCache<Record<string, TsconfigCacheData>>(tsConfigCachePath);
+    cache = { fileHashes: {}, rawFiles: {}, isExternalProjectReference: {} };
+    initializeTsConfigCache([configFilePath], context.workspaceRoot);
 
     const { targets } = buildTscTargets(
       join(context.workspaceRoot, configFilePath),
       projectRoot,
       normalizedOptions,
       context
+    );
+
+    writeToCache(
+      tsConfigCachePath,
+      toRelativePaths(tsConfigCache, context.workspaceRoot)
     );
 
     return {
@@ -217,17 +227,23 @@ export const createNodes: CreateNodes<TscPluginOptions> = [
 async function resolveValidConfigFilesAndHashes(
   configFilePaths: readonly string[],
   optionsHash: string,
-  lockFileHash: string,
   context: CreateNodesContext | CreateNodesContextV2
 ): Promise<{
   configFilePaths: string[];
   hashes: string[];
   projectRoots: string[];
 }> {
+  const lockFileHash =
+    hashFile(
+      join(
+        context.workspaceRoot,
+        getLockFileName(detectPackageManager(context.workspaceRoot))
+      )
+    ) ?? '';
+
   const validConfigFilePaths: string[] = [];
   const hashes: string[] = [];
   const projectRoots: string[] = [];
-  const fileHashesCache: Record<string, string> = {};
 
   for await (const configFilePath of configFilePaths) {
     const projectRoot = dirname(configFilePath);
@@ -245,8 +261,7 @@ async function resolveValidConfigFilesAndHashes(
         context.workspaceRoot,
         projectRoot,
         optionsHash,
-        lockFileHash,
-        fileHashesCache
+        lockFileHash
       )
     );
   }
@@ -271,17 +286,12 @@ async function getConfigFileHash(
   workspaceRoot: string,
   projectRoot: string,
   optionsHash: string,
-  lockFileHash: string,
-  fileHashesCache: Record<string, string>
+  lockFileHash: string
 ): Promise<string> {
   const fullConfigPath = join(workspaceRoot, configFilePath);
 
-  const tsConfig = readCachedTsConfig(fullConfigPath, workspaceRoot);
-  const extendedConfigFiles = getExtendedConfigFiles(
-    fullConfigPath,
-    tsConfig,
-    workspaceRoot
-  );
+  const tsConfig = retrieveTsConfigFromCache(fullConfigPath, workspaceRoot);
+  const extendedConfigFiles = getExtendedConfigFiles(tsConfig, workspaceRoot);
   const internalReferencedFiles = resolveInternalProjectReferences(
     tsConfig,
     workspaceRoot,
@@ -303,13 +313,11 @@ async function getConfigFileHash(
   return hashArray([
     ...[
       fullConfigPath,
-      ...extendedConfigFiles.files,
-      ...Object.keys(internalReferencedFiles),
-      ...Object.keys(externalProjectReferences),
-    ].map((file) => {
-      fileHashesCache[file] ??= hashFile(file);
-      return fileHashesCache[file];
-    }),
+      ...extendedConfigFiles.files.sort(),
+      ...Object.keys(internalReferencedFiles).sort(),
+      ...Object.keys(externalProjectReferences).sort(),
+    ].map((file) => getFileHash(file, workspaceRoot)),
+    ...extendedConfigFiles.packages.sort(),
     lockFileHash,
     optionsHash,
     ...(packageJson ? [hashObject(packageJson)] : []),
@@ -365,7 +373,10 @@ function buildTscTargets(
 ) {
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
-  const tsConfig = readCachedTsConfig(configFilePath, context.workspaceRoot);
+  const tsConfig = retrieveTsConfigFromCache(
+    configFilePath,
+    context.workspaceRoot
+  );
 
   let internalProjectReferences: Record<string, ParsedTsconfigData>;
   // Typecheck target
@@ -507,11 +518,7 @@ function getInputs(
   const configFiles = new Set<string>();
   const externalDependencies = ['typescript'];
 
-  const extendedConfigFiles = getExtendedConfigFiles(
-    configFilePath,
-    tsConfig,
-    workspaceRoot
-  );
+  const extendedConfigFiles = getExtendedConfigFiles(tsConfig, workspaceRoot);
   extendedConfigFiles.files.forEach((configPath) => {
     configFiles.add(configPath);
   });
@@ -863,7 +870,6 @@ function pathToInputOrOutput(
 }
 
 function getExtendedConfigFiles(
-  tsConfigPath: string,
   tsConfig: ParsedTsconfigData,
   workspaceRoot: string
 ): {
@@ -873,26 +879,17 @@ function getExtendedConfigFiles(
   const extendedConfigFiles = new Set<string>();
   const extendedExternalPackages = new Set<string>();
 
-  let currentConfigPath = tsConfigPath;
-  let currentConfig = tsConfig;
-  while (currentConfig.raw?.extends) {
-    const extendedConfigPath = resolveExtendedTsConfigPath(
-      currentConfig.raw.extends,
-      dirname(currentConfigPath)
-    );
-    if (!extendedConfigPath) {
+  let currentExtendedConfigFile = tsConfig.extendedConfigFile;
+  while (currentExtendedConfigFile) {
+    if (currentExtendedConfigFile.externalPackage) {
+      extendedExternalPackages.add(currentExtendedConfigFile.externalPackage);
       break;
     }
-    if (extendedConfigPath.externalPackage) {
-      extendedExternalPackages.add(extendedConfigPath.externalPackage);
-      break;
-    }
-    extendedConfigFiles.add(extendedConfigPath.filePath);
-    currentConfig = readCachedTsConfig(
-      extendedConfigPath.filePath,
+    extendedConfigFiles.add(currentExtendedConfigFile.filePath);
+    currentExtendedConfigFile = retrieveTsConfigFromCache(
+      currentExtendedConfigFile.filePath,
       workspaceRoot
-    );
-    currentConfigPath = extendedConfigPath.filePath;
+    ).extendedConfigFile;
   }
 
   return {
@@ -930,7 +927,7 @@ function resolveInternalProjectReferences(
     if (!refConfigPath.endsWith('.json')) {
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
-    projectReferences[refConfigPath] = readCachedTsConfig(
+    projectReferences[refConfigPath] = retrieveTsConfigFromCache(
       refConfigPath,
       workspaceRoot
     );
@@ -972,7 +969,7 @@ function resolveShallowExternalProjectReferences(
       if (!refConfigPath.endsWith('.json')) {
         refConfigPath = join(refConfigPath, 'tsconfig.json');
       }
-      projectReferences[refConfigPath] = readCachedTsConfig(
+      projectReferences[refConfigPath] = retrieveTsConfigFromCache(
         refConfigPath,
         workspaceRoot
       );
@@ -1013,7 +1010,7 @@ function hasExternalProjectReferences(
     if (!refConfigPath.endsWith('.json')) {
       refConfigPath = join(refConfigPath, 'tsconfig.json');
     }
-    const refTsConfig = readCachedTsConfig(refConfigPath, workspaceRoot);
+    const refTsConfig = retrieveTsConfigFromCache(refConfigPath, workspaceRoot);
     const result = hasExternalProjectReferences(
       refConfigPath,
       refTsConfig,
@@ -1035,12 +1032,18 @@ function isExternalProjectReference(
   workspaceRoot: string,
   projectRoot: string
 ): boolean {
+  const relativePath = posix.relative(workspaceRoot, refTsConfigPath);
+  if (cache.isExternalProjectReference[relativePath] !== undefined) {
+    return cache.isExternalProjectReference[relativePath];
+  }
+
   const absoluteProjectRoot = join(workspaceRoot, projectRoot);
 
   let currentPath = getTsConfigDirName(refTsConfigPath);
 
   if (relative(absoluteProjectRoot, currentPath).startsWith('..')) {
     // it's outside of the project root, so it's an external project reference
+    cache.isExternalProjectReference[relativePath] = true;
     return true;
   }
 
@@ -1050,12 +1053,14 @@ function isExternalProjectReference(
       existsSync(join(currentPath, 'project.json'))
     ) {
       // it's inside a nested project root, so it's and external project reference
+      cache.isExternalProjectReference[relativePath] = true;
       return true;
     }
     currentPath = dirname(currentPath);
   }
 
   // it's inside the project root, so it's an internal project reference
+  cache.isExternalProjectReference[relativePath] = false;
   return false;
 }
 
@@ -1065,42 +1070,122 @@ function getTsConfigDirName(tsConfigPath: string): string {
     : normalize(tsConfigPath);
 }
 
-function readCachedTsConfig(
+function retrieveTsConfigFromCache(
   tsConfigPath: string,
   workspaceRoot: string
 ): ParsedTsconfigData {
-  const relativeTsConfigPath = posix.relative(workspaceRoot, tsConfigPath);
-  const timestamp = statSync(tsConfigPath).mtimeMs;
+  const relativePath = posix.relative(workspaceRoot, tsConfigPath);
 
-  if (tsConfigCache[relativeTsConfigPath]?.timestamp === timestamp) {
-    return tsConfigCache[relativeTsConfigPath].data;
+  // we don't need to check the hash if it's in the cache, because we've already
+  // checked it when we initially populated the cache
+  return tsConfigCache[relativePath]
+    ? tsConfigCache[relativePath].data
+    : readTsConfigAndCache(tsConfigPath, workspaceRoot);
+}
+
+function initializeTsConfigCache(
+  configFilePaths: readonly string[],
+  workspaceRoot: string
+): void {
+  tsConfigCache = toAbsolutePaths(
+    readFromCache<Record<string, TsconfigCacheData>>(tsConfigCachePath),
+    workspaceRoot
+  );
+
+  // ensure hashes are checked and the cache is invalidated and populated as needed
+  for (const configFilePath of configFilePaths) {
+    const fullConfigPath = join(workspaceRoot, configFilePath);
+    readTsConfigAndCache(fullConfigPath, workspaceRoot);
+  }
+}
+
+function readTsConfigAndCache(
+  tsConfigPath: string,
+  workspaceRoot: string
+): ParsedTsconfigData {
+  const relativePath = posix.relative(workspaceRoot, tsConfigPath);
+  const hash = getFileHash(tsConfigPath, workspaceRoot);
+
+  let extendedFilesHash: string;
+  if (
+    tsConfigCache[relativePath] &&
+    tsConfigCache[relativePath].hash === hash
+  ) {
+    extendedFilesHash = getExtendedFilesHash(
+      tsConfigCache[relativePath].data.extendedConfigFile,
+      workspaceRoot
+    );
+    if (tsConfigCache[relativePath].extendedFilesHash === extendedFilesHash) {
+      return tsConfigCache[relativePath].data;
+    }
   }
 
-  const tsConfig = readTsConfig(tsConfigPath);
-  tsConfigCache[relativeTsConfigPath] = {
+  const tsConfig = readTsConfig(tsConfigPath, workspaceRoot);
+  const extendedConfigFile = tsConfig.raw?.extends
+    ? resolveExtendedTsConfigPath(tsConfig.raw.extends, dirname(tsConfigPath))
+    : null;
+  extendedFilesHash ??= getExtendedFilesHash(extendedConfigFile, workspaceRoot);
+
+  tsConfigCache[relativePath] = {
     data: {
       options: tsConfig.options,
       projectReferences: tsConfig.projectReferences,
       raw: tsConfig.raw,
+      extendedConfigFile: extendedConfigFile ?? null,
     },
-    timestamp,
+    hash,
+    extendedFilesHash,
   };
 
-  return tsConfig;
+  return tsConfigCache[relativePath].data;
+}
+
+function getExtendedFilesHash(
+  extendedConfigFile: ParsedTsconfigData['extendedConfigFile'] | null,
+  workspaceRoot: string
+): string {
+  const hashes: string[] = [];
+  if (!extendedConfigFile) {
+    return '';
+  }
+
+  if (extendedConfigFile.externalPackage) {
+    hashes.push(extendedConfigFile.externalPackage);
+  } else if (extendedConfigFile.filePath) {
+    hashes.push(getFileHash(extendedConfigFile.filePath, workspaceRoot));
+    hashes.push(
+      getExtendedFilesHash(
+        readTsConfigAndCache(extendedConfigFile.filePath, workspaceRoot)
+          .extendedConfigFile,
+        workspaceRoot
+      )
+    );
+  }
+
+  return hashes.join('|');
 }
 
 let ts: typeof import('typescript');
-function readTsConfig(tsConfigPath: string): ParsedCommandLine {
+function readTsConfig(
+  tsConfigPath: string,
+  workspaceRoot: string
+): ParsedCommandLine {
   if (!ts) {
     ts = require('typescript');
   }
-  const readResult = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+
+  const tsSys: System = {
+    ...ts.sys,
+    readFile: (path) => readFile(path, workspaceRoot),
+    readDirectory: () => [],
+  };
+  const readResult = ts.readConfigFile(tsConfigPath, tsSys.readFile);
 
   // read with a custom host that won't read directories which is only used
   // to identify the filenames included in the program, which we won't use
   return ts.parseJsonConfigFileContent(
     readResult.config,
-    { ...ts.sys, readDirectory: () => [] },
+    tsSys,
     dirname(tsConfigPath)
   );
 }
@@ -1173,4 +1258,136 @@ function resolveExtendedTsConfigPath(
   } catch {
     return null;
   }
+}
+
+function getFileHash(filePath: string, workspaceRoot: string): string {
+  const relativePath = posix.relative(workspaceRoot, filePath);
+  if (!cache.fileHashes[relativePath]) {
+    const content = readFile(filePath, workspaceRoot);
+    cache.fileHashes[relativePath] = hashArray([content]);
+  }
+
+  return cache.fileHashes[relativePath];
+}
+
+function readFile(filePath: string, workspaceRoot: string): string {
+  const relativePath = posix.relative(workspaceRoot, filePath);
+  if (!cache.rawFiles[relativePath]) {
+    const content = readFileSync(filePath, 'utf8');
+    cache.rawFiles[relativePath] = content;
+  }
+
+  return cache.rawFiles[relativePath];
+}
+
+function toAbsolutePaths(
+  cache: Record<string, TsconfigCacheData>,
+  workspaceRoot: string
+): Record<string, TsconfigCacheData> {
+  const updatedCache: Record<string, TsconfigCacheData> = {};
+  for (const [key, { data, extendedFilesHash, hash }] of Object.entries(
+    cache
+  )) {
+    updatedCache[key] = {
+      data: {
+        options: { noEmit: data.options.noEmit },
+        extendedConfigFile: data.extendedConfigFile,
+      },
+      extendedFilesHash,
+      hash,
+    };
+    if (data.options.rootDir) {
+      updatedCache[key].data.options.rootDir = join(
+        workspaceRoot,
+        data.options.rootDir
+      );
+    }
+    if (data.options.outDir) {
+      updatedCache[key].data.options.outDir = join(
+        workspaceRoot,
+        data.options.outDir
+      );
+    }
+    if (data.options.outFile) {
+      updatedCache[key].data.options.outFile = join(
+        workspaceRoot,
+        data.options.outFile
+      );
+    }
+    if (data.options.tsBuildInfoFile) {
+      updatedCache[key].data.options.tsBuildInfoFile = join(
+        workspaceRoot,
+        data.options.tsBuildInfoFile
+      );
+    }
+    if (data.extendedConfigFile?.filePath) {
+      updatedCache[key].data.extendedConfigFile.filePath = join(
+        workspaceRoot,
+        data.extendedConfigFile.filePath
+      );
+    }
+    if (data.projectReferences) {
+      updatedCache[key].data.projectReferences = data.projectReferences.map(
+        (ref) => ({ ...ref, path: join(workspaceRoot, ref.path) })
+      );
+    }
+  }
+
+  return updatedCache;
+}
+
+function toRelativePaths(
+  cache: Record<string, TsconfigCacheData>,
+  workspaceRoot: string
+): Record<string, TsconfigCacheData> {
+  const updatedCache: Record<string, TsconfigCacheData> = {};
+  for (const [key, { data, extendedFilesHash, hash }] of Object.entries(
+    cache
+  )) {
+    updatedCache[key] = {
+      data: {
+        options: { noEmit: data.options.noEmit },
+        extendedConfigFile: data.extendedConfigFile,
+      },
+      extendedFilesHash,
+      hash,
+    };
+    if (data.options.rootDir) {
+      updatedCache[key].data.options.rootDir = posix.relative(
+        workspaceRoot,
+        data.options.rootDir
+      );
+    }
+    if (data.options.outDir) {
+      updatedCache[key].data.options.outDir = posix.relative(
+        workspaceRoot,
+        data.options.outDir
+      );
+    }
+    if (data.options.outFile) {
+      updatedCache[key].data.options.outFile = posix.relative(
+        workspaceRoot,
+        data.options.outFile
+      );
+    }
+    if (data.options.tsBuildInfoFile) {
+      updatedCache[key].data.options.tsBuildInfoFile = posix.relative(
+        workspaceRoot,
+        data.options.tsBuildInfoFile
+      );
+    }
+    if (data.extendedConfigFile?.filePath) {
+      updatedCache[key].data.extendedConfigFile.filePath = posix.relative(
+        workspaceRoot,
+        data.extendedConfigFile.filePath
+      );
+    }
+    if (data.projectReferences) {
+      updatedCache[key].data.projectReferences = data.projectReferences.map(
+        (ref) => ({ ...ref, path: posix.relative(workspaceRoot, ref.path) })
+      );
+    }
+  }
+
+  return updatedCache;
 }

@@ -107,20 +107,22 @@ async function createNodesInternal(
 
   const normalizedOptions = normalizeOptions(options);
 
-  // We do not want to alter how the hash is calculated, so appending the config file path to the hash
-  // to prevent vite/vitest files overwriting the target cache created by the other
-
-  const nodeHash = hashArray([
-    ...[
-      join(context.workspaceRoot, configFilePath),
+  const lockFileHash =
+    hashFile(
       join(
         context.workspaceRoot,
         getLockFileName(detectPackageManager(context.workspaceRoot))
-      ),
-    ].map(hashFile),
-    hashObject(options),
+      )
+    ) ?? '';
+
+  const nodeHash = hashArray([
+    hashFile(join(context.workspaceRoot, configFilePath)),
+    lockFileHash,
+    hashObject({ ...options, isTsSolutionSetup }),
     hashObject(packageJson),
   ]);
+  // We do not want to alter how the hash is calculated, so appending the config file path to the hash
+  // to prevent vite/vitest files overwriting the target cache created by the other
   const hash = `${nodeHash}_${configFilePath}`;
 
   targetsCache[hash] ??= await createRspackTargets(
