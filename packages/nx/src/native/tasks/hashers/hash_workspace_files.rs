@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
+use crate::native::types::FileData;
 use anyhow::*;
 use dashmap::DashMap;
+use nx_glob::NxGlobSet;
+use nx_hasher::hash;
 use tracing::{debug, debug_span, trace, warn};
-
-use crate::native::types::FileData;
-use crate::native::{glob::build_glob_set, hasher::hash};
 
 pub fn hash_workspace_files(
     workspace_file_sets: &[String],
@@ -44,7 +44,7 @@ pub fn hash_workspace_files(
         return Ok(cache_results.clone());
     }
 
-    let glob = build_glob_set(&globs)?;
+    let glob = NxGlobSet::new(&globs)?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     debug_span!("Hashing workspace fileset", cache_key).in_scope(|| {
@@ -66,10 +66,9 @@ pub fn hash_workspace_files(
 
 #[cfg(test)]
 mod test {
-    use crate::native::hasher::hash;
-
     use super::*;
     use dashmap::DashMap;
+    use nx_hasher::hash;
     use std::sync::Arc;
 
     #[test]

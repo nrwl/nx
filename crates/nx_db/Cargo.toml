@@ -1,0 +1,20 @@
+[package]
+name = "nx_db"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+napi = { workspace = true }
+napi-derive = { workspace = true }
+nx_logger = { workspace = true }
+nx_utils = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+fs4 = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rusqlite = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

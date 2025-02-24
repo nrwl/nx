@@ -1,7 +1,8 @@
-use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::Task;
-use crate::native::types::{Input, NxJson};
+use nx_core::types::project_graph::{Project, ProjectGraph};
 use std::collections::HashMap;
+use nx_core::types::inputs::Input;
+use nx_core::types::nx_json::NxJson;
 
 #[derive(Debug)]
 pub(super) struct SplitInputs<'a> {
