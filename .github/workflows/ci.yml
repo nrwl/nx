@@ -37,6 +37,8 @@ jobs:
 
       - name: Set SHAs
         uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: 'master'
 
       - name: Start CI Run
         run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
@@ -147,6 +149,9 @@ jobs:
 
       - name: Set SHAs
         uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: 'master'
+        
 
       - name: Run E2E Tests for macOS
         run: |

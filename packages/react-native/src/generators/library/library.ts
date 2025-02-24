@@ -25,11 +25,7 @@ import {
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
-import {
-  nxVersion,
-  reactNativeVersion,
-  reactVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
@@ -38,9 +34,13 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import type { PackageJson } from 'nx/src/utils/package-json';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addReleaseConfigForNonTsSolution,
+  addReleaseConfigForTsSolution,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -107,7 +107,7 @@ export async function reactNativeLibraryGeneratorInternal(
   tasks.push(jestTask);
 
   if (options.publishable || options.buildable) {
-    updateLibPackageNpmScope(host, options);
+    tasks.push(await releaseTasks(host));
   }
 
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
@@ -179,8 +179,15 @@ async function addProject(
       nx: {
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
+      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
+    if (options.publishable) {
+      await addReleaseConfigForTsSolution(host, options.name, project);
+    }
   } else {
+    if (options.publishable) {
+      await addReleaseConfigForNonTsSolution(host, options.name, project);
+    }
     addProjectConfiguration(host, options.name, project);
   }
 
@@ -276,26 +283,11 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  if (!options.publishable && !options.buildable) {
-    host.delete(`${options.projectRoot}/package.json`);
-  }
-
   if (options.js) {
     toJS(host);
   }
 
   updateTsConfig(host, options);
-}
-
-function updateLibPackageNpmScope(host: Tree, options: NormalizedSchema) {
-  return updateJson(host, `${options.projectRoot}/package.json`, (json) => {
-    json.name = options.importPath;
-    json.peerDependencies = {
-      react: reactVersion,
-      'react-native': reactNativeVersion,
-    };
-    return json;
-  });
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {
@@ -307,10 +299,6 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 function determineEntryFields(
   options: NormalizedSchema
 ): Pick<PackageJson, 'main' | 'types' | 'exports'> {
-  if (options.buildable) {
-    return {};
-  }
-
   return {
     main: options.js ? './src/index.js' : './src/index.ts',
     types: options.js ? './src/index.js' : './src/index.ts',
