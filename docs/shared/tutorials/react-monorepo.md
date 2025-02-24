@@ -863,7 +863,16 @@ If you're ready and want to ship your applications, you can build them using
 
 All the required files will be placed in `/apps/react-store/dist` and `/apps/inventory/dist` and can be deployed to your favorite hosting provider.
 
-You can even create your own `deploy` task that sends the build output to your hosting provider.
+Nx will run any script defined in `package.json`, so you can create a `deploy` task that sends the build output to your hosting provider.
+
+```json {% fileName="apps/react-store/package.json" %}
+{
+  "scripts": {
+    "deploy": "netlify deploy --dir=dist"
+}
+```
+
+We want to let Nx know that the `build` task needs to be run before the `deploy` task, so we add a `dependsOn` property for that target.
 
 ```json {% fileName="apps/react-store/package.json" %}
 {
@@ -873,6 +882,22 @@ You can even create your own `deploy` task that sends the build output to your h
   "nx": {
     "targets": {
       "deploy": {
+        "dependsOn": ["build"]
+      }
+    }
+  }
+}
+```
+
+If you want to keep the script next to its Nx configuration, you can rewrite the above configuration like this:
+
+```json {% fileName="apps/react-store/package.json" %}
+{
+  "scripts": {},
+  "nx": {
+    "targets": {
+      "deploy": {
+        "command": "netlify deploy --dir=dist",
         "dependsOn": ["build"]
       }
     }
@@ -905,7 +930,7 @@ When building these kinds of constraints you usually have two dimensions:
 - **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library
 - **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
 
-Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `pacakge.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
+Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `package.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
 
 ```json {% fileName="libs/orders/package.json" %}
 {
