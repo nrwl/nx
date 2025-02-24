@@ -21,7 +21,8 @@ import { NormalizedSchema } from '../schema';
 
 export async function addRollupBuildTarget(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema & { format?: Array<'esm' | 'cjs'> },
+  external: Set<String> = new Set(['react', 'react-dom'])
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -51,12 +52,10 @@ export async function addRollupBuildTarget(
     );
   }
 
-  const external: string[] = ['react', 'react-dom'];
-
   if (options.style === '@emotion/styled') {
-    external.push('@emotion/react/jsx-runtime');
+    external.add('@emotion/react/jsx-runtime');
   } else {
-    external.push('react/jsx-runtime');
+    external.add('react/jsx-runtime');
   }
 
   const nxJson = readNxJson(host);
@@ -87,7 +86,7 @@ module.exports = withNx(
     }',
     tsConfig: './tsconfig.lib.json',
     compiler: '${options.compiler ?? 'babel'}',
-    external: ${JSON.stringify(external)},
+    external: ${JSON.stringify(Array.from(external))},
     format: ['esm'],
     assets:[{ input: '.', output: '.', glob: 'README.md'}],
   }, {
@@ -117,7 +116,7 @@ module.exports = withNx(
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
-        external,
+        external: Array.from(external),
         rollupConfig: `@nx/react/plugins/bundle-rollup`,
         compiler: options.compiler ?? 'babel',
         assets: [

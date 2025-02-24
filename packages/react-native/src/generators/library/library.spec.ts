@@ -10,6 +10,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
 import { Linter } from '@nx/eslint';
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
 import { Schema } from './schema';
 
 describe('lib', () => {
@@ -309,40 +310,27 @@ describe('lib', () => {
   });
 
   describe('--buildable', () => {
-    it('should have a builder defined', async () => {
+    it('should add a rollup.config.cjs', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         buildable: true,
       });
 
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-
-      expect(projectConfiguration.targets.build).toBeDefined();
+      expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
+      expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
   });
 
   describe('--publishable', () => {
-    it('should add build architect', async () => {
+    it('should add a rollup.config.cjs', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
         importPath: '@proj/my-lib',
       });
 
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-
-      expect(projectConfiguration.targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          external: ['react/jsx-runtime', 'react-native', 'react', 'react-dom'],
-          entryFile: 'my-lib/src/index.ts',
-          outputPath: 'dist/my-lib',
-          project: 'my-lib/package.json',
-          tsConfig: 'my-lib/tsconfig.lib.json',
-          rollupConfig: '@nx/react/plugins/bundle-rollup',
-        },
-      });
+      expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
+      expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
 
     it('should fail if no importPath is provided with publishable', async () => {
@@ -492,16 +480,22 @@ describe('lib', () => {
         ]
       `);
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(appTree, 'my-lib/package.json')))
-        .toMatchInlineSnapshot(`
-        [
-          "name",
-          "version",
-          "main",
-          "types",
-          "exports",
-          "nx",
-        ]
+      expect(readJson(appTree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
+          "main": "./src/index.ts",
+          "name": "@proj/my-lib",
+          "nx": {},
+          "types": "./src/index.ts",
+          "version": "0.0.1",
+        }
       `);
       expect(readJson(appTree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
         {

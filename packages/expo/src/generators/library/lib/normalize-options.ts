@@ -14,7 +14,6 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   routePath: string;
   parsedTags: string[];
-  appMain: string;
   isUsingTsSolutionConfig: boolean;
 }
 
@@ -43,7 +42,6 @@ export async function normalizeOptions(
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-  const appMain = options.js ? 'src/index.js' : 'src/index.ts';
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const normalized: NormalizedSchema = {
@@ -52,12 +50,11 @@ export async function normalizeOptions(
     routePath: `/${projectNames.projectSimpleName}`,
     name: projectName,
     projectName: isUsingTsSolutionConfig
-      ? getImportPath(host, projectName)
+      ? importPath ?? getImportPath(host, projectName)
       : projectName,
     projectRoot,
     parsedTags,
     importPath,
-    appMain,
     isUsingTsSolutionConfig,
   };
 

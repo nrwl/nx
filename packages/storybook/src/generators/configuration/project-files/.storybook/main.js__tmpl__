@@ -48,11 +48,18 @@ const config = {
       },
       resolve: {
         extensions: [
+          '.mjs',
           '.web.tsx',
+          '.tsx',
           '.web.ts',
+          '.ts',
           '.web.jsx',
+          '.jsx',
           '.web.js',
-          ...(config.resolve.extensions ?? []),
+          '.js',
+          '.css',
+          '.json',
+          ...(config.resolve?.extensions ?? []),
         ],
         alias: {
           'react-native': 'react-native-web',

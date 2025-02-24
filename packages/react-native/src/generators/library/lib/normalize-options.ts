@@ -51,7 +51,7 @@ export async function normalizeOptions(
     fileName: projectName,
     routePath: `/${projectNames.projectSimpleName}`,
     name: isUsingTsSolutionConfig
-      ? getImportPath(host, projectName)
+      ? options.importPath ?? getImportPath(host, projectName)
       : projectName,
     projectRoot,
     parsedTags,
