@@ -67,7 +67,6 @@ function installDependencies(options: NormalizedOptions) {
     'web-vitals',
     'jest-watch-typeahead',
     'vite',
-    'vite-tsconfig-paths',
     'vitest',
   ];
 
