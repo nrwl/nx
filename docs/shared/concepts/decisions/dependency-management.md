@@ -1,3 +1,8 @@
+---
+title: Dependency Management Strategies
+description: Compare independently maintained dependencies versus single version policy approaches for monorepos, with guidance on choosing the right strategy for your team.
+---
+
 # Dependency Management Strategies
 
 When working with a monorepo, one of the key architectural decisions is how to manage dependencies across your projects. This document outlines two main strategies and helps you choose the right approach for your team.
