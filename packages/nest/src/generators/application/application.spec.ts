@@ -62,6 +62,7 @@ describe('application generator', () => {
                 "buildTarget": "my-node-app:build:production",
               },
             },
+            "continuous": true,
             "defaultConfiguration": "development",
             "dependsOn": [
               "build",
@@ -242,6 +243,7 @@ describe('application generator', () => {
                     "buildTarget": "@proj/myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
