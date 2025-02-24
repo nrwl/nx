@@ -1,3 +1,8 @@
+---
+title: Module Federation and Nx
+description: Learn how Nx provides out-of-the-box support for Module Federation, making it easier to share code between applications in a monorepo environment.
+---
+
 # Module Federation and Nx
 
 Module Federation is a technique that allows developers to share code and resources across multiple applications. It has become more popular in recent years since the addition of the [ModuleFederationPlugin](https://webpack.js.org/plugins/module-federation-plugin/) in [Webpack](https://webpack.js.org).
