@@ -61,9 +61,9 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
-{% link-card title="TypeScript Packages" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
+{% link-card title="TypeScript Monorepo" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
 
-{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
+{% link-card title="React-Focused TypeScript Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
 
 {% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
 
