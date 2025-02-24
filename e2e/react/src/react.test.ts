@@ -422,12 +422,16 @@ describe('React Applications', () => {
         return config;
       });
       updateFile(
+        `apps/${appName}/src/base.${style}`,
+        `html { font-family: "Comic Sans MS"; }`
+      );
+      updateFile(
         `apps/${appName}/src/styles.${style}`,
         `@import 'base.${style}';`
       );
       updateFile(
         `apps/${appName}/src/app/app.module.${style}`,
-        (s) => `@import 'base.${style}';\n${s}`
+        (s) => `@import '../base.${style}';\n${s}`
       );
       updateFile(
         `libs/shared/lib/base.${style}`,
