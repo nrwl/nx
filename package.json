@@ -184,7 +184,7 @@
     "ejs": "^3.1.7",
     "emnapi": "^1.2.0",
     "enhanced-resolve": "^5.8.3",
-    "esbuild": "0.19.5",
+    "esbuild": "0.25.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.16",
     "eslint-config-prettier": "9.1.0",
