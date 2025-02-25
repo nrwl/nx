@@ -22,7 +22,7 @@ export function writeViteConfig(
     `import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import replace from '@rollup/plugin-replace';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 // Match CRA's environment variables.
 // TODO: Replace these with VITE_ prefixed environment variables, and using import.meta.env.VITE_* instead of process.env.REACT_APP_*.
@@ -54,7 +54,7 @@ export default defineConfig({
   plugins: [
     react(),
     replace({ values: craEnvVars, preventAssignment: true }),
-    tsconfigPaths(),
+    nxViteTsPaths(),
   ],
 });
 `

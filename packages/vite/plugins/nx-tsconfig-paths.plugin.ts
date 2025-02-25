@@ -48,6 +48,7 @@ export interface nxViteTsPathsOptions {
 }
 
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
+  let foundTsConfigPath: string;
   let matchTsPathEsm: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;
   let tsConfigPathsEsm: ConfigLoaderSuccessResult;
@@ -79,7 +80,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     async configResolved(config: any) {
       projectRoot = config.root;
       const projectRootFromWorkspaceRoot = relative(workspaceRoot, projectRoot);
-      let foundTsConfigPath = getTsConfig(
+      foundTsConfigPath = getTsConfig(
         process.env.NX_TSCONFIG_PATH ??
           join(
             workspaceRoot,
@@ -89,10 +90,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
             'tsconfig.generated.json'
           )
       );
-      if (!foundTsConfigPath) {
-        throw new Error(stripIndents`Unable to find a tsconfig in the workspace! 
-There should at least be a tsconfig.base.json or tsconfig.json in the root of the workspace ${workspaceRoot}`);
-      }
+
+      if (!foundTsConfigPath) return;
 
       if (
         !options.buildLibsFromSource &&
@@ -164,6 +163,9 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       }
     },
     resolveId(importPath: string) {
+      // Let other resolvers handle this path.
+      if (!foundTsConfigPath) return null;
+
       let resolvedFile: string;
       try {
         resolvedFile = matchTsPathEsm(importPath);
@@ -211,6 +213,7 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
       resolve(preferredTsConfigPath),
       resolve(join(workspaceRoot, 'tsconfig.base.json')),
       resolve(join(workspaceRoot, 'tsconfig.json')),
+      resolve(join(workspaceRoot, 'jsconfig.json')),
     ].find((tsPath) => {
       if (existsSync(tsPath)) {
         logIt('Found tsconfig at', tsPath);

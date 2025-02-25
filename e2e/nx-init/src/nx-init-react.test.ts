@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
   getPackageManagerCommand,
   getPublishedVersion,
   getSelectedPackageManager,
@@ -19,7 +20,7 @@ import {
   updateJson,
 } from '../../utils';
 
-describe('nx init (for React - legacy)', () => {
+describe('nx init (React)', () => {
   let pmc: ReturnType<typeof getPackageManagerCommand>;
 
   beforeAll(() => {
@@ -28,7 +29,7 @@ describe('nx init (for React - legacy)', () => {
     });
   });
 
-  it('should convert to an standalone workspace with Vite', () => {
+  it('should convert a CRA project to Vite', () => {
     const appName = 'my-app';
     createReactApp(appName);
 
@@ -60,6 +61,41 @@ describe('nx init (for React - legacy)', () => {
 
     const unitTestsOutput = runCLI(`test ${appName}`);
     expect(unitTestsOutput).toContain('Successfully ran target test');
+  });
+
+  it('should support path aliases', () => {
+    const appName = 'my-app';
+    createReactApp(appName);
+    createFile(
+      'jsconfig.json',
+      JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            'foo/*': ['src/foo/*'],
+          },
+        },
+      })
+    );
+    createFile('src/foo/Foo.js', `export const Foo = () => <p>Foo</p>;`);
+    updateFile(
+      'src/App.js',
+      `
+      import { Foo } from 'foo/Foo';
+      function App() {
+        return <Foo />;
+      }
+      export default App;
+    `
+    );
+
+    runCommand(
+      `${
+        pmc.runUninstalledPackage
+      } nx@${getPublishedVersion()} init --no-interactive`
+    );
+
+    expect(() => runCLI(`build ${appName}`)).not.toThrow();
   });
 
   function createReactApp(appName: string) {
