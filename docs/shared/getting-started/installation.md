@@ -136,7 +136,7 @@ To avoid potential issues, it is [recommended to update one major version of Nx 
 
 Try one of these tutorials for a full walkthrough of what to do after you install Nx
 
-- [TypeScript Packages Tutorial](/getting-started/tutorials/typescript-packages-tutorial)
+- [TypeScript Monorepo Tutorial](/getting-started/tutorials/typescript-packages-tutorial)
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 

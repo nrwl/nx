@@ -50,6 +50,8 @@
               "@module-federation/enhanced",
               "css-loader",
               "webpack",
+              "sass-embedded",
+              "sass",
               "ts-checker-rspack-plugin"
             ]
           }

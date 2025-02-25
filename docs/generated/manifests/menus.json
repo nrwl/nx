@@ -47,7 +47,7 @@
             "isExternal": false,
             "children": [
               {
-                "name": "TypeScript Packages",
+                "name": "TypeScript Monorepo",
                 "path": "/getting-started/tutorials/typescript-packages-tutorial",
                 "id": "typescript-packages-tutorial",
                 "isExternal": false,
@@ -123,7 +123,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "TypeScript Packages",
+            "name": "TypeScript Monorepo",
             "path": "/getting-started/tutorials/typescript-packages-tutorial",
             "id": "typescript-packages-tutorial",
             "isExternal": false,
@@ -158,7 +158,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "TypeScript Packages",
+        "name": "TypeScript Monorepo",
         "path": "/getting-started/tutorials/typescript-packages-tutorial",
         "id": "typescript-packages-tutorial",
         "isExternal": false,

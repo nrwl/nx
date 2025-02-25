@@ -41,7 +41,7 @@
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "TypeScript Packages",
+                  "name": "TypeScript Monorepo",
                   "id": "typescript-packages-tutorial",
                   "file": "shared/tutorials/typescript-packages"
                 },

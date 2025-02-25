@@ -33,7 +33,7 @@ Someone who appreciates the flexibility of a package-based repository will be mo
 - Easily create new projects or tools with [code generators](/features/generate-code)
 
 {% cards %}
-{% card title="TypeScript Packages Tutorial" description="Add Nx to an existing TypeScript repo" type="documentation" url="/getting-started/tutorials/typescript-packages-tutorial" /%}
+{% card title="TypeScript Monorepo Tutorial" description="Add Nx to an existing TypeScript repo" type="documentation" url="/getting-started/tutorials/typescript-packages-tutorial" /%}
 {% /cards %}
 
 ## Integrated Repos

@@ -59,7 +59,7 @@
         "itemList": [
           {
             "id": "typescript-packages-tutorial",
-            "name": "TypeScript Packages",
+            "name": "TypeScript Monorepo",
             "description": "",
             "mediaImage": "",
             "file": "shared/tutorials/typescript-packages",
@@ -164,7 +164,7 @@
     "itemList": [
       {
         "id": "typescript-packages-tutorial",
-        "name": "TypeScript Packages",
+        "name": "TypeScript Monorepo",
         "description": "",
         "mediaImage": "",
         "file": "shared/tutorials/typescript-packages",
@@ -213,7 +213,7 @@
   },
   "/getting-started/tutorials/typescript-packages-tutorial": {
     "id": "typescript-packages-tutorial",
-    "name": "TypeScript Packages",
+    "name": "TypeScript Monorepo",
     "description": "",
     "mediaImage": "",
     "file": "shared/tutorials/typescript-packages",
