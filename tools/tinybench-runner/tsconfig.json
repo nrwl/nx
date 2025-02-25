@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../build/bench-out",
+    "module": "commonjs",
+    "types": ["node"]
+  },
+  "include": ["../../**/*.ts"]
+}

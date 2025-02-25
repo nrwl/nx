@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "CommonJS",
     "outDir": "../../dist/out-tsc",
     "declaration": true,
     "types": ["node"]
@@ -11,8 +11,7 @@
     "**/*_spec.ts",
     "jest.config.ts",
     "**/__fixtures__/**/*.*",
-    "./src/internal-testing-utils/**/*.ts",
-    "**/*.benchmark.ts"
+    "./src/internal-testing-utils/**/*.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.benchmark.ts"]
 }

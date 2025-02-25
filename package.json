@@ -46,6 +46,7 @@
     "@babel/preset-react": "^7.22.5",
     "@babel/preset-typescript": "^7.22.5",
     "@babel/runtime": "^7.22.6",
+    "@codspeed/tinybench-plugin": "^4.0.0",
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^2.1.1",
     "@eslint/js": "^8.48.0",
@@ -377,6 +378,7 @@
     "tailwind-merge": "^2.4.0",
     "tailwindcss": "3.4.4",
     "three": "^0.166.1",
+    "tinybench": "^2.9.0",
     "tslib": "^2.3.0",
     "webpack-cli": "^5.1.4"
   },
