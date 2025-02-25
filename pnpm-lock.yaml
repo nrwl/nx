@@ -120,6 +120,9 @@ importers:
       npm-run-path:
         specifier: ^4.0.1
         version: 4.0.1
+      picomatch:
+        specifier: 4.0.2
+        version: 4.0.2
       preact:
         specifier: 10.25.4
         version: 10.25.4
@@ -505,6 +508,9 @@ importers:
       '@types/npm-package-arg':
         specifier: 6.1.1
         version: 6.1.1
+      '@types/picomatch':
+        specifier: 3.0.2
+        version: 3.0.2
       '@types/react':
         specifier: 18.3.1
         version: 18.3.1
@@ -7281,6 +7287,9 @@ packages:
 
   '@types/phoenix@1.6.5':
     resolution: {integrity: sha512-xegpDuR+z0UqG9fwHqNoy3rI7JDlvaPh2TY47Fl80oq6g+hXT+c/LEuE43X48clZ6lOfANl5WrPur9fYO1RJ/w==}
+
+  '@types/picomatch@3.0.2':
+    resolution: {integrity: sha512-n0i8TD3UDB7paoMMxA3Y65vUncFJXjcUf7lQY7YyKGl6031FNjfsLs6pdLFCy2GNFxItPJG8GvvpbZc2skH7WA==}
 
   '@types/prettier@2.7.3':
     resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
@@ -25666,6 +25675,8 @@ snapshots:
   '@types/parse-json@4.0.2': {}
 
   '@types/phoenix@1.6.5': {}
+
+  '@types/picomatch@3.0.2': {}
 
   '@types/prettier@2.7.3': {}
 
