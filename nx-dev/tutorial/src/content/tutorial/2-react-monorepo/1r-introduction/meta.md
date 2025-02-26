@@ -4,6 +4,7 @@ title: Introduction
 editor:
   fileTree:
     allowEdits: true
+prepareCommands: []
 filesystem:
   watch:
     [

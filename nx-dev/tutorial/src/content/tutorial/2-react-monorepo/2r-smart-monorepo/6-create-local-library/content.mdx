@@ -33,7 +33,7 @@ When you develop your React application, usually all your logic sits in the `app
    │     │  ├─ ...
    │     │  └─ main.tsx
    │     ├─ ...
-   │     └─ project.json
+   │     └─ package.json
    ├─ nx.json
    ├─ ...
 ```
@@ -69,7 +69,7 @@ Running the above commands should lead to the following directory structure:
    ├─ libs
    │  ├─ products
    │  │  ├─ ...
-   │  │  ├─ project.json
+   │  │  ├─ package.json
    │  │  ├─ src
    │  │  │  ├─ index.ts
    │  │  │  └─ lib
@@ -81,7 +81,7 @@ Running the above commands should lead to the following directory structure:
    │  │  └─ vite.config.ts
    │  ├─ orders
    │  │  ├─ ...
-   │  │  ├─ project.json
+   │  │  ├─ package.json
    │  │  ├─ src
    │  │  │  ├─ index.ts
    │  │  │  └─ ...
@@ -89,7 +89,7 @@ Running the above commands should lead to the following directory structure:
    │  └─ shared
    │     └─ ui
    │        ├─ ...
-   │        ├─ project.json
+   │        ├─ package.json
    │        ├─ src
    │        │  ├─ index.ts
    │        │  └─ ...
@@ -100,7 +100,7 @@ Running the above commands should lead to the following directory structure:
 Each of these libraries
 
 - has a project details view where you can see the available tasks (e.g. running tests for just orders: `npx nx test orders`)
-- has its own `project.json` file where you can customize targets
-- has the name you specified in the generate command; you can find the name in the corresponding `project.json` file
+- has its own `package.json` file where you can customize targets
+- has the name you specified in the generate command; you can find the name in the corresponding `package.json` file
 - has a dedicated `index.ts` file which is the "public API" of the library
-- is mapped in the `tsconfig.base.json` at the root of the workspace
+- is included in the `workspaces` property of the `package.json` file at the root of the workspace
