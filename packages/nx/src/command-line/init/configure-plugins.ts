@@ -1,6 +1,5 @@
 import * as createSpinner from 'ora';
 import { bold } from 'chalk';
-import { execSync } from 'child_process';
 
 import {
   getPackageManagerCommand,
@@ -10,13 +9,13 @@ import { output } from '../../utils/output';
 import { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { addDepsToPackageJson, runInstall } from './implementation/utils';
-import { getPluginCapabilities } from '../../utils/plugins';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import {
   isAggregateCreateNodesError,
   isProjectConfigurationsError,
   isProjectsWithNoNameError,
 } from '../../project-graph/error-types';
+import { generate } from '../generate/generate';
 
 export function runPackageManagerInstallPlugins(
   repoRoot: string,
@@ -31,47 +30,6 @@ export function runPackageManagerInstallPlugins(
 }
 
 /**
- * Installs a plugin by running its init generator. It will change the file system tree passed in.
- * @param plugin The name of the plugin to install
- * @param repoRoot repo root
- * @param pmc package manager commands
- * @param updatePackageScripts whether to update package scripts
- * @param verbose whether to run in verbose mode
- * @returns void
- */
-export async function installPlugin(
-  plugin: string,
-  repoRoot: string = workspaceRoot,
-  updatePackageScripts: boolean = false,
-  verbose: boolean = false,
-  pmc: PackageManagerCommands = getPackageManagerCommand()
-): Promise<void> {
-  const capabilities = await getPluginCapabilities(repoRoot, plugin, {});
-  const generators = capabilities?.generators;
-  if (!generators) {
-    throw new Error(`No generators found in ${plugin}.`);
-  }
-
-  const initGenerator = findInitGenerator(generators);
-  if (!initGenerator) {
-    output.log({
-      title: `No "init" generator found in ${plugin}. Skipping initialization.`,
-    });
-    return;
-  }
-  execSync(
-    `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-      updatePackageScripts ? '--updatePackageScripts' : ''
-    } ${verbose ? '--verbose' : ''}`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-      windowsHide: false,
-    }
-  );
-}
-
-/**
  * Install plugins
  * Get the implementation of the plugin's init generator and run it
  * @returns a list of succeeded plugins and a map of failed plugins to errors
@@ -79,9 +37,9 @@ export async function installPlugin(
 export async function installPlugins(
   plugins: string[],
   updatePackageScripts: boolean,
-  pmc: PackageManagerCommands,
   repoRoot: string = workspaceRoot,
-  verbose: boolean = false
+  verbose: boolean = false,
+  interactive: boolean = false
 ): Promise<{
   succeededPlugins: string[];
   failedPlugins: { [plugin: string]: Error };
@@ -101,9 +59,21 @@ export async function installPlugins(
   for (const plugin of plugins) {
     try {
       spinner.start('Installing plugin ' + plugin);
-      await installPlugin(plugin, repoRoot, updatePackageScripts, verbose, pmc);
-      succeededPlugins.push(plugin);
-      spinner.succeed('Installed plugin ' + plugin);
+      const status = await generate({
+        generator: `${plugin}:init`,
+        verbose,
+        interactive,
+        updatePackageScripts,
+      });
+      if (typeof status === 'number' && status !== 0) {
+        failedPlugins[plugin] = new Error(
+          `Failed to install plugin ${plugin} with status ${status}`
+        );
+        spinner.fail('Failed to install plugin ' + plugin);
+      } else {
+        succeededPlugins.push(plugin);
+        spinner.succeed('Installed plugin ' + plugin);
+      }
     } catch (e) {
       failedPlugins[plugin] = e;
       spinner.fail('Failed to install plugin ' + plugin);
@@ -125,7 +95,8 @@ export async function configurePlugins(
   updatePackageScripts: boolean,
   pmc: PackageManagerCommands,
   repoRoot: string = workspaceRoot,
-  verbose: boolean = false
+  verbose: boolean = false,
+  interactive: boolean = false
 ): Promise<{
   succeededPlugins: string[];
   failedPlugins: { [plugin: string]: Error };
@@ -141,9 +112,9 @@ export async function configurePlugins(
   let { succeededPlugins, failedPlugins } = await installPlugins(
     plugins,
     updatePackageScripts,
-    pmc,
     repoRoot,
-    verbose
+    verbose,
+    interactive
   );
 
   if (succeededPlugins.length > 0) {

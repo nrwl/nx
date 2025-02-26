@@ -301,122 +301,127 @@ export function printGenHelp(
   );
 }
 
-export async function generate(args: { [k: string]: any }) {
-  return handleErrors(args.verbose, async () => {
-    const nxJsonConfiguration = readNxJson();
-    const projectGraph = await createProjectGraphAsync();
-    const projectsConfigurations =
-      readProjectsConfigurationFromProjectGraph(projectGraph);
-    const opts = await convertToGenerateOptions(
-      args,
-      'generate',
-      projectsConfigurations
-    );
+export async function generateWithHadleErrors(args: {
+  [k: string]: any;
+}): Promise<number> {
+  return handleErrors(args.verbose, async () => await generate(args));
+}
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-      generatorConfiguration: {
-        aliases,
-        hidden,
-        ['x-deprecated']: deprecated,
-        ['x-use-standalone-layout']: isStandalonePreset,
-      },
-    } = getGeneratorInformation(
+export async function generate(args: {
+  [k: string]: any;
+}): Promise<void | number> {
+  const nxJsonConfiguration = readNxJson();
+  const projectGraph = await createProjectGraphAsync();
+  const projectsConfigurations =
+    readProjectsConfigurationFromProjectGraph(projectGraph);
+  const opts: GenerateOptions = await convertToGenerateOptions(
+    args,
+    'generate',
+    projectsConfigurations
+  );
+
+  const {
+    normalizedGeneratorName,
+    schema,
+    implementationFactory,
+    generatorConfiguration: {
+      aliases,
+      ['x-deprecated']: deprecated,
+      ['x-use-standalone-layout']: isStandalonePreset,
+    },
+  } = getGeneratorInformation(
+    opts.collectionName,
+    opts.generatorName,
+    workspaceRoot,
+    projectsConfigurations.projects
+  );
+
+  if (deprecated) {
+    logger.warn(
+      [
+        `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
+        `${deprecated}`,
+      ].join('\n')
+    );
+  }
+  if (!opts.quiet && !opts.help) {
+    logger.info(
+      `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
+    );
+  }
+
+  if (opts.help) {
+    printGenHelp(opts, schema, normalizedGeneratorName, aliases);
+    return 0;
+  }
+
+  const cwd = getCwd();
+
+  const combinedOpts = await combineOptionsForGenerator(
+    opts.generatorOptions,
+    opts.collectionName,
+    normalizedGeneratorName,
+    projectsConfigurations,
+    nxJsonConfiguration,
+    schema,
+    opts.interactive,
+    calculateDefaultProjectName(
+      cwd,
+      workspaceRoot,
+      projectsConfigurations,
+      nxJsonConfiguration
+    ),
+    relative(workspaceRoot, cwd),
+    args.verbose
+  );
+
+  if (
+    getGeneratorInformation(
       opts.collectionName,
-      opts.generatorName,
+      normalizedGeneratorName,
       workspaceRoot,
       projectsConfigurations.projects
+    ).isNxGenerator
+  ) {
+    const host = new FsTree(
+      workspaceRoot,
+      args.verbose,
+      `generating (${opts.collectionName}:${normalizedGeneratorName})`
     );
+    const implementation = implementationFactory();
 
-    if (deprecated) {
-      logger.warn(
-        [
-          `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
-          `${deprecated}`,
-        ].join('\n')
-      );
-    }
-    if (!opts.quiet && !opts.help) {
-      logger.info(
-        `NX Generating ${opts.collectionName}:${normalizedGeneratorName}`
-      );
+    // @todo(v17): Remove this, isStandalonePreset property is defunct.
+    if (normalizedGeneratorName === 'preset' && !isStandalonePreset) {
+      host.write('apps/.gitkeep', '');
+      host.write('libs/.gitkeep', '');
     }
 
-    if (opts.help) {
-      printGenHelp(opts, schema, normalizedGeneratorName, aliases);
-      return 0;
+    const task = await implementation(host, combinedOpts);
+    host.lock();
+
+    const changes = host.listChanges();
+
+    if (!opts.quiet) {
+      printChanges(changes);
     }
-
-    const cwd = getCwd();
-
-    const combinedOpts = await combineOptionsForGenerator(
-      opts.generatorOptions,
-      opts.collectionName,
-      normalizedGeneratorName,
-      projectsConfigurations,
-      nxJsonConfiguration,
-      schema,
-      opts.interactive,
-      calculateDefaultProjectName(
-        cwd,
-        workspaceRoot,
-        projectsConfigurations,
-        nxJsonConfiguration
-      ),
-      relative(workspaceRoot, cwd),
-      args.verbose
-    );
-
-    if (
-      getGeneratorInformation(
-        opts.collectionName,
-        normalizedGeneratorName,
-        workspaceRoot,
-        projectsConfigurations.projects
-      ).isNxGenerator
-    ) {
-      const host = new FsTree(
-        workspaceRoot,
-        args.verbose,
-        `generating (${opts.collectionName}:${normalizedGeneratorName})`
-      );
-      const implementation = implementationFactory();
-
-      // @todo(v17): Remove this, isStandalonePreset property is defunct.
-      if (normalizedGeneratorName === 'preset' && !isStandalonePreset) {
-        host.write('apps/.gitkeep', '');
-        host.write('libs/.gitkeep', '');
-      }
-
-      const task = await implementation(host, combinedOpts);
-      host.lock();
-
-      const changes = host.listChanges();
-
-      if (!opts.quiet) {
-        printChanges(changes);
-      }
-      if (!opts.dryRun) {
-        flushChanges(workspaceRoot, changes);
-        if (task) {
-          await task();
-        }
-      } else {
-        logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    if (!opts.dryRun) {
+      flushChanges(workspaceRoot, changes);
+      if (task) {
+        await task();
       }
     } else {
-      require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
-        workspaceRoot,
-        {
-          ...opts,
-          generatorOptions: combinedOpts,
-        },
-        projectsConfigurations.projects,
-        args.verbose
-      );
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
-  });
+  } else {
+    require('../../adapter/compat');
+    return (await import('../../adapter/ngcli-adapter')).generate(
+      workspaceRoot,
+      {
+        ...opts,
+        generatorOptions: combinedOpts,
+      },
+      projectsConfigurations.projects,
+      args.verbose
+    );
+  }
 }

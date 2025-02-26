@@ -1,7 +1,6 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
 import * as ora from 'ora';
-import * as yargsParser from 'yargs-parser';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -14,14 +13,11 @@ import {
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/handle-errors';
 import { nxVersion } from '../../utils/versions';
-import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 import { gte } from 'semver';
-import {
-  installPlugin,
-  getFailedToInstallPluginErrorMessages,
-} from '../init/configure-plugins';
+import { getFailedToInstallPluginErrorMessages } from '../init/configure-plugins';
+import { generate } from '../generate/generate';
 
 export function addHandler(options: AddOptions): Promise<number> {
   return handleErrors(options.verbose, async () => {
@@ -67,7 +63,8 @@ async function installPackage(
           if (error) {
             spinner.fail();
             output.addNewline();
-            logger.error(stdout);
+            logger.error(error);
+            if (stdout) logger.error(stdout);
             output.error({
               title: `Failed to install ${pkgName}. Please check the error above for more details.`,
             });
@@ -126,12 +123,15 @@ async function initializePlugin(
   spinner.start();
 
   try {
-    await installPlugin(
-      pkgName,
-      workspaceRoot,
+    const status = await generate({
+      generator: `${pkgName}:init`,
+      verbose: options.verbose,
+      interactive: process.env.NX_INTERACTIVE === 'true',
       updatePackageScripts,
-      options.verbose
-    );
+    });
+    if (typeof status === 'number' && status !== 0) {
+      throw new Error(`Failed to initialize ${pkgName} with status ${status}`);
+    }
   } catch (e) {
     spinner.fail();
     output.addNewline();

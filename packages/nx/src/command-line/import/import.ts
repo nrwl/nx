@@ -307,7 +307,8 @@ export async function importHandler(options: ImportOptions) {
           updatePackageScripts,
           pmc,
           workspaceRoot,
-          verbose
+          verbose,
+          options.interactive
         );
         if (succeededPlugins.length > 0) {
           await destinationGitClient.amendCommit();

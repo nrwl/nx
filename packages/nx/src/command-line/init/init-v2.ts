@@ -147,7 +147,8 @@ export async function initHandler(options: InitArgs): Promise<void> {
     updatePackageScripts,
     pmc,
     repoRoot,
-    options.verbose
+    options.verbose,
+    options.interactive
   );
 
   if (useNxCloud) {
