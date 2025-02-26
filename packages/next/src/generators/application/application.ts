@@ -7,7 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '@nx/react';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
