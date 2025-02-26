@@ -837,6 +837,7 @@ export async function handleNxReleaseConfigError(
         title: `There was an error when resolving the configured changelog renderer at path: ${error.data.workspaceRelativePath}`,
         bodyLines: [nxJsonMessage],
       });
+      break;
     }
     case 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER':
       {
