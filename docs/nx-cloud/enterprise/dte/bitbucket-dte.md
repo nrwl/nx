@@ -2,7 +2,7 @@
 
 Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
-## Run agents on Bitbucket Pipelines
+## Run Agents on Bitbucket Pipelines
 
 Run agents directly on Bitbucket Pipelines with the workflow below:
 

@@ -2,7 +2,7 @@
 
 Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
-## Run agents on Azure Pipelines
+## Run Agents on Azure Pipelines
 
 Run agents directly on Azure Pipelines with the workflow below:
 

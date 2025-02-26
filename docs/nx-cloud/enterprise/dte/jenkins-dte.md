@@ -2,7 +2,7 @@
 
 Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up manual distributed task execution on your own CI provider using the recipe below.
 
-## Distribute Tasks Across agents on Jenkins
+## Distribute Tasks Across Agents on Jenkins
 
 Run agents directly on Jenkins with the workflow below:
 

@@ -2,7 +2,7 @@
 
 Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. You can ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents. Lighter tasks like `lint` and `test` can run on smaller agents.
 
-Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Manual istibuted Task Execution (DTE)](/ci/recipes/dte) or with [dynamic Nx agents](/ci/features/dynamic-agents). Note that additional configuration is required when using Manual DTE.
+Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Manual Distributed Task Execution (DTE)](/ci/recipes/dte) or with [dynamic Nx agents](/ci/features/dynamic-agents). Note that additional configuration is required when using Manual DTE.
 
 ## How to Define an Assignment Rule
 
