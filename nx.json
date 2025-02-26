@@ -293,7 +293,7 @@
       {
         "rule": "@nx/workspace-plugin/conformance-rules/migration-groups",
         "options": {
-          "versionRange": ">= 19",
+          "versionRange": ">= 19.8",
           "groups": [
             [
               "angular-eslint",
