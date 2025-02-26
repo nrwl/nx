@@ -1262,9 +1262,9 @@
                   "file": "shared/examples/caching"
                 },
                 {
-                  "name": "Large Repo and DTE",
-                  "id": "dte",
-                  "file": "shared/examples/dte"
+                  "name": "Large Repo and Nx Agents",
+                  "id": "nx-agents",
+                  "file": "shared/examples/nx-agents"
                 }
               ]
             }
@@ -1889,6 +1889,43 @@
               ]
             },
             {
+              "name": "Manual Distributed Task Execution",
+              "id": "dte",
+              "description": "Manual DTE on your own CI provider",
+              "itemList": [
+                {
+                  "name": "GitHub Actions Manual DTE",
+                  "id": "github-dte",
+                  "file": "nx-cloud/enterprise/dte/github-dte"
+                },
+                {
+                  "name": "Circle CI Manual DTE",
+                  "id": "circle-ci-dte",
+                  "file": "nx-cloud/enterprise/dte/circle-ci-dte"
+                },
+                {
+                  "name": "Azure Pipelines Manual DTE",
+                  "id": "azure-dte",
+                  "file": "nx-cloud/enterprise/dte/azure-dte"
+                },
+                {
+                  "name": "Bitbucket Pipelines Manual DTE",
+                  "id": "bitbucket-dte",
+                  "file": "nx-cloud/enterprise/dte/bitbucket-dte"
+                },
+                {
+                  "name": "GitLab Manual DTE",
+                  "id": "gitlab-dte",
+                  "file": "nx-cloud/enterprise/dte/gitlab-dte"
+                },
+                {
+                  "name": "Jenkins Manual DTE",
+                  "id": "jenkins-dte",
+                  "file": "nx-cloud/enterprise/dte/jenkins-dte"
+                }
+              ]
+            },
+            {
               "name": "Enterprise",
               "id": "enterprise",
               "description": "Recipes for enterprise accounts",
@@ -1933,43 +1970,6 @@
                       "name": "Custom GitHub App",
                       "id": "custom-github-app",
                       "file": "nx-cloud/enterprise/single-tenant/custom-github-app"
-                    }
-                  ]
-                },
-                {
-                  "name": "Custom Distributed Task Execution",
-                  "id": "dte",
-                  "description": "Custom DTE on your own CI provider",
-                  "itemList": [
-                    {
-                      "name": "GitHub Actions Custom DTE",
-                      "id": "github-dte",
-                      "file": "nx-cloud/enterprise/dte/github-dte"
-                    },
-                    {
-                      "name": "Circle CI Custom DTE",
-                      "id": "circle-ci-dte",
-                      "file": "nx-cloud/enterprise/dte/circle-ci-dte"
-                    },
-                    {
-                      "name": "Azure Pipelines Custom DTE",
-                      "id": "azure-dte",
-                      "file": "nx-cloud/enterprise/dte/azure-dte"
-                    },
-                    {
-                      "name": "Bitbucket Pipelines Custom DTE",
-                      "id": "bitbucket-dte",
-                      "file": "nx-cloud/enterprise/dte/bitbucket-dte"
-                    },
-                    {
-                      "name": "GitLab Custom DTE",
-                      "id": "gitlab-dte",
-                      "file": "nx-cloud/enterprise/dte/gitlab-dte"
-                    },
-                    {
-                      "name": "Jenkins Custom DTE",
-                      "id": "jenkins-dte",
-                      "file": "nx-cloud/enterprise/dte/jenkins-dte"
                     }
                   ]
                 },

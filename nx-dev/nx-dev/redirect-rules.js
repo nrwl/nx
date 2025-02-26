@@ -1183,6 +1183,16 @@ const enterpriseNxSection = {
     '/nx-enterprise/activate-powerpack',
 };
 
+const manualDTEUpdate = {
+  '/ci/recipes/enterprise/dte': '/ci/recipes/dte',
+  '/ci/recipes/enterprise/dte/github-dte': '/ci/recipes/dte/github-dte',
+  '/ci/recipes/enterprise/dte/circle-ci-dte': '/ci/recipes/dte/circle-ci-dte',
+  '/ci/recipes/enterprise/dte/azure-dte': '/ci/recipes/dte/azure-dte',
+  '/ci/recipes/enterprise/dte/bitbucket-dte': '/ci/recipes/dte/bitbucket-dte',
+  '/ci/recipes/enterprise/dte/gitlab-dte': '/ci/recipes/dte/gitlab-dte',
+  '/ci/recipes/enterprise/dte/jenkins-dte': '/ci/recipes/dte/jenkins-dte',
+  '/showcase/benchmarks/dte': '/showcase/benchmarks/nx-agents',
+};
 /**
  * Public export API
  */
@@ -1217,4 +1227,5 @@ module.exports = {
   featurePagesUpdate,
   marketing,
   enterpriseNxSection,
+  manualDTEUpdate,
 };
