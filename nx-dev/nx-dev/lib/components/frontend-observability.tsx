@@ -2,6 +2,12 @@
 import { useEffect, useRef } from 'react';
 import { getWebInstrumentations, initializeFaro } from '@grafana/faro-web-sdk';
 
+const DEFAULT_SAMPLE_RATE = 0.5;
+let samplingRate = process.env.NEXT_PUBLIC_FARO_SAMPLING_RATE
+  ? parseFloat(process.env.NEXT_PUBLIC_FARO_SAMPLING_RATE)
+  : DEFAULT_SAMPLE_RATE;
+if (isNaN(samplingRate) || samplingRate > 1) samplingRate = DEFAULT_SAMPLE_RATE;
+
 export function FrontendObservability() {
   const initialized = useRef(false);
   useEffect(() => {
@@ -23,6 +29,9 @@ export function FrontendObservability() {
         name: 'Nx Dev',
         version,
         environment,
+      },
+      sessionTracking: {
+        samplingRate,
       },
       instrumentations: [...getWebInstrumentations()],
     });
