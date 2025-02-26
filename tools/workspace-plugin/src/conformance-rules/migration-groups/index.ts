@@ -22,7 +22,12 @@ export default createConformanceRule<Options>({
     const violations: ProjectFilesViolation[] = [];
 
     for (const project of Object.values(projectGraph.nodes)) {
-      if (project.name !== 'angular' && project.name !== 'eslint') continue;
+      if (
+        project.name !== 'angular' &&
+        project.name !== 'eslint' &&
+        project.name !== 'storybook'
+      )
+        continue;
       const migrationsPath = join(
         workspaceRoot,
         project.data.root,
