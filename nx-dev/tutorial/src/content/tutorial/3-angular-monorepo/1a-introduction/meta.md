@@ -6,4 +6,5 @@ editor:
     allowEdits: true
 filesystem:
   watch: ['/angular-monorepo/*.*', '/angular-monorepo/apps/**']
+prepareCommands: []
 ---
