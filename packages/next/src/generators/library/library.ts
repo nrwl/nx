@@ -9,7 +9,10 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
+import {
+  testingLibraryDomVersion,
+  testingLibraryReactVersion,
+} from '@nx/react/src/utils/versions';
 
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';
@@ -61,6 +64,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+      devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
     }
 
     tasks.push(
