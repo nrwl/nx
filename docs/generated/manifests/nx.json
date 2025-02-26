@@ -5748,14 +5748,14 @@
             "tags": []
           },
           {
-            "id": "dte",
-            "name": "Large Repo and DTE",
+            "id": "nx-agents",
+            "name": "Large Repo and Nx Agents",
             "description": "",
             "mediaImage": "",
-            "file": "shared/examples/dte",
+            "file": "shared/examples/nx-agents",
             "itemList": [],
             "isExternal": false,
-            "path": "/showcase/benchmarks/dte",
+            "path": "/showcase/benchmarks/nx-agents",
             "tags": []
           }
         ],
@@ -6162,14 +6162,14 @@
         "tags": []
       },
       {
-        "id": "dte",
-        "name": "Large Repo and DTE",
+        "id": "nx-agents",
+        "name": "Large Repo and Nx Agents",
         "description": "",
         "mediaImage": "",
-        "file": "shared/examples/dte",
+        "file": "shared/examples/nx-agents",
         "itemList": [],
         "isExternal": false,
-        "path": "/showcase/benchmarks/dte",
+        "path": "/showcase/benchmarks/nx-agents",
         "tags": []
       }
     ],
@@ -6199,15 +6199,15 @@
     "path": "/showcase/benchmarks/caching",
     "tags": []
   },
-  "/showcase/benchmarks/dte": {
-    "id": "dte",
-    "name": "Large Repo and DTE",
+  "/showcase/benchmarks/nx-agents": {
+    "id": "nx-agents",
+    "name": "Large Repo and Nx Agents",
     "description": "",
     "mediaImage": "",
-    "file": "shared/examples/dte",
+    "file": "shared/examples/nx-agents",
     "itemList": [],
     "isExternal": false,
-    "path": "/showcase/benchmarks/dte",
+    "path": "/showcase/benchmarks/nx-agents",
     "tags": []
   },
   "/reference": {
