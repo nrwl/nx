@@ -127,7 +127,7 @@ export async function reportHandler() {
       );
       if ('perpetualNxVersion' in powerpackLicense) {
         bodyLines.push(
-          `Perpetually licensed to use Nx ${powerpackLicense.perpetualNxVersion} and below.`
+          `License is valid for use with Nx ${powerpackLicense.perpetualNxVersion} and below.`
         );
       }
     }
