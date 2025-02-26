@@ -1049,6 +1049,22 @@
         "@angular-eslint/utils": {
           "version": "^18.0.1",
           "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -1368,6 +1384,22 @@
         "@angular-eslint/utils": {
           "version": "^19.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -1408,6 +1440,22 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/utils": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
           "version": "^19.0.2",
           "alwaysAddToPackageJson": false
         }
