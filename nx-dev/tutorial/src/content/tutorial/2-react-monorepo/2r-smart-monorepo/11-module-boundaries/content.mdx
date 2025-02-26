@@ -58,7 +58,7 @@ Next, let's come up with a set of rules based on these tags:
 
 To enforce the rules, Nx ships with a custom ESLint rule. Open the `eslint.config.mjs` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
 
-```mjs title="eslint.config.mjs"
+```js title="eslint.config.mjs"
 export default [
   // ...
   {
