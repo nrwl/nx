@@ -15,20 +15,10 @@ import { VideoLink } from '@nx/nx-dev/ui-markdoc';
 
 <VideoLink link="https://youtu.be/gc4N7kxiA50?t=456"></VideoLink>
 
-All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
+All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
 
-```file:/tsconfig.base.json title="/tsconfig.base.json" collapse={4-16}
-{
-  "compilerOptions": {
-    ...
-    "paths": {
-      "@react-monorepo/products": ["libs/products/src/index.ts"],
-      "@react-monorepo/orders": ["libs/orders/src/index.ts"],
-      "@react-monorepo/shared-ui": ["libs/shared/ui/src/index.ts"]
-    },
-    ...
-  },
-}
+```file:/package.json title="/package.json" collapse={4-16}
+TODO
 ```
 
 Hence we can easily import them into other libraries and our React application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.

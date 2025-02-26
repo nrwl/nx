@@ -3,6 +3,7 @@ type: lesson
 title: Generate a Starter Repository
 filesystem:
   watch: ['/react-monorepo/*.json', '/react-monorepo/(apps|libs)/**']
+prepareCommands: []
 ---
 
 ## Creating a new React Monorepo
@@ -14,7 +15,7 @@ import { VideoLink } from '@nx/nx-dev/ui-markdoc';
 Create a new React monorepo with the following command:
 
 ```shell
-npx create-nx-workspace@latest react-monorepo --preset=react-monorepo
+npx create-nx-workspace@latest react-monorepo --preset=react-monorepo --workspaces
 ```
 
 ```
@@ -22,9 +23,12 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · react-store
 ✔ Which bundler would you like to use? · vite
+✔ Which unit test runner would you like to use? · vitest
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Which CI provider would you like to use? · GitHub Actions
+✔ Would you like to use ESLint? · Yes
+✔ Would you like to use Prettier for code formatting? · Yes
+✔ Which CI provider would you like to use? · github
 ```
 
 Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. We'll talk more about how Nx integrates with GitHub Actions later in the tutorial. The above command generates the following structure:
@@ -46,7 +50,7 @@ Let's name the initial application `react-store`. In this tutorial we're going t
    │  │  │  ├─ main.tsx
    │  │  │  └─ styles.css
    │  │  ├─ index.html
-   │  │  ├─ project.json
+   │  │  ├─ package.json
    │  │  ├─ tsconfig.app.json
    │  │  ├─ tsconfig.json
    │  │  ├─ tsconfig.spec.json
@@ -68,4 +72,4 @@ The setup includes..
 
 One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
-The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/react-store/project.json` file contains [settings that are specific to the `react-store` project](/reference/project-configuration). We'll examine that file more in the next section.
+The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.

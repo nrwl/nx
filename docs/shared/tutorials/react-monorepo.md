@@ -927,7 +927,7 @@ Nx comes with a generic mechanism that allows you to assign "tags" to projects. 
 }
 ```
 
-Then go to the `project.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
+Then go to the `package.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
 
 ```json {% fileName="libs/products/package.json" %}
 {
@@ -938,7 +938,7 @@ Then go to the `project.json` of your `products` library and assign the tags `ty
 }
 ```
 
-Finally, go to the `project.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
+Finally, go to the `package.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
 
 ```json {% fileName="libs/shared/ui/package.json" %}
 {

@@ -17,9 +17,11 @@ What will you learn?
 
 ## Why Use an Nx Monorepo?
 
-In this tutorial, we'll set up a monorepo that is configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
+Nx works along side your existing tooling to improve your experience developing in a monorepo. You can also use code generators that Nx provides to quickly spin up a new project that is pre-configured with industry standard tooling. In this tutorial, we'll set up a monorepo that leverages the same tooling you would typically use without Nx, but Nx will enable you to focus your time on the features of your application rather than the tooling that surrounds it.
 
-You'll notice that instead of using npm/yarn/pnpm workspaces, projects within the repository are linked using typescript path aliases that are defined in the `tsconfig.base.json` file. Also, since we're creating projects using Nx plugin generators, all new projects come preconfigured with useful tools like Prettier, ESLint and Jest.
+We'll use npm/yarn/pnpm workspaces to link projects and TypeScript project references to incrementally typecheck the repository. Nx works well whether you have a [single version policy](/concepts/decisions/dependency-management#single-version-policy) or have each project [separately define their dependencies](/concepts/decisions/dependency-management#independently-maintained-dependencies), but in this tutorial we'll define all dependencies in a single `package.json` at the root of the repository.
+
+Nx generators will automatically configure new projects with useful tools like Prettier, ESLint and Jest. Those generators will also make sure that each project is referenced correctly in the root `workspaces` property and the `tsconfig` references properties accurately reflect the dependencies of each project.
 
 Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 

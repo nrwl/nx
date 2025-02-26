@@ -1,9 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "outDir": "out-tsc/cypress",
     "allowJs": true,
-    "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
     "types": ["cypress", "node"],
     "sourceMap": false
   },
@@ -16,5 +15,12 @@
     "**/*.cy.js",
     "**/*.cy.jsx",
     "**/*.d.ts"
+  ],
+  "exclude": [
+    "out-tsc",
+    "test-output",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
   ]
 }

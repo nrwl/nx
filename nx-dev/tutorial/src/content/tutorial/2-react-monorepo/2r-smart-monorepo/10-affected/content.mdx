@@ -69,22 +69,51 @@ If you're ready and want to ship your applications, you can build them using
 npx nx run-many -t build
 ```
 
-All the required files will be placed in `dist/react-store` and `dist/inventory` and can be deployed to your favorite hosting provider.
+All the required files will be placed in `/apps/react-store/dist` and `/apps/inventory/dist` and can be deployed to your favorite hosting provider.
 
-You can even create your own `deploy` task that sends the build output to your hosting provider.
+Nx will run any script defined in `package.json`, so you can create a `deploy` task that sends the build output to your hosting provider.
 
-```json title="/apps/react-store/project.json"
+```json {% fileName="apps/react-store/package.json" %}
 {
-  "targets": {
-    "deploy": {
-      "dependsOn": ["build"],
-      "command": "netlify deploy --dir=dist/react-store"
+  "scripts": {
+    "deploy": "netlify deploy --dir=dist"
+}
+```
+
+We want to let Nx know that the `build` task needs to be run before the `deploy` task, so we add a `dependsOn` property for that target.
+
+```json title="apps/react-store/package.json"
+{
+  "scripts": {
+    "deploy": "netlify deploy --dir=dist"
+  },
+  "nx": {
+    "targets": {
+      "deploy": {
+        "dependsOn": ["build"]
+      }
     }
   }
 }
 ```
 
-Replace the `command` with whatever terminal command you use to deploy your site.
+If you want to keep the script next to its Nx configuration, you can rewrite the above configuration like this:
+
+```json title="apps/react-store/package.json"
+{
+  "scripts": {},
+  "nx": {
+    "targets": {
+      "deploy": {
+        "command": "netlify deploy --dir=dist",
+        "dependsOn": ["build"]
+      }
+    }
+  }
+}
+```
+
+Replace the `deploy` script with whatever terminal command you use to deploy your site.
 
 The `"dependsOn": ["build"]` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
 
