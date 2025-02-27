@@ -224,11 +224,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   }
 
   function logIt(...msg: any[]) {
-    const shouldLog =
-      options?.debug === false
-        ? false
-        : process.env.NX_VERBOSE_LOGGING === 'true' || options?.debug;
-    if (shouldLog) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true' && options?.debug !== false) {
       console.debug('\n[Nx Vite TsPaths]', ...msg);
     }
   }
