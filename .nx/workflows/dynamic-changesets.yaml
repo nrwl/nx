@@ -16,12 +16,6 @@ assignment-rules:
         parallelism: 6
 
   - targets:
-      - check-*
-    run-on:
-      - agent: linux-medium
-        parallelism: 1
-
-  - targets:
       - '*'
     run-on:
       - agent: linux-medium
