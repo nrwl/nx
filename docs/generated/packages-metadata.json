@@ -1687,6 +1687,16 @@
         "type": "migration"
       },
       {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.4.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-@typescript-eslint-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "eslint/migrations/20.4.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
         "file": "generated/packages/eslint/migrations/add-file-extensions-to-overrides.json",
         "hidden": false,
