@@ -80,7 +80,8 @@ describe('migration-groups', () => {
         [
           {
             "file": "/path/to/test-project/migrations.json",
-            "message": "Package.json updates for "0.0.1" is missing packages in a group: @acme/bar. Versions of packages in a group must be in sync. Other packages in the group: @acme/foo",
+            "message": "Package.json updates for "0.0.1" is missing packages in a group: @acme/bar. Versions of packages in a group must have their versions synced. Version: 1.0.0.
+                    ",
             "sourceProject": "test-project",
           },
         ]
