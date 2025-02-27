@@ -14,7 +14,7 @@ Nx's LLM enhancement feature makes your AI assistant significantly smarter by pr
 
 ![Nx Console LLM Enhancement](/shared/images/nx-enhance-llm-illustration.avif)
 
-Nx maintains comprehensive metadata about your workspace to power features like [caching](/features/cache-task-results) and [distributed task execution](/ci/features/distribute-task-execution). Nx Console, as an editor extension, hooks into this rich metadata, post-processes it, and feeds it directly to your LLM (currently supporting GitHub Copilot). This enables your LLM to:
+Nx maintains comprehensive metadata about your workspace to power features like [caching](/features/cache-task-results) and [distributed task execution](/ci/features/distribute-task-execution). Nx Console, as an editor extension, hooks into this rich metadata, post-processes it, and feeds it directly to your LLM. This enables your LLM to:
 
 - Understand the complete workspace structure, including applications and libraries
 - Know how different projects are connected and their dependency relationships
@@ -24,14 +24,34 @@ Nx maintains comprehensive metadata about your workspace to power features like 
 
 This enhanced context allows your LLM to move beyond simple file-level operations to understand your workspace at an architectural level, making it a more effective development partner.
 
-To **enable LLM enhancement in your workspace**:
+## Setting Up LLM Enhancements
+
+### VS Code with GitHub Copilot
+
+To enable LLM enhancement in VS Code:
 
 1. Install or update [Nx Console](/getting-started/editor-setup) in VS Code
 2. Ensure you have GitHub Copilot installed and configured
 3. Start using Copilot in your Nx workspace by typing `@nx` at the beginning of your prompt - this will automatically provide the enhanced context
 
+### Cursor
+
+To enable LLM enhancements in Cursor:
+
+1. Install or update [Nx Console](/getting-started/editor-setup) and make sure you're on the latest version of Cursor (0.46 and up)
+2. When starting Cursor, you will see a notification prompting you to add the Nx enhancement to Cursor Agents
+3. Accept the notification and Nx Console will configure an [MCP server](https://modelcontextprotocol.io/introduction) that provides the enhanced context to Cursor's AI features
+4. Make sure the MCP server is enabled under `Cursor` -> `Settings` -> `Cursor Settings` -> `MCP`
+
+### Other LLM Clients
+
+Other LLM clients like Claude Desktop can use the MCP server as well:
+
+1. Run `npx nx-mcp /path/to/workspace` to start the MCP server for your workspace
+2. The MCP server will provide the necessary context to your LLM client when interacting with your Nx workspace
+
 {% callout type="note" title="Current Support" %}
-LLM enhancement is currently available for VS Code with GitHub Copilot. Support for additional editors and LLM providers is planned for future releases.
+LLM enhancement is available for VS Code with GitHub Copilot, Cursor, and other LLM clients through the MCP server. Support for additional editors and LLM providers continues to expand.
 {% /callout %}
 
 ## Key Benefits
