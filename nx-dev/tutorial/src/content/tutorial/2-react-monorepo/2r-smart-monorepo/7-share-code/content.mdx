@@ -2,11 +2,7 @@
 type: lesson
 title: Share Code
 previews:
-  - {
-      port: 4211,
-      title: 'Project Details View',
-      pathname: '/project-details/react-store',
-    }
+  - { port: 4211, title: 'Project Graph', pathname: '/projects' }
 ---
 
 ### Import Libraries into the React Applications
@@ -17,8 +13,8 @@ import { VideoLink } from '@nx/nx-dev/ui-markdoc';
 
 All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
 
-```file:/package.json title="/package.json" collapse={4-16}
-TODO
+```file:/package.json title="/package.json" collapse={3-51}
+
 ```
 
 Hence we can easily import them into other libraries and our React application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
