@@ -10,5 +10,5 @@
   "path": "/packages/react",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Add Module Federation Env Var to Target Defaults\n\nAdd NX_MF_DEV_REMOTES to inputs for task hashing when `@nx/webpack:webpack` or `@nx/rspack:rspack` is used for Module Federation.\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {\n    \"@nx/webpack:webpack\": {\n      \"inputs\": [\"^build\"]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[4,5,6] fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {\n    \"@nx/webpack:webpack\": {\n      \"cache\": true,\n      \"dependsOn\": [\"^build\"],\n      \"inputs\": [\n        \"^build\",\n        {\n          \"env\": \"NX_MF_DEV_REMOTES\"\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }
