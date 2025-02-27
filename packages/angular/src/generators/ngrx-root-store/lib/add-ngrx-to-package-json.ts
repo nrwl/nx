@@ -13,8 +13,6 @@ export function addNgRxToPackageJson(
     : '~0.8.3';
   const ngrxVersion = versions(tree).ngrxVersion;
 
-  process.env.npm_config_legacy_peer_deps ??= 'true';
-
   return addDependenciesToPackageJson(
     tree,
     {

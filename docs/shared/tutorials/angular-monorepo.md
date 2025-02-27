@@ -1298,7 +1298,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - uses: nrwl/nx-set-shas@v4
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
