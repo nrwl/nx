@@ -9,26 +9,6 @@ Assignment rules are defined in `yaml` files within your workspace's `.nx/workfl
 Each assignment rule has one of the following properties that it matches against tasks: `projects`, `targets`, and/or `configurations`. You can provide a list of globs to match against the tasks in your workspace. It also has a list of possible [agent types](/ci/reference/launch-templates) that tasks with the matching properties can run on. Rules are defined in yaml like the following:
 
 {% tabs %}
-{% tab label="Assignment rules with manual DTE" %}
-
-```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
-assignment-rules:
-  - projects:
-      - app1
-    targets:
-      - e2e-ci*
-    run-on:
-      - agent: linux-medium
-        parallelism: 5
-
-  - targets:
-      - lint,build
-    run-on:
-      - agent: linux-large
-        parallelism: 10
-```
-
-{% /tab %}
 {% tab label="Assignment rules with Nx Agents" %}
 
 ```yaml {% fileName=".nx/workflows/distribution-config.yaml" %}
@@ -49,6 +29,26 @@ assignment-rules:
   - targets:
       - lint
       - build
+    run-on:
+      - agent: linux-large
+        parallelism: 10
+```
+
+{% /tab %}
+{% tab label="Assignment rules with manual DTE" %}
+
+```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
+assignment-rules:
+  - projects:
+      - app1
+    targets:
+      - e2e-ci*
+    run-on:
+      - agent: linux-medium
+        parallelism: 5
+
+  - targets:
+      - lint,build
     run-on:
       - agent: linux-large
         parallelism: 10
@@ -117,7 +117,7 @@ You can use globs for better control over how to define your assignment rules.
 
 If you provide a list of globs to an individual rule property (`projects`, `targets`, `configurations`), it will match any of the patterns for that given property.
 
-```yaml
+```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
 assignment-rules:
   - targets:
       - e2e-ci*
@@ -134,9 +134,9 @@ The following rule will match the following tasks:
 
 #### Comma delimited globs
 
-Within each list entry, you can define a list of globs. This notation will match a given property only if all globs match.
+Within each list entry, you can define a comma delimited list of globs. This notation will match a given property only if all globs match.
 
-```yaml
+```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
 assignment-rules:
   - targets:
       - 'e2e-ci*,*server-test'
@@ -151,9 +151,78 @@ The following rule will match the following tasks:
 - starts with `e2e-ci` and ends with `server-test` (i.e `e2e-ci--playwright-server-test`)
 - starts with `lint` (i.e `lint-js`)
 
+### Configuring Parallelism through Assignment Rules
+
+You can specify how many tasks of a certain type can run in parallel on a particular agent. Each agent object within the `run-on` list can have the `parallelism` property. Configuring parallelism through your assignment rules will override the other parallelism configurations in your workspace. For a given command run with DTE, parallelism is determined by in the following order:
+
+1. Parallelism defined in the assignment rules
+2. Parallelism defined in the `--parallel` flag in your command
+3. Parallelism defined in your `nx.json` file (`parallel: 3`)
+
+If none of these methods of configuring parallelism are used, the parallelism of executed tasks will default to `1`.
+
+Note that there are two special cases for parallelism with assignment rules where the behaviour may differ.
+
+1. All tasks that are marked as `non-cacheable` (they are configured with `cache: false`) will be run with a parallelism of `1` regardless of the parallelism defined in the assignment rules or execution. This is usually the case with tasks such as `e2e-ci` which may requires its process to have their own environment or resources to run.
+2. Assignment rules only apply to distributed executions (DTE). If you want to run multiple tasks in parallel without DTE (via the `--no-dte` flag), you will need to use the `--parallel` flag in your commands.
+
+```shell
+nx affected -t lint test built --no-dte --parallel=3
+```
+
+#### Assignment Rules Parallelism Example
+
+```shell {% fileName=".github/workflows/ci.yaml" %}
+nx affected -t lint test build --parallel=3
+```
+
+```yaml {% fileName=".nx/workflows/assignment-rules.yaml" %}
+assignment-rules
+  - targets:
+    - lint
+    - test
+    run-on:
+      - agent: linux-medium
+        parallelism: 4
+
+  - target:
+    - build
+    run-on:
+      - agent: linux-large
+```
+
+In the above example, the `lint` and `test` targets will run on `linux-medium` agents with a parallelism of `4` as defined within the rules. The `build` target will run on `linux-large` agents, but note that there is no parallelism defined for that target. The parallelism for `build` tasks will then use the value provided by the `--parallel` flag, which is `3`.
+
+#### Setting Default Parallelism for Multiple Tasks
+
+Putting globs and parallelism together, you can set a default parallelism for all tasks within your executions. Take the following statement:
+
+> Only `e2e-ci` tasks should run on large agents. All other tasks should run on medium agents with a parallelism of 5.
+
+This can be represented as the following yaml config.
+
+```yaml
+assignment-rules:
+  # Since this rule was defined first and `targets` has a higher precedence order,
+  # e2e-ci tasks will use this rule
+  - targets:
+      - e2e-ci*
+    run-on:
+      - agent: linux-large
+
+  # This rule will match all projects in your workspace
+  - projects:
+      - '*'
+    run-on:
+      - agent: linux-medium
+        parallelism: 5
+```
+
 ## Assignment Rule Precedence
 
 Having multiple assignment rules means that often rules may overlap or apply to the same tasks. For a given task, only one rule will ever be applied. To determine which rule take priority, a rule of thumb is that **more specific rules take precedence over more general rules**. You can consult our precedence chart for a full list of rule priorities. A checkmark indicates that a rule has a particular property defined.
+
+If two rules have the same priority based on the below chart, the rule that appears first in the `assignment-rules` list will take precedence.
 
 | Priority | Configuration | Target | Project |
 | :------: | :-----------: | :----: | :-----: |
@@ -167,7 +236,7 @@ Having multiple assignment rules means that often rules may overlap or apply to 
 
 ### Rule Precedence Example
 
-In this example, the task defined below can match multiple assignment rules. However, since the second rule specifies all three properties (`project`, `target`, and `configuration`) rather than just two (`project` and `target`), it takes precedence, and we automatically apply the second rule when distributing the task.
+In this example, the task defined below can match multiple assignment rules. However, since the second rule specifies all three properties (`projects`, `targets`, and `configurations`) rather than just two (`projects` and `targets`), it takes precedence, and we automatically apply the second rule when distributing the task.
 
 ```json {% fileName="A task from your workspace" %}
 {
@@ -179,7 +248,8 @@ In this example, the task defined below can match multiple assignment rules. How
 
 ```yaml {% fileName=".nx/workflows/distribution-config.yaml" %}
 assignment-rules:
-  # A task for app1:build:production will use this rule because it is more specific (matches all three properties instead of just two)
+  # A task for app1:build:production will use this rule because it is more
+  # specific (matches all three properties instead of just two)
   - projects:
       - app1
     targets:
@@ -415,4 +485,19 @@ assignment-rules:
       - test
     run-on:
       - agent: linux-medium-js
+```
+
+## Deprecated Assignment Rules
+
+Assignment rules used to be defined with the following schema. However, this schema did not support multi-glob matching, nor parallelism. Rules defined in this format will still work, but we recommend updating them to the new schema.
+
+```yaml {% fileName=".nx/workflows/distribution-config.yaml" %}
+# We recommend updating your assignment rules to the most recent schema
+assignment-rules:
+  - project: app1 # replaced by `projects`
+    target: e2e-ci* # replaced by `targets`
+    configuration: production # replaced by `configurations`
+    runs-on: # replaced by `run-on`
+      - linux-medium-js
+      - linux-large-js
 ```
