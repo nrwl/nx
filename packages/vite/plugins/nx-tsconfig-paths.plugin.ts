@@ -254,6 +254,19 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
           importPath.replace(normalizedImport, joinedPath),
           options.extensions
         );
+
+        if (
+          resolvedFile === undefined &&
+          options.extensions.some((ext) => importPath.endsWith(ext))
+        ) {
+          const foundExtension = options.extensions.find((ext) =>
+            importPath.endsWith(ext)
+          );
+          const pathWithoutExtension = importPath
+            .replace(normalizedImport, joinedPath)
+            .slice(0, -foundExtension.length);
+          resolvedFile = findFile(pathWithoutExtension, options.extensions);
+        }
       }
     }
 
