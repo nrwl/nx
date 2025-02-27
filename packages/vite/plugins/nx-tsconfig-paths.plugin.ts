@@ -24,7 +24,8 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 export interface nxViteTsPathsOptions {
   /**
    * Enable debug logging
-   * @default false
+   * If set to false, it will always ignore the debug logging even when `--verbose` or `NX_VERBOSE_LOGGING` is set to true.
+   * @default undefined
    **/
   debug?: boolean;
   /**
@@ -223,7 +224,7 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   }
 
   function logIt(...msg: any[]) {
-    if (process.env.NX_VERBOSE_LOGGING === 'true' || options?.debug) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true' && options?.debug !== false) {
       console.debug('\n[Nx Vite TsPaths]', ...msg);
     }
   }
