@@ -42,6 +42,7 @@ export const config = defineConfig({
   integrations: [
     tutorialkit({
       components: {
+        HeadTags: './src/components/HeadTags.astro',
         TopBar: './src/components/TopBar.astro',
       },
     }),
