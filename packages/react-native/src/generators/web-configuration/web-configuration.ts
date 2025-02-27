@@ -57,8 +57,8 @@ export async function webConfigurationGenerator(
   }
 
   // apply webpack or vite init generator
-  const bundlerTask = await addBundlerConfiguration(tree, normalizedSchema);
-  tasks.push(bundlerTask);
+  const bundlerTasks = await addBundlerConfiguration(tree, normalizedSchema);
+  tasks.push(...bundlerTasks);
 
   // create files for webpack and vite config, index.html
   if (normalizedSchema.bundler === 'vite') {
@@ -77,7 +77,7 @@ export async function webConfigurationGenerator(
         ...normalizedSchema,
         tmpl: '',
         webpackPluginOptions: hasWebpackPlugin(tree)
-          ? createNxWebpackPluginOptions(normalizedSchema)
+          ? createNxWebpackPluginOptions(tree, normalizedSchema)
           : null,
       }
     );
@@ -110,7 +110,7 @@ export async function webConfigurationGenerator(
 async function addBundlerConfiguration(
   tree: Tree,
   normalizedSchema: NormalizedSchema
-) {
+): Promise<GeneratorCallback[]> {
   if (normalizedSchema.bundler === 'vite') {
     const { viteConfigurationGenerator } = ensurePackage<
       typeof import('@nx/vite')
@@ -125,8 +125,9 @@ async function addBundlerConfiguration(
       compiler: 'babel',
       skipFormat: true,
     });
-    return viteTask;
+    return [viteTask];
   } else {
+    let tasks: GeneratorCallback[] = [];
     const { webpackInitGenerator } = ensurePackage<
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
@@ -135,6 +136,13 @@ async function addBundlerConfiguration(
       skipFormat: true,
       skipPackageJson: normalizedSchema.skipPackageJson,
     });
+    tasks.push(webpackInitTask);
+    if (!normalizedSchema.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
+    }
 
     if (!hasWebpackPlugin(tree)) {
       const projectConfiguration = readProjectConfiguration(
@@ -143,7 +151,7 @@ async function addBundlerConfiguration(
       );
       projectConfiguration.targets = {
         ...projectConfiguration.targets,
-        build: createBuildTarget(normalizedSchema),
+        build: createBuildTarget(tree, normalizedSchema),
         serve: createServeTarget(normalizedSchema),
       };
       updateProjectConfiguration(
@@ -153,7 +161,7 @@ async function addBundlerConfiguration(
       );
     }
 
-    return webpackInitTask;
+    return tasks;
   }
 }
 
