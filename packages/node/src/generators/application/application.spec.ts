@@ -667,9 +667,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "nodenext",
             "moduleResolution": "nodenext",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],

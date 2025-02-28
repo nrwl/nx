@@ -187,9 +187,9 @@ describe('next library', () => {
             "jsx": "react-jsx",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/mylib",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",

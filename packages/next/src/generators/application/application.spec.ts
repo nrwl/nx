@@ -981,7 +981,7 @@ describe('app (legacy)', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "noEmit": true,
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "paths": {
               "@/*": [
                 "./src/*",
@@ -995,7 +995,7 @@ describe('app (legacy)', () => {
             "resolveJsonModule": true,
             "rootDir": "src",
             "strict": true,
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
             "types": [
               "jest",
               "node",
