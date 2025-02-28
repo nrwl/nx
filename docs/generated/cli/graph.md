@@ -47,12 +47,6 @@ Show the graph where every node is either an ancestor or a descendant of todos-f
  nx graph --focus=todos-feature-main
 ```
 
-Include project-one and project-two in the project graph:
-
-```shell
- nx graph --include=project-one,project-two
-```
-
 Exclude project-one and project-two from the project graph:
 
 ```shell
