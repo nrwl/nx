@@ -551,7 +551,7 @@ describe('lib', () => {
             tsConfig: './tsconfig.lib.json',
             compiler: 'babel',
             external: ["react","react-dom","react/jsx-runtime"],
-            format: ['esm'],
+            format: ["esm"],
             assets:[{ input: '.', output: '.', glob: 'README.md'}],
           }, {
             // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
@@ -1207,7 +1207,7 @@ module.exports = withNx(
             tsConfig: './tsconfig.lib.json',
             compiler: 'babel',
             external: ["react","react-dom","react/jsx-runtime"],
-            format: ['esm'],
+            format: ["esm"],
             assets:[{ input: '.', output: '.', glob: 'README.md'}],
           }, {
             // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options

@@ -22,7 +22,9 @@ export async function reactNativeComponentGenerator(
 
   addExportsToBarrel(host, options);
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
@@ -59,7 +61,9 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
-      options.projectSourceRoot,
+      ...(options.projectSourceRoot
+        ? [options.projectSourceRoot]
+        : [options.projectRoot, 'src']),
       options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
     );
 
