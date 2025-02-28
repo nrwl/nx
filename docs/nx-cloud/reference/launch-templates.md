@@ -203,6 +203,7 @@ In the example below, we can run NPM Install and install the Rust dependencies i
 Running them in parallel can reduce agent startup time by up to 2 minutes, which can add up to a lot of compute time savings over the month.
 
 ⚠️ Tips for using parallel steps:
+
 - don't assume everything can be run in parallel
   - you'll notice below we had to run `playwright install` after the parallel group, as it was likely writing to the same locations and fighting for similar resources to `npm install`
   - experiment with different parallel groups and measure startup times until you land on the most optimal config for your use-case
@@ -216,7 +217,7 @@ launch-templates:
     init-steps:
       - group-name: Install Dependencies
         parallel: true
-        # all the below steps will start at the same time and run in parallel 
+        # all the below steps will start at the same time and run in parallel
         steps:
           - name: Install Rust
             script: |
@@ -249,33 +250,33 @@ launch-templates:
         script: npx playwright install --with-deps
       - name: Start services
         script: |
-            # we create the PATH here
-            echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV
-            npm run start-docker-services
+          # we create the PATH here
+          echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV
+          npm run start-docker-services
 ```
 
 We can also group steps and run them serially. This is actually the default behaviour when you don't set `parallel: true` for a group.
 
-This can be useful if we have a set of quick enough steps, such as restoring from cache, where we don't need to optimise for speed, and instead we just want them 
-grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner: 
+This can be useful if we have a set of quick enough steps, such as restoring from cache, where we don't need to optimise for speed, and instead we just want them
+grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner:
 
 ```yaml
-  - group-name: Restore Cache
-    steps:
-      - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'package-lock.json'
-          paths: |
-            ~/.npm
-          base-branch: 'main'
-      - name: Restore Browser Binary Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'package-lock.json|"browsers"'
-          paths: |
-            '~/.cache/Cypress'
-          base-branch: 'main'
+- group-name: Restore Cache
+  steps:
+    - name: Restore Node Modules Cache
+      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      inputs:
+        key: 'package-lock.json'
+        paths: |
+          ~/.npm
+        base-branch: 'main'
+    - name: Restore Browser Binary Cache
+      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      inputs:
+        key: 'package-lock.json|"browsers"'
+        paths: |
+          '~/.cache/Cypress'
+        base-branch: 'main'
 ```
 
 ## Full Example
@@ -285,8 +286,8 @@ This is an example of a launch template using all pre-built features:
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
 common-init-steps: &common-init-steps
   - name: Checkout
-  # using a reusable step in an external GitHub repo,
-  # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
+    # using a reusable step in an external GitHub repo,
+    # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
   # group these steps together as they related (it doesn't change anything functionally, but it helps with organising your steps as they will be collapsed together in the UI)
   - group-name: Restore Cache
@@ -349,7 +350,7 @@ launch-templates:
       MY_ENV_VAR: shared
       # list out steps to run on the agent before accepting tasks
       # the agent will need a copy of the source code and dependencies installed
-      # note we are using yaml anchors te reduce duplication with the below launch-template (they have the same init-steps) 
+      # note we are using yaml anchors te reduce duplication with the below launch-template (they have the same init-steps)
     init-steps: *common-init-steps
 
   # another template which does the same as above, but with a large resource class
@@ -359,9 +360,9 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v9'
     env:
       MY_ENV_VAR: shared
-      # note we are using yaml anchors te reduce duplication with the above launch-template (they have the same init-steps) 
+      # note we are using yaml anchors te reduce duplication with the above launch-template (they have the same init-steps)
     init-steps: *common-init-steps
-      
+
   # template that installs rust
   my-linux-rust-large:
     resource-class: 'docker_linux_amd64/large'
