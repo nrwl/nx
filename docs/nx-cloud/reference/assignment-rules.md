@@ -59,7 +59,7 @@ assignment-rules:
 
 The above rule will match any task that has a project named `app1`, any targets that begin with `e2e-ci`, and a configuration named `production`. Any tasks that match this rule will only be allowed to run on agents with `linux-medium-js` launch templates. Agents assigned these tasks will also be able to execute up to `5` tasks in parallel.
 
-The seconds rule above will match any task that has a `lint` or `build` target. These tasks only run on `linux-large` agents and up to 10 tasks can be executed in parallel by agents of that type.
+The second rule above will match any task that has a `lint` or `build` target. These tasks only run on `linux-large` agents and up to 10 tasks can be executed in parallel by agents of that type.
 
 You can mix and match any of the criteria in an assignment rule provided that you follow the constraints:
 
@@ -163,7 +163,7 @@ If none of these methods of configuring parallelism are used, the parallelism of
 
 Note that there are two special cases for parallelism with assignment rules where the behaviour may differ.
 
-1. All tasks that are marked as `non-cacheable` (they are configured with `cache: false`) will be run with a parallelism of `1` regardless of the parallelism defined in the assignment rules or execution. This is usually the case with tasks such as `e2e-ci` which may requires its process to have their own environment or resources to run.
+1. All tasks that are marked as `non-cacheable` (they are configured with `cache: false`) will be run with a parallelism of `1` regardless of the parallelism defined in the assignment rules or execution. This is usually the case with tasks such as `e2e-ci` which may requires each process to have its own environment or resources to run.
 2. Assignment rules only apply to distributed executions (DTE). If you want to run multiple tasks in parallel without DTE (via the `--no-dte` flag), you will need to use the `--parallel` flag in your commands.
 
 ```shell
