@@ -131,16 +131,16 @@ ${content}`
 
     // check typecheck
     expect(runCLI(`typecheck ${esbuildParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${esbuildParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${esbuildParentLib} and 4 tasks it depends on`
     );
     expect(runCLI(`typecheck ${rollupParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${rollupParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${rollupParentLib} and 4 tasks it depends on`
     );
     expect(runCLI(`typecheck ${swcParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${swcParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${swcParentLib} and 4 tasks it depends on`
     );
     expect(runCLI(`typecheck ${viteParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${viteParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${viteParentLib} and 4 tasks it depends on`
     );
 
     // check lint
