@@ -1,5 +1,5 @@
 import { toProjectName } from './to-project-name';
-import { TempFs } from '../internal-testing-utils/temp-fs';
+import { TempFs } from '../generators/testing-utils/temp-fs';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from './configuration';

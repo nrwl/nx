@@ -1,4 +1,4 @@
-import { TempFs } from '../../internal-testing-utils';
+import { TempFs } from '../../testing';
 import { convertNxExecutor } from './convert-nx-executor';
 
 describe('Convert Nx Executor', () => {

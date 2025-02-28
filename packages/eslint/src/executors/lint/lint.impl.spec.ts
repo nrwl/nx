@@ -1,5 +1,5 @@
 import type { ExecutorContext } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from '@nx/devkit/testing';
 import * as fs from 'fs';
 import { resolve } from 'path';
 import type { Schema } from './schema';
@@ -24,6 +24,7 @@ class MockESLint {
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
   lintFiles = mockLintFiles;
+
   calculateConfigForFile(file: string) {
     return { file: file };
   }

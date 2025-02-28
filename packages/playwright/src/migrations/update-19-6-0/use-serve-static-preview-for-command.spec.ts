@@ -1,7 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ProjectGraph, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
 import useServeStaticPreviewForCommand from './use-serve-static-preview-for-command';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import { join } from 'path';
 
 let projectGraph: ProjectGraph;

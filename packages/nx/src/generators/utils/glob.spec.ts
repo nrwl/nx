@@ -1,4 +1,4 @@
-import { TempFs } from '../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../generators/testing-utils/temp-fs';
 import { FsTree, Tree } from '../tree';
 import { glob } from './glob';
 

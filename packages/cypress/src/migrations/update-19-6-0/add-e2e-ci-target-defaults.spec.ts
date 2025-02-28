@@ -1,6 +1,6 @@
 import { ProjectGraph, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import addE2eCiTargetDefaults from './add-e2e-ci-target-defaults';
 
 let projectGraph: ProjectGraph;

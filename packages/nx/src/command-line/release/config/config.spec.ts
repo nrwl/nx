@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
-import { TempFs } from '../../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../../generators/testing-utils/temp-fs';
 import { createNxReleaseConfig } from './config';
 
 expect.addSnapshotSerializer({

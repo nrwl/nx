@@ -1,5 +1,5 @@
 import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from 'nx/src/generators/testing-utils/temp-fs';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { findPluginForConfigFile } from './find-plugin-for-config-file';
 

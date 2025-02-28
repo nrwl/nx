@@ -6,7 +6,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({

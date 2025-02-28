@@ -117,3 +117,49 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 ## Generator Utilities
 
 The [`@nx/devkit` package](/nx-api/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
+
+## Unit Testing Generators
+
+Generators will be created with a default test suite. You can add additional tests to this test suite to ensure that your generator is working as expected.
+
+If your generator makes use of or composes generators that make use of Inferred Tasks or Inference Plugins, you will need additional setup in your test suite to ensure that any plugins registered in your current Nx Workspace do not interfere with the unit tests.
+The `@nx/devkit/testing` packages provides a useful utility for this purpose called `TempFs`.
+
+You can use it to create a temporary directory and set it as the current working directory for your tests.
+You should also ensure that you change the process's current working directory to the temporary directory and revert it back to the original directory after your tests have completed.
+
+```typescript {% fileName="my-generator.spec.ts" %}
+import { createTreeWithEmptyWorkspace, TempFs } from '@nx/devkit/testing';
+import { myGeneratorGenerator } from './my-generator';
+
+describe('my-generator generator', () => {
+  let tree: Tree;
+  let tempFs: TempFs;
+
+  // Note that original cwd is stored to be restored after the test
+  const cwd = process.cwd();
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+    tempFs = new TempFs('test');
+    tempFs.createFileSync('nx.json', `{}`);
+    tree.write('nx.json', `{}`);
+    // Note that tree's root is set to the temp directory
+    tree.root = tempFs.tempDir;
+    // Note that process.cwd() is set to the temp directory
+    process.chdir(tree.root);
+  });
+
+  afterEach(() => {
+    tempFs.reset();
+    // Note that process.cwd() is restored to the original directory
+    process.chdir(cwd);
+  });
+
+  // Replace with your test cases
+  it('should run the generator', async () => {
+    await myGeneratorGenerator(tree, { ...opts });
+    expect(true).toBe(true);
+  });
+});
+```
