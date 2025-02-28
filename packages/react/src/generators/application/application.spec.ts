@@ -1,5 +1,6 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   getProjects,
   ProjectGraph,
@@ -29,6 +30,7 @@ jest.mock('@nx/devkit', () => {
     createProjectGraphAsync: jest
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
+    detectPackageManager: jest.fn(),
   };
 });
 
@@ -53,6 +55,9 @@ describe('app', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
+    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
+      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    );
   });
 
   describe('not nested', () => {
@@ -1507,6 +1512,7 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
       updateJson(appTree, 'package.json', (json) => {
         delete json.workspaces;
         return json;
