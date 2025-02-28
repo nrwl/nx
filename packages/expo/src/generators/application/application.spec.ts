@@ -400,9 +400,9 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "noUnusedLocals": false,
-            "outDir": "out-tsc/my-app",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-app/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],

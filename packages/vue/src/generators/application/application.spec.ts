@@ -276,10 +276,10 @@ describe('application generator', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/test",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/test/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "vite/client",
             ],

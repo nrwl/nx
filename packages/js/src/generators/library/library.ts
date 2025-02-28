@@ -1031,10 +1031,7 @@ function createProjectTsConfigs(
         .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
         .join(',\n    '),
       tmpl: '',
-      outDir:
-        options.bundler === 'tsc'
-          ? 'dist'
-          : `out-tsc/${options.projectRoot.split('/').pop()}`,
+      outDir: 'dist',
       emitDeclarationOnly: options.bundler === 'tsc' ? false : true,
     }
   );

@@ -552,9 +552,9 @@ describe('lib', () => {
             "jsx": "react-jsx",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/my-lib",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
             ],

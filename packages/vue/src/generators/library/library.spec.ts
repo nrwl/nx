@@ -606,10 +606,10 @@ module.exports = [
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/my-lib",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "vite/client",
             ],

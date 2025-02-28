@@ -801,9 +801,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],

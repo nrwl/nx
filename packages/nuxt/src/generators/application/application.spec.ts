@@ -286,10 +286,10 @@ describe('app', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
           },
           "exclude": [
             "out-tsc",
