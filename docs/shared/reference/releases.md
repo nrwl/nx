@@ -31,7 +31,7 @@ The following are the currently supported major versions of Nx.
 |  v18\*  |     LTS      |  2024-02-03  |
 |   v17   |     LTS      |  2023-10-19  |
 
-**\*Note:** v18 is a special release and does not fit into the normal release cycle. Thus, v16 continues to be supported
+**\*Note:** v18 is a special release and does not fit into the normal release cycle. Thus, v17 continues to be supported
 according to schedule.
 
 ### Current vs LTS
