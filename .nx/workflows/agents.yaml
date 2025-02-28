@@ -67,4 +67,3 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v10'
     env: *common-env
     init-steps: *common-init-steps
-
