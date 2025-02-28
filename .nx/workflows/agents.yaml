@@ -19,10 +19,9 @@ common-init-steps: &common-init-steps
   - group-name: Install dependencies
     parallel: true
     steps:
-      - name: Install zip and unzip
-        script: sudo apt-get -yqq install zip unzip
       - name: Install bun
         script: |
+          sudo apt-get -yqq install zip unzip
           curl -fsSL https://bun.sh/install | bash
           echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
           echo "BUN_PATH=$HOME/.bun/bin" >> $NX_CLOUD_ENV
