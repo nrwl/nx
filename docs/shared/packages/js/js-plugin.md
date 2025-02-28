@@ -65,7 +65,7 @@ To create with the older setup for TS monorepo with `compilerOptions.paths`, use
 
 ### How @nx/js Infers Tasks
 
-The `@nx/js` plugin will add a `typecheck` task to projects that have a `tsconfig.json`. It adds a `build` task for projects that have a runtime tsconfig file (defaults to `tsconfig.lib.json`).
+The `@nx/js/typescript` plugin will add a `typecheck` task to projects that have a `tsconfig.json`. It adds a `build` task for projects that have a runtime tsconfig file (defaults to `tsconfig.lib.json`).
 
 ### View Inferred Tasks
 
