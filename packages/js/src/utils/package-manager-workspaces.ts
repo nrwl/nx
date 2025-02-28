@@ -27,7 +27,13 @@ export function getProjectPackageManagerWorkspaceState(
 
   const patterns = getGlobPatternsFromPackageManagerWorkspaces(
     tree.root,
-    (path) => readJson(tree, path, { expectComments: true })
+    (path) => readJson(tree, path, { expectComments: true }),
+    (path) => {
+      const content = tree.read(path, 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      return load(content, { filename: path });
+    },
+    (path) => tree.exists(path)
   );
   const isIncluded = patterns.some((p) =>
     picomatch(p)(join(projectRoot, 'package.json'))
@@ -40,11 +46,7 @@ export function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
   return isWorkspacesEnabled(tree);
 }
 
-export function isWorkspacesEnabled(
-  tree: Tree
-  // packageManager: PackageManager = detectPackageManager(),
-  // root: string = workspaceRoot
-): boolean {
+export function isWorkspacesEnabled(tree: Tree): boolean {
   const packageManager = detectPackageManager(tree.root);
   if (packageManager === 'pnpm') {
     return tree.exists('pnpm-workspace.yaml');

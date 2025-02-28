@@ -27,7 +27,6 @@ import {
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
@@ -267,7 +266,11 @@ async function configureProject(
 ) {
   if (options.hasPlugin) {
     const nxJson = readNxJson(tree);
-    ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
+    ensureProjectIsIncludedInPluginRegistrations(
+      nxJson,
+      options.projectRoot,
+      options.bundler === 'none' ? null : 'build'
+    );
     updateNxJson(tree, nxJson);
   }
 
