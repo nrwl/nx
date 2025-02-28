@@ -118,9 +118,17 @@ export async function reportHandler() {
 
     // license is not expired
     if (licenseExpiryDate.getTime() >= Date.now()) {
-      bodyLines.push(
-        `License is active until ${licenseExpiryDate.toLocaleDateString()}.`
-      );
+      if ('perpetualNxVersion' in powerpackLicense) {
+        bodyLines.push(
+          `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+            powerpackLicense.perpetualNxVersion
+          } and below.`
+        );
+      } else {
+        bodyLines.push(
+          `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
+        );
+      }
     } else {
       if ('perpetualNxVersion' in powerpackLicense) {
         bodyLines.push(
