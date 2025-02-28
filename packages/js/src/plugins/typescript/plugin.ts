@@ -380,7 +380,11 @@ function buildTscTargets(
 
   let internalProjectReferences: Record<string, ParsedTsconfigData>;
   // Typecheck target
-  if (basename(configFilePath) === 'tsconfig.json' && options.typecheck) {
+  if (
+    basename(configFilePath) === 'tsconfig.json' &&
+    options.typecheck &&
+    tsConfig.raw?.['nx']?.addTypecheckTarget !== false
+  ) {
     internalProjectReferences = resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
@@ -1291,6 +1295,9 @@ function toAbsolutePaths(
     updatedCache[key] = {
       data: {
         options: { noEmit: data.options.noEmit },
+        raw: {
+          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        },
         extendedConfigFile: data.extendedConfigFile,
       },
       extendedFilesHash,
@@ -1347,6 +1354,9 @@ function toRelativePaths(
     updatedCache[key] = {
       data: {
         options: { noEmit: data.options.noEmit },
+        raw: {
+          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        },
         extendedConfigFile: data.extendedConfigFile,
       },
       extendedFilesHash,
