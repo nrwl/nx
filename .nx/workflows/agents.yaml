@@ -21,14 +21,12 @@ common-init-steps: &common-init-steps
     steps:
       - name: Install bun
         script: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
           sudo apt-get -yqq install zip unzip
           curl -fsSL https://bun.sh/install | bash
           echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
           echo "BUN_PATH=$HOME/.bun/bin" >> $NX_CLOUD_ENV
-      - name: Install e2e deps
-        script: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
       - name: Pnpm Install
         script: |
           npm install -g pnpm@9.8.0
@@ -39,6 +37,9 @@ common-init-steps: &common-init-steps
           source "$HOME/.cargo/env"
           echo "CARGO_PATH=$HOME/.cargo/bin" >> $NX_CLOUD_ENV
           rustup toolchain install 1.70.0
+  - name: Load binary paths
+    script: |
+      echo "PATH=$BUN_PATH:$CARGO_PATH:$PATH" >> $NX_CLOUD_ENV
   - name: Check bun
     script: |
       bun --version
@@ -50,9 +51,6 @@ common-init-steps: &common-init-steps
     script: |
       git config --global user.email test@test.com
       git config --global user.name "Test Test"
-  - name: Load binary paths
-    script: |
-      echo "PATH=$BUN_PATH:$CARGO_PATH:$PATH" >> $NX_CLOUD_ENV
 
 launch-templates:
   linux-medium:
