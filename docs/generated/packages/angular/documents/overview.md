@@ -59,8 +59,8 @@ npm add -D @nx/angular
 {% /tab %}
 {% /tabs %}
 
-{% callout type="note" title="Angular Tutorials" %}
-For a full tutorial experience, follow the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial) or the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+{% callout type="note" title="Angular Tutorial" %}
+For a full tutorial experience, follow the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 {% /callout %}
 
 ## Using the Angular Plugin
@@ -127,7 +127,6 @@ nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 
 ## More Documentation
 
-- [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)

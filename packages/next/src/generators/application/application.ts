@@ -7,8 +7,11 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '@nx/react';
-import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import {
+  testingLibraryDomVersion,
+  testingLibraryReactVersion,
+} from '@nx/react/src/utils/versions';
 import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
 
 import { normalizeOptions } from './lib/normalize-options';
@@ -115,6 +118,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+      devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
     }
 
     tasks.push(

@@ -59,24 +59,13 @@
         "itemList": [
           {
             "id": "typescript-packages-tutorial",
-            "name": "TypeScript Packages",
+            "name": "TypeScript Monorepo",
             "description": "",
             "mediaImage": "",
             "file": "shared/tutorials/typescript-packages",
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/typescript-packages-tutorial",
-            "tags": []
-          },
-          {
-            "id": "react-standalone-tutorial",
-            "name": "React Standalone",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/tutorials/react-standalone",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/react-standalone-tutorial",
             "tags": []
           },
           {
@@ -91,17 +80,6 @@
             "tags": []
           },
           {
-            "id": "angular-standalone-tutorial",
-            "name": "Angular Standalone",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/tutorials/angular-standalone",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/angular-standalone-tutorial",
-            "tags": []
-          },
-          {
             "id": "angular-monorepo-tutorial",
             "name": "Angular Monorepo",
             "description": "",
@@ -110,17 +88,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/angular-monorepo-tutorial",
-            "tags": []
-          },
-          {
-            "id": "vue-standalone-tutorial",
-            "name": "Vue Standalone",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/tutorials/vue-standalone",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/vue-standalone-tutorial",
             "tags": []
           },
           {
@@ -197,24 +164,13 @@
     "itemList": [
       {
         "id": "typescript-packages-tutorial",
-        "name": "TypeScript Packages",
+        "name": "TypeScript Monorepo",
         "description": "",
         "mediaImage": "",
         "file": "shared/tutorials/typescript-packages",
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/typescript-packages-tutorial",
-        "tags": []
-      },
-      {
-        "id": "react-standalone-tutorial",
-        "name": "React Standalone",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/tutorials/react-standalone",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/react-standalone-tutorial",
         "tags": []
       },
       {
@@ -229,17 +185,6 @@
         "tags": []
       },
       {
-        "id": "angular-standalone-tutorial",
-        "name": "Angular Standalone",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/tutorials/angular-standalone",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/angular-standalone-tutorial",
-        "tags": []
-      },
-      {
         "id": "angular-monorepo-tutorial",
         "name": "Angular Monorepo",
         "description": "",
@@ -248,17 +193,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
-        "tags": []
-      },
-      {
-        "id": "vue-standalone-tutorial",
-        "name": "Vue Standalone",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/tutorials/vue-standalone",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "tags": []
       },
       {
@@ -279,24 +213,13 @@
   },
   "/getting-started/tutorials/typescript-packages-tutorial": {
     "id": "typescript-packages-tutorial",
-    "name": "TypeScript Packages",
+    "name": "TypeScript Monorepo",
     "description": "",
     "mediaImage": "",
     "file": "shared/tutorials/typescript-packages",
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/typescript-packages-tutorial",
-    "tags": []
-  },
-  "/getting-started/tutorials/react-standalone-tutorial": {
-    "id": "react-standalone-tutorial",
-    "name": "React Standalone",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/tutorials/react-standalone",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/react-standalone-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/react-monorepo-tutorial": {
@@ -310,17 +233,6 @@
     "path": "/getting-started/tutorials/react-monorepo-tutorial",
     "tags": []
   },
-  "/getting-started/tutorials/angular-standalone-tutorial": {
-    "id": "angular-standalone-tutorial",
-    "name": "Angular Standalone",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/tutorials/angular-standalone",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/angular-standalone-tutorial",
-    "tags": []
-  },
   "/getting-started/tutorials/angular-monorepo-tutorial": {
     "id": "angular-monorepo-tutorial",
     "name": "Angular Monorepo",
@@ -330,17 +242,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/angular-monorepo-tutorial",
-    "tags": []
-  },
-  "/getting-started/tutorials/vue-standalone-tutorial": {
-    "id": "vue-standalone-tutorial",
-    "name": "Vue Standalone",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/tutorials/vue-standalone",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/vue-standalone-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/gradle-tutorial": {
@@ -5847,14 +5748,14 @@
             "tags": []
           },
           {
-            "id": "dte",
-            "name": "Large Repo and DTE",
+            "id": "nx-agents",
+            "name": "Large Repo and Nx Agents",
             "description": "",
             "mediaImage": "",
-            "file": "shared/examples/dte",
+            "file": "shared/examples/nx-agents",
             "itemList": [],
             "isExternal": false,
-            "path": "/showcase/benchmarks/dte",
+            "path": "/showcase/benchmarks/nx-agents",
             "tags": []
           }
         ],
@@ -6261,14 +6162,14 @@
         "tags": []
       },
       {
-        "id": "dte",
-        "name": "Large Repo and DTE",
+        "id": "nx-agents",
+        "name": "Large Repo and Nx Agents",
         "description": "",
         "mediaImage": "",
-        "file": "shared/examples/dte",
+        "file": "shared/examples/nx-agents",
         "itemList": [],
         "isExternal": false,
-        "path": "/showcase/benchmarks/dte",
+        "path": "/showcase/benchmarks/nx-agents",
         "tags": []
       }
     ],
@@ -6298,15 +6199,15 @@
     "path": "/showcase/benchmarks/caching",
     "tags": []
   },
-  "/showcase/benchmarks/dte": {
-    "id": "dte",
-    "name": "Large Repo and DTE",
+  "/showcase/benchmarks/nx-agents": {
+    "id": "nx-agents",
+    "name": "Large Repo and Nx Agents",
     "description": "",
     "mediaImage": "",
-    "file": "shared/examples/dte",
+    "file": "shared/examples/nx-agents",
     "itemList": [],
     "isExternal": false,
-    "path": "/showcase/benchmarks/dte",
+    "path": "/showcase/benchmarks/nx-agents",
     "tags": []
   },
   "/reference": {

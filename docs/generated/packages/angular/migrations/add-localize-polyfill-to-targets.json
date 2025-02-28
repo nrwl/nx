@@ -11,5 +11,5 @@
   "path": "/packages/angular",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Add Localize Polyfill to Targets\n\nAdd the '@angular/localize/init' polyfill to the 'polyfills' option of targets using esbuild-based executors.\n\n#### Sample Code Changes\n\nAdd the `@angular/localize/init` polyfill to any of these executors:\n\n- `@angular/build:application`\n- `@angular-devkit/build-angular:application`\n- `@nx/angular:application`\n- `@angular-devkit/build-angular:browser-esbuild`\n- `@nx/angular:browser-esbuild`\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"apps/app1/project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@angular/build:application\",\n      \"options\": {\n        \"localize\": true\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% fileName=\"apps/app1/project.json\" %}\n{\n  \"targets\": {\n    \"build\": {\n      \"executor\": \"@angular/build:application\",\n      \"options\": {\n        \"localize\": true,\n        \"polyfills\": [\"@angular/localize/init\"]\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }

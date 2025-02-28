@@ -9,5 +9,5 @@
   "path": "/packages/jest",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Replace getJestProjects with getJestProjectsAsync\n\nReplace getJestProjects with getJestProjectsAsync\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"jest.config.ts\" %}\nimport { getJestProjects } from '@nx/jest';\n\nexport default {\n  projects: getJestProjects(),\n};\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"jest.config.ts\" %}\nimport { getJestProjectsAsync } from '@nx/jest';\n\nexport default async () => ({\n  projects: await getJestProjectsAsync(),\n});\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }

@@ -17,7 +17,7 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import {
   basename,
@@ -555,8 +555,8 @@ function getInputs(
         if (
           !otherFilesInclude.some(
             (includePath) =>
-              minimatch(normalize(includePath), normalize(excludePath)) ||
-              minimatch(normalize(excludePath), normalize(includePath))
+              picomatch(normalize(excludePath))(normalize(includePath)) ||
+              picomatch(normalize(includePath))(normalize(excludePath))
           )
         ) {
           excludePaths.add(excludePath);
@@ -1032,7 +1032,7 @@ function isExternalProjectReference(
   workspaceRoot: string,
   projectRoot: string
 ): boolean {
-  const relativePath = posix.relative(workspaceRoot, refTsConfigPath);
+  const relativePath = posixRelative(workspaceRoot, refTsConfigPath);
   if (cache.isExternalProjectReference[relativePath] !== undefined) {
     return cache.isExternalProjectReference[relativePath];
   }
@@ -1074,7 +1074,7 @@ function retrieveTsConfigFromCache(
   tsConfigPath: string,
   workspaceRoot: string
 ): ParsedTsconfigData {
-  const relativePath = posix.relative(workspaceRoot, tsConfigPath);
+  const relativePath = posixRelative(workspaceRoot, tsConfigPath);
 
   // we don't need to check the hash if it's in the cache, because we've already
   // checked it when we initially populated the cache
@@ -1103,7 +1103,7 @@ function readTsConfigAndCache(
   tsConfigPath: string,
   workspaceRoot: string
 ): ParsedTsconfigData {
-  const relativePath = posix.relative(workspaceRoot, tsConfigPath);
+  const relativePath = posixRelative(workspaceRoot, tsConfigPath);
   const hash = getFileHash(tsConfigPath, workspaceRoot);
 
   let extendedFilesHash: string;
@@ -1261,7 +1261,7 @@ function resolveExtendedTsConfigPath(
 }
 
 function getFileHash(filePath: string, workspaceRoot: string): string {
-  const relativePath = posix.relative(workspaceRoot, filePath);
+  const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.fileHashes[relativePath]) {
     const content = readFile(filePath, workspaceRoot);
     cache.fileHashes[relativePath] = hashArray([content]);
@@ -1271,7 +1271,7 @@ function getFileHash(filePath: string, workspaceRoot: string): string {
 }
 
 function readFile(filePath: string, workspaceRoot: string): string {
-  const relativePath = posix.relative(workspaceRoot, filePath);
+  const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.rawFiles[relativePath]) {
     const content = readFileSync(filePath, 'utf8');
     cache.rawFiles[relativePath] = content;
@@ -1353,41 +1353,48 @@ function toRelativePaths(
       hash,
     };
     if (data.options.rootDir) {
-      updatedCache[key].data.options.rootDir = posix.relative(
+      updatedCache[key].data.options.rootDir = posixRelative(
         workspaceRoot,
         data.options.rootDir
       );
     }
     if (data.options.outDir) {
-      updatedCache[key].data.options.outDir = posix.relative(
+      updatedCache[key].data.options.outDir = posixRelative(
         workspaceRoot,
         data.options.outDir
       );
     }
     if (data.options.outFile) {
-      updatedCache[key].data.options.outFile = posix.relative(
+      updatedCache[key].data.options.outFile = posixRelative(
         workspaceRoot,
         data.options.outFile
       );
     }
     if (data.options.tsBuildInfoFile) {
-      updatedCache[key].data.options.tsBuildInfoFile = posix.relative(
+      updatedCache[key].data.options.tsBuildInfoFile = posixRelative(
         workspaceRoot,
         data.options.tsBuildInfoFile
       );
     }
     if (data.extendedConfigFile?.filePath) {
-      updatedCache[key].data.extendedConfigFile.filePath = posix.relative(
+      updatedCache[key].data.extendedConfigFile.filePath = posixRelative(
         workspaceRoot,
         data.extendedConfigFile.filePath
       );
     }
     if (data.projectReferences) {
       updatedCache[key].data.projectReferences = data.projectReferences.map(
-        (ref) => ({ ...ref, path: posix.relative(workspaceRoot, ref.path) })
+        (ref) => ({
+          ...ref,
+          path: posixRelative(workspaceRoot, ref.path),
+        })
       );
     }
   }
 
   return updatedCache;
+}
+
+function posixRelative(workspaceRoot: string, path: string): string {
+  return posix.normalize(relative(workspaceRoot, path));
 }
