@@ -113,7 +113,7 @@ You can also set `typecheck` and `build` options to `false` to not infer the cor
 
 To disable `typecheck` task for a specific project, set the `nx.addTypecheckTarget` property to `false` in `tsconfig.json`.
 
-```json {% fileName="tsconfig.json" highlightLines=["10-12"] %}
+```json {% fileName="packages/pkg1/tsconfig.json" highlightLines=["10-12"] %}
 {
   "extends": "../../tsconfig.base.json",
   "files": [],
