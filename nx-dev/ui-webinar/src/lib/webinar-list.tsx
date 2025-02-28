@@ -1,10 +1,8 @@
 import { WebinarDataEntry } from '@nx/nx-dev/data-access-documents/node-only';
-import { BlogAuthors, BlogEntry } from '@nx/nx-dev/ui-blog';
-import { WebinarListItem } from './webinar-list-item';
 import { CallToAction } from '@nx/nx-dev/ui-markdoc';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ButtonLink } from '@nx/nx-dev/ui-common';
+import { WebinarListItem } from './webinar-list-item';
 
 export interface WebinarListProps {
   webinars: WebinarDataEntry[];
@@ -20,7 +18,9 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
   ) : (
     <div className="mx-auto max-w-7xl px-8">
       {webinars
-        .filter((w) => w.status === 'Upcoming')
+        .filter(
+          (w) => w.status === 'Upcoming' && new Date(w.date) >= new Date()
+        )
         .map((webinar, index) => {
           const authorsList = (
             webinar.authors.length > 1
@@ -82,7 +82,9 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
       </div>
       <div>
         {webinars
-          .filter((w) => w.status !== 'Upcoming')
+          .filter(
+            (w) => w.status !== 'Upcoming' || new Date(w.date) < new Date()
+          )
           .map((w, index) => (
             <WebinarListItem key={w.slug} webinar={w} episode={index + 1} />
           ))}
