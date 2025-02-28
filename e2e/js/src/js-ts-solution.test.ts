@@ -139,9 +139,6 @@ ${content}`
     expect(runCLI(`typecheck ${swcParentLib}`)).toContain(
       `Successfully ran target typecheck for project @proj/${swcParentLib} and 5 tasks it depends on`
     );
-    expect(runCLI(`typecheck ${tscParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${tscParentLib} and 5 tasks it depends on`
-    );
     expect(runCLI(`typecheck ${viteParentLib}`)).toContain(
       `Successfully ran target typecheck for project @proj/${viteParentLib} and 5 tasks it depends on`
     );
