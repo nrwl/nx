@@ -6,6 +6,7 @@ import {
   joinPathFragments,
   normalizePath,
   ProjectGraphProjectNode,
+  readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
 
@@ -74,7 +75,10 @@ export function buildEsbuildOptions(
   } else if (options.platform === 'node' && format === 'cjs') {
     // When target platform Node and target format is CJS, then also transpile workspace libs used by the app.
     // Provide a `require` override in the main entry file so workspace libs can be loaded when running the app.
-    const paths = getTsConfigCompilerPaths(context);
+    const paths = options.isTsSolutionSetup
+      ? createPathsFromTsConfigReferences(context)
+      : getTsConfigCompilerPaths(context);
+
     const entryPointsFromProjects = getEntryPoints(
       context.projectName,
       context,
@@ -121,6 +125,50 @@ export function buildEsbuildOptions(
   }
 
   return esbuildOptions;
+}
+
+/**
+ * When using TS project references we need to map the paths to the referenced projects.
+ * This is necessary because esbuild does not support project references out of the box.
+ * @param context ExecutorContext
+ */
+export function createPathsFromTsConfigReferences(
+  context: ExecutorContext
+): Record<string, string[]> {
+  const {
+    findAllProjectNodeDependencies,
+  } = require('nx/src/utils/project-graph-utils');
+
+  const deps = findAllProjectNodeDependencies(context.projectName);
+  const tsConfig = readJsonFile(
+    joinPathFragments(context.root, 'tsconfig.json')
+  );
+  const referencesAsPaths = new Set(
+    tsConfig.references.map((ref) => joinPathFragments(workspaceRoot, ref.path))
+  );
+
+  // for each dep we check if it contains a build target
+  // we only want to add the paths for projects that do not have a build target
+  return deps.reduce((acc, dep) => {
+    const projectNode = context.projectGraph.nodes[dep];
+    if (!projectNode.data.targets?.build) {
+      const projectPath = joinPathFragments(
+        workspaceRoot,
+        projectNode.data.root
+      );
+      const projectPkgJson = readJsonFile(
+        joinPathFragments(projectPath, 'package.json')
+      );
+      // if the project has a name and a main entry point, we add it to the paths
+      if (projectPkgJson?.name && projectPkgJson?.main) {
+        const main = joinPathFragments(projectPath, projectPkgJson.main);
+        if (referencesAsPaths.has(projectPath)) {
+          acc[projectPkgJson.name] = [path.relative(workspaceRoot, main)];
+        }
+      }
+    }
+    return acc;
+  }, {});
 }
 
 export function getOutExtension(
