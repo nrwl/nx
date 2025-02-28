@@ -1507,6 +1507,11 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      updateJson(appTree, 'package.json', (json) => {
+        delete json.workspaces;
+        return json;
+      });
+      appTree.write('pnpm-lock.yaml', '');
       appTree.write('pnpm-workspace.yaml', `packages:`);
 
       await applicationGenerator(appTree, {

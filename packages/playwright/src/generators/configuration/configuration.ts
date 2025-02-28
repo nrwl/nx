@@ -248,6 +248,7 @@ export async function configurationGeneratorInternal(
     if (projectPackageManagerWorkspaceState !== 'included') {
       tasks.push(
         getProjectPackageManagerWorkspaceStateWarningTask(
+          tree,
           projectPackageManagerWorkspaceState,
           tree.root
         )

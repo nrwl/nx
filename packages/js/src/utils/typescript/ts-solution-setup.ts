@@ -10,7 +10,10 @@ import {
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
-import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import {
+  getProjectPackageManagerWorkspaceState,
+  isUsingPackageManagerWorkspaces,
+} from '../package-manager-workspaces';
 import { getNeededCompilerOptionOverrides } from './configuration';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
@@ -213,6 +216,11 @@ export function addProjectToTsSolutionWorkspace(
   tree: Tree,
   projectDir: string
 ) {
+  const state = getProjectPackageManagerWorkspaceState(tree, projectDir);
+  if (state === 'included') {
+    return;
+  }
+
   // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
   // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
   // If the dir is just "foo" then we have to add it as is.

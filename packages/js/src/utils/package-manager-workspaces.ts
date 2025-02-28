@@ -1,9 +1,10 @@
 import {
-  detectPackageManager,
   getPackageManagerVersion,
   output,
   readJson,
+  readNxJson,
   type GeneratorCallback,
+  type PackageManager,
   type Tree,
 } from '@nx/devkit';
 import picomatch = require('picomatch');
@@ -27,7 +28,13 @@ export function getProjectPackageManagerWorkspaceState(
 
   const patterns = getGlobPatternsFromPackageManagerWorkspaces(
     tree.root,
-    (path) => readJson(tree, path, { expectComments: true })
+    (path) => readJson(tree, path, { expectComments: true }),
+    (path) => {
+      const content = tree.read(path, 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      return load(content, { filename: path });
+    },
+    (path) => tree.exists(path)
   );
   const isIncluded = patterns.some((p) =>
     picomatch(p)(join(projectRoot, 'package.json'))
@@ -40,12 +47,8 @@ export function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
   return isWorkspacesEnabled(tree);
 }
 
-export function isWorkspacesEnabled(
-  tree: Tree
-  // packageManager: PackageManager = detectPackageManager(),
-  // root: string = workspaceRoot
-): boolean {
-  const packageManager = detectPackageManager(tree.root);
+export function isWorkspacesEnabled(tree: Tree): boolean {
+  const packageManager = detectPackageManager(tree);
   if (packageManager === 'pnpm') {
     return tree.exists('pnpm-workspace.yaml');
   }
@@ -58,7 +61,22 @@ export function isWorkspacesEnabled(
   return false;
 }
 
+function detectPackageManager(tree: Tree, dir: string = ''): PackageManager {
+  const nxJson = readNxJson(tree);
+  return (
+    nxJson?.cli?.packageManager ??
+    (tree.exists(join(dir, 'bun.lockb')) || tree.exists(join(dir, 'bun.lock'))
+      ? 'bun'
+      : tree.exists(join(dir, 'yarn.lock'))
+      ? 'yarn'
+      : tree.exists(join(dir, 'pnpm-lock.yaml'))
+      ? 'pnpm'
+      : 'npm')
+  );
+}
+
 export function getProjectPackageManagerWorkspaceStateWarningTask(
+  tree: Tree,
   projectPackageManagerWorkspaceState: ProjectPackageManagerWorkspaceState,
   workspaceRoot: string
 ): GeneratorCallback {
@@ -67,7 +85,7 @@ export function getProjectPackageManagerWorkspaceStateWarningTask(
       return;
     }
 
-    const packageManager = detectPackageManager(workspaceRoot);
+    const packageManager = detectPackageManager(tree, workspaceRoot);
     let adviseMessage =
       'updating the "workspaces" option in the workspace root "package.json" file with the project root or pattern that includes it';
     let packageManagerWorkspaceSetupDocs: string;
