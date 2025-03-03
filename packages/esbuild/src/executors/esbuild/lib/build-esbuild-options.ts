@@ -1,6 +1,6 @@
 import * as esbuild from 'esbuild';
 import * as path from 'path';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, lstatSync } from 'fs';
 import {
   ExecutorContext,
   joinPathFragments,
@@ -138,37 +138,129 @@ export function createPathsFromTsConfigReferences(
   const {
     findAllProjectNodeDependencies,
   } = require('nx/src/utils/project-graph-utils');
-
-  const deps = findAllProjectNodeDependencies(context.projectName);
+  const {
+    isValidPackageJsonBuildConfig,
+  } = require('@nx/js/src/plugins/typescript/util');
+  const { readTsConfig } = require('@nx/devkit');
+  const deps = findAllProjectNodeDependencies(
+    context.projectName,
+    context.projectGraph
+  );
   const tsConfig = readJsonFile(
     joinPathFragments(context.root, 'tsconfig.json')
   );
   const referencesAsPaths = new Set(
-    tsConfig.references.map((ref) => joinPathFragments(workspaceRoot, ref.path))
+    tsConfig.references.reduce((acc, ref) => {
+      if (!ref.path) return acc;
+
+      const fullPath = joinPathFragments(workspaceRoot, ref.path);
+
+      try {
+        if (lstatSync(fullPath).isDirectory()) {
+          acc.push(fullPath);
+        }
+      } catch {
+        // Ignore errors (e.g., path doesn't exist)
+      }
+
+      return acc;
+    }, [])
   );
+
+  const getTsConfigPath = (
+    projectType: string,
+    projectPath: string
+  ): string => {
+    if (projectType === 'app') {
+      return existsSync(join(projectPath, 'tsconfig.app.json'))
+        ? 'tsconfig.app.json'
+        : 'tsconfig.json';
+    }
+
+    return existsSync(join(projectPath, 'tsconfig.lib.json'))
+      ? 'tsconfig.lib.json'
+      : 'tsconfig.json';
+  };
 
   // for each dep we check if it contains a build target
   // we only want to add the paths for projects that do not have a build target
   return deps.reduce((acc, dep) => {
     const projectNode = context.projectGraph.nodes[dep];
-    if (!projectNode.data.targets?.build) {
-      const projectPath = joinPathFragments(
+    const projectPath = joinPathFragments(workspaceRoot, projectNode.data.root);
+    const projTsConfig = readTsConfig(
+      getTsConfigPath(projectNode.type, projectPath)
+    ) as any;
+
+    const projectPkgJson = readJsonFile(
+      joinPathFragments(projectPath, 'package.json')
+    );
+
+    if (
+      !isValidPackageJsonBuildConfig(
+        projTsConfig,
         workspaceRoot,
-        projectNode.data.root
-      );
-      const projectPkgJson = readJsonFile(
-        joinPathFragments(projectPath, 'package.json')
-      );
-      // if the project has a name and a main entry point, we add it to the paths
-      if (projectPkgJson?.name && projectPkgJson?.main) {
-        const main = joinPathFragments(projectPath, projectPkgJson.main);
-        if (referencesAsPaths.has(projectPath)) {
-          acc[projectPkgJson.name] = [path.relative(workspaceRoot, main)];
-        }
+        projectPath
+      ) &&
+      projectPkgJson?.name
+    ) {
+      const entryPoint = getProjectEntryPoint(projectPkgJson, projectPath);
+      if (referencesAsPaths.has(projectPath)) {
+        acc[projectPkgJson.name] = [path.relative(workspaceRoot, entryPoint)];
       }
     }
+
     return acc;
   }, {});
+}
+
+// Get the entry point for the project
+function getProjectEntryPoint(projectPkgJson: any, projectPath: string) {
+  let entryPoint = null;
+  if (typeof projectPkgJson.exports === 'string') {
+    // If exports is a string, use it as the entry point
+    entryPoint = path.relative(
+      workspaceRoot,
+      joinPathFragments(projectPath, projectPkgJson.exports)
+    );
+  } else if (
+    typeof projectPkgJson.exports === 'object' &&
+    projectPkgJson.exports['.']
+  ) {
+    // If exports is an object and has a '.' key, process it
+    const exportEntry = projectPkgJson.exports['.'];
+    if (typeof exportEntry === 'object') {
+      entryPoint =
+        exportEntry.import ||
+        exportEntry.require ||
+        exportEntry.default ||
+        null;
+    } else if (typeof exportEntry === 'string') {
+      entryPoint = exportEntry;
+    }
+
+    if (entryPoint) {
+      entryPoint = path.relative(
+        workspaceRoot,
+        joinPathFragments(projectPath, entryPoint)
+      );
+    }
+  }
+
+  // If no exports were found, fall back to main and module
+  if (!entryPoint) {
+    if (projectPkgJson.main) {
+      entryPoint = path.relative(
+        workspaceRoot,
+        joinPathFragments(projectPath, projectPkgJson.main)
+      );
+    } else if (projectPkgJson.module) {
+      entryPoint = path.relative(
+        workspaceRoot,
+        joinPathFragments(projectPath, projectPkgJson.module)
+      );
+    }
+  }
+  return entryPoint;
 }
 
 export function getOutExtension(
