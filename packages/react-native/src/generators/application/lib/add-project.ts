@@ -9,6 +9,7 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -27,15 +28,29 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   };
 
   if (isUsingTsSolutionSetup(host)) {
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: options.projectName,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       private: true,
-      nx: {
-        targets: hasPlugin ? {} : getTargets(options),
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (!hasPlugin) {
+      packageJson.nx ??= {};
+      packageJson.nx.targets = getTargets(options);
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(host, options.projectName, {
       ...project,

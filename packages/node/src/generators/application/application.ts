@@ -212,9 +212,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
       version: '0.0.1',
       private: true,
       nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: project.sourceRoot,
+        name: options.name !== options.importPath ? options.name : undefined,
         targets: project.targets,
         tags: project.tags?.length ? project.tags : undefined,
       },
@@ -515,6 +513,12 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   addAppFiles(tree, options);
   addProject(tree, options);
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
   updateTsConfigOptions(tree, options);
 
   if (options.linter === Linter.EsLint) {
@@ -595,12 +599,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
-  }
-
   sortPackageJsonFields(tree, options.appProjectRoot);
 
   if (!options.skipFormat) {
@@ -620,7 +618,7 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
     projectRoot: appProjectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(host, {
@@ -646,6 +644,9 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
 
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+
   return {
     addPlugin,
     ...options,
@@ -664,7 +665,7 @@ async function normalizeOptions(
       ? joinPathFragments(appProjectRoot, 'dist')
       : joinPathFragments(
           'dist',
-          options.rootProject ? options.name : appProjectRoot
+          options.rootProject ? appProjectName : appProjectRoot
         ),
     isUsingTsSolutionConfig,
     swcJest,

@@ -14,7 +14,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
 ): Promise<NormalizedSchema<T>> {
   await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
     projectRoot: appProjectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(host, {
@@ -33,6 +33,10 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   options.rootProject = appProjectRoot === '.';
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
@@ -48,23 +52,18 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   assertValidStyle(options.style);
 
-  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const normalized = {
     ...options,
-    projectName:
-      isUsingTsSolutionConfig &&
-      !options.name &&
-      !options.alwaysGenerateProjectJson
-        ? importPath
-        : appProjectName,
+    projectName: appProjectName,
     appProjectRoot,
+    importPath,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-    names: names(appProjectName),
+    names: names(projectName),
     isUsingTsSolutionConfig,
   } as NormalizedSchema;
 

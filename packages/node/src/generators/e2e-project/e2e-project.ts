@@ -280,7 +280,11 @@ async function normalizeOptions(
     importPath: string;
   }
 > {
-  options.directory = options.directory ?? `${options.project}-e2e`;
+  let directory = options.rootProject ? 'e2e' : options.directory;
+  if (!directory) {
+    const projectConfig = readProjectConfiguration(tree, options.project);
+    directory = `${projectConfig.root}-e2e`;
+  }
   const {
     projectName: e2eProjectName,
     projectRoot: e2eProjectRoot,
@@ -288,7 +292,7 @@ async function normalizeOptions(
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'library',
-    directory: options.rootProject ? 'e2e' : options.directory,
+    directory,
   });
 
   const nxJson = readNxJson(tree);

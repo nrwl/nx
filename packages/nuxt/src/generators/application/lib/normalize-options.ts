@@ -12,7 +12,8 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
+    names: projectNames,
     projectRoot: appProjectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(host, {
@@ -23,6 +24,10 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
@@ -32,7 +37,7 @@ export async function normalizeOptions(
 
   const normalized = {
     ...options,
-    name: names(appProjectName).fileName,
+    name: projectNames.projectFileName,
     projectName: appProjectName,
     appProjectRoot,
     importPath,
@@ -40,7 +45,7 @@ export async function normalizeOptions(
     e2eProjectRoot,
     parsedTags,
     style: options.style ?? 'none',
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.unitTestRunner ??= 'vitest';

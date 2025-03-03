@@ -16,6 +16,7 @@ describe('updateEslint', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-app',
+      projectSimpleName: 'my-app',
       appProjectRoot: 'my-app',
       directory: 'my-app',
       importPath: '@proj/my-app',
@@ -24,11 +25,11 @@ describe('updateEslint', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
       outputPath: 'dist/my-app',
-      name: 'my-app',
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
       styledModule: null,
+      isTsSolutionSetup: false,
     };
     tree = createTreeWithEmptyWorkspace();
     const project: ProjectConfiguration = {

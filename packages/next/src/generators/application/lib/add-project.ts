@@ -11,6 +11,7 @@ import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-default
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nextVersion } from '../../../utils/versions';
 import { reactDomVersion, reactVersion } from '@nx/react';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
@@ -72,7 +73,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   };
 
   if (isUsingTsSolutionSetup(host)) {
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
+    const packageJson: PackageJson = {
       name: options.importPath,
       version: '0.0.1',
       private: true,
@@ -81,13 +82,21 @@ export function addProject(host: Tree, options: NormalizedSchema) {
         react: reactVersion,
         'react-dom': reactDomVersion,
       },
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: options.appProjectRoot,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(host, options.projectName, {
       ...project,

@@ -10,6 +10,7 @@ import { type NxRemixGeneratorSchema } from '../schema';
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
   projectRoot: string;
+  importPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
@@ -35,20 +36,23 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const e2eProjectName = options.rootProject ? 'e2e' : `${projectName}-e2e`;
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+
+  const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${projectRoot}-e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     linter: options.linter ?? Linter.EsLint,
-    projectName:
-      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
+    projectName: appProjectName,
     projectRoot,
+    importPath,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,

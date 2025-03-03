@@ -39,6 +39,7 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  importPath: string;
   parsedTags: string[];
   fileName: string;
   styledModule: null | SupportedStyles;

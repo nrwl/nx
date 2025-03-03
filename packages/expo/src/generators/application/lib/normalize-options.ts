@@ -6,8 +6,10 @@ import {
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Schema } from '../schema';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema
+  extends Omit<Schema, 'name' | 'useTsSolution'> {
   className: string;
+  simpleName: string;
   projectName: string;
   appProjectRoot: string;
   importPath: string;
@@ -25,7 +27,7 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
     names: projectNames,
     projectRoot: appProjectRoot,
     importPath,
@@ -40,11 +42,16 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const { className } = names(appProjectName);
+  const { className } = names(projectName);
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const rootProject = appProjectRoot === '.';
+
+  const isTsSolutionSetup =
+    options.useTsSolution ?? isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isTsSolutionSetup || options.name ? projectName : importPath;
 
   const e2eProjectName = rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -53,7 +60,7 @@ export async function normalizeOptions(
     ...options,
     unitTestRunner: options.unitTestRunner || 'jest',
     e2eTestRunner: options.e2eTestRunner || 'none',
-    name: projectNames.projectSimpleName,
+    simpleName: projectNames.projectSimpleName,
     className,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,
@@ -64,6 +71,6 @@ export async function normalizeOptions(
     rootProject,
     e2eProjectName,
     e2eProjectRoot,
-    isTsSolutionSetup: isUsingTsSolutionSetup(host),
+    isTsSolutionSetup,
   };
 }

@@ -205,7 +205,7 @@ export async function addE2e(
         e2eDirectory: options.e2eProjectRoot,
         appProject: options.projectName,
         appDisplayName: options.displayName,
-        appName: options.name,
+        appName: options.simpleName,
         framework: 'expo',
         setParserOptionsProject: options.setParserOptionsProject,
         skipFormat: true,

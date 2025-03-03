@@ -53,6 +53,7 @@ import {
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -246,17 +247,25 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
 
 async function addProject(tree: Tree, options: NormalizedSchema) {
   if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
+    const packageJson: PackageJson = {
       name: options.importPath,
       version: '0.0.1',
       private: true,
-      nx: {
-        name: options.importPath === options.name ? undefined : options.name,
-        projectType: 'application',
-        sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(tree, options.projectName, {
       projectType: 'application',
@@ -475,8 +484,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
           version: '0.0.1',
           private: true,
           nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
             implicitDependencies: [options.projectName],
           },
         }
@@ -553,8 +560,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
           version: '0.0.1',
           private: true,
           nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
             implicitDependencies: [options.projectName],
           },
         }
@@ -690,7 +695,7 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
     projectRoot: appProjectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(host, {
@@ -704,9 +709,12 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
-  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   const npmScope = getNpmScope(host);
 
@@ -724,15 +732,14 @@ async function normalizeOptions(
     prefix: options.prefix ?? npmScope ?? 'app',
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',
-    projectName:
-      isUsingTsSolutionConfig && !options.name ? importPath : appProjectName,
+    projectName: appProjectName,
     importPath,
     strict: options.strict ?? true,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
-    names: names(appProjectName),
+    names: names(projectName),
     isUsingTsSolutionConfig,
   };
 }

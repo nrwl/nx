@@ -6,9 +6,12 @@ import {
 import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema
+  extends Omit<Schema, 'name' | 'useTsSolution'> {
   projectName: string;
+  projectSimpleName: string;
   appProjectRoot: string;
   importPath: string;
   outputPath: string;
@@ -17,6 +20,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
+  isTsSolutionSetup: boolean;
   js?: boolean;
 }
 
@@ -26,7 +30,8 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
+    names: projectNames,
     projectRoot: appProjectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(host, {
@@ -44,15 +49,18 @@ export async function normalizeOptions(
 
   options.addPlugin ??= addPlugin;
 
+  const isTsSolutionSetup =
+    options.useTsSolution ?? isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isTsSolutionSetup || options.name ? projectName : importPath;
+
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
-
-  const name = names(appProjectName).fileName;
 
   const outputPath = joinPathFragments(
     'dist',
     appProjectRoot,
-    ...(options.rootProject ? [name] : [])
+    ...(options.rootProject ? [projectNames.projectFileName] : [])
   );
 
   const parsedTags = options.tags
@@ -80,13 +88,14 @@ export async function normalizeOptions(
     e2eTestRunner: options.e2eTestRunner || 'playwright',
     fileName,
     linter: options.linter || Linter.EsLint,
-    name,
     outputPath,
     parsedTags,
     projectName: appProjectName,
+    projectSimpleName: projectNames.projectSimpleName,
     style: options.style || 'css',
     styledModule,
     unitTestRunner: options.unitTestRunner || 'jest',
     importPath,
+    isTsSolutionSetup,
   };
 }
