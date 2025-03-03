@@ -10,6 +10,18 @@ focus: /package.json
 
 Nx offers many features, but at its core, it is a task runner. Out of the box, it can cache your tasks and ensure those tasks are run in the correct order. After the initial set up, you can incrementally add on other features that would be helpful in your organization.
 
+:::info
+
+##### In-Browser Editing Tips
+
+Instructions for each step will appear in this left-hand panel. You can edit files in the editor in the top right and execute terminal commands in the bottom right.
+
+The file system and terminal will be reset at each step of the tutorial, so don't worry about breaking the workspace while experimenting. If you are stuck on a step, click the `Solve` button in the top right to set the file system to the solved state.
+
+If you experience technical issues with the in-browser tutorial, try refreshing the page or use the download button in the top right to download the files for the current step to your local machine.
+
+:::
+
 ### Add Nx
 
 To enable Nx in your repository, run a single command:

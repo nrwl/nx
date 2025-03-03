@@ -113,9 +113,9 @@ export class AppComponent {
 
 ## Testing and Linting
 
-import { VideoLink } from '@nx/nx-dev/ui-markdoc';
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
 
-<VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=410"></VideoLink>
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=410"></VideoLink> */}
 
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. The `test` and `lint` targets are defined in the application `project.json` file, while the `e2e` target is [inferred from the `apps/angular-store-e2e/cypress.config.ts` file](#inferred-tasks). We can use the same syntax as before to run these tasks:
 
