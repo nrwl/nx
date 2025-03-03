@@ -239,25 +239,27 @@ Create a new folder `libs/tailwind-preset` with a `tailwind.config.js` file in i
 ```javascript {% fileName="libs/tailwind-preset/tailwind.config.js" %}
 module.exports = {
   theme: {
-    colors: {
-      primary: {
-        light: 'var(--primary-light)',
-        DEFAULT: 'var(--primary)',
-        dark: 'var(--primary-dark)',
+    extend: {
+      colors: {
+        primary: {
+          light: 'var(--primary-light)',
+          DEFAULT: 'var(--primary)',
+          dark: 'var(--primary-dark)',
+        },
+        secondary: {
+          light: 'var(--secondary-light)',
+          DEFAULT: 'var(--secondary)',
+          dark: 'var(--secondary-dark)',
+        },
+        white: 'var(--white)',
+        black: 'var(--black)',
       },
-      secondary: {
-        light: 'var(--secondary-light)',
-        DEFAULT: 'var(--secondary)',
-        dark: 'var(--secondary-dark)',
+      spacing: {
+        sm: 'var(--spacing-sm)',
+        md: 'var(--spacing-md)',
+        lg: 'var(--spacing-lg)',
+        xl: 'var(--spacing-xl)',
       },
-      white: 'var(--white)',
-      black: 'var(--black)',
-    },
-    spacing: {
-      sm: 'var(--spacing-sm)',
-      md: 'var(--spacing-md)',
-      lg: 'var(--spacing-lg)',
-      xl: 'var(--spacing-xl)',
     },
   },
   plugins: [],
