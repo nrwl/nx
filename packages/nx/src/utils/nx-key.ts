@@ -2,13 +2,13 @@ import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
-export async function printPowerpackLicense() {
+export async function printNxKey() {
   try {
     const { organizationName, seatCount, workspaceCount } =
-      await getPowerpackLicenseInformation();
+      await getNxKeyInformation();
 
     logger.log(
-      `Nx Powerpack Licensed to ${organizationName} for ${seatCount} user${
+      `Nx key licensed to ${organizationName} for ${seatCount} user${
         seatCount > 1 ? 's' : ''
       } in ${
         workspaceCount === 9999 ? 'an unlimited number of' : workspaceCount
@@ -17,7 +17,7 @@ export async function printPowerpackLicense() {
   } catch {}
 }
 
-export async function getPowerpackLicenseInformation() {
+export async function getNxKeyInformation() {
   try {
     const {
       getPowerpackLicenseInformation,
@@ -29,19 +29,26 @@ export async function getPowerpackLicenseInformation() {
       getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
     )(workspaceRoot);
   } catch (e) {
-    if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
-      throw new NxPowerpackNotInstalledError(e);
+    try {
+      const { getNxKeyInformationAsync } = (await import(
+        '@nx/key'
+      )) as typeof import('@nx/key');
+      return getNxKeyInformationAsync(workspaceRoot);
+    } catch (e) {
+      if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
+        throw new NxKeyNotInstalledError(e);
+      }
+      throw e;
     }
-    throw e;
   }
 }
 
-export class NxPowerpackNotInstalledError extends Error {
+export class NxKeyNotInstalledError extends Error {
   constructor(e: Error) {
     super(
-      `The "@nx/powerpack-license" package is needed to use Nx Powerpack enabled features. Please install the @nx/powerpack-license with ${
+      `The "@nx/key" package is needed to use Nx Powerpack enabled features. Please install the @nx/key with ${
         getPackageManagerCommand().addDev
-      } @nx/powerpack-license`,
+      } @nx/key`,
       { cause: e }
     );
   }
