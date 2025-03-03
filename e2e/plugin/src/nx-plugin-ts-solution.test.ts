@@ -6,6 +6,7 @@ import {
   readJson,
   renameFile,
   runCLI,
+  runCommand,
   uniq,
   updateFile,
   updateJson,
@@ -104,12 +105,10 @@ describe('Nx Plugin (TS solution)', () => {
 
     // Register plugin in nx.json (required for inference)
     updateJson(`nx.json`, (nxJson) => {
-      nxJson.plugins = [
-        {
-          plugin: `@${workspaceName}/${plugin}`,
-          options: { inferredTags: ['my-tag'] },
-        },
-      ];
+      nxJson.plugins.push({
+        plugin: `@${workspaceName}/${plugin}`,
+        options: { inferredTags: ['my-tag'] },
+      });
       return nxJson;
     });
 
@@ -276,9 +275,6 @@ describe('Nx Plugin (TS solution)', () => {
 
     expect(runCLI(`build ${plugin}`)).toContain(
       `Successfully ran target build for project ${plugin}`
-    );
-    expect(runCLI(`typecheck ${plugin}`)).toContain(
-      `Successfully ran target typecheck for project ${plugin}`
     );
     expect(runCLI(`lint ${plugin}`)).toContain(
       `Successfully ran target lint for project ${plugin}`

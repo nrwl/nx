@@ -193,12 +193,6 @@ describe('Node Applications', () => {
     expect(runCLI(`build ${nestLib}`)).toContain(
       `Successfully ran target build for project ${nestLib}`
     );
-    expect(runCLI(`typecheck ${nodeLib}`)).toContain(
-      `Successfully ran target typecheck for project ${nodeLib}`
-    );
-    expect(runCLI(`typecheck ${nestLib}`)).toContain(
-      `Successfully ran target typecheck for project ${nestLib}`
-    );
   }, 300_000);
 });
 

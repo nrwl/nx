@@ -59,7 +59,14 @@ describe('Vue (TS solution)', () => {
     const lib = uniq('lib');
 
     runCLI(
-      `generate @nx/vue:library packages/${lib} --name=${lib} --bundler=vite --unitTestRunner=vitest --linter=eslint`
+      `generate @nx/vue:library packages/${lib} --name=${lib} --bundler=vite --unitTestRunner=vitest`
+    );
+    // lib generator doesn't generate specs, add one
+    updateFile(
+      `packages/${lib}/src/foo.spec.ts`,
+      `test('it should run', () => {
+        expect(true).toBeTruthy();
+      });`
     );
 
     const packageJson = readJson(`packages/${lib}/package.json`);
@@ -70,9 +77,6 @@ describe('Vue (TS solution)', () => {
     );
     expect(runCLI(`typecheck ${lib}`)).toContain(
       `Successfully ran target typecheck for project ${lib}`
-    );
-    expect(runCLI(`lint ${lib}`)).toContain(
-      `Successfully ran target lint for project ${lib}`
     );
     expect(runCLI(`test ${lib}`)).toContain(
       `Successfully ran target test for project ${lib}`

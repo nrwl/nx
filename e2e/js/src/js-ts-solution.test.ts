@@ -183,7 +183,7 @@ ${content}`
     const lib1 = uniq('lib1');
 
     runCLI(
-      `generate @nx/js:lib packages/${lib1} --name=${lib1} --linter=eslint --unitTestRunner=jest`
+      `generate @nx/js:lib packages/${lib1} --name=${lib1} --bundler=vite --linter=eslint --unitTestRunner=jest`
     );
 
     const packageJson = readJson(`packages/${lib1}/package.json`);
