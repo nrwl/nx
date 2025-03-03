@@ -237,11 +237,13 @@ function buildTargetWebpack(
 
   if (
     buildableProjectConfig.targets[parsed.target].executor !==
-    '@nx/webpack:webpack'
+      '@nx/webpack:webpack' &&
+    buildableProjectConfig.targets[parsed.target].executor !==
+      '@nx/rspack:rspack'
   ) {
     throw new InvalidExecutorError(
-      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' executor. ` +
-        `Please make sure to use '@nx/webpack:webpack' executor in that target to use Cypress Component Testing.`
+      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' or '@nx/rspack:rspack' executor. ` +
+        `Please make sure to use '@nx/webpack:webpack' or '@nx/rspack:rspack' executor in that target to use Cypress Component Testing.`
     );
   }
 
