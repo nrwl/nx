@@ -103,6 +103,11 @@ const teamMembers = [
     imageUrl: 'jonathan-cammisuli.avif',
   },
   {
+    name: 'Jordan Powell',
+    title: 'Senior Engineer',
+    imageUrl: 'jordan-powell.avif',
+  },
+  {
     name: 'Juri Strumpflohner',
     title: 'Director of Developer Experience',
     imageUrl: 'juri-strumpflohner.avif',
