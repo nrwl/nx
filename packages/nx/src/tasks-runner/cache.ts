@@ -223,35 +223,27 @@ export class DbCache {
   }
 
   private async getS3Cache(): Promise<RemoteCacheV2 | null> {
-    const powerpackCache = await this.resolveRemoteCache(
-      '@nx/powerpack-s3-cache'
-    );
-    if (powerpackCache) return powerpackCache;
-    return this.resolveRemoteCache('@nx/s3-cache');
+    const cache = await this.resolveRemoteCache('@nx/s3-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-s3-cache');
   }
 
   private async getSharedCache(): Promise<RemoteCacheV2 | null> {
-    const powerpackCache = await this.resolveRemoteCache(
-      '@nx/powerpack-shared-fs-cache'
-    );
-    if (powerpackCache) return powerpackCache;
-    return this.resolveRemoteCache('@nx/shared-fs-cache');
+    const cache = await this.resolveRemoteCache('@nx/shared-fs-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-shared-fs-cache');
   }
 
   private async getGcsCache(): Promise<RemoteCacheV2 | null> {
-    const powerpackCache = await this.resolveRemoteCache(
-      '@nx/powerpack-gcs-cache'
-    );
-    if (powerpackCache) return powerpackCache;
-    return this.resolveRemoteCache('@nx/gcs-cache');
+    const cache = await this.resolveRemoteCache('@nx/gcs-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-gcs-cache');
   }
 
   private async getAzureCache(): Promise<RemoteCacheV2 | null> {
-    const powerpackCache = await this.resolveRemoteCache(
-      '@nx/powerpack-azure-cache'
-    );
-    if (powerpackCache) return powerpackCache;
-    return this.resolveRemoteCache('@nx/azure-cache');
+    const cache = await this.resolveRemoteCache('@nx/azure-cache');
+    if (cache) return cache;
+    return this.resolveRemoteCache('@nx/powerpack-azure-cache');
   }
 
   private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
