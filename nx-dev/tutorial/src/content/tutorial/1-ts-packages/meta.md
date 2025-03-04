@@ -8,7 +8,7 @@ editor:
   fileTree:
     allowEdits: true
 filesystem:
-  watch: ['/*.json', '/packages/*(/!(node_modules))/*']
+  watch: ['/*.json', '/packages/*(/!(node_modules))/*', '/packages/*/dist/*']
 downloadAsZip: true
 terminal:
   panels: 'terminal'
