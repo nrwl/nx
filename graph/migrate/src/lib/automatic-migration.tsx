@@ -6,16 +6,14 @@ import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { PauseIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { useInterpret, useSelector } from '@xstate/react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect } from 'react';
 import {
   automaticMigrationMachine,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
 } from './automatic-migration.machine';
-import { MigrationCard, MigrationCardHandle } from './migration-card';
-import { Pill } from '@nx/graph-internal/ui-project-details';
+import { MigrationTimeline } from './migration-timeline';
 
 export function AutomaticMigration(props: {
   migrations: MigrationDetailsWithId[];
@@ -68,14 +66,6 @@ export function AutomaticMigration(props: {
     (migration) => migration.id === currentMigration?.id
   );
 
-  const beforeMigrations = props.migrations.slice(
-    0,
-    currentMigrationIndex ?? 0
-  );
-  const afterMigrations = props.migrations.slice(
-    (currentMigrationIndex ?? 0) + 1
-  );
-
   const currentMigrationRunning = useSelector(
     actor,
     (state) => state.context.currentMigrationRunning
@@ -93,166 +83,39 @@ export function AutomaticMigration(props: {
 
   const isDone = useSelector(actor, (state) => state.matches('done'));
 
-  const [showCompletedMigrations, setShowCompletedMigrations] = useState(false);
-
-  const currentMigrationRef = useRef<MigrationCardHandle>(null);
-
-  // Auto-expand when entering needsReview state with failed migration
-  useEffect(() => {
-    if (currentMigrationFailed && currentMigrationRef.current) {
-      currentMigrationRef.current.expand();
+  const handlePauseResume = () => {
+    if (running) {
+      actor.send({ type: 'pause' });
+    } else {
+      actor.send({ type: 'startRunning' });
     }
-  }, [currentMigration?.id, currentMigrationFailed]);
+  };
+
+  const handleReviewMigration = (migrationId: string) => {
+    actor.send({
+      type: 'reviewMigration',
+      migrationId,
+    });
+  };
 
   return (
-    <div>
-      <div
-        className={`mb-2 ${
-          showCompletedMigrations
-            ? 'rounded-md border border-slate-200 p-2  dark:border-slate-700/60'
-            : ''
-        }`}
-      >
-        {beforeMigrations.length > 0 && (
-          <div
-            onClick={() => setShowCompletedMigrations(!showCompletedMigrations)}
-          >
-            <Pill
-              color="grey"
-              text={
-                showCompletedMigrations
-                  ? 'Hide completed migrations'
-                  : `${beforeMigrations.length} completed migration${
-                      beforeMigrations.length === 1 ? '' : 's'
-                    }`
-              }
-            />
-          </div>
-        )}
-        {showCompletedMigrations &&
-          beforeMigrations.length &&
-          beforeMigrations.map((migration) => (
-            <MigrationCard
-              key={migration.id}
-              migration={migration}
-              nxConsoleMetadata={props.nxConsoleMetadata}
-              onFileClick={(file) => props.onFileClick(migration, file)}
-              onViewImplementation={() => {
-                props.onViewImplementation(migration);
-              }}
-              onViewDocumentation={() => {
-                props.onViewDocumentation(migration);
-              }}
-            />
-          ))}
-      </div>
-      {!isDone && (
-        <>
-          <div>
-            <div className="mb-2 flex items-center justify-start gap-2">
-              <button
-                onClick={() =>
-                  running
-                    ? actor.send({ type: 'pause' })
-                    : actor.send({ type: 'startRunning' })
-                }
-                type="button"
-                className="flex items-center rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
-              >
-                {running ? (
-                  <PauseIcon className="mr-2 h-4 w-4" />
-                ) : (
-                  <PlayIcon className="mr-2 h-4 w-4" />
-                )}
-                {running ? 'Pause Migrations' : 'Run Migrations'}
-              </button>
-              {currentMigrationFailed && (
-                <button
-                  onClick={() =>
-                    currentMigration
-                      ? props.onRunMigration(currentMigration)
-                      : undefined
-                  }
-                  type="button"
-                  className="flex items-center rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
-                >
-                  Rerun
-                </button>
-              )}
-              {currentMigrationFailed && (
-                <button
-                  onClick={() =>
-                    currentMigration
-                      ? props.onSkipMigration(currentMigration)
-                      : undefined
-                  }
-                  type="button"
-                  className="flex items-center rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
-                >
-                  Skip
-                </button>
-              )}
-              {currentMigrationChangesNeedReview && (
-                <button
-                  onClick={() => {
-                    if (currentMigration) {
-                      actor.send({
-                        type: 'reviewMigration',
-                        migrationId: currentMigration?.id,
-                      });
-                    }
-                  }}
-                  type="button"
-                  className="flex items-center rounded-md border border-green-500 bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 dark:border-green-700 dark:bg-green-600 dark:text-white hover:dark:bg-green-700"
-                >
-                  Approve Changes
-                </button>
-              )}
-            </div>
-
-            {currentMigration && (
-              <div className="rounded-md border border-black p-3">
-                <MigrationCard
-                  ref={currentMigrationRef}
-                  migration={currentMigration}
-                  nxConsoleMetadata={props.nxConsoleMetadata}
-                  onFileClick={(file) =>
-                    props.onFileClick(currentMigration, file)
-                  }
-                  forceIsRunning={currentMigrationRunning}
-                  onViewImplementation={() => {
-                    props.onViewImplementation(currentMigration);
-                  }}
-                  onViewDocumentation={() => {
-                    props.onViewDocumentation(currentMigration);
-                  }}
-                />
-              </div>
-            )}
-          </div>
-          <div className="p-3">
-            {afterMigrations.map((migration) => (
-              <MigrationCard
-                key={migration.id}
-                migration={migration}
-                nxConsoleMetadata={props.nxConsoleMetadata}
-                onFileClick={(file) => props.onFileClick(migration, file)}
-                onViewImplementation={() => {
-                  props.onViewImplementation(migration);
-                }}
-                onViewDocumentation={() => {
-                  props.onViewDocumentation(migration);
-                }}
-              />
-            ))}
-          </div>
-        </>
-      )}
-      {isDone && (
-        <div className="rounded-md border border-black p-3">
-          <h2 className="text-lg font-bold">All migrations completed</h2>
-        </div>
-      )}
-    </div>
+    <MigrationTimeline
+      migrations={props.migrations}
+      nxConsoleMetadata={props.nxConsoleMetadata}
+      currentMigrationIndex={
+        currentMigrationIndex >= 0 ? currentMigrationIndex : 0
+      }
+      currentMigrationRunning={currentMigrationRunning}
+      currentMigrationFailed={currentMigrationFailed}
+      isDone={isDone}
+      onRunMigration={props.onRunMigration}
+      onSkipMigration={props.onSkipMigration}
+      onFileClick={props.onFileClick}
+      onViewImplementation={props.onViewImplementation}
+      onViewDocumentation={props.onViewDocumentation}
+      onPauseResume={handlePauseResume}
+      isPaused={!running}
+      onReviewMigration={handleReviewMigration}
+    />
   );
 }
