@@ -1,3 +1,8 @@
+---
+title: Why Nx?
+description: Discover how Nx helps developers speed up computation, integrate tooling, and scale projects from small teams to entire organizations with powerful caching and CI capabilities.
+---
+
 # Why Nx?
 
 {% youtube

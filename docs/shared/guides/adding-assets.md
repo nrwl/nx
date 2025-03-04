@@ -1,3 +1,8 @@
+---
+title: Adding Images, Fonts, and Files
+description: Learn how to import and use assets like images, fonts, and files directly in your Nx projects, including special handling for SVGs in React, Next.js, and Vite applications.
+---
+
 # Adding Images, Fonts, and Files
 
 With Nx, you can **`import` assets directly from your TypeScript/JavaScript code**.

@@ -1,3 +1,8 @@
+---
+title: Import an Existing Project into an Nx Workspace
+description: Learn how to use the nx import command to move projects between repositories while preserving git history, managing dependencies, and handling external code references.
+---
+
 # Import an Existing Project into an Nx Workspace
 
 {% youtube src="https://youtu.be/hnbwoV2-620" title="Importing an existing project into your monorepo" /%}

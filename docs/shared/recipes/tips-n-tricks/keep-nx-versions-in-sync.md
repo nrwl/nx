@@ -1,3 +1,8 @@
+---
+title: Keep Nx Versions in Sync
+description: Learn how to ensure all Nx plugins in your repository are using the same version to avoid compatibility issues and debugging challenges.
+---
+
 # Keep Nx Versions in Sync
 
 If your Nx plugin versions do not match the version of `nx` in your repository, you can encounter some difficult to debug errors. To get your Nx plugins back in sync, follow the steps below:

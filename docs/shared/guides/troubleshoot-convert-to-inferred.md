@@ -1,3 +1,8 @@
+---
+title: Troubleshoot Convert to Inferred Migration
+description: Learn how to resolve common issues when migrating from executor-based tasks to inferred tasks in Nx, with specific solutions for Next.js, Remix, and other frameworks.
+---
+
 # Troubleshoot Convert to Inferred Migration
 
 Nx comes with plugins that automatically [infer tasks](/concepts/inferred-tasks) (i.e. Project Crystal) for your

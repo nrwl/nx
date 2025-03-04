@@ -1,3 +1,8 @@
+---
+title: Migrate to Inferred Tasks (Project Crystal)
+description: Learn how to convert your Nx workspace from explicit executor configuration to using inferred tasks for reduced configuration and improved caching.
+---
+
 # Migrate to Inferred Tasks (Project Crystal)
 
 In this recipe, you'll learn how to migrate an existing Nx workspace from using executors in `project.json` to using [inferred tasks](/concepts/inferred-tasks).

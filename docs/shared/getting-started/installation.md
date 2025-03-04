@@ -1,3 +1,8 @@
+---
+title: Installation
+description: Learn how to install Nx in a new workspace, add it to an existing repository, install it globally, or set it up in a non-JavaScript repository with step-by-step instructions.
+---
+
 # Installation
 
 Create a new Nx workspace using the following command:

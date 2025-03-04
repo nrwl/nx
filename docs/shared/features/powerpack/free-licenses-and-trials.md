@@ -1,3 +1,8 @@
+---
+title: 'Free Licenses and Trials'
+description: 'Learn about Nx Powerpack free licenses for small teams and open source projects, as well as trial options and extended evaluation periods.'
+---
+
 # Powerpack Free Licenses and Trials
 
 ## Free Licenses Enabling Self-Hosted Remote Cache
