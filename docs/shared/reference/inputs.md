@@ -1,3 +1,8 @@
+---
+title: Inputs and Named Inputs
+description: Learn how Nx uses inputs to compute cache hashes for tasks, including file sets, runtime inputs, and environment variables that affect task outputs.
+---
+
 # Inputs and Named Inputs
 
 When Nx [computes the hash for a given operation](/concepts/how-caching-works), it takes into account the `inputs` of the target.

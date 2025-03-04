@@ -1,3 +1,8 @@
+---
+title: 'Nx Micro-Frontend Example'
+description: 'Explore a real-world example of a micro-frontend architecture using Nx, combining React and Angular apps with shared web components.'
+---
+
 # Nx Micro-Frontend Example
 
 This repository contains a single book store website that serves a React app for some routes and an Angular app for other routes. Both apps make use of web components to share UI.

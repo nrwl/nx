@@ -1,3 +1,8 @@
+---
+title: Using Nx Release with Rust
+description: Learn how to version Rust libraries, generate changelogs, and publish Rust crates in a monorepo using Nx Release with a step-by-step guide.
+---
+
 # Using Nx Release with Rust
 
 This recipe guides you through versioning Rust libraries, generating changelogs, and publishing Rust crates in a monorepo with Nx Release.

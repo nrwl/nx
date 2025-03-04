@@ -1,3 +1,8 @@
+---
+title: Using Environment Variables in Angular Applications
+description: Learn how to configure and use environment variables in Angular applications with Nx, including setup for ESBuild and TypeScript type definitions.
+---
+
 # Using environment variables in Angular applications
 
 ## For Angular applications using ESBuild

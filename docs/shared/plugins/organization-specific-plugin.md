@@ -1,3 +1,8 @@
+---
+title: Enforce Organizational Best Practices with a Local Plugin
+description: Learn how to create a custom Nx plugin that encodes your organization's best practices into code generators for consistent project creation.
+---
+
 # Enforce Organizational Best Practices with a Local Plugin
 
 Every repository has a unique set of conventions and best practices that developers need to learn in order to write code that integrates well with the rest of the code base. It is important to document those best practices, but developers don't always read the documentation and even if they have read the documentation, they don't consistently follow the documentation every time they perform a task. Nx allows you to encode these best practices in code generators that have been tailored to your specific repository.

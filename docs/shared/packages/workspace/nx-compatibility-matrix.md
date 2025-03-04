@@ -1,3 +1,8 @@
+---
+title: Nx, NodeJS and TypeScript Compatibility Matrix
+description: A reference table showing which versions of Node.js and TypeScript are compatible with different major versions of Nx.
+---
+
 # Nx, NodeJS and TypeScript Compatibility Matrix
 
 Below is a reference table that matches versions the latest major versions of Nx to the version TypeScript that it uses

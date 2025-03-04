@@ -1,3 +1,8 @@
+---
+title: Install Nx in a Non-JavaScript Repository
+description: Learn how to install and use Nx in repositories that don't contain JavaScript or TypeScript code, such as .NET or Java-based workspaces.
+---
+
 # Install Nx in a Non-Javascript Repo
 
 Nx can manage its own installation without requiring a `package.json` file or a `node_modules` folder. This type of installation is useful for repositories that may not contain any JavaScript or TypeScript (e.g. .Net or Java based workspaces that want to leverage Nx features). In this setup, the Nx CLI is all contained within a `.nx` folder.

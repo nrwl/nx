@@ -1,3 +1,8 @@
+---
+title: 'Maintain TypeScript Monorepos'
+description: 'Learn how Nx simplifies TypeScript monorepo maintenance by auto-configuring tools, managing project references, and enhancing tooling for better monorepo support.'
+---
+
 # Maintain TypeScript Monorepos
 
 Keeping all the industry-standard tools involved in a large TypeScript monorepo correctly configured and working well together is a difficult task. And the more tools you add, the more opportunity there is for tools to conflict with each other in some way.

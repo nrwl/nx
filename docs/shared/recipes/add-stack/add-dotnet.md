@@ -1,3 +1,8 @@
+---
+title: Add a New .NET Project
+description: Learn how to integrate .NET projects with Nx using the @nx-dotnet/core plugin, including setup, configuration, and leveraging Nx features.
+---
+
 # Add a New .NET Project
 
 **Supported Features**

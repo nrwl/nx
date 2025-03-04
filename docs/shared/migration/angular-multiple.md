@@ -1,3 +1,8 @@
+---
+title: Migrating Multiple Angular CLI Workspaces into an Nx Monorepo
+description: Learn strategies for migrating multiple Angular CLI workspaces into a single Nx monorepo, including incremental approaches and version alignment considerations.
+---
+
 # Migrating multiple Angular CLI workspaces into an Nx Monorepo
 
 Migrating multiple Angular CLI workspaces into a single Nx monorepo involves some more manual steps and decisions to take.

@@ -1,3 +1,8 @@
+---
+title: Nx and Angular Versions
+description: A comprehensive compatibility matrix showing which Nx versions work with different Angular versions, including recommended versions and supported ranges.
+---
+
 # Nx and Angular Versions
 
 The latest version of Nx supports the [actively supported versions of Angular (current and LTS versions)](https://angular.dev/reference/releases#actively-supported-versions). Workspaces in any of those versions are recommended to use the latest version of Nx to benefit from all the new features and fixes.

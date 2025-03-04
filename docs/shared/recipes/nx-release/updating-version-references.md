@@ -1,3 +1,8 @@
+---
+title: Updating Version References in Manifest Files
+description: Learn how to configure Nx Release to update version references in package.json and other manifest files, including strategies for source files, custom dist directories, and local dependency references.
+---
+
 # Updating Version References in Manifest Files (e.g. package.json)
 
 The versioning stage of Nx Release is customizable and programming language agnostic, but some of its capabilities are dictated by the tooling you are using. This is particularly true when it comes to updating version references in manifest files, such as `package.json`.

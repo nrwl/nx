@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using Azure Pipelines and Nx
+description: Learn how to set up Azure Pipelines for your Nx workspace to run affected commands, retrieve previous successful builds, and optimize CI performance.
+---
+
 # Configuring CI Using Azure Pipelines and Nx
 
 Below is an example of an Azure Pipelines setup building and testing only what is affected.
