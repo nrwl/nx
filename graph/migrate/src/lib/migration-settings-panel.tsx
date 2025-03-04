@@ -1,5 +1,5 @@
 import { Cog8ToothIcon } from '@heroicons/react/24/outline';
-import { Tooltip } from '@nx/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { useState } from 'react';
 
 export interface MigrationSettingsPanelProps {

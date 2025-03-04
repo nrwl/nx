@@ -11,7 +11,7 @@ import { MigrationList } from './migration-list';
 import { AutomaticMigration } from './automatic-migration';
 import { MigrationSettingsPanel } from './migration-settings-panel';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Tooltip } from '@nx/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
