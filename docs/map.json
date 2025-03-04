@@ -102,6 +102,12 @@
               "file": "shared/features/generate-code"
             },
             {
+              "name": "Maintain TypeScript Monorepos",
+              "id": "maintain-ts-monorepos",
+              "tags": ["inferred-tasks", "project-linking", "sync"],
+              "file": "shared/features/maintain-typescript-monorepos"
+            },
+            {
               "name": "Automate Updating Dependencies",
               "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
               "id": "automate-updating-dependencies",

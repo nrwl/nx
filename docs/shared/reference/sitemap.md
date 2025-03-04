@@ -16,6 +16,7 @@
     - [Enhance Your LLM](/features/enhance-AI)
     - [Explore Your Workspace](/features/explore-graph)
     - [Generate Code](/features/generate-code)
+    - [Maintain TypeScript Monorepos](/features/maintain-ts-monorepos)
     - [Automate Updating Dependencies](/features/automate-updating-dependencies)
     - [Enforce Module Boundaries](/features/enforce-module-boundaries)
     - [Manage Releases](/features/manage-releases)
