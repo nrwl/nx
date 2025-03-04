@@ -123,6 +123,10 @@ export async function reactNativeLibraryGeneratorInternal(
   });
   tasks.push(() => componentTask);
 
+  if (options.publishable) {
+    tasks.push(await releaseTasks(host));
+  }
+
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
@@ -188,13 +192,21 @@ async function addProject(
       nx: {
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+      files: options.publishable
+        ? ['dist', 'src/index.ts', '!**/*.tsbuildinfo']
+        : undefined,
       peerDependencies: {
         react: reactVersion,
         'react-native': reactNativeVersion,
       },
     });
+    if (options.publishable) {
+      await addReleaseConfigForTsSolution(host, options.name, project);
+    }
   } else {
+    if (options.publishable) {
+      await addReleaseConfigForNonTsSolution(host, options.name, project);
+    }
     addProjectConfiguration(host, options.name, project);
   }
 
