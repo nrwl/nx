@@ -60,13 +60,15 @@ export async function e2eProjectGeneratorInternal(
       version: '0.0.1',
       private: true,
       nx: {
-        name: options.e2eProjectName,
-        projectType: 'application',
+        name:
+          options.e2eProjectName !== options.importPath
+            ? options.e2eProjectName
+            : undefined,
         implicitDependencies: [options.project],
         targets: {
           e2e: {
             executor: '@nx/jest:jest',
-            outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
+            outputs: ['{projectRoot}/test-output/jest/coverage'],
             options: {
               jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
               passWithNoTests: true,
@@ -130,6 +132,7 @@ export async function e2eProjectGeneratorInternal(
   const coverageDirectory = isUsingTsSolutionConfig
     ? 'test-output/jest/coverage'
     : joinPathFragments(rootOffset, 'coverage', options.e2eProjectName);
+  const projectSimpleName = options.project.split('/').pop();
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -137,7 +140,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'server' : options.project),
+        ...names(options.rootProject ? 'server' : projectSimpleName),
         tsConfigFile,
         offsetFromRoot: rootOffset,
         jestPreset,
@@ -154,7 +157,7 @@ export async function e2eProjectGeneratorInternal(
         options.e2eProjectRoot,
         {
           ...options,
-          ...names(options.rootProject ? 'server' : options.project),
+          ...names(options.rootProject ? 'server' : projectSimpleName),
           tsConfigFile,
           offsetFromRoot: rootOffset,
           tmpl: '',
@@ -169,7 +172,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'cli' : options.project),
+        ...names(options.rootProject ? 'cli' : projectSimpleName),
         mainFile,
         tsConfigFile,
         offsetFromRoot: rootOffset,
@@ -291,7 +294,7 @@ async function normalizeOptions(
     importPath,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
-    projectType: 'library',
+    projectType: 'application',
     directory,
   });
 

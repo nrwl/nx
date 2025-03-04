@@ -50,7 +50,7 @@ export async function normalizeOptions(
   options.addPlugin ??= addPlugin;
 
   const isTsSolutionSetup =
-    options.useTsSolution ?? isUsingTsSolutionSetup(host);
+    options.useTsSolution || isUsingTsSolutionSetup(host);
   const appProjectName =
     !isTsSolutionSetup || options.name ? projectName : importPath;
 

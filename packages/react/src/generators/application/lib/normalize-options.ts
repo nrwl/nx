@@ -15,6 +15,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
   await ensureRootProjectName(options, 'application');
   const {
     projectName,
+    names: projectNames,
     projectRoot: appProjectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(host, {
@@ -63,7 +64,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-    names: names(projectName),
+    names: names(projectNames.projectSimpleName),
     isUsingTsSolutionConfig,
   } as NormalizedSchema;
 

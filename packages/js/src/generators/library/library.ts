@@ -900,10 +900,7 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    name:
-      isUsingTsSolutionConfig && !options.name && !options.useProjectJson
-        ? importPath
-        : projectName,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
     projectRoot,
     parsedTags,

@@ -67,10 +67,7 @@ export async function normalizeOptions(
     ...options,
     bundler: options.compiler ?? 'tsc',
     fileName: projectName,
-    projectName:
-      isTsSolutionSetup && !options.name && !options.useProjectJson
-        ? importPath
-        : projectName,
+    projectName: isTsSolutionSetup && !options.name ? importPath : projectName,
     projectRoot,
     projectDirectory,
     parsedTags,

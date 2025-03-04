@@ -103,12 +103,14 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     join(projectConfiguration.root, 'package.json')
   );
 
+  const simplePluginName = options.pluginName.split('/').pop();
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
     packageManagerCommands: getPackageManagerCommand(),
     pluginPackageName,
+    simplePluginName,
   });
 }
 

@@ -56,7 +56,7 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
-    useTsSolution: options.useTsSolution ?? isUsingTsSolutionConfig,
+    useTsSolution: isUsingTsSolutionConfig,
     isUsingTsSolutionConfig,
   };
 }

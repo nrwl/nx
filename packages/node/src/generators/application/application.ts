@@ -61,7 +61,7 @@ import {
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   appProjectRoot: string;
   parsedTags: string[];
   outputPath: string;

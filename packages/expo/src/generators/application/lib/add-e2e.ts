@@ -51,8 +51,6 @@ export async function addE2e(
             version: '0.0.1',
             private: true,
             nx: {
-              projectType: 'application',
-              sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
               implicitDependencies: [options.projectName],
             },
           }
@@ -134,8 +132,6 @@ export async function addE2e(
             version: '0.0.1',
             private: true,
             nx: {
-              projectType: 'application',
-              sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
               implicitDependencies: [options.projectName],
             },
           }

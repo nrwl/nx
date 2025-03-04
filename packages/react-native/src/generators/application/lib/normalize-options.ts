@@ -6,7 +6,7 @@ import {
 import { Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   className: string; // app name in class case
   fileName: string; // app name in file class
   projectName: string; // directory + app name, case based on user input
@@ -44,7 +44,7 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const { className, fileName } = names(projectName);
+  const { className, fileName } = names(projectNames.projectSimpleName);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');
   const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
   const rootProject = appProjectRoot === '.';

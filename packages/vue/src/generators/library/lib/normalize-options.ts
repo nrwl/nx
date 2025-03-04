@@ -10,7 +10,11 @@ import {
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   host: Tree,
@@ -76,16 +80,27 @@ export async function normalizeOptions(
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
+    const appProjectType = getProjectType(
+      host,
+      appProjectConfig.root,
+      appProjectConfig.projectType
+    );
 
-    if (appProjectConfig.projectType !== 'application') {
+    if (appProjectType !== 'application') {
       throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
+        `appProject expected type of "application" but got "${appProjectType}"`
       );
     }
 
+    const appSourceRoot = getProjectSourceRoot(
+      host,
+      appProjectConfig.sourceRoot,
+      appProjectConfig.root
+    );
+
     try {
       normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
+      normalized.appSourceRoot = normalizePath(appSourceRoot);
     } catch (e) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`

@@ -2368,19 +2368,6 @@ describe('lib', () => {
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
     });
 
-    it('should not set "nx.name" in package.json when "useProjectJson" is "true"', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        directory: 'my-lib',
-        name: 'my-lib',
-        useProjectJson: true,
-        bundler: 'none',
-        addPlugin: true,
-      });
-
-      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
-    });
-
     it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
@@ -2390,6 +2377,33 @@ describe('lib', () => {
         addPlugin: true,
       });
 
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should set "name" in project.json to the import path when "useProjectJson" is "true"', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        useProjectJson: true,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/project.json').name).toBe('@proj/my-lib');
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should set "name" in project.json to the user-provided name when "useProjectJson" is "true"', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        name: 'my-lib',
+        useProjectJson: true,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/project.json').name).toBe('my-lib');
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });

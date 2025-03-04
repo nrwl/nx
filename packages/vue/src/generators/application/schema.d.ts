@@ -23,7 +23,7 @@ export interface Schema {
   useTsSolution?: boolean;
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   projectName: string;
   appProjectRoot: string;
   importPath: string;

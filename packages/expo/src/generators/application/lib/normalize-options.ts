@@ -48,8 +48,7 @@ export async function normalizeOptions(
     : [];
   const rootProject = appProjectRoot === '.';
 
-  const isTsSolutionSetup =
-    options.useTsSolution ?? isUsingTsSolutionSetup(host);
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
   const appProjectName =
     !isTsSolutionSetup || options.name ? projectName : importPath;
 
