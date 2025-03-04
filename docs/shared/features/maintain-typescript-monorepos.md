@@ -13,13 +13,13 @@ Whenever possible, Nx will detect the existing configuration settings of other t
 
 ### Project Detection with Workspaces
 
-If your repository is using package manager workspaces, Nx will use those settings to find all the projects in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration on the left, allows Nx to detect the project graph on the right.
+If your repository is using package manager workspaces, Nx will use those settings to find all the [projects](/reference/project-configuration) in your repository. So you don't need to define a project for your package manager and separately identify the project for Nx. The `workspaces` configuration on the left allows Nx to detect the project graph on the right.
 
 {% side-by-side align="top" %}
 
 ```json {% fileName="/package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -78,15 +78,13 @@ If your repository is using package manager workspaces, Nx will use those settin
 
 {% /side-by-side %}
 
-- Nx configures itself to match the existing configuration of other tools.
-  - Inferred tasks
-  - Workspaces
-- Nx enhances tools to function better in a monorepo
-  - Sync generators and TS Project References
-
 ### Inferred Tasks with Tooling Plugins
 
-Nx provides [plugins](/concepts/nx-plugins) for tools that run tasks, like Vite, TypeScript, Playwright or Jest. These plugins can automatically [infer the Nx-specific task configuration](/concepts/inferred-tasks) based on the tooling configuration files that already exist. In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx knows that the `cart` project can run a `build` task using Vite. If you expand the `build` task on the right, you can also see that Nx configured the output directory for the [cache](/features/cache-task-results) to match the `build.outDir` provided in the Vite configuration file. With inferred tasks, you can keep your tooling configuration file as the one source of truth for that tool's configuration, instead of adding an extra layer of configuration on top.
+Nx provides [plugins](/concepts/nx-plugins) for tools that run tasks, like Vite, TypeScript, Playwright or Jest. These plugins can automatically [infer the Nx-specific task configuration](/concepts/inferred-tasks) based on the tooling configuration files that already exist.
+
+In the example below, because the `/apps/cart/vite.config.ts` file exists, Nx knows that the `cart` project can run a `build` task using Vite. If you expand the `build` task on the right, you can also see that Nx configured the output directory for the [cache](/features/cache-task-results) to match the `build.outDir` provided in the Vite configuration file.
+
+With inferred tasks, you can keep your tooling configuration file as the one source of truth for that tool's configuration, instead of adding an extra layer of configuration on top.
 
 {% side-by-side align="top" %}
 
