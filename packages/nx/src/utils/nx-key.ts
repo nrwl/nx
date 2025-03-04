@@ -46,7 +46,7 @@ export async function getNxKeyInformation() {
 export class NxKeyNotInstalledError extends Error {
   constructor(e: Error) {
     super(
-      `The "@nx/key" package is needed to use Nx Powerpack enabled features. Please install the @nx/key with ${
+      `The "@nx/key" package is needed to use Nx key enabled features. Please install it with ${
         getPackageManagerCommand().addDev
       } @nx/key`,
       { cause: e }
