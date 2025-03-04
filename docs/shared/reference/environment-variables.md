@@ -1,3 +1,8 @@
+---
+title: Environment Variables
+description: A comprehensive reference of all environment variables that can be used to configure and control Nx behavior in different environments.
+---
+
 # Environment Variables
 
 The following environment variables are ones that you can set to change the behavior of Nx in different environments.

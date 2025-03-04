@@ -1,3 +1,8 @@
+---
+title: Nx Console Project Details View
+description: Learn how to use Nx Console's Project Details View to explore project information, run tasks, and navigate the dependency graph directly from your editor.
+---
+
 # Nx Console Project Details View
 
 Nx Console provides seamless integration with the [Project Details View](features/explore-graph#explore-projects-in-your-workspace).

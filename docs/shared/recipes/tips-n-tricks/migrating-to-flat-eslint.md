@@ -1,3 +1,8 @@
+---
+title: Switching to ESLint's Flat Config Format
+description: Learn how to migrate your Nx workspace to ESLint's new flat configuration format, understanding the benefits and implementation details.
+---
+
 # Switching to ESLint's flat config format
 
 Version 8 of ESLint introduced a new configuration format called [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new). The next major version will use this config format by default. The purpose of this format is to:

@@ -1,3 +1,8 @@
+---
+title: Nx Module Federation Technical Overview
+description: Understand the technical details of how Nx implements Module Federation through executors and webpack configuration utilities.
+---
+
 # Nx Module Federation Technical Overview
 
 Nx's Module Federation support is provided through a mixture of `executors` and the `withModuleFederation()` util that is used in you `webpack.config` file. Understanding what is happening under the hood can help when developing applications that use Module Federation as well as debugging any potential issues you run into.

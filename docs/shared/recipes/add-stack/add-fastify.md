@@ -1,3 +1,8 @@
+---
+title: Add a New Fastify Project
+description: Learn how to create and configure Fastify applications and libraries in your Nx workspace using the @nx/node plugin.
+---
+
 # Add a New Fastify Project
 
 {% youtube

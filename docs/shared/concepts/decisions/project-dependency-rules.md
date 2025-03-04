@@ -1,3 +1,8 @@
+---
+title: Project Dependency Rules
+description: Learn how to organize your Nx workspace with library types like feature, UI, data-access, and utility libraries, and enforce dependency rules between them.
+---
+
 # Project Dependency Rules
 
 There are many types of libraries in a workspace. You can identify the type of a library through a naming convention and/or by using the project tagging system. With explicitly defined types, you can also use Nx to enforce project dependency rules based on the types of each project. This article explains one possible way to organize your repository projects by type. Every repository is different and yours may need a different set of types.

@@ -1,3 +1,8 @@
+---
+title: Migrating from Turborepo to Nx
+description: Learn how to migrate from Turborepo to Nx to gain superior performance, better CI capabilities, enhanced developer experience, and enterprise-ready features.
+---
+
 # Migrating from Turborepo to Nx
 
 {% callout type="note" title="Already know you want to migrate?" %}

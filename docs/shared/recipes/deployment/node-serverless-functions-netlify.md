@@ -1,3 +1,8 @@
+---
+title: Add and Deploy Netlify Edge Functions with Node
+description: Learn how to set up, develop, and deploy Node.js serverless functions to Netlify from an Nx workspace, including local development and production deployment.
+---
+
 # Add and Deploy Netlify Edge Functions with Node
 
 Deploying Node.js serverless functions to Netlify involves a few steps.

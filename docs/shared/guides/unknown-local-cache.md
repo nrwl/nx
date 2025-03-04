@@ -1,3 +1,8 @@
+---
+title: Unknown Local Cache Error
+description: Learn how to troubleshoot and resolve Nx cache errors related to machine ID changes, network drives, and understand how Nx ensures cache security.
+---
+
 # Unknown Local Cache Error
 
 This document will explain why the following errors happen and how to address them.
