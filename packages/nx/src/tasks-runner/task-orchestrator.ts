@@ -32,16 +32,18 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { NxJsonConfiguration } from '../config/nx-json';
-import type { TaskDetails } from '../native';
+import { RunningTasksService, type TaskDetails } from '../native';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
 import { NxArgs } from '../utils/command-line-utils';
+import { getDbConnection } from '../utils/db-connection';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
+  private runningTasksService = new RunningTasksService(getDbConnection());
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
@@ -422,6 +424,8 @@ export class TaskOrchestrator {
       );
 
       const { code, terminalOutput } = await childProcess.getResults();
+
+      childProcess.kill();
       results.push({
         task,
         status: code === 0 ? 'success' : 'failure',
@@ -568,6 +572,14 @@ export class TaskOrchestrator {
   }
 
   private async startContinuousTask(task: Task, groupId: number) {
+    if (this.runningTasksService.getRunningTasks([task.id]).length) {
+      // task is already running, we need to poll and wait for the running task to finish
+      do {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } while (this.runningTasksService.getRunningTasks([task.id]).length);
+      return;
+    }
+
     const taskSpecificEnv = await this.processedTasks.get(task.id);
     await this.preRunSteps([task], { groupId });
 
@@ -607,9 +619,11 @@ export class TaskOrchestrator {
       temporaryOutputPath,
       pipeOutput
     );
+    this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
     childProcess.onExit((code) => {
+      this.runningTasksService.removeRunningTask(task.id);
       if (!this.cleaningUp) {
         console.error(
           `Task "${task.id}" is continuous but exited with code ${code}`
