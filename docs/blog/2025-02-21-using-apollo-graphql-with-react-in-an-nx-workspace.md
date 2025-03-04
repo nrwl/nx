@@ -31,19 +31,22 @@ An example repo with all the work you’ll be doing here can be found in [our Nx
 Start by creating an Nx workspace:
 
 ```shell
-npx create-nx-workspace@latest --preset=node-monorepo nx-apollo
+npx create-nx-workspace@latest --preset=node-monorepo --workspaces nx-apollo
 ```
 
 When prompted, answer the prompts as follows:
 
 ```shell
-❯ npx create-nx-workspace@latest --preset node nx-apollo
+❯ npx create-nx-workspace@latest --preset=node-monorepo --workspaces nx-apollo
 
  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · api
 ✔ What framework should be used? · none
 ✔ Would you like to generate a Dockerfile? [https://docs.docker.com/] · No
+✔ Which unit test runner would you like to use? · none
+✔ Would you like to use ESLint? · No
+✔ Would you like to use Prettier for code formatting? · Yes
 ✔ Which CI provider would you like to use? · skip
 ✔ Would you like remote caching to make your build faster? · skip
 ```
@@ -78,7 +81,7 @@ You need a GraphQL schema to create the API, so write a very simple one with a s
 type Set {
   id: Int!
   name: String
-  year: Int
+  year: String
   numParts: Int
 }
 
@@ -94,7 +97,7 @@ type Mutation {
 To start generating our models from this schema, we'll use [GraphQl Codegen](https://the-guild.dev/graphql/codegen). Install the packages needed:
 
 ```shell
-npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-resolvers @graphql-codegen/typescript-react-apollo
+npm install -D @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/typescript-resolvers @graphql-codegen/typescript-react-apollo @graphql-codegen/add
 ```
 
 GraphQL Codegen is controlled by a configuration file named `codegen.ts` in each project that needs it. Create one for `models-graphql`:
@@ -103,9 +106,9 @@ GraphQL Codegen is controlled by a configuration file named `codegen.ts` in each
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
-  schema: 'libs/models-graphql/src/lib/schema.graphql',
+  schema: 'src/lib/schema.graphql',
   generates: {
-    'libs/models-graphql/src/lib/__generated__/models.ts': {
+    'src/lib/__generated__/models.ts': {
       plugins: ['typescript'],
       config: {
         avoidOptionals: true,
@@ -116,13 +119,11 @@ const config: CodegenConfig = {
 export default config;
 ```
 
-To run GraphqlQL Codegen, we need a target added to our project. Add this to the `project.json` for `models-graphql`:
+To run GraphqlQL Codegen, we need a target added to our project. Add this to the `package.json` for `models-graphql`:
 
-```json {% fileName="libs/models-graphql/project.json" %}
-"targets": {
-    "codegen": {
-      "command": "npx graphql-codegen --config {projectRoot}/codegen.ts"
-    }
+```json {% fileName="libs/models-graphql/package.json" %}
+"scripts": {
+    "codegen": "npx graphql-codegen --config {projectRoot}/codegen.ts"
 }
 ```
 
@@ -159,18 +160,21 @@ The workspace was generated with a Node application for us, but we need to make 
   }
 ```
 
-And change the `build` target config in `project.json`:
+And change the `build` target config in `package.json`:
 
-```json {% fileName="apps/api/project.json" %}
-"targets": {
-  "build": {
-    ...
-    "options": {
+```json {% fileName="apps/api/package.json" %}
+"nx": {
+  "targets": {
+    "build": {
       ...
-      "format": ["esm"]
+      "options": {
+        ...
+        "format": ["esm"]
+      }
     }
   }
 }
+
 ```
 
 GraphQl Codegen has already created our models for our GraphQL schema, but it can also generate the resolver types we'll want to implement in Apollo Server. Like before, create a `codegen.ts` in the `api` application:
@@ -194,14 +198,12 @@ const config: CodegenConfig = {
 export default config;
 ```
 
-And add the task to our targets:
+And add the task to our project:
 
-```json {% fileName="apps/api/project.json" %}
-  "targets": {
-    "codegen": {
-      "command": "npx graphql-codegen --config {projectRoot}/codegen.ts"
-    }
-}
+```json {% fileName="apps/api/package.json" %}
+  "scripts": {
+    "codegen": "npx graphql-codegen --config {projectRoot}/codegen.ts"
+  }
 ```
 
 And run the task:
@@ -431,10 +433,10 @@ Once again create a `codegen.ts` for the project:
 import { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
-  schema: 'libs/models-graphql/src/lib/schema.graphql',
-  documents: ['libs/feature-sets/src/**/*.graphql'],
+  schema: '../models-graphql/src/lib/schema.graphql',
+  documents: ['src/**/*.graphql'],
   generates: {
-    'libs/feature-sets/src/lib/__generated__/operations.ts': {
+    'src/lib/__generated__/operations.ts': {
       plugins: ['add', 'typescript-operations', 'typescript-react-apollo'],
       config: {
         useIndexSignature: true,
@@ -451,13 +453,11 @@ export default config;
 
 This configuration grabs all of your GraphQL files and generates all the needed types and services to consume the API.
 
-Add a new task in `project.json` to run this code generator:
+Add a new task in `package.json` to run this code generator:
 
-```json {% fileName="libs/feature-sets/project.json" %}
-  "targets": {
-    "codegen": {
-      "command": "npx graphql-codegen --config {projectRoot}/codegen.ts"
-    }
+```json {% fileName="libs/feature-sets/package.json" %}
+  "scripts": {
+    "codegen": "graphql-codegen"
 }
 ```
 
