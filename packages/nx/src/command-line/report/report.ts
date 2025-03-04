@@ -100,7 +100,7 @@ export async function reportHandler() {
   if (nxKey) {
     bodyLines.push('');
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(chalk.green('Nx key'));
+    bodyLines.push(chalk.green('Nx key licensed packages'));
 
     const licenseExpiryDate = new Date(
       (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
