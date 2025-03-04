@@ -1,3 +1,8 @@
+---
+title: Automatically Version with Conventional Commits
+description: Learn how to configure Nx Release to automatically determine version bumps based on conventional commit messages, enabling automated versioning in CI/CD pipelines.
+---
+
 # Automatically Version with Conventional Commits
 
 If you wish to bypass the versioning prompt, you can configure Nx Release to defer to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard to determine the version bump automatically. This is useful for automating the versioning process in a CI/CD pipeline.

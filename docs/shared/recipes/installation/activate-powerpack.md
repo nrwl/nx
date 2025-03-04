@@ -1,3 +1,8 @@
+---
+title: Activate Nx Powerpack
+description: Learn how to obtain and register an Nx Powerpack license to unlock enterprise features like conformance rules, code ownership, and custom caching solutions.
+---
+
 # Activate Powerpack
 
 Nx Powerpack unlocks features of Nx that are particularly useful for larger organizations. Powerpack is available for Nx version 19.8 and higher. The features include the ability to:

@@ -1,3 +1,8 @@
+---
+title: Nx Release Schedule and Support Policy
+description: Information about Nx package releases, including version support timelines, LTS policy, and deprecation guidelines for the nx and @nx/* packages.
+---
+
 # Releases of the nx and @nx/\* packages
 
 {% callout type="info" title="Looking for guidance on releasing your projects with Nx Release?" %}

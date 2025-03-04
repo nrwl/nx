@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using Bitbucket Pipelines and Nx
+description: Learn how to set up Bitbucket Pipelines for your Nx workspace to run affected commands, handle pull requests, and optimize CI performance.
+---
+
 # Configuring CI Using Bitbucket Pipelines and Nx
 
 Below is an example of a Bitbucket Pipelines, building and testing only what is affected.
