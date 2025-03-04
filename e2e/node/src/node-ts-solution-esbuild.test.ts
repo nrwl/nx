@@ -4,6 +4,7 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
   newProject,
+  readFile,
   runCLI,
   runCommand,
   uniq,
@@ -13,7 +14,7 @@ import {
 
 let originalEnvPort;
 
-describe('Node Applications', () => {
+describe('Node Esbuild Applications', () => {
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
     newProject({
@@ -33,7 +34,7 @@ describe('Node Applications', () => {
     process.env.PORT = `${port}`;
 
     runCLI(
-      `generate @nx/node:app apps/${nodeapp} --port=${port} --bundler=esbuild --linter=none --e2eTestRunner=none --unitTestRunner=none`
+      `generate @nx/node:app apps/${nodeapp} --port=${port} --bundler=esbuild --framework=fastify --no-interactive`
     );
 
     runCLI(
@@ -49,6 +50,19 @@ describe('Node Applications', () => {
       ${content}
       `
     );
+
+    // App is CJS by default so lets update the lib to follow the same pattern
+    updateJson(`packages/${lib}/tsconfig.lib.json`, (json) => {
+      json.compilerOptions.module = 'commonjs';
+      json.compilerOptions.moduleResolution = 'node';
+      return json;
+    });
+
+    updateJson('tsconfig.base.json', (json) => {
+      json.compilerOptions.moduleResolution = 'node';
+      json.compilerOptions.module = 'esnext';
+      return json;
+    });
 
     const pm = getSelectedPackageManager();
     if (pm === 'pnpm') {
@@ -66,7 +80,7 @@ describe('Node Applications', () => {
 
     // check build
     expect(runCLI(`build ${nodeapp}`)).toContain(
-      `Successfully ran target build for project @proj/${nodeapp}`
+      `Successfully ran target build for project ${nodeapp}`
     );
   });
 });

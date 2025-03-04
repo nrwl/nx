@@ -141,7 +141,11 @@ export function createPathsFromTsConfigReferences(
   const {
     isValidPackageJsonBuildConfig,
   } = require('@nx/js/src/plugins/typescript/util');
-  const { readTsConfig } = require('@nx/devkit');
+  const { readTsConfig } = require('@nx/js');
+  const {
+    findRuntimeTsConfigName,
+  } = require('@nx/js/src/utils/typescript/ts-solution-setup');
+
   const deps = findAllProjectNodeDependencies(
     context.projectName,
     context.projectGraph
@@ -167,35 +171,21 @@ export function createPathsFromTsConfigReferences(
     }, [])
   );
 
-  const getTsConfigPath = (
-    projectType: string,
-    projectPath: string
-  ): string => {
-    if (projectType === 'app') {
-      return existsSync(join(projectPath, 'tsconfig.app.json'))
-        ? 'tsconfig.app.json'
-        : 'tsconfig.json';
-    }
-
-    return existsSync(join(projectPath, 'tsconfig.lib.json'))
-      ? 'tsconfig.lib.json'
-      : 'tsconfig.json';
-  };
-
   // for each dep we check if it contains a build target
   // we only want to add the paths for projects that do not have a build target
   return deps.reduce((acc, dep) => {
     const projectNode = context.projectGraph.nodes[dep];
     const projectPath = joinPathFragments(workspaceRoot, projectNode.data.root);
-    const projTsConfig = readTsConfig(
-      getTsConfigPath(projectNode.type, projectPath)
-    ) as any;
+    const resolvedTsConfigPath =
+      findRuntimeTsConfigName(projectPath) ?? 'tsconfig.json';
+    const projTsConfig = readTsConfig(resolvedTsConfigPath) as any;
 
     const projectPkgJson = readJsonFile(
       joinPathFragments(projectPath, 'package.json')
     );
 
     if (
+      projTsConfig &&
       !isValidPackageJsonBuildConfig(
         projTsConfig,
         workspaceRoot,
