@@ -236,6 +236,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Maintain TypeScript Monorepos",
+            "path": "/features/maintain-ts-monorepos",
+            "id": "maintain-ts-monorepos",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automate Updating Dependencies",
             "path": "/features/automate-updating-dependencies",
             "id": "automate-updating-dependencies",
@@ -355,6 +363,14 @@
         "name": "Generate Code",
         "path": "/features/generate-code",
         "id": "generate-code",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Maintain TypeScript Monorepos",
+        "path": "/features/maintain-ts-monorepos",
+        "id": "maintain-ts-monorepos",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
