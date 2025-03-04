@@ -1,10 +1,17 @@
 import { type Tree, readJson, createProjectGraphAsync } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
-import { nextVersion, next14Version } from './versions';
+import {
+  nextVersion,
+  next14Version,
+  eslintConfigNext14Version,
+  eslintConfigNextVersion,
+} from './versions';
 
 type NextDependenciesVersions = {
   next: string;
 };
+
+type EslintConfigNextVersion = string;
 
 export async function getNextDependenciesVersionsToInstall(
   tree: Tree,
@@ -18,6 +25,16 @@ export async function getNextDependenciesVersionsToInstall(
     return {
       next: nextVersion,
     };
+  }
+}
+
+export async function getEslintConfigNextDependenciesVersionsToInstall(
+  tree: Tree
+): Promise<EslintConfigNextVersion> {
+  if (await isNext14(tree)) {
+    return eslintConfigNext14Version;
+  } else {
+    return eslintConfigNextVersion;
   }
 }
 
