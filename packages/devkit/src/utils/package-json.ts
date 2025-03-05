@@ -29,6 +29,9 @@ const NON_SEMVER_TAGS = {
   legacy: -2,
 };
 
+const ERR_REQUIRE_ESM = 'ERR_REQUIRE_ESM';
+export const ERR_MODULE_NOT_FOUND = 'MODULE_NOT_FOUND';
+
 function filterExistingDependencies(
   dependencies: Record<string, string>,
   existingAltDependencies: Record<string, string>
@@ -452,6 +455,7 @@ export function ensurePackage<T extends any = any>(
 ): T {
   let pkg: string;
   let requiredVersion: string;
+  let errorCode: string;
   if (typeof pkgOrTree === 'string') {
     pkg = pkgOrTree;
     requiredVersion = requiredVersionOrPackage;
@@ -468,18 +472,20 @@ export function ensurePackage<T extends any = any>(
   try {
     return require(pkg);
   } catch (e) {
-    if (e.code === 'ERR_REQUIRE_ESM') {
+    errorCode = e.code;
+    if (errorCode === ERR_REQUIRE_ESM) {
       // The package is installed, but is an ESM package.
       // The consumer of this function can import it as needed.
       return null;
-    } else if (e.code !== 'MODULE_NOT_FOUND') {
+    } else if (errorCode !== ERR_MODULE_NOT_FOUND) {
       throw e;
     }
   }
 
   if (process.env.NX_DRY_RUN && process.env.NX_DRY_RUN !== 'false') {
     throw new Error(
-      'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n'
+      `NOTE: This generator does not support --dry-run for ${pkgOrTree}. If you are running this in Nx Console, it should execute fine once you hit the "Generate" button.\n`, 
+      { 'cause': errorCode }
     );
   }
 
@@ -526,7 +532,7 @@ export function ensurePackage<T extends any = any>(
 
     return result;
   } catch (e) {
-    if (e.code === 'ERR_REQUIRE_ESM') {
+    if (e.code === ERR_REQUIRE_ESM) {
       // The package is installed, but is an ESM package.
       // The consumer of this function can import it as needed.
       packageMapCache.set(pkg, null);
