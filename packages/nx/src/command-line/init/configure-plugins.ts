@@ -10,13 +10,13 @@ import { output } from '../../utils/output';
 import { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { addDepsToPackageJson, runInstall } from './implementation/utils';
-import { getPluginCapabilities } from '../../utils/plugins';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import {
   isAggregateCreateNodesError,
   isProjectConfigurationsError,
   isProjectsWithNoNameError,
 } from '../../project-graph/error-types';
+import { getGeneratorInformation } from '../generate/generator-utils';
 
 export function runPackageManagerInstallPlugins(
   repoRoot: string,
@@ -46,29 +46,25 @@ export async function installPlugin(
   verbose: boolean = false,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ): Promise<void> {
-  const capabilities = await getPluginCapabilities(repoRoot, plugin, {});
-  const generators = capabilities?.generators;
-  if (!generators) {
-    throw new Error(`No generators found in ${plugin}.`);
-  }
-
-  const initGenerator = findInitGenerator(generators);
-  if (!initGenerator) {
+  try {
+    getGeneratorInformation(plugin, 'init', workspaceRoot, {});
+    execSync(
+      `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
+        updatePackageScripts ? '--updatePackageScripts' : ''
+      } ${verbose ? '--verbose' : ''}`,
+      {
+        stdio: [0, 1, 2],
+        cwd: repoRoot,
+        windowsHide: false,
+      }
+    );
+  } catch {
+    // init generator does not exist, so this function should noop
     output.log({
       title: `No "init" generator found in ${plugin}. Skipping initialization.`,
     });
     return;
   }
-  execSync(
-    `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-      updatePackageScripts ? '--updatePackageScripts' : ''
-    } ${verbose ? '--verbose' : ''}`,
-    {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-      windowsHide: false,
-    }
-  );
 }
 
 /**
