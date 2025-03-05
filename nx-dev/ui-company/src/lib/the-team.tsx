@@ -4,12 +4,12 @@ import { ReactElement } from 'react';
 const teamMembers = [
   {
     name: 'Altan Stalker',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'altan-stalker.avif',
   },
   {
     name: 'Austin Fahsl',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'austin-fahsl.avif',
   },
   {
@@ -24,7 +24,7 @@ const teamMembers = [
   },
   {
     name: 'Caleb Ukle',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'caleb-ukle.avif',
   },
   {
@@ -104,7 +104,7 @@ const teamMembers = [
   },
   {
     name: 'Jordan Powell',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'jordan-powell.avif',
   },
   {
@@ -144,8 +144,13 @@ const teamMembers = [
   },
   {
     name: 'Miroslav Jonas',
-    title: 'Senior Engineer',
+    title: 'Developer Productivity Engineer',
     imageUrl: 'miroslav-jonas.avif',
+  },
+  {
+    name: 'Nate Bohn',
+    title: 'Director of Finance & Accounting',
+    imageUrl: 'nate-bohn.avif',
   },
   {
     name: 'Nicholas Cunningham',
@@ -179,8 +184,13 @@ const teamMembers = [
   },
   {
     name: 'Steve Pentland',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'steve-pentland.avif',
+  },
+  {
+    name: 'Steven Nance',
+    title: 'Developer Productivity Engineer',
+    imageUrl: 'steven-nance.avif',
   },
   {
     name: 'Whitney Loy',
@@ -189,7 +199,7 @@ const teamMembers = [
   },
   {
     name: 'Zack DeRose',
-    title: 'Senior Engineer',
+    title: 'Architect',
     imageUrl: 'zack-derose.avif',
   },
 ];
