@@ -148,7 +148,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.useTsSolution) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
   sortPackageJsonFields(host, options.appProjectRoot);

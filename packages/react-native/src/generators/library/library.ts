@@ -147,7 +147,7 @@ export async function reactNativeLibraryGeneratorInternal(
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   sortPackageJsonFields(host, options.projectRoot);

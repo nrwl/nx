@@ -72,12 +72,6 @@ export async function applicationGeneratorInternal(
 
   const options = await normalizeOptions(tree, schema);
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
-  }
-
   showPossibleWarnings(tree, options);
 
   const initTask = await reactInitGenerator(tree, {
@@ -114,6 +108,12 @@ export async function applicationGeneratorInternal(
 
   await createApplicationFiles(tree, options);
   addProject(tree, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
 
   if (options.style === 'tailwind') {
     const twTask = await setupTailwindGenerator(tree, {
