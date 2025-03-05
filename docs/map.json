@@ -699,6 +699,87 @@
               "description": "Advanced guides to adopt Nx in Angular.",
               "itemList": [
                 {
+                  "name": "Angular Rspack",
+                  "id": "rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "tags": ["introduction"],
+                      "file": "shared/guides/angular-rspack/introduction"
+                    },
+                    {
+                      "name": "Migrate from Angular Webpack",
+                      "id": "migrate-from-webpack",
+                      "tags": ["migrate-from-webpack"],
+                      "file": "shared/guides/angular-rspack/migrate-from-webpack"
+                    },
+                    {
+                      "name": "Handling Configurations",
+                      "id": "handling-configurations",
+                      "tags": ["handling-configurations", "configurations"],
+                      "file": "shared/guides/angular-rspack/handling-configurations"
+                    },
+                    {
+                      "name": "API Reference",
+                      "id": "api-reference",
+                      "tags": ["api-reference", "api"],
+                      "itemList": [
+                        {
+                          "name": "@ng-rspack/build",
+                          "id": "ng-rspack-build",
+                          "tags": ["ng-rspack-build", "@ng-rspack/build"],
+                          "itemList": [
+                            {
+                              "name": "createConfig",
+                              "id": "create-config",
+                              "tags": ["create-config", "create-config-api"],
+                              "file": "shared/guides/angular-rspack/api/ng-rspack-build/create-config"
+                            },
+                            {
+                              "name": "createServer",
+                              "id": "create-server",
+                              "tags": ["create-server", "create-server-api"],
+                              "file": "shared/guides/angular-rspack/api/ng-rspack-build/create-server"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "@ng-rsbuild/plugin-angular",
+                          "id": "ng-rsbuild-plugin-angular",
+                          "tags": [
+                            "ng-rsbuild-plugin-angular",
+                            "@ng-rsbuild/plugin-angular"
+                          ],
+                          "itemList": [
+                            {
+                              "name": "createConfig",
+                              "id": "create-config",
+                              "tags": ["create-config", "create-config-api"],
+                              "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/create-config"
+                            },
+                            {
+                              "name": "createServer",
+                              "id": "create-server",
+                              "tags": ["create-server", "create-server-api"],
+                              "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/create-server"
+                            },
+                            {
+                              "name": "withConfigurations",
+                              "id": "with-configurations",
+                              "tags": [
+                                "with-configurations",
+                                "with-configurations-api"
+                              ],
+                              "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/with-configurations"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   "name": "Migration",
                   "id": "migration",
                   "itemList": [

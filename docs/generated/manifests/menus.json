@@ -1513,6 +1513,106 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Angular Rspack",
+                "path": "/recipes/angular/rspack",
+                "id": "rspack",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Introduction",
+                    "path": "/recipes/angular/rspack/introduction",
+                    "id": "introduction",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrate from Angular Webpack",
+                    "path": "/recipes/angular/rspack/migrate-from-webpack",
+                    "id": "migrate-from-webpack",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Handling Configurations",
+                    "path": "/recipes/angular/rspack/handling-configurations",
+                    "id": "handling-configurations",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "API Reference",
+                    "path": "/recipes/angular/rspack/api-reference",
+                    "id": "api-reference",
+                    "isExternal": false,
+                    "children": [
+                      {
+                        "name": "@ng-rspack/build",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rspack-build",
+                        "id": "ng-rspack-build",
+                        "isExternal": false,
+                        "children": [
+                          {
+                            "name": "createConfig",
+                            "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config",
+                            "id": "create-config",
+                            "isExternal": false,
+                            "children": [],
+                            "disableCollapsible": false
+                          },
+                          {
+                            "name": "createServer",
+                            "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server",
+                            "id": "create-server",
+                            "isExternal": false,
+                            "children": [],
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "@ng-rsbuild/plugin-angular",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular",
+                        "id": "ng-rsbuild-plugin-angular",
+                        "isExternal": false,
+                        "children": [
+                          {
+                            "name": "createConfig",
+                            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config",
+                            "id": "create-config",
+                            "isExternal": false,
+                            "children": [],
+                            "disableCollapsible": false
+                          },
+                          {
+                            "name": "createServer",
+                            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server",
+                            "id": "create-server",
+                            "isExternal": false,
+                            "children": [],
+                            "disableCollapsible": false
+                          },
+                          {
+                            "name": "withConfigurations",
+                            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations",
+                            "id": "with-configurations",
+                            "isExternal": false,
+                            "children": [],
+                            "disableCollapsible": false
+                          }
+                        ],
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Migration",
                 "path": "/recipes/angular/migration",
                 "id": "migration",
@@ -2926,6 +3026,106 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Angular Rspack",
+            "path": "/recipes/angular/rspack",
+            "id": "rspack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Introduction",
+                "path": "/recipes/angular/rspack/introduction",
+                "id": "introduction",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate from Angular Webpack",
+                "path": "/recipes/angular/rspack/migrate-from-webpack",
+                "id": "migrate-from-webpack",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Handling Configurations",
+                "path": "/recipes/angular/rspack/handling-configurations",
+                "id": "handling-configurations",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "API Reference",
+                "path": "/recipes/angular/rspack/api-reference",
+                "id": "api-reference",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "@ng-rspack/build",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rspack-build",
+                    "id": "ng-rspack-build",
+                    "isExternal": false,
+                    "children": [
+                      {
+                        "name": "createConfig",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config",
+                        "id": "create-config",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "createServer",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server",
+                        "id": "create-server",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "@ng-rsbuild/plugin-angular",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular",
+                    "id": "ng-rsbuild-plugin-angular",
+                    "isExternal": false,
+                    "children": [
+                      {
+                        "name": "createConfig",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config",
+                        "id": "create-config",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "createServer",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server",
+                        "id": "create-server",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      },
+                      {
+                        "name": "withConfigurations",
+                        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations",
+                        "id": "with-configurations",
+                        "isExternal": false,
+                        "children": [],
+                        "disableCollapsible": false
+                      }
+                    ],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Migration",
             "path": "/recipes/angular/migration",
             "id": "migration",
@@ -2991,6 +3191,295 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular Rspack",
+        "path": "/recipes/angular/rspack",
+        "id": "rspack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Introduction",
+            "path": "/recipes/angular/rspack/introduction",
+            "id": "introduction",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate from Angular Webpack",
+            "path": "/recipes/angular/rspack/migrate-from-webpack",
+            "id": "migrate-from-webpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Handling Configurations",
+            "path": "/recipes/angular/rspack/handling-configurations",
+            "id": "handling-configurations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "API Reference",
+            "path": "/recipes/angular/rspack/api-reference",
+            "id": "api-reference",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "@ng-rspack/build",
+                "path": "/recipes/angular/rspack/api-reference/ng-rspack-build",
+                "id": "ng-rspack-build",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "createConfig",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config",
+                    "id": "create-config",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "createServer",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server",
+                    "id": "create-server",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
+                "name": "@ng-rsbuild/plugin-angular",
+                "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular",
+                "id": "ng-rsbuild-plugin-angular",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "createConfig",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config",
+                    "id": "create-config",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "createServer",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server",
+                    "id": "create-server",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "withConfigurations",
+                    "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations",
+                    "id": "with-configurations",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Introduction",
+        "path": "/recipes/angular/rspack/introduction",
+        "id": "introduction",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate from Angular Webpack",
+        "path": "/recipes/angular/rspack/migrate-from-webpack",
+        "id": "migrate-from-webpack",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Handling Configurations",
+        "path": "/recipes/angular/rspack/handling-configurations",
+        "id": "handling-configurations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "API Reference",
+        "path": "/recipes/angular/rspack/api-reference",
+        "id": "api-reference",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "@ng-rspack/build",
+            "path": "/recipes/angular/rspack/api-reference/ng-rspack-build",
+            "id": "ng-rspack-build",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "createConfig",
+                "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config",
+                "id": "create-config",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "createServer",
+                "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server",
+                "id": "create-server",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "@ng-rsbuild/plugin-angular",
+            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular",
+            "id": "ng-rsbuild-plugin-angular",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "createConfig",
+                "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config",
+                "id": "create-config",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "createServer",
+                "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server",
+                "id": "create-server",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "withConfigurations",
+                "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations",
+                "id": "with-configurations",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "@ng-rspack/build",
+        "path": "/recipes/angular/rspack/api-reference/ng-rspack-build",
+        "id": "ng-rspack-build",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "createConfig",
+            "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config",
+            "id": "create-config",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "createServer",
+            "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server",
+            "id": "create-server",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "createConfig",
+        "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config",
+        "id": "create-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "createServer",
+        "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server",
+        "id": "create-server",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "@ng-rsbuild/plugin-angular",
+        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular",
+        "id": "ng-rsbuild-plugin-angular",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "createConfig",
+            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config",
+            "id": "create-config",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "createServer",
+            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server",
+            "id": "create-server",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "withConfigurations",
+            "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations",
+            "id": "with-configurations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "createConfig",
+        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config",
+        "id": "create-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "createServer",
+        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server",
+        "id": "create-server",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "withConfigurations",
+        "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations",
+        "id": "with-configurations",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

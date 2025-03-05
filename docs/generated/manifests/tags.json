@@ -1071,6 +1071,178 @@
       "path": "/troubleshooting/performance-profiling"
     }
   ],
+  "introduction": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/introduction",
+      "id": "introduction",
+      "name": "Introduction",
+      "path": "/recipes/angular/rspack/introduction"
+    }
+  ],
+  "migrate-from-webpack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/migrate-from-webpack",
+      "id": "migrate-from-webpack",
+      "name": "Migrate from Angular Webpack",
+      "path": "/recipes/angular/rspack/migrate-from-webpack"
+    }
+  ],
+  "handling-configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "api-reference": [
+    {
+      "description": "",
+      "file": "",
+      "id": "api-reference",
+      "name": "API Reference",
+      "path": "/recipes/angular/rspack/api-reference"
+    }
+  ],
+  "api": [
+    {
+      "description": "",
+      "file": "",
+      "id": "api-reference",
+      "name": "API Reference",
+      "path": "/recipes/angular/rspack/api-reference"
+    }
+  ],
+  "ng-rspack-build": [
+    {
+      "description": "",
+      "file": "",
+      "id": "ng-rspack-build",
+      "name": "@ng-rspack/build",
+      "path": "/recipes/angular/rspack/api-reference/ng-rspack-build"
+    }
+  ],
+  "@ng-rspack/build": [
+    {
+      "description": "",
+      "file": "",
+      "id": "ng-rspack-build",
+      "name": "@ng-rspack/build",
+      "path": "/recipes/angular/rspack/api-reference/ng-rspack-build"
+    }
+  ],
+  "create-config": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rspack-build/create-config",
+      "id": "create-config",
+      "name": "createConfig",
+      "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/create-config",
+      "id": "create-config",
+      "name": "createConfig",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config"
+    }
+  ],
+  "create-config-api": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rspack-build/create-config",
+      "id": "create-config",
+      "name": "createConfig",
+      "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-config"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/create-config",
+      "id": "create-config",
+      "name": "createConfig",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config"
+    }
+  ],
+  "create-server": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rspack-build/create-server",
+      "id": "create-server",
+      "name": "createServer",
+      "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/create-server",
+      "id": "create-server",
+      "name": "createServer",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server"
+    }
+  ],
+  "create-server-api": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rspack-build/create-server",
+      "id": "create-server",
+      "name": "createServer",
+      "path": "/recipes/angular/rspack/api-reference/ng-rspack-build/create-server"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/create-server",
+      "id": "create-server",
+      "name": "createServer",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-server"
+    }
+  ],
+  "ng-rsbuild-plugin-angular": [
+    {
+      "description": "",
+      "file": "",
+      "id": "ng-rsbuild-plugin-angular",
+      "name": "@ng-rsbuild/plugin-angular",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular"
+    }
+  ],
+  "@ng-rsbuild/plugin-angular": [
+    {
+      "description": "",
+      "file": "",
+      "id": "ng-rsbuild-plugin-angular",
+      "name": "@ng-rsbuild/plugin-angular",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular"
+    }
+  ],
+  "with-configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/with-configurations",
+      "id": "with-configurations",
+      "name": "withConfigurations",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations"
+    }
+  ],
+  "with-configurations-api": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/api/ng-rsbuild-plugin-angular/with-configurations",
+      "id": "with-configurations",
+      "name": "withConfigurations",
+      "path": "/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/with-configurations"
+    }
+  ],
   "deployment": [
     {
       "description": "",
