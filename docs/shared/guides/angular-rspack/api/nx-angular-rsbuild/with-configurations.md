@@ -1,12 +1,12 @@
 ---
-title: 'withConfigurations - @ng-rsbuild/plugin-angular'
-description: 'API Reference for withConfigurations from @ng-rsbuild/plugin-angular'
+title: 'withConfigurations - @nx/angular-rsbuild'
+description: 'API Reference for withConfigurations from @nx/angular-rsbuild'
 ---
 
 # withConfigurations
 
 ```bash
-import { withConfigurations } from '@ng-rsbuild/plugin-angular';
+import { withConfigurations } from '@nx/angular-rsbuild';
 ```
 
 The `withConfigurations` function is used to create a Rsbuild configuration object setup for Angular applications that use multiple configurations.
@@ -14,7 +14,7 @@ The `withConfigurations` function is used to create a Rsbuild configuration obje
 The first argument is the default options, and the second is an object of configurations. The configurations object is keyed by the name of the configuration, and the value is an object with the options and `rsbuildConfigOverrides` to be used for that configuration.
 
 {% callout type="info" title="PluginAngularOptions" %}
-To learn more about the options available when configuring the plugin, see the [createConfig](/recipes/angular/rspack/api-reference/ng-rsbuild-plugin-angular/create-config) API reference.
+To learn more about the options available when configuring the plugin, see the [createConfig](/nx-api/angular-rsbuild/documents/create-config) API reference.
 {% /callout %}
 
 The final argument is the environment variable to use to determine which configuration to use. The default is `NGRS_CONFIG`.
@@ -46,7 +46,7 @@ function withConfigurations(
 The following example shows how to create a default configuration with a production configuration:
 
 ```ts {% fileName="myapp/rsbuild.config.ts" %}
-import { withConfigurations } from '@ng-rsbuild/plugin-angular';
+import { withConfigurations } from '@nx/angular-rsbuild';
 
 export default withConfigurations(
   {
