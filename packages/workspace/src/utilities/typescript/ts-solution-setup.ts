@@ -4,8 +4,10 @@ import {
   type Tree,
   workspaceRoot,
 } from '@nx/devkit';
+import { dirname } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import { type PackageJson } from 'nx/src/utils/package-json';
+import { isProjectIncludedInPackageManagerWorkspaces } from '../package-manager-workspaces';
 
 function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
   return isWorkspacesEnabled(tree);
@@ -74,4 +76,48 @@ export function isUsingTsSolutionSetup(tree?: Tree): boolean {
     isUsingPackageManagerWorkspaces(tree) &&
     isWorkspaceSetupWithTsSolution(tree)
   );
+}
+
+export function addProjectToTsSolutionWorkspace(
+  tree: Tree,
+  projectDir: string
+) {
+  const isIncluded = isProjectIncludedInPackageManagerWorkspaces(
+    tree,
+    projectDir
+  );
+  if (isIncluded) {
+    return;
+  }
+
+  // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
+  // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
+  // If the dir is just "foo" then we have to add it as is.
+  const baseDir = dirname(projectDir);
+  const pattern = baseDir === '.' ? projectDir : `${baseDir}/*`;
+  if (tree.exists('pnpm-workspace.yaml')) {
+    const { load, dump } = require('@zkochan/js-yaml');
+    const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
+    const yamlData = load(workspaceFile) ?? {};
+    yamlData.packages ??= [];
+
+    if (!yamlData.packages.includes(pattern)) {
+      yamlData.packages.push(pattern);
+      tree.write(
+        'pnpm-workspace.yaml',
+        dump(yamlData, { indent: 2, quotingType: '"', forceQuotes: true })
+      );
+    }
+  } else {
+    // Update package.json
+    const packageJson = readJson(tree, 'package.json');
+    if (!packageJson.workspaces) {
+      packageJson.workspaces = [];
+    }
+
+    if (!packageJson.workspaces.includes(pattern)) {
+      packageJson.workspaces.push(pattern);
+      tree.write('package.json', JSON.stringify(packageJson, null, 2));
+    }
+  }
 }
