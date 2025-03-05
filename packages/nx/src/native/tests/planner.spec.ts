@@ -1,4 +1,4 @@
-import { TempFs } from '../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../generators/testing-utils/temp-fs';
 import { HashPlanner, transferProjectGraph } from '../index';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';

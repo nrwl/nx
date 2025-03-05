@@ -1,6 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
 
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import { type GradleReport } from '../utils/get-gradle-report';
 
 let gradleReport: GradleReport;

@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from '@nx/devkit/testing';
 import type { StorybookConfig } from '@storybook/types';
 import { join } from 'node:path';
 import { createNodesV2 } from './plugin';
