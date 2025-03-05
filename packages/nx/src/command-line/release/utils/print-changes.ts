@@ -1,10 +1,11 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { diff } from 'jest-diff';
 import { readFileSync } from 'node:fs';
 import { Tree, flushChanges } from '../../../generators/tree';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { joinPathFragments } from '../../../utils/path';
 import { logger } from '../../../utils/logger';
+import { output } from '../../../utils/output';
 
 // jest-diff does not export this constant
 const NO_DIFF_MESSAGE = 'Compared values have no visual difference.';
@@ -19,8 +20,8 @@ export function printDiff(
     omitAnnotationLines: true,
     contextLines,
     expand: false,
-    aColor: chalk.red,
-    bColor: chalk.green,
+    aColor: pc.red,
+    bColor: pc.green,
     patchColor: (s) => '',
   });
   // It is not an exact match because of the color codes
@@ -54,8 +55,8 @@ export function printAndFlushChanges(
   changes.filter(changePredicate).forEach((f) => {
     if (f.type === 'CREATE') {
       console.error(
-        `${chalk.green('CREATE')} ${f.path}${
-          isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+        `${pc.green('CREATE')} ${f.path}${
+          isDryRun ? output.colors.orange(' [dry-run]') : ''
         }`
       );
       printDiff(
@@ -66,8 +67,8 @@ export function printAndFlushChanges(
       );
     } else if (f.type === 'UPDATE') {
       console.error(
-        `${chalk.white('UPDATE')} ${f.path}${
-          isDryRun ? chalk.keyword('orange')(' [dry-run]') : ''
+        `${pc.white('UPDATE')} ${f.path}${
+          isDryRun ? output.colors.orange(' [dry-run]') : ''
         }`
       );
       const currentContentsOnDisk = readFileSync(
