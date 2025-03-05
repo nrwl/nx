@@ -60,7 +60,7 @@ export async function detoxApplicationGeneratorInternal(
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
   }
 
   sortPackageJsonFields(host, options.e2eProjectRoot);

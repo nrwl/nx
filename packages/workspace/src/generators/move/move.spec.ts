@@ -1,13 +1,22 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
-
 import {
+  detectPackageManager,
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
+
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual('@nx/devkit'),
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => ({
+    nodes: {},
+    dependencies: {},
+  })),
+  detectPackageManager: jest.fn(),
+}));
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -16,6 +25,9 @@ describe('move', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
+      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    );
   });
 
   it('should update jest config when moving down directories', async () => {
@@ -194,5 +206,94 @@ describe('move', () => {
     expect(myLibNewConfig.targets.foo.options.cwd).toEqual('packages/lib1');
     // check that the project.json file is not present
     expect(tree.exists('packages/lib1/project.json')).toBeFalsy();
+  });
+
+  it('should add new destination to the package manager workspaces config when it does not match any existing pattern and it was previously included', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['libs/*'];
+      return json;
+    });
+    await libraryGenerator(tree, { directory: 'libs/lib1' });
+
+    await moveGenerator(tree, {
+      projectName: 'lib1',
+      destination: 'packages/lib1',
+      updateImportPath: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.workspaces).toStrictEqual(['libs/*', 'packages/*']);
+  });
+
+  it('should add new destination to the pnpm workspaces config when it does not match any existing pattern and it was previously included', async () => {
+    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    tree.write(
+      'pnpm-workspace.yaml',
+      `packages:
+- 'libs/*'`
+    );
+    await libraryGenerator(tree, { directory: 'libs/lib1' });
+
+    await moveGenerator(tree, {
+      projectName: 'lib1',
+      destination: 'packages/lib1',
+      updateImportPath: true,
+    });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "packages:
+        - 'libs/*'
+        - 'packages/*'
+      "
+    `);
+  });
+
+  it('should add the project root to the package manager workspaces config when a more generic pattern would match other projects that were not previously included', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['libs/*'];
+      return json;
+    });
+    await libraryGenerator(tree, { directory: 'libs/lib1' });
+    // extra project that's not part of the package manager workspaces
+    await libraryGenerator(tree, { directory: 'packages/some-package' });
+
+    await moveGenerator(tree, {
+      projectName: 'lib1',
+      destination: 'packages/lib1',
+      updateImportPath: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.workspaces).toStrictEqual(['libs/*', 'packages/lib1']);
+  });
+
+  it('should not add new destination to the package manager workspaces config when it was not previously included', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['apps/*'];
+      return json;
+    });
+    await libraryGenerator(tree, { directory: 'libs/lib1' });
+
+    await moveGenerator(tree, {
+      projectName: 'lib1',
+      destination: 'packages/lib1',
+      updateImportPath: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.workspaces).toStrictEqual(['apps/*']);
+  });
+
+  it('should not configure package manager workspaces if it was not previously configured', async () => {
+    await libraryGenerator(tree, { directory: 'libs/lib1' });
+
+    await moveGenerator(tree, {
+      projectName: 'lib1',
+      destination: 'packages/lib1',
+      updateImportPath: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.workspaces).toBeUndefined();
   });
 });
