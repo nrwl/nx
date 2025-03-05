@@ -12,7 +12,13 @@ export function isProjectIncludedInPackageManagerWorkspaces(
     return false;
   }
 
-  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
+  const patterns = getPackageManagerWorkspacesPatterns(tree);
+
+  return patterns.some((p) => picomatch(p)(join(projectRoot, 'package.json')));
+}
+
+export function getPackageManagerWorkspacesPatterns(tree: Tree): string[] {
+  return getGlobPatternsFromPackageManagerWorkspaces(
     tree.root,
     (path) => readJson(tree, path, { expectComments: true }),
     (path) => {
@@ -22,8 +28,6 @@ export function isProjectIncludedInPackageManagerWorkspaces(
     },
     (path) => tree.exists(path)
   );
-
-  return patterns.some((p) => picomatch(p)(join(projectRoot, 'package.json')));
 }
 
 export function isUsingPackageManagerWorkspaces(tree: Tree): boolean {

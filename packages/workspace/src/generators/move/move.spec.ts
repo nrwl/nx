@@ -248,6 +248,25 @@ describe('move', () => {
     `);
   });
 
+  it('should add the project root to the package manager workspaces config when a more generic pattern would match other projects that were not previously included', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.workspaces = ['libs/*'];
+      return json;
+    });
+    await libraryGenerator(tree, { directory: 'libs/lib1' });
+    // extra project that's not part of the package manager workspaces
+    await libraryGenerator(tree, { directory: 'packages/some-package' });
+
+    await moveGenerator(tree, {
+      projectName: 'lib1',
+      destination: 'packages/lib1',
+      updateImportPath: true,
+    });
+
+    const packageJson = readJson(tree, 'package.json');
+    expect(packageJson.workspaces).toStrictEqual(['libs/*', 'packages/lib1']);
+  });
+
   it('should not add new destination to the package manager workspaces config when it was not previously included', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.workspaces = ['apps/*'];
