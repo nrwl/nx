@@ -12,6 +12,7 @@ import {
   toJS,
   Tree,
   updateJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 
@@ -39,6 +40,11 @@ import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-dire
 import { expoComponentGenerator } from '../component/component';
 import { relative } from 'path';
 import { reactNativeVersion, reactVersion } from '../../utils/versions';
+import {
+  addReleaseConfigForNonTsSolution,
+  addReleaseConfigForTsSolution,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -122,6 +128,10 @@ export async function expoLibraryGeneratorInternal(
   });
   tasks.push(() => componentTask);
 
+  if (options.publishable) {
+    tasks.push(await releaseTasks(host));
+  }
+
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(host, options.importPath, [
       joinPathFragments(
@@ -183,14 +193,28 @@ async function addProject(
       nx: {
         tags: options.parsedTags?.length ? options.parsedTags : undefined,
       },
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+      files: options.publishable
+        ? ['dist', 'src/index.ts', '!**/*.tsbuildinfo']
+        : undefined,
       peerDependencies: {
         react: reactVersion,
         'react-native': reactNativeVersion,
       },
     });
+    if (options.publishable) {
+      addReleaseConfigForTsSolution(host, options.projectName, project);
+      updateProjectConfiguration(host, options.projectName, project);
+    }
   } else {
-    addProjectConfiguration(host, options.name, project);
+    if (options.publishable) {
+      addReleaseConfigForNonTsSolution(
+        host,
+        options.projectName,
+        project,
+        'dist'
+      );
+    }
+    addProjectConfiguration(host, options.projectName, project);
   }
 
   if (options.publishable || options.buildable) {
