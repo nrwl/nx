@@ -102,10 +102,6 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(chalk.green('Nx key licensed packages'));
 
-    const licenseExpiryDate = new Date(
-      (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
-    );
-
     bodyLines.push(
       `Licensed to ${nxKey.organizationName} for ${nxKey.seatCount} user${
         nxKey.seatCount > 1 ? 's' : ''
@@ -116,30 +112,36 @@ export async function reportHandler() {
       } workspace${nxKey.workspaceCount > 1 ? 's' : ''}.`
     );
 
-    // license is not expired
-    if (licenseExpiryDate.getTime() >= Date.now()) {
-      if ('perpetualNxVersion' in nxKey) {
-        bodyLines.push(
-          `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
-            nxKey.perpetualNxVersion
-          } and below.`
-        );
+    if (nxKey.realExpiresAt || nxKey.expiresAt) {
+      const licenseExpiryDate = new Date(
+        (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
+      );
+
+      // license is not expired
+      if (licenseExpiryDate.getTime() >= Date.now()) {
+        if ('perpetualNxVersion' in nxKey) {
+          bodyLines.push(
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+              nxKey.perpetualNxVersion
+            } and below.`
+          );
+        } else {
+          bodyLines.push(
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
+          );
+        }
       } else {
-        bodyLines.push(
-          `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
-        );
-      }
-    } else {
-      if ('perpetualNxVersion' in nxKey) {
-        bodyLines.push(
-          `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
-            nxKey.perpetualNxVersion
-          } and below.`
-        );
-      } else {
-        bodyLines.push(
-          `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
-        );
+        if ('perpetualNxVersion' in nxKey) {
+          bodyLines.push(
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+              nxKey.perpetualNxVersion
+            } and below.`
+          );
+        } else {
+          bodyLines.push(
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
+          );
+        }
       }
     }
 
