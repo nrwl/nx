@@ -105,6 +105,14 @@
     "echo": {
       "command": "echo hi"
     },
+    "benchmark": {
+      "command": "node -r ts-node/register --hash-seed=1 --random-seed=1 --no-opt --predictable --predictable-gc-schedule --interpreted-frames-native-stack --allow-natives-syntax --expose-gc --no-concurrent-sweeping ./tools/tinybench-runner {projectRoot}",
+      "options": {
+        "env": {
+          "TS_NODE_PROJECT": "./tools/tinybench-runner/tsconfig.json"
+        }
+      }
+    },
     "build": {
       "dependsOn": ["^build-client", "build-base", "build-native"],
       "inputs": [

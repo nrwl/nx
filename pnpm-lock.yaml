@@ -156,6 +156,9 @@ importers:
       three:
         specifier: ^0.166.1
         version: 0.166.1
+      tinybench:
+        specifier: ^2.9.0
+        version: 2.9.0
       tslib:
         specifier: ^2.3.0
         version: 2.7.0
@@ -223,6 +226,9 @@ importers:
       '@babel/runtime':
         specifier: ^7.22.6
         version: 7.25.6
+      '@codspeed/tinybench-plugin':
+        specifier: ^4.0.0
+        version: 4.0.0(tinybench@2.9.0)
       '@eslint/compat':
         specifier: ^1.1.1
         version: 1.1.1
@@ -2614,6 +2620,14 @@ packages:
   '@cloudflare/kv-asset-handler@0.3.4':
     resolution: {integrity: sha512-YLPHc8yASwjNkmcDMQMY35yiWjoKAKnhUbPRszBRS0YgH+IXtsMp61j+yTcnCE3oO2DgP0U3iejLC8FTtKDC8Q==}
     engines: {node: '>=16.13'}
+
+  '@codspeed/core@4.0.0':
+    resolution: {integrity: sha512-B3zwdwLG8rcV0ORfYKX1wDP6ZCWf9C6ySidSf61q2vm9v5Lj2cWwRvj7vX+w/UyFHWKjp/zSyWTEed/r3Fv4Tg==}
+
+  '@codspeed/tinybench-plugin@4.0.0':
+    resolution: {integrity: sha512-h31pWeN1yrxAnkL5UYyBLTt0abrWFbdEIFzuO11lGqYp6BQn8OitaJFsDWo5SAk5od+hb/tKTtjGpDm5UnQ5Sw==}
+    peerDependencies:
+      tinybench: ^2.3.0
 
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -16349,6 +16363,10 @@ packages:
   stable@0.1.8:
     resolution: {integrity: sha512-ji9qxRnOVfcuLDySj9qzhGSEFVobyt1kIOSkj1qZzYLzq7Tos/oUUWvotUPQLlrsidqsK6tBH89Bc9kL5zHA6w==}
 
+  stack-trace@1.0.0-pre2:
+    resolution: {integrity: sha512-2ztBJRek8IVofG9DBJqdy2N5kulaacX30Nz7xmkYF6ale9WBVmIy6mFBchvGX7Vx/MyjBhx+Rcxqrj+dbOnQ6A==}
+    engines: {node: '>=16'}
+
   stack-utils@2.0.6:
     resolution: {integrity: sha512-XlkWvfIm6RmsWtNJx+uqtKLS8eqFbxUg0ZzLXqY0caEy9l7hruX8IpiDnjsLavoBgqCCR71TqWO8MaXYheJ3RQ==}
     engines: {node: '>=10'}
@@ -20846,6 +20864,23 @@ snapshots:
   '@cloudflare/kv-asset-handler@0.3.4':
     dependencies:
       mime: 3.0.0
+
+  '@codspeed/core@4.0.0':
+    dependencies:
+      axios: 1.7.7
+      find-up: 6.3.0
+      form-data: 4.0.0
+      node-gyp-build: 4.8.2
+    transitivePeerDependencies:
+      - debug
+
+  '@codspeed/tinybench-plugin@4.0.0(tinybench@2.9.0)':
+    dependencies:
+      '@codspeed/core': 4.0.0
+      stack-trace: 1.0.0-pre2
+      tinybench: 2.9.0
+    transitivePeerDependencies:
+      - debug
 
   '@colors/colors@1.5.0':
     optional: true
@@ -37552,6 +37587,8 @@ snapshots:
       swrev: 4.0.0
 
   stable@0.1.8: {}
+
+  stack-trace@1.0.0-pre2: {}
 
   stack-utils@2.0.6:
     dependencies:

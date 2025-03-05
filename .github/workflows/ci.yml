@@ -8,6 +8,10 @@ on:
     branches:
       - "**"
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
@@ -160,3 +164,42 @@ jobs:
           else
             echo "Skip E2E tests for macOS as there are no changes in React Native projects."
           fi
+
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Fetch Master
+        run: git fetch origin master:master
+        if: ${{ github.event_name == 'pull_request' }}
+
+      - name: Set SHAs
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9.8.0
+          run_install: false
+
+      - name: Install project dependencies
+        run: |
+          pnpm install --frozen-lockfile
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: "pnpm exec nx run-many -t benchmark"
+          token: ${{ secrets.CODSPEED_TOKEN }}
