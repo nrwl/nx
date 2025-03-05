@@ -1,5 +1,5 @@
-use crate::native::project_graph::types::ProjectGraph;
 use hashbrown::HashSet;
+use nx_core::types::project_graph::ProjectGraph;
 
 pub(super) fn find_all_project_node_dependencies<'a>(
     parent_node_name: &str,

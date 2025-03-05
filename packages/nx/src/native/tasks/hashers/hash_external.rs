@@ -1,10 +1,10 @@
-use crate::native::hasher::{hash, hash_array};
-use crate::native::project_graph::types::ExternalNode;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
+use nx_core::types::project_graph::ExternalNode;
+use nx_hasher::{hash, hash_array};
 
 pub fn hash_external(
     external_name: &str,
@@ -37,16 +37,16 @@ pub fn hash_all_externals<S: AsRef<str>>(
 ) -> Result<String> {
     let hashes = sorted_externals
         .iter()
-        .map(|name| hash_external(name.as_ref(), externals, Arc::clone(&cache)).map(Some))
-        .collect::<Result<Vec<Option<String>>>>()?;
+        .map(|name| hash_external(name.as_ref(), externals, Arc::clone(&cache)))
+        .collect::<Result<Vec<_>>>()?;
     Ok(hash_array(hashes))
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::native::project_graph::types::ExternalNode;
     use dashmap::DashMap;
+    use nx_core::types::project_graph::ExternalNode;
     use std::sync::Arc;
 
     fn get_external_nodes_map() -> HashMap<String, ExternalNode> {
