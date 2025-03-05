@@ -207,6 +207,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   'react-native': '@nx/react-native',
   '@remix-run/dev': '@nx/remix',
   '@rsbuild/core': '@nx/rsbuild',
+  '@react-router/dev': '@nx/react',
 };
 
 export async function detectPlugins(

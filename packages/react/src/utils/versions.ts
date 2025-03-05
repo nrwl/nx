@@ -32,6 +32,7 @@ export const emotionBabelPlugin = '11.11.0';
 export const styledJsxVersion = '5.1.2';
 
 export const reactRouterDomVersion = '6.29.0';
+export const reactRouterVersion = '7.1.5';
 
 export const testingLibraryReactVersion = '16.1.0';
 export const testingLibraryDomVersion = '10.4.0';
