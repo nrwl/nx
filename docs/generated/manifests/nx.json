@@ -2072,6 +2072,51 @@
         "file": "",
         "itemList": [
           {
+            "id": "rspack",
+            "name": "Angular Rspack",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "introduction",
+                "name": "Introduction",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/introduction",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/introduction",
+                "tags": ["introduction"]
+              },
+              {
+                "id": "migrate-from-webpack",
+                "name": "Migrate from Angular Webpack",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/migrate-from-webpack",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/migrate-from-webpack",
+                "tags": ["migrate-from-webpack"]
+              },
+              {
+                "id": "handling-configurations",
+                "name": "Handling Configurations",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/handling-configurations",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/handling-configurations",
+                "tags": ["handling-configurations", "configurations"]
+              }
+            ],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack",
+            "tags": []
+          },
+          {
             "id": "migration",
             "name": "Migration",
             "description": "",
@@ -4009,6 +4054,51 @@
     "file": "",
     "itemList": [
       {
+        "id": "rspack",
+        "name": "Angular Rspack",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "introduction",
+            "name": "Introduction",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/introduction",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/introduction",
+            "tags": ["introduction"]
+          },
+          {
+            "id": "migrate-from-webpack",
+            "name": "Migrate from Angular Webpack",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/migrate-from-webpack",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/migrate-from-webpack",
+            "tags": ["migrate-from-webpack"]
+          },
+          {
+            "id": "handling-configurations",
+            "name": "Handling Configurations",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/handling-configurations",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/handling-configurations",
+            "tags": ["handling-configurations", "configurations"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack",
+        "tags": []
+      },
+      {
         "id": "migration",
         "name": "Migration",
         "description": "",
@@ -4101,6 +4191,84 @@
     "isExternal": false,
     "path": "/recipes/angular",
     "tags": []
+  },
+  "/recipes/angular/rspack": {
+    "id": "rspack",
+    "name": "Angular Rspack",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "introduction",
+        "name": "Introduction",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/introduction",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/introduction",
+        "tags": ["introduction"]
+      },
+      {
+        "id": "migrate-from-webpack",
+        "name": "Migrate from Angular Webpack",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/migrate-from-webpack",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/migrate-from-webpack",
+        "tags": ["migrate-from-webpack"]
+      },
+      {
+        "id": "handling-configurations",
+        "name": "Handling Configurations",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/handling-configurations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/handling-configurations",
+        "tags": ["handling-configurations", "configurations"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack",
+    "tags": []
+  },
+  "/recipes/angular/rspack/introduction": {
+    "id": "introduction",
+    "name": "Introduction",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/introduction",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/introduction",
+    "tags": ["introduction"]
+  },
+  "/recipes/angular/rspack/migrate-from-webpack": {
+    "id": "migrate-from-webpack",
+    "name": "Migrate from Angular Webpack",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/migrate-from-webpack",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/migrate-from-webpack",
+    "tags": ["migrate-from-webpack"]
+  },
+  "/recipes/angular/rspack/handling-configurations": {
+    "id": "handling-configurations",
+    "name": "Handling Configurations",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/handling-configurations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/handling-configurations",
+    "tags": ["handling-configurations", "configurations"]
   },
   "/recipes/angular/migration": {
     "id": "migration",
