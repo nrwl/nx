@@ -80,7 +80,7 @@ export async function moveGenerator(tree: Tree, rawSchema: Schema) {
       // the new destination is not included in the package manager workspaces
       // so we need to add it and run a package install to ensure the symlink
       // is created
-      addProjectToTsSolutionWorkspace(tree, schema.destination);
+      await addProjectToTsSolutionWorkspace(tree, schema.destination);
       task = () => installPackagesTask(tree, true);
     }
   }
