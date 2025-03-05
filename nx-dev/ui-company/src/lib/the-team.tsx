@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 
 const teamMembers = [
   {
-    name: 'Altan stalker',
+    name: 'Altan Stalker',
     title: 'Senior Engineer',
     imageUrl: 'altan-stalker.avif',
   },
@@ -69,7 +69,7 @@ const teamMembers = [
   },
   {
     name: 'Jack Butler',
-    title: 'Account Exec',
+    title: 'Account Executive',
     imageUrl: 'jack-butler.avif',
   },
   {
