@@ -6,7 +6,7 @@ import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import { MigrateUI } from '@nx/graph-migrate';
-import { getExternalApiService } from '@nx/graph/shared';
+import { getExternalApiService } from '@nx/graph/legacy/shared';
 import { useSelector } from '@xstate/react';
 import { Interpreter } from 'xstate';
 import { MigrateEvents, MigrateState } from './migrate.machine';
