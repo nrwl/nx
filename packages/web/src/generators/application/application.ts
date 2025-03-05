@@ -301,7 +301,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
   const tasks: GeneratorCallback[] = [];

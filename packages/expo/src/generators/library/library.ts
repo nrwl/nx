@@ -70,7 +70,7 @@ export async function expoLibraryGeneratorInternal(
   }
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   const initTask = await init(host, { ...options, skipFormat: true });

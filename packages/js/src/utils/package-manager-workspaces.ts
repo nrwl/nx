@@ -25,7 +25,16 @@ export function getProjectPackageManagerWorkspaceState(
     return 'no-workspaces';
   }
 
-  const patterns = getGlobPatternsFromPackageManagerWorkspaces(
+  const patterns = getPackageManagerWorkspacesPatterns(tree);
+  const isIncluded = patterns.some((p) =>
+    picomatch(p)(join(projectRoot, 'package.json'))
+  );
+
+  return isIncluded ? 'included' : 'excluded';
+}
+
+export function getPackageManagerWorkspacesPatterns(tree: Tree): string[] {
+  return getGlobPatternsFromPackageManagerWorkspaces(
     tree.root,
     (path) => readJson(tree, path, { expectComments: true }),
     (path) => {
@@ -35,11 +44,6 @@ export function getProjectPackageManagerWorkspaceState(
     },
     (path) => tree.exists(path)
   );
-  const isIncluded = patterns.some((p) =>
-    picomatch(p)(join(projectRoot, 'package.json'))
-  );
-
-  return isIncluded ? 'included' : 'excluded';
 }
 
 export function isUsingPackageManagerWorkspaces(tree: Tree): boolean {
