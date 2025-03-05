@@ -1,12 +1,12 @@
 ---
-title: 'createConfig - @ng-rsbuild/plugin-angular'
-description: 'API Reference for createConfig from @ng-rsbuild/plugin-angular'
+title: 'createConfig - @nx/angular-rsbuild'
+description: 'API Reference for createConfig from @nx/angular-rsbuild'
 ---
 
 # createConfig
 
 ```bash
-import { createConfig } from '@ng-rsbuild/plugin-angular';
+import { createConfig } from '@nx/angular-rsbuild';
 ```
 
 The `createConfig` function is used to create a Rsbuild configuration object setup for Angular applications.
@@ -30,7 +30,7 @@ function createConfig(
 The following example shows how to create a configuration for a SSR application:
 
 ```ts {% fileName="myapp/rsbuild.config.ts" %}
-import { createConfig } from '@ng-rsbuild/plugin-angular';
+import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
   browser: './src/main.ts',
@@ -45,7 +45,7 @@ export default createConfig({
 The following example shows how to create a configuration for a CSR application:
 
 ```ts {% fileName="myapp/rsbuild.config.ts" %}
-import { createConfig } from '@ng-rsbuild/plugin-angular';
+import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
   browser: './src/main.ts',
@@ -58,7 +58,7 @@ export default createConfig({
 The following example shows how to modify the base Rsbuild configuration:
 
 ```ts {% fileName="myapp/rsbuild.config.ts" %}
-import { createConfig } from '@ng-rsbuild/plugin-angular';
+import { createConfig } from '@nx/angular-rsbuild';
 import { pluginSass } from '@rsbuild/plugin-sass';
 
 export default createConfig(
@@ -80,7 +80,7 @@ export default createConfig(
 The following example shows how to use file replacements:
 
 ```ts {% fileName="myapp/rsbuild.config.ts" %}
-import { createConfig } from '@ng-rsbuild/plugin-angular';
+import { createConfig } from '@nx/angular-rsbuild';
 
 export default createConfig({
   browser: './src/main.ts',

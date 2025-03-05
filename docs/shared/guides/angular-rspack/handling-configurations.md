@@ -7,7 +7,7 @@ description: 'Guide on how to handle configurations with Angular Rspack'
 
 Configurations are handled slightly differently compared to the Angular CLI. Rsbuild and Rspack use `mode` instead of configurations to handle different environments by default. This means that a different solution is needed to handle different build configurations you may have to match the behavior of Angular's configuration handling.
 
-`@ng-rsbuild/plugin-angular` provides a `withConfigurations` function to help you handle this. It uses the `NGRS_CONFIG` environment variable to determine which configuration to use. The default configuration is `production`.
+`@nx/angular-rsbuild` provides a `withConfigurations` function to help you handle this. It uses the `NGRS_CONFIG` environment variable to determine which configuration to use. The default configuration is `production`.
 
 {% callout type="info" title="Roll your own" %}
 You can handle configurations by yourself if you prefer, all you need is some manner of detecting the environment and then merging the options passed to `createConfig`.
@@ -18,7 +18,7 @@ You can handle configurations by yourself if you prefer, all you need is some ma
 The `withConfigurations` function takes two arguments, the first is the default options, and the second is an object of configurations. The configurations object is keyed by the name of the configuration, and the value is an object with the options and `rsbuildConfigOverrides` to be used for that configuration.
 
 ```ts {% fileName="myapp/rspack.config.ts" %}
-import { withConfigurations } from '@ng-rsbuild/plugin-angular';
+import { withConfigurations } from '@nx/angular-rsbuild';
 export default withConfigurations(
   {
     options: {

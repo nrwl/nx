@@ -1,12 +1,12 @@
 ---
-title: 'createConfig - @ng-rspack/build'
-description: 'API Reference for createConfig from @ng-rspack/build'
+title: 'createConfig - @nx/angular-rspack'
+description: 'API Reference for createConfig from @nx/angular-rspack'
 ---
 
 # createConfig
 
 ```bash
-import { createConfig } from '@ng-rspack/build';
+import { createConfig } from '@nx/angular-rspack';
 ```
 
 The `createConfig` function is used to create an Rspack configuration object setup for Angular applications.
@@ -30,7 +30,7 @@ function createConfig(
 The following example shows how to create a configuration for a SSR application:
 
 ```ts {% fileName="myapp/rspack.config.ts" %}
-import { createConfig } from '@ng-rspack/build';
+import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig({
   browser: './src/main.ts',
@@ -45,7 +45,7 @@ export default createConfig({
 The following example shows how to create a configuration for a CSR application:
 
 ```ts {% fileName="myapp/rspack.config.ts" %}
-import { createConfig } from '@ng-rspack/build';
+import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig({
   browser: './src/main.ts',
@@ -58,7 +58,7 @@ export default createConfig({
 The following example shows how to modify the base Rspack configuration:
 
 ```ts {% fileName="myapp/rspack.config.ts" %}
-import { createConfig } from '@ng-rspack/build';
+import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig(
   {
@@ -78,7 +78,7 @@ export default createConfig(
 The following example shows how to use file replacements:
 
 ```ts {% fileName="myapp/rspack.config.ts" %}
-import { createConfig } from '@ng-rspack/build';
+import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig({
   browser: './src/main.ts',
