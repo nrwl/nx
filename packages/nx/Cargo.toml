@@ -43,6 +43,8 @@ swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
+log = "0.4.26"
+vt100-ctt = { git = "https://github.com/JamesHenry/vt100-rust", rev = "1de895505fe9f697aadac585e4075b8fb45c880d" }
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi"] }
