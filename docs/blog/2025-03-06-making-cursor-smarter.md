@@ -74,15 +74,12 @@ The Nx MCP integration is built on top of the official [Model Context Protocol T
 
 **TODO: include overview diagram of how this works architecturally ([like this](https://mermaid.live/edit#pako:eNqNklGPojAUhf8K6byqUUAQHibZKJls4rpmmewmKxNT6UW7Ykva4uCo_30LVQd3ksn2pZf7ndNyDxxRygmgEK0FLjbW9EfCLL1kuTKNcU6BKdOs17gUkouF2ayvk-jFMGAkYf94Z9W38Xwxqyy9WTGIPYiX95Nm07hmU8zWJV7DR8Ez57lcfNljmuNVDub5k-saPqVSLaKq4BLInaNev-IFq5avXGxlgVNokfmkJoXgfyBVSwJKX9p2Tr6PawHhabv7FM3q7hoYCKy4uGPxHVrKdAM73BL8fKoFeypLnNM3WDZDfBzvknS3-3iK4-hUx2aALpquGVaezLSGNWVD54LvKbnhOp5bcOqgUzUf2MponocPWZB1pBJ8C-GD4ziXuvtKidqEdlG1jc3XvfhWq__33d7j6s1Wn3pRB-1A7DAl-i891iclSOksIUGhLgkW2wQl7Kx1ZUGwgohQHTgKM5xL6CBcKh4fWIpCJUq4iiYU68B3N1WB2W_Od1eR4OV604YoPKIKhQPX77me79meO_QDxwk66IBC27N7w2HfDhzXGfkDz_bPHfTWHGf3-sPhyHUCpz9w3ZHnnf8CJawbbg))**
 
-### Server Configuration
-
-The MCP server is configured through the `.cursor/mcp.json` file, which is automatically created in your workspace as mentioned in the previous section.
-
+The MCP server is configured through the `.cursor/mcp.json` file, which is automatically created in your workspace as mentioned in the previous section. Nx Console will automatically read the port specified there and spin up a matching MCP server.
 You can always view and modify the configuration through `Cursor Settings -> MCP`.
 
 ### Available Tools
 
-While the Model Context Protocol supports various functionalities (tools, resources, roots, and sampling), current client support is limited. For now, we've focused on providing a set of essential tools that leverage Nx's rich metadata:
+While the Model Context Protocol defines various functionalities (tools, resources, roots, and sampling), support in popular clients like Cursor or Claude Desktop is limited. For now, we've focused on providing a set of essential tools that leverage Nx's rich metadata:
 
 - `nx_workspace`: Provides an annotated representation of your Nx configuration and project graph
 - `nx_project_details`: Returns comprehensive configuration for any specific Nx project
@@ -96,7 +93,7 @@ While the Model Context Protocol supports various functionalities (tools, resour
 Behind the scenes, we use the Nx Language Server (`nxls`) that comes as part of the [Nx Console extension](/getting-started/editor-setup) to gather workspace information. Each tool request triggers a specific data flow:
 
 1. The tool receives your query
-2. `nxls` retrieves relevant workspace information
+2. `nxls` retrieves relevant workspace information from your nx workspace
 3. We transform this data into a format optimized for LLM consumption
 4. The transformed data is enriched with natural language descriptions
 5. The result is passed back to the AI assistant
@@ -105,16 +102,16 @@ For example, when handling project graph queries, we transform the raw graph dat
 
 ### IDE Integration
 
-The MCP's true power lies in its ability to trigger actions directly in your IDE. Currently, we support:
+The MCP's true potential lies in its deep integration with your IDE. Right now, it can trigger these actions directly in your IDE:
 
-- Project graph visualization
-- Task graph visualization for specific projects and targets
+- Visualize the project graph focused on a specific project
+- Visualization the task graph for specific a specific project and target
 
-But this is just the beginning. We plan to expand these capabilities in future releases.
+This is just the beginning. We plan to expand these capabilities in future releases and would love to hear your feedback and ideas on what you'd like to see.
 
 ### Using MCP Outside Cursor
 
-If you want to use our MCP integration with other tools that support the protocol (like Claude Desktop), you can run it in `stdio` mode. This allows direct communication between the client and server process. Follow the instructions in the [nx-mcp npm package documentation](https://www.npmjs.com/package/nx-mcp?activeTab=readme) to set this up.
+If you want to use our MCP integration with other tools that support the protocol (like Claude Desktop, Cline, Windsurf and more), you can run it in `stdio` mode. This allows direct communication between the client and server process. Follow the instructions in the [nx-mcp npm package documentation](https://www.npmjs.com/package/nx-mcp?activeTab=readme) to set this up.
 
 ## Let's see it in action
 
@@ -124,7 +121,7 @@ If you want to use our MCP integration with other tools that support the protoco
 
 Learn more:
 
-- 🧠 [Nx Docs](/getting-started/intro)
+- 🧠 [Nx AI Docs](/features/enhance-AI)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
 - 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)
