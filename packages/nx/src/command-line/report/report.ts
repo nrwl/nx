@@ -24,10 +24,10 @@ import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import {
-  getPowerpackLicenseInformation,
-  NxPowerpackNotInstalledError,
-} from '../../utils/powerpack';
-import type { PowerpackLicense } from '@nx/powerpack-license';
+  getNxKeyInformation,
+  NxKeyNotInstalledError,
+} from '../../utils/nx-key';
+import { type NxKey } from '@nx/key';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -64,8 +64,8 @@ export async function reportHandler() {
   const {
     pm,
     pmVersion,
-    powerpackLicense,
-    powerpackError,
+    nxKey,
+    nxKeyError,
     localPlugins,
     powerpackPlugins,
     communityPlugins,
@@ -97,49 +97,51 @@ export async function reportHandler() {
     );
   });
 
-  if (powerpackLicense) {
+  if (nxKey) {
     bodyLines.push('');
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(chalk.green('Nx Powerpack'));
-
-    const licenseExpiryDate = new Date(
-      (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
-    );
+    bodyLines.push(chalk.green('Nx key licensed packages'));
 
     bodyLines.push(
-      `Licensed to ${powerpackLicense.organizationName} for ${
-        powerpackLicense.seatCount
-      } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
-        powerpackLicense.workspaceCount === 9999
+      `Licensed to ${nxKey.organizationName} for ${nxKey.seatCount} user${
+        nxKey.seatCount > 1 ? 's' : ''
+      } in ${
+        nxKey.workspaceCount === 9999
           ? 'an unlimited number of'
-          : powerpackLicense.workspaceCount
-      } workspace${powerpackLicense.workspaceCount > 1 ? 's' : ''}.`
+          : nxKey.workspaceCount
+      } workspace${nxKey.workspaceCount > 1 ? 's' : ''}.`
     );
 
-    // license is not expired
-    if (licenseExpiryDate.getTime() >= Date.now()) {
-      if ('perpetualNxVersion' in powerpackLicense) {
-        bodyLines.push(
-          `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
-            powerpackLicense.perpetualNxVersion
-          } and below.`
-        );
+    if (nxKey.realExpiresAt || nxKey.expiresAt) {
+      const licenseExpiryDate = new Date(
+        (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
+      );
+
+      // license is not expired
+      if (licenseExpiryDate.getTime() >= Date.now()) {
+        if ('perpetualNxVersion' in nxKey) {
+          bodyLines.push(
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+              nxKey.perpetualNxVersion
+            } and below.`
+          );
+        } else {
+          bodyLines.push(
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
+          );
+        }
       } else {
-        bodyLines.push(
-          `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
-        );
-      }
-    } else {
-      if ('perpetualNxVersion' in powerpackLicense) {
-        bodyLines.push(
-          `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
-            powerpackLicense.perpetualNxVersion
-          } and below.`
-        );
-      } else {
-        bodyLines.push(
-          `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
-        );
+        if ('perpetualNxVersion' in nxKey) {
+          bodyLines.push(
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+              nxKey.perpetualNxVersion
+            } and below.`
+          );
+        } else {
+          bodyLines.push(
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
+          );
+        }
       }
     }
 
@@ -159,11 +161,11 @@ export async function reportHandler() {
       );
     }
     bodyLines.push('');
-  } else if (powerpackError) {
+  } else if (nxKeyError) {
     bodyLines.push('');
-    bodyLines.push(chalk.red('Nx Powerpack'));
+    bodyLines.push(chalk.red('Nx key'));
     bodyLines.push(LINE_SEPARATOR);
-    bodyLines.push(powerpackError.message);
+    bodyLines.push(nxKeyError.message);
     bodyLines.push('');
   }
 
@@ -226,8 +228,8 @@ export async function reportHandler() {
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
-  powerpackLicense: PowerpackLicense | null;
-  powerpackError: Error | null;
+  nxKey: NxKey | null;
+  nxKeyError: Error | null;
   powerpackPlugins: PackageJson[];
   localPlugins: string[];
   communityPlugins: PackageJson[];
@@ -276,20 +278,20 @@ export async function getReportData(): Promise<ReportData> {
 
   const native = isNativeAvailable();
 
-  let powerpackLicense = null;
-  let powerpackError = null;
+  let nxKey = null;
+  let nxKeyError = null;
   try {
-    powerpackLicense = await getPowerpackLicenseInformation();
+    nxKey = await getNxKeyInformation();
   } catch (e) {
-    if (!(e instanceof NxPowerpackNotInstalledError)) {
-      powerpackError = e;
+    if (!(e instanceof NxKeyNotInstalledError)) {
+      nxKeyError = e;
     }
   }
 
   return {
     pm,
-    powerpackLicense,
-    powerpackError,
+    nxKey,
+    nxKeyError,
     powerpackPlugins,
     pmVersion,
     localPlugins,
@@ -393,7 +395,9 @@ export function findMisalignedPackagesForPackage(
 export function findInstalledPowerpackPlugins(): PackageJson[] {
   const installedPlugins = findInstalledPlugins();
   return installedPlugins.filter((dep) =>
-    new RegExp('@nx/powerpack*').test(dep.name)
+    new RegExp(
+      '@nx/powerpack*|@nx/(.+)-cache|@nx/(conformance|owners|enterprise*)'
+    ).test(dep.name)
   );
 }
 
