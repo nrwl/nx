@@ -34,7 +34,6 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { relative } from 'node:path/posix';
 import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 
@@ -57,17 +56,19 @@ export async function e2eProjectGeneratorInternal(
   // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
   if (isUsingTsSolutionConfig) {
     writeJson(host, joinPathFragments(options.e2eProjectRoot, 'package.json'), {
-      name: getImportPath(host, options.e2eProjectName),
+      name: options.importPath,
       version: '0.0.1',
       private: true,
       nx: {
-        name: options.e2eProjectName,
-        projectType: 'application',
+        name:
+          options.e2eProjectName !== options.importPath
+            ? options.e2eProjectName
+            : undefined,
         implicitDependencies: [options.project],
         targets: {
           e2e: {
             executor: '@nx/jest:jest',
-            outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
+            outputs: ['{projectRoot}/test-output/jest/coverage'],
             options: {
               jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
               passWithNoTests: true,
@@ -131,6 +132,7 @@ export async function e2eProjectGeneratorInternal(
   const coverageDirectory = isUsingTsSolutionConfig
     ? 'test-output/jest/coverage'
     : joinPathFragments(rootOffset, 'coverage', options.e2eProjectName);
+  const projectSimpleName = options.project.split('/').pop();
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -138,7 +140,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'server' : options.project),
+        ...names(options.rootProject ? 'server' : projectSimpleName),
         tsConfigFile,
         offsetFromRoot: rootOffset,
         jestPreset,
@@ -155,7 +157,7 @@ export async function e2eProjectGeneratorInternal(
         options.e2eProjectRoot,
         {
           ...options,
-          ...names(options.rootProject ? 'server' : options.project),
+          ...names(options.rootProject ? 'server' : projectSimpleName),
           tsConfigFile,
           offsetFromRoot: rootOffset,
           tmpl: '',
@@ -170,7 +172,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'cli' : options.project),
+        ...names(options.rootProject ? 'cli' : projectSimpleName),
         mainFile,
         tsConfigFile,
         offsetFromRoot: rootOffset,
@@ -275,15 +277,26 @@ async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<
-  Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
+  Omit<Schema, 'name'> & {
+    e2eProjectRoot: string;
+    e2eProjectName: string;
+    importPath: string;
+  }
 > {
-  options.directory = options.directory ?? `${options.project}-e2e`;
-  const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: options.name,
-      projectType: 'library',
-      directory: options.rootProject ? 'e2e' : options.directory,
-    });
+  let directory = options.rootProject ? 'e2e' : options.directory;
+  if (!directory) {
+    const projectConfig = readProjectConfiguration(tree, options.project);
+    directory = `${projectConfig.root}-e2e`;
+  }
+  const {
+    projectName: e2eProjectName,
+    projectRoot: e2eProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'application',
+    directory,
+  });
 
   const nxJson = readNxJson(tree);
   const addPlugin =
@@ -295,6 +308,7 @@ async function normalizeOptions(
     ...options,
     e2eProjectRoot,
     e2eProjectName,
+    importPath,
     port: options.port ?? 3000,
     rootProject: !!options.rootProject,
   };

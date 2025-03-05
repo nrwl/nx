@@ -505,6 +505,9 @@ describe('@nx/eslint:lint-project', () => {
       }
       "
     `);
+    expect(
+      readJson(tree, 'package.json').devDependencies['jsonc-eslint-parser']
+    ).toBeDefined();
   });
 
   it('should generate a project config for buildable lib with lintFilePatterns if provided', async () => {

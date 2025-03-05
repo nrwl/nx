@@ -269,3 +269,16 @@ export function getProjectType(
   if (!packageJson?.exports) return 'application';
   return 'library';
 }
+
+export function getProjectSourceRoot(
+  tree: Tree,
+  projectSourceRoot: string | undefined,
+  projectRoot: string
+): string | undefined {
+  return (
+    projectSourceRoot ??
+    (tree.exists(joinPathFragments(projectRoot, 'src'))
+      ? joinPathFragments(projectRoot, 'src')
+      : projectRoot)
+  );
+}

@@ -20,6 +20,7 @@ import {
   getProjectType,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { typesNodeVersion } from '@nx/js/src/utils/versions';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
@@ -174,17 +175,18 @@ getTestBed().initTestEnvironment(
     updateNxJson(tree, nxJson);
   }
 
-  const coverageProviderDependency = await getCoverageProviderDependency(
+  const devDependencies = await getCoverageProviderDependency(
     tree,
     schema.coverageProvider
   );
+  devDependencies['@types/node'] = typesNodeVersion;
 
-  const installCoverageProviderTask = addDependenciesToPackageJson(
+  const installDependenciesTask = addDependenciesToPackageJson(
     tree,
     {},
-    coverageProviderDependency
+    devDependencies
   );
-  tasks.push(installCoverageProviderTask);
+  tasks.push(installDependenciesTask);
 
   // Setup workspace config file (https://vitest.dev/guide/workspace.html)
   if (
@@ -351,7 +353,7 @@ function createFiles(
 async function getCoverageProviderDependency(
   tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
-) {
+): Promise<Record<string, string>> {
   const { vitestCoverageV8, vitestCoverageIstanbul } =
     await getVitestDependenciesVersionsToInstall(tree);
   switch (coverageProvider) {

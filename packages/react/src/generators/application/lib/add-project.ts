@@ -11,6 +11,7 @@ import {
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -39,11 +40,29 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   }
 
   if (options.isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: options.projectName,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       private: true,
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (Object.keys(project.targets).length) {
+      packageJson.nx ??= {};
+      packageJson.nx.targets = project.targets;
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 
   if (!options.isUsingTsSolutionConfig || options.alwaysGenerateProjectJson) {

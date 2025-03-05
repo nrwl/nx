@@ -331,8 +331,10 @@ describe('app', () => {
   });
 
   describe('TS solution setup', () => {
-    it('should add project references when using TS solution', async () => {
-      const tree = createTreeWithEmptyWorkspace();
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
       tree.write('.gitignore', '');
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
@@ -349,7 +351,9 @@ describe('app', () => {
         files: [],
         references: [],
       });
+    });
 
+    it('should add project references when using TS solution', async () => {
       await expoApplicationGenerator(tree, {
         directory: 'my-app',
         displayName: 'myApp',
@@ -368,14 +372,15 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'my-app/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
           "private",
-          "nx",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -474,6 +479,33 @@ describe('app', () => {
             },
           ],
         }
+      `);
+    });
+
+    it('should respect provided name', async () => {
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        name: 'my-app',
+        displayName: 'myApp',
+        linter: Linter.EsLint,
+        e2eTestRunner: 'none',
+        skipFormat: false,
+        js: false,
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      });
+
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx.name).toBe('my-app');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
       `);
     });
   });

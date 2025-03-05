@@ -69,7 +69,6 @@ describe('nx package.json workspaces plugin', () => {
             },
             "name": "root",
             "root": ".",
-            "sourceRoot": ".",
             "tags": [
               "npm:public",
             ],
@@ -123,7 +122,6 @@ describe('nx package.json workspaces plugin', () => {
             },
             "name": "lib-a",
             "root": "packages/lib-a",
-            "sourceRoot": "packages/lib-a",
             "tags": [
               "npm:public",
             ],
@@ -185,7 +183,6 @@ describe('nx package.json workspaces plugin', () => {
             },
             "name": "lib-b",
             "root": "packages/lib-b",
-            "sourceRoot": "packages/lib-b",
             "tags": [
               "npm:public",
             ],
@@ -290,7 +287,6 @@ describe('nx package.json workspaces plugin', () => {
                   },
                   "name": "vite",
                   "root": "packages/vite",
-                  "sourceRoot": "packages/vite",
                   "tags": [
                     "npm:public",
                   ],
@@ -394,7 +390,6 @@ describe('nx package.json workspaces plugin', () => {
                   },
                   "name": "vite",
                   "root": "packages/vite",
-                  "sourceRoot": "packages/vite",
                   "tags": [
                     "npm:public",
                   ],
@@ -494,7 +489,6 @@ describe('nx package.json workspaces plugin', () => {
                   },
                   "name": "vite",
                   "root": "packages/vite",
-                  "sourceRoot": "packages/vite",
                   "tags": [
                     "npm:public",
                   ],
@@ -582,7 +576,6 @@ describe('nx package.json workspaces plugin', () => {
                   },
                   "name": "root",
                   "root": "packages/a",
-                  "sourceRoot": "packages/a",
                   "tags": [
                     "npm:public",
                   ],
@@ -667,7 +660,6 @@ describe('nx package.json workspaces plugin', () => {
                   },
                   "name": "root",
                   "root": "packages/a",
-                  "sourceRoot": "packages/a",
                   "tags": [
                     "npm:public",
                   ],
@@ -753,7 +745,6 @@ describe('nx package.json workspaces plugin', () => {
                   },
                   "name": "root",
                   "root": "packages/a",
-                  "sourceRoot": "packages/a",
                   "tags": [
                     "npm:public",
                   ],
@@ -939,7 +930,6 @@ describe('nx package.json workspaces plugin', () => {
                 },
                 "name": "lib-a",
                 "root": "packages/lib-a",
-                "sourceRoot": "packages/lib-a",
                 "tags": [
                   "npm:public",
                 ],
@@ -990,7 +980,6 @@ describe('nx package.json workspaces plugin', () => {
                 },
                 "name": "lib-b",
                 "root": "libs/lib-b",
-                "sourceRoot": "libs/lib-b",
                 "tags": [
                   "npm:public",
                 ],

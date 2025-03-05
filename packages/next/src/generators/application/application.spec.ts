@@ -938,7 +938,6 @@ describe('app (legacy)', () => {
         ...schema,
         addPlugin: true,
         directory: 'myapp',
-        name: 'myapp',
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -951,14 +950,15 @@ describe('app (legacy)', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
           "private",
-          "nx",
           "dependencies",
         ]
       `);
@@ -1084,6 +1084,29 @@ describe('app (legacy)', () => {
             "**/*.d.ts",
           ],
         }
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        ...schema,
+        addPlugin: true,
+        directory: 'myapp',
+        name: 'myapp',
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+          "dependencies",
+        ]
       `);
     });
   });

@@ -22,12 +22,12 @@ import { addRsbuild } from './lib/add-rsbuild';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
   return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
@@ -66,16 +66,25 @@ export async function applicationGeneratorInternal(
     nxJson.useInferencePlugins !== false;
 
   if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: options.projectName,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       private: true,
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(tree, options.projectName, {
       root: options.appProjectRoot,

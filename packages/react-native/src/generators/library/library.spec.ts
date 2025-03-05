@@ -450,7 +450,7 @@ describe('lib', () => {
   });
 
   describe('TS solution setup', () => {
-    it('should add project references when using TS solution', async () => {
+    beforeEach(() => {
       updateJson(appTree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
         return json;
@@ -466,7 +466,9 @@ describe('lib', () => {
         files: [],
         references: [],
       });
+    });
 
+    it('should add project references when using TS solution', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
       });
@@ -492,7 +494,6 @@ describe('lib', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
-          "nx": {},
           "peerDependencies": {
             "react": "~18.3.1",
             "react-native": "~0.76.3",
@@ -592,6 +593,40 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: '@proj/my-lib',
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

@@ -503,7 +503,6 @@ describe('lib', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
-          "nx": {},
           "peerDependencies": {
             "react": "~18.3.1",
             "react-native": "0.76.3",
@@ -520,7 +519,6 @@ describe('lib', () => {
           "main",
           "types",
           "exports",
-          "nx",
           "peerDependencies",
         ]
       `);
@@ -639,7 +637,6 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
-          "nx": {},
           "peerDependencies": {
             "react": "~18.3.1",
             "react-native": "0.76.3",
@@ -648,6 +645,39 @@ describe('lib', () => {
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: '@proj/my-lib',
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema, // defaultSchema has no name
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

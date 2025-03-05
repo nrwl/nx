@@ -256,5 +256,45 @@ describe('next library', () => {
         }
       `);
     });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        linter: 'none',
+        unitTestRunner: 'none',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        name: '@proj/my-lib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        style: 'css',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
   });
 });

@@ -27,7 +27,7 @@ import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 
 export async function hostGenerator(
@@ -36,7 +36,10 @@ export async function hostGenerator(
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
-    ...(await normalizeOptions<Schema>(host, schema)),
+    ...(await normalizeOptions<Schema>(host, {
+      ...schema,
+      alwaysGenerateProjectJson: true,
+    })),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
       ? false
@@ -60,7 +63,7 @@ export async function hostGenerator(
     });
   }
 
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const initTask = await applicationGenerator(host, {
     ...options,
     directory: options.appProjectRoot,
