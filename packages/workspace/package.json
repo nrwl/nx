@@ -39,12 +39,12 @@
   },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
+    "@zkochan/js-yaml": "0.0.7",
     "chalk": "^4.1.0",
     "enquirer": "~2.3.6",
-    "tslib": "^2.3.0",
-    "yargs-parser": "21.1.1",
     "picomatch": "4.0.2",
-    "@zkochan/js-yaml": "0.0.7"
+    "tslib": "^2.3.0",
+    "yargs-parser": "21.1.1"
   },
   "publishConfig": {
     "access": "public"
