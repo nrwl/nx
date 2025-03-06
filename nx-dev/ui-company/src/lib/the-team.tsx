@@ -94,7 +94,7 @@ const teamMembers = [
   },
   {
     name: 'Joe Johnson',
-    title: 'Director of Professional Services',
+    title: 'VP of Customer Success',
     imageUrl: 'joe-johnson.avif',
   },
   {
