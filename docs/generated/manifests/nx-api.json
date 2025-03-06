@@ -208,6 +208,15 @@
         "path": "/nx-api/angular/generators/convert-to-application-executor",
         "type": "generator"
       },
+      "/nx-api/angular/generators/convert-to-rspack": {
+        "description": "Converts Angular Webpack projects to use Rspack.",
+        "file": "generated/packages/angular/generators/convert-to-rspack.json",
+        "hidden": false,
+        "name": "convert-to-rspack",
+        "originalFilePath": "/packages/angular/src/generators/convert-to-rspack/schema.json",
+        "path": "/nx-api/angular/generators/convert-to-rspack",
+        "type": "generator"
+      },
       "/nx-api/angular/generators/directive": {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",
