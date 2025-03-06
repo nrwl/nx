@@ -1,8 +1,8 @@
 ---
-title: "Nx Agents Walkthrough:
-Effortlessly Fast CI Built for Monorepos"
-description: "Learn how you can streamline your existing CI config to its absolute simplest form, reducing CI times from 30 minutes to ~5 minutes with Nx Agents. "
-slug: 'nx-agents-walkthrougheffortlessly-fast-ci-built-for-monorepos'
+title: 'Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos'
+description: 'Learn how you can streamline your existing CI config to its absolute simplest form, reducing CI times from 30 minutes to ~5 minutes with Nx Agents. '
+date: 2024-03-11
+slug: 'nx-agents-walkthrough-effortlessly-fast-ci-built-for-monorepos'
 authors: ['Rareș Matei']
 tags: [webinar]
 cover_image: /blog/images/2024-03-11/march-webinar.png
