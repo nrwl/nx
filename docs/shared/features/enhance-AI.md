@@ -45,7 +45,7 @@ To enable LLM enhancement in VS Code:
 To enable LLM enhancements in Cursor:
 
 1. Install or update [Nx Console](/getting-started/editor-setup) and make sure you're on the latest version of Cursor (0.46 and up)
-2. When starting Cursor, you will see a notification prompting you to add the Nx enhancement to Cursor Agents. Accept the notification. ![Screenshot of the Nx AI notification](/shared/images/cursor-ai-notification.avif)
+2. When starting Cursor, you will see a notification prompting you to add the Nx enhancement to Cursor Agents. Accept the notification. Alternatively, you can execute the `nx.configureMcpServer` command. ![Screenshot of the Nx AI notification](/shared/images/cursor-ai-notification.avif)
 3. Make sure the MCP server is enabled under `Cursor` -> `Settings` -> `Cursor Settings` -> `MCP` ![Screenshot of the Cursor MCP settings page](/shared/images/cursor-mcp-settings.avif)
 4. You have now successfully configured an [MCP server](https://modelcontextprotocol.io/introduction) that provides the enhanced context to Cursor's AI features ![Example of Cursor Agent using Nx tools](/shared/images/cursor-mcp-example.avif)
 
