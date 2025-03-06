@@ -17,6 +17,8 @@ youtubeUrl: https://youtu.be/V2W94Sq_v6A
 
 A couple of weeks ago, we [announced how Nx makes your LLM smarter](/blog/nx-just-made-your-llm-smarter) by providing rich metadata about your monorepo structure, project relationships, and architectural context. This enhancement was initially available through GitHub Copilot in VSCode, but now we're taking it a step further by implementing the Model Context Protocol (MCP) for Cursor, making your AI assistant even more powerful.
 
+{% call-to-action title="Learn more about Nx and AI" url="https://go.nx.dev/march2025-webinar" description="LLM-focused Webinar on March 19th" /%}
+
 {% toc /%}
 
 ## What is the Model Context Protocol (MCP)?
