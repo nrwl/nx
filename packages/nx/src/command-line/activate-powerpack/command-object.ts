@@ -2,14 +2,16 @@ import { CommandModule } from 'yargs';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { handleErrors } from '../../utils/handle-errors';
 
-export interface ActivateKeyOptions {
-  key: string;
+export interface ActivatePowerpackOptions {
+  license: string;
   verbose: boolean;
 }
 
-export const yargsActivateKeyCommand: CommandModule<{}, ActivateKeyOptions> = {
-  command: 'activate-key <key>',
-  aliases: ['activate-powerpack'],
+export const yargsActivatePowerpackCommand: CommandModule<
+  {},
+  ActivatePowerpackOptions
+> = {
+  command: 'activate-powerpack <license>',
   describe: false,
   // describe: 'Activate a Nx Powerpack license.',
   builder: (yargs) =>
@@ -18,14 +20,19 @@ export const yargsActivateKeyCommand: CommandModule<{}, ActivateKeyOptions> = {
         'strip-dashed': true,
         'unknown-options-as-args': true,
       })
-      .positional('key', {
+      .positional('license', {
         type: 'string',
-        description: 'This is a key for Nx.',
+        description: 'This is a License Key for Nx Powerpack.',
       })
-      .example('$0 activate-key <key>', 'Activate a Nx key'),
+      .example(
+        '$0 activate-powerpack <license key>',
+        'Activate a Nx Powerpack license'
+      ),
   handler: async (args) => {
     const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      return (await import('./activate-key')).handleActivateKey(args);
+      return (await import('./activate-powerpack')).handleActivatePowerpack(
+        args
+      );
     });
     process.exit(exitCode);
   },

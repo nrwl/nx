@@ -213,40 +213,32 @@ export class DbCache {
       }
     } else {
       return (
-        (await this.getS3Cache()) ??
-        (await this.getSharedCache()) ??
-        (await this.getGcsCache()) ??
-        (await this.getAzureCache()) ??
+        (await this.getPowerpackS3Cache()) ??
+        (await this.getPowerpackSharedCache()) ??
+        (await this.getPowerpackGcsCache()) ??
+        (await this.getPowerpackAzureCache()) ??
         null
       );
     }
   }
 
-  private async getS3Cache(): Promise<RemoteCacheV2 | null> {
-    const cache = await this.resolveRemoteCache('@nx/s3-cache');
-    if (cache) return cache;
-    return this.resolveRemoteCache('@nx/powerpack-s3-cache');
+  private getPowerpackS3Cache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-s3-cache');
   }
 
-  private async getSharedCache(): Promise<RemoteCacheV2 | null> {
-    const cache = await this.resolveRemoteCache('@nx/shared-fs-cache');
-    if (cache) return cache;
-    return this.resolveRemoteCache('@nx/powerpack-shared-fs-cache');
+  private getPowerpackSharedCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-shared-fs-cache');
   }
 
-  private async getGcsCache(): Promise<RemoteCacheV2 | null> {
-    const cache = await this.resolveRemoteCache('@nx/gcs-cache');
-    if (cache) return cache;
-    return this.resolveRemoteCache('@nx/powerpack-gcs-cache');
+  private getPowerpackGcsCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-gcs-cache');
   }
 
-  private async getAzureCache(): Promise<RemoteCacheV2 | null> {
-    const cache = await this.resolveRemoteCache('@nx/azure-cache');
-    if (cache) return cache;
-    return this.resolveRemoteCache('@nx/powerpack-azure-cache');
+  private getPowerpackAzureCache(): Promise<RemoteCacheV2 | null> {
+    return this.getPowerpackCache('@nx/powerpack-azure-cache');
   }
 
-  private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {
+  private async getPowerpackCache(pkg: string): Promise<RemoteCacheV2 | null> {
     let getRemoteCache = null;
     try {
       getRemoteCache = (await import(this.resolvePackage(pkg))).getRemoteCache;
