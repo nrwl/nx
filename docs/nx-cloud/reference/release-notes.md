@@ -20,7 +20,7 @@ Once you start using assignment rules, you'll be able to see all your configured
 
 Speaking about the CIPE "Analysis" page, the agent utilization graph has been completely revamped.
 
-The new agent utilization visualization allows you to see when agents were actively executing tasks, and gaps when agents were idle. You can use this tool to optimize how work gets distributed, and modify your commands and dependencies for to remove idle time. Tasks that hang will be highlighted in yellow, helping you debug OOM issues. If you’re using Nx Agents, you’ll also see set up steps on the visualization.
+The new agent utilization visualization allows you to see when agents were actively executing tasks, and gaps when agents were idle. You can use this tool to optimize how work gets distributed, and modify your commands and dependencies to remove idle time. Tasks that hang will be highlighted in yellow, helping you debug OOM issues. If you’re using Nx Agents, you’ll also see set up steps on the visualization.
 
 ##### Workspace data caching
 
@@ -36,7 +36,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
 
 ##### Misc Items
 
-- a new version of the AMQ image was also released with the latest security patches and fixes
+- a new version of the AMQ image was released with the latest security patches and fixes
 - node modules caching fixes on Nx Agents
   - previously, we were always recommending caching the `node_modules` folder itself in your Nx Agents yaml configs
   - this does not work `npm ci`, as it always deletes the local `node_modules` folder before starting the installation. Instead, NPM recommends caching the `$HOME/.npm` directory.
@@ -44,27 +44,27 @@ To enable it, you need to set this env variable on the nx-api deployment:
   - Part of this release, we now fixed caching folders in the `$HOME` directory, so all the below options should work:
     - `~/.npm`
     - `~/.cache/yarn`
-    - `.pnpm-store` (PNPM on Nx Agents does not store its cache folder in the $HOME dir)
+    - `.pnpm-store` (note PNPM on Nx Agents does not store its cache folder in the $HOME dir)
   - Please refer to the [custom launch templates docs](https://nx.dev/ci/reference/launch-templates#full-example) for how you can setup your caching under these new recommendations
 - Nx Agents `$HOME` directory mounting
-  - previously, we were mounting as a k8s volume just the folder in which we checkout your repo: `$HOME/workspace`
+  - previously, when your Nx Agents pods were starting up, we were mounting as a k8s volume just the folder in which you checkout your repo: `$HOME/workspace`
   - however, a lot of dependencies and third-party apps use `$HOME` folder to deposit a lot of files (Rust, NPM cache folders etc.)
   - this caused agents to fight for available space on the node itself, causing very hard to debug issues if the space requirements were too big
   - part of this release, we now mount the whole `$HOME` directory as a volume, ensuring each agent gets a predictable storage size allocated
-  - this also enables Nx Agents to run in more restricted environments (such as OpenShift), where read-only filesystems are enforced, as mountable volumes are write-able
+  - this also enables Nx Agents to run in more restricted environments (such as OpenShift), where read-only filesystems are enforced (due to mountable volumes being writeable)
   - to enable this:
     - ensure you use (or are extending from) one of our pre-built agents base images
       - this is the image you set in your `image:` portion of your `agents.yaml`
-      - (you are most likely using one of our images, so it's likely you can skip this step)
+      - (you are most likely using one of our images, so you can probably skip this step)
     - if you had to import the above image into your own internal registry, ensure it is part of a repository called `nx-agents-base-images`
-      - Example: `image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud-enterprise-public/nx-agents-base-images:ubuntu22.04-node20.11-v12'`
-    - enable the `--copy-home-dir-init-container` flag on the `controller.deployment.args` section in your Nx Agents `helm-config.yaml`
+      - Example (see the `nx-agents-base-images` part in this path): `image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud-enterprise-public/nx-agents-base-images:ubuntu22.04-node20.11-v12'`
+    - enable the `--copy-home-dir-init-container` flag [on the `controller.deployment.args` section in your Nx Agents `helm-config.yaml`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L69)
 - increase restart amount for agents
   - if any of your agents go down (either because one of their init steps fails, due to networking issues for example) or they run out of memory, we now try to restart them up to `N` times, where `N` is the number of agents you have
-  - this should result in more pipeline stability, though it is worth monitoring the failed steps to ensure any persistent issues get addresses
+  - this should result in more pipeline stability, though it is worth to still monitor the failed steps to ensure any persistent issues get addressed
 - various potential race conditions where addresses with the NxCloud runner when restoring items from the cache (this was mainly noticeable on very large workspaces)
 - various UI issues with the "compare tasks diff" have now been addressed
-  - this is the tool used to diagnose why there was a cache miss and what are the differences between two given hashes
+  - this is the tool used to diagnose why a cache hit did not occur and what the differences are between two given hashes
 
 ### 2025.01.4
 
