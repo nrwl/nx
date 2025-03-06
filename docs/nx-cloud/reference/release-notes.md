@@ -8,7 +8,7 @@
 
 ##### Assignment rules
 
-Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suite the individual needs of your tasks. You can ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents. Lighter tasks like `lint` and `test` can run on smaller agents.
+Assignment rules allow you to control which tasks can run on which agents. Save on agent costs by provisioning different sizes of agents to suit the individual needs of your tasks. You can ensure resource intensive targets like `e2e-ci` and `build` have what they need by using larger agents. Lighter tasks like `lint` and `test` can run on smaller agents.
 
 Assignment rules are defined in yaml files within your workspace's `.nx/workflows` directory. You can use assignment rules with DTE-agents or with dynamic Nx Agents. Note that additional configuration is required when using DTE agents.
 
@@ -39,7 +39,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
 - a new version of the AMQ image was released with the latest security patches and fixes
 - node modules caching fixes on Nx Agents
   - previously, we were always recommending caching the `node_modules` folder itself in your Nx Agents yaml configs
-  - this does not work `npm ci`, as it always deletes the local `node_modules` folder before starting the installation. Instead, NPM recommends caching the `$HOME/.npm` directory.
+  - this does not work with `npm ci`, as it always deletes the local `node_modules` folder before starting the installation. Instead, NPM recommends caching the `$HOME/.npm` directory.
   - Yarn and PNPM also have their own dedicated folders they recommend for caching
   - Part of this release, we now fixed caching folders in the `$HOME` directory, so all the below options should work:
     - `~/.npm`
@@ -51,7 +51,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
   - however, a lot of dependencies and third-party apps use `$HOME` folder to deposit a lot of files (Rust, NPM cache folders etc.)
   - this caused agents to fight for available space on the node itself, causing very hard to debug issues if the space requirements were too big
   - part of this release, we now mount the whole `$HOME` directory as a volume, ensuring each agent gets a predictable storage size allocated
-  - this also enables Nx Agents to run in more restricted environments (such as OpenShift), where read-only filesystems are enforced (due to mountable volumes being writeable)
+  - this also enables Nx Agents to run in more restricted environments (such as OpenShift), where read-only file systems are enforced (due to mountable volumes being writeable)
   - to enable this:
     - ensure you use (or are extending from) one of our pre-built agents base images
       - this is the image you set in your `image:` portion of your `agents.yaml`
@@ -62,7 +62,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
 - increase restart amount for agents
   - if any of your agents go down (either because one of their init steps fails, due to networking issues for example) or they run out of memory, we now try to restart them up to `N` times, where `N` is the number of agents you have
   - this should result in more pipeline stability, though it is worth to still monitor the failed steps to ensure any persistent issues get addressed
-- various potential race conditions where addresses with the NxCloud runner when restoring items from the cache (this was mainly noticeable on very large workspaces)
+- addresses various potential race conditions in the NxCloud runner when restoring items from the cache (this was mainly noticeable on very large workspaces)
 - various UI issues with the "compare tasks diff" have now been addressed
   - this is the tool used to diagnose why a cache hit did not occur and what the differences are between two given hashes
 
