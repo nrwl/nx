@@ -59,7 +59,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
 import type { Observable } from 'rxjs';
-import { printNxKey } from '../utils/nx-key';
+import { printPowerpackLicense } from '../utils/powerpack';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -273,7 +273,7 @@ export async function runCommandForTasks(
 
   await renderIsDone;
 
-  await printNxKey();
+  await printPowerpackLicense();
 
   return taskResults;
 }

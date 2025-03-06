@@ -2,13 +2,13 @@ import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
 
-export async function printNxKey() {
+export async function printPowerpackLicense() {
   try {
     const { organizationName, seatCount, workspaceCount } =
-      await getNxKeyInformation();
+      await getPowerpackLicenseInformation();
 
     logger.log(
-      `Nx key licensed to ${organizationName} for ${seatCount} user${
+      `Nx Powerpack Licensed to ${organizationName} for ${seatCount} user${
         seatCount > 1 ? 's' : ''
       } in ${
         workspaceCount === 9999 ? 'an unlimited number of' : workspaceCount
@@ -17,7 +17,7 @@ export async function printNxKey() {
   } catch {}
 }
 
-export async function getNxKeyInformation() {
+export async function getPowerpackLicenseInformation() {
   try {
     const {
       getPowerpackLicenseInformation,
@@ -29,26 +29,19 @@ export async function getNxKeyInformation() {
       getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
     )(workspaceRoot);
   } catch (e) {
-    try {
-      const { getNxKeyInformationAsync } = (await import(
-        '@nx/key'
-      )) as typeof import('@nx/key');
-      return getNxKeyInformationAsync(workspaceRoot);
-    } catch (e) {
-      if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
-        throw new NxKeyNotInstalledError(e);
-      }
-      throw e;
+    if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
+      throw new NxPowerpackNotInstalledError(e);
     }
+    throw e;
   }
 }
 
-export class NxKeyNotInstalledError extends Error {
+export class NxPowerpackNotInstalledError extends Error {
   constructor(e: Error) {
     super(
-      `The "@nx/key" package is needed to use Nx key enabled features. Please install it with ${
+      `The "@nx/powerpack-license" package is needed to use Nx Powerpack enabled features. Please install the @nx/powerpack-license with ${
         getPackageManagerCommand().addDev
-      } @nx/key`,
+      } @nx/powerpack-license`,
       { cause: e }
     );
   }
