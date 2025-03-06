@@ -80,7 +80,7 @@ describe('Node Esbuild Applications', () => {
 
     // check build
     expect(runCLI(`build ${nodeapp}`)).toContain(
-      `Successfully ran target build for project ${nodeapp}`
+      `Successfully ran target build for project @proj/${nodeapp}`
     );
   });
 });
