@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["vitest", "node"]
+  },
+  "include": ["**/*.bench.ts", "**/*.d.ts", "jest.config.ts"]
+}

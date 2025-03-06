@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  NX_CLOUD_ACCESS_TOKEN: OWViNjcxNmUtYzRmNC00YzBjLWFhNGEtNzc0OTYxZDYwNmEwfHJlYWQtd3JpdGU=
 
 jobs:
   main-linux:

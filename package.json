@@ -47,6 +47,7 @@
     "@babel/preset-typescript": "^7.22.5",
     "@babel/runtime": "^7.22.6",
     "@codspeed/tinybench-plugin": "^4.0.0",
+    "@codspeed/vitest-plugin": "^4.0.0",
     "@eslint/compat": "^1.1.1",
     "@eslint/eslintrc": "^2.1.1",
     "@eslint/js": "^8.48.0",
@@ -397,5 +398,11 @@
       "check-codeowners"
     ]
   },
-  "packageManager": "pnpm@9.8.0"
+  "packageManager": "pnpm@9.8.0",
+  "pnpm": {
+    "overrides": {
+      "vite": "6.2.0",
+      "vitest": "3.0.5"
+    }
+  }
 }

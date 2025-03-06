@@ -1,0 +1,17 @@
+{
+  "name": "e2e-benchmarks",
+  "targets": {
+    "benchmark": {
+      "command": "vitest bench",
+      "options": {
+        "cwd": "{projectRoot}",
+        "args": ["--watch=false"]
+      },
+      "configurations": {
+        "watch": {
+          "args": ["--watch=true"]
+        }
+      }
+    }
+  }
+}

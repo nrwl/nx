@@ -115,6 +115,7 @@
               "@nestjs/cli", // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
               "ts-node", // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
               "memfs", // used in mock for handling .node files in tests
+              "tinybench", // used in benchmarks
               "events", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "process", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "prettier", // This is coming from @storybook/builder-manager since it uses the browser polyfill
