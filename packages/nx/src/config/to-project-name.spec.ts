@@ -65,7 +65,6 @@ describe('Workspaces', () => {
           },
           "name": "my-package",
           "root": "packages/my-package",
-          "sourceRoot": "packages/my-package",
           "tags": [
             "npm:public",
           ],
