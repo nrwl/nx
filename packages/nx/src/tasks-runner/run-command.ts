@@ -1,6 +1,8 @@
 import { prompt } from 'enquirer';
+import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import * as ora from 'ora';
-import { join } from 'path';
+import type { Observable } from 'rxjs';
 import {
   NxJsonConfiguration,
   readNxJson,
@@ -16,13 +18,18 @@ import {
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
 import { IS_WASM } from '../native';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
+import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
-import { handleErrors } from '../utils/handle-errors';
+import { printPowerpackLicense } from '../utils/powerpack';
 import {
   collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
@@ -48,8 +55,8 @@ import { StoreRunInformationLifeCycle } from './life-cycles/store-run-informatio
 import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { LegacyTaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle-old';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
-import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
+import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import {
   findCycle,
   makeAcyclic,
@@ -58,12 +65,8 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
-import type { Observable } from 'rxjs';
-import { printPowerpackLicense } from '../utils/powerpack';
-import {
-  runPostTasksExecution,
-  runPreTasksExecution,
-} from '../project-graph/plugins/tasks-execution-hooks';
+
+const originalStdoutWrite = process.stdout.write;
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -74,17 +77,56 @@ async function getTerminalOutputLifeCycle(
   overrides: Record<string, unknown>
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   if (process.env.NX_TUI === 'true') {
-    const { AppLifeCycle, restoreTerminal } = require('../native');
+    const { AppLifeCycle, restoreTerminal } = await import('../native');
 
     const lifeCycle = new AppLifeCycle(projectNames, tasks, nxArgs, overrides);
 
     const renderIsDone = new Promise<void>((resolve) => {
-      lifeCycle.init(() => {
+      lifeCycle.__init(() => {
         resolve();
       });
-    }).then(() => {
-      restoreTerminal();
-    });
+    })
+      .then(() => {
+        restoreTerminal();
+      })
+      .finally(() => {
+        // Revert the patched stdout.write method
+        process.stdout.write = originalStdoutWrite;
+      });
+
+    /**
+     * Patch stdout.write method to pass Nx Cloud client logs to the TUI via the lifecycle
+     */
+    const createPatchedLogWrite = (
+      originalWrite: typeof process.stdout.write
+    ): typeof process.stdout.write => {
+      // @ts-ignore
+      return (chunk, encoding, callback) => {
+        // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
+        const stackTrace = new Error().stack;
+        const isNxCloudLog = stackTrace.includes(
+          join(workspaceRoot, '.nx', 'cache', 'cloud')
+        );
+        if (!isNxCloudLog) {
+          return originalWrite(chunk, encoding, callback);
+        }
+
+        // Do not bother to store logs with only whitespace characters, they aren't relevant for the TUI
+        const trimmedChunk = chunk.toString().trim();
+        if (trimmedChunk.length) {
+          // Remove ANSI escape codes, the TUI will control the formatting
+          lifeCycle.__setCloudMessage(stripVTControlCharacters(trimmedChunk));
+        }
+        // Preserve original behavior around callback and return value, just in case
+        if (callback) {
+          callback();
+        }
+        return true;
+      };
+    };
+
+    process.stdout.write = createPatchedLogWrite(originalStdoutWrite);
+
     return {
       lifeCycle,
       renderIsDone,

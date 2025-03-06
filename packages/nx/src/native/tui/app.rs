@@ -1,9 +1,10 @@
-use super::task::{Task};
+use super::task::Task;
 use super::{
     action::Action,
     components::{help_popup::HelpPopup, tasks_list::TasksList, Component},
     tui,
 };
+use crate::native::tui::tui::Tui;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -15,7 +16,6 @@ use ratatui::widgets::Paragraph;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
-use crate::native::tui::tui::Tui;
 
 pub struct App {
     pub tick_rate: f64,
@@ -436,7 +436,12 @@ impl App {
         Ok(false)
     }
 
-    pub fn handle_action(&mut self, tui: &mut Tui, action: Action, action_tx: &UnboundedSender<Action>) {
+    pub fn handle_action(
+        &mut self,
+        tui: &mut Tui,
+        action: Action,
+        action_tx: &UnboundedSender<Action>,
+    ) {
         if action != Action::Tick && action != Action::Render {
             log::debug!("{action:?}");
         }
@@ -470,15 +475,12 @@ impl App {
                         let r = component.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
-                                .send(Action::Error(format!(
-                                    "Failed to draw: {:?}",
-                                    e
-                                )))
+                                .send(Action::Error(format!("Failed to draw: {:?}", e)))
                                 .ok();
                         }
                     }
                 })
-                    .ok();
+                .ok();
             }
             Action::Render => {
                 tui.draw(|f| {
@@ -548,17 +550,33 @@ impl App {
         }
     }
 
-    pub fn set_done_callback(&mut self, done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>) {
+    pub fn set_done_callback(
+        &mut self,
+        done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+    ) {
         self.done_callback = Some(done_callback);
     }
 
     pub fn call_done_callback(&self) {
         if let Some(cb) = &self.done_callback {
-            cb.call((), napi::threadsafe_function::ThreadsafeFunctionCallMode::Blocking);
+            cb.call(
+                (),
+                napi::threadsafe_function::ThreadsafeFunctionCallMode::Blocking,
+            );
         }
     }
 
     pub fn focus(&self) -> Focus {
         self.focus
+    }
+
+    pub fn set_cloud_message(&mut self, message: Option<String>) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            tasks_list.set_cloud_message(message);
+        }
     }
 }

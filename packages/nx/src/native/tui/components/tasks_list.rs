@@ -53,6 +53,7 @@ pub struct TasksList {
     terminal_pane_data: [TerminalPaneData; 2],
     target_names: Vec<String>,
     task_list_hidden: bool, // New field to track if task list is hidden
+    cloud_message: Option<String>,
 }
 
 /// Represents an individual task with its current state and execution details.
@@ -333,6 +334,7 @@ impl TasksList {
             terminal_pane_data: [TerminalPaneData::new(), TerminalPaneData::new()],
             target_names,
             task_list_hidden: false,
+            cloud_message: None,
         }
     }
 
@@ -1121,6 +1123,10 @@ impl TasksList {
             self.task_list_hidden = !self.task_list_hidden;
         }
     }
+
+    pub fn set_cloud_message(&mut self, message: Option<String>) {
+        self.cloud_message = message;
+    }
 }
 
 impl Component for TasksList {
@@ -1256,7 +1262,102 @@ impl Component for TasksList {
 
             // Add padding to fill remaining space
             let content_width: usize = title_text.iter().map(|s| s.width()).sum();
-            if available_width > content_width {
+
+            // Check if we have a cloud message to display
+            if let Some(message) = &self.cloud_message {
+                if !self.has_visible_panes() {
+                    // Extract URL for styling if present
+                    if let Some(url_pos) = message.find("https://") {
+                        let prefix = &message[0..url_pos];
+                        let url = &message[url_pos..];
+
+                        // Calculate widths
+                        let url_width = url.len();
+                        let prefix_width = prefix.len();
+                        let total_message_width = prefix_width + url_width;
+                        let buffer_space = 3; // Add a buffer space between title and message
+
+                        // Define styles
+                        let dimmed_style = Style::default().fg(Color::DarkGray);
+                        let url_style = Style::default().fg(Color::LightCyan).bold().underlined();
+
+                        // Case 1: Enough space for everything (prefix + URL + buffer)
+                        if available_width >= content_width + total_message_width + buffer_space {
+                            // Add padding between title and cloud message
+                            let padding_width =
+                                available_width - content_width - total_message_width;
+                            title_text.push(Span::raw(" ".repeat(padding_width)));
+
+                            // Add the message parts with appropriate styling
+                            title_text.push(Span::styled(prefix, dimmed_style));
+                            title_text.push(Span::styled(url, url_style));
+                        }
+                        // Case 2: Only enough space for URL + buffer (no prefix)
+                        else if available_width >= content_width + url_width + buffer_space {
+                            // Add padding between title and URL to keep URL right-aligned
+                            let padding_width = available_width - content_width - url_width;
+                            title_text.push(Span::raw(" ".repeat(padding_width)));
+
+                            // Add only the URL
+                            title_text.push(Span::styled(url, url_style));
+                        }
+                        // Case 3: Not enough space for URL with current title, truncate title
+                        else if available_width >= url_width + 15 {
+                            // Ensure minimum title width + buffer
+                            // Save original title text length for comparison
+                            let original_title_len = title_text.len();
+
+                            // Keep truncating the title until we have enough space for the URL + buffer
+                            while title_text.iter().map(|s| s.width()).sum::<usize>()
+                                > available_width - url_width - buffer_space
+                            {
+                                if title_text.len() <= 2 {
+                                    // Keep at least the NX logo
+                                    break;
+                                }
+                                title_text.pop();
+                            }
+
+                            // Add ellipsis if we truncated the title (with dimmed styling)
+                            if title_text.len() < original_title_len {
+                                title_text.push(Span::styled("...", dimmed_style));
+                            }
+
+                            // Add padding to ensure URL is right-aligned
+                            let current_width = title_text.iter().map(|s| s.width()).sum::<usize>();
+                            let padding_width = available_width - current_width - url_width;
+                            title_text.push(Span::raw(" ".repeat(padding_width)));
+
+                            // Add the URL
+                            title_text.push(Span::styled(url, url_style));
+                        }
+                        // Case 4: Not enough space for anything meaningful
+                        else {
+                            // Just add padding to fill available space
+                            if available_width > content_width {
+                                title_text
+                                    .push(Span::raw(" ".repeat(available_width - content_width)));
+                            }
+                        }
+                    } else {
+                        // No URL, add the whole message if there's space (with buffer)
+                        let buffer_space = 3;
+                        if available_width > content_width + message.len() + buffer_space {
+                            let padding_width = available_width - content_width - message.len();
+                            title_text.push(Span::raw(" ".repeat(padding_width)));
+                            title_text
+                                .push(Span::styled(message, Style::default().fg(Color::DarkGray)));
+                        } else if available_width > content_width {
+                            // Not enough space, just add padding
+                            title_text.push(Span::raw(" ".repeat(available_width - content_width)));
+                        }
+                    }
+                } else if available_width > content_width {
+                    // Has visible panes, just add padding
+                    title_text.push(Span::raw(" ".repeat(available_width - content_width)));
+                }
+            } else if available_width > content_width {
+                // No cloud message, add regular padding
                 title_text.push(Span::raw(" ".repeat(available_width - content_width)));
             }
 
@@ -1835,6 +1936,7 @@ impl Default for TasksList {
             terminal_pane_data: [TerminalPaneData::default(), TerminalPaneData::default()],
             target_names: Vec::new(),
             task_list_hidden: false,
+            cloud_message: None,
         }
     }
 }
