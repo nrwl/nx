@@ -1,0 +1,11 @@
+!dist
+dist/tsconfig.lib.tsbuildinfo
+eslint.config.js
+project.json
+tsconfig.json
+tsconfig.lib.json
+tsconfig.spec.json
+vite.config.ts
+src/**/*.ts
+!src/lib/patch
+.swcrc

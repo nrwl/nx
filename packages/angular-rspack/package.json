@@ -1,0 +1,73 @@
+{
+  "name": "@nx/angular-rspack",
+  "version": "19.0.0-alpha.29",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Rspack Plugin and Loaders for building Angular.",
+  "author": "Colum Ferry",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/angular-rspack/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/angular-rspack.git",
+    "directory": "packages/angular-rspack"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "Rspack"
+  ],
+  "scripts": {},
+  "type": "commonjs",
+  "main": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "typings": "./dist/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/index.d.ts",
+      "default": "./dist/lib/index.js"
+    },
+    "./loaders/angular-partial-transform-loader": {
+      "types": "./dist/lib/plugins/loaders/angular-partial-transform.loader.d.ts",
+      "default": "./dist/lib/plugins/loaders/angular-partial-transform.loader.js"
+    },
+    "./loaders/angular-loader": {
+      "types": "./dist/lib/plugins/loaders/angular-transform.loader.d.ts",
+      "default": "./dist/lib/plugins/loaders/angular-transform.loader.js"
+    },
+    "./ssr": {
+      "types": "./dist/lib/ssr/server.d.ts",
+      "default": "./dist/lib/ssr/server.js"
+    }
+  },
+  "dependencies": {
+    "less-loader": "^12.2.0",
+    "sass-loader": "^16.0.2",
+    "sass-embedded": "^1.79.3",
+    "tslib": "^2.3.0",
+    "@ng-rspack/compiler": "workspace:*",
+    "webpack-merge": "^6.0.1",
+    "ws": "^8.18.0",
+    "express": "4.21.1"
+  },
+  "devDependencies": {
+    "@ng-rspack/testing-setup": "workspace:*"
+  },
+  "peerDependencies": {
+    "@rspack/core": ">=1.0.5 <2.0.0",
+    "@angular/common": ">=19.0.0 <20.0.0",
+    "@angular/ssr": ">=19.0.0 <20.0.0"
+  },
+  "nx": {
+    "name": "angular-rspack",
+    "sourceRoot": "packages/angular-rspack/src",
+    "projectType": "library",
+    "targets": {
+      "code-pushup": {}
+    }
+  }
+}
