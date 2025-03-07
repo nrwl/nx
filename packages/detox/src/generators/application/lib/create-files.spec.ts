@@ -15,6 +15,7 @@ describe('Create Files', () => {
       e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',

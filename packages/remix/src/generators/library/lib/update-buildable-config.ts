@@ -22,7 +22,7 @@ export function updateBuildableConfig(
     format: ['cjs'],
     outputPath: joinPathFragments(project.root, 'dist'),
   };
-  updateProjectConfiguration(tree, options.name, project);
+  updateProjectConfiguration(tree, options.projectName, project);
 
   // Point to nested dist for yarn/npm/pnpm workspaces
   updateJson(tree, joinPathFragments(project.root, 'package.json'), (json) => {

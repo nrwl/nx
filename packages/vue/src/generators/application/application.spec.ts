@@ -188,6 +188,7 @@ describe('application generator', () => {
         ...options,
         style: 'none',
         linter: 'eslint',
+        addPlugin: true,
       });
 
       expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -244,14 +245,15 @@ describe('application generator', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'test/package.json');
+      expect(packageJson.name).toBe('@proj/test');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'test/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
           "private",
-          "nx",
         ]
       `);
       expect(readJson(tree, 'test/tsconfig.json')).toMatchInlineSnapshot(`
@@ -353,6 +355,28 @@ describe('application generator', () => {
             },
           ],
         }
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        ...options,
+        name: 'myapp',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      const packageJson = readJson(tree, 'test/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
       `);
     });
   });

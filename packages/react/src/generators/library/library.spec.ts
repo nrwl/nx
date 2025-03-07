@@ -988,7 +988,7 @@ module.exports = withNx(
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es']
+              formats: ['es' as const]
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -1274,6 +1274,40 @@ module.exports = withNx(
       const pnpmWorkspaceFile = load(pnpmContent);
 
       expect(pnpmWorkspaceFile.packages).toEqual(['mylib']);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'libs/my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'libs/my-lib',
+        name: '@proj/my-lib',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'libs/my-lib',
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

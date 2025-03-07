@@ -62,6 +62,12 @@ export async function expoApplicationGeneratorInternal(
   await createApplicationFiles(host, options);
   addProject(host, options);
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
+
   const lintTask = await addLinting(host, {
     ...options,
     projectRoot: options.appProjectRoot,
@@ -99,12 +105,6 @@ export async function expoApplicationGeneratorInternal(
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
       : undefined
   );
-
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.useTsSolution) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
-  }
 
   sortPackageJsonFields(host, options.appProjectRoot);
 

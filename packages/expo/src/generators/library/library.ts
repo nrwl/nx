@@ -176,19 +176,30 @@ async function addProject(
   };
 
   if (options.isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+    const packageJson: PackageJson = {
       name: options.projectName,
       version: '0.0.1',
       ...determineEntryFields(options),
-      nx: {
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
       peerDependencies: {
         react: reactVersion,
         'react-native': reactNativeVersion,
       },
-    });
+    };
+
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(host, options.name, project);
   }

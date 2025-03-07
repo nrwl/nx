@@ -87,6 +87,10 @@ export async function reactNativeLibraryGeneratorInternal(
     tasks.push(addProjectTask);
   }
 
+  if (options.isUsingTsSolutionConfig) {
+    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
+
   const lintTask = await addLinting(host, {
     ...options,
     projectName: options.name,
@@ -146,10 +150,6 @@ export async function reactNativeLibraryGeneratorInternal(
       : undefined
   );
 
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
-
   sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
@@ -181,19 +181,30 @@ async function addProject(
   };
 
   if (options.isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: options.name,
+    const packageJson: PackageJson = {
+      name: options.importPath,
       version: '0.0.1',
       ...determineEntryFields(options),
-      nx: {
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
       peerDependencies: {
         react: reactVersion,
         'react-native': reactNativeVersion,
       },
-    });
+    };
+
+    if (options.name !== options.importPath) {
+      packageJson.nx = { name: options.name };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+
+    writeJson(
+      host,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   } else {
     addProjectConfiguration(host, options.name, project);
   }
