@@ -1,0 +1,28 @@
+{
+  "name": "bundle-rules",
+  "implementation": "/libs/nx-packages/conformance/src/executors/bundle-rules/executor.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "BundleNxConformanceRules",
+    "description": "Compile and bundle one or more Nx Conformance Rules",
+    "type": "object",
+    "properties": {
+      "rulesDirectory": {
+        "type": "string",
+        "description": "The directory, relative to the workspace root, containing the rule subdirectories to bundle. Defaults to {projectRoot}/src"
+      },
+      "outputPath": {
+        "type": "string",
+        "description": "The output path for the bundled rules to be written to"
+      }
+    },
+    "required": ["outputPath"],
+    "presets": []
+  },
+  "description": "Compile and bundle one or more Nx Conformance Rules",
+  "aliases": [],
+  "hidden": false,
+  "path": "/libs/nx-packages/conformance/src/executors/bundle-rules/schema.json",
+  "type": "executor"
+}

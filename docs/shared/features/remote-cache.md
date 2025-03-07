@@ -76,6 +76,12 @@ Caching access can be restricted in terms of read/write access. You can configur
 
 Nx Replay automatically syncs the remote cache to the local cache folder. As such, if the remote cache is not available, it will automatically fall back to the local cache or just run the task if it is not cached.
 
-### Skipping Cloud Cache
+### Can I self-host my remote cache?
+
+If you're an enterprise and have special restrictions, [reach out to us](/enterprise/trial). Our enterprise plan includes various hosting options, from dedicated EU region hosting, to single-tenant and also on-premise.
+
+If you still want to manage and self-host the cache on your own, have a look at [our self-hosting options](/recipes/running-tasks/self-hosted-caching).
+
+### How can I skip Nx Cloud caching?
 
 To learn more about how to temporarily skip task caching, head over to [our corresponding docs page](/recipes/running-tasks/skipping-cache#skip-remote-caching-from-nx-cloud).
