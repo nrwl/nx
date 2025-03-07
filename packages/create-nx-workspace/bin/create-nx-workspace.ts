@@ -310,7 +310,7 @@ async function normalizeArgsMiddleware(
     const useGitHub =
       nxCloud === 'skip'
         ? undefined
-        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(nxCloud));
+        : nxCloud === 'github' || (await determineIfGitHubWillBeUsed(argv));
     Object.assign(argv, {
       nxCloud,
       useGitHub,

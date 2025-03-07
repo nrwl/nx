@@ -435,6 +435,36 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/20.5.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.5.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-angular-eslint-package-updates",
+        "version": "20.5.0-rc.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.5.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-19-2-0": {
+        "description": "Update the @angular/cli package version to ~19.2.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-19-2-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-19-2-0",
+        "version": "20.5.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-19-2-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/update-angular-cli-version-19-1-0": {
         "description": "Update the @angular/cli package version to ~19.1.0.",
         "file": "generated/packages/angular/migrations/update-angular-cli-version-19-1-0.json",
@@ -2719,6 +2749,16 @@
     "executors": {},
     "generators": {},
     "migrations": {
+      "/nx-api/module-federation/migrations/20.5.0": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.5.0.json",
+        "hidden": false,
+        "name": "20.5.0",
+        "version": "20.5.0-beta.5",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/nx-api/module-federation/migrations/20.5.0",
+        "type": "migration"
+      },
       "/nx-api/module-federation/migrations/20.4.0-package-updates": {
         "description": "",
         "file": "generated/packages/module-federation/migrations/20.4.0-package-updates.json",
@@ -5154,7 +5194,7 @@
         "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
         "hidden": false,
         "name": "20.5.0-package-updates",
-        "version": "20.5.0-beta.3",
+        "version": "20.5.0-beta.4",
         "originalFilePath": "/packages/rspack",
         "path": "/nx-api/rspack/migrations/20.5.0-package-updates",
         "type": "migration"
@@ -5955,6 +5995,16 @@
       }
     },
     "migrations": {
+      "/nx-api/webpack/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/webpack/migrations/19.7.0-package-updates": {
         "description": "",
         "file": "generated/packages/webpack/migrations/19.7.0-package-updates.json",

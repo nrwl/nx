@@ -29,7 +29,6 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     const zoneJsVersion =
       getInstalledPackageVersion(tree, 'zone.js') ?? pkgVersions.zoneJsVersion;
 
-    dependencies['@angular/animations'] = angularVersion;
     dependencies['@angular/common'] = angularVersion;
     dependencies['@angular/compiler'] = angularVersion;
     dependencies['@angular/core'] = angularVersion;

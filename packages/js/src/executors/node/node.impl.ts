@@ -404,7 +404,7 @@ function getFileToRun(
       const outputFilePath = interpolate(outputPath, {
         projectName: project.name,
         projectRoot: project.data.root,
-        workspaceRoot: '',
+        workspaceRoot: context.root,
       });
       return path.join(outputFilePath, 'main.js');
     }

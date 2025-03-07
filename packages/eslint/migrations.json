@@ -104,6 +104,18 @@
         },
         "@typescript-eslint/utils": {
           "version": "^7.16.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^7.16.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^7.16.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^7.16.0",
+          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -116,14 +128,26 @@
         "typescript-eslint": {
           "version": "^8.19.0"
         },
-        "@typescript-eslint/parser": {
+        "@typescript-eslint/eslint-plugin": {
           "version": "^8.19.0"
         },
-        "@typescript-eslint/eslint-plugin": {
+        "@typescript-eslint/parser": {
           "version": "^8.19.0"
         },
         "@typescript-eslint/utils": {
           "version": "^8.19.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.19.0",
+          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -136,14 +160,26 @@
         "typescript-eslint": {
           "version": "^8.19.0"
         },
-        "@typescript-eslint/parser": {
+        "@typescript-eslint/eslint-plugin": {
           "version": "^8.19.0"
         },
-        "@typescript-eslint/eslint-plugin": {
+        "@typescript-eslint/parser": {
           "version": "^8.19.0"
         },
         "@typescript-eslint/utils": {
           "version": "^8.19.0"
+        },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.19.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

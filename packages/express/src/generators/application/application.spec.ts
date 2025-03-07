@@ -185,9 +185,6 @@ describe('app', () => {
         {
           "name": "@proj/myapp",
           "nx": {
-            "name": "myapp",
-            "projectType": "application",
-            "sourceRoot": "myapp/src",
             "targets": {
               "build": {
                 "configurations": {
@@ -217,10 +214,10 @@ describe('app', () => {
               "serve": {
                 "configurations": {
                   "development": {
-                    "buildTarget": "myapp:build:development",
+                    "buildTarget": "@proj/myapp:build:development",
                   },
                   "production": {
-                    "buildTarget": "myapp:build:production",
+                    "buildTarget": "@proj/myapp:build:production",
                   },
                 },
                 "defaultConfiguration": "development",
@@ -229,7 +226,7 @@ describe('app', () => {
                 ],
                 "executor": "@nx/js:node",
                 "options": {
-                  "buildTarget": "myapp:build",
+                  "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
               },
@@ -265,9 +262,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "nodenext",
             "moduleResolution": "nodenext",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "express",

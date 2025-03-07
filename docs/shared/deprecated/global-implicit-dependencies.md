@@ -1,3 +1,8 @@
+---
+title: 'Global Implicit Dependencies'
+description: 'Learn about the transition from global implicit dependencies to inputs and namedInputs in Nx, and how to properly configure project dependencies on global files.'
+---
+
 # Global Implicit Dependencies
 
 Since v14.4, Nx supports [`inputs` and `namedInputs`](/recipes/running-tasks/configure-inputs) for setting up implicit dependencies. As of Nx v16, the `implicitDependencies` defined in `nx.json` are ignored and do not influence the affected graph. This field will be removed in v17. The [`implicitDependencies` in the project configuration](/reference/project-configuration#implicitdependencies) are still the best way to manually set up a dependency between two projects that Nx is not able to detect automatically.

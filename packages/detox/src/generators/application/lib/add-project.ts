@@ -25,12 +25,14 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   if (isUsingTsSolutionSetup(host)) {
     writeJson(host, joinPathFragments(options.e2eProjectRoot, 'package.json'), {
-      name: options.e2eProjectName,
+      name: options.importPath,
       version: '0.0.1',
       private: true,
       nx: {
-        sourceRoot: `${options.e2eProjectRoot}/src`,
-        projectType: 'application',
+        name:
+          options.e2eProjectName !== options.importPath
+            ? options.e2eProjectName
+            : undefined,
         targets: hasPlugin ? undefined : getTargets(options),
         implicitDependencies: [options.appProject],
       },

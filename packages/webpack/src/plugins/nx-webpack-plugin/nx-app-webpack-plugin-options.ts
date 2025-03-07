@@ -194,7 +194,11 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
    */
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   /**
    * External stylesheets that will be included with the application.
    */
@@ -215,6 +219,12 @@ export interface NxAppWebpackPluginOptions {
    * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
    */
   useTsconfigPaths?: boolean;
+  // TODO(v21): Make Sass Embedded the default in version 21.
+  // TODO(v22): Remove in version 22.
+  /**
+   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
+   */
+  sassImplementation?: 'sass' | 'sass-embedded';
   /**
    * Generate a separate vendor chunk for 3rd party packages.
    */

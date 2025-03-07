@@ -10,7 +10,10 @@ import {
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
-import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import {
+  getProjectPackageManagerWorkspaceState,
+  isUsingPackageManagerWorkspaces,
+} from '../package-manager-workspaces';
 import { getNeededCompilerOptionOverrides } from './configuration';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
@@ -105,9 +108,10 @@ export function assertNotUsingTsSolutionSetup(
 }
 
 export function findRuntimeTsConfigName(
-  tree: Tree,
-  projectRoot: string
+  projectRoot: string,
+  tree?: Tree
 ): string | null {
+  tree ??= new FsTree(workspaceRoot, false);
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
     return 'tsconfig.app.json';
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
@@ -137,9 +141,7 @@ export function updateTsconfigFiles(
 
       json.compilerOptions = {
         ...json.compilerOptions,
-        // Make sure d.ts files from typecheck does not conflict with bundlers.
-        // Other tooling like jest write to "out-tsc/jest" to we just default to "out-tsc/<project-name>".
-        outDir: joinPathFragments('out-tsc', projectRoot.split('/').at(-1)),
+        outDir: 'dist',
         rootDir,
         ...compilerOptions,
       };
@@ -213,6 +215,11 @@ export function addProjectToTsSolutionWorkspace(
   tree: Tree,
   projectDir: string
 ) {
+  const state = getProjectPackageManagerWorkspaceState(tree, projectDir);
+  if (state === 'included') {
+    return;
+  }
+
   // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
   // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
   // If the dir is just "foo" then we have to add it as is.
@@ -262,4 +269,17 @@ export function getProjectType(
     : null;
   if (!packageJson?.exports) return 'application';
   return 'library';
+}
+
+export function getProjectSourceRoot(
+  tree: Tree,
+  projectSourceRoot: string | undefined,
+  projectRoot: string
+): string | undefined {
+  return (
+    projectSourceRoot ??
+    (tree.exists(joinPathFragments(projectRoot, 'src'))
+      ? joinPathFragments(projectRoot, 'src')
+      : projectRoot)
+  );
 }

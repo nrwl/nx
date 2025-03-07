@@ -1,3 +1,8 @@
+---
+title: Remix with Nx
+description: Learn how to create, build, serve, and test Remix applications within an Nx workspace, leveraging Nx's powerful tooling for modern web development.
+---
+
 # Remix with Nx
 
 In this recipe, we'll show you how to create a [Remix](https://remix.run) application with Nx.

@@ -22,12 +22,11 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
@@ -64,7 +63,6 @@ import type {
   NormalizedLibraryGeneratorOptions,
 } from './schema';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
-import { getImportPath } from '../../utils/get-import-path';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
@@ -267,7 +265,11 @@ async function configureProject(
 ) {
   if (options.hasPlugin) {
     const nxJson = readNxJson(tree);
-    ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
+    ensureProjectIsIncludedInPluginRegistrations(
+      nxJson,
+      options.projectRoot,
+      options.bundler === 'none' ? null : 'build'
+    );
     updateNxJson(tree, nxJson);
   }
 
@@ -365,13 +367,7 @@ async function configureProject(
     }
 
     // empty targets are cleaned up automatically by `updateProjectConfiguration`
-    updateProjectConfiguration(
-      tree,
-      options.isUsingTsSolutionConfig
-        ? options.importPath ?? options.name
-        : options.name,
-      projectConfiguration
-    );
+    updateProjectConfiguration(tree, options.name, projectConfiguration);
   } else if (options.config === 'workspace' || options.config === 'project') {
     addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
@@ -679,6 +675,12 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       });
     }
 
+    if (!options.useProjectJson && options.name !== options.importPath) {
+      packageJson.nx = {
+        name: options.name,
+      };
+    }
+
     writeJson<PackageJson>(tree, packageJsonPath, packageJson);
   }
 
@@ -757,7 +759,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
-  await ensureProjectName(tree, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -898,9 +900,7 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    name: isUsingTsSolutionConfig
-      ? getImportPath(tree, projectName)
-      : projectName,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
     projectRoot,
     parsedTags,
@@ -1028,10 +1028,7 @@ function createProjectTsConfigs(
         .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
         .join(',\n    '),
       tmpl: '',
-      outDir:
-        options.bundler === 'tsc'
-          ? 'dist'
-          : `out-tsc/${options.projectRoot.split('/').pop()}`,
+      outDir: 'dist',
       emitDeclarationOnly: options.bundler === 'tsc' ? false : true,
     }
   );
@@ -1046,6 +1043,12 @@ function createProjectTsConfigs(
         json.references.push({
           path: './tsconfig.lib.json',
         });
+        // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
+        // This applies to `@nx/js/typescript` plugin only.
+        if (options.bundler === 'tsc') {
+          json['nx'] ??= {};
+          json['nx'].addTypecheckTarget = false;
+        }
         return json;
       });
     } else {
@@ -1056,6 +1059,12 @@ function createProjectTsConfigs(
         include: [],
         references: [{ path: './tsconfig.lib.json' }],
       };
+      // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
+      // This applies to `@nx/js/typescript` plugin only.
+      if (options.bundler === 'tsc') {
+        tsconfig['nx'] ??= {};
+        tsconfig['nx'].addTypecheckTarget = false;
+      }
       writeJson(
         tree,
         joinPathFragments(options.projectRoot, 'tsconfig.json'),

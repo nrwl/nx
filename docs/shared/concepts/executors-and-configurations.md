@@ -1,3 +1,8 @@
+---
+title: Executors and Configurations
+description: Learn about Nx executors, pre-packaged node scripts that run tasks consistently across projects, and how to configure them in project.json files.
+---
+
 # Executors and Configurations
 
 Executors are pre-packaged node scripts that can be used to run tasks in a consistent way.

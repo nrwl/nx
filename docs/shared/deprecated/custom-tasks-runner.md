@@ -1,3 +1,8 @@
+---
+title: 'Deprecating Custom Tasks Runner'
+description: 'Learn about the transition from Custom Tasks Runner to the new plugin-based API in Nx, including pre and post task execution hooks and self-hosted remote cache options.'
+---
+
 # Deprecating Custom Tasks Runner
 
 The Nx core has been migrated to Rust. However, the Custom Tasks Runner API is not compatible with this rewrite because it allows modifications to the lifecycle of the Nx command execution, which could break important invariants that Nx depends on.
@@ -8,7 +13,7 @@ The custom task runners API was created many years ago and has not been supporte
 
 ### Custom Tasks Runner Version
 
-Let’s imagine that you have implemented a custom task runner as follows:
+Let's imagine that you have implemented a custom task runner as follows:
 
 ```typescript
 function serializeTasksResults(taskResults: { [taskId: string]: TaskResult }) {
@@ -193,7 +198,7 @@ We recognize that many organizations have been using DIY remote cache solutions.
 
 ### Example Configuration Change
 
-Enabling a Nx Powerpack plugin will configure it in `nx.json`. The specific modification depends on your repository’s configuration. The following is one example, where a custom tasks runner configuration in `nx.json` will be removed:
+Enabling a Nx Powerpack plugin will configure it in `nx.json`. The specific modification depends on your repository's configuration. The following is one example, where a custom tasks runner configuration in `nx.json` will be removed:
 
 ```json
 {

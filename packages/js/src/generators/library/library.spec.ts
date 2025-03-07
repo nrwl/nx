@@ -2126,6 +2126,7 @@ describe('lib', () => {
           directory: 'my-lib',
           unitTestRunner: 'jest',
           bundler,
+          useProjectJson: false,
         });
 
         expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
@@ -2185,5 +2186,225 @@ describe('lib', () => {
         );
       }
     );
+
+    it('should not add/update a plugin registration for a non-buildable library when there is no build target', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins ??= [];
+        json.plugins.push({
+          plugin: '@nx/js/typescript',
+          options: {}, // by default, there's no build target
+        });
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'nx.json').plugins).toStrictEqual([
+        {
+          plugin: '@nx/js/typescript',
+          options: {},
+        },
+      ]);
+    });
+
+    it('should exclude a non-buildable library from a plugin registration when it has a build target', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins ??= [];
+        json.plugins.push({
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build' },
+          },
+        });
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/my-lib',
+        bundler: 'none',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'nx.json').plugins).toStrictEqual([
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            build: { targetName: 'build' },
+          },
+          exclude: ['packages/my-lib/*'],
+        },
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            typecheck: { targetName: 'typecheck' },
+          },
+          include: ['packages/my-lib/*'],
+        },
+      ]);
+    });
+
+    it('should exclude a buildable library from a plugin registration and create a new plugin registration when it does not have a build target', async () => {
+      updateJson(tree, 'nx.json', (json) => {
+        json.plugins ??= [];
+        json.plugins.push({
+          plugin: '@nx/js/typescript',
+          options: {},
+        });
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/my-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'nx.json').plugins).toStrictEqual([
+        {
+          plugin: '@nx/js/typescript',
+          options: {},
+          exclude: ['packages/my-lib/*'],
+        },
+        {
+          plugin: '@nx/js/typescript',
+          options: {
+            typecheck: { targetName: 'typecheck' },
+            build: {
+              targetName: 'build',
+              configName: 'tsconfig.lib.json',
+            },
+          },
+          include: ['packages/my-lib/*'],
+        },
+      ]);
+    });
+
+    it('should add a pattern for the project to package manager workspaces when it does not match any existing patterns', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'not-included-dir/my-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'package.json').workspaces).toContain(
+        'not-included-dir/*'
+      );
+    });
+
+    it('should not add a pattern for a project that already matches an existing pattern', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/**'];
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'packages/sub-dir/my-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'package.json').workspaces).toStrictEqual([
+        'packages/**',
+      ]);
+    });
+
+    it('should add nx.addTypecheckTarget to tsconfig.json when using tsc to build to avoid duplicated typechecks', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        useProjectJson: false,
+        directory: 'my-ts-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'my-ts-lib/tsconfig.json').nx)
+        .toMatchInlineSnapshot(`
+        {
+          "addTypecheckTarget": false,
+        }
+      `);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name and "useProjectJson" is "false"', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        name: 'my-lib',
+        useProjectJson: false,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        name: '@proj/my-lib',
+        useProjectJson: false,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        useProjectJson: false,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should set "name" in project.json to the import path when "useProjectJson" is "true"', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        useProjectJson: true,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/project.json').name).toBe('@proj/my-lib');
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should set "name" in project.json to the user-provided name when "useProjectJson" is "true"', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        name: 'my-lib',
+        useProjectJson: true,
+        bundler: 'none',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'my-lib/project.json').name).toBe('my-lib');
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
   });
 });

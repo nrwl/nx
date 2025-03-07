@@ -3,6 +3,7 @@ import { join } from 'path';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
+  directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
@@ -335,4 +336,19 @@ export function isMonorepo(packageJson: PackageJson) {
   if (existsSync('lerna.json')) return true;
 
   return false;
+}
+
+export function isCRA(packageJson: PackageJson) {
+  const combinedDependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  };
+  return (
+    // Required dependencies for CRA projects
+    combinedDependencies['react'] &&
+    combinedDependencies['react-dom'] &&
+    combinedDependencies['react-scripts'] &&
+    directoryExists('src') &&
+    directoryExists('public')
+  );
 }

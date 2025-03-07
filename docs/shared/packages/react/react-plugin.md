@@ -1,3 +1,8 @@
+---
+title: React Plugin for Nx
+description: Learn how to use the @nx/react plugin to create and manage React applications and libraries in your Nx workspace, including components, hooks, and more.
+---
+
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
 It provides:
 
@@ -12,8 +17,8 @@ It provides:
 
 To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
 
-{% callout type="note" title="React Tutorials" %}
-For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+{% callout type="note" title="React Tutorial" %}
+For a full tutorial experience, follow the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 {% /callout %}
 
 ### Installation
@@ -144,7 +149,6 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Using Cypress](/nx-api/cypress)
 - [Using Jest](/nx-api/jest)

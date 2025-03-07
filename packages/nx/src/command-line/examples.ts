@@ -169,10 +169,6 @@ export const examples: Record<string, Example[]> = {
         'Show the graph where every node is either an ancestor or a descendant of todos-feature-main',
     },
     {
-      command: 'graph --include=project-one,project-two',
-      description: 'Include project-one and project-two in the project graph',
-    },
-    {
       command: 'graph --exclude=project-one,project-two',
       description: 'Exclude project-one and project-two from the project graph',
     },

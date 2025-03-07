@@ -16,8 +16,6 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     private configOverride?: NxModuleFederationConfigOverride
   ) {}
 
-  // Do nothing
-
   apply(compiler: Compiler) {
     if (global.NX_GRAPH_CREATION) {
       return;

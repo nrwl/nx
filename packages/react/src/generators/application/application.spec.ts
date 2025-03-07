@@ -1,5 +1,6 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   getProjects,
   ProjectGraph,
@@ -29,6 +30,7 @@ jest.mock('@nx/devkit', () => {
     createProjectGraphAsync: jest
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
+    detectPackageManager: jest.fn(),
   };
 });
 
@@ -53,6 +55,9 @@ describe('app', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
+    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
+      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    );
   });
 
   describe('not nested', () => {
@@ -1325,9 +1330,11 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(appTree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
@@ -1359,9 +1366,9 @@ describe('app', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1468,6 +1475,32 @@ describe('app', () => {
       `);
     });
 
+    it('should respect the provided name', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        name: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+      });
+
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
     it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
@@ -1507,6 +1540,12 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      updateJson(appTree, 'package.json', (json) => {
+        delete json.workspaces;
+        return json;
+      });
+      appTree.write('pnpm-lock.yaml', '');
       appTree.write('pnpm-workspace.yaml', `packages:`);
 
       await applicationGenerator(appTree, {

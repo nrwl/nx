@@ -47,6 +47,8 @@
               "less",
               "less-loader",
               "postcss-loader",
+              "sass",
+              "sass-embedded",
               "sass-loader",
               "style-loader",
               "stylus",

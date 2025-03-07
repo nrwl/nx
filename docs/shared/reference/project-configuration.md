@@ -1,5 +1,6 @@
 ---
 keywords: [project.json]
+description: Learn how Nx constructs project configuration from inferred tasks, workspace defaults, and project-level files, with detailed explanations of task definitions and configuration options.
 ---
 
 # Project Configuration

@@ -4,13 +4,12 @@ import type {
 } from './public-api';
 import { getPlugins } from './get-plugins';
 import { isOnDaemon } from '../../daemon/is-on-daemon';
-import { daemonClient } from '../../daemon/client/client';
-import { isDaemonEnabled } from '../../daemon/client/enabled';
+import { daemonClient, isDaemonEnabled } from '../../daemon/client/client';
 
 export async function runPreTasksExecution(
   pluginContext: PreTasksExecutionContext
 ) {
-  if (isOnDaemon() || !isDaemonEnabled(pluginContext.nxJsonConfiguration)) {
+  if (isOnDaemon() || !isDaemonEnabled()) {
     performance.mark(`preTasksExecution:start`);
     const plugins = await getPlugins(pluginContext.workspaceRoot);
     const envs = await Promise.all(
@@ -31,7 +30,7 @@ export async function runPreTasksExecution(
         })
     );
 
-    if (!isDaemonEnabled(pluginContext.nxJsonConfiguration)) {
+    if (!isDaemonEnabled()) {
       applyProcessEnvs(envs);
     }
     performance.mark(`preTasksExecution:end`);
@@ -58,7 +57,7 @@ function applyProcessEnvs(envs: NodeJS.ProcessEnv[]) {
 export async function runPostTasksExecution(
   context: PostTasksExecutionContext
 ) {
-  if (isOnDaemon() || !isDaemonEnabled(context.nxJsonConfiguration)) {
+  if (isOnDaemon() || !isDaemonEnabled()) {
     performance.mark(`postTasksExecution:start`);
     const plugins = await getPlugins();
     await Promise.all(

@@ -9,7 +9,6 @@ import {
   parseTargetString,
   readJsonFile,
   stripIndents,
-  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { unlinkSync } from 'fs';
@@ -19,6 +18,11 @@ import { output } from 'nx/src/utils/output';
 import { dirname, join, relative, extname, resolve } from 'path';
 import type * as ts from 'typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
+import { randomUUID } from 'crypto';
+import {
+  isProjectGraphExternalNode,
+  isProjectGraphProjectNode,
+} from 'nx/src/config/project-graph';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -111,7 +115,7 @@ export function calculateProjectDependencies(
     .map(({ name: dep, isTopLevel }) => {
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
-      if (depNode.type === 'lib') {
+      if (isProjectGraphProjectNode(depNode) && depNode.type === 'lib') {
         if (isBuildable(targetName, depNode)) {
           const libPackageJsonPath = join(
             root,
@@ -137,7 +141,7 @@ export function calculateProjectDependencies(
         } else {
           nonBuildableDependencies.push(dep);
         }
-      } else if (depNode.type === 'npm') {
+      } else if (isProjectGraphExternalNode(depNode)) {
         project = {
           name: depNode.data.packageName,
           outputs: [],
@@ -443,7 +447,7 @@ export function createTmpTsConfig(
     'tmp',
     projectRoot,
     process.env.NX_TASK_TARGET_TARGET ?? 'build',
-    'tsconfig.generated.json'
+    `tsconfig.generated.${randomUUID()}.json`
   );
   if (tsconfigPath === tmpTsConfigPath) {
     return tsconfigPath;
@@ -529,54 +533,52 @@ export function updatePaths(
 ) {
   const pathsKeys = Object.keys(paths);
   // For each registered dependency
-  dependencies.forEach((dep) => {
-    if (dep.node.type === 'npm') {
-      return;
-    }
+  dependencies
+    .filter((dep) => isProjectGraphProjectNode(dep.node))
+    .forEach((dep) => {
+      // If there are outputs
+      if (dep.outputs && dep.outputs.length > 0) {
+        // Directly map the dependency name to the output paths (dist/packages/..., etc.)
+        paths[dep.name] = dep.outputs;
 
-    // If there are outputs
-    if (dep.outputs && dep.outputs.length > 0) {
-      // Directly map the dependency name to the output paths (dist/packages/..., etc.)
-      paths[dep.name] = dep.outputs;
+        // check for secondary entrypoints
+        // For each registered path
+        for (const path of pathsKeys) {
+          const nestedName = `${dep.name}/`;
 
-      // check for secondary entrypoints
-      // For each registered path
-      for (const path of pathsKeys) {
-        const nestedName = `${dep.name}/`;
+          // If the path points to the current dependency and is nested (/)
+          if (path.startsWith(nestedName)) {
+            const nestedPart = path.slice(nestedName.length);
 
-        // If the path points to the current dependency and is nested (/)
-        if (path.startsWith(nestedName)) {
-          const nestedPart = path.slice(nestedName.length);
+            // Bind potential secondary endpoints for ng-packagr projects
+            let mappedPaths = dep.outputs.map(
+              (output) => `${output}/${nestedPart}`
+            );
 
-          // Bind potential secondary endpoints for ng-packagr projects
-          let mappedPaths = dep.outputs.map(
-            (output) => `${output}/${nestedPart}`
-          );
+            const { root } = (dep.node as ProjectGraphProjectNode).data;
+            // Update nested mappings to point to the dependency's output paths
+            mappedPaths = mappedPaths.concat(
+              paths[path].flatMap((p) =>
+                dep.outputs.flatMap((output) => {
+                  const basePath = p.replace(root, output);
+                  return [
+                    // extension-less path to support compiled output
+                    basePath.replace(
+                      new RegExp(`${extname(basePath)}$`, 'gi'),
+                      ''
+                    ),
+                    // original path with the root re-mapped to the output path
+                    basePath,
+                  ];
+                })
+              )
+            );
 
-          const { root } = dep.node.data;
-          // Update nested mappings to point to the dependency's output paths
-          mappedPaths = mappedPaths.concat(
-            paths[path].flatMap((p) =>
-              dep.outputs.flatMap((output) => {
-                const basePath = p.replace(root, output);
-                return [
-                  // extension-less path to support compiled output
-                  basePath.replace(
-                    new RegExp(`${extname(basePath)}$`, 'gi'),
-                    ''
-                  ),
-                  // original path with the root re-mapped to the output path
-                  basePath,
-                ];
-              })
-            )
-          );
-
-          paths[path] = mappedPaths;
+            paths[path] = mappedPaths;
+          }
         }
       }
-    }
-  });
+    });
 }
 
 /**
@@ -629,7 +631,10 @@ export function updateBuildableProjectPackageJsonDependencies(
     ) {
       try {
         let depVersion;
-        if (entry.node.type === 'lib') {
+        if (
+          isProjectGraphProjectNode(entry.node) &&
+          entry.node.type === 'lib'
+        ) {
           const outputs = getOutputsForTargetAndConfiguration(
             {
               project: projectName,
