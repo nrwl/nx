@@ -1071,6 +1071,42 @@
       "path": "/troubleshooting/performance-profiling"
     }
   ],
+  "introduction": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/introduction",
+      "id": "introduction",
+      "name": "Introduction",
+      "path": "/recipes/angular/rspack/introduction"
+    }
+  ],
+  "migrate-from-webpack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/migrate-from-webpack",
+      "id": "migrate-from-webpack",
+      "name": "Migrate from Angular Webpack",
+      "path": "/recipes/angular/rspack/migrate-from-webpack"
+    }
+  ],
+  "handling-configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
   "deployment": [
     {
       "description": "",

@@ -1513,6 +1513,39 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Angular Rspack",
+                "path": "/recipes/angular/rspack",
+                "id": "rspack",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Introduction",
+                    "path": "/recipes/angular/rspack/introduction",
+                    "id": "introduction",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrate from Angular Webpack",
+                    "path": "/recipes/angular/rspack/migrate-from-webpack",
+                    "id": "migrate-from-webpack",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Handling Configurations",
+                    "path": "/recipes/angular/rspack/handling-configurations",
+                    "id": "handling-configurations",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Migration",
                 "path": "/recipes/angular/migration",
                 "id": "migration",
@@ -2926,6 +2959,39 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Angular Rspack",
+            "path": "/recipes/angular/rspack",
+            "id": "rspack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Introduction",
+                "path": "/recipes/angular/rspack/introduction",
+                "id": "introduction",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate from Angular Webpack",
+                "path": "/recipes/angular/rspack/migrate-from-webpack",
+                "id": "migrate-from-webpack",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Handling Configurations",
+                "path": "/recipes/angular/rspack/handling-configurations",
+                "id": "handling-configurations",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Migration",
             "path": "/recipes/angular/migration",
             "id": "migration",
@@ -2991,6 +3057,63 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular Rspack",
+        "path": "/recipes/angular/rspack",
+        "id": "rspack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Introduction",
+            "path": "/recipes/angular/rspack/introduction",
+            "id": "introduction",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate from Angular Webpack",
+            "path": "/recipes/angular/rspack/migrate-from-webpack",
+            "id": "migrate-from-webpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Handling Configurations",
+            "path": "/recipes/angular/rspack/handling-configurations",
+            "id": "handling-configurations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Introduction",
+        "path": "/recipes/angular/rspack/introduction",
+        "id": "introduction",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate from Angular Webpack",
+        "path": "/recipes/angular/rspack/migrate-from-webpack",
+        "id": "migrate-from-webpack",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Handling Configurations",
+        "path": "/recipes/angular/rspack/handling-configurations",
+        "id": "handling-configurations",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
