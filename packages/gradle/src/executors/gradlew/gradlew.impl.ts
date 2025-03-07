@@ -4,7 +4,7 @@ import runCommandsImpl, {
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 
-const MAX_PROJECTS_IN_BATCH = 10;
+const MAX_PROJECTS_IN_BATCH = 100;
 
 export async function graldewExecutor(
   options: RunCommandsOptions,
@@ -43,12 +43,17 @@ export async function batchGradlew(
     return gradlewTask.replace(gradlewCommand, '').trim();
   });
 
+  if (!tasksRan.length) {
+    return results;
+  }
+
   const startTime = Date.now();
   const { success, terminalOutput } = await runCommandsImpl(
     {
       command: `${gradlewCommand} ${gradlewTasks.join(' ')} --parallel`,
       __unparsed__: [],
       ...(overrides ?? {}),
+      ...(inputs[tasksRan[0]].options ?? {}),
     },
     context
   );

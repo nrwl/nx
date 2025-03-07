@@ -29,7 +29,7 @@ export async function getProjectReportLines(
       'projectReportAll',
       process.env.NX_VERBOSE_LOGGING === 'true' ? '--info' : '',
       '--excludeTask',
-      'htmlDependencyReport'
+      'htmlDependencyReport',
     ]);
   } catch (e: Buffer | Error | any) {
     if (e.toString()?.includes('ERROR: JAVA_HOME')) {
