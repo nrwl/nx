@@ -1,3 +1,8 @@
+---
+title: 'Remote Caching (Nx Replay)'
+description: 'Learn how to use Nx Replay to share computation caches across your team and CI, speeding up builds and saving CI costs.'
+---
+
 # Use Remote Caching (Nx Replay)
 
 {% youtube
@@ -31,7 +36,7 @@ See the [connect to Nx Cloud recipe](/ci/intro/connect-to-nx-cloud) for all the 
 
 Nx Replay directly benefits your organization by:
 
-- **Speeding up CI pipelines:** With Nx Replay, tasks that have already been executed in a PR’s initial CI pipeline run can **reuse cached results in subsequent runs**. This reduces the need to re-run unaffected tasks, significantly speeding up the CI process for modified PRs. This benefit complements the [affected command](/ci/features/affected), which optimizes pipelines by only running tasks for projects that could be impacted by code changes.
+- **Speeding up CI pipelines:** With Nx Replay, tasks that have already been executed in a PR's initial CI pipeline run can **reuse cached results in subsequent runs**. This reduces the need to re-run unaffected tasks, significantly speeding up the CI process for modified PRs. This benefit complements the [affected command](/ci/features/affected), which optimizes pipelines by only running tasks for projects that could be impacted by code changes.
 
 - **Boosting local developer efficiency:** Depending on [how cache permissions](/ci/recipes/security/access-tokens) are set for your workspace, developers can reuse cached results from CI on their local machines. As a result, tasks like builds and tests can complete instantly if they were already executed in CI. This accelerates developer workflows without any extra steps required.
 

@@ -1,3 +1,8 @@
+---
+title: Add a New Solid Project
+description: Learn how to integrate SolidJS with Nx, including setting up applications, configuring build systems, and leveraging Nx features with manual configuration.
+---
+
 # Add a New Solid Project
 
 The code for this example is available on GitHub:

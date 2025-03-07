@@ -1,3 +1,8 @@
+---
+title: Workspace Plugin for Nx
+description: Learn about the core workspace plugin that provides essential executors and generators for any Nx workspace, including tools for project management.
+---
+
 The workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.
 
 ## Creating Local Generators

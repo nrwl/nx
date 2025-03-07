@@ -1,3 +1,8 @@
+---
+title: How Caching Works
+description: Learn how Nx's computation hashing enables powerful caching, including what factors determine cache validity and how local and remote caches work together.
+---
+
 # How Caching Works
 
 Before running any cacheable task, Nx computes its computation hash. As long as the computation hash is the same, the output of
@@ -18,11 +23,11 @@ By default, the computation hash for something like `nx test remixapp` includes:
 
 After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally, and then if it is missing, and if a remote cache is configured, it checks remotely. If a matching computation is found, Nx retrieves and replays it. This includes restoring files.
 
-Nx places the right files in the right folders and prints the terminal output. From the user’s point of view, the command ran the same, just a lot faster.
+Nx places the right files in the right folders and prints the terminal output. From the user's point of view, the command ran the same, just a lot faster.
 
 ![cache](/shared/images/caching/cache.svg)
 
-If Nx doesn’t find a corresponding computation hash, Nx runs the task, and after it completes, it takes the outputs and the terminal logs and stores them locally (and, if configured, remotely as well). All of this happens transparently, so you don’t have to worry about it.
+If Nx doesn't find a corresponding computation hash, Nx runs the task, and after it completes, it takes the outputs and the terminal logs and stores them locally (and, if configured, remotely as well). All of this happens transparently, so you don't have to worry about it.
 
 ## Optimizations
 
@@ -96,8 +101,7 @@ Nx cache works on the process level. Regardless of the tools used to build/test/
 
 {% /tab %}
 
-If the `outputs` property for a given target isn't defined in the project'
-s `package.json` file, Nx will look at the global, workspace-wide definition in the `targetDefaults` section of `nx.json`:
+If the `outputs` property for a given target isn't defined in the project's `package.json` file, Nx will look at the global, workspace-wide definition in the `targetDefaults` section of `nx.json`:
 
 ```jsonc {% fileName="nx.json"%}
 {

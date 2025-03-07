@@ -1,3 +1,8 @@
+---
+title: Create a Sync Generator
+description: Learn how to create and register sync generators in Nx to ensure your file system is in the correct state before tasks run, including global and task-specific sync generators.
+---
+
 # Create a Sync Generator
 
 Sync generators are generators that are used to ensure that your file system is in the correct state before a task is run or the CI process is started. From a technical perspective, a sync generator is no different from any other generator, but it has some additional performance considerations and needs to be registered in a particular way.

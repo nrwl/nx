@@ -108,9 +108,10 @@ export function assertNotUsingTsSolutionSetup(
 }
 
 export function findRuntimeTsConfigName(
-  tree: Tree,
-  projectRoot: string
+  projectRoot: string,
+  tree?: Tree
 ): string | null {
+  tree ??= new FsTree(workspaceRoot, false);
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
     return 'tsconfig.app.json';
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
@@ -268,4 +269,17 @@ export function getProjectType(
     : null;
   if (!packageJson?.exports) return 'application';
   return 'library';
+}
+
+export function getProjectSourceRoot(
+  tree: Tree,
+  projectSourceRoot: string | undefined,
+  projectRoot: string
+): string | undefined {
+  return (
+    projectSourceRoot ??
+    (tree.exists(joinPathFragments(projectRoot, 'src'))
+      ? joinPathFragments(projectRoot, 'src')
+      : projectRoot)
+  );
 }

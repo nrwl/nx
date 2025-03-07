@@ -1,3 +1,8 @@
+---
+title: Add a New Rust Project
+description: Learn how to integrate Rust with Nx using the @monodon/rust plugin, including creating applications, libraries, and leveraging Nx features.
+---
+
 # Add a New Rust Project
 
 The code for this example is available on GitHub:

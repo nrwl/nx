@@ -1,3 +1,8 @@
+---
+title: Node.js Plugin for Nx
+description: Learn how to use the @nx/node plugin to create and manage Node.js applications and libraries in your Nx workspace, including setup, building, and testing.
+---
+
 The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
 
 ## Setting Up @nx/node

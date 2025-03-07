@@ -1,4 +1,6 @@
 ---
+title: 'Distribute Task Execution (Nx Agents)'
+description: 'Learn how to use Nx Agents to distribute task execution across multiple machines, optimizing CI pipeline speed and efficiency through intelligent task allocation.'
 keywords: [distributed tasks]
 ---
 

@@ -19,7 +19,7 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
     <div className="mx-auto max-w-7xl px-8">
       {webinars
         .filter(
-          (w) => w.status === 'Upcoming' && new Date(w.date) >= new Date()
+          (w) => w.status === 'Upcoming' && new Date(w.eventDate) >= new Date()
         )
         .map((webinar, index) => {
           const authorsList = (
@@ -30,7 +30,7 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
               : webinar.authors.map((a) => a.name)
           ).join(', ');
           const dateAndTime =
-            new Date(webinar.date).toLocaleDateString('en-US', {
+            new Date(webinar.eventDate).toLocaleDateString('en-US', {
               month: 'short',
               day: '2-digit',
               year: 'numeric',
@@ -83,7 +83,7 @@ export function WebinarList({ webinars }: WebinarListProps): JSX.Element {
       <div>
         {webinars
           .filter(
-            (w) => w.status !== 'Upcoming' || new Date(w.date) < new Date()
+            (w) => w.status !== 'Upcoming' || new Date(w.eventDate) < new Date()
           )
           .map((w, index) => (
             <WebinarListItem key={w.slug} webinar={w} episode={index + 1} />

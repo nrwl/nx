@@ -1,3 +1,8 @@
+---
+title: Sync Generators
+description: Learn how to use Nx sync generators to maintain repository state and update configuration files based on the project graph before tasks are run.
+---
+
 # Sync Generators
 
 In Nx 19.8, you can use sync generators to ensure that your repository is maintained in a correct state. One specific application is to use the project graph to update files. These can be global configuration files or scripts, or at the task level to ensure that files are in sync before a task is run.

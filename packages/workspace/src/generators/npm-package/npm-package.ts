@@ -7,10 +7,9 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
-import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
   directory: string;
@@ -19,33 +18,37 @@ export interface ProjectOptions {
 
 interface NormalizedProjectOptions extends ProjectOptions {
   projectRoot: string;
+  importPath: string;
 }
 
 async function normalizeOptions(
   tree: Tree,
   options: ProjectOptions
 ): Promise<NormalizedProjectOptions> {
-  await ensureProjectName(tree, options, 'library');
-  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
-    tree,
-    {
+  await ensureRootProjectName(options, 'library');
+  const { projectName, projectRoot, importPath } =
+    await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'library',
       directory: options.directory,
-    }
-  );
+    });
 
   return {
     ...options,
     name: projectName,
     projectRoot,
+    importPath,
   };
 }
 
-function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
+function addFiles(
+  projectRoot: string,
+  tree: Tree,
+  options: NormalizedProjectOptions
+) {
   const packageJsonPath = join(projectRoot, 'package.json');
   writeJson(tree, packageJsonPath, {
-    name: getImportPath(tree, options.name),
+    name: options.importPath,
     version: '0.0.0',
     scripts: {
       test: 'node index.js',
