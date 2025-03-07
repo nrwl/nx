@@ -1,0 +1,39 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "type": "commonjs",
+    "outDir": "../../dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ],
+    "paths": {
+      "@ng-rspack/testing-setup": ["../../testing/setup/index.ts"]
+    }
+  },
+  "references": [
+    {
+      "path": "../../testing/setup/tsconfig.lib.json"
+    },
+    {
+      "path": "../../testing/utils/tsconfig.lib.json"
+    }
+  ],
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.integration.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ]
+}
