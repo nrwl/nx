@@ -5,8 +5,6 @@ description: 'Learn how Nx enhances your AI assistant by providing rich workspac
 
 # Enhance Your LLM
 
-{% youtube src="https://youtu.be/RNilYmJJzdk?si=et_6zWMMxJPa7lp2" title="We Just Made Your LLM Way Smarter!" /%}
-
 Nx's LLM enhancement feature makes your AI assistant significantly smarter by providing it with rich metadata about your workspace structure, project relationships, and architectural decisions. While LLMs are powerful tools for boosting development productivity, their effectiveness depends entirely on the context they have access to. Nx bridges this gap by:
 
 - Providing **architectural awareness** about your workspace structure and project relationships
@@ -14,6 +12,12 @@ Nx's LLM enhancement feature makes your AI assistant significantly smarter by pr
 - Sharing knowledge about **available tasks** and their configuration
 - Including details about **technology stacks** and project types
 - Supplying **Nx documentation** context for better assistance
+
+{% side-by-side %}
+{% youtube src="https://youtu.be/RNilYmJJzdk?si=et_6zWMMxJPa7lp2" title="We Just Made Your LLM Way Smarter!" /%}
+
+{% youtube src="https://www.youtube.com/watch?v=V2W94Sq_v6A" title="We Just Released the MCP Server for Monorepos" /%}
+{% /side-by-side %}
 
 ## How It Works
 
