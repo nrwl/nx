@@ -109,6 +109,7 @@ jobs:
         run: npx cypress install
 
   prepare-matrix:
+    name: Prepare matrix combinations
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     outputs:
@@ -119,63 +120,10 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Load matrix data
-        id: load-matrix-json
-        run: |
-          value=$((jq . .github/workflows/nightly/matrix.json) | jq tostring)
-          echo "matrix=$value" >> $GITHUB_OUTPUT
-
       - name: Process matrix data
         id: process-json
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          script: | # Load matrix from file and process the data to the format needed for the matrix
-            const matrixData = JSON.parse(${{ steps.load-matrix-json.outputs.matrix }});
-            const matrix = [];
-
-            function addMatrixCombo(project, nodeVersion, pm, os) {
-              matrix.push({
-                project: project.name,
-                codeowners: project.codeowners,
-                node_version: nodeVersion,
-                package_manager: matrixData.setup[os].package_managers[pm],
-                os: matrixData.setup[os].os,
-                os_name: matrixData.setup[os].os_name,
-                os_timeout: matrixData.setup[os].os_timeout,
-              });
-            }
-
-            function processProject(project, nodeVersion) {
-              for (let os = 0; os < matrixData.setup.length; os++) {
-                for (let pm = 0; pm < matrixData.setup[os].package_managers.length; pm++) {
-                  if (!matrixData.setup[os].excluded || !matrixData.setup[os].excluded.includes(project.name)) {
-                    if (nodeVersion) {
-                      addMatrixCombo(project, nodeVersion, pm, os);
-                    } else {
-                      for (let n = 0; n < matrixData.setup[os].node_versions.length; n++) {
-                        addMatrixCombo(project, matrixData.setup[os].node_versions[n], pm, os);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-
-            // process core projects
-            for (let p = 0; p < matrixData.coreProjects.length; p++) {
-              processProject(matrixData.coreProjects[p]);
-            }
-            // process other projects
-            for (let p = 0; p < matrixData.projects.length; p++) {
-              processProject(matrixData.projects[p], matrixData.nodeTLS);
-            }
-
-            if (matrix.length > 256) {
-              throw new Error('You have exceeded the size of the matrix. GitHub allows only 256 jobs in a matrix. Found ${matrix.length} jobs.');
-            }
-            core.setOutput('MATRIX', { include: matrix });
+        run:
+          echo "MATRIX=$(npx tsx .github/workflows/nightly/process-matrix.ts | jq -c .)" >> $GITHUB_OUTPUT
 
   e2e:
     if: ${{ github.repository_owner == 'nrwl' }}
