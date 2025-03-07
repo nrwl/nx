@@ -29,4 +29,6 @@ pub struct TaskResult {
     pub status: String,
     pub code: i32,
     pub terminal_output: Option<String>,
+    pub start_time: Option<i64>,
+    pub end_time: Option<i64>,
 }

@@ -11,6 +11,8 @@ export interface TaskResult {
   status: TaskStatus;
   code: number;
   terminalOutput?: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 /**

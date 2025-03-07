@@ -87,6 +87,8 @@ pub struct TaskResult {
     pub status: String,
     pub code: i32,
     pub terminal_output: Option<String>,
+    pub start_time: Option<i64>,
+    pub end_time: Option<i64>,
 }
 
 impl From<TaskResult> for RustTaskResult {
@@ -96,6 +98,8 @@ impl From<TaskResult> for RustTaskResult {
             status: js.status.parse().unwrap(),
             code: js.code,
             terminal_output: js.terminal_output,
+            start_time: js.start_time,
+            end_time: js.end_time,
         }
     }
 }
@@ -169,27 +173,17 @@ impl AppLifeCycle {
         status: String,
         output: String,
     ) -> napi::Result<()> {
-        // Convert the status string to our TaskStatus enum
-        let task_status = status
-            .parse()
-            .map_err(|e| napi::Error::from_reason(format!("Invalid task status: {}.", e)))?;
-
-        // We only want to react to this lifecycle hook in the case of cache restoration. Otherwise exit early,
-        // because the pty created during __runCommandsForTask will be in charge of the terminal output.
-        if !matches!(
-            task_status,
-            TaskStatus::LocalCache | TaskStatus::LocalCacheKeptExisting | TaskStatus::RemoteCache
-        ) {
-            return Ok(());
-        }
         if let Ok(mut app) = self.app.lock() {
-            // Find the TasksList component
             if let Some(tasks_list) = app
                 .components
                 .iter_mut()
                 .find_map(|c| c.as_any_mut().downcast_mut::<tasks_list::TasksList>())
             {
-                tasks_list.complete_cached_task(&task.id, task_status, Some(&output));
+                tasks_list.update_task_output_and_status(
+                    &task.id,
+                    status.parse().unwrap(),
+                    Some(&output),
+                );
             }
         }
         Ok(())

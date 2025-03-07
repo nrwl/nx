@@ -59,18 +59,6 @@ impl App {
         })
     }
 
-    // Only needed for the prototype testing mode via main.rs
-    // TODO: Remove this after Nx integration
-    pub fn queue_all_tasks(&mut self) {
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.queue_all_tasks();
-        }
-    }
-
     pub fn handle_event(
         &mut self,
         event: tui::Event,

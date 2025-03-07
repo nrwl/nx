@@ -17,17 +17,18 @@ use ratatui::{
 };
 use std::any::Any;
 use std::io;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::pagination::Pagination;
 use super::task_selection_manager::TaskSelectionManager;
 use super::terminal_pane::{TerminalPane, TerminalPaneData};
 use super::{help_text::HelpText, terminal_pane::TerminalPaneState};
+use crate::native::tui::utils::sort_task_items;
 
 const CACHE_STATUS_LOCAL_KEPT_EXISTING: &str = "Kept Existing";
 const CACHE_STATUS_LOCAL: &str = "Local";
 const CACHE_STATUS_REMOTE: &str = "Remote";
-const CACHE_STATUS_MISS: &str = "Miss";
+const CACHE_STATUS_NOT_YET_KNOWN: &str = "...";
+const CACHE_STATUS_NOT_APPLICABLE: &str = "-";
 
 /// A list component that displays and manages tasks in a terminal UI.
 /// Provides filtering, sorting, and output display capabilities.
@@ -46,8 +47,6 @@ pub struct TasksList {
     content_height: usize,
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
     focused_pane: Option<usize>,     // Currently focused pane (if any)
-    last_task_start: Option<u128>,   // Timestamp of last task start
-    queued_tasks: Vec<usize>,        // Indices of tasks queued to start
     is_dimmed: bool,
     spacebar_mode: bool, // Whether we're in spacebar mode (output follows selection)
     terminal_pane_data: [TerminalPaneData; 2],
@@ -58,15 +57,18 @@ pub struct TasksList {
 
 /// Represents an individual task with its current state and execution details.
 pub struct TaskItem {
-    name: String,
+    // Public to aid with sorting utility and testing
+    pub name: String,
     duration: String,
-    cache: String,
-    status: TaskStatus,
+    cache_status: String,
+    // Public to aid with sorting utility and testing
+    pub status: TaskStatus,
     terminal_output: String,
     continuous: bool,
     pty: Option<PtyInstance>,
-    completed_at: Option<u128>,
-    started_at: Option<u128>,
+    start_time: Option<u128>,
+    // Public to aid with sorting utility and testing
+    pub end_time: Option<u128>,
 }
 
 impl Clone for TaskItem {
@@ -74,13 +76,13 @@ impl Clone for TaskItem {
         Self {
             name: self.name.clone(),
             duration: self.duration.clone(),
-            cache: self.cache.clone(),
+            cache_status: self.cache_status.clone(),
             status: self.status.clone(),
             continuous: self.continuous,
             terminal_output: self.terminal_output.clone(),
             pty: None,
-            completed_at: self.completed_at,
-            started_at: self.started_at,
+            start_time: self.start_time,
+            end_time: self.end_time,
         }
     }
 }
@@ -90,133 +92,40 @@ impl TaskItem {
         Self {
             name,
             duration: "".to_string(),
-            cache: if continuous {
-                "-".to_string()
+            cache_status: if continuous {
+                // We know upfront that the cache status will not be applicable
+                CACHE_STATUS_NOT_APPLICABLE.to_string()
             } else {
-                "...".to_string()
+                CACHE_STATUS_NOT_YET_KNOWN.to_string()
             },
             status: TaskStatus::NotStarted,
             continuous,
             terminal_output: String::new(),
             pty: None,
-            completed_at: None,
-            started_at: None,
+            start_time: None,
+            end_time: None,
         }
     }
 
-    fn save_output(&self) -> io::Result<()> {
-        // if let Some(pty) = &self.pty {
-        //     if let Some(screen) = pty.get_screen() {
-        //         // Create tmp directory if it doesn't exist
-        //         let tmp_dir = PathBuf::from("tmp");
-        //         fs::create_dir_all(&tmp_dir)?;
-
-        //         // Create a file for this task's output
-        //         let file_name = format!("{}.txt", self.name.replace(':', "-"));
-        //         let file_path = tmp_dir.join(file_name);
-        //         let mut file = File::create(file_path)?;
-
-        //         // Write the full output including scrollback
-        //         file.write_all(&screen.all_contents_formatted())?;
-        //     }
-        // }
-        Ok(())
-    }
-
-    pub fn update_status(&mut self) {
-        if let Some(pty) = &self.pty {
-            if !self.continuous {
-                if let Some(exit_code) = pty.get_exit_status() {
-                    // Only update status if we're in progress or not started
-                    if matches!(self.status, TaskStatus::InProgress | TaskStatus::NotStarted) {
-                        let now = SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .unwrap()
-                            .as_millis();
-                        self.completed_at = Some(now);
-
-                        if let Some(start) = self.started_at {
-                            self.duration = utils::format_duration_since(start, now);
-                        }
-
-                        // Check for cached output first
-                        if let Some(_) = self.get_cached_output() {
-                            let cache_status = TaskStatus::random_cache_status();
-                            self.cache = match cache_status {
-                                TaskStatus::LocalCacheKeptExisting => {
-                                    CACHE_STATUS_LOCAL_KEPT_EXISTING.to_string()
-                                }
-                                TaskStatus::LocalCache => CACHE_STATUS_LOCAL.to_string(),
-                                TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string(),
-                                _ => unreachable!(), // random_cache_status() only returns cache variants
-                            };
-                            self.status = cache_status;
-                        } else {
-                            // No cache hit, set regular success/failure
-                            let new_status = if exit_code == 0 {
-                                TaskStatus::Success
-                            } else {
-                                TaskStatus::Failure
-                            };
-
-                            // Save output if task passed
-                            if new_status == TaskStatus::Success {
-                                if let Err(_e) = self.save_output() {
-                                    // log_debug(&format!("Failed to save task output: {}", e));
-                                }
-                            }
-
-                            // Update cache status to "miss" since this was a fresh run
-                            self.cache = CACHE_STATUS_MISS.to_string();
-                            self.status = new_status;
-                        }
-                    }
-                }
-            } else {
-                self.duration = "Continuous".to_string();
+    pub fn update_status(&mut self, status: TaskStatus) {
+        self.status = status;
+        // Update the cache_status label that gets printed in the UI
+        if self.continuous {
+            self.cache_status = CACHE_STATUS_NOT_APPLICABLE.to_string();
+        } else {
+            self.cache_status = match status {
+                TaskStatus::InProgress => CACHE_STATUS_NOT_YET_KNOWN.to_string(),
+                TaskStatus::LocalCacheKeptExisting => CACHE_STATUS_LOCAL_KEPT_EXISTING.to_string(),
+                TaskStatus::LocalCache => CACHE_STATUS_LOCAL.to_string(),
+                TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string(),
+                _ => CACHE_STATUS_NOT_APPLICABLE.to_string(),
             }
         }
     }
 
-    fn get_cached_output(&self) -> Option<Vec<u8>> {
-        None
-        // if self.terminal_output.is_empty() {
-        //     let tmp_dir = PathBuf::from("tmp");
-        //     let file_name = format!("{}.txt", self.name.replace(':', "-"));
-        //     let file_path = tmp_dir.join(file_name);
-
-        //     if file_path.exists() {
-        //         fs::read(file_path).ok()
-        //     } else {
-        //         None
-        //     }
-        // } else {
-        //     Some(self.terminal_output.as_bytes().to_vec())
-        // }
-    }
-
-    pub fn start_task(&mut self) -> io::Result<bool> {
-        if matches!(self.status, TaskStatus::NotStarted) {
-            self.status = TaskStatus::InProgress;
-
-            // Record start time in milliseconds
-            self.started_at = Some(
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis(),
-            );
-
-            // Get command and args from lookup
-            Ok(false)
-        } else {
-            Ok(false)
-        }
-    }
-
-    pub fn update_output(&mut self, output: &str, status: TaskStatus) {
+    pub fn update_output_and_status(&mut self, output: &str, status: TaskStatus) {
         self.terminal_output = output.to_string();
-        self.status = status;
+        self.update_status(status);
 
         // Get terminal size
         let terminal_size = crossterm::terminal::size().unwrap_or((80, 24));
@@ -286,18 +195,6 @@ impl std::str::FromStr for TaskStatus {
     }
 }
 
-impl TaskStatus {
-    fn random_cache_status() -> Self {
-        use rand::Rng;
-        let mut rng = rand::rng();
-        match rng.random_range(0..3) {
-            0 => Self::LocalCacheKeptExisting,
-            1 => Self::LocalCache,
-            _ => Self::RemoteCache,
-        }
-    }
-}
-
 impl TasksList {
     /// Creates a new TasksList with the given tasks.
     /// Converts the input tasks into TaskItems and initializes the UI state.
@@ -309,7 +206,6 @@ impl TasksList {
         }
 
         let filtered_names = Vec::new();
-        let queued_tasks = Vec::new();
         let selection_manager = TaskSelectionManager::new(5); // Default 5 items per page
 
         Self {
@@ -327,8 +223,6 @@ impl TasksList {
             content_height: 0,
             pane_tasks: [None, None],
             focused_pane: None,
-            last_task_start: None,
-            queued_tasks,
             is_dimmed: false,
             spacebar_mode: false,
             terminal_pane_data: [TerminalPaneData::new(), TerminalPaneData::new()],
@@ -782,84 +676,13 @@ impl TasksList {
         Ok(())
     }
 
-    /// Sorts tasks based on their status and completion time.
-    /// Order: InProgress -> Failures -> Other Completed -> NotStarted
     fn sort_tasks(&mut self) {
-        self.tasks.sort_by(|a, b| {
-            use TaskStatus::*;
-            match (&a.status, &b.status) {
-                // InProgress tasks come first
-                (InProgress, other) if !matches!(other, InProgress) => std::cmp::Ordering::Less,
-                (other, InProgress) if !matches!(other, InProgress) => std::cmp::Ordering::Greater,
-                // Among completed tasks, failures come first
-                (Failure, other) if !matches!(other, NotStarted | InProgress | Failure) => {
-                    std::cmp::Ordering::Less
-                }
-                (other, Failure) if !matches!(other, NotStarted | InProgress | Failure) => {
-                    std::cmp::Ordering::Greater
-                }
-                // Then other completed tasks (maintain their relative order by using completion time)
-                (status_a, status_b)
-                    if !matches!(status_a, NotStarted | InProgress)
-                        && !matches!(status_b, NotStarted | InProgress) =>
-                {
-                    // If either task is missing a completion time, consider them equal
-                    // This maintains their original order
-                    match (a.completed_at, b.completed_at) {
-                        (Some(time_a), Some(time_b)) => time_a.cmp(&time_b),
-                        _ => std::cmp::Ordering::Equal,
-                    }
-                }
-                // NotStarted tasks come last
-                (NotStarted, other) if !matches!(other, NotStarted) => std::cmp::Ordering::Greater,
-                (other, NotStarted) if !matches!(other, NotStarted) => std::cmp::Ordering::Less,
-                // Equal status, maintain original order
-                _ => std::cmp::Ordering::Equal,
-            }
-        });
+        sort_task_items(&mut self.tasks);
 
         // Update filtered indices to match new order
         self.filtered_names = self.tasks.iter().map(|t| t.name.clone()).collect();
         if !self.filter_text.is_empty() {
             self.apply_filter();
-        }
-    }
-
-    /// Attempts to start the next queued task if enough time has passed.
-    /// Implements rate limiting to prevent too many tasks starting at once.
-    fn try_start_next_task(&mut self) {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
-
-        // Check if enough time has passed since last task start
-        if let Some(last_start) = self.last_task_start {
-            if now - last_start < 1500 {
-                // 1.5 seconds
-                return;
-            }
-        }
-
-        // Start next task if any are queued
-        if let Some(task_idx) = self.queued_tasks.first().cloned() {
-            if let Some(task) = self.tasks.get_mut(task_idx) {
-                if matches!(task.status, TaskStatus::NotStarted) {
-                    // Start the task with current UI dimensions
-                    match task.start_task() {
-                        Ok(_) => {
-                            self.last_task_start = Some(now);
-                            self.queued_tasks.remove(0);
-                            // Force a sort to show the new in-progress task
-                            self.sort_tasks();
-                        }
-                        Err(_) => {}
-                    }
-                } else {
-                    // Task already started, remove it from queue
-                    self.queued_tasks.remove(0);
-                }
-            }
         }
     }
 
@@ -941,8 +764,8 @@ impl TasksList {
                     .count();
 
                 // Calculate total duration if we have start/end times
-                if let Some(first_start) = self.tasks.iter().filter_map(|t| t.started_at).min() {
-                    if let Some(last_end) = self.tasks.iter().filter_map(|t| t.completed_at).max() {
+                if let Some(first_start) = self.tasks.iter().filter_map(|t| t.start_time).min() {
+                    if let Some(last_end) = self.tasks.iter().filter_map(|t| t.end_time).max() {
                         format!(
                             "Completed {} tasks in {}",
                             completed,
@@ -989,11 +812,6 @@ impl TasksList {
         self.is_dimmed = is_dimmed;
     }
 
-    /// Queues all tasks for execution.
-    pub fn queue_all_tasks(&mut self) {
-        self.queued_tasks = (0..self.tasks.len()).collect();
-    }
-
     // In the TS driven case, we need to load tasks in given to us by the TS and render them as pending tasks
     pub fn load_tasks(&mut self, tasks: Vec<Task>) {
         let mut task_items = Vec::new();
@@ -1008,13 +826,7 @@ impl TasksList {
     pub fn start_tasks(&mut self, tasks: Vec<Task>) {
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
-                task_item.status = TaskStatus::InProgress;
-                task_item.started_at = Some(
-                    SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis(),
-                );
+                task_item.update_status(TaskStatus::InProgress);
 
                 // Get terminal size
                 let terminal_size = crossterm::terminal::size().unwrap_or((80, 24));
@@ -1043,28 +855,27 @@ impl TasksList {
                 .iter_mut()
                 .find(|t| t.name == task_result.task.id)
             {
+                let parsed_status = task_result.status.parse().unwrap();
+
                 // In the case of tasks that actually ran (i.e. not cache hits), there will be a final terminal output
                 // copy on the task result. We need to update the task's terminal output and create a new PTY in this case.
                 if task_result.terminal_output.is_some() {
-                    task.update_output(
+                    task.update_output_and_status(
                         task_result.terminal_output.unwrap_or_default().as_str(),
-                        task_result.status.parse().unwrap(),
+                        parsed_status,
                     );
+                } else {
+                    // We always need to make sure the status is updated, even if there is no terminal output
+                    task.update_status(parsed_status);
                 }
 
-                // TODO: Migrate to the actual data Nx gives us for timings
-                // Set completion time if not already set
-                if task.completed_at.is_none() {
-                    let now = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis();
-                    task.completed_at = Some(now);
-
-                    // Update duration for completed tasks
-                    if let Some(started) = task.started_at {
-                        task.duration = utils::format_duration_since(started, now);
-                    }
+                if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
+                    task.start_time = Some(task_result.task.start_time.unwrap() as u128);
+                    task.end_time = Some(task_result.task.end_time.unwrap() as u128);
+                    task.duration = utils::format_duration_since(
+                        task_result.task.start_time.unwrap() as u128,
+                        task_result.task.end_time.unwrap() as u128,
+                    );
                 }
             }
         }
@@ -1079,33 +890,14 @@ impl TasksList {
         }
     }
 
-    pub fn complete_cached_task(
+    pub fn update_task_output_and_status(
         &mut self,
         task_id: &str,
         status: TaskStatus,
         output: Option<&str>,
     ) {
         if let Some(task) = self.tasks.iter_mut().find(|t| t.name == task_id) {
-            // TODO: maybe report on cache timings more accurately by not having this all here?
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_millis();
-            task.started_at = Some(now);
-            task.completed_at = Some(now);
-            task.duration = "<1ms".to_string();
-
-            task.update_output(output.unwrap_or_default(), status);
-
-            // TODO: Do we actually need this separate property on the task item? We can probably derive it from the status in draw, legacy of POC
-            task.cache = match status {
-                TaskStatus::LocalCacheKeptExisting => CACHE_STATUS_LOCAL_KEPT_EXISTING.to_string(),
-                TaskStatus::LocalCache => CACHE_STATUS_LOCAL.to_string(),
-                TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string(),
-                _ => unreachable!(),
-            };
-
-            self.sort_tasks();
+            task.update_output_and_status(output.unwrap_or_default(), status);
         }
     }
 
@@ -1552,14 +1344,14 @@ impl Component for TasksList {
 
                         if !collapsed_mode {
                             row_cells.push(Cell::from(
-                                Line::from(match task.cache.as_str() {
-                                    "..." | "-" => {
+                                Line::from(match task.cache_status.as_str() {
+                                    CACHE_STATUS_NOT_YET_KNOWN | CACHE_STATUS_NOT_APPLICABLE => {
                                         vec![Span::styled(
-                                            task.cache.clone(),
+                                            task.cache_status.clone(),
                                             Style::default().dim(),
                                         )]
                                     }
-                                    _ => vec![Span::raw(task.cache.clone())],
+                                    _ => vec![Span::raw(task.cache_status.clone())],
                                 })
                                 .right_aligned(),
                             ));
@@ -1841,29 +1633,6 @@ impl Component for TasksList {
         match action {
             Action::Tick => {
                 self.throbber_counter = self.throbber_counter.wrapping_add(1);
-
-                // Try to start next task if any are queued
-                self.try_start_next_task();
-
-                // Store old statuses
-                let old_statuses: Vec<TaskStatus> =
-                    self.tasks.iter().map(|t| t.status.clone()).collect();
-
-                // Update task statuses
-                for task in &mut self.tasks {
-                    task.update_status();
-                }
-
-                // Check if any task's status changed
-                let status_changed = self
-                    .tasks
-                    .iter()
-                    .zip(old_statuses.iter())
-                    .any(|(task, old_status)| &task.status != old_status);
-
-                if status_changed {
-                    self.sort_tasks();
-                }
             }
             Action::Resize(w, h) => {
                 self.handle_resize(w, h)?;
@@ -1929,8 +1698,6 @@ impl Default for TasksList {
             content_height: 0,
             pane_tasks: [None, None],
             focused_pane: None,
-            last_task_start: None,
-            queued_tasks: Vec::new(),
             is_dimmed: false,
             spacebar_mode: false,
             terminal_pane_data: [TerminalPaneData::default(), TerminalPaneData::default()],
