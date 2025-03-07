@@ -31,7 +31,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nestjs/schematics": "^9.1.0",
+    "@nestjs/schematics": "^11.0.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
