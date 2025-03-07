@@ -440,9 +440,9 @@ There are 3 steps involved with this:
 
 Perhaps one of the easiest methods of fetching the Remote Definitions at runtime is to store them in a JSON file that can be present in each environment. The Host application then only has to make a GET request to the JSON file.
 
-We'll start by creating this file. Add a `module-federation.manifest.json` file to the `src/public/` folder in our **Dashboard** application with the following content:
+We'll start by creating this file. Add a `module-federation.manifest.json` file to the `public/` folder in our **Dashboard** application with the following content:
 
-```json {% fileName="apps/dashboard/src/public/module-federation.manifest.json" %}
+```json {% fileName="apps/dashboard/public/module-federation.manifest.json" %}
 {
   "login": "http://localhost:4201"
 }
