@@ -1,20 +1,20 @@
-import { CreateNodesContext } from '@nx/devkit';
-
+import { CreateNodesContext, readJsonFile } from '@nx/devkit';
+import { join } from 'path';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { type GradleReport } from '../utils/get-gradle-report';
+import { type NodesReport } from './utils/get-nodes-from-gradle-plugin';
 
-let gradleReport: GradleReport;
-jest.mock('../utils/get-gradle-report', () => {
+let gradleReport: NodesReport;
+jest.mock('./utils/get-nodes-from-gradle-plugin', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
-    populateGradleReport: jest.fn().mockImplementation(() => void 0),
-    getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
+    populateNodes: jest.fn().mockImplementation(() => void 0),
+    getCurrentNodesReport: jest.fn().mockImplementation(() => gradleReport),
   };
 });
 
 import { createNodesV2 } from './nodes';
 
-describe('@nx/gradle/plugin', () => {
+describe('@nx/gradle/plugin/nodes', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContext;
   let tempFs: TempFs;
@@ -22,32 +22,9 @@ describe('@nx/gradle/plugin', () => {
 
   beforeEach(async () => {
     tempFs = new TempFs('test');
-    gradleReport = {
-      gradleFileToGradleProjectMap: new Map<string, string>([
-        ['proj/build.gradle', 'proj'],
-      ]),
-      buildFileToDepsMap: new Map<string, Set<string>>(),
-      gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
-        ['proj/build.gradle', new Map([['build', 'build']])],
-      ]),
-      gradleProjectToTasksMap: new Map<string, Set<string>>([
-        ['proj', new Set(['test'])],
-      ]),
-      gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        [
-          'proj',
-          new Map([
-            ['test', 'Verification'],
-            ['build', 'Build'],
-          ]),
-        ],
-      ]),
-      gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
-      gradleProjectNameToProjectRootMap: new Map<string, string>([
-        ['proj', 'proj'],
-      ]),
-      gradleProjectToChildProjects: new Map<string, string[]>(),
-    };
+    gradleReport = readJsonFile(
+      join(__dirname, 'utils/__mocks__/gradle_tutorial.json')
+    );
     cwd = process.cwd();
     process.chdir(tempFs.tempDir);
     context = {
@@ -81,190 +58,13 @@ describe('@nx/gradle/plugin', () => {
       context
     );
 
-    expect(results).toMatchInlineSnapshot(`
-      [
-        [
-          "proj/build.gradle",
-          {
-            "projects": {
-              "proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Verification": [
-                      "test",
-                    ],
-                  },
-                  "technologies": [
-                    "gradle",
-                  ],
-                },
-                "name": "proj",
-                "projectType": "application",
-                "targets": {
-                  "test": {
-                    "cache": true,
-                    "command": "./gradlew proj:test",
-                    "dependsOn": [
-                      "testClasses",
-                    ],
-                    "inputs": [
-                      "default",
-                      "^production",
-                    ],
-                    "metadata": {
-                      "help": {
-                        "command": "./gradlew help --task proj:test",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "--rerun",
-                            ],
-                          },
-                        },
-                      },
-                      "technologies": [
-                        "gradle",
-                      ],
-                    },
-                    "options": {
-                      "cwd": ".",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-      ]
-    `);
-  });
-
-  it('should create nodes include subprojects tasks', async () => {
-    const results = await createNodesFunction(
-      ['proj/build.gradle'],
-      {
-        buildTargetName: 'build',
-        includeSubprojectsTasks: true,
-      },
-      context
-    );
-
-    expect(results).toMatchInlineSnapshot(`
-      [
-        [
-          "proj/build.gradle",
-          {
-            "projects": {
-              "proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Build": [
-                      "build",
-                    ],
-                    "Verification": [
-                      "test",
-                    ],
-                  },
-                  "technologies": [
-                    "gradle",
-                  ],
-                },
-                "name": "proj",
-                "projectType": "application",
-                "targets": {
-                  "build": {
-                    "cache": true,
-                    "command": "./gradlew proj:build",
-                    "dependsOn": [
-                      "^build",
-                      "classes",
-                      "test",
-                    ],
-                    "inputs": [
-                      "production",
-                      "^production",
-                    ],
-                    "metadata": {
-                      "help": {
-                        "command": "./gradlew help --task proj:build",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "--rerun",
-                            ],
-                          },
-                        },
-                      },
-                      "technologies": [
-                        "gradle",
-                      ],
-                    },
-                    "options": {
-                      "cwd": ".",
-                    },
-                    "outputs": [
-                      "build",
-                    ],
-                  },
-                  "test": {
-                    "cache": true,
-                    "command": "./gradlew proj:test",
-                    "dependsOn": [
-                      "testClasses",
-                    ],
-                    "inputs": [
-                      "default",
-                      "^production",
-                    ],
-                    "metadata": {
-                      "help": {
-                        "command": "./gradlew help --task proj:test",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "--rerun",
-                            ],
-                          },
-                        },
-                      },
-                      "technologies": [
-                        "gradle",
-                      ],
-                    },
-                    "options": {
-                      "cwd": ".",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-      ]
-    `);
+    expect(results).toMatchSnapshot();
   });
 
   it('should create nodes based on gradle for nested project root', async () => {
-    gradleReport = {
-      gradleFileToGradleProjectMap: new Map<string, string>([
-        ['nested/nested/proj/build.gradle', 'proj'],
-      ]),
-      buildFileToDepsMap: new Map<string, Set<string>>(),
-      gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
-        ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
-      ]),
-      gradleProjectToTasksMap: new Map<string, Set<string>>([
-        ['proj', new Set(['test'])],
-      ]),
-      gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        ['proj', new Map([['test', 'Verification']])],
-      ]),
-      gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
-      gradleProjectNameToProjectRootMap: new Map<string, string>([
-        ['proj', 'proj'],
-      ]),
-      gradleProjectToChildProjects: new Map<string, string[]>(),
-    };
+    gradleReport = readJsonFile(
+      join(__dirname, '/utils/__mocks__/gradle_composite.json')
+    );
     await tempFs.createFiles({
       'nested/nested/proj/build.gradle': ``,
     });
@@ -277,311 +77,30 @@ describe('@nx/gradle/plugin', () => {
       context
     );
 
-    expect(results).toMatchInlineSnapshot(`
-      [
-        [
-          "nested/nested/proj/build.gradle",
-          {
-            "projects": {
-              "nested/nested/proj": {
-                "metadata": {
-                  "targetGroups": {
-                    "Verification": [
-                      "test",
-                    ],
-                  },
-                  "technologies": [
-                    "gradle",
-                  ],
-                },
-                "name": "proj",
-                "projectType": "application",
-                "targets": {
-                  "test": {
-                    "cache": true,
-                    "command": "./gradlew proj:test",
-                    "dependsOn": [
-                      "testClasses",
-                    ],
-                    "inputs": [
-                      "default",
-                      "^production",
-                    ],
-                    "metadata": {
-                      "help": {
-                        "command": "./gradlew help --task proj:test",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "--rerun",
-                            ],
-                          },
-                        },
-                      },
-                      "technologies": [
-                        "gradle",
-                      ],
-                    },
-                    "options": {
-                      "cwd": ".",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-      ]
-    `);
+    expect(results).toMatchSnapshot();
   });
 
-  describe('with atomized tests targets', () => {
-    beforeEach(async () => {
-      gradleReport = {
-        gradleFileToGradleProjectMap: new Map<string, string>([
-          ['nested/nested/proj/build.gradle', 'proj'],
-        ]),
-        buildFileToDepsMap: new Map<string, Set<string>>(),
-        gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
-          ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
-        ]),
-        gradleProjectToTasksMap: new Map<string, Set<string>>([
-          ['proj', new Set(['test'])],
-        ]),
-        gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-          ['proj', new Map([['test', 'Test']])],
-        ]),
-        gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
-        gradleProjectNameToProjectRootMap: new Map<string, string>([
-          ['proj', 'proj'],
-        ]),
-        gradleProjectToChildProjects: new Map<string, string[]>(),
-      };
-      await tempFs.createFiles({
-        'nested/nested/proj/build.gradle': ``,
-      });
-      await tempFs.createFiles({
-        'proj/src/test/java/test/rootTest.java': ``,
-      });
-      await tempFs.createFiles({
-        'nested/nested/proj/src/test/java/test/aTest.java': ``,
-      });
-      await tempFs.createFiles({
-        'nested/nested/proj/src/test/java/test/bTest.java': ``,
-      });
-      await tempFs.createFiles({
-        'nested/nested/proj/src/test/java/test/cTests.java': ``,
-      });
-    });
+  it('should create nodes with atomized tests targets based on gradle if ciTargetName is specified', async () => {
+    const results = await createNodesFunction(
+      ['proj/application/build.gradle'],
+      {
+        buildTargetName: 'build',
+        ciTargetName: 'test-ci',
+      },
+      context
+    );
 
-    it('should create nodes with atomized tests targets based on gradle for nested project root', async () => {
-      const results = await createNodesFunction(
-        [
-          'nested/nested/proj/build.gradle',
-          'proj/src/test/java/test/rootTest.java',
-          'nested/nested/proj/src/test/java/test/aTest.java',
-          'nested/nested/proj/src/test/java/test/bTest.java',
-          'nested/nested/proj/src/test/java/test/cTests.java',
-        ],
-        {
-          buildTargetName: 'build',
-          ciTargetName: 'test-ci',
-        },
-        context
-      );
+    expect(results).toMatchSnapshot();
+  });
 
-      expect(results).toMatchInlineSnapshot(`
-        [
-          [
-            "nested/nested/proj/build.gradle",
-            {
-              "projects": {
-                "nested/nested/proj": {
-                  "metadata": {
-                    "targetGroups": {
-                      "Test": [
-                        "test-ci--aTest",
-                        "test-ci--bTest",
-                        "test-ci--cTests",
-                        "test-ci",
-                        "test",
-                      ],
-                    },
-                    "technologies": [
-                      "gradle",
-                    ],
-                  },
-                  "name": "proj",
-                  "projectType": "application",
-                  "targets": {
-                    "test": {
-                      "cache": false,
-                      "command": "./gradlew proj:test",
-                      "dependsOn": [
-                        "testClasses",
-                      ],
-                      "inputs": [
-                        "default",
-                        "^production",
-                      ],
-                      "metadata": {
-                        "help": {
-                          "command": "./gradlew help --task proj:test",
-                          "example": {
-                            "options": {
-                              "args": [
-                                "--rerun",
-                              ],
-                            },
-                          },
-                        },
-                        "technologies": [
-                          "gradle",
-                        ],
-                      },
-                      "options": {
-                        "cwd": ".",
-                      },
-                    },
-                    "test-ci": {
-                      "cache": true,
-                      "dependsOn": [
-                        {
-                          "params": "forward",
-                          "projects": "self",
-                          "target": "test-ci--aTest",
-                        },
-                        {
-                          "params": "forward",
-                          "projects": "self",
-                          "target": "test-ci--bTest",
-                        },
-                        {
-                          "params": "forward",
-                          "projects": "self",
-                          "target": "test-ci--cTests",
-                        },
-                      ],
-                      "executor": "nx:noop",
-                      "inputs": [
-                        "default",
-                        "^production",
-                      ],
-                      "metadata": {
-                        "description": "Runs Gradle Tests in CI",
-                        "help": {
-                          "command": "./gradlew help --task proj:test",
-                          "example": {
-                            "options": {
-                              "args": [
-                                "--rerun",
-                              ],
-                            },
-                          },
-                        },
-                        "nonAtomizedTarget": "test",
-                        "technologies": [
-                          "gradle",
-                        ],
-                      },
-                    },
-                    "test-ci--aTest": {
-                      "cache": true,
-                      "command": "./gradlew proj:test --tests aTest",
-                      "dependsOn": [
-                        "testClasses",
-                      ],
-                      "inputs": [
-                        "default",
-                        "^production",
-                      ],
-                      "metadata": {
-                        "description": "Runs Gradle test nested/nested/proj/src/test/java/test/aTest.java in CI",
-                        "help": {
-                          "command": "./gradlew help --task proj:test",
-                          "example": {
-                            "options": {
-                              "args": [
-                                "--rerun",
-                              ],
-                            },
-                          },
-                        },
-                        "technologies": [
-                          "gradle",
-                        ],
-                      },
-                      "options": {
-                        "cwd": ".",
-                      },
-                    },
-                    "test-ci--bTest": {
-                      "cache": true,
-                      "command": "./gradlew proj:test --tests bTest",
-                      "dependsOn": [
-                        "testClasses",
-                      ],
-                      "inputs": [
-                        "default",
-                        "^production",
-                      ],
-                      "metadata": {
-                        "description": "Runs Gradle test nested/nested/proj/src/test/java/test/bTest.java in CI",
-                        "help": {
-                          "command": "./gradlew help --task proj:test",
-                          "example": {
-                            "options": {
-                              "args": [
-                                "--rerun",
-                              ],
-                            },
-                          },
-                        },
-                        "technologies": [
-                          "gradle",
-                        ],
-                      },
-                      "options": {
-                        "cwd": ".",
-                      },
-                    },
-                    "test-ci--cTests": {
-                      "cache": true,
-                      "command": "./gradlew proj:test --tests cTests",
-                      "dependsOn": [
-                        "testClasses",
-                      ],
-                      "inputs": [
-                        "default",
-                        "^production",
-                      ],
-                      "metadata": {
-                        "description": "Runs Gradle test nested/nested/proj/src/test/java/test/cTests.java in CI",
-                        "help": {
-                          "command": "./gradlew help --task proj:test",
-                          "example": {
-                            "options": {
-                              "args": [
-                                "--rerun",
-                              ],
-                            },
-                          },
-                        },
-                        "technologies": [
-                          "gradle",
-                        ],
-                      },
-                      "options": {
-                        "cwd": ".",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          ],
-        ]
-      `);
-    });
+  it('should not create nodes with atomized tests targets based on gradle if ciTargetName is not specified', async () => {
+    const results = await createNodesFunction(
+      ['proj/application/build.gradle'],
+      {
+        buildTargetName: 'build',
+      },
+      context
+    );
+    expect(results).toMatchSnapshot();
   });
 });
