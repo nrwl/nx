@@ -1,4 +1,7 @@
 import * as yargs from 'yargs';
+import * as enquirer from 'enquirer';
+import * as chalk from 'chalk';
+
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
@@ -8,24 +11,26 @@ import {
   packageManagerList,
 } from '../utils/package-manager';
 import { stringifyCollection } from '../utils/string-utils';
-import enquirer = require('enquirer');
 import { NxCloud } from '../utils/nx/nx-cloud';
-import chalk = require('chalk');
+import { isCI } from '../utils/ci/is-ci';
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
 ): Promise<NxCloud> {
-  if (parsedArgs.nxCloud === undefined) {
-    return nxCloudPrompt('setupCI');
-  } else {
+  if (parsedArgs.nxCloud) {
     return parsedArgs.nxCloud;
+  } else if (!parsedArgs.interactive || isCI()) {
+    return 'skip';
+  } else {
+    return nxCloudPrompt('setupCI');
   }
 }
 
 export async function determineIfGitHubWillBeUsed(
-  nxCloud: NxCloud
+  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud; useGitHub?: boolean }>
 ): Promise<boolean> {
-  if (nxCloud === 'yes' || nxCloud === 'circleci') {
+  if (parsedArgs.nxCloud === 'yes' || parsedArgs.nxCloud === 'circleci') {
+    if (parsedArgs?.useGitHub) return true;
     const reply = await enquirer.prompt<{ github: 'Yes' | 'No' }>([
       {
         name: 'github',
@@ -70,9 +75,8 @@ export async function determineDefaultBase(
   parsedArgs: yargs.Arguments<{ defaultBase?: string }>
 ): Promise<string> {
   if (parsedArgs.defaultBase) {
-    return Promise.resolve(parsedArgs.defaultBase);
-  }
-  if (parsedArgs.allPrompts) {
+    return parsedArgs.defaultBase;
+  } else if (parsedArgs.allPrompts) {
     return enquirer
       .prompt<{ DefaultBase: string }>([
         {
@@ -93,7 +97,7 @@ export async function determineDefaultBase(
         return a.DefaultBase;
       });
   }
-  return Promise.resolve(deduceDefaultBase());
+  return deduceDefaultBase();
 }
 
 export async function determinePackageManager(
@@ -103,7 +107,7 @@ export async function determinePackageManager(
 
   if (packageManager) {
     if (packageManagerList.includes(packageManager as PackageManager)) {
-      return Promise.resolve(packageManager as PackageManager);
+      return packageManager as PackageManager;
     }
     output.error({
       title: 'Invalid package manager',
@@ -114,9 +118,7 @@ export async function determinePackageManager(
       ],
     });
     process.exit(1);
-  }
-
-  if (parsedArgs.allPrompts) {
+  } else if (parsedArgs.allPrompts) {
     return enquirer
       .prompt<{ packageManager: PackageManager }>([
         {
@@ -135,5 +137,5 @@ export async function determinePackageManager(
       .then((a) => a.packageManager);
   }
 
-  return Promise.resolve(detectInvokedPackageManager());
+  return detectInvokedPackageManager();
 }

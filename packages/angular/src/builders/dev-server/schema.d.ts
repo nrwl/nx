@@ -21,6 +21,7 @@ interface BaseSchema {
   prebundle?: boolean | { exclude: string[] };
   buildLibsFromSource?: boolean;
   esbuildMiddleware?: string[];
+  watchDependencies?: boolean;
 }
 
 export type SchemaWithBrowserTarget = BaseSchema & {

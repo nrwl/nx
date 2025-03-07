@@ -50,8 +50,9 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
+import { isProjectGraphProjectNode } from 'nx/src/config/project-graph';
 
-type Options = [
+export type Options = [
   {
     allow: string[];
     buildTargets: string[];
@@ -524,6 +525,11 @@ export default ESLintUtils.RuleCreator(
         }
         return;
       }
+
+      if (!isProjectGraphProjectNode(targetProject)) {
+        return;
+      }
+      targetProject = targetProject as ProjectGraphProjectNode;
 
       // check constraints between libs and apps
       // check for circular dependency

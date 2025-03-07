@@ -1,0 +1,15 @@
+{
+  "name": "20.5.0-package-updates",
+  "version": "20.5.0-beta.3",
+  "packages": {
+    "vite": { "version": "^6.0.0", "alwaysAddToPackageJson": false },
+    "vite-plugin-dts": { "version": "~4.5.0", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/vite",
+  "schema": null,
+  "type": "migration"
+}

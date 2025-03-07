@@ -41,7 +41,8 @@
               "nx",
               "typescript",
               "@swc/core", // Installed to workspace and only used in swc() plugin
-              "postcss"
+              "postcss",
+              "@rollup/plugin-typescript"
             ]
           }
         ]

@@ -1,6 +1,11 @@
+---
+title: Using PlanetScale with Serverless Fastify
+description: Learn how to integrate PlanetScale database with Fastify in a serverless environment using Netlify functions in an Nx workspace.
+---
+
 # Using PlanetScale with Serverless Fastify
 
-In this example repo, you’ll learn how to:
+In this example repo, you'll learn how to:
 
 - Use Netlify serverless functions
 - Integrate Fastify with Netlify functions

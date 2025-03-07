@@ -216,11 +216,17 @@ export class Migrator {
       );
     for (const packageToCheck of packagesToCheck) {
       const filteredUpdates: Record<string, PackageUpdate> = {};
-      for (const packageUpdate of packageToCheck.updates) {
+      for (const [packageUpdateKey, packageUpdate] of Object.entries(
+        packageToCheck.updates
+      )) {
         if (
           this.areRequirementsMet(packageUpdate.requires) &&
           (!this.interactive ||
-            (await this.runPackageJsonUpdatesConfirmationPrompt(packageUpdate)))
+            (await this.runPackageJsonUpdatesConfirmationPrompt(
+              packageUpdate,
+              packageUpdateKey,
+              packageToCheck.package
+            )))
         ) {
           Object.entries(packageUpdate.packages).forEach(([name, update]) => {
             filteredUpdates[name] = update;
@@ -243,7 +249,7 @@ export class Migrator {
   ): Promise<
     {
       package: string;
-      updates: PackageJsonUpdates[string][];
+      updates: PackageJsonUpdates;
     }[]
   > {
     let targetVersion = target.version;
@@ -293,11 +299,11 @@ export class Migrator {
         migrationConfig
       );
 
-    if (!packageJsonUpdates.length) {
+    if (!Object.keys(packageJsonUpdates).length) {
       return [];
     }
 
-    const shouldCheckUpdates = packageJsonUpdates.some(
+    const shouldCheckUpdates = Object.values(packageJsonUpdates).some(
       (packageJsonUpdate) =>
         (this.interactive && packageJsonUpdate['x-prompt']) ||
         Object.keys(packageJsonUpdate.requires ?? {}).length
@@ -307,7 +313,7 @@ export class Migrator {
       return [{ package: targetPackage, updates: packageJsonUpdates }];
     }
 
-    const packageUpdatesToApply = packageJsonUpdates.reduce(
+    const packageUpdatesToApply = Object.values(packageJsonUpdates).reduce(
       (m, c) => ({ ...m, ...c.packages }),
       {} as Record<string, PackageUpdate>
     );
@@ -336,7 +342,7 @@ export class Migrator {
     targetVersion: string,
     migrationConfig: ResolvedMigrationConfiguration
   ): {
-    packageJsonUpdates: PackageJsonUpdates[string][];
+    packageJsonUpdates: PackageJsonUpdates;
     packageGroupOrder: string[];
   } {
     const packageGroupOrder: string[] =
@@ -350,7 +356,7 @@ export class Migrator {
       !migrationConfig.packageJsonUpdates ||
       !this.getPkgVersion(packageName)
     ) {
-      return { packageJsonUpdates: [], packageGroupOrder };
+      return { packageJsonUpdates: {}, packageGroupOrder };
     }
 
     const packageJsonUpdates = this.filterPackageJsonUpdates(
@@ -416,10 +422,12 @@ export class Migrator {
     packageJsonUpdates: PackageJsonUpdates,
     packageName: string,
     targetVersion: string
-  ): PackageJsonUpdates[string][] {
-    const filteredPackageJsonUpdates: PackageJsonUpdates[string][] = [];
+  ): PackageJsonUpdates {
+    const filteredPackageJsonUpdates: PackageJsonUpdates = {};
 
-    for (const packageJsonUpdate of Object.values(packageJsonUpdates)) {
+    for (const [packageJsonUpdateKey, packageJsonUpdate] of Object.entries(
+      packageJsonUpdates
+    )) {
       if (
         !packageJsonUpdate.packages ||
         this.lt(packageJsonUpdate.version, this.getPkgVersion(packageName)) ||
@@ -456,7 +464,7 @@ export class Migrator {
       }
       if (Object.keys(filtered).length) {
         packageJsonUpdate.packages = filtered;
-        filteredPackageJsonUpdates.push(packageJsonUpdate);
+        filteredPackageJsonUpdates[packageJsonUpdateKey] = packageJsonUpdate;
       }
     }
 
@@ -563,7 +571,9 @@ export class Migrator {
   }
 
   private async runPackageJsonUpdatesConfirmationPrompt(
-    packageUpdate: PackageJsonUpdates[string]
+    packageUpdate: PackageJsonUpdates[string],
+    packageUpdateKey: string,
+    packageName: string
   ): Promise<boolean> {
     if (!packageUpdate['x-prompt']) {
       return Promise.resolve(true);
@@ -574,26 +584,39 @@ export class Migrator {
       return Promise.resolve(false);
     }
 
-    return await prompt([
-      {
-        name: 'shouldApply',
-        type: 'confirm',
-        message: packageUpdate['x-prompt'],
-        initial: true,
-      },
-    ]).then(({ shouldApply }: { shouldApply: boolean }) => {
-      this.promptAnswers[promptKey] = shouldApply;
+    const promptConfig = {
+      name: 'shouldApply',
+      type: 'confirm',
+      message: packageUpdate['x-prompt'],
+      initial: true,
+    };
 
-      if (
-        !shouldApply &&
-        (!this.minVersionWithSkippedUpdates ||
-          lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
-      ) {
-        this.minVersionWithSkippedUpdates = packageUpdate.version;
+    if (packageName.startsWith('@nx/')) {
+      // @ts-expect-error -- enquirer types aren't correct, footer does exist
+      promptConfig.footer = () =>
+        chalk.dim(
+          `  View migration details at https://nx.dev/nx-api/${packageName.replace(
+            '@nx/',
+            ''
+          )}#${packageUpdateKey.replace(/[-\.]/g, '')}packageupdates`
+        );
+    }
+
+    return await prompt([promptConfig]).then(
+      ({ shouldApply }: { shouldApply: boolean }) => {
+        this.promptAnswers[promptKey] = shouldApply;
+
+        if (
+          !shouldApply &&
+          (!this.minVersionWithSkippedUpdates ||
+            lt(packageUpdate.version, this.minVersionWithSkippedUpdates))
+        ) {
+          this.minVersionWithSkippedUpdates = packageUpdate.version;
+        }
+
+        return shouldApply;
       }
-
-      return shouldApply;
-    });
+    );
   }
 
   private getPackageUpdatePromptKey(

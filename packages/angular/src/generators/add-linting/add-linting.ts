@@ -89,22 +89,6 @@ export async function addLintingGenerator(
         files: ['*.html'],
         rules: {},
       });
-
-      if (isBuildableLibraryProject(tree, options.projectName)) {
-        addOverrideToLintConfig(tree, '', {
-          files: ['*.json'],
-          parser: 'jsonc-eslint-parser',
-          rules: {
-            '@nx/dependency-checks': [
-              'error',
-              {
-                // With flat configs, we don't want to include imports in the eslint js/cjs/mjs files to be checked
-                ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}'],
-              },
-            ],
-          },
-        });
-      }
     } else {
       replaceOverridesInLintConfig(tree, options.projectRoot, [
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),

@@ -40,7 +40,7 @@ export function parseTargetString(
   targetString: string,
   projectGraphOrCtx?: ProjectGraph | ExecutorContext
 ): Target {
-  let projectGraph =
+  let projectGraph: ProjectGraph =
     projectGraphOrCtx && 'projectGraph' in projectGraphOrCtx
       ? projectGraphOrCtx.projectGraph
       : (projectGraphOrCtx as ProjectGraph);

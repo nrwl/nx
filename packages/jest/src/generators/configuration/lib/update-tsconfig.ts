@@ -6,12 +6,16 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { NormalizedJestProjectSchema } from '../schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function updateTsConfig(
   host: Tree,
   options: NormalizedJestProjectSchema
 ) {
-  const { root, projectType } = readProjectConfiguration(host, options.project);
+  const { root, projectType: _projectType } = readProjectConfiguration(
+    host,
+    options.project
+  );
   if (!host.exists(joinPathFragments(root, 'tsconfig.json'))) {
     throw new Error(
       `Expected ${joinPathFragments(
@@ -31,6 +35,7 @@ export function updateTsConfig(
     }
     return json;
   });
+  const projectType = getProjectType(host, root, _projectType);
 
   // fall-back runtime tsconfig file path in case the user didn't provide one
   let runtimeTsconfigPath = joinPathFragments(
@@ -42,6 +47,16 @@ export function updateTsConfig(
       root,
       options.runtimeTsconfigFileName
     );
+    // If the app is Next.js it will not have a tsconfig.app.json
+    const extensions = ['js', 'ts', 'mjs', 'cjs'];
+    const hasNextConfig = extensions.some((ext) =>
+      host.exists(joinPathFragments(root, `next.config.${ext}`))
+    );
+
+    if (hasNextConfig && projectType === 'application') {
+      runtimeTsconfigPath = joinPathFragments(root, 'tsconfig.json');
+    }
+
     if (!host.exists(runtimeTsconfigPath)) {
       // the user provided a runtimeTsconfigFileName that doesn't exist, so we throw an error
       throw new Error(

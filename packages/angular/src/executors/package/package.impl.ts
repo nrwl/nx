@@ -20,7 +20,7 @@ async function initializeNgPackagr(
   context: ExecutorContext,
   projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
-  const ngPackagr = await getNgPackagrInstance(options);
+  const ngPackagr = await getNgPackagrInstance();
   ngPackagr.forProject(resolve(context.root, options.project));
 
   if (options.tsConfig) {

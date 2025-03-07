@@ -2,7 +2,7 @@
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR 1`] = `
 "const { composePlugins, withNx, withReact } = require('@nx/rspack');
-const { withModuleFederationForSSR } = require('@nx/rspack/module-federation');
+const { withModuleFederationForSSR } = require('@nx/module-federation/rspack');
 
 const baseConfig = require('./module-federation.config');
 
@@ -44,7 +44,7 @@ module.exports = moduleFederationConfig;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs for SSR when --typescriptConfiguration=true 1`] = `
 "import { composePlugins, withNx, withReact } from '@nx/rspack';
-import { withModuleFederationForSSR } from '@nx/rspack/module-federation';
+import { withModuleFederationForSSR } from '@nx/module-federation/rspack';
 
 import baseConfig from './module-federation.config';
 
@@ -83,7 +83,7 @@ export default config;
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=false 1`] = `
 "const { composePlugins, withNx, withReact } = require('@nx/rspack');
-const { withModuleFederation } = require('@nx/rspack/module-federation');
+const { withModuleFederation } = require('@nx/module-federation/rspack');
 
 const baseConfig = require('./module-federation.config');
 
@@ -130,7 +130,7 @@ module.exports = {
 
 exports[`hostGenerator bundler=rspack should generate host files and configs when --typescriptConfiguration=true 1`] = `
 "import {composePlugins, withNx, withReact} from '@nx/rspack';
-import { withModuleFederation } from '@nx/rspack/module-federation';
+import { withModuleFederation } from '@nx/module-federation/rspack';
 import { ModuleFederationConfig } from '@nx/module-federation';
 
 import baseConfig from './module-federation.config';

@@ -116,15 +116,18 @@ function __napi_rs_initialize_modules(__napiInstance) {
   __napiInstance.exports['__napi_register__ExternalDependenciesInput_struct_36']?.()
   __napiInstance.exports['__napi_register__DepsOutputsInput_struct_37']?.()
   __napiInstance.exports['__napi_register__NxJson_struct_38']?.()
-  __napiInstance.exports['__napi_register__WorkspaceContext_struct_39']?.()
-  __napiInstance.exports['__napi_register__WorkspaceContext_impl_48']?.()
-  __napiInstance.exports['__napi_register__WorkspaceErrors_49']?.()
-  __napiInstance.exports['__napi_register__NxWorkspaceFiles_struct_50']?.()
-  __napiInstance.exports['__napi_register__NxWorkspaceFilesExternals_struct_51']?.()
-  __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_52']?.()
-  __napiInstance.exports['__napi_register__FileMap_struct_53']?.()
-  __napiInstance.exports['__napi_register____test_only_transfer_file_map_54']?.()
+  __napiInstance.exports['__napi_register__FileLock_struct_39']?.()
+  __napiInstance.exports['__napi_register__FileLock_impl_41']?.()
+  __napiInstance.exports['__napi_register__WorkspaceContext_struct_42']?.()
+  __napiInstance.exports['__napi_register__WorkspaceContext_impl_51']?.()
+  __napiInstance.exports['__napi_register__WorkspaceErrors_52']?.()
+  __napiInstance.exports['__napi_register__NxWorkspaceFiles_struct_53']?.()
+  __napiInstance.exports['__napi_register__NxWorkspaceFilesExternals_struct_54']?.()
+  __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_55']?.()
+  __napiInstance.exports['__napi_register__FileMap_struct_56']?.()
+  __napiInstance.exports['__napi_register____test_only_transfer_file_map_57']?.()
 }
+module.exports.FileLock = __napiModule.exports.FileLock
 module.exports.HashPlanner = __napiModule.exports.HashPlanner
 module.exports.ImportResult = __napiModule.exports.ImportResult
 module.exports.TaskHasher = __napiModule.exports.TaskHasher

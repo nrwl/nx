@@ -1,0 +1,28 @@
+<%_ if (transformer === '@swc/jest') { _%>
+/* eslint-disable */
+<% if(js) {%>const { readFileSync } = require('fs')<% } else { %>import { readFileSync } from 'fs';<% } %>
+
+// Reading the SWC compilation config for the spec files
+const swcJestConfig = JSON.parse(
+  readFileSync(`${__dirname}/.spec.swcrc`, 'utf-8')
+);
+
+// Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+swcJestConfig.swcrc = false;
+
+<%_ } _%>
+<% if(js){ %>module.exports =<% } else{ %>export default<% } %> {
+  displayName: '<%= project %>',
+  preset: '<%= offsetFromRoot %>jest.preset.<%= presetExt %>',<% if(setupFile !== 'none') { %>
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if(testEnvironment) { %>
+  testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
+  transform: {
+    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformerOptions) { %>['<%= transformer %>', <%- transformerOptions %>]<% } else { %>'<%= transformer %>'<% } %>
+  },
+  <% if (supportTsx) { %>moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
+  coverageDirectory: '<%= coverageDirectory %>'<% if(rootProject){ %>,
+  testMatch: [
+    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+  ],<% } %>
+};

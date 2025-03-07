@@ -152,3 +152,31 @@ Below is an example on how to connect to MinIO:
 | **endpoint**        | The custom endpoint to upload artifacts to. If endpoint is not defined, the default AWS endpoint is used  |
 | **accessKeyId**     | AWS Access Key ID (optional if `AWS_ACCESS_KEY_ID` is set in the environment)                             |
 | **secretAccessKey** | AWS secret access key (optional if `AWS_SECRET_ACCESS_KEY` is set in the environment)                     |
+
+# Cache Modes
+
+By default, Nx will try to write and read from the remote cache while running locally. This means that permissions must be set for users who are expected to access the remote cache.
+
+Nx will only show warnings when the remote cache is not writable. You can disable these warnings by setting `localMode` to `read-only` or `no-cache` in the `nx.json` file.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "localMode": "read-only"
+  }
+}
+```
+
+The cache mode in CI can also be configured by setting `ciMode` to `read-only` or `no-cache` in the `nx.json` file. Or setting `NX_POWERPACK_CACHE_MODE` to `read-only` or `no-cache` in the CI environment.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "s3": {
+    "region": "us-east-1",
+    "bucket": "my-bucket",
+    "ciMode": "read-only"
+  }
+}
+```

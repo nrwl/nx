@@ -39,6 +39,7 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 import cypressInitGenerator, { addPlugin } from '../init/init';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -103,6 +104,26 @@ export async function configurationGeneratorInternal(
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
     addTarget(tree, opts, projectGraph);
+  }
+
+  const projectTsConfigPath = joinPathFragments(
+    opts.projectRoot,
+    'tsconfig.json'
+  );
+  if (tree.exists(projectTsConfigPath)) {
+    updateJson(tree, projectTsConfigPath, (json) => {
+      // Cypress uses commonjs, unless the project is also using commonjs (or does not set "module" i.e. uses default of commonjs),
+      // then we need to set the moduleResolution to node10 or else Cypress will fail with TS5095 error.
+      // See: https://github.com/cypress-io/cypress/issues/27731
+      if (
+        (json.compilerOptions?.module ||
+          json.compilerOptions?.module !== 'commonjs') &&
+        json.compilerOptions?.moduleResolution
+      ) {
+        json.compilerOptions.moduleResolution = 'node10';
+      }
+      return json;
+    });
   }
 
   const { root: projectRoot } = readProjectConfiguration(tree, options.project);
@@ -179,6 +200,18 @@ Rename or remove the existing e2e target.`);
     !options.devServerTarget &&
     !projectConfig?.targets?.serve
   ) {
+    const { devServerTarget, baseUrl } = await promptForMissingServeData(
+      options.project
+    );
+    options.devServerTarget = devServerTarget;
+    options.baseUrl = baseUrl;
+  }
+
+  if (
+    !options.baseUrl &&
+    !options.devServerTarget &&
+    !projectConfig?.targets?.serve
+  ) {
     throw new Error(`The project ${options.project} does not have a 'serve' target.
 In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:<configName>]', or a baseUrl option`);
   }
@@ -201,9 +234,42 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',
+    projectRoot: projectConfig.root,
     rootProject: options.rootProject ?? projectConfig.root === '.',
     linter,
     devServerTarget,
+  };
+}
+
+async function promptForMissingServeData(projectName: string) {
+  const { devServerTarget, port } = await promptWhenInteractive<{
+    devServerTarget: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'devServerTarget',
+        message:
+          'What is the name of the target used to serve the application locally?',
+        initial: `${projectName}:serve`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      devServerTarget: `${projectName}:serve`,
+      port: 3000,
+    }
+  );
+
+  return {
+    devServerTarget,
+    baseUrl: `http://localhost:${port}`,
   };
 }
 
@@ -409,6 +475,9 @@ function createPackageJson(tree: Tree, options: NormalizedSchema) {
     version: '0.0.1',
     private: true,
   };
+  if (options.project !== importPath) {
+    packageJson.nx = { name: options.project };
+  }
   writeJson(tree, packageJsonPath, packageJson);
 }
 

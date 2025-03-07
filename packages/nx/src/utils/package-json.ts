@@ -49,7 +49,14 @@ export interface PackageJson {
     | string
     | Record<
         string,
-        string | { types?: string; require?: string; import?: string }
+        | string
+        | {
+            types?: string;
+            require?: string;
+            import?: string;
+            development?: string;
+            default?: string;
+          }
       >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -147,15 +154,22 @@ export function buildTargetFromScript(
 let packageManagerCommand: PackageManagerCommands | undefined;
 
 export function getMetadataFromPackageJson(
-  packageJson: PackageJson
+  packageJson: PackageJson,
+  isInPackageManagerWorkspaces: boolean
 ): ProjectMetadata {
-  const { scripts, nx, description } = packageJson ?? {};
+  const { scripts, nx, description, name, exports, main } = packageJson;
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
   return {
     targetGroups: {
       ...(includedScripts.length ? { 'NPM Scripts': includedScripts } : {}),
     },
     description,
+    js: {
+      packageName: name,
+      packageExports: exports,
+      packageMain: main,
+      isInPackageManagerWorkspaces,
+    },
   };
 }
 
@@ -177,8 +191,8 @@ export function readTargetsFromPackageJson(
   const { scripts, nx, private: isPrivate } = packageJson ?? {};
   const res: Record<string, TargetConfiguration> = {};
   const includedScripts = nx?.includedScripts || Object.keys(scripts ?? {});
-  packageManagerCommand ??= getPackageManagerCommand();
   for (const script of includedScripts) {
+    packageManagerCommand ??= getPackageManagerCommand();
     res[script] = buildTargetFromScript(script, scripts, packageManagerCommand);
   }
   for (const targetName in nx?.targets) {

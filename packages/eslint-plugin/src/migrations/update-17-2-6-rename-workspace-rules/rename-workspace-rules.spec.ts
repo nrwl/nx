@@ -96,13 +96,13 @@ describe('update-17-2-6-rename-workspace-rules', () => {
     expect(tree.read('custom.js', 'utf-8')).toMatchInlineSnapshot(`
       "import { getSourceNodes } from '@nx/workspace/src/utilities/typescript';
 
-            // eslint-disable-next-line @nx/workspace-test-rule
-            import { something } from 'somewhere';
+      // eslint-disable-next-line @nx/workspace-test-rule
+      import { something } from 'somewhere';
 
-            /* eslint-disable @nx/workspace-my-rule */
-            // something that should remain the same @nx/workspace/unknown-rule
-            /* eslint-enable @nx/workspace-my-rule */
-          "
+      /* eslint-disable @nx/workspace-my-rule */
+      // something that should remain the same @nx/workspace/unknown-rule
+      /* eslint-enable @nx/workspace-my-rule */
+      "
     `);
   });
 

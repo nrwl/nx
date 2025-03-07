@@ -537,6 +537,7 @@ describe('Vite - Convert Executors To Plugin', () => {
             ],
             "options": {
               "buildTargetName": "build",
+              "devTargetName": "dev",
               "previewTargetName": "preview",
               "serveStaticTargetName": "serve-static",
               "serveTargetName": "serve",
@@ -552,6 +553,7 @@ describe('Vite - Convert Executors To Plugin', () => {
             ],
             "options": {
               "buildTargetName": "bundle",
+              "devTargetName": "dev",
               "previewTargetName": "preview",
               "serveStaticTargetName": "serve-static",
               "serveTargetName": "serve",
@@ -566,6 +568,7 @@ describe('Vite - Convert Executors To Plugin', () => {
             ],
             "options": {
               "buildTargetName": "build-base",
+              "devTargetName": "dev",
               "previewTargetName": "preview",
               "serveStaticTargetName": "serve-static",
               "serveTargetName": "serve",

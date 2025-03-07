@@ -50,7 +50,7 @@ module.exports = function (path: string, options: ResolverOptions) {
             return path;
           }
 
-          return resolveExports(pkg, path) || path;
+          return resolveExports(pkg, path)?.[0] || path;
         },
       });
     }

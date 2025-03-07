@@ -185,13 +185,13 @@ describe('Rollup Plugin', () => {
     checkFilesExist(`dist/test/index.mjs.js`);
   });
 
-  it('should support array config from rollup.config.js', () => {
+  it('should support array config from rollup.config.cjs', () => {
     const jsLib = uniq('jslib');
     runCLI(
       `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup --verbose`
     );
     updateFile(
-      `libs/${jsLib}/rollup.config.js`,
+      `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = (config) => [{
         ...config,
         output: {
@@ -204,7 +204,7 @@ describe('Rollup Plugin', () => {
       }]`
     );
     updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
       return config;
     });
 
@@ -219,7 +219,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/js:lib ${jsLib} --directory=libs/${jsLib} --bundler rollup --verbose`
     );
     updateFile(
-      `libs/${jsLib}/rollup.config.js`,
+      `libs/${jsLib}/rollup.config.cjs`,
       `module.exports = (config) => ({
         ...config,
         // Filter out the plugin, but the @nx/rollup:rollup executor should add it back
@@ -227,7 +227,7 @@ describe('Rollup Plugin', () => {
       })`
     );
     updateJson(join('libs', jsLib, 'project.json'), (config) => {
-      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.js`;
+      config.targets.build.options.rollupConfig = `libs/${jsLib}/rollup.config.cjs`;
       return config;
     });
 

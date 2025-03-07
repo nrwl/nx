@@ -12,10 +12,14 @@ export async function getViteE2EWebServerInfo(
   let e2ePort = e2ePortOverride ?? 4200;
 
   if (
-    nxJson.targetDefaults?.['serve'] &&
-    nxJson.targetDefaults?.['serve'].options?.port
+    (nxJson.targetDefaults?.['dev'] &&
+      nxJson.targetDefaults?.['dev'].options?.port) ||
+    (nxJson.targetDefaults?.['serve'] &&
+      nxJson.targetDefaults?.['serve'].options?.port)
   ) {
-    e2ePort = nxJson.targetDefaults?.['serve'].options?.port;
+    e2ePort =
+      nxJson.targetDefaults?.['dev'].options?.port ??
+      nxJson.targetDefaults?.['serve'].options?.port;
   }
 
   return getE2EWebServerInfo(
@@ -23,12 +27,12 @@ export async function getViteE2EWebServerInfo(
     projectName,
     {
       plugin: '@nx/vite/plugin',
-      serveTargetName: 'serveTargetName',
+      serveTargetName: 'devTargetName',
       serveStaticTargetName: 'previewTargetName',
       configFilePath,
     },
     {
-      defaultServeTargetName: 'serve',
+      defaultServeTargetName: 'dev',
       defaultServeStaticTargetName: 'preview',
       defaultE2EWebServerAddress: `http://localhost:${e2ePort}`,
       defaultE2ECiBaseUrl: 'http://localhost:4300',

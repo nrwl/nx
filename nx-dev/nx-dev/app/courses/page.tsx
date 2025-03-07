@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'Nx Video Courses',
   description:
     'Master Nx with expert-led video courses from the core team. Boost your skills and productivity.',
+  alternates: {
+    canonical: 'https://nx.dev/courses',
+  },
   openGraph: {
     url: 'https://nx.dev/courses',
     title: 'Nx Video Courses',

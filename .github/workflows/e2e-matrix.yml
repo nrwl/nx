@@ -506,19 +506,16 @@ jobs:
           matrix=$((
             echo '${{ toJSON(matrix) }}'
           ) | jq --argjson delta $delta -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
-          echo "$matrix" > matrix
-          path=outputs/${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
-          echo "path=$path" >> $GITHUB_OUTPUT
-          echo "$matrix" > $path
+          echo "$matrix" > 'outputs/matrix.json'
 
       - name: Upload matrix config
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: outputs
+          name: ${{ matrix.os_name}}-${{ matrix.node_version}}-${{ matrix.package_manager}}-${{ matrix.project }}
           overwrite: true
           if-no-files-found: 'ignore'
-          path: ${{ steps.save-matrix.outputs.path }}
+          path: 'outputs/matrix.json'
 
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && failure() }}
@@ -535,16 +532,18 @@ jobs:
       pm-duration: ${{ steps.process-json.outputs.SLACK_PM_DURATION }}
       codeowners: ${{ steps.process-json.outputs.CODEOWNERS }}
     steps:
+      - name: Prepare dir for output
+        run: mkdir -p outputs
+
       - name: Load outputs
         uses: actions/download-artifact@v4
         with:
-          name: outputs
           path: outputs
 
       - name: Join and stringify matrix configs
         id: combine-json
         run: |
-          combined=$((jq -s . outputs/*) | jq tostring)
+          combined=$((jq -s . outputs/*/matrix.json) | jq tostring)
           echo "combined=$combined" >> $GITHUB_OUTPUT
 
       - name: Make slack outputs

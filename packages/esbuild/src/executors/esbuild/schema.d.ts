@@ -36,4 +36,5 @@ export interface NormalizedEsBuildExecutorOptions
   singleEntry: boolean;
   external: string[];
   userDefinedBuildOptions: esbuild.BuildOptions | undefined;
+  isTsSolutionSetup?: boolean;
 }

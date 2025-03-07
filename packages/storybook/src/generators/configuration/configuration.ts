@@ -9,7 +9,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 import { StorybookConfigureSchema } from './schema';
 import { initGenerator } from '../init/init';
@@ -26,9 +25,9 @@ import {
   createProjectStorybookDir,
   createStorybookTsconfigFile,
   editTsconfigBaseJson,
-  findMetroConfig,
   findNextConfig,
   findViteConfig,
+  isUsingReactNative,
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
@@ -48,6 +47,7 @@ import {
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function configurationGenerator(
   tree: Tree,
@@ -60,8 +60,6 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
-  assertNotUsingTsSolutionSetup(tree, 'storybook', 'configuration');
-
   const storybookMajor = storybookMajorVersion();
   if (storybookMajor > 0 && storybookMajor === 6) {
     throw new Error(pleaseUpgrade());
@@ -85,7 +83,6 @@ export async function configurationGeneratorInternal(
   const viteConfigFilePath = viteConfig?.fullConfigPath;
   const viteConfigFileName = viteConfig?.viteConfigFileName;
   const nextConfigFilePath = findNextConfig(tree, root);
-  const metroConfigFilePath = findMetroConfig(tree, root);
 
   if (viteConfigFilePath) {
     if (schema.uiFramework === '@storybook/react-webpack5') {
@@ -130,13 +127,14 @@ export async function configurationGeneratorInternal(
   );
 
   const mainDir =
-    !!nextConfigFilePath && projectType === 'application'
+    !!nextConfigFilePath &&
+    getProjectType(tree, root, projectType) === 'application'
       ? 'components'
       : 'src';
 
   const usesVite =
     !!viteConfigFilePath || schema.uiFramework?.endsWith('-vite');
-  const useReactNative = !!metroConfigFilePath;
+  const usesReactNative = isUsingReactNative(schema.project);
 
   createProjectStorybookDir(
     tree,
@@ -155,7 +153,7 @@ export async function configurationGeneratorInternal(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
-    useReactNative
+    usesReactNative
   );
 
   if (schema.uiFramework !== '@storybook/angular') {

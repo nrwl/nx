@@ -67,25 +67,9 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 
 ### Splitting E2E Tests
 
-The `@nx/playwright/plugin` will automatically split your e2e tasks by file if you provide a `ciTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). This will create a target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+`@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
 
-```json {% fileName="nx.json" %}
-{
-  "plugins": [
-    {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "e2e",
-        "ciTargetName": "e2e-ci"
-      }
-    }
-  ]
-}
-```
-
-### Splitting E2E tasks by file
-
-The `@nx/playwright/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
+If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
 
 {% /tab %}
 {% tab label="Nx < 18" %}
@@ -158,6 +142,46 @@ nx e2e <your-app-name> --ui
 ```
 
 You can also use `--headed` flag to run Playwright where the browser can be seen without using the [Playwright UI](https://playwright.dev/docs/test-ui-mode)
+
+### Specifying a Project/Target Browser
+
+The default generated Playwright configuration will contain a `projects` property that contains a list of browsers to run the tests against.
+
+It should look similar to this:
+
+```ts
+export default defineConfig({
+  ...,
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    }
+  ]
+});
+```
+
+By default, Playwright will run tests against all browsers in the `projects` list.
+
+You can specify a specific browser to run the tests against by passing the `--project` flag to the `nx e2e` command.
+
+```shell
+nx e2e frontend-e2e -- --project=firefox
+```
+
+{% callout type="note" title="Argument Forwarding" %}
+As Nx also has a `--project` argument, you need to use `--` to forward the argument to the Playwright configuration.
+{% /callout %}
 
 ### Specifying a Base Url
 

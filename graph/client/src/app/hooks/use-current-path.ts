@@ -1,7 +1,7 @@
 import { matchRoutes, useLocation } from 'react-router-dom';
 import { getRoutesForEnvironment } from '../routes';
 import { useState } from 'react';
-import { getEnvironmentConfig } from '@nx/graph/shared';
+import { getEnvironmentConfig } from '@nx/graph/legacy/shared';
 
 export const useCurrentPath = () => {
   const [lastLocation, setLastLocation] = useState<string>();

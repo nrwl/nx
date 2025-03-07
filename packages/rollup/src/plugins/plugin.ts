@@ -20,6 +20,8 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -45,9 +47,11 @@ export const createDependencies: CreateDependencies = () => {
 
 export interface RollupPluginOptions {
   buildTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
-const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs}';
+const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
 
 export const createNodes: CreateNodes<RollupPluginOptions> = [
   rollupConfigGlob,
@@ -59,7 +63,8 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
       configFilePath,
       normalizeOptions(options),
       context,
-      {}
+      {},
+      isUsingTsSolutionSetup()
     );
   },
 ];
@@ -74,6 +79,7 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
       `rollup-${optionsHash}.hash`
     );
     const targetsCache = readTargetsCache(cachePath);
+    const isTsSolutionSetup = isUsingTsSolutionSetup();
 
     try {
       return await createNodesFromFiles(
@@ -82,7 +88,8 @@ export const createNodesV2: CreateNodesV2<RollupPluginOptions> = [
             configFile,
             normalizedOptions,
             context,
-            targetsCache
+            targetsCache,
+            isTsSolutionSetup
           ),
         configFilePaths,
         normalizedOptions,
@@ -98,7 +105,8 @@ async function createNodesInternal(
   configFilePath: string,
   options: Required<RollupPluginOptions>,
   context: CreateNodesContext,
-  targetsCache: Record<string, Record<string, TargetConfiguration>>
+  targetsCache: Record<string, Record<string, TargetConfiguration>>,
+  isTsSolutionSetup: boolean
 ) {
   const projectRoot = dirname(configFilePath);
   const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
@@ -123,7 +131,8 @@ async function createNodesInternal(
     configFilePath,
     projectRoot,
     options,
-    context
+    context,
+    isTsSolutionSetup
   );
 
   return {
@@ -140,7 +149,8 @@ async function buildRollupTarget(
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  isTsSolutionSetup: boolean
 ): Promise<Record<string, TargetConfiguration>> {
   let loadConfigFile: (
     path: string,
@@ -163,11 +173,13 @@ async function buildRollupTarget(
     loadConfigFile = require('rollup/loadConfigFile').loadConfigFile;
   }
 
+  const isTsConfig = configFilePath.endsWith('ts');
+  const tsConfigPlugin = '@rollup/plugin-typescript';
   const namedInputs = getNamedInputs(projectRoot, context);
   const rollupConfig = (
     (await loadConfigFile(
       joinPathFragments(context.workspaceRoot, configFilePath),
-      {},
+      isTsConfig ? { configPlugin: tsConfigPlugin } : {},
       true // Enable watch mode so that rollup properly reloads config files without reusing a cached version
     )) as { options: RollupOptions[] }
   ).options;
@@ -175,7 +187,9 @@ async function buildRollupTarget(
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
-    command: `rollup -c ${basename(configFilePath)}`,
+    command: `rollup -c ${basename(configFilePath)}${
+      isTsConfig ? ` --configPlugin ${tsConfigPlugin}` : ''
+    }`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
@@ -200,6 +214,21 @@ async function buildRollupTarget(
       },
     },
   };
+
+  if (isTsSolutionSetup) {
+    targets[options.buildTargetName].syncGenerators = [
+      '@nx/js:typescript-sync',
+    ];
+  }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
+
   return targets;
 }
 
@@ -243,5 +272,7 @@ function normalizeOptions(
 ): Required<RollupPluginOptions> {
   return {
     buildTargetName: options.buildTargetName ?? 'build',
+    buildDepsTargetName: options.buildDepsTargetName ?? 'build-deps',
+    watchDepsTargetName: options.watchDepsTargetName ?? 'watch-deps',
   };
 }

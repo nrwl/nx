@@ -326,6 +326,9 @@ export function getUpdatedPackageJsonContent(
             : filePath;
         } else if (typeof packageJson.exports[exportEntry] === 'object') {
           packageJson.exports[exportEntry].import ??= filePath;
+          if (!hasCjsFormat) {
+            packageJson.exports[exportEntry].default ??= filePath;
+          }
         }
       }
     }

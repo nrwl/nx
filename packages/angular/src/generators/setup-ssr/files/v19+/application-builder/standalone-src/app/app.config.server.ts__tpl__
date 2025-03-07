@@ -1,0 +1,14 @@
+import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering } from '@angular/platform-server';<% if(serverRouting) { %>
+import { <%= provideServerRoutingFn %> } from '@angular/ssr';<% } %>
+import { appConfig } from './app.config';<% if(serverRouting) { %>
+import { serverRoutes } from './app.routes.server';<% } %>
+
+const serverConfig: ApplicationConfig = {
+  providers: [
+    provideServerRendering()<% if(serverRouting) { %>,
+    <%= provideServerRoutingFn %>(serverRoutes)<% } %>
+  ]
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);

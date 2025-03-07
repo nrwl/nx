@@ -22,7 +22,7 @@ import {
   parseStaticRemotesConfig,
   StaticRemotesConfig,
 } from '@nx/module-federation/src/utils';
-import { buildStaticRemotes } from '../../utils/module-federation/build-static.remotes';
+import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';
 import { ModuleFederationStaticServerSchema } from './schema';

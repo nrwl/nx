@@ -5,7 +5,7 @@ import {
   runExecutor,
 } from '@nx/devkit';
 import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 
 import { RspackExecutorSchema } from '../rspack/schema';
 import { waitUntilServerIsListening } from './lib/wait-until-server-is-listening';
@@ -62,7 +62,7 @@ export async function* ssrDevServerExecutor(
     if (nodeStarted && browserBuilt) {
       await waitUntilServerIsListening(options.port);
       console.log(
-        `[ ${chalk.green('ready')} ] on http://localhost:${options.port}`
+        `[ ${pc.green('ready')} ] on http://localhost:${options.port}`
       );
       yield {
         ...output,

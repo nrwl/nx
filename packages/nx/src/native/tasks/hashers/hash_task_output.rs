@@ -16,5 +16,5 @@ pub fn hash_task_output(workspace_root: &str, glob: &str, outputs: &[String]) ->
         .filter(|file| glob.is_match(file))
         .filter_map(|file| hash_file(Path::new(workspace_root).join(file).to_str().expect("path contains invalid utf-8").to_owned()))
         .collect::<Vec<_>>();
-    Ok(hash_array(hashes))
+    Ok(hash_array(hashes.into_iter().map(Some).collect()))
 }

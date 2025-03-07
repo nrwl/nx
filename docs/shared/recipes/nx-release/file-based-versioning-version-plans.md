@@ -1,3 +1,8 @@
+---
+title: File Based Versioning (Version Plans)
+description: Learn how to use Nx Release's version plans feature to track version bumps in separate files, similar to Changesets or Beachball, allowing for more flexible versioning workflows.
+---
+
 # File Based Versioning ("Version Plans")
 
 Tools such as Changesets and Beachball helped popularize the concept of tracking the desired semver version bump in a separate file on disk (which is committed to your repository alongside your code changes). This has the advantage of separating the desired bump from your git commits themselves, which can be very useful if you are not able to enforce that all contributors follow a strict commit message format ([e.g. Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)), or if you want multiple commits to be included in the same version bump and therefore not map commits 1:1 with changelog entries.
@@ -118,7 +123,7 @@ Attempting to keep track of this manually as a part of pull request reviews can 
 nx release plan:check
 ```
 
-Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updatedDependents` option).
+Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updateDependents` option).
 
 <!-- Prettier will mess up the end tag of the callout causing it to capture all content that follows it -->
 <!-- prettier-ignore-start -->
@@ -151,7 +156,7 @@ You can read more about these utilities and why they are needed on their respect
 
 Nx release will compare the touched projects to the projects and release groups that are specified in the version plan files in the `.nx/version-plans/` directory. If a version plan file does not exist, the command will print an error message and return a non-zero exit code, which can be used to fail CI builds or other automation.
 
-By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `"ignorePatternsForPlanCheck"` property to an array of glob patterns that should be ignored when checking for version plans. For example:
+By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `ignorePatternsForPlanCheck` property to an array of glob patterns that should be ignored when checking for version plans. For example:
 
 ```jsonc
 {

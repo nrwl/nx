@@ -27,18 +27,19 @@ import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  assertNotUsingTsSolutionSetup(host, 'react', 'host');
-
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
-    ...(await normalizeOptions<Schema>(host, schema)),
+    ...(await normalizeOptions<Schema>(host, {
+      ...schema,
+      alwaysGenerateProjectJson: true,
+    })),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
       ? false
@@ -62,14 +63,15 @@ export async function hostGenerator(
     });
   }
 
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const initTask = await applicationGenerator(host, {
     ...options,
     directory: options.appProjectRoot,
-    name: options.projectName,
+    name: options.name,
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
     skipFormat: true,
+    alwaysGenerateProjectJson: true,
   });
   tasks.push(initTask);
 
@@ -106,6 +108,7 @@ export async function hostGenerator(
   addModuleFederationFiles(host, options, remotesWithPorts);
   updateModuleFederationProject(host, options);
   updateModuleFederationE2eProject(host, options);
+  updateModuleFederationTsconfig(host, options);
 
   if (options.ssr) {
     const setupSsrTask = await setupSsrGenerator(host, {
@@ -146,13 +149,14 @@ export async function hostGenerator(
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
     { '@module-federation/enhanced': moduleFederationEnhancedVersion },
     {
       '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
     }
   );
   tasks.push(installTask);

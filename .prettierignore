@@ -47,3 +47,4 @@ CODEOWNERS
 .pnpm-store
 
 /.nx/workspace-data
+/.nx/workflows/dynamic-changesets.yaml

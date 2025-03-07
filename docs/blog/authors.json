@@ -135,5 +135,29 @@
     "image": "/blog/images/Nx.jpeg",
     "twitter": "NxDevTools",
     "github": "nrwl"
+  },
+  {
+    "name": "Nicolas Beaussart",
+    "image": "/blog/images/Nicolas Beaussart.jpeg",
+    "twitter": "beaussan",
+    "github": "beaussan"
+  },
+  {
+    "name": "Nicole Oliver",
+    "image": "/blog/images/Nicole Oliver.jpeg",
+    "twitter": "nixcodes",
+    "github": "nixallover"
+  },
+  {
+    "name": "Rareș Matei",
+    "image": "/blog/images/Rareș Matei.jpeg",
+    "twitter": "__rares",
+    "github": "rarmatei"
+  },
+  {
+    "name": "James Henry",
+    "image": "/blog/images/James Henry.jpeg",
+    "twitter": "MrJamesHenry",
+    "github": "JamesHenry"
   }
 ]

@@ -1,4 +1,10 @@
-import { Listbox, Transition } from '@headlessui/react';
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from '@headlessui/react';
 import { ChevronUpDownIcon } from '@heroicons/react/24/solid';
 import { Fragment, JSX } from 'react';
 
@@ -20,7 +26,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
         {({ open }) => (
           <>
             <div className="relative">
-              <Listbox.Button
+              <ListboxButton
                 className={
                   'relative w-full cursor-pointer border border-slate-200 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-slate-700' +
                   (props.className ? ` ${props.className}` : '')
@@ -38,7 +44,7 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
                     aria-hidden="true"
                   />
                 </span>
-              </Listbox.Button>
+              </ListboxButton>
               <Transition
                 show={open}
                 as={Fragment}
@@ -49,28 +55,26 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
                 leaveFrom="transform scale-100 opacity-100"
                 leaveTo="transform scale-95 opacity-0"
               >
-                <Listbox.Options
+                <ListboxOptions
                   static
                   className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-white py-1 pl-0 text-base shadow-md focus:outline-none sm:text-sm dark:bg-slate-800/60 dark:focus-within:ring-sky-500"
                 >
                   {props.items.map((item, personIdx) => (
-                    <Listbox.Option
+                    <ListboxOption
                       key={personIdx}
-                      className={({ active }) =>
+                      className={() =>
                         `relative cursor-pointer select-none list-none px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800`
                       }
                       value={item}
                     >
-                      {({ selected, active }) => (
-                        <>
-                          <span className={'block truncate font-medium'}>
-                            {item.label}
-                          </span>
-                        </>
+                      {() => (
+                        <span className={'block truncate font-medium'}>
+                          {item.label}
+                        </span>
                       )}
-                    </Listbox.Option>
+                    </ListboxOption>
                   ))}
-                </Listbox.Options>
+                </ListboxOptions>
               </Transition>
             </div>
           </>

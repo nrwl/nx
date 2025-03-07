@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { <%= symbolName %> } from './<%= fileName %>';
+import <% if (exportDefault) { %><%= symbolName %><% } else { %>{ <%= symbolName %> }<% } %> from './<%= fileName %>';
 
 describe('<%= symbolName %>', () => {
   let component: <%= symbolName %>;

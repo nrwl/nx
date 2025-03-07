@@ -1,4 +1,9 @@
-import { Dialog, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { AnimateValue, Marquee } from '@nx/nx-dev/ui-animations';
 import {
@@ -197,7 +202,7 @@ export function ApplicationCard(): JSX.Element {
           onClose={() => setIsOpen(false)}
           className="relative z-10"
         >
-          <Transition.Child
+          <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
             enterFrom="opacity-0"
@@ -207,10 +212,10 @@ export function ApplicationCard(): JSX.Element {
             leaveTo="opacity-0"
           >
             <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
-          </Transition.Child>
+          </TransitionChild>
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
+              <TransitionChild
                 as={Fragment}
                 enter="ease-out duration-300"
                 enterFrom="opacity-0 scale-95"
@@ -219,7 +224,7 @@ export function ApplicationCard(): JSX.Element {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
+                <DialogPanel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
                   <iframe
                     width="812"
                     height="468"
@@ -230,8 +235,8 @@ export function ApplicationCard(): JSX.Element {
                     allowFullScreen
                     className="max-w-full"
                   />
-                </Dialog.Panel>
-              </Transition.Child>
+                </DialogPanel>
+              </TransitionChild>
             </div>
           </div>
         </Dialog>
@@ -315,7 +320,7 @@ export function ProjectsCreatedEveryMonth(): JSX.Element {
         <div className="flex flex-col justify-between text-center drop-shadow">
           <div>
             <span className="text-9xl font-bold text-slate-950 dark:text-white">
-              <AnimateValue num={10} suffix="k" once />
+              <AnimateValue num={20} suffix="k" once />
             </span>
             <br />
             <span className="text-4xl font-semibold text-slate-950 dark:text-white">

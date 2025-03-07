@@ -5,6 +5,8 @@ import {
   getProjects,
   readJson,
   readProjectConfiguration,
+  updateJson,
+  writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -247,6 +249,193 @@ describe('app', () => {
       });
 
       expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
+    });
+  });
+
+  describe('TS solution setup', () => {
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      tree.write('.gitignore', '');
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        displayName: 'myApp',
+        tags: 'one,two',
+        linter: Linter.EsLint,
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'jest',
+        bundler: 'vite',
+        addPlugin: true,
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+        [
+          {
+            "path": "./my-app",
+          },
+        ]
+      `);
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx.name).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+      expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
+        {
+          "extends": "../tsconfig.base.json",
+          "files": [],
+          "include": [],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+            {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-app/tsconfig.app.json')).toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "lib": [
+              "dom",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "noUnusedLocals": false,
+            "outDir": "dist",
+            "rootDir": "src",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+            "types": [
+              "node",
+            ],
+          },
+          "exclude": [
+            "out-tsc",
+            "dist",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/test-setup.ts",
+            "jest.config.ts",
+            "eslint.config.js",
+            "eslint.config.cjs",
+            "eslint.config.mjs",
+          ],
+          "extends": "../tsconfig.base.json",
+          "files": [
+            "../node_modules/@nx/react-native/typings/svg.d.ts",
+          ],
+          "include": [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "src/**/*.js",
+            "src/**/*.jsx",
+          ],
+        }
+      `);
+      expect(readJson(tree, 'my-app/tsconfig.spec.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "lib": [
+              "dom",
+            ],
+            "module": "esnext",
+            "moduleResolution": "bundler",
+            "noUnusedLocals": false,
+            "outDir": "./out-tsc/jest",
+            "types": [
+              "jest",
+              "node",
+            ],
+          },
+          "extends": "../tsconfig.base.json",
+          "files": [
+            "src/test-setup.ts",
+          ],
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+          ],
+          "references": [
+            {
+              "path": "./tsconfig.app.json",
+            },
+          ],
+        }
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        name: 'my-app',
+        displayName: 'myApp',
+        tags: 'one,two',
+        linter: Linter.EsLint,
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'jest',
+        bundler: 'vite',
+        addPlugin: true,
+      });
+
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx.name).toBe('my-app');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
     });
   });
 });

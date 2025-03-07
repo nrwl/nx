@@ -278,6 +278,17 @@ function createPackagesMenu(packages: PackageManifest): {
         disableCollapsible: false,
       });
     }
+
+    if (!!Object.values(p.migrations).length) {
+      item.children.push({
+        id: 'migrations',
+        path: '/' + ['nx-api', p.name, 'migrations'].join('/'),
+        name: 'migrations',
+        children: [],
+        isExternal: false,
+        disableCollapsible: false,
+      });
+    }
     return item;
   });
   return { id: 'nx-api', menu: packagesMenu };
@@ -330,6 +341,13 @@ function createPackagesManifest(packages: PackageMetadata[]): {
       ),
       generators: convertToDictionary(
         p.generators.map((g) => ({
+          ...g,
+          path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
+        })),
+        'path'
+      ),
+      migrations: convertToDictionary(
+        p.migrations.map((g) => ({
           ...g,
           path: generatePath({ id: g.name, path: g.path }, 'nx-api'),
         })),

@@ -164,6 +164,8 @@ async function normalizeOptions(
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     path: options.path,
     name: options.name,
+    allowedFileExtensions: ['ts'],
+    fileExtension: 'ts',
   });
 
   const { className, propertyName } = names(name);
@@ -188,7 +190,7 @@ async function normalizeOptions(
     propertyName,
     description,
     projectRoot,
-    projectSourceRoot,
+    projectSourceRoot: projectSourceRoot ?? join(projectRoot, 'src'),
     isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 }

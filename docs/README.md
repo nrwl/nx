@@ -208,12 +208,12 @@ You can optionally also pass a `path` like
 ‎```
 ````
 
-#### Terminal Video Output
+#### Table of Contents
 
-You can have a more dynamic visualization of a terminal output by using the following component:
+You can add a table of contents to your document by using the following component. This is mostly useful for blog posts.
 
-```
-{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
+```markdown
+{% toc /%}
 ```
 
 #### Custom iframes

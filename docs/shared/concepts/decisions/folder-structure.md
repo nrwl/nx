@@ -1,3 +1,8 @@
+---
+title: Folder Structure
+description: Learn about organizing your Nx monorepo with effective folder structures, and how to easily move or remove projects as your organization evolves.
+---
+
 # Folder Structure
 
 Nx can work with any folder structure you choose, but it is good to have a plan in place for the folder structure of your monorepo.
@@ -51,7 +56,7 @@ libs/
 
 One of the main advantages of using a monorepo is that there is more visibility into code that can be reused across many different applications. Shared projects are a great way to save developers time and effort by reusing a solution to a common problem.
 
-Let’s consider our reference monorepo. The `shared-data-access` project contains the code needed to communicate with the back-end (for example, the URL prefix). We know that this would be the same for all libs; therefore, we should place this in the shared lib and properly document it so that all projects can use it instead of writing their own versions.
+Let's consider our reference monorepo. The `shared-data-access` project contains the code needed to communicate with the back-end (for example, the URL prefix). We know that this would be the same for all libs; therefore, we should place this in the shared lib and properly document it so that all projects can use it instead of writing their own versions.
 
 ```text
   libs/

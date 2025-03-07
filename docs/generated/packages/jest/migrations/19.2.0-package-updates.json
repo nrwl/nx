@@ -1,0 +1,14 @@
+{
+  "name": "19.2.0-package-updates",
+  "version": "19.2.0-beta.0",
+  "packages": {
+    "@swc/jest": { "version": "~0.2.36", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/jest",
+  "schema": null,
+  "type": "migration"
+}

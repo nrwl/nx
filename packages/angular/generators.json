@@ -36,7 +36,7 @@
     "convert-to-application-executor": {
       "factory": "./src/generators/convert-to-application-executor/convert-to-application-executor",
       "schema": "./src/generators/convert-to-application-executor/schema.json",
-      "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_."
+      "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder."
     },
     "directive": {
       "factory": "./src/generators/directive/directive",
@@ -73,7 +73,8 @@
       "factory": "./src/generators/remote/remote",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
-      "description": "Generate a Remote Angular Module Federation Application."
+      "description": "Generate a Remote Angular Module Federation Application.",
+      "aliases": ["producer"]
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
@@ -91,7 +92,8 @@
       "factory": "./src/generators/host/host",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
-      "description": "Generate a Host Angular Module Federation Application."
+      "description": "Generate a Host Angular Module Federation Application.",
+      "aliases": ["consumer"]
     },
     "ng-add": {
       "factory": "./src/generators/ng-add/ng-add",

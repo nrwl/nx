@@ -2,7 +2,7 @@
   "testRunner": {
     "args": {
       "$0": "jest",
-      "config": "./jest.config.json"
+      "config": "./<%= jestConfigFileName %>"
     },
     "jest": {
       "setupTimeout": 120000

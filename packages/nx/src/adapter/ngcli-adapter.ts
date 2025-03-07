@@ -1183,7 +1183,9 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         optionSchema: builderInfo.schema,
         import: resolveImplementation(
           executorConfig.implementation,
-          dirname(executorsFilePath)
+          dirname(executorsFilePath),
+          packageName,
+          this.projects
         ),
       };
     }
@@ -1240,25 +1242,33 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         const { executorsFilePath, executorConfig, isNgCompat } =
           this.readExecutorsJson(nodeModule, executor);
         const executorsDir = dirname(executorsFilePath);
-        const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
+        const schemaPath = resolveSchema(
+          executorConfig.schema,
+          executorsDir,
+          nodeModule,
+          this.projects
+        );
         const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
 
         const implementationFactory = this.getImplementationFactory<Executor>(
           executorConfig.implementation,
-          executorsDir
+          executorsDir,
+          nodeModule
         );
 
         const batchImplementationFactory = executorConfig.batchImplementation
           ? this.getImplementationFactory<TaskGraphExecutor>(
               executorConfig.batchImplementation,
-              executorsDir
+              executorsDir,
+              nodeModule
             )
           : null;
 
         const hasherFactory = executorConfig.hasher
           ? this.getImplementationFactory<CustomHasher>(
               executorConfig.hasher,
-              executorsDir
+              executorsDir,
+              nodeModule
             )
           : null;
 
@@ -1278,9 +1288,15 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
     private getImplementationFactory<T>(
       implementation: string,
-      executorsDir: string
+      executorsDir: string,
+      packageName: string
     ): () => T {
-      return getImplementationFactory(implementation, executorsDir);
+      return getImplementationFactory(
+        implementation,
+        executorsDir,
+        packageName,
+        this.projects
+      );
     }
   }
 

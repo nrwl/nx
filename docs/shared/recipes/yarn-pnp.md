@@ -1,3 +1,8 @@
+---
+title: Using Yarn Plug'n'Play with Nx
+description: Learn how to configure and use Yarn Plug'n'Play (PnP) in your Nx workspace to improve installation speed, reduce disk usage, and enforce dependency constraints.
+---
+
 # Using Yarn Plug'n'Play
 
 Plug'n'Play (PnP) is an innovative installation strategy for Node that tries to solve the challenges of using `node_modules` for storing installed packages:

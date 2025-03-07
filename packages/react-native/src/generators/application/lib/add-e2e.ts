@@ -1,5 +1,5 @@
 import { addE2e as addE2eReact } from '@nx/react/src/generators/application/lib/add-e2e';
-import { GeneratorCallback, Tree, ensurePackage } from '@nx/devkit';
+import { GeneratorCallback, Tree, ensurePackage, names } from '@nx/devkit';
 
 import { nxVersion } from '../../../utils/versions';
 
@@ -18,6 +18,7 @@ export async function addE2e(
         styledModule: null,
         hasStyles: false,
         unitTestRunner: 'none',
+        names: names(options.name),
       });
     case 'playwright':
       return addE2eReact(host, {
@@ -27,6 +28,7 @@ export async function addE2e(
         styledModule: null,
         hasStyles: false,
         unitTestRunner: 'none',
+        names: names(options.name),
       });
     case 'detox':
       const { detoxApplicationGenerator } = ensurePackage<

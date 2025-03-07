@@ -5,6 +5,7 @@ import { FeaturedBlogs } from './featured-blogs';
 import { useEffect, useMemo, useState } from 'react';
 import { Filters } from './filters';
 import { useSearchParams } from 'next/navigation';
+import { ALL_TOPICS } from './topics';
 import {
   ComputerDesktopIcon,
   BookOpenIcon,
@@ -20,57 +21,6 @@ export interface BlogContainerProps {
   blogPosts: BlogPostDataEntry[];
   tags: string[];
 }
-
-let ALL_TOPICS = [
-  {
-    label: 'All',
-    icon: ListBulletIcon,
-    value: 'All',
-    heading: 'All Blogs',
-  },
-  {
-    label: 'Stories',
-    icon: BookOpenIcon,
-    value: 'customer story',
-    heading: 'Customer Stories',
-  },
-  {
-    label: 'Webinars',
-    icon: ComputerDesktopIcon,
-    value: 'webinar',
-    heading: 'Webinars',
-  },
-  {
-    label: 'Podcasts',
-    icon: MicrophoneIcon,
-    value: 'podcast',
-    heading: 'Podcasts',
-  },
-  {
-    label: 'Releases',
-    icon: CubeIcon,
-    value: 'release',
-    heading: 'Release Blogs',
-  },
-  {
-    label: 'Talks',
-    icon: ChatBubbleOvalLeftEllipsisIcon,
-    value: 'talk',
-    heading: 'Talks',
-  },
-  {
-    label: 'Tutorials',
-    icon: AcademicCapIcon,
-    value: 'tutorial',
-    heading: 'Tutorials',
-  },
-  {
-    label: 'Livestreams',
-    icon: VideoCameraIcon,
-    value: 'livestream',
-    heading: 'Livestreams',
-  },
-];
 
 // first five blog posts contain potentially pinned plus the last published ones. They
 // should be sorted by date (not just all pinned first)
@@ -142,7 +92,14 @@ export function BlogContainer({ blogPosts, tags }: BlogContainerProps) {
           </div>
         </div>
         <FeaturedBlogs blogs={firstFiveBlogs} />
-        {!!remainingBlogs.length && <MoreBlogs blogs={remainingBlogs} />}
+        {!!remainingBlogs.length && (
+          <>
+            <div className="mx-auto mb-8 mt-20 border-b-2 border-slate-300 pb-3 text-sm dark:border-slate-700">
+              <h2 className="font-semibold">More blogs</h2>
+            </div>
+            <MoreBlogs blogs={remainingBlogs} />
+          </>
+        )}
       </div>
     </main>
   );

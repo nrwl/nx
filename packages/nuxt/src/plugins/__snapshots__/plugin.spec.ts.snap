@@ -38,6 +38,11 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "staticFilePath": "{projectRoot}/dist",
           },
         },
+        "build-deps": {
+          "dependsOn": [
+            "^build",
+          ],
+        },
         "build-something": {
           "cache": true,
           "command": "nuxt build",
@@ -66,6 +71,12 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           "options": {
             "cwd": "my-app",
           },
+        },
+        "watch-deps": {
+          "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+          "dependsOn": [
+            "build-deps",
+          ],
         },
       },
     },
@@ -100,6 +111,11 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           "outputs": [
             "dist/my-app/.nuxt",
             "{projectRoot}/.output",
+          ],
+        },
+        "build-deps": {
+          "dependsOn": [
+            "^build",
           ],
         },
         "build-static": {
@@ -139,6 +155,12 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "spa": false,
             "staticFilePath": "{projectRoot}/dist",
           },
+        },
+        "watch-deps": {
+          "command": "npx nx watch --projects nuxt --includeDependentProjects -- npx nx build-deps nuxt",
+          "dependsOn": [
+            "build-deps",
+          ],
         },
       },
     },

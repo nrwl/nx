@@ -329,5 +329,46 @@ describe('project configuration', () => {
       `);
       expect(tree.exists('proj/project.json')).toBeFalsy();
     });
+
+    it('should avoid writing empty nx property', () => {
+      writeJson(tree, 'proj/package.json', {
+        name: 'proj',
+      });
+
+      updateProjectConfiguration(tree, 'proj', {
+        root: 'proj',
+      });
+
+      const updatedProj = readProjectConfiguration(tree, 'proj');
+      expect(updatedProj).toEqual({
+        name: 'proj',
+        root: 'proj',
+      });
+
+      expect(tree.read('proj/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "proj"
+        }
+        "
+      `);
+      expect(tree.exists('proj/project.json')).toBeFalsy();
+
+      // Adding tags will add nx property
+      updateProjectConfiguration(tree, 'proj', {
+        root: 'proj',
+        tags: ['test'],
+      });
+      expect(tree.read('proj/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "proj",
+          "nx": {
+            "tags": [
+              "test"
+            ]
+          }
+        }
+        "
+      `);
+    });
   });
 });

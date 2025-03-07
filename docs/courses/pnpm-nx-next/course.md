@@ -3,6 +3,7 @@ title: 'From PNPM Workspaces to Distributed CI'
 description: 'Learn how to transform a PNPM workspace monorepo into a high-performance distributed CI setup using Nx.'
 authors: [Juri Strumpflohner]
 repository: 'https://github.com/nrwl/nx-course-pnpm-nx'
+order: 2
 ---
 
 In this course, we'll walk through a step-by-step guide using the Tasker application as our example. Tasker is a task management app built with Next.js, structured as a PNPM workspace monorepo. The monorepo contains the Next.js application which is modularized into packages that handle data access via Prisma to a local DB, UI components, and more.

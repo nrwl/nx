@@ -345,6 +345,7 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 
 @Component({
   selector: 'app-remote1-entry',
+  standalone: false,
   template: \`<app-nx-welcome></app-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
@@ -356,6 +357,7 @@ exports[`Init MF should generate the remote entry module and component correctly
 
 @Component({
   selector: 'my-org-remote1-entry',
+  standalone: false,
   template: \`<my-org-nx-welcome></my-org-nx-welcome>\`,
 })
 export class RemoteEntryComponent {}

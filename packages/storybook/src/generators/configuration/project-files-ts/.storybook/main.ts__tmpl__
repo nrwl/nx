@@ -25,7 +25,7 @@ const config: StorybookConfig = {
       <% } %>
     },
   },
-  <% if (useReactNative && uiFramework === '@storybook/react-webpack5') { %>webpackFinal: async (config) => {
+  <% if (usesReactNative && uiFramework === '@storybook/react-webpack5') { %>webpackFinal: async (config) => {
     if (config.resolve) {
       config.resolve.alias = {
         ...config.resolve.alias,
@@ -43,6 +43,28 @@ const config: StorybookConfig = {
   },<% } %><% if (usesVite && !viteConfigFilePath) { %>
   viteFinal: async (config) =>
     mergeConfig(config, {
+      <% if (usesReactNative) { %>define: {
+        global: 'window',
+      },
+      resolve: {
+        extensions: [
+          '.mjs',
+          '.web.tsx',
+          '.tsx',
+          '.web.ts',
+          '.ts',
+          '.web.jsx',
+          '.jsx',
+          '.web.js',
+          '.js',
+          '.css',
+          '.json',
+          ...(config.resolve?.extensions ?? []),
+        ],
+        alias: {
+          'react-native': 'react-native-web',
+        },
+      },<% } %>
       plugins: [<% if(uiFramework === '@storybook/vue3-vite') { %>vue(), <% } %><% if(uiFramework === '@storybook/react-vite') { %>react(), <% } %>nxViteTsPaths()],
     }),
   <% } %>

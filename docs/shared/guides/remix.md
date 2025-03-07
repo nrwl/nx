@@ -1,3 +1,8 @@
+---
+title: Remix with Nx
+description: Learn how to create, build, serve, and test Remix applications within an Nx workspace, leveraging Nx's powerful tooling for modern web development.
+---
+
 # Remix with Nx
 
 In this recipe, we'll show you how to create a [Remix](https://remix.run) application with Nx.
@@ -23,10 +28,6 @@ nx add @nx/remix
 ```
 
 ## Generate a Remix Application
-
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
 
 ```{% command="nx g @nx/remix:app apps/myapp"  path="~/acme" %}
 NX  Generating @nx/remix:application

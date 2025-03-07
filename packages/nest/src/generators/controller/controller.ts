@@ -31,7 +31,9 @@ async function normalizeControllerOptions(
   tree: Tree,
   options: ControllerGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(tree, options);
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'controller',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

@@ -4,7 +4,6 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
-import { testOnlyTransferFileMap } from '../native';
 
 describe('native task hasher', () => {
   let tempFs: TempFs;
@@ -166,9 +165,9 @@ describe('native task hasher', () => {
             "unrelated:ProjectConfiguration": "11133337791644294114",
             "unrelated:TsConfig": "2264969541778889434",
             "unrelated:{projectRoot}/**/*": "4127219831408253695",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
           },
-          "value": "391066910278240047",
+          "value": "15987635381237972716",
         },
       ]
     `);
@@ -232,9 +231,9 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "8031122597231773116",
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
-        "value": "2068118780828544905",
+        "value": "10262178246623018030",
       }
     `);
   });
@@ -312,9 +311,9 @@ describe('native task hasher', () => {
           "parent:!{projectRoot}/**/*.spec.ts": "8911122541468969799",
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "11114659294156087056",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
         },
-        "value": "7780216706447676384",
+        "value": "14320402761058545796",
       }
     `);
   });
@@ -379,9 +378,9 @@ describe('native task hasher', () => {
             "parent:!{projectRoot}/**/*.spec.ts": "8911122541468969799",
             "parent:ProjectConfiguration": "16402137858974842465",
             "parent:TsConfig": "2264969541778889434",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "11114659294156087056",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
           },
-          "value": "16063851723942996830",
+          "value": "2453961902871518313",
         },
         {
           "details": {
@@ -390,9 +389,9 @@ describe('native task hasher', () => {
             "parent:ProjectConfiguration": "16402137858974842465",
             "parent:TsConfig": "2264969541778889434",
             "parent:{projectRoot}/**/*": "17059468255294227635",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "11114659294156087056",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "9567402949680805009",
           },
-          "value": "1153029350223570014",
+          "value": "5894031627295207190",
         },
       ]
     `);
@@ -480,11 +479,11 @@ describe('native task hasher', () => {
             "parent:ProjectConfiguration": "14398811678394411425",
             "parent:TsConfig": "2264969541778889434",
             "parent:{projectRoot}/**/*": "17059468255294227635",
-            "workspace:[{workspaceRoot}/global1]": "14542405497386871555",
-            "workspace:[{workspaceRoot}/global2]": "12932836274958677781",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "12076281115618125366",
+            "workspace:[{workspaceRoot}/global1]": "11580065831422255455",
+            "workspace:[{workspaceRoot}/global2]": "6389465682922235219",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "1359893257201181462",
           },
-          "value": "11623032905580707496",
+          "value": "12394084267697729491",
         },
       ]
     `);
@@ -537,9 +536,9 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "8661678577354855152",
           "parent:{projectRoot}/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
-        "value": "15449891577656158381",
+        "value": "16657264716563422624",
       }
     `);
   });
@@ -616,9 +615,9 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
-        "value": "7701541978018526456",
+        "value": "1325637283470296766",
       }
     `);
 
@@ -639,9 +638,9 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
           "parent:{projectRoot}/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "18099427347122160586",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
         },
-        "value": "7701541978018526456",
+        "value": "1325637283470296766",
       }
     `);
   });

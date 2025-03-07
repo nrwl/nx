@@ -30,8 +30,7 @@ import {
   moduleFederationEnhancedVersion,
   nxVersion,
 } from '../../utils/versions';
-import { ensureProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -95,11 +94,12 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
-  assertNotUsingTsSolutionSetup(host, 'react', 'remote');
-
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
-    ...(await normalizeOptions<Schema>(host, schema)),
+    ...(await normalizeOptions<Schema>(host, {
+      ...schema,
+      alwaysGenerateProjectJson: true,
+    })),
     // when js is set to true, we want to use the js configuration
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
@@ -122,7 +122,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     }
   }
 
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const REMOTE_NAME_REGEX = '^[a-zA-Z_$][a-zA-Z_$0-9]*$';
   const remoteNameRegex = new RegExp(REMOTE_NAME_REGEX);
   if (!remoteNameRegex.test(options.projectName)) {
@@ -137,11 +137,12 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     name: options.projectName,
     skipFormat: true,
+    alwaysGenerateProjectJson: true,
   });
   tasks.push(initAppTask);
 
-  if (schema.host) {
-    updateHostWithRemote(host, schema.host, options.projectName);
+  if (options.host) {
+    updateHostWithRemote(host, options.host, options.projectName);
   }
 
   // Module federation requires bootstrap code to be dynamically imported.
@@ -220,7 +221,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  addMfEnvToTargetDefaultInputs(host);
+  addMfEnvToTargetDefaultInputs(host, options.bundler);
 
   const installTask = addDependenciesToPackageJson(
     host,
@@ -228,6 +229,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
+      '@nx/module-federation': nxVersion,
     }
   );
   tasks.push(installTask);

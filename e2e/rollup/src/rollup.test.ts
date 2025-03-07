@@ -27,7 +27,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -61,7 +61,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=swc`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -85,7 +85,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=tsc`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({
@@ -114,7 +114,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --tsConfig=./tsconfig.lib.json --main=./src/index.ts --compiler=tsc`
     );
     updateFile(
-      `libs/${myPkg}/rollup.config.js`,
+      `libs/${myPkg}/rollup.config.cjs`,
       `
       const { withNx } = require('@nx/rollup/with-nx');
       module.exports =  withNx({

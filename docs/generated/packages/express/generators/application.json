@@ -33,14 +33,17 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
-        "default": "eslint"
+        "enum": ["eslint", "none"],
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
       },
       "unitTestRunner": {
         "type": "string",
         "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
-        "default": "jest"
+        "default": "none",
+        "x-prompt": "Which unit test runner would you like to use?"
       },
       "tags": {
         "type": "string",

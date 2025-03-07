@@ -1,5 +1,6 @@
 {
   "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  <%_ if (!isTsSolutionSetup) { _%>
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
@@ -10,6 +11,7 @@
     "strict": true,
     "declaration": true
   },
+  <%_ } _%>
   "files": [],
   "include": [],
   "references": [

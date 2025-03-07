@@ -1,0 +1,14 @@
+{
+  "name": "19.0.3-package-updates",
+  "version": "19.0.3-beta.0",
+  "packages": {
+    "tailwindcss": { "version": "3.4.3", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration"
+}

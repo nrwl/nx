@@ -5,6 +5,7 @@ import {
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   logger,
   NxJsonConfiguration,
   readJsonFile,
@@ -17,9 +18,9 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { hashObject } from 'nx/src/devkit-internals';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;
@@ -31,7 +32,10 @@ export interface ExpoPluginOptions {
   installTargetName?: string;
   buildTargetName?: string;
   submitTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(
   cachePath: string
@@ -186,6 +190,14 @@ function buildExpoTargets(
       options: { cwd: projectRoot },
     },
   };
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return targets;
 }

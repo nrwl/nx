@@ -14,5 +14,7 @@
 Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.
 
 This package is a [Module Federation plugin for Nx](https://nx.dev/nx-api/module-federation).
+Module Federation allows developers to share code between deployed applications easier and makes team collaboration more efficient.  
+To learn more about Module Federation, check out the [official documentation](https://module-federation.io/).
 
 {{content}}

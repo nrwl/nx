@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "allowJs": false,
+    "lib": ["dom", "dom.iterable", "esnext"],
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true

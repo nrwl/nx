@@ -34,7 +34,10 @@ import {
   ProjectGraphError,
 } from '../../project-graph/error-types';
 import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
-import { HandleGlobMessage } from '../message-types/glob';
+import {
+  HandleGlobMessage,
+  HandleMultiGlobMessage,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   HandleNxWorkspaceFilesMessage,
@@ -47,7 +50,12 @@ import {
   GET_FILES_IN_DIRECTORY,
   HandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
-import { HASH_GLOB, HandleHashGlobMessage } from '../message-types/hash-glob';
+import {
+  HASH_GLOB,
+  HASH_MULTI_GLOB,
+  HandleHashGlobMessage,
+  HandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -77,6 +85,17 @@ import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   type HandleFlushSyncGeneratorChangesToDiskMessage,
 } from '../message-types/flush-sync-generator-changes-to-disk';
+import { DelayedSpinner } from '../../utils/delayed-spinner';
+import {
+  PostTasksExecutionContext,
+  PreTasksExecutionContext,
+} from '../../project-graph/plugins/public-api';
+import {
+  HandlePostTasksExecutionMessage,
+  HandlePreTasksExecutionMessage,
+  POST_TASKS_EXECUTION,
+  PRE_TASKS_EXECUTION,
+} from '../message-types/run-tasks-execution-hooks';
 
 const DAEMON_ENV_SETTINGS = {
   NX_PROJECT_GLOB_CACHE: 'false',
@@ -194,6 +213,14 @@ export class DaemonClient {
     projectGraph: ProjectGraph;
     sourceMaps: ConfigurationSourceMaps;
   }> {
+    let spinner: DelayedSpinner;
+    // If the graph takes a while to load, we want to show a spinner.
+    spinner = new DelayedSpinner(
+      'Calculating the project graph on the Nx Daemon'
+    ).scheduleMessageUpdate(
+      'Calculating the project graph on the Nx Daemon is taking longer than expected. Re-run with NX_DAEMON=false to see more details.',
+      { ciDelay: 60_000, delay: 30_000 }
+    );
     try {
       const response = await this.sendToDaemonViaQueue({
         type: 'REQUEST_PROJECT_GRAPH',
@@ -208,6 +235,8 @@ export class DaemonClient {
       } else {
         throw e;
       }
+    } finally {
+      spinner?.cleanup();
     }
   }
 
@@ -318,6 +347,15 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue(message);
   }
 
+  multiGlob(globs: string[], exclude?: string[]): Promise<string[][]> {
+    const message: HandleMultiGlobMessage = {
+      type: 'MULTI_GLOB',
+      globs,
+      exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
   getWorkspaceContextFileData(): Promise<FileData[]> {
     const message: HandleContextFileDataMessage = {
       type: GET_CONTEXT_FILE_DATA,
@@ -348,6 +386,14 @@ export class DaemonClient {
       type: HASH_GLOB,
       globs,
       exclude,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  hashMultiGlob(globGroups: string[][]): Promise<string[]> {
+    const message: HandleHashMultiGlobMessage = {
+      type: HASH_MULTI_GLOB,
+      globGroups: globGroups,
     };
     return this.sendToDaemonViaQueue(message);
   }
@@ -420,6 +466,26 @@ export class DaemonClient {
       createdFiles,
       updatedFiles,
       deletedFiles,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPreTasksExecution(
+    context: PreTasksExecutionContext
+  ): Promise<NodeJS.ProcessEnv[]> {
+    const message: HandlePreTasksExecutionMessage = {
+      type: PRE_TASKS_EXECUTION,
+      context,
+    };
+    return this.sendToDaemonViaQueue(message);
+  }
+
+  async runPostTasksExecution(
+    context: PostTasksExecutionContext
+  ): Promise<void> {
+    const message: HandlePostTasksExecutionMessage = {
+      type: POST_TASKS_EXECUTION,
+      context,
     };
     return this.sendToDaemonViaQueue(message);
   }
@@ -579,6 +645,12 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
+    if (global.NX_PLUGIN_WORKER) {
+      throw new Error(
+        'Fatal Error: Something unexpected has occurred. Plugin Workers should not start a new daemon process. Please report this issue.'
+      );
+    }
+
     mkdirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE, { recursive: true });
     if (!existsSync(DAEMON_OUTPUT_LOG_FILE)) {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');

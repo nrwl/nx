@@ -265,7 +265,7 @@ export function withNx(
       commonjs(),
       analyze(),
       options.generatePackageJson && generatePackageJson(options, packageJson),
-    ];
+    ].filter(Boolean);
     if (Array.isArray(rollupConfig.plugins)) {
       finalConfig.plugins.push(...rollupConfig.plugins);
     }

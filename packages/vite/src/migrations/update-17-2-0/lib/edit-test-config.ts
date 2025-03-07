@@ -86,7 +86,7 @@ export function updateTestConfig(
       changes.push({
         type: ChangeType.Insert,
         index: testCoverage.getStart() + `coverage: {`.length + 1,
-        text: `provider: 'v8',`,
+        text: `provider: 'v8' as const,`,
       });
     }
   } else if (testObject) {
@@ -95,7 +95,7 @@ export function updateTestConfig(
       index: testObject.getStart() + `test: {`.length + 1,
       text: `coverage: {
           reportsDirectory: '${coverageDir}',
-          provider: 'v8',
+          provider: 'v8' as const,
         },`,
     });
   }

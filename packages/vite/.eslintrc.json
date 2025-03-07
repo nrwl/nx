@@ -29,7 +29,15 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "typescript", "vite"]
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "vite",
+              // we only check if the package is installed
+              "eslint",
+              // we ensure it is installed and only use it when eslint is installed
+              "@nx/eslint"
+            ]
           }
         ]
       }

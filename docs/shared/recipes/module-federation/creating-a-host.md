@@ -1,3 +1,8 @@
+---
+title: Creating a Module Federation Host
+description: Learn how to generate and configure a host application for Module Federation in React and Angular using Nx generators.
+---
+
 # Creating a Host
 
 A `host` is the term within [Module Federation](https://module-federation.io/docs/en/mf-docs/0.2/getting-started/) given
@@ -18,7 +23,7 @@ To generate only a host application in your workspace, run the following command
 {% tabs %}
 {% tab label="React" %}
 
-```{% command="nx g @nx/react:host apps/shell --directory=apps/react/shell" %}
+```{% command="nx g @nx/react:host apps/react/shell" %}
 NX  Generating @nx/react:host
 
 CREATE apps/react/shell/src/app/app.spec.tsx
@@ -48,7 +53,7 @@ CREATE apps/react/shell/webpack.config.prod.ts
 {% /tab %}
 {% tab label="Angular" %}
 
-```{% command="nx g @nx/angular:host apps/shell --directory=apps/angular/shell" %}
+```{% command="nx g @nx/angular:host apps/angular/shell" %}
 NX Generating @nx/angular:host
 
 CREATE apps/angular/shell/project.json

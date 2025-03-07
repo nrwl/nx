@@ -37,9 +37,9 @@
     "presets": []
   },
   "description": "Initializes a Gradle project in the current workspace",
+  "hidden": true,
   "implementation": "/packages/gradle/src/generators/init/init#initGenerator.ts",
   "aliases": [],
-  "hidden": false,
   "path": "/packages/gradle/src/generators/init/schema.json",
   "type": "generator"
 }

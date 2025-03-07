@@ -25,12 +25,12 @@ export function applyReactConfig(
       {
         test: /\.svg$/i,
         type: 'asset',
-        resourceQuery: /react/, // *.svg?react
+        resourceQuery: /url/, // *.svg?url
       },
       {
         test: /\.svg$/i,
         issuer: /\.[jt]sx?$/,
-        resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
+        resourceQuery: { not: [/url/] }, // exclude react component if not *.svg?url
         use: [{ loader: '@svgr/webpack', options: svgrOptions }],
       }
     );
@@ -47,7 +47,7 @@ function removeSvgLoaderIfPresent(
   config: Partial<RspackOptionsNormalized | Configuration>
 ) {
   const svgLoaderIdx = config.module.rules.findIndex(
-    (rule) => typeof rule === 'object' && rule.test.toString().includes('svg')
+    (rule) => typeof rule === 'object' && rule.test?.toString().includes('svg')
   );
   if (svgLoaderIdx === -1) return;
   config.module.rules.splice(svgLoaderIdx, 1);

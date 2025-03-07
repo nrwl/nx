@@ -1,0 +1,14 @@
+{
+  "name": "update-module-federation-ssr-server-file",
+  "cli": "nx",
+  "version": "19.6.0-beta.4",
+  "description": "Update the server file for Module Federation SSR port value to be the same as the 'serve' target port value.",
+  "factory": "./src/migrations/update-19-6-0/update-ssr-server-port",
+  "implementation": "/packages/react/src/migrations/update-19-6-0/update-ssr-server-port.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

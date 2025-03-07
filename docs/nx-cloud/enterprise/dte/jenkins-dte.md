@@ -1,8 +1,8 @@
-# Custom Distributed Task Execution on Jenkins
+# Manual Distributed Task Execution on Jenkins
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up manual distributed task execution on your own CI provider using the recipe below.
 
-## Distribute Tasks Across Custom Agents on Jenkins
+## Distribute Tasks Across Agents on Jenkins
 
 Run agents directly on Jenkins with the workflow below:
 
@@ -11,7 +11,6 @@ pipeline {
     agent none
     environment {
         NX_BRANCH = env.BRANCH_NAME.replace('PR-', '')
-        NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT = 3
     }
     stages {
         stage('Pipeline') {

@@ -6,7 +6,6 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { nxVersion, vueVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 
@@ -28,8 +27,6 @@ function updateDependencies(host: Tree, schema: InitSchema) {
 }
 
 export async function vueInitGenerator(host: Tree, schema: InitSchema) {
-  assertNotUsingTsSolutionSetup(host, 'vue', 'init');
-
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(host, schema);

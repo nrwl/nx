@@ -1,68 +1,46 @@
 import { existsSync } from 'fs';
-import { PackageJson } from '../../utils/package-json';
+
+import { prompt } from 'enquirer';
 import { prerelease } from 'semver';
-import { output } from '../../utils/output';
-import {
-  getPackageManagerCommand,
-  PackageManagerCommands,
-} from '../../utils/package-manager';
-import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { runNxSync } from '../../utils/child-process';
 import { readJsonFile } from '../../utils/fileutils';
-import { nxVersion } from '../../utils/versions';
+import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
+import { output } from '../../utils/output';
+import { PackageJson } from '../../utils/package-json';
 import {
-  addDepsToPackageJson,
-  createNxJsonFile,
-  initCloud,
-  isMonorepo,
-  printFinalMessage,
-  runInstall,
-  updateGitIgnore,
-} from './implementation/utils';
-import { prompt } from 'enquirer';
-import { execSync } from 'child_process';
-import { addNxToAngularCliRepo } from './implementation/angular';
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../utils/package-manager';
+import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
-import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
+import {
+  configurePlugins,
+  runPackageManagerInstallPlugins,
+} from './configure-plugins';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
+import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
+import { addNxToAngularCliRepo } from './implementation/angular';
+import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
+import {
+  createNxJsonFile,
+  initCloud,
+  isCRA,
+  isMonorepo,
+  printFinalMessage,
+  updateGitIgnore,
+} from './implementation/utils';
+import { addNxToCraRepo } from './implementation/react';
 
 export interface InitArgs {
   interactive: boolean;
   nxCloud?: boolean;
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
-}
-
-export function installPlugins(
-  repoRoot: string,
-  plugins: string[],
-  pmc: PackageManagerCommands,
-  updatePackageScripts: boolean
-) {
-  if (plugins.length === 0) {
-    return;
-  }
-
-  addDepsToPackageJson(repoRoot, plugins);
-
-  runInstall(repoRoot, pmc);
-
-  output.log({ title: '🔨 Configuring plugins' });
-  for (const plugin of plugins) {
-    execSync(
-      `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-        updatePackageScripts ? '--updatePackageScripts' : ''
-      }`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-        windowsHide: false,
-      }
-    );
-  }
+  verbose?: boolean;
+  force?: boolean;
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
@@ -111,7 +89,44 @@ export async function initHandler(options: InitArgs): Promise<void> {
   }
 
   const packageJson: PackageJson = readJsonFile('package.json');
-  if (isMonorepo(packageJson)) {
+  const _isTurborepo = existsSync('turbo.json');
+  const _isMonorepo = isMonorepo(packageJson);
+  const _isCRA = isCRA(packageJson);
+
+  const learnMoreLink = _isTurborepo
+    ? 'https://nx.dev/recipes/adopting-nx/from-turborepo'
+    : _isMonorepo
+    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
+    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
+
+  /**
+   * Turborepo users must have set up individual scripts already, and we keep the transition as minimal as possible.
+   * We log a message during the conversion process in addNxToTurborepo about how they can learn more about the power
+   * of Nx plugins and how it would allow them to infer all the relevant scripts automatically, including all cache
+   * inputs and outputs.
+   */
+  if (_isTurborepo) {
+    await addNxToTurborepo({
+      interactive: options.interactive,
+    });
+    printFinalMessage({
+      learnMoreLink,
+    });
+    return;
+  }
+
+  const pmc = getPackageManagerCommand();
+
+  if (_isCRA) {
+    await addNxToCraRepo({
+      addE2e: false,
+      force: options.force,
+      vite: true,
+      integrated: false,
+      interactive: options.interactive,
+      nxCloud: false,
+    });
+  } else if (_isMonorepo) {
     await addNxToMonorepo({
       interactive: options.interactive,
       nxCloud: false,
@@ -122,15 +137,12 @@ export async function initHandler(options: InitArgs): Promise<void> {
       nxCloud: false,
     });
   }
-  const learnMoreLink = isMonorepo(packageJson)
-    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
-    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
+
   const useNxCloud =
     options.nxCloud ??
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   const repoRoot = process.cwd();
-  const pmc = getPackageManagerCommand();
 
   createNxJsonFile(repoRoot, [], [], {});
   updateGitIgnore(repoRoot);
@@ -139,14 +151,29 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '🧐 Checking dependencies' });
 
-  const { plugins, updatePackageScripts } = await detectPlugins(
-    nxJson,
-    options.interactive
-  );
+  let plugins: string[];
+  let updatePackageScripts: boolean;
+
+  if (_isCRA) {
+    plugins = ['@nx/vite'];
+    updatePackageScripts = true;
+  } else {
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, options.interactive);
+    plugins = _plugins;
+    updatePackageScripts = _updatePackageScripts;
+  }
 
   output.log({ title: '📦 Installing Nx' });
 
-  installPlugins(repoRoot, plugins, pmc, updatePackageScripts);
+  runPackageManagerInstallPlugins(repoRoot, pmc, plugins);
+  await configurePlugins(
+    plugins,
+    updatePackageScripts,
+    pmc,
+    repoRoot,
+    options.verbose
+  );
 
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
@@ -166,6 +193,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   vite: '@nx/vite',
   vitest: '@nx/vite',
   webpack: '@nx/webpack',
+  '@rspack/core': '@nx/rspack',
   rollup: '@nx/rollup',
   // Testing tools
   jest: '@nx/jest',
@@ -178,6 +206,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   nuxt: '@nx/nuxt',
   'react-native': '@nx/react-native',
   '@remix-run/dev': '@nx/remix',
+  '@rsbuild/core': '@nx/rsbuild',
 };
 
 export async function detectPlugins(

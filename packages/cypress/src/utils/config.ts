@@ -39,32 +39,40 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(options)})`;
+    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(
+      options,
+      null,
+      2
+    )
+      .split('\n')
+      .join('\n    ')})`;
 
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
       (node: ObjectLiteralExpression) => {
-        let baseUrlContents = baseUrl ? `,\nbaseUrl: '${baseUrl}'` : '';
+        let baseUrlContents = baseUrl ? `,\n    baseUrl: '${baseUrl}'` : '';
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
-  e2e: { ...${configValue}${baseUrlContents} } 
+  e2e: {
+    ...${configValue}${baseUrlContents}
+  } 
 }`;
         }
         return `{
-  e2e: { ...${configValue}${baseUrlContents} }
+  e2e: {
+    ...${configValue}${baseUrlContents}
+  }
 }`;
       }
     );
 
     return isCommonJS
       ? `const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
-    
-    ${updatedConfigContents}`
+${updatedConfigContents}`
       : `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-    
-    ${updatedConfigContents}`;
+${updatedConfigContents}`;
   }
   return updatedConfigContents;
 }

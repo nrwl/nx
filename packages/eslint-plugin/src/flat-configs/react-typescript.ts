@@ -11,6 +11,16 @@ import tseslint from 'typescript-eslint';
  * package.
  */
 export default tseslint.config({
+  files: [
+    '**/*.ts',
+    '**/*.cts',
+    '**/*.mts',
+    '**/*.tsx',
+    '**/*.js',
+    '**/*.cjs',
+    '**/*.mjs',
+    '**/*.jsx',
+  ],
   rules: {
     // TypeScript"s `noFallthroughCasesInSwitch` option is more robust (#6906)
     'default-case': 'off',

@@ -1,5 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import { TaskNodeTooltipProps } from '@nx/graph/ui-tooltips';
+import { TaskNodeTooltipProps } from '@nx/graph/legacy/tooltips';
 import { useEffect, useState } from 'react';
 
 export function TaskNodeActions(props: TaskNodeTooltipProps) {
@@ -9,7 +9,7 @@ export function TaskNodeActions(props: TaskNodeTooltipProps) {
   }, [props.id]);
   const project = props.id.split(':')[0];
   return (
-    <div className="w-full w-full min-w-[350px] max-w-full overflow-auto rounded-md border border-slate-200 dark:border-slate-800">
+    <div className="w-full min-w-[350px] max-w-full overflow-auto rounded-md border border-slate-200 dark:border-slate-800">
       <div
         className="flex w-full items-center justify-between bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400"
         onClick={() => setIsOpen(!isOpen)}

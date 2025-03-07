@@ -23,7 +23,7 @@ export function readTsConfig(tsConfigPath: string) {
   );
 }
 
-function readTsConfigOptions(tsConfigPath: string) {
+export function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
     tsModule = require('typescript');
   }
@@ -33,16 +33,16 @@ function readTsConfigOptions(tsConfigPath: string) {
     tsModule.sys.readFile
   );
 
-  // we don't need to scan the files, we only care about options
-  const host: Partial<ts.ParseConfigHost> = {
+  // We only care about options, so we don't need to scan source files, and thus
+  // `readDirectory` is stubbed for performance.
+  const host = {
+    ...tsModule.sys,
     readDirectory: () => [],
-    readFile: () => '',
-    fileExists: tsModule.sys.fileExists,
   };
 
   return tsModule.parseJsonConfigFileContent(
     readResult.config,
-    host as ts.ParseConfigHost,
+    host,
     dirname(tsConfigPath)
   ).options;
 }

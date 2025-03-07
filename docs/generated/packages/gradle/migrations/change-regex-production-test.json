@@ -1,0 +1,14 @@
+{
+  "name": "change-regex-production-test",
+  "version": "19.4.1-beta.0",
+  "cli": "nx",
+  "description": "This function changes !{projectRoot}/test/**/* in nx.json for production to !{projectRoot}/src/test/**/*",
+  "factory": "./src/migrations/19-4-1/change-regex-test-production",
+  "implementation": "/packages/gradle/src/migrations/19-4-1/change-regex-test-production.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/gradle",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

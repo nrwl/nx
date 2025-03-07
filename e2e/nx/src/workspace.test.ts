@@ -32,7 +32,7 @@ describe('@nx/workspace:infer-targets', () => {
     // default case, everything is generated with crystal, everything should be skipped
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     const output = runCLI(`generate infer-targets --no-interactive --verbose`);
@@ -70,7 +70,7 @@ describe('@nx/workspace:infer-targets', () => {
     // default case, everything is generated with crystal, relevant plugins should be skipped
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     const output = runCLI(
@@ -116,7 +116,7 @@ describe('@nx/workspace:infer-targets', () => {
     // even if we make sure there are executors for remix & remix-e2e, only remix conversions will run with --project option
     const remixApp = uniq('remix');
     runCLI(
-      `generate @nx/remix:app apps/${remixApp} --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/remix:app apps/${remixApp} --linter eslint --unitTestRunner jest --e2eTestRunner=playwright --no-interactive`
     );
 
     updateJson('nx.json', (json) => {
@@ -167,7 +167,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
-      `generate @nx/react:app --name=${reactApp} --directory="." --rootProject=true --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/react:app --name=${reactApp} --directory="." --rootProject=true --linter eslint --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
     );
 
     runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive');

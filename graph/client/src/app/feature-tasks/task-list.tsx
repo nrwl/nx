@@ -10,7 +10,7 @@ import {
 import { WorkspaceLayout } from '../interfaces';
 import { ExclamationCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
-import { Tooltip } from '@nx/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
 import { TaskGraphErrorTooltip } from './task-graph-error-tooltip';
 
 interface SidebarProject {

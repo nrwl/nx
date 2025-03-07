@@ -34,6 +34,13 @@
       "id": "console-run-command",
       "name": "Run Command",
       "path": "/recipes/nx-console/console-run-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-nx-cloud",
+      "id": "console-nx-cloud",
+      "name": "Nx Cloud Integration",
+      "path": "/recipes/nx-console/console-nx-cloud"
     }
   ],
   "run-tasks": [
@@ -57,6 +64,13 @@
       "id": "executors-and-configurations",
       "name": "Executors and Configurations",
       "path": "/concepts/executors-and-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/common-tasks",
+      "id": "common-tasks",
+      "name": "Common Tasks",
+      "path": "/concepts/common-tasks"
     },
     {
       "description": "",
@@ -243,6 +257,15 @@
       "path": "/nx-api/nx/documents/reset"
     }
   ],
+  "AI": [
+    {
+      "description": "",
+      "file": "shared/features/enhance-AI",
+      "id": "enhance-AI",
+      "name": "Enhance Your LLM",
+      "path": "/features/enhance-AI"
+    }
+  ],
   "explore-graph": [
     {
       "description": "",
@@ -357,6 +380,110 @@
       "id": "generate",
       "name": "generate",
       "path": "/nx-api/nx/documents/generate"
+    }
+  ],
+  "inferred-tasks": [
+    {
+      "description": "",
+      "file": "shared/features/maintain-typescript-monorepos",
+      "id": "maintain-ts-monorepos",
+      "name": "Maintain TypeScript Monorepos",
+      "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/mental-model",
+      "id": "mental-model",
+      "name": "Mental Model",
+      "path": "/concepts/mental-model"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/inferred-tasks",
+      "id": "inferred-tasks",
+      "name": "Inferred Tasks",
+      "path": "/concepts/inferred-tasks"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Infer Tasks or Projects",
+      "path": "/extending-nx/recipes/project-graph-plugins"
+    }
+  ],
+  "project-linking": [
+    {
+      "description": "",
+      "file": "shared/features/maintain-typescript-monorepos",
+      "id": "maintain-ts-monorepos",
+      "name": "Maintain TypeScript Monorepos",
+      "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/typescript-project-linking",
+      "id": "typescript-project-linking",
+      "name": "TypeScript Project Linking",
+      "path": "/concepts/typescript-project-linking"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+      "id": "switch-to-workspaces-project-references",
+      "name": "Switch to Workspaces and TS Project References",
+      "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+    }
+  ],
+  "sync": [
+    {
+      "description": "",
+      "file": "shared/features/maintain-typescript-monorepos",
+      "id": "maintain-ts-monorepos",
+      "name": "Maintain TypeScript Monorepos",
+      "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/sync-generators",
+      "id": "sync-generators",
+      "name": "Sync Generators",
+      "path": "/concepts/sync-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/sync",
+      "id": "sync",
+      "name": "sync",
+      "path": "/nx-api/nx/documents/sync"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/sync-check",
+      "id": "sync-check",
+      "name": "sync:check",
+      "path": "/nx-api/nx/documents/sync-check"
     }
   ],
   "automate-updating-dependencies": [
@@ -499,6 +626,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/updating-version-references",
+      "id": "updating-version-references",
+      "name": "Updating Version References in Manifest Files (e.g. package.json)",
+      "path": "/recipes/nx-release/updating-version-references"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
@@ -562,13 +696,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/nx-release/publish-custom-dist-directory",
-      "id": "publish-custom-dist-directory",
-      "name": "Publish a Custom Dist Directory",
-      "path": "/recipes/nx-release/publish-custom-dist-directory"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/nx-release/build-before-versioning",
       "id": "build-before-versioning",
       "name": "Build Before Versioning",
@@ -596,43 +723,6 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
-    }
-  ],
-  "inferred-tasks": [
-    {
-      "description": "",
-      "file": "shared/concepts/mental-model",
-      "id": "mental-model",
-      "name": "Mental Model",
-      "path": "/concepts/mental-model"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/nx-plugins",
-      "id": "nx-plugins",
-      "name": "What Are Nx Plugins",
-      "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/inferred-tasks",
-      "id": "inferred-tasks",
-      "name": "Inferred Tasks",
-      "path": "/concepts/inferred-tasks"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/convert-to-inferred",
-      "id": "convert-to-inferred",
-      "name": "Migrate to Inferred Tasks (Project Crystal)",
-      "path": "/recipes/running-tasks/convert-to-inferred"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Infer Tasks or Projects",
-      "path": "/extending-nx/recipes/project-graph-plugins"
     }
   ],
   "add": [
@@ -723,36 +813,6 @@
       "id": "daemon",
       "name": "daemon",
       "path": "/nx-api/nx/documents/daemon"
-    }
-  ],
-  "sync": [
-    {
-      "description": "",
-      "file": "shared/concepts/sync-generators",
-      "id": "sync-generators",
-      "name": "Sync Generators",
-      "path": "/concepts/sync-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/create-sync-generator",
-      "id": "create-sync-generator",
-      "name": "Create a Sync Generator",
-      "path": "/extending-nx/recipes/create-sync-generator"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/sync",
-      "id": "sync",
-      "name": "sync",
-      "path": "/nx-api/nx/documents/sync"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/sync-check",
-      "id": "sync-check",
-      "name": "sync:check",
-      "path": "/nx-api/nx/documents/sync-check"
     }
   ],
   "module-federation": [
@@ -1235,6 +1295,20 @@
       "id": "conformance",
       "name": "Run Language-Agnostic Conformance Rules",
       "path": "/nx-enterprise/powerpack/conformance"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/configure-conformance-rules-in-nx-cloud",
+      "id": "configure-conformance-rules-in-nx-cloud",
+      "name": "Configure Conformance Rules in Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/configure-conformance-rules-in-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "nx-cloud/enterprise/conformance/publish-conformance-rules-to-nx-cloud",
+      "id": "publish-conformance-rules-to-nx-cloud",
+      "name": "Publish Conformance Rules to Nx Cloud",
+      "path": "/ci/recipes/enterprise/conformance/publish-conformance-rules-to-nx-cloud"
     }
   ],
   "owners": [

@@ -27,6 +27,13 @@ jest.mock('@nx/devkit', () => {
               type: 'static',
             },
           ],
+          'npm:@nx/playwright': [
+            {
+              source: 'npm:@nx/playwright',
+              target: 'npm:@nx/webpack',
+              type: 'static',
+            },
+          ],
         },
         nodes: {
           shell: {
@@ -45,6 +52,17 @@ jest.mock('@nx/devkit', () => {
               root: 'apps/remote',
               sourceRoot: 'remote/src',
               targets: {},
+            },
+          },
+        },
+        externalNodes: {
+          'npm:@nx/playwright': {
+            type: 'npm',
+            name: 'npm:@nx/playwright',
+            data: {
+              version: '20.2.0-beta.3',
+              packageName: '@nx/playwright',
+              hash: 'sha512-8rzIZ8ljVfWsOqmSUSRPo0lT19oAhTR2nAI25V3wbFwhlErQ7kpgKd45W36Tja1aka729cO3mAH5ACKSujU6wQ==',
             },
           },
         },

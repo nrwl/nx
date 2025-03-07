@@ -696,6 +696,70 @@ To fix this you will either need to add a package.json file at that location, or
             }
           `);
         });
+
+        it('should update dependents with a prepatch when creating a pre-release version', async () => {
+          expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+            '0.0.1'
+          );
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            ).version
+          ).toEqual('0.0.1');
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            ).version
+          ).toEqual('0.0.1');
+
+          await releaseVersionGenerator(tree, {
+            projects: Object.values(projectGraph.nodes), // version all projects
+            projectGraph,
+            currentVersionResolver: 'disk',
+            specifier: 'prepatch',
+            preid: 'alpha',
+            releaseGroup: createReleaseGroup('independent'),
+          });
+
+          expect(readJson(tree, 'libs/my-lib/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.2-alpha.0",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.2-alpha.0",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2-alpha.0",
+            }
+          `);
+        });
       });
     });
   });

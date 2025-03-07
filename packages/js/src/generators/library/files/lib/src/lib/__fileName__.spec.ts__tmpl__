@@ -1,4 +1,4 @@
-import { <%= propertyName %> } from './<%= fileName %>';
+import { <%= propertyName %> } from './<%= fileNameImport %>';
 
 describe('<%= propertyName %>', () => {
   it('should work', () => {

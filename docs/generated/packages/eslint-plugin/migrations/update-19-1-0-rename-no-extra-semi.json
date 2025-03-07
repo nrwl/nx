@@ -1,0 +1,13 @@
+{
+  "name": "update-19-1-0-rename-no-extra-semi",
+  "cli": "nx",
+  "version": "19.1.0-beta.6",
+  "description": "Migrate no-extra-semi rules into user config, out of nx extendable configs",
+  "implementation": "/packages/eslint-plugin/src/migrations/update-19-1-0-migrate-no-extra-semi/migrate-no-extra-semi.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/eslint-plugin",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

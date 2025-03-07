@@ -9,4 +9,5 @@ export interface ViteBuildExecutorOptions {
   skipTypeCheck?: boolean;
   tsConfig?: string;
   watch?: boolean;
+  useEnvironmentsApi?: boolean;
 }

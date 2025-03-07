@@ -138,7 +138,7 @@ describe('setup-build generator', () => {
       bundler: 'rollup',
     });
 
-    expect(tree.exists('packages/mypkg/rollup.config.js')).toBe(true);
+    expect(tree.exists('packages/mypkg/rollup.config.cjs')).toBe(true);
   });
 
   it('should support --bundler=esbuild', async () => {

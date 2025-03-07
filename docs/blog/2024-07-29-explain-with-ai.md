@@ -5,6 +5,7 @@ authors: ['Philip Fulcher']
 cover_image: '/blog/images/2024-07-29/explain-with-ai-header.avif'
 tags: [nx, nx-cloud, ai, release]
 youtubeUrl: https://youtu.be/g2m9cHp-O-Q?si=ax-SKCO0Xvy9vFIz
+description: Explain with AI in Nx Cloud Pro helps debug CI failures with AI explanations and suggested fixes.
 ---
 
 It's Friday, and you absolutely, positively have to deploy to production. But you can't get CI to pass your PR. What do you do? It's an inevitable part of your life as a developer, and you've built a collection of tools to deal with it: Google, MDN, Discord, ChatGPT. We've got one more tool for your toolbox: **"Explain with AI" for [Nx Cloud](/nx-cloud)**.

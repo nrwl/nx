@@ -1,0 +1,13 @@
+{
+  "name": "add-vue-to-storybook-config",
+  "cli": "nx",
+  "version": "19.6.0-beta.0",
+  "description": "Add vue() plugin to viteFinal in Storybook config files when it is missing.",
+  "implementation": "/packages/nuxt/src/migrations/update-19-6-0/add-vue-plugin-to-storybook-config.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nuxt",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": ""
+}

@@ -102,17 +102,47 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(chalk.green('Nx Powerpack'));
 
+    const licenseExpiryDate = new Date(
+      (powerpackLicense.realExpiresAt ?? powerpackLicense.expiresAt) * 1000
+    );
+
     bodyLines.push(
       `Licensed to ${powerpackLicense.organizationName} for ${
         powerpackLicense.seatCount
       } user${powerpackLicense.seatCount > 1 ? 's' : ''} in ${
-        powerpackLicense.workspaceCount
-      } workspace${
-        powerpackLicense.workspaceCount > 1 ? 's' : ''
-      } until ${new Date(
-        powerpackLicense.expiresAt * 1000
-      ).toLocaleDateString()}`
+        powerpackLicense.workspaceCount === 9999
+          ? 'an unlimited number of'
+          : powerpackLicense.workspaceCount
+      } workspace${powerpackLicense.workspaceCount > 1 ? 's' : ''}.`
     );
+
+    // license is not expired
+    if (licenseExpiryDate.getTime() >= Date.now()) {
+      if ('perpetualNxVersion' in powerpackLicense) {
+        bodyLines.push(
+          `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+            powerpackLicense.perpetualNxVersion
+          } and below.`
+        );
+      } else {
+        bodyLines.push(
+          `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
+        );
+      }
+    } else {
+      if ('perpetualNxVersion' in powerpackLicense) {
+        bodyLines.push(
+          `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+            powerpackLicense.perpetualNxVersion
+          } and below.`
+        );
+      } else {
+        bodyLines.push(
+          `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
+        );
+      }
+    }
+
     bodyLines.push('');
 
     padding =

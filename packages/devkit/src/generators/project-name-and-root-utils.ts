@@ -42,7 +42,7 @@ export type ProjectNameAndRootOptions = {
   /**
    * Normalized import path for the project.
    */
-  importPath?: string;
+  importPath: string;
 };
 
 export async function determineProjectNameAndRootOptions(
@@ -88,11 +88,8 @@ export async function determineProjectNameAndRootOptions(
     }
   }
 
-  let importPath: string | undefined = undefined;
-  if (options.projectType === 'library') {
-    importPath =
-      options.importPath ?? resolveImportPath(tree, name, projectRoot);
-  }
+  const importPath =
+    options.importPath ?? resolveImportPath(tree, name, projectRoot);
 
   return {
     projectName: name,
@@ -125,24 +122,17 @@ export function resolveImportPath(
   return importPath;
 }
 
-export async function ensureProjectName(
-  tree: Tree,
-  options: Omit<ProjectGenerationOptions, 'projectType'>,
+export async function ensureRootProjectName(
+  options: { directory: string; name?: string },
   projectType: 'application' | 'library'
 ): Promise<void> {
-  if (!options.name) {
-    if (options.directory === '.' && getRelativeCwd() === '') {
-      const result = await prompt<{ name: string }>({
-        type: 'input',
-        name: 'name',
-        message: `What do you want to name the ${projectType}?`,
-      }).then(({ name }) => (options.name = name));
-    }
-    const { projectName } = await determineProjectNameAndRootOptions(tree, {
-      ...options,
-      projectType,
+  if (!options.name && options.directory === '.' && getRelativeCwd() === '') {
+    const result = await prompt<{ name: string }>({
+      type: 'input',
+      name: 'name',
+      message: `What do you want to name the ${projectType}?`,
     });
-    options.name = projectName;
+    options.name = result.name;
   }
 }
 

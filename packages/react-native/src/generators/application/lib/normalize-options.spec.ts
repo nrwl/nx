@@ -25,6 +25,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      importPath: '@proj/my-app',
       fileName: 'my-app',
       className: 'MyApp',
       directory: 'my-app',
@@ -43,6 +44,7 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      isTsSolutionSetup: false,
     });
   });
 
@@ -60,6 +62,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'myApp/android',
       appProjectRoot: 'myApp',
+      importPath: '@proj/myApp',
       className: 'MyApp',
       fileName: 'my-app',
       directory: 'myApp',
@@ -78,6 +81,7 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
+      isTsSolutionSetup: false,
     });
   });
 
@@ -96,6 +100,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       fileName: 'my-app',
       directory: 'directory/my-app',
@@ -114,6 +119,7 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
+      isTsSolutionSetup: false,
     });
   });
 
@@ -131,6 +137,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       directory: 'directory/my-app',
       fileName: 'my-app',
@@ -149,6 +156,7 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
+      isTsSolutionSetup: false,
     });
   });
 
@@ -167,6 +175,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       fileName: 'my-app',
       directory: 'my-app',
@@ -185,6 +194,7 @@ describe('Normalize Options', () => {
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
+      isTsSolutionSetup: false,
     });
   });
 });

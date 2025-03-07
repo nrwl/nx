@@ -2,6 +2,7 @@ export interface AsyncPushCallbacks<T> {
   next: (value: T) => void;
   done: () => void;
   error: (err: unknown) => void;
+  registerCleanup?: (cb: () => void | Promise<void>) => void;
 }
 
 export function createAsyncIterable<T = unknown>(
@@ -9,6 +10,7 @@ export function createAsyncIterable<T = unknown>(
 ): AsyncIterable<T> {
   let done = false;
   let error: unknown | null = null;
+  let cleanup: (() => void | Promise<void>) | undefined;
 
   const pushQueue: T[] = [];
   const pullQueue: Array<
@@ -42,6 +44,9 @@ export function createAsyncIterable<T = unknown>(
           }
           done = true;
         },
+        registerCleanup: (cb) => {
+          cleanup = cb;
+        },
       });
 
       return {
@@ -59,6 +64,12 @@ export function createAsyncIterable<T = unknown>(
               }
             }
           );
+        },
+        async return() {
+          if (cleanup) {
+            await cleanup();
+          }
+          return { value: undefined, done: true };
         },
       };
     },

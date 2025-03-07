@@ -24,6 +24,22 @@ export function readTsConfig(
   );
 }
 
+export function readTsConfigFromTree(
+  tree: Tree,
+  tsConfigPath: string
+): ts.ParsedCommandLine {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  const tsSysFromTree: ts.System = {
+    ...tsModule.sys,
+    readFile: (path) => tree.read(path, 'utf-8'),
+  };
+
+  return readTsConfig(tsConfigPath, tsSysFromTree);
+}
+
 export function getRootTsConfigPathInTree(tree: Tree): string | null {
   for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
     if (tree.exists(path)) {

@@ -14,7 +14,7 @@ import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
 import { ProjectDetailsPage } from '@nx/graph-internal/project-details';
 import { ErrorBoundary } from './ui-components/error-boundary';

@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ErrorRenderer } from '@nx/graph/ui-components';
+import { ErrorRenderer } from '@nx/graph/legacy/components';
 import { GraphError } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import type { JSX } from 'react';

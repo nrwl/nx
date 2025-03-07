@@ -19,6 +19,7 @@ import { basename, join } from 'path';
 import { minimatch } from 'minimatch';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { nxVersion } from '../../utils/versions';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 let tsModule: typeof import('typescript');
 
@@ -35,7 +36,7 @@ export async function projectRootPath(
   config: ProjectConfiguration
 ): Promise<string> {
   let projectDir: string;
-  if (config.projectType === 'application') {
+  if (getProjectType(tree, config.root, config.projectType) === 'application') {
     const isNextJs = await isNextJsProject(tree, config);
     if (isNextJs) {
       // Next.js apps
@@ -47,8 +48,10 @@ export async function projectRootPath(
   } else if (config.projectType == 'library') {
     // libs/test-lib/src/lib
     projectDir = 'lib';
+  } else {
+    projectDir = '.';
   }
-  return joinPathFragments(config.sourceRoot, projectDir);
+  return joinPathFragments(config.sourceRoot ?? config.root, projectDir);
 }
 
 export function containsComponentDeclaration(
@@ -119,7 +122,10 @@ export async function createAllStories(
 
   await Promise.all(
     componentPaths.map(async (componentPath) => {
-      const relativeCmpDir = componentPath.replace(join(sourceRoot, '/'), '');
+      const relativeCmpDir = componentPath.replace(
+        join(sourceRoot ?? root, '/'),
+        ''
+      );
 
       if (!containsComponentDeclaration(tree, componentPath)) {
         return;

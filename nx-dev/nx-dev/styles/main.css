@@ -255,3 +255,10 @@ html.dark .adaptive-icon {
     transform: translateY(0);
   }
 }
+
+.accordion {
+  border: none;
+}
+.accordion summary h3 {
+  display: inline-block;
+}

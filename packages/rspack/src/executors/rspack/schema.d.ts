@@ -35,7 +35,12 @@ export interface RspackExecutorSchema {
   sourceMap?: boolean | DevTool;
   standardRspackConfigFunction?: boolean;
   statsJson?: boolean;
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
+  sassImplementation?: 'sass' | 'sass-embedded';
   styles?: Array<ExtraEntryPointClass | string>;
   target?: 'web' | 'node';
   transformers?: TransformerEntry[];
@@ -69,4 +74,5 @@ export interface NormalizedRspackExecutorSchema extends RspackExecutorSchema {
   root: string;
   projectRoot: string;
   sourceRoot: string;
+  useTsconfigPaths: boolean;
 }

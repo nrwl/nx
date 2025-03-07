@@ -1,3 +1,8 @@
+---
+title: 'Large Next.js Apps Made Faster with Nx'
+description: 'Explore how Nx optimizes and speeds up large Next.js applications with shared components, buildable packages, and efficient caching strategies.'
+---
+
 # File Large Next.js Apps Made Faster by Using Nx
 
 Repo contains:

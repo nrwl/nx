@@ -1,3 +1,8 @@
+---
+title: Ban Dependencies with Certain Tags
+description: Learn how to use the notDependOnLibsWithTags property to prevent projects from depending on libraries with specific tags in your Nx workspace.
+---
+
 # Ban Dependencies with Certain Tags
 
 Specifying which tags a project is allowed to depend on can sometimes lead to a long list of possible options:

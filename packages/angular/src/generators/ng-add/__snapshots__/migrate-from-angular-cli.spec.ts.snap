@@ -93,7 +93,8 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
       "!{projectRoot}/**/*.spec.[jt]s",
       "!{projectRoot}/karma.conf.js",
       "!{projectRoot}/.eslintrc.json",
-      "!{projectRoot}/eslint.config.js",
+      "!{projectRoot}/eslint.config.cjs",
+      "!{projectRoot}/eslint.config.mjs",
     ],
     "sharedGlobals": [],
   },
@@ -104,7 +105,7 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.config.mjs",
       ],
     },
     "build": {
@@ -129,7 +130,7 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/eslint.config.js",
+        "{workspaceRoot}/eslint.config.cjs",
       ],
     },
     "test": {

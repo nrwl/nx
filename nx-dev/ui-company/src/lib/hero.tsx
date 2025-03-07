@@ -1,4 +1,5 @@
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+'use client';
+import { SectionHeading, YouTube } from '@nx/nx-dev/ui-common';
 import {
   GlobeAltIcon,
   TrophyIcon,
@@ -24,23 +25,27 @@ const statements = [
       "Since 2016 we've been helping global enterprises use build tools to optimize their development processes, speed up their CI and create better software.",
   },
 ];
+
 export function Hero(): JSX.Element {
   return (
     <section>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading as="h1" variant="display">
-            About us
+            We Help You Succeed at Scale
           </SectionHeading>
           <SectionHeading
             as="p"
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            We make developers
+            Making developers
             <span className="mx-1 text-gray-500 line-through">10x</span>
             Nx more productive
           </SectionHeading>
+        </div>
+        <div className="mt-12">
+          <YouTube src="https://youtu.be/Ut-FfVChAno" title="About Nx" />
         </div>
         <dl className="mt-24 grid grid-cols-1 gap-16 lg:grid lg:grid-cols-3">
           {statements.map((statement, _) => {

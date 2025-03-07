@@ -8,6 +8,14 @@
         "no-restricted-imports": [
           "error",
           {
+            "name": "fast-glob",
+            "message": "Please use `tinyglobby` instead."
+          },
+          {
+            "name": "minimatch",
+            "message": "Please use `picomatch` instead."
+          },
+          {
             "name": "fs-extra",
             "message": "Please use equivalent utilities from `node:fs` instead."
           }

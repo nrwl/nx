@@ -290,6 +290,55 @@ describe('addPlugin', () => {
       expect(scripts['build:dev']).toBe('nx build');
     });
 
+    it('should support replacing scripts where a command is the same as the cli entry point', async () => {
+      writeJson(tree, 'app1/package.json', {
+        name: 'app1',
+        scripts: {
+          dev: 'next',
+          build: 'tsc -b && next build',
+          preview: 'next preview',
+        },
+      });
+
+      createNodes = [
+        '**/next.config.{ts,js,cjs,mjs}',
+        () => [
+          [
+            'app1/next.config.js',
+            {
+              projects: {
+                app1: {
+                  name: 'app1',
+                  targets: {
+                    build: { command: 'next build' },
+                    dev: { command: 'next' },
+                    preview: { command: 'next preview' },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      await addPlugin(
+        tree,
+        graph,
+        '@nx/next/plugin',
+        createNodes,
+
+        {
+          targetName: ['build'],
+        },
+        true
+      );
+
+      const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
+      expect(scripts.dev).toBe('nx dev');
+      expect(scripts.build).toBe('tsc -b && nx build');
+      expect(scripts.preview).toBe('nx preview');
+    });
+
     it('should support replacing multiple scripts', async () => {
       writeJson(tree, 'app1/package.json', {
         name: 'app1',

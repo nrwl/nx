@@ -1,6 +1,6 @@
 import { AggregatedResult } from '@jest/reporters';
 import { pluralize, formatTime } from 'jest-util';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 
 /**
  * Copied from the jest repo because these utility functions are not exposed through the package
@@ -50,9 +50,9 @@ const renderTime = (runTime: number, estimatedTime: number, width: number) => {
   // If we are more than one second over the estimated time, highlight it.
   const renderedTime =
     estimatedTime && runTime >= estimatedTime + 1
-      ? chalk.bold.yellow(formatTime(runTime, 0))
+      ? pc.bold(pc.yellow(formatTime(runTime, 0)))
       : formatTime(runTime, 0);
-  let time = chalk.bold(`Time:`) + `        ${renderedTime}`;
+  let time = pc.bold(`Time:`) + `        ${renderedTime}`;
   if (runTime < estimatedTime) {
     time += `, estimated ${formatTime(estimatedTime, 0)}`;
   }
@@ -68,8 +68,8 @@ const renderTime = (runTime: number, estimatedTime: number, width: number) => {
     if (availableWidth >= 2) {
       time +=
         '\n' +
-        chalk.green('█').repeat(length) +
-        chalk.white('█').repeat(availableWidth - length);
+        pc.green('█').repeat(length) +
+        pc.white('█').repeat(availableWidth - length);
     }
   }
   return time;
@@ -120,12 +120,12 @@ export const getSummary = (
   const width = options?.width || 0;
 
   const suites =
-    chalk.bold('Test Suites: ') +
-    (suitesFailed ? chalk.bold.red(`${suitesFailed} failed`) + ', ' : '') +
+    pc.bold('Test Suites: ') +
+    (suitesFailed ? pc.bold(pc.red(`${suitesFailed} failed`)) + ', ' : '') +
     (suitesPending
-      ? chalk.bold.yellow(`${suitesPending} skipped`) + ', '
+      ? pc.bold(pc.yellow(`${suitesPending} skipped`)) + ', '
       : '') +
-    (suitesPassed ? chalk.bold.green(`${suitesPassed} passed`) + ', ' : '') +
+    (suitesPassed ? pc.bold(pc.green(`${suitesPassed} passed`)) + ', ' : '') +
     (suitesRun !== suitesTotal
       ? suitesRun + ' of ' + suitesTotal
       : suitesTotal) +
@@ -138,50 +138,50 @@ export const getSummary = (
   const updatedTestsTotal = testsTotal + numTotalTests;
 
   const tests =
-    chalk.bold('Tests:       ') +
+    pc.bold('Tests:       ') +
     (updatedTestsFailed > 0
-      ? chalk.bold.red(`${updatedTestsFailed} failed`) + ', '
+      ? pc.bold(pc.red(`${updatedTestsFailed} failed`)) + ', '
       : '') +
     (updatedTestsPending > 0
-      ? chalk.bold.yellow(`${updatedTestsPending} skipped`) + ', '
+      ? pc.bold(pc.yellow(`${updatedTestsPending} skipped`)) + ', '
       : '') +
     (updatedTestsTodo > 0
-      ? chalk.bold.magenta(`${updatedTestsTodo} todo`) + ', '
+      ? pc.bold(pc.magenta(`${updatedTestsTodo} todo`)) + ', '
       : '') +
     (updatedTestsPassed > 0
-      ? chalk.bold.green(`${updatedTestsPassed} passed`) + ', '
+      ? pc.bold(pc.green(`${updatedTestsPassed} passed`)) + ', '
       : '') +
     `${updatedTestsTotal} total`;
 
   const snapshots =
-    chalk.bold('Snapshots:   ') +
+    pc.bold('Snapshots:   ') +
     (snapshotsFailed
-      ? chalk.bold.red(`${snapshotsFailed} failed`) + ', '
+      ? pc.bold(pc.red(`${snapshotsFailed} failed`)) + ', '
       : '') +
     (snapshotsOutdated && !snapshotsDidUpdate
-      ? chalk.bold.yellow(`${snapshotsOutdated} obsolete`) + ', '
+      ? pc.bold(pc.yellow(`${snapshotsOutdated} obsolete`)) + ', '
       : '') +
     (snapshotsOutdated && snapshotsDidUpdate
-      ? chalk.bold.green(`${snapshotsOutdated} removed`) + ', '
+      ? pc.bold(pc.green(`${snapshotsOutdated} removed`)) + ', '
       : '') +
     (snapshotsFilesRemoved && !snapshotsDidUpdate
-      ? chalk.bold.yellow(
-          pluralize('file', snapshotsFilesRemoved) + ' obsolete'
+      ? pc.bold(
+          pc.yellow(pluralize('file', snapshotsFilesRemoved) + ' obsolete')
         ) + ', '
       : '') +
     (snapshotsFilesRemoved && snapshotsDidUpdate
-      ? chalk.bold.green(
-          pluralize('file', snapshotsFilesRemoved) + ' removed'
+      ? pc.bold(
+          pc.green(pluralize('file', snapshotsFilesRemoved) + ' removed')
         ) + ', '
       : '') +
     (snapshotsUpdated
-      ? chalk.bold.green(`${snapshotsUpdated} updated`) + ', '
+      ? pc.bold(pc.green(`${snapshotsUpdated} updated`)) + ', '
       : '') +
     (snapshotsAdded
-      ? chalk.bold.green(`${snapshotsAdded} written`) + ', '
+      ? pc.bold(pc.green(`${snapshotsAdded} written`)) + ', '
       : '') +
     (snapshotsPassed
-      ? chalk.bold.green(`${snapshotsPassed} passed`) + ', '
+      ? pc.bold(pc.green(`${snapshotsPassed} passed`)) + ', '
       : '') +
     `${snapshotsTotal} total`;
 
