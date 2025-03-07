@@ -1,0 +1,67 @@
+{
+  "name": "@nx/angular-rspack-compiler",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Compilation utilities for Angular with Rspack and Rsbuild.",
+  "author": "Colum Ferry",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/angular-rspack/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/angular-rspack.git",
+    "directory": "packages/angular-rspack-compiler"
+  },
+  "keywords": [
+    "angular",
+    "rspack",
+    "rsbuild",
+    "compiler"
+  ],
+  "version": "19.0.0-alpha.29",
+  "scripts": {
+    "postinstall": "node ./patch/patch-angular-build.js"
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "sass-embedded": "^1.79.3",
+    "ts-morph": "^24.0.0",
+    "tslib": "^2.3.0",
+    "typescript": "5.6.3"
+  },
+  "devDependencies": {
+    "@ng-rspack/testing-setup": "workspace:*"
+  },
+  "peerDependencies": {
+    "@angular/compiler-cli": ">=18.0.0 <20.0.0",
+    "@rsbuild/core": ">=1.0.5 <2.0.0",
+    "@angular/build": ">=18.0.0 <20.0.0",
+    "@swc/core": ">=1.5.0 <1.11.0"
+  },
+  "nx": {
+    "sourceRoot": "packages/angular-rspack-compiler/src",
+    "projectType": "library",
+    "name": "angular-rspack-compiler",
+    "targets": {
+      "code-pushup": {},
+      "integration-test": {
+        "configName": "vitest.integration.config.mts"
+      },
+      "unit-test": {
+        "configName": "vitest.unit.config.mts"
+      }
+    }
+  }
+}
