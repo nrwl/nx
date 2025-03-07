@@ -12,7 +12,7 @@ Assignment rules allow you to control which tasks can run on which agents. Save 
 
 Assignment rules are defined in yaml files within your workspace's `.nx/workflows` directory. You can use assignment rules with DTE-agents or with dynamic Nx Agents. Note that additional configuration is required when using DTE agents.
 
-Read the full docs [here](https://nx.dev/ci/reference/assignment-rules#assignment-rules-beta).
+Read the full docs [here](/ci/reference/assignment-rules#assignment-rules-beta).
 
 Once you start using assignment rules, you'll be able to see all your configured "rules" in your CIPE "Analysis page".
 
@@ -45,7 +45,7 @@ To enable it, you need to set this env variable on the nx-api deployment:
     - `~/.npm`
     - `~/.cache/yarn`
     - `.pnpm-store` (note PNPM on Nx Agents does not store its cache folder in the $HOME dir)
-  - Please refer to the [custom launch templates docs](https://nx.dev/ci/reference/launch-templates#full-example) for how you can setup your caching under these new recommendations
+  - Please refer to the [custom launch templates docs](/ci/reference/launch-templates#full-example) for how you can setup your caching under these new recommendations
 - Nx Agents `$HOME` directory mounting
   - previously, when your Nx Agents pods were starting up, we were mounting as a k8s volume just the folder in which you checkout your repo: `$HOME/workspace`
   - however, a lot of dependencies and third-party apps use `$HOME` folder to deposit a lot of files (Rust, NPM cache folders etc.)
