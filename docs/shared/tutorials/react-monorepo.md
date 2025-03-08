@@ -286,10 +286,10 @@ More info can be found in [the integrate with editors article](/getting-started/
 
 {% /callout %}
 
-Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
+Run the following command to generate a new `inventory` application. Note how we append `--dryRun` to first check the output.
 
-```{% command="npx nx g @nx/react:app apps/inventory" path="react-monorepo" %}
- NX  Generating @nx/react:application
+```{% command="npx nx g --dryRun @nx/react:app apps/inventory" path="react-monorepo" %}
+NX  Generating @nx/react:application
 
 ✔ Would you like to add React Router to this application? (y/N) · false
 ✔ What unit test runner should be used? · vitest
@@ -324,7 +324,7 @@ CREATE apps/inventory-e2e/eslint.config.mjs
 NOTE: The "dryRun" flag means no changes were made.
 ```
 
-As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
+As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dryRun` flag.
 
 ```shell
 npx nx g @nx/react:app apps/inventory
