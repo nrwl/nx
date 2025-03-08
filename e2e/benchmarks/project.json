@@ -1,0 +1,11 @@
+{
+  "name": "e2e-benchmarks",
+  "targets": {
+    "benchmark": {
+      "command": "vitest bench",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}
