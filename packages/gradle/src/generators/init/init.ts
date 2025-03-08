@@ -94,6 +94,11 @@ function addProjectReportToBuildGradle(settingsGradleFile: string, tree: Tree) {
     if (!buildGradleContent.includes('"project-report"')) {
       logger.warn(`Please add the project-report plugin to your ${gradleFilePath}:
 allprojects {
+  tasks.whenTaskAdded {task ->
+    if(task.name.contains("htmlDependencyReport")){
+      task.enabled = false
+    }
+  }
   apply {
       plugin("project-report")
   }
