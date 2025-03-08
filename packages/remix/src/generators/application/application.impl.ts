@@ -85,7 +85,7 @@ export async function remixApplicationGeneratorInternal(
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   if (!options.isUsingTsSolutionConfig) {

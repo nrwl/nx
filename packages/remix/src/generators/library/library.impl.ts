@@ -30,7 +30,7 @@ export async function remixLibraryGeneratorInternal(
   const options = await normalizeOptions(tree, schema);
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   const jsInitTask = await jsInitGenerator(tree, {

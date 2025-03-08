@@ -62,7 +62,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   if (options.publishable === true && !schema.importPath) {

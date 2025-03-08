@@ -258,7 +258,7 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isTsSolutionSetup) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   if (!options.skipFormat) {
