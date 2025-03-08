@@ -104,17 +104,24 @@ describe('nx release', () => {
     ).toEqual(3);
     expect(
       versionOutput.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
+        /Resolved the current version as 0\.0\.0 from manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
+    // First project
     expect(
       versionOutput.match(
-        /Resolved the current version as 0.0.0 from my-pkg-\d*\/package.json/g
+        /Applied explicit semver value "999\.9\.9", from the given specifier, to get new version 999\.9\.9/g
       ).length
-    ).toEqual(3);
+    ).toEqual(1);
+    // Other projects
     expect(
       versionOutput.match(
-        /New version 999.9.9 written to my-pkg-\d*\/package.json/g
+        /Applied version 999\.9\.9 directly, because the project is a member of a fixed release group containing my-pkg-\d*/g
+      ).length
+    ).toEqual(2);
+    expect(
+      versionOutput.match(
+        /New version 999\.9\.9 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -296,17 +303,12 @@ describe('nx release', () => {
       versionOutput2.match(/Running release version for project: my-pkg-\d*/g)
         .length
     ).toEqual(3);
-    expect(
-      versionOutput2.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
-      ).length
-    ).toEqual(3);
 
-    // It should resolve the current version from the registry once...
+    // It should resolve the current version from the registry once because it is a fixed release group...
     expect(
       versionOutput2.match(
         new RegExp(
-          `Resolved the current version as 999.9.9 for tag "latest" from registry ${e2eRegistryUrl}`,
+          `Resolved the current version as 999.9.9 from the remote registry: "@proj:registry=${e2eRegistryUrl}" tag=latest`,
           'g'
         )
       ).length
@@ -315,15 +317,28 @@ describe('nx release', () => {
     expect(
       versionOutput2.match(
         new RegExp(
-          `Using the current version 999.9.9 already resolved from the registry ${e2eRegistryUrl}`,
+          `Reusing the current version 999.9.9 already resolved for my-pkg-\\d* from the registry: "@proj:registry=${e2eRegistryUrl}" tag=latest`,
           'g'
         )
       ).length
     ).toEqual(2);
 
+    // First project
     expect(
       versionOutput2.match(
-        /New version 1000.0.0-next.0 written to my-pkg-\d*\/package.json/g
+        /Applied semver relative bump "premajor", from the given specifier, to get new version 1000\.0\.0-next\.0/g
+      ).length
+    ).toEqual(1);
+    // Other projects
+    expect(
+      versionOutput2.match(
+        /Applied version 1000\.0\.0-next\.0 directly, because the project is a member of a fixed release group containing my-pkg-\d*/g
+      ).length
+    ).toEqual(2);
+
+    expect(
+      versionOutput2.match(
+        /New version 1000\.0\.0-next\.0 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -421,17 +436,17 @@ describe('nx release', () => {
       execSync(
         `npm view @proj/${pkg1}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm (ERR!|error) code E404/);
     expect(() =>
       execSync(
         `npm view @proj/${pkg2}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm (ERR!|error) code E404/);
     expect(() =>
       execSync(
         `npm view @proj/${pkg3}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm (ERR!|error) code E404/);
 
     // Actually publish to the custom registry (not e2e registry), and a custom dist tag of "next"
     const publishOutput3 = runCLI(publishToNext);
@@ -758,11 +773,6 @@ describe('nx release', () => {
       versionOutput3.match(/Running release version for project: my-pkg-\d*/g)
         .length
     ).toEqual(3);
-    expect(
-      versionOutput3.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
-      ).length
-    ).toEqual(3);
 
     // It should resolve the current version from the git tag once...
     expect(
@@ -777,15 +787,28 @@ describe('nx release', () => {
     expect(
       versionOutput3.match(
         new RegExp(
-          `Using the current version 1100.0.0 already resolved from git tag "xx1100.0.0"`,
+          `Reusing the current version 1100.0.0 already resolved for my-pkg-\\d* from git tag "xx1100.0.0"`,
           'g'
         )
       ).length
     ).toEqual(2);
 
+    // First project
     expect(
       versionOutput3.match(
-        /New version 1100.1.0 written to my-pkg-\d*\/package.json/g
+        /Applied semver relative bump "minor", from the given specifier, to get new version 1100\.1\.0/g
+      ).length
+    ).toEqual(1);
+    // Other projects
+    expect(
+      versionOutput3.match(
+        /Applied version 1100\.1\.0 directly, because the project is a member of a fixed release group containing my-pkg-\d*/g
+      ).length
+    ).toEqual(2);
+
+    expect(
+      versionOutput3.match(
+        /New version 1100\.1\.0 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -821,11 +844,6 @@ describe('nx release', () => {
       versionOutput4.match(/Running release version for project: my-pkg-\d*/g)
         .length
     ).toEqual(3);
-    expect(
-      versionOutput4.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
-      ).length
-    ).toEqual(3);
 
     // It should resolve the current version from the git tag once...
     expect(
@@ -840,13 +858,24 @@ describe('nx release', () => {
     expect(
       versionOutput4.match(
         new RegExp(
-          `Using the current version 1100.0.0 already resolved from git tag "xx1100.0.0"`,
+          `Reusing the current version 1100.0.0 already resolved for my-pkg-\\d* from git tag "xx1100.0.0"`,
           'g'
         )
       ).length
     ).toEqual(2);
 
-    expect(versionOutput4.match(/Skipping versioning/g).length).toEqual(3);
+    // First project
+    expect(
+      versionOutput4.match(
+        /No changes were detected using git history and the conventional commits standard/g
+      ).length
+    ).toEqual(1);
+    // Other projects
+    expect(
+      versionOutput4.match(
+        /Skipping versioning for my-pkg-\d* as it is a part of a fixed release group with my-pkg-\d* and no dependency bumps were detected/g
+      ).length
+    ).toEqual(2);
 
     await runCommandAsync(
       `git add ${pkg1}/my-file.txt && git commit -m "feat!: add new file"`
@@ -856,7 +885,7 @@ describe('nx release', () => {
 
     expect(
       versionOutput5.match(
-        /New version 1101.0.0 written to my-pkg-\d*\/package.json/g
+        /New version 1101\.0\.0 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
