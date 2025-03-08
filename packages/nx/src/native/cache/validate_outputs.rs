@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use regex::Regex;
 
-use crate::native::glob::{contains_glob_pattern, glob_transform::partition_glob};
+use nx_glob::{contains_glob_pattern, partition_glob};
 
 const ALLOWED_WORKSPACE_ROOT_OUTPUT_PREFIXES: [&str; 2] = ["!{workspaceRoot}", "{workspaceRoot}"];
 

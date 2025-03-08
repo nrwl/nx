@@ -1,0 +1,22 @@
+[package]
+name = "nx_terminal"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+anyhow = { workspace = true }
+tracing = { workspace = true }
+portable-pty = { workspace = true }
+crossterm = { workspace = true }
+parking_lot = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+winapi = { workspace = true }
+
+[target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
+mio = { workspace = true }
+
+[dev-dependencies]
+assert_fs = { workspace = true }
+tempfile = { workspace = true }

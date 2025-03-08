@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use anyhow::*;
 use tracing::{trace, trace_span};
 
-use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
+use nx_glob::NxGlobSet;
 
 pub fn hash_project_files(
     project_name: &str,
@@ -41,8 +41,8 @@ fn collect_files<'a>(
         })
         .collect::<Vec<_>>();
     let now = std::time::Instant::now();
-    let glob_set = build_glob_set(&globs)?;
-    trace!("build_glob_set for {:?}", now.elapsed());
+    let glob_set = NxGlobSet::new(&globs)?;
+    trace!("build glob set for {:?}", now.elapsed());
 
     project_file_map.get(project_name).map_or_else(
         || Err(anyhow!("project {} not found", project_name)),
@@ -60,9 +60,8 @@ fn collect_files<'a>(
 }
 #[cfg(test)]
 mod tests {
-    use crate::native::hasher::hash;
-
     use super::*;
+    use nx_hasher::hash;
     use std::collections::HashMap;
 
     #[test]
@@ -158,12 +157,15 @@ mod tests {
         let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
-            hash(&[
-                file_data1.hash.as_bytes(),
-                file_data1.file.as_bytes(),
-                file_data3.hash.as_bytes(),
-                file_data3.file.as_bytes()
-            ].concat())
+            hash(
+                &[
+                    file_data1.hash.as_bytes(),
+                    file_data1.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
+                    file_data3.file.as_bytes()
+                ]
+                .concat()
+            )
         );
     }
 
@@ -205,12 +207,15 @@ mod tests {
         let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
-            hash(&[
-                file_data1.hash.as_bytes(),
-                file_data1.file.as_bytes(),
-                file_data3.hash.as_bytes(),
-                file_data3.file.as_bytes(),
-            ].concat())
+            hash(
+                &[
+                    file_data1.hash.as_bytes(),
+                    file_data1.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
+                    file_data3.file.as_bytes(),
+                ]
+                .concat()
+            )
         );
     }
 }

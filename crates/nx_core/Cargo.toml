@@ -1,0 +1,9 @@
+[package]
+name = "nx_core"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+napi = { workspace = true}
+napi-derive = { workspace = true}
