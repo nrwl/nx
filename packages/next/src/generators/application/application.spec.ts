@@ -691,6 +691,47 @@ describe('app', () => {
         `);
       });
 
+      it('should install eslint-config-next@15 when generating a new Next.js application in an empty Nx workspace', async () => {
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-config-next': '~15.1.4',
+          },
+        });
+      });
+
+      it('should install eslint-config-next@14 when an existing Next.js 14 project is detected', async () => {
+        tree.write(
+          '/package.json',
+          JSON.stringify({
+            name: '@proj/source',
+            dependencies: {
+              next: '~14.2.16',
+            },
+            devDependencies: {},
+          })
+        );
+
+        const name = uniq();
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-config-next': '~14.2.16',
+          },
+        });
+      });
+
       it('should add .eslintrc.json and dependencies', async () => {
         await applicationGenerator(tree, {
           directory: 'myapp',
