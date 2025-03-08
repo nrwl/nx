@@ -1,6 +1,6 @@
 import type { CreateNodesContextV2 } from '@nx/devkit';
 import { mkdirSync, rmdirSync } from 'node:fs';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import { createNodesV2, type AngularProjectConfiguration } from './plugin';
 
 jest.mock('nx/src/utils/cache-directory', () => ({

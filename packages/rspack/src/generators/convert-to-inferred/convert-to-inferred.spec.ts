@@ -12,7 +12,7 @@ import {
   type Tree,
   detectPackageManager,
 } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from '@nx/devkit/testing';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';

@@ -1,6 +1,6 @@
 import { CreateNodesContextV2 } from '@nx/devkit';
 import { minimatch } from 'minimatch';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import { createNodesV2, EslintPluginOptions } from './plugin';
 import { mkdirSync, rmdirSync } from 'fs';
 

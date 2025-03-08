@@ -2,7 +2,7 @@ import { CreateNodesContext } from '@nx/devkit';
 import type { NextConfig } from 'next';
 
 import { createNodesV2 } from './plugin';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from '@nx/devkit/testing';
 
 describe('@nx/next/plugin', () => {
   let createNodesFunction = createNodesV2[1];
