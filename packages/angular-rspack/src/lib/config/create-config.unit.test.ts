@@ -1,4 +1,4 @@
-import { createConfig, withConfigurations } from './create-config';
+import { _createConfig, createConfig } from './create-config';
 import { beforeEach, expect } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 
@@ -26,7 +26,7 @@ describe('createConfig', () => {
 
   it('should create config for mode "production" if env variable NODE_ENV is "production"', () => {
     vi.stubEnv('NODE_ENV', 'production');
-    expect(createConfig(configBase)).toStrictEqual([
+    expect(_createConfig(configBase)).toStrictEqual([
       expect.objectContaining({ mode: 'production' }),
     ]);
   });
@@ -36,15 +36,15 @@ describe('createConfig', () => {
     (nodeEnv) => {
       vi.stubEnv('NODE_ENV', nodeEnv);
 
-      expect(createConfig(configBase)).toStrictEqual([
+      expect(_createConfig(configBase)).toStrictEqual([
         expect.objectContaining({ mode: 'development' }),
       ]);
     }
   );
 
-  describe('withConfigurations', () => {
-    const runWithConfigurations = () => {
-      return withConfigurations(
+  describe('createConfig', () => {
+    const runCreateConfig = () => {
+      return createConfig(
         { options: configBase },
         {
           development: {
@@ -64,7 +64,7 @@ describe('createConfig', () => {
     };
 
     it('should create config from options', () => {
-      expect(withConfigurations({ options: configBase })).toStrictEqual([
+      expect(createConfig({ options: configBase })).toStrictEqual([
         expect.objectContaining({
           mode: 'development',
           plugins: [
@@ -88,7 +88,7 @@ describe('createConfig', () => {
       (configuration, fileNameSegment, skipTypeChecking) => {
         vi.stubEnv('NGRS_CONFIG', configuration);
 
-        const config = runWithConfigurations();
+        const config = runCreateConfig();
 
         const plugins = config[0].plugins;
         const NgRspackPlugin = plugins?.find(
