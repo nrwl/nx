@@ -1,5 +1,5 @@
 import type { Compilation } from '@rspack/core';
-import type { JavaScriptTransformer } from '@ng-rspack/compiler';
+import type { JavaScriptTransformer } from '@nx/angular-rspack-compiler';
 
 export const NG_RSPACK_SYMBOL_NAME = 'NG_RSPACK_BUILD';
 

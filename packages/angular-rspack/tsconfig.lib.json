@@ -24,9 +24,6 @@
       "path": "../angular-rspack-compiler/tsconfig.lib.json"
     },
     {
-      "path": "../compiler/tsconfig.lib.json"
-    },
-    {
       "path": "../../testing/setup/tsconfig.lib.json"
     }
   ]

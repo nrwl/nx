@@ -1,4 +1,4 @@
-import { StylePreprocessorOptions } from '@ng-rspack/compiler';
+import { StylePreprocessorOptions } from '@nx/angular-rspack-compiler';
 
 export function getIncludePathOptions(includePaths?: string[]) {
   if (!includePaths || includePaths.length === 0) {
