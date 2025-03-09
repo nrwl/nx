@@ -25,7 +25,7 @@ export async function setupCompilationWithParallelCompilation(
 
   try {
     await parallelCompilation.initialize(
-      config.source?.tsconfigPath ?? options.tsconfigPath,
+      config.source?.tsconfigPath ?? options.tsConfig,
       {
         ...compilerOptions,
         fileReplacements,

@@ -19,7 +19,7 @@ describe('setupCompilationWithParallelCompilation', () => {
   };
 
   const pluginAngularOptions: SetupCompilationOptions = {
-    tsconfigPath: 'tsconfig.angular.json',
+    tsConfig: 'tsconfig.angular.json',
     fileReplacements: [
       {
         replace: 'src/main.ts',

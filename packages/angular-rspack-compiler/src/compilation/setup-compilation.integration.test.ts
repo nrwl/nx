@@ -120,7 +120,7 @@ describe('setupCompilation', () => {
     await expect(
       setupCompilation(rsBuildMockConfig, {
         root: '',
-        tsconfigPath: 'irrelevant-if-tsconfig-is-in-rsbuild-config',
+        tsConfig: 'irrelevant-if-tsconfig-is-in-rsbuild-config',
         aot: true,
         inlineStylesExtension: 'css',
         fileReplacements: [],
@@ -147,7 +147,7 @@ describe('setupCompilation', () => {
         },
         {
           root: '',
-          tsconfigPath: path.join(fixturesDir, 'tsconfig.other.mock.json'),
+          tsConfig: path.join(fixturesDir, 'tsconfig.other.mock.json'),
           aot: true,
           inlineStylesExtension: 'css',
           fileReplacements: [],
