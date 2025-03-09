@@ -1,6 +1,6 @@
 import type {
   FileReplacement,
-  InlineStyleExtension,
+  InlineStyleLanguage,
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
 
@@ -16,7 +16,7 @@ export interface AngularRspackPluginOptions {
   scripts: string[];
   fileReplacements: FileReplacement[];
   aot: boolean;
-  inlineStylesExtension: InlineStyleExtension;
+  inlineStyleLanguage: InlineStyleLanguage;
   tsConfig: string;
   hasServer: boolean;
   skipTypeChecking: boolean;
