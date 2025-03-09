@@ -16,6 +16,9 @@
   },
   "references": [
     {
+      "path": "tsconfig.lib.json"
+    },
+    {
       "path": "../../testing/setup/tsconfig.lib.json"
     },
     {

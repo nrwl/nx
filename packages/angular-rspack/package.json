@@ -67,7 +67,12 @@
     "sourceRoot": "packages/angular-rspack/src",
     "projectType": "library",
     "targets": {
-      "code-pushup": {}
+      "code-pushup": {},
+      "unit-test": {
+        "dependsOn": [
+          "^build"
+        ]
+      }
     }
   }
 }
