@@ -10,7 +10,7 @@ import { getSupportedBrowsers } from '@angular/build/private';
 
 export interface SetupCompilationOptions {
   root: string;
-  tsconfigPath: string;
+  tsConfig: string;
   aot: boolean;
   inlineStylesExtension: InlineStyleExtension;
   fileReplacements: Array<FileReplacement>;
@@ -42,7 +42,7 @@ export async function setupCompilation(
 
   const { readConfiguration } = await loadCompilerCli();
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
-    config.source?.tsconfigPath ?? options.tsconfigPath,
+    config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
       ...(options.useTsProjectReferences

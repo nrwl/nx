@@ -37,7 +37,7 @@ describe('setupCompilation', () => {
   };
 
   const pluginAngularOptions: SetupCompilationOptions = {
-    tsconfigPath: 'tsconfig.angular.json',
+    tsConfig: 'tsconfig.angular.json',
     aot: true,
     inlineStylesExtension: 'css',
     useTsProjectReferences: false,
@@ -102,7 +102,7 @@ describe('setupCompilation', () => {
       compilerOptions: {
         inlineStylesExtension: 'css',
         aot: true,
-        tsconfigPath: expect.stringMatching(/tsconfig.angular.json$/),
+        tsConfig: expect.stringMatching(/tsconfig.angular.json$/),
         useTsProjectReferences: false,
         fileReplacements: [],
       },
@@ -149,7 +149,7 @@ describe('setupCompilation', () => {
     expect(createIncrementalCompilerHostSpy).toHaveBeenCalledWith({
       inlineStylesExtension: 'css',
       aot: true,
-      tsconfigPath: expect.stringMatching(/tsconfig.angular.json$/),
+      tsConfig: expect.stringMatching(/tsconfig.angular.json$/),
       useTsProjectReferences: false,
       fileReplacements: [],
     });
