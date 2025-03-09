@@ -1065,6 +1065,104 @@ describe('app', () => {
     });
   });
 
+  describe('--use-react-router', () => {
+    it('should add react-router to vite.config', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(appTree.read('my-app/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import { reactRouter } from '@react-router/dev/vite';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/my-app',
+          server: {
+            port: 4200,
+            host: 'localhost',
+          },
+          preview: {
+            port: 4300,
+            host: 'localhost',
+          },
+          plugins: [
+            !process.env.VITEST && reactRouter(),
+            nxViteTsPaths(),
+            nxCopyAssetsPlugin(['*.md']),
+          ],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          build: {
+            outDir: '../dist/my-app',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+          },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/my-app',
+              provider: 'v8' as const,
+            },
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should add types to tsconfig', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+      const tsconfigSpec = readJson(appTree, 'my-app/tsconfig.json');
+      expect(tsconfigSpec.compilerOptions.types).toEqual([
+        'vite/client',
+        'vitest',
+        '@react-router/node',
+      ]);
+    });
+
+    it('should have a project package.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const packageJson = readJson(appTree, 'my-app/package.json');
+      expect(packageJson.dependencies['@react-router/node']).toBeDefined();
+      expect(packageJson.dependencies['@react-router/serve']).toBeDefined();
+      expect(packageJson.dependencies['react-router']).toBeDefined();
+      expect(packageJson.devDependencies['@react-router/dev']).toBeDefined();
+    });
+  });
+
   describe('--directory="." (--root-project)', () => {
     it('should create files at the root', async () => {
       await applicationGenerator(appTree, {

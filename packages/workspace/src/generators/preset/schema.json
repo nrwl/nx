@@ -25,6 +25,11 @@
       "type": "boolean",
       "default": true
     },
+    "useReactRouter": {
+      "description": "Use React Router for routing.",
+      "type": "boolean",
+      "default": false
+    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",

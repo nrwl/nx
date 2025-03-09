@@ -14,6 +14,7 @@ export interface Schema {
   linter: Linter | LinterType;
   classComponent?: boolean;
   routing?: boolean;
+  useReactRouter?: boolean;
   skipNxJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
