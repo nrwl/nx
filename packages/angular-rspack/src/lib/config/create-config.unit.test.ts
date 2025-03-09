@@ -8,7 +8,7 @@ describe('createConfig', () => {
     browser: './src/main.ts',
     index: './src/index.html',
     tsConfig: './tsconfig.base.json',
-    inlineStylesExtension: 'css',
+    inlineStyleLanguage: 'css',
     polyfills: [],
     styles: [],
     assets: [],
