@@ -31,6 +31,7 @@ interface Schema {
   bundler?: 'vite' | 'webpack';
   standaloneApi?: boolean;
   routing?: boolean;
+  routingType?: 'none' | 'vanilla' | 'framework' | 'library';
   packageManager?: PackageManager;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
