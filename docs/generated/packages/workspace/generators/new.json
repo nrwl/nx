@@ -25,6 +25,12 @@
         "type": "boolean",
         "default": true
       },
+      "routingType": {
+        "description": "The type of routing to use.",
+        "type": "string",
+        "enum": ["vanilla", "framework", "library", "none"],
+        "default": "vanilla"
+      },
       "standaloneApi": {
         "description": "Use Standalone Components if generating an Angular application.",
         "type": "boolean",

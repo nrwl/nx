@@ -53,6 +53,9 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   assertValidStyle(options.style);
 
+  options.bundler =
+    options.routingType === 'framework' ? 'vite' : options.bundler;
+
   const normalized = {
     ...options,
     projectName: appProjectName,
@@ -69,6 +72,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;
+  normalized.routingType = normalized.routingType ?? 'none';
   normalized.strict = normalized.strict ?? true;
   normalized.classComponent = normalized.classComponent ?? false;
   normalized.compiler = normalized.compiler ?? 'babel';

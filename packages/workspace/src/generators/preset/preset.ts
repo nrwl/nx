@@ -77,6 +77,7 @@ async function createPreset(tree: Tree, options: Schema) {
         options.unitTestRunner ??
         (options.bundler === 'vite' ? 'vitest' : 'jest'),
       addPlugin,
+      routingType: options.routingType,
       nxCloudToken: options.nxCloudToken,
       useTsSolution: options.workspaces,
       formatter: options.formatter,
@@ -94,39 +95,11 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
       rootProject: true,
       bundler,
+      routing: options.routing,
+      routingType: options.routingType,
       e2eTestRunner: options.e2eTestRunner ?? 'playwright',
       unitTestRunner:
         options.unitTestRunner ?? (bundler === 'vite' ? 'vitest' : 'jest'),
-      addPlugin,
-      nxCloudToken: options.nxCloudToken,
-      formatter: options.formatter,
-    });
-  } else if (options.preset === Preset.RemixMonorepo) {
-    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
-      '/remix/generators');
-
-    return remixApplicationGenerator(tree, {
-      name: options.name,
-      directory: join('apps', options.name),
-      linter: options.linter,
-      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
-      unitTestRunner: options.unitTestRunner ?? 'vitest',
-      addPlugin,
-      nxCloudToken: options.nxCloudToken,
-      useTsSolution: options.workspaces,
-      formatter: options.formatter,
-    });
-  } else if (options.preset === Preset.RemixStandalone) {
-    const { applicationGenerator: remixApplicationGenerator } = require('@nx' +
-      '/remix/generators');
-
-    return remixApplicationGenerator(tree, {
-      name: options.name,
-      directory: '.',
-      linter: options.linter,
-      e2eTestRunner: options.e2eTestRunner ?? 'playwright',
-      rootProject: true,
-      unitTestRunner: options.unitTestRunner ?? 'vitest',
       addPlugin,
       nxCloudToken: options.nxCloudToken,
       formatter: options.formatter,

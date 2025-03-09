@@ -11,6 +11,9 @@ import {
   typesNodeVersion,
   typesReactDomVersion,
   typesReactVersion,
+  typesReactRouterNodeVersion,
+  reactRouterVersion,
+  reactRouterIsBotVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
@@ -27,13 +30,25 @@ export async function installCommonDependencies(
 
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {
-    '@types/node': typesNodeVersion,
     '@types/react': reactDeps['@types/react'],
     '@types/react-dom': reactDeps['@types/react-dom'],
+    ...(options.routingType === 'framework'
+      ? {
+          '@types/node': typesReactRouterNodeVersion,
+          '@react-router/dev': reactRouterVersion,
+        }
+      : { '@types/node': typesNodeVersion }),
   };
 
   if (options.bundler !== 'vite') {
     dependencies['tslib'] = tsLibVersion;
+  }
+
+  if (options.routingType === 'framework') {
+    dependencies['react-router'] = reactRouterVersion;
+    dependencies['@react-router/node'] = reactRouterVersion;
+    dependencies['@react-router/serve'] = reactRouterVersion;
+    dependencies['isbot'] = reactRouterIsBotVersion;
   }
 
   // Vite requires style preprocessors to be installed manually.
@@ -65,5 +80,5 @@ export async function installCommonDependencies(
     devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }

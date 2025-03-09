@@ -48,11 +48,13 @@ interface ReactArguments extends BaseArguments {
   stack: 'react';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'none' | 'next' | 'remix';
+  framework: 'none' | 'next';
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
   nextSrcDir: boolean;
+  routingType: 'none' | 'vanilla' | 'framework' | 'library';
+  routing: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
@@ -376,8 +378,6 @@ async function determineStack(
       case Preset.ReactMonorepo:
       case Preset.NextJs:
       case Preset.NextJsStandalone:
-      case Preset.RemixStandalone:
-      case Preset.RemixMonorepo:
       case Preset.ReactNative:
       case Preset.Expo:
         return 'react';
@@ -590,6 +590,8 @@ async function determineReactOptions(
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let routingType: undefined | 'none' | 'vanilla' | 'framework' | 'library' =
+    undefined;
   let nextAppDir = false;
   let nextSrcDir = false;
   let linter: undefined | 'none' | 'eslint';
@@ -601,8 +603,7 @@ async function determineReactOptions(
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
-      preset === Preset.NextJsStandalone ||
-      preset === Preset.RemixStandalone
+      preset === Preset.NextJsStandalone
     ) {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -628,17 +629,12 @@ async function determineReactOptions(
       } else {
         preset = Preset.NextJs;
       }
-    } else if (framework === 'remix') {
-      if (isStandalone) {
-        preset = Preset.RemixStandalone;
-      } else {
-        preset = Preset.RemixMonorepo;
-      }
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
+      routingType = await determineReactRoutingStrategy(parsedArgs);
       if (isStandalone) {
         preset = Preset.ReactStandalone;
       } else {
@@ -648,7 +644,10 @@ async function determineReactOptions(
   }
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
-    bundler = await determineReactBundler(parsedArgs);
+    bundler =
+      routingType === 'framework'
+        ? 'vite'
+        : await determineReactBundler(parsedArgs);
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       preferVitest: bundler === 'vite',
     });
@@ -658,14 +657,6 @@ async function determineReactOptions(
     nextSrcDir = await determineNextSrcDir(parsedArgs);
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       exclude: 'vitest',
-    });
-    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (
-    preset === Preset.RemixMonorepo ||
-    preset === Preset.RemixStandalone
-  ) {
-    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-      preferVitest: true,
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
@@ -747,6 +738,7 @@ async function determineReactOptions(
     nextSrcDir,
     unitTestRunner,
     e2eTestRunner,
+    routingType,
     linter,
     formatter,
     workspaces,
@@ -1220,9 +1212,9 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'remix' | 'expo' | 'react-native'> {
+): Promise<'none' | 'nextjs' | 'react-router' | 'expo' | 'react-native'> {
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'remix' | 'expo' | 'react-native';
+    framework: 'none' | 'nextjs' | 'react-router' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1236,19 +1228,20 @@ async function determineReactFramework(
         },
         {
           name: 'nextjs',
-          message: 'Next.js       [ https://nextjs.org/      ]',
+          message: 'Next.js       [ https://nextjs.org/       ]',
         },
-        {
-          name: 'remix',
-          message: 'Remix         [ https://remix.run/       ]',
-        },
+        // {
+        //   name: 'react-router',
+        //   message: 'React Router  [ https:///reactrouter.com/ ]',
+        //   hint: '(Previously known as Remix)'
+        // },
         {
           name: 'expo',
-          message: 'Expo          [ https://expo.io/         ]',
+          message: 'Expo          [ https://expo.io/          ]',
         },
         {
           name: 'react-native',
-          message: 'React Native  [ https://reactnative.dev/ ]',
+          message: 'React Native  [ https://reactnative.dev/  ]',
         },
       ],
       initial: 0,
@@ -1492,4 +1485,46 @@ async function determineE2eTestRunner(
     },
   ]);
   return reply.e2eTestRunner;
+}
+
+async function determineReactRoutingStrategy(
+  parsedArgs: yargs.Arguments<{
+    routingType?: 'none' | 'vanilla' | 'framework' | 'library';
+  }>
+): Promise<'none' | 'vanilla' | 'framework' | 'library'> {
+  if (parsedArgs.routing === false) return 'none';
+  if (parsedArgs.routingType) return parsedArgs.routingType;
+  const reply = await enquirer.prompt<{
+    routing: 'vanilla' | 'framework' | 'library';
+  }>([
+    {
+      message: 'What routing strategy would you like to use?',
+      type: 'autocomplete',
+      name: 'routing',
+      skip: !parsedArgs.interactive || isCI(),
+      choices: [
+        {
+          name: 'vanilla',
+          message:
+            'React Router Dom + CSR [ https://reactrouter.com/6.30.0/start/overview     ]',
+        },
+        {
+          name: 'framework',
+          message:
+            'React Router + SSR     [ https://reactrouter.com/start/framework/routing   ]',
+        },
+        {
+          name: 'library',
+          message:
+            'React Router + CSR     [ https://reactrouter.com/start/library/routing     ]',
+        },
+        {
+          name: 'none',
+          message: 'None',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+  return reply.routing;
 }
