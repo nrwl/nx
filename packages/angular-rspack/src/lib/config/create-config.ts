@@ -36,7 +36,7 @@ export function _createConfig(
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
       conditionNames: ['es2020', 'es2015', '...'],
       tsConfig: {
-        configFile: normalizedOptions.tsconfigPath,
+        configFile: normalizedOptions.tsConfig,
       },
     },
     experiments: {

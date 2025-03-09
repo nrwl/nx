@@ -197,7 +197,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       ? typeof tsConfig === 'string'
         ? tsConfig
         : tsConfig.configFile
-      : this.#_options.tsconfigPath;
+      : this.#_options.tsConfig;
     this.#angularCompilation = await setupCompilationWithParallelCompilation(
       {
         source: {
@@ -207,7 +207,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       {
         root: this.#_options.root,
         aot: this.#_options.aot,
-        tsconfigPath: tsconfigPath,
+        tsConfig: tsconfigPath,
         inlineStylesExtension: this.#_options.inlineStylesExtension,
         fileReplacements: this.#_options.fileReplacements,
         useTsProjectReferences: this.#_options.useTsProjectReferences,
