@@ -27,7 +27,7 @@ import * as ts from 'typescript';
 import { type CompilerHost as AngularCompilerHost } from '@angular/compiler-cli';
 import { normalize } from 'path';
 import { createHash } from 'node:crypto';
-import { InlineStyleExtension } from '../models';
+import { InlineStyleLanguage } from '../models';
 
 /**
  *
@@ -43,7 +43,7 @@ export function augmentHostWithResources(
     options?: { ssr?: boolean }
   ) => string | null,
   options: {} & {
-    inlineStylesExtension?: InlineStyleExtension;
+    inlineStylesExtension?: InlineStyleLanguage;
     isProd?: boolean;
   } = {}
 ) {

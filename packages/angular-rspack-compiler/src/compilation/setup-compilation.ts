@@ -2,7 +2,7 @@ import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
 import { compileString } from 'sass-embedded';
 import { augmentHostWithResources } from './augments';
-import { InlineStyleExtension, FileReplacement } from '../models';
+import { InlineStyleLanguage, FileReplacement } from '../models';
 import { loadCompilerCli } from '../utils';
 import { ComponentStylesheetBundler } from '@angular/build/src/tools/esbuild/angular/component-stylesheets';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
@@ -12,7 +12,7 @@ export interface SetupCompilationOptions {
   root: string;
   tsConfig: string;
   aot: boolean;
-  inlineStylesExtension: InlineStyleExtension;
+  inlineStyleLanguage: InlineStyleLanguage;
   fileReplacements: Array<FileReplacement>;
   useTsProjectReferences?: boolean;
   hasServer?: boolean;
@@ -77,13 +77,13 @@ export async function setupCompilation(
         })
       ),
     },
-    options.inlineStylesExtension,
+    options.inlineStyleLanguage,
     false
   );
 
   if (options.aot) {
     augmentHostWithResources(host, (code) => compileString(code).css, {
-      inlineStylesExtension: options.inlineStylesExtension,
+      inlineStylesExtension: options.inlineStyleLanguage,
       isProd,
     });
   }

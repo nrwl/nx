@@ -27,7 +27,7 @@ describe('setupCompilationWithParallelCompilation', () => {
       },
     ],
     aot: true,
-    inlineStylesExtension: 'css',
+    inlineStyleLanguage: 'css',
   };
 
   const initializeSpy = vi

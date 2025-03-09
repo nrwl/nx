@@ -39,7 +39,7 @@ describe('setupCompilation', () => {
   const pluginAngularOptions: SetupCompilationOptions = {
     tsConfig: 'tsconfig.angular.json',
     aot: true,
-    inlineStylesExtension: 'css',
+    inlineStyleLanguage: 'css',
     useTsProjectReferences: false,
     fileReplacements: [],
   };
@@ -100,7 +100,7 @@ describe('setupCompilation', () => {
       setupCompilation(rsBuildConfig, pluginAngularOptions)
     ).resolves.toStrictEqual({
       compilerOptions: {
-        inlineStylesExtension: 'css',
+        inlineStyleLanguage: 'css',
         aot: true,
         tsConfig: expect.stringMatching(/tsconfig.angular.json$/),
         useTsProjectReferences: false,
@@ -147,7 +147,7 @@ describe('setupCompilation', () => {
     ).resolves.not.toThrow();
     expect(createIncrementalCompilerHostSpy).toHaveBeenCalledTimes(1);
     expect(createIncrementalCompilerHostSpy).toHaveBeenCalledWith({
-      inlineStylesExtension: 'css',
+      inlineStyleLanguage: 'css',
       aot: true,
       tsConfig: expect.stringMatching(/tsconfig.angular.json$/),
       useTsProjectReferences: false,
