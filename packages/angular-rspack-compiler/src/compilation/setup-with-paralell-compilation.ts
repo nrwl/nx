@@ -14,7 +14,7 @@ export async function setupCompilationWithParallelCompilation(
   const { rootNames, compilerOptions, componentStylesheetBundler } =
     await setupCompilation(config, options);
   const parallelCompilation = new ParallelCompilation(
-    options.jit ?? false,
+    !options.aot,
     options.hasServer === false
   );
   const fileReplacements: Record<string, string> =

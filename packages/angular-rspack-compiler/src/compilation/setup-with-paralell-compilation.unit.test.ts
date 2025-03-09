@@ -26,7 +26,7 @@ describe('setupCompilationWithParallelCompilation', () => {
         with: 'src/main.prod.ts',
       },
     ],
-    jit: false,
+    aot: true,
     inlineStylesExtension: 'css',
   };
 
@@ -102,7 +102,7 @@ describe('setupCompilationWithParallelCompilation', () => {
     await expect(() =>
       setupCompilationWithParallelCompilation(rsBuildConfig, {
         ...pluginAngularOptions,
-        jit: true,
+        aot: false,
         hasServer: false,
       })
     ).not.toThrow();
@@ -115,7 +115,7 @@ describe('setupCompilationWithParallelCompilation', () => {
     await expect(() =>
       setupCompilationWithParallelCompilation(rsBuildConfig, {
         ...pluginAngularOptions,
-        jit: true,
+        aot: false,
         hasServer: true,
       })
     ).not.toThrow();
