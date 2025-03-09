@@ -60,5 +60,13 @@ export function normalizeOptions(
     hasServer: getHasServer({ server, ssrEntry, root }),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
+    devServer: options.devServer
+      ? {
+          ...options.devServer,
+          port: options.devServer.port ?? 4200,
+        }
+      : {
+          port: 4200,
+        },
   };
 }

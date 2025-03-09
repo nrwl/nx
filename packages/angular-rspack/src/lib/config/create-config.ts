@@ -117,7 +117,7 @@ export function _createConfig(
         client: {
           webSocketURL: {
             hostname: 'localhost',
-            port: 4200,
+            port: normalizedOptions.devServer?.port ?? 4200,
           },
           overlay: {
             errors: true,
@@ -126,6 +126,7 @@ export function _createConfig(
           },
           reconnect: true,
         },
+        port: normalizedOptions.devServer?.port ?? 4200,
         hot: false,
         liveReload: true,
         watchFiles: ['./src/**/*.*', './public/**/*.*'],
@@ -210,7 +211,7 @@ export function _createConfig(
       client: {
         webSocketURL: {
           hostname: 'localhost',
-          port: 4200,
+          port: options.devServer?.port ?? 4200,
         },
         overlay: {
           errors: true,
@@ -229,7 +230,7 @@ export function _createConfig(
       devMiddleware: {
         writeToDisk: (file) => !file.includes('.hot-update.'),
       },
-      port: 4200,
+      port: options.devServer?.port ?? 4200,
       onListening: (devServer) => {
         if (!devServer) {
           throw new Error('@rspack/dev-server is not defined');
