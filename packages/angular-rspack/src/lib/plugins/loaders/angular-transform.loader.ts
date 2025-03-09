@@ -1,7 +1,10 @@
 import type { LoaderContext } from '@rspack/core';
 import { normalize } from 'path';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
-import { StyleUrlsResolver, TemplateUrlsResolver } from '@ng-rspack/compiler';
+import {
+  StyleUrlsResolver,
+  TemplateUrlsResolver,
+} from '@nx/angular-rspack-compiler';
 
 const styleUrlsResolver = new StyleUrlsResolver();
 const templateUrlsResolver = new TemplateUrlsResolver();

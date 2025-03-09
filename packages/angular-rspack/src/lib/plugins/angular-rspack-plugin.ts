@@ -9,13 +9,13 @@ import {
   NG_RSPACK_SYMBOL_NAME,
   NgRspackCompilation,
 } from '../models';
-import { maxWorkers } from '@ng-rspack/compiler';
 import {
+  maxWorkers,
   buildAndAnalyzeWithParallelCompilation,
   JavaScriptTransformer,
   setupCompilationWithParallelCompilation,
   DiagnosticModes,
-} from '@ng-rspack/compiler';
+} from '@nx/angular-rspack-compiler';
 import { dirname, normalize, resolve } from 'path';
 import fs_1 from 'fs';
 
@@ -44,7 +44,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         sourcemap: false,
         thirdPartySourcemaps: false,
         advancedOptimizations: true,
-        jit: this.#_options.jit,
+        jit: !this.#_options.aot,
       },
       maxWorkers()
     ) as unknown as ResolvedJavascriptTransformer;
@@ -206,7 +206,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       },
       {
         root: this.#_options.root,
-        jit: this.#_options.jit,
+        aot: this.#_options.aot,
         tsconfigPath: tsconfigPath,
         inlineStylesExtension: this.#_options.inlineStylesExtension,
         fileReplacements: this.#_options.fileReplacements,

@@ -10,9 +10,6 @@
       "path": "../angular-rspack-compiler"
     },
     {
-      "path": "../compiler"
-    },
-    {
       "path": "../../testing/setup"
     },
     {

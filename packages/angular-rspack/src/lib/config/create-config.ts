@@ -7,7 +7,10 @@ import {
 import { merge as rspackMerge } from 'webpack-merge';
 import { join } from 'path';
 import { AngularRspackPluginOptions, normalizeOptions } from '../models';
-import { JS_ALL_EXT_REGEX, TS_ALL_EXT_REGEX } from '@ng-rspack/compiler';
+import {
+  JS_ALL_EXT_REGEX,
+  TS_ALL_EXT_REGEX,
+} from '@nx/angular-rspack-compiler';
 import { getStyleLoaders } from './style-config-utils';
 
 export function _createConfig(
