@@ -11,7 +11,7 @@ import { getSupportedBrowsers } from '@angular/build/private';
 export interface SetupCompilationOptions {
   root: string;
   tsconfigPath: string;
-  jit: boolean;
+  aot: boolean;
   inlineStylesExtension: InlineStyleExtension;
   fileReplacements: Array<FileReplacement>;
   useTsProjectReferences?: boolean;
@@ -81,7 +81,7 @@ export async function setupCompilation(
     false
   );
 
-  if (!options.jit) {
+  if (options.aot) {
     augmentHostWithResources(host, (code) => compileString(code).css, {
       inlineStylesExtension: options.inlineStylesExtension,
       isProd,
