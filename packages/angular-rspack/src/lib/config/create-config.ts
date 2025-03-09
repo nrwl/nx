@@ -10,7 +10,7 @@ import { AngularRspackPluginOptions, normalizeOptions } from '../models';
 import { JS_ALL_EXT_REGEX, TS_ALL_EXT_REGEX } from '@ng-rspack/compiler';
 import { getStyleLoaders } from './style-config-utils';
 
-export function createConfig(
+export function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Configuration[] {
@@ -309,7 +309,7 @@ export function createConfig(
   return configs;
 }
 
-export function withConfigurations(
+export function createConfig(
   defaultOptions: {
     options: AngularRspackPluginOptions;
     rspackConfigOverrides?: Partial<Configuration>;
@@ -346,5 +346,5 @@ export function withConfigurations(
     );
   }
 
-  return createConfig(mergedBuildOptionsOptions, mergedRspackConfigOverrides);
+  return _createConfig(mergedBuildOptionsOptions, mergedRspackConfigOverrides);
 }
