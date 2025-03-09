@@ -56,7 +56,7 @@ export function normalizeOptions(
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     aot: options.aot ?? true,
     inlineStylesExtension: options.inlineStylesExtension ?? 'css',
-    tsconfigPath: options.tsconfigPath ?? join(root, 'tsconfig.app.json'),
+    tsConfig: options.tsConfig ?? join(root, 'tsconfig.app.json'),
     hasServer: getHasServer({ server, ssrEntry, root }),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,

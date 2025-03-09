@@ -17,7 +17,7 @@ export interface AngularRspackPluginOptions {
   fileReplacements: FileReplacement[];
   aot: boolean;
   inlineStylesExtension: InlineStyleExtension;
-  tsconfigPath: string;
+  tsConfig: string;
   hasServer: boolean;
   skipTypeChecking: boolean;
   useTsProjectReferences?: boolean;
