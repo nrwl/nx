@@ -308,3 +308,43 @@ export function createConfig(
   configs.unshift(mergedConfig);
   return configs;
 }
+
+export function withConfigurations(
+  defaultOptions: {
+    options: AngularRspackPluginOptions;
+    rspackConfigOverrides?: Partial<Configuration>;
+  },
+  configurations: Record<
+    string,
+    {
+      options: Partial<AngularRspackPluginOptions>;
+      rspackConfigOverrides?: Partial<Configuration>;
+    }
+  > = {},
+  configEnvVar = 'NGRS_CONFIG'
+) {
+  const configurationMode = process.env[configEnvVar] ?? 'production';
+  const isDefault = configurationMode === 'default';
+  const isModeConfigured = configurationMode in configurations;
+
+  const mergedBuildOptionsOptions = {
+    ...defaultOptions.options,
+    ...((!isDefault && isModeConfigured
+      ? configurations[configurationMode]?.options
+      : {}) ?? {}),
+  };
+
+  let mergedRspackConfigOverrides = defaultOptions.rspackConfigOverrides ?? {};
+  if (
+    !isDefault &&
+    isModeConfigured &&
+    configurations[configurationMode]?.rspackConfigOverrides
+  ) {
+    mergedRspackConfigOverrides = rspackMerge(
+      mergedRspackConfigOverrides,
+      configurations[configurationMode]?.rspackConfigOverrides ?? {}
+    );
+  }
+
+  return createConfig(mergedBuildOptionsOptions, mergedRspackConfigOverrides);
+}
