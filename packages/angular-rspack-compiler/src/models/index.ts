@@ -2,7 +2,7 @@ import { JavaScriptTransformer } from '@angular/build/src/tools/esbuild/javascri
 import { ParallelCompilation } from '@angular/build/src/tools/angular/compilation/parallel-compilation';
 export { ParallelCompilation, JavaScriptTransformer };
 
-export * from './inline-style-extension';
+export * from './inline-style-language';
 export * from './file-replacement';
 export * from './style-preprocessor-options';
 

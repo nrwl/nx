@@ -122,7 +122,7 @@ describe('setupCompilation', () => {
         root: '',
         tsConfig: 'irrelevant-if-tsconfig-is-in-rsbuild-config',
         aot: true,
-        inlineStylesExtension: 'css',
+        inlineStyleLanguage: 'css',
         fileReplacements: [],
       })
     ).resolves.toStrictEqual(
@@ -149,7 +149,7 @@ describe('setupCompilation', () => {
           root: '',
           tsConfig: path.join(fixturesDir, 'tsconfig.other.mock.json'),
           aot: true,
-          inlineStylesExtension: 'css',
+          inlineStyleLanguage: 'css',
           fileReplacements: [],
         }
       )
