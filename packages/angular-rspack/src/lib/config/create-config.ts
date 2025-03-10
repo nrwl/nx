@@ -98,7 +98,7 @@ export function _createConfig(
       target: 'node',
       entry: {
         server: {
-          import: [normalizedOptions.ssrEntry],
+          import: [(normalizedOptions.ssr as { entry: string }).entry],
         },
       },
       output: {

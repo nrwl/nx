@@ -22,15 +22,37 @@ export function resolveFileReplacements(
 
 export function getHasServer({
   server,
-  ssrEntry,
+  ssr,
   root,
-}: Pick<AngularRspackPluginOptions, 'server' | 'ssrEntry' | 'root'>): boolean {
+}: Pick<AngularRspackPluginOptions, 'server' | 'ssr' | 'root'>): boolean {
   return !!(
     server &&
-    ssrEntry &&
+    ssr &&
+    (ssr as { entry: string }).entry &&
     existsSync(join(root, server)) &&
-    existsSync(join(root, ssrEntry))
+    existsSync(join(root, (ssr as { entry: string }).entry))
   );
+}
+
+export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
+  if (!ssr) {
+    return;
+  }
+  if (ssr === true) {
+    throw new Error(
+      'The "ssr" option should be an object or false. Please check the documentation.'
+    );
+  }
+  if (typeof ssr === 'object')
+    if (!ssr.entry) {
+      throw new Error(
+        'The "ssr" option should have an "entry" property. Please check the documentation.'
+      );
+    } else if (ssr.experimentalPlatform === 'neutral') {
+      console.warn(
+        'The "ssr.experimentalPlatform" option is not currently supported. Node will be used as the platform.'
+      );
+    }
 }
 
 export function validateOptimization(
@@ -52,9 +74,20 @@ export function normalizeOptions(
     root = process.cwd(),
     fileReplacements = [],
     server,
-    ssrEntry,
+    ssr,
     optimization,
   } = options;
+
+  validateSsr(ssr);
+
+  const normalizedSsr = !ssr
+    ? false
+    : typeof ssr === 'object'
+    ? {
+        entry: ssr.entry,
+        experimentalPlatform: 'node' as const, // @TODO: Add support for neutral platform
+      }
+    : ssr;
 
   validateOptimization(optimization);
   const normalizedOptimization = optimization !== false; // @TODO: Add support for optimization options
@@ -64,7 +97,7 @@ export function normalizeOptions(
     index: options.index ?? './src/index.html',
     browser: options.browser ?? './src/main.ts',
     ...(server ? { server } : {}),
-    ...(ssrEntry ? { ssrEntry } : {}),
+    ...(ssr ? { ssr: normalizedSsr } : {}),
     optimization: normalizedOptimization,
     polyfills: options.polyfills ?? [],
     assets: options.assets ?? ['./public'],
@@ -74,7 +107,7 @@ export function normalizeOptions(
     aot: options.aot ?? true,
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     tsConfig: options.tsConfig ?? join(root, 'tsconfig.app.json'),
-    hasServer: getHasServer({ server, ssrEntry, root }),
+    hasServer: getHasServer({ server, ssr: normalizedSsr, root }),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     devServer: options.devServer

@@ -53,7 +53,11 @@ export class NgRspackPlugin implements RspackPluginInstance {
         scriptLoading: 'module',
         template: join(this.pluginOptions.root, this.pluginOptions.index),
       }).apply(compiler);
-      if (this.pluginOptions.ssrEntry !== undefined) {
+      if (
+        this.pluginOptions.ssr &&
+        typeof this.pluginOptions.ssr === 'object' &&
+        this.pluginOptions.ssr.entry !== undefined
+      ) {
         new AngularSsrDevServer().apply(compiler);
       }
     }
