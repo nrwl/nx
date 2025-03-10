@@ -21,6 +21,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
   }
 
   apply(compiler: Compiler) {
+    const root = compiler.options.context ?? process.cwd();
     const isProduction = process.env['NODE_ENV'] === 'production';
     const isDevServer = process.env['WEBPACK_SERVE'];
 
@@ -51,7 +52,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
         minify: false,
         inject: 'body',
         scriptLoading: 'module',
-        template: join(this.pluginOptions.root, this.pluginOptions.index),
+        template: join(root, this.pluginOptions.index),
       }).apply(compiler);
       if (
         this.pluginOptions.ssr &&
@@ -72,7 +73,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
     if (this.pluginOptions.assets) {
       new CopyRspackPlugin({
         patterns: (this.pluginOptions.assets ?? []).map((assetPath) => ({
-          from: join(this.pluginOptions.root, assetPath),
+          from: join(root, assetPath),
           to: '.',
           noErrorOnMissing: true,
         })),

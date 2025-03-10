@@ -27,8 +27,8 @@ export function resolveFileReplacements(
 export function getHasServer({
   server,
   ssr,
-  root,
-}: Pick<AngularRspackPluginOptions, 'server' | 'ssr' | 'root'>): boolean {
+}: Pick<AngularRspackPluginOptions, 'server' | 'ssr'>): boolean {
+  const root = process.cwd();
   return !!(
     server &&
     ssr &&
@@ -74,13 +74,7 @@ export function validateOptimization(
 export function normalizeOptions(
   options: Partial<AngularRspackPluginOptions> = {}
 ): NormalizedAngularRspackPluginOptions {
-  const {
-    root = process.cwd(),
-    fileReplacements = [],
-    server,
-    ssr,
-    optimization,
-  } = options;
+  const { fileReplacements = [], server, ssr, optimization } = options;
 
   validateSsr(ssr);
 
@@ -96,12 +90,13 @@ export function normalizeOptions(
   validateOptimization(optimization);
   const normalizedOptimization = optimization !== false; // @TODO: Add support for optimization options
 
+  const root = process.cwd();
+
   const aot = options.aot ?? true;
   // @TODO: should be `aot && normalizedOptimization.scripts` once we support optimization options
   const advancedOptimizations = aot && normalizedOptimization;
 
   return {
-    root,
     index: options.index ?? './src/index.html',
     browser: options.browser ?? './src/main.ts',
     ...(server ? { server } : {}),
@@ -117,7 +112,7 @@ export function normalizeOptions(
     outputHashing: options.outputHashing ?? 'all',
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     tsConfig: options.tsConfig ?? join(root, 'tsconfig.app.json'),
-    hasServer: getHasServer({ server, ssr: normalizedSsr, root }),
+    hasServer: getHasServer({ server, ssr: normalizedSsr }),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     devServer: normalizeDevServer(options.devServer),

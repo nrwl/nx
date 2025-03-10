@@ -4,7 +4,6 @@ import { AngularRspackPluginOptions } from '../models';
 
 describe('createConfig', () => {
   const configBase: AngularRspackPluginOptions = {
-    root: '',
     browser: './src/main.ts',
     index: './src/index.html',
     tsConfig: './tsconfig.base.json',
