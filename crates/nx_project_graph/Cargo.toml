@@ -1,0 +1,13 @@
+[package]
+name = "nx_project_graph"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+nx_core = { workspace = true }
+hashbrown = {workspace = true}
+anyhow = { workspace = true}
+nx_glob = { workspace =  true}
+
+[dev-dependencies]

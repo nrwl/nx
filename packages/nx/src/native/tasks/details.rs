@@ -1,5 +1,5 @@
-use crate::native::db::connection::NxDbConnection;
 use napi::bindgen_prelude::*;
+use nx_db::connection::NxDbConnection;
 use rusqlite::params;
 use tracing::trace;
 

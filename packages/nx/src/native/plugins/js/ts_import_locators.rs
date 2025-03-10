@@ -19,8 +19,7 @@ use swc_ecma_parser::token::Keyword::{
 use swc_ecma_parser::token::Word::{Ident, Keyword};
 use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
 use swc_ecma_parser::{Syntax, Tokens, TsConfig};
-
-use crate::native::logger::enable_logger;
+use nx_logger::enable_logger;
 
 #[napi]
 #[derive(Debug)]
@@ -713,10 +712,10 @@ fn find_imports(
 #[cfg(test)]
 mod find_imports {
     use super::*;
-    use crate::native::glob::build_glob_set;
-    use crate::native::walker::nx_walker;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use nx_glob::NxGlobSet;
+    use nx_walker::nx_walker;
     use std::env;
     use std::path::PathBuf;
     use swc_common::comments::NoopComments;
@@ -962,7 +961,7 @@ import('./dynamic-import.vue')
     </template>
     <template #heading>Documentation</template>
 
-    Vue’s
+    Vue's
     <a href="https://vuejs.org/" target="_blank" rel="noopener">official documentation</a>
     provides you with all information you need to get started.
   </WelcomeItem>
@@ -1481,7 +1480,7 @@ import(myTag`react@${version}`);
         ancestors.next();
         let root = PathBuf::from(ancestors.next().unwrap());
 
-        let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
+        let glob = NxGlobSet::new(&["**/*.[jt]s"]).unwrap();
         let files = nx_walker(root.clone(), true)
             .filter(|file| glob.is_match(&file.full_path))
             .map(|file| file.full_path)

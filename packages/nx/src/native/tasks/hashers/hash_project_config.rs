@@ -2,10 +2,9 @@ use std::collections::HashMap;
 
 use anyhow::*;
 use itertools::Itertools;
-
-use crate::native::hasher::hash;
-use crate::native::project_graph::types::Project;
-use crate::native::types::Input;
+use nx_core::types::inputs::Input;
+use nx_core::types::project_graph::Project;
+use nx_hasher::hash;
 
 pub fn hash_project_config(
     project_name: &str,
@@ -17,7 +16,6 @@ pub fn hash_project_config(
     let targets = project
         .targets
         .iter()
-        .map(|(k, v)| (k, v))
         .sorted_by(|a, b| a.0.cmp(b.0))
         .map(|(k, v)| {
             format!(
@@ -40,7 +38,6 @@ pub fn hash_project_config(
         .map(|inputs| {
             inputs
                 .iter()
-                .map(|(k, v)| (k, v))
                 .sorted_by(|a, b| a.0.cmp(b.0))
                 .map(|(_, v)| {
                     v.iter()
@@ -68,7 +65,7 @@ pub fn hash_project_config(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::project_graph::types::Target;
+    use nx_core::types::project_graph::{Project, Target};
     use std::collections::HashMap;
 
     #[test]

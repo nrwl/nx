@@ -2,26 +2,21 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::native::{
-    hasher::hash,
-    project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::HashInstruction,
-    types::NapiDashMap,
-};
-use crate::native::{
-    project_graph::utils::ProjectRootMappings,
-    tasks::hashers::{hash_env, hash_runtime, hash_workspace_files},
-};
-use crate::native::{
     tasks::hashers::{
-        hash_all_externals, hash_external, hash_project_config, hash_project_files,
-        hash_task_output, hash_tsconfig_selectively,
+        hash_all_externals, hash_env, hash_external, hash_project_config, hash_project_files,
+        hash_runtime, hash_task_output, hash_tsconfig_selectively, hash_workspace_files,
     },
-    types::FileData,
+    tasks::types::HashInstruction,
+    types::{FileData, NapiDashMap},
     workspace::types::ProjectFiles,
 };
+
 use anyhow::anyhow;
 use dashmap::DashMap;
 use napi::bindgen_prelude::{Buffer, External};
+use nx_core::types::project_graph::ProjectGraph;
+use nx_hasher::hash;
+use nx_project_graph::utils::{ProjectRootMappings, create_project_root_mappings};
 use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
 
