@@ -22,9 +22,10 @@ export async function _createConfig(
   const normalizedOptions = normalizeOptions(options);
   const isProduction = process.env['NODE_ENV'] === 'production';
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
+  const root = process.cwd();
 
   const defaultConfig: Configuration = {
-    context: normalizedOptions.root,
+    context: root,
     mode: isProduction ? 'production' : 'development',
     output: {
       uniqueName: 'rspack-angular',
@@ -108,7 +109,7 @@ export async function _createConfig(
         ...defaultConfig.output,
         publicPath: 'auto',
         clean: true,
-        path: join(normalizedOptions.root, 'dist', 'server'),
+        path: join(root, 'dist', 'server'),
         filename: '[name].js',
         chunkFilename: '[name].js',
       },
@@ -145,20 +146,14 @@ export async function _createConfig(
             normalizedOptions.devServer?.sslKey &&
             normalizedOptions.devServer?.sslCert
               ? {
-                  key: resolve(
-                    normalizedOptions.root,
-                    normalizedOptions.devServer.sslKey
-                  ),
-                  cert: resolve(
-                    normalizedOptions.root,
-                    normalizedOptions.devServer.sslCert
-                  ),
+                  key: resolve(root, normalizedOptions.devServer.sslKey),
+                  cert: resolve(root, normalizedOptions.devServer.sslCert),
                 }
               : {},
           type: normalizedOptions.devServer?.ssl ? 'https' : 'http',
         },
         proxy: await getProxyConfig(
-          normalizedOptions.root,
+          root,
           normalizedOptions.devServer?.proxyConfig
         ),
       },
@@ -260,20 +255,14 @@ export async function _createConfig(
           normalizedOptions.devServer?.sslKey &&
           normalizedOptions.devServer?.sslCert
             ? {
-                key: resolve(
-                  normalizedOptions.root,
-                  normalizedOptions.devServer.sslKey
-                ),
-                cert: resolve(
-                  normalizedOptions.root,
-                  normalizedOptions.devServer.sslCert
-                ),
+                key: resolve(root, normalizedOptions.devServer.sslKey),
+                cert: resolve(root, normalizedOptions.devServer.sslCert),
               }
             : {},
         type: normalizedOptions.devServer?.ssl ? 'https' : 'http',
       },
       proxy: await getProxyConfig(
-        normalizedOptions.root,
+        root,
         normalizedOptions.devServer?.proxyConfig
       ),
       onListening: (devServer) => {
@@ -292,7 +281,7 @@ export async function _createConfig(
       hashFunction: isProduction ? 'xxhash64' : undefined,
       publicPath: 'auto',
       clean: true,
-      path: join(normalizedOptions.root, 'dist/browser'),
+      path: join(root, 'dist/browser'),
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
       chunkFilename: `[name]${hashFormat.chunk}.js`,

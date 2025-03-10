@@ -51,12 +51,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   }
 
   apply(compiler: Compiler) {
+    const root = compiler.options.context ?? process.cwd();
     // Both of these are exclusive to each other - only one of them can be used at a time
     // But they will happen before the compiler is created - so we can use them to set up the parallel compilation once
     compiler.hooks.beforeRun.tapAsync(
       PLUGIN_NAME,
       async (compiler, callback) => {
-        await this.setupCompilation(compiler.options.resolve.tsConfig);
+        await this.setupCompilation(root, compiler.options.resolve.tsConfig);
 
         compiler.hooks.beforeCompile.tapAsync(
           PLUGIN_NAME,
@@ -97,7 +98,10 @@ export class AngularRspackPlugin implements RspackPluginInstance {
                 ?.modifiedFiles
                 ? new Set(compiler.watching.compiler.modifiedFiles)
                 : new Set<string>();
-              await this.setupCompilation(compiler.options.resolve.tsConfig);
+              await this.setupCompilation(
+                root,
+                compiler.options.resolve.tsConfig
+              );
               await this.#angularCompilation.update(watchingModifiedFiles);
 
               await buildAndAnalyzeWithParallelCompilation(
@@ -191,6 +195,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   }
 
   private async setupCompilation(
+    root: string,
     tsConfig: RspackOptionsNormalized['resolve']['tsConfig']
   ) {
     const tsconfigPath = tsConfig
@@ -205,7 +210,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         },
       },
       {
-        root: this.#_options.root,
+        root,
         aot: this.#_options.aot,
         tsConfig: tsconfigPath,
         inlineStyleLanguage: this.#_options.inlineStyleLanguage,

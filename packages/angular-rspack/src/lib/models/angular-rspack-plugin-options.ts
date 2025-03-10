@@ -27,7 +27,6 @@ export type HashFormat = {
 };
 
 export interface AngularRspackPluginOptions {
-  root: string;
   index: string;
   browser: string;
   server?: string;
