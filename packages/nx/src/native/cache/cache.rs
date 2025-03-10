@@ -2,7 +2,7 @@ use std::fs::{create_dir_all, read_to_string, write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use fs_extra::{dir::get_size, remove_items};
+use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
 use rusqlite::params;
@@ -147,13 +147,13 @@ impl NxCache {
         // Write the terminal outputs into a file
         let task_outputs_path = self.get_task_outputs_path_internal(&hash);
         trace!("Writing terminal outputs to: {:?}", &task_outputs_path);
+        let mut total_size: i64 = terminal_output.len() as i64;
         write(task_outputs_path, terminal_output)?;
 
         // Expand the outputs
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
 
         // Copy the outputs to the cache
-        let mut total_size: i64 = 0;
         for expanded_output in expanded_outputs.iter() {
             let p = self.workspace_root.join(expanded_output);
             if p.exists() {
@@ -163,7 +163,7 @@ impl NxCache {
             }
         }
 
-        self.record_to_cache(hash, code, Some(total_size))?;
+        self.record_to_cache(hash, code, total_size)?;
         Ok(())
     }
 
@@ -172,19 +172,17 @@ impl NxCache {
         &self,
         hash: String,
         result: CachedResult,
+        outputs: Vec<String>,
     ) -> anyhow::Result<()> {
         trace!(
             "applying remote cache results: {:?} ({})",
             &hash,
             &result.outputs_path
         );
-        let terminal_output = result.terminal_output;
-        let size = if result.size.is_some() {
-            result.size
-        } else if Path::new(&result.outputs_path).exists() {
-            Some(get_size(&result.outputs_path).unwrap_or(0) as i64)
-        } else {
-            None
+        let terminal_output = result.terminal_output.clone();
+        let mut size = terminal_output.len() as i64;
+        if outputs.len() > 0 && result.code == 0 {
+            size += try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
         };
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
@@ -203,8 +201,7 @@ impl NxCache {
             .to_normalized_string()
     }
 
-    fn record_to_cache(&self, hash: String, code: i16, size: Option<i64>) -> anyhow::Result<()> {
-        let size = size.unwrap_or(0);
+    fn record_to_cache(&self, hash: String, code: i16, size: i64) -> anyhow::Result<()> {
         trace!("Recording to cache: {}, {}, {}", &hash, code, size);
         self.db.execute(
             "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
@@ -217,36 +214,42 @@ impl NxCache {
     }
 
     fn ensure_cache_size_within_limit(&self) -> anyhow::Result<()> {
-        if let Some(max_cache_size) = self.max_cache_size {
+        if let Some(user_specified_max_cache_size) = self.max_cache_size {
+            let buffer_amount = (0.1 * user_specified_max_cache_size as f64) as i64;
+            let target_cache_size = user_specified_max_cache_size - buffer_amount;
+
             let full_cache_size = self
                 .db
                 .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
                     row.get::<_, i64>(0)
                 })?
                 .unwrap_or(0);
-            if max_cache_size < full_cache_size {
+            if user_specified_max_cache_size < full_cache_size {
                 let mut cache_size = full_cache_size;
-                let mut hashes_to_delete = vec![];
                 let mut stmt = self.db.prepare(
                     "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
                 )?;
-                while cache_size > max_cache_size {
-                    let mut rows = stmt.query([])?;
-                    while let Some(row) = rows.next()? {
-                        let hash: String = row.get(0)?;
-                        let size: i64 = row.get(1)?;
-                        cache_size -= size;
-                        hashes_to_delete.push(hash);
-
-                        if (cache_size) < max_cache_size {
-                            break;
+                'outer: while cache_size > target_cache_size {
+                    let rows = stmt.query_map([], |r| {
+                        let hash: String = r.get(0)?;
+                        let size: i64 = r.get(1)?;
+                        Ok((hash, size))
+                    })?;
+                    for row in rows {
+                        if let Ok((hash, size)) = row {
+                            cache_size -= size;
+                            self.db.execute(
+                                "DELETE FROM cache_outputs WHERE hash = ?1",
+                                params![hash],
+                            )?;
+                            remove_items(&[self.cache_path.join(&hash)])?;
+                        }
+                        // We've deleted enough cache entries to be under the
+                        // target cache size, stop looking for more.
+                        if cache_size < target_cache_size {
+                            break 'outer;
                         }
                     }
-                }
-                for hash in hashes_to_delete {
-                    self.db
-                        .execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
-                    remove_items(&[self.cache_path.join(&hash)])?;
                 }
             }
         }
@@ -258,7 +261,7 @@ impl NxCache {
         &self,
         cached_result: CachedResult,
         outputs: Vec<String>,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<i64> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
@@ -277,9 +280,9 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        _copy(outputs_path, &self.workspace_root)?;
+        let sz = _copy(outputs_path, &self.workspace_root)?;
 
-        Ok(())
+        Ok(sz)
     }
 
     #[napi]
@@ -339,6 +342,32 @@ impl NxCache {
             Ok(true)
         } else {
             Ok(true)
+        }
+    }
+}
+
+fn try_and_retry<T, F>(mut f: F) -> anyhow::Result<T>
+where
+    F: FnMut() -> anyhow::Result<T>,
+{
+    let mut attempts = 0;
+    // Generate a random number between 2 and 4 to raise to the power of attempts
+    let base_exponent = rand::random::<f64>() * 2.0 + 2.0;
+    let base_timeout = 15;
+
+    loop {
+        attempts += 1;
+        match f() {
+            Ok(result) => return Ok(result),
+            Err(e) => {
+                // Max time is 15 * (4 + 4² + 4³ + 4⁴ + 4⁵) = 20460ms
+                if attempts == 6 {
+                    // After enough attempts, throw the error
+                    return Err(e);
+                }
+                let timeout = base_timeout as f64 * base_exponent.powi(attempts);
+                std::thread::sleep(std::time::Duration::from_millis(timeout as u64));
+            }
         }
     }
 }

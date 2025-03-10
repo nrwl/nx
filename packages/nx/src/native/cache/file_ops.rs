@@ -17,7 +17,10 @@ pub fn copy(src: String, dest: String) -> anyhow::Result<i64> {
     _copy(src, dest)
 }
 
-pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<i64> where P: AsRef<Path> {
+pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<i64>
+where
+    P: AsRef<Path>,
+{
     let dest: PathBuf = remove_trailing_single_dot(dest);
 
     let dest_parent = dest.parent().unwrap_or(&dest);
@@ -68,7 +71,6 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<(
 }
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64> {
-
     trace!("creating directory: {:?}", dst.as_ref());
     fs::create_dir_all(&dst)?;
     trace!("reading source directory: {:?}", src.as_ref());

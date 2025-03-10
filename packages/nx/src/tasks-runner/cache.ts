@@ -136,7 +136,7 @@ export class DbCache {
       );
 
       if (res) {
-        this.applyRemoteCacheResults(task.hash, res);
+        this.applyRemoteCacheResults(task.hash, res, task.outputs);
 
         return {
           ...res,
@@ -150,8 +150,12 @@ export class DbCache {
     }
   }
 
-  private applyRemoteCacheResults(hash: string, res: NativeCacheResult) {
-    return this.cache.applyRemoteCacheResults(hash, res);
+  private applyRemoteCacheResults(
+    hash: string,
+    res: NativeCacheResult,
+    outputs: string[]
+  ) {
+    return this.cache.applyRemoteCacheResults(hash, res, outputs);
   }
 
   async put(

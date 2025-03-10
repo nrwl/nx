@@ -40,9 +40,9 @@ export declare class NxCache {
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
-  applyRemoteCacheResults(hash: string, result: CachedResult): void
+  applyRemoteCacheResults(hash: string, result: CachedResult, outputs: Array<string>): void
   getTaskOutputsPath(hash: string): string
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): void
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
