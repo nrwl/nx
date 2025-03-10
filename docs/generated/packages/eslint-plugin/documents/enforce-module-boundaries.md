@@ -1,3 +1,8 @@
+---
+title: Enforce Module Boundaries ESLint Rule
+description: Learn how to use the @nx/enforce-module-boundaries ESLint rule to define strict rules for accessing resources between different projects in your Nx workspace.
+---
+
 # Enforce module boundaries rule
 
 The `@nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between

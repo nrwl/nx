@@ -1,3 +1,8 @@
+---
+title: Switch to Workspaces and Project References
+description: Learn how to migrate from TypeScript path aliases to package manager workspaces for project linking, enabling TypeScript project references for better performance.
+---
+
 # Switch to Workspaces and Project References
 
 If you want to take advantage of the [performance benefits](/concepts/typescript-project-linking#typescript-project-references-performance-benefits) of TypeScript project references, it is recommended to use package manager workspaces for local [project linking](/concepts/typescript-project-linking). If you are currently using TypeScript path aliases for project linking, follow the steps in this guide to switch to workspaces project linking and enable TypeScript project references.

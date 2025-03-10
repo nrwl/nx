@@ -42,10 +42,6 @@
         "sass-loader": {
           "version": "^16.0.4",
           "alwaysAddToPackageJson": false
-        },
-        "sass-embedded": {
-          "version": "^1.83.4",
-          "alwaysAddToPackageJson": true
         }
       }
     }

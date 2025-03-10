@@ -15,6 +15,7 @@ export interface NormalizedSchema extends Omit<Schema, 'js'> {
   fileExtension: string;
   fileExtensionType: FileExtensionType;
   projectName: string;
+  projectRoot: string;
 }
 
 export async function normalizeOptions(
@@ -65,5 +66,6 @@ export async function normalizeOptions(
     fileExtensionType,
     projectSourceRoot,
     projectName,
+    projectRoot: root,
   };
 }

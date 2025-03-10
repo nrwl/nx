@@ -318,6 +318,17 @@
         "tags": ["generate-code"]
       },
       {
+        "id": "maintain-ts-monorepos",
+        "name": "Maintain TypeScript Monorepos",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/maintain-typescript-monorepos",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/maintain-ts-monorepos",
+        "tags": ["inferred-tasks", "project-linking", "sync"]
+      },
+      {
         "id": "automate-updating-dependencies",
         "name": "Automate Updating Dependencies",
         "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
@@ -487,6 +498,17 @@
     "isExternal": false,
     "path": "/features/generate-code",
     "tags": ["generate-code"]
+  },
+  "/features/maintain-ts-monorepos": {
+    "id": "maintain-ts-monorepos",
+    "name": "Maintain TypeScript Monorepos",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/maintain-typescript-monorepos",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/maintain-ts-monorepos",
+    "tags": ["inferred-tasks", "project-linking", "sync"]
   },
   "/features/automate-updating-dependencies": {
     "id": "automate-updating-dependencies",

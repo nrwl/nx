@@ -1,3 +1,8 @@
+---
+title: 'Legacy Cache'
+description: 'Learn about the transition from legacy file system cache to the new database cache in Nx 21, including migration options for custom task runners and shared caches.'
+---
+
 # Legacy Cache
 
 In Nx 21, the legacy file system cache will be removed in favor of a new database cache. The new database cache stores metadata in a database, rather than blindly trusting the file system. The database cache has the following benefits:

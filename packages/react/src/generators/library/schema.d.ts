@@ -36,6 +36,7 @@ export interface NormalizedSchema extends Schema {
   projectRoot: string;
   routePath: string;
   parsedTags: string[];
+  importPath: string;
   appMain?: string;
   appSourceRoot?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';

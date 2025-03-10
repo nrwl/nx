@@ -20,12 +20,17 @@ export async function normalizeSchema(
       projectConfiguration
     );
 
+  const isNxConfiguredInPackageJson = !tree.exists(
+    joinPathFragments(projectConfiguration.root, 'project.json')
+  );
+
   return {
     ...schema,
     destination: normalizePathSlashes(schema.destination),
     importPath,
     newProjectName,
     relativeToRootDestination: destination,
+    isNxConfiguredInPackageJson,
   };
 }
 
@@ -41,13 +46,45 @@ async function determineProjectNameAndRootOptions(
   projectConfiguration: ProjectConfiguration
 ): Promise<ProjectNameAndRootOptions> {
   validateName(tree, options.newProjectName, projectConfiguration);
-  const projectNameAndRootOptions = getProjectNameAndRootOptions(
-    tree,
-    options,
-    projectConfiguration
-  );
 
-  return projectNameAndRootOptions;
+  let destination = normalizePathSlashes(options.destination);
+
+  if (
+    options.newProjectName &&
+    options.newProjectName.includes('/') &&
+    !options.newProjectName.startsWith('@')
+  ) {
+    throw new Error(
+      `You can't specify a new project name with a directory path (${options.newProjectName}). ` +
+        `Please provide a valid name without path segments and the full destination with the "--destination" option.`
+    );
+  }
+
+  const newProjectName = options.newProjectName ?? options.projectName;
+
+  if (projectConfiguration.projectType !== 'library') {
+    return { destination, newProjectName };
+  }
+
+  let importPath = options.importPath;
+  if (importPath) {
+    return { destination, newProjectName, importPath };
+  }
+
+  if (options.newProjectName?.startsWith('@')) {
+    // keep the existing import path if the name didn't change
+    importPath =
+      options.newProjectName && options.projectName !== options.newProjectName
+        ? newProjectName
+        : undefined;
+  } else if (options.newProjectName) {
+    const npmScope = getNpmScope(tree);
+    importPath = npmScope
+      ? `${npmScope === '@' ? '' : '@'}${npmScope}/${newProjectName}`
+      : newProjectName;
+  }
+
+  return { destination, newProjectName, importPath };
 }
 
 function validateName(
@@ -99,64 +136,4 @@ function validateName(
       );
     }
   }
-}
-
-function getProjectNameAndRootOptions(
-  tree: Tree,
-  options: Schema,
-  projectConfiguration: ProjectConfiguration
-): ProjectNameAndRootOptions {
-  let destination = normalizePathSlashes(options.destination);
-
-  if (
-    options.newProjectName &&
-    options.newProjectName.includes('/') &&
-    !options.newProjectName.startsWith('@')
-  ) {
-    throw new Error(
-      `You can't specify a new project name with a directory path (${options.newProjectName}). ` +
-        `Please provide a valid name without path segments and the full destination with the "--destination" option.`
-    );
-  }
-
-  const asProvidedOptions = getAsProvidedOptions(
-    tree,
-    { ...options, destination },
-    projectConfiguration
-  );
-
-  return asProvidedOptions;
-}
-
-function getAsProvidedOptions(
-  tree: Tree,
-  options: Schema,
-  projectConfiguration: ProjectConfiguration
-): ProjectNameAndRootOptions {
-  const newProjectName = options.newProjectName ?? options.projectName;
-  const destination = options.destination;
-
-  if (projectConfiguration.projectType !== 'library') {
-    return { destination, newProjectName };
-  }
-
-  let importPath = options.importPath;
-  if (importPath) {
-    return { destination, newProjectName, importPath };
-  }
-
-  if (options.newProjectName?.startsWith('@')) {
-    // keep the existing import path if the name didn't change
-    importPath =
-      options.newProjectName && options.projectName !== options.newProjectName
-        ? newProjectName
-        : undefined;
-  } else if (options.newProjectName) {
-    const npmScope = getNpmScope(tree);
-    importPath = npmScope
-      ? `${npmScope === '@' ? '' : '@'}${npmScope}/${newProjectName}`
-      : newProjectName;
-  }
-
-  return { destination, newProjectName, importPath };
 }

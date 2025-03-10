@@ -599,9 +599,11 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
@@ -613,17 +615,14 @@ describe('app', () => {
         {
           "name": "@proj/myapp",
           "nx": {
-            "name": "myapp",
-            "projectType": "application",
-            "sourceRoot": "myapp/src",
             "targets": {
               "serve": {
                 "configurations": {
                   "development": {
-                    "buildTarget": "myapp:build:development",
+                    "buildTarget": "@proj/myapp:build:development",
                   },
                   "production": {
-                    "buildTarget": "myapp:build:production",
+                    "buildTarget": "@proj/myapp:build:production",
                   },
                 },
                 "defaultConfiguration": "development",
@@ -632,7 +631,7 @@ describe('app', () => {
                 ],
                 "executor": "@nx/js:node",
                 "options": {
-                  "buildTarget": "myapp:build",
+                  "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
               },
@@ -667,9 +666,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "nodenext",
             "moduleResolution": "nodenext",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
@@ -717,6 +716,29 @@ describe('app', () => {
       `);
     });
 
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        bundler: 'webpack',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
     it('should use @swc/jest for jest', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/my-app',
@@ -737,7 +759,7 @@ describe('app', () => {
         swcJestConfig.swcrc = false;
 
         export default {
-          displayName: 'my-app',
+          displayName: '@proj/my-app',
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
@@ -819,7 +841,7 @@ describe('app', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, 'my-app').targets.build.options
+        readProjectConfiguration(tree, '@proj/my-app').targets.build.options
           .outputPath
       ).toBe('apps/my-app/dist');
     });
@@ -833,7 +855,7 @@ describe('app', () => {
       });
 
       expect(
-        readProjectConfiguration(tree, 'my-app').targets.build.options
+        readProjectConfiguration(tree, '@proj/my-app').targets.build.options
           .outputPath
       ).toBe('apps/my-app/dist');
     });

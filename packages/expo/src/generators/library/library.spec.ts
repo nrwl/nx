@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
-
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
 
@@ -333,40 +333,27 @@ describe('lib', () => {
   });
 
   describe('--buildable', () => {
-    it('should have a builder defined', async () => {
+    it('should add a rollup.config.cjs', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         buildable: true,
       });
 
-      const projects = getProjects(appTree);
-
-      expect(projects.get('my-lib').targets.build).toBeDefined();
+      expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
+      expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
   });
 
   describe('--publishable', () => {
-    it('should add build architect', async () => {
+    it('should add a rollup.config.cjs', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
         importPath: '@proj/my-lib',
       });
 
-      const projects = getProjects(appTree);
-
-      expect(projects.get('my-lib').targets.build).toMatchObject({
-        executor: '@nx/rollup:rollup',
-        outputs: ['{options.outputPath}'],
-        options: {
-          external: ['react/jsx-runtime', 'react-native', 'react', 'react-dom'],
-          entryFile: 'my-lib/src/index.ts',
-          outputPath: 'dist/my-lib',
-          project: 'my-lib/package.json',
-          tsConfig: 'my-lib/tsconfig.lib.json',
-          rollupConfig: '@nx/react/plugins/bundle-rollup',
-        },
-      });
+      expect(appTree.exists('my-lib/rollup.config.cjs')).toBeTruthy();
+      expect(hasRollupPlugin(appTree)).toBeTruthy();
     });
 
     it('should fail if no importPath is provided with publishable', async () => {
@@ -516,6 +503,10 @@ describe('lib', () => {
           },
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
+          "peerDependencies": {
+            "react": "~18.3.1",
+            "react-native": "0.76.3",
+          },
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
@@ -528,6 +519,7 @@ describe('lib', () => {
           "main",
           "types",
           "exports",
+          "peerDependencies",
         ]
       `);
       expect(readJson(appTree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
@@ -552,9 +544,9 @@ describe('lib', () => {
             "jsx": "react-jsx",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/my-lib",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
             ],
@@ -636,57 +628,56 @@ describe('lib', () => {
         {
           "exports": {
             ".": {
-              "default": "./dist/index.esm.js",
-              "import": "./dist/index.esm.js",
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
               "types": "./dist/index.esm.d.ts",
             },
             "./package.json": "./package.json",
           },
-          "main": "./dist/index.esm.js",
+          "main": "./src/index.ts",
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
-          "nx": {
-            "projectType": "library",
-            "sourceRoot": "my-lib/src",
-            "tags": [],
-            "targets": {
-              "build": {
-                "executor": "@nx/rollup:rollup",
-                "options": {
-                  "assets": [
-                    {
-                      "glob": "my-lib/README.md",
-                      "input": ".",
-                      "output": ".",
-                    },
-                  ],
-                  "entryFile": "my-lib/src/index.ts",
-                  "external": [
-                    "react/jsx-runtime",
-                    "react-native",
-                    "react",
-                    "react-dom",
-                  ],
-                  "outputPath": "dist/my-lib",
-                  "project": "my-lib/package.json",
-                  "rollupConfig": "@nx/react/plugins/bundle-rollup",
-                  "tsConfig": "my-lib/tsconfig.lib.json",
-                },
-                "outputs": [
-                  "{options.outputPath}",
-                ],
-              },
-            },
-          },
           "peerDependencies": {
             "react": "~18.3.1",
             "react-native": "0.76.3",
           },
-          "type": "module",
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: '@proj/my-lib',
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema, // defaultSchema has no name
+        skipFormat: true,
+      });
+
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

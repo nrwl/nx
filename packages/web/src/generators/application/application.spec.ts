@@ -780,6 +780,17 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'apps/myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+        ]
+      `);
       expect(readJson(tree, 'apps/myapp/tsconfig.json')).toMatchInlineSnapshot(`
         {
           "extends": "../../tsconfig.base.json",
@@ -801,9 +812,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
@@ -932,6 +943,32 @@ describe('app', () => {
         };
 
         "
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        name: 'myapp',
+        addPlugin: true,
+        linter: 'none',
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+      });
+
+      const packageJson = readJson(tree, 'apps/myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
       `);
     });
   });

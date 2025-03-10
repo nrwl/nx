@@ -1,3 +1,8 @@
+---
+title: Add a New Qwik Project
+description: Learn how to integrate Qwik with Nx using the qwik-nx plugin, including creating applications, libraries, and leveraging Nx features.
+---
+
 # Add a New Qwik Project
 
 The code for this example is available on GitHub:

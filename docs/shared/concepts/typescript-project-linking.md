@@ -1,3 +1,8 @@
+---
+title: 'TypeScript Project Linking'
+description: 'Learn how to efficiently reference code between TypeScript projects in your monorepo using project linking instead of relative paths.'
+---
+
 # Typescript Project Linking
 
 {% youtube src="https://youtu.be/D9D8KNffyBk" title="TypeScript Monorepos Done Right!" /%}

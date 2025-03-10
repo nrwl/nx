@@ -1,3 +1,8 @@
+---
+title: Adding Nx to NPM/Yarn/PNPM Workspace
+description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+---
+
 # Adding Nx to NPM/Yarn/PNPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}

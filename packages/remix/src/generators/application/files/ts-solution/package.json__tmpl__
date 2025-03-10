@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "<%= projectName %>",
+  "name": "<%= importPath %>",
   "scripts": {},
   "type": "module",
   "dependencies": {
@@ -19,8 +19,5 @@
   "engines": {
     "node": ">=20"
   },
-  "sideEffects": false<% if (isUsingTsSolutionConfig && parsedTags?.length) { %>,
-  "nx": {
-    "tags": <%- JSON.stringify(parsedTags) %>
-  }<% } %>
+  "sideEffects": false
 }

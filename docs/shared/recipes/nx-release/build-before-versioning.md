@@ -1,3 +1,8 @@
+---
+title: Build Before Versioning
+description: Learn how to configure Nx Release to build your projects before applying version updates, ensuring that distribution files are properly generated before publishing.
+---
+
 # Build Before Versioning
 
 In order to ensure that projects are built before the new version is applied to their package manifest, you can use the `preVersionCommand` property in `nx.json`:

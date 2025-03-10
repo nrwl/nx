@@ -462,9 +462,9 @@ describe('Remix Application', () => {
         tags: 'foo',
       });
 
+      const packageJson = readJson(tree, 'myapp/package.json');
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "private",
@@ -477,7 +477,7 @@ describe('Remix Application', () => {
           "devDependencies",
         ]
       `);
-      expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
+      expect(packageJson).toMatchInlineSnapshot(`
         {
           "dependencies": {
             "@remix-run/node": "^2.15.0",
@@ -548,7 +548,7 @@ describe('Remix Application', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": ".",
             "skipLibCheck": true,
@@ -652,6 +652,35 @@ describe('Remix Application', () => {
             "src/**/*.d.ts",
           ],
         }
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        tags: 'foo',
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "private",
+          "type",
+          "scripts",
+          "engines",
+          "sideEffects",
+          "nx",
+          "dependencies",
+          "devDependencies",
+        ]
       `);
     });
 
