@@ -5,7 +5,7 @@ import {
   SwcJsMinimizerRspackPlugin,
 } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { AngularRspackPluginOptions, normalizeOptions } from '../models';
 import {
   JS_ALL_EXT_REGEX,
@@ -109,7 +109,7 @@ export async function _createConfig(
         ...defaultConfig.output,
         publicPath: 'auto',
         clean: true,
-        path: join(root, 'dist', 'server'),
+        path: normalizedOptions.outputPath.server,
         filename: '[name].js',
         chunkFilename: '[name].js',
       },
@@ -281,7 +281,7 @@ export async function _createConfig(
       hashFunction: isProduction ? 'xxhash64' : undefined,
       publicPath: 'auto',
       clean: true,
-      path: join(root, 'dist/browser'),
+      path: normalizedOptions.outputPath.browser,
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
       chunkFilename: `[name]${hashFormat.chunk}.js`,

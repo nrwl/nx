@@ -1,13 +1,17 @@
 import { Compiler, RspackPluginInstance } from '@rspack/core';
 import { ChildProcess, fork } from 'child_process';
 import { SsrReloadServer } from './server/ssr-reload-server';
+import { OutputPath } from '../models';
+import { join } from 'node:path';
 
 const PLUGIN_NAME = 'AngularSsrDevServer';
 export class AngularSsrDevServer implements RspackPluginInstance {
   #devServerProcess: ChildProcess | undefined;
   #wsServer: SsrReloadServer;
+  #outputPath: OutputPath;
 
-  constructor() {
+  constructor(outputPath: OutputPath) {
+    this.#outputPath = outputPath;
     this.#wsServer = new SsrReloadServer();
   }
 
@@ -26,11 +30,7 @@ export class AngularSsrDevServer implements RspackPluginInstance {
       PLUGIN_NAME,
       async (compiler, callback) => {
         compiler.hooks.afterEmit.tapAsync(PLUGIN_NAME, async (_, callback) => {
-          const serverPath =
-            compiler.options.output.path?.replace(
-              'browser',
-              'server/server.js'
-            ) ?? 'dist/server/server.js';
+          const serverPath = join(this.#outputPath.server, 'server.js');
           if (this.#devServerProcess) {
             this.#devServerProcess.kill();
             this.#devServerProcess = undefined;

@@ -10,7 +10,7 @@ import {
 import { basename, extname, join } from 'path';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
-import type { NormalizedAngularRspackPluginOptions } from '../models';
+import { NormalizedAngularRspackPluginOptions, OutputPath } from '../models';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
 
 export class NgRspackPlugin implements RspackPluginInstance {
@@ -59,7 +59,9 @@ export class NgRspackPlugin implements RspackPluginInstance {
         typeof this.pluginOptions.ssr === 'object' &&
         this.pluginOptions.ssr.entry !== undefined
       ) {
-        new AngularSsrDevServer().apply(compiler);
+        new AngularSsrDevServer(
+          this.pluginOptions.outputPath as OutputPath
+        ).apply(compiler);
       }
     }
     if (!isDevServer) {
@@ -74,7 +76,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
       new CopyRspackPlugin({
         patterns: (this.pluginOptions.assets ?? []).map((assetPath) => ({
           from: join(root, assetPath),
-          to: '.',
+          to: this.pluginOptions.outputPath.media,
           noErrorOnMissing: true,
         })),
       }).apply(compiler);
