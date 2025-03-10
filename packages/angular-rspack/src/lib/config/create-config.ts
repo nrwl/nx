@@ -138,7 +138,7 @@ export function _createConfig(
           writeToDisk: (file) => !file.includes('.hot-update.'),
         },
       },
-      optimization: isProduction
+      optimization: normalizedOptions.optimization
         ? {
             minimize: true,
             runtimeChunk: false,
@@ -254,7 +254,7 @@ export function _createConfig(
       scriptType: 'module',
       module: true,
     },
-    optimization: isProduction
+    optimization: normalizedOptions.optimization
       ? {
           minimize: true,
           runtimeChunk: 'single',

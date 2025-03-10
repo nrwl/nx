@@ -33,6 +33,18 @@ export function getHasServer({
   );
 }
 
+export function validateOptimization(
+  optimization: AngularRspackPluginOptions['optimization']
+) {
+  if (typeof optimization === 'boolean' || optimization === undefined) {
+    return;
+  }
+  if (typeof optimization === 'object')
+    console.warn(
+      'The "optimization" option currently only supports a boolean value. Please check the documentation.'
+    );
+}
+
 export function normalizeOptions(
   options: Partial<AngularRspackPluginOptions> = {}
 ): AngularRspackPluginOptions {
@@ -41,7 +53,11 @@ export function normalizeOptions(
     fileReplacements = [],
     server,
     ssrEntry,
+    optimization,
   } = options;
+
+  validateOptimization(optimization);
+  const normalizedOptimization = optimization !== false; // @TODO: Add support for optimization options
 
   return {
     root,
@@ -49,6 +65,7 @@ export function normalizeOptions(
     browser: options.browser ?? './src/main.ts',
     ...(server ? { server } : {}),
     ...(ssrEntry ? { ssrEntry } : {}),
+    optimization: normalizedOptimization,
     polyfills: options.polyfills ?? [],
     assets: options.assets ?? ['./public'],
     styles: options.styles ?? ['./src/styles.css'],
