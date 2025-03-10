@@ -26,19 +26,19 @@ describe('createConfig', () => {
     vi.stubEnv('NGRS_CONFIG', '');
   });
 
-  it('should create config for mode "production" if env variable NODE_ENV is "production"', () => {
+  it('should create config for mode "production" if env variable NODE_ENV is "production"', async () => {
     vi.stubEnv('NODE_ENV', 'production');
-    expect(_createConfig(configBase)).toStrictEqual([
+    await expect(_createConfig(configBase)).resolves.toStrictEqual([
       expect.objectContaining({ mode: 'production' }),
     ]);
   });
 
   it.each(['development', 'not-production'])(
     'should create config for mode "development" if env variable NODE_ENV is "%s"',
-    (nodeEnv) => {
+    async (nodeEnv) => {
       vi.stubEnv('NODE_ENV', nodeEnv);
 
-      expect(_createConfig(configBase)).toStrictEqual([
+      await expect(_createConfig(configBase)).resolves.toStrictEqual([
         expect.objectContaining({ mode: 'development' }),
       ]);
     }
@@ -65,8 +65,10 @@ describe('createConfig', () => {
       );
     };
 
-    it('should create config from options', () => {
-      expect(createConfig({ options: configBase })).toStrictEqual([
+    it('should create config from options', async () => {
+      await expect(
+        createConfig({ options: configBase })
+      ).resolves.toStrictEqual([
         expect.objectContaining({
           mode: 'development',
           devServer: expect.objectContaining({
@@ -89,10 +91,10 @@ describe('createConfig', () => {
       ]);
     });
 
-    it('should allow turning off optimizations', () => {
-      expect(
+    it('should allow turning off optimizations', async () => {
+      await expect(
         createConfig({ options: { ...configBase, optimization: false } })
-      ).toStrictEqual([
+      ).resolves.toStrictEqual([
         expect.objectContaining({
           mode: 'development',
           devServer: expect.objectContaining({
@@ -115,8 +117,8 @@ describe('createConfig', () => {
       ]);
     });
 
-    it('should allow changing the devServer port', () => {
-      expect(
+    it('should allow changing the devServer port', async () => {
+      await expect(
         createConfig({
           options: {
             ...configBase,
@@ -125,7 +127,7 @@ describe('createConfig', () => {
             },
           },
         })
-      ).toStrictEqual([
+      ).resolves.toStrictEqual([
         expect.objectContaining({
           devServer: expect.objectContaining({
             port: 8080,
@@ -139,10 +141,10 @@ describe('createConfig', () => {
       ['production', 'prod', false],
     ])(
       'should create config for mode "development" if env variable NGRS_CONFIG is "%s"',
-      (configuration, fileNameSegment, skipTypeChecking) => {
+      async (configuration, fileNameSegment, skipTypeChecking) => {
         vi.stubEnv('NGRS_CONFIG', configuration);
 
-        const config = runCreateConfig();
+        const config = await runCreateConfig();
 
         const plugins = config[0].plugins;
         const NgRspackPlugin = plugins?.find(

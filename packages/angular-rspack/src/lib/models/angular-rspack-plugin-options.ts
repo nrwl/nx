@@ -5,7 +5,11 @@ import type {
 } from '@nx/angular-rspack-compiler';
 
 export interface DevServerOptions {
-  port: number;
+  port?: number;
+  ssl?: boolean;
+  sslKey?: string;
+  sslCert?: string;
+  proxyConfig?: string;
 }
 
 export interface OptimizationOptions {
