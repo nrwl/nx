@@ -494,7 +494,7 @@
     "description": "Plugin to deploy and promote Nx apps on Heroku",
     "url": "https://github.com/getlarge/nx-heroku"
   },
-    {
+  {
     "name": "@getlarge/nx-node-sea",
     "description": "Plugin that provides integration with Node.js Single Executable Applications (SEA).",
     "url": "https://github.com/getlarge/nx-node-sea"
