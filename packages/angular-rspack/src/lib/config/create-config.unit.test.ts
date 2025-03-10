@@ -13,6 +13,8 @@ describe('createConfig', () => {
     styles: [],
     assets: [],
     fileReplacements: [],
+    optimization: true,
+    outputHashing: 'all',
     scripts: [],
     aot: true,
     hasServer: false,
