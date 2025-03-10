@@ -3,6 +3,7 @@ import type {
   AngularRspackPluginOptions,
   DevServerOptions,
   NormalizedAngularRspackPluginOptions,
+  OutputPath,
 } from './angular-rspack-plugin-options';
 import { join, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -107,6 +108,7 @@ export function normalizeOptions(
     assets: options.assets ?? ['./public'],
     styles: options.styles ?? ['./src/styles.css'],
     scripts: options.scripts ?? [],
+    outputPath: normalizeOutputPath(root, options.outputPath),
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     aot,
     outputHashing: options.outputHashing ?? 'all',
@@ -131,5 +133,60 @@ function normalizeDevServer(
   return {
     ...devServer,
     port: devServer.port ?? defaultPort,
+  };
+}
+
+function normalizeOutputPath(
+  root: string,
+  outputPath:
+    | string
+    | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>)
+    | undefined
+): OutputPath {
+  const defaultBase = join(root, 'dist');
+  const defaultBrowser = join(defaultBase, 'browser');
+  if (!outputPath) {
+    return {
+      base: defaultBase,
+      browser: defaultBrowser,
+      server: join(defaultBase, 'server'),
+      media: join(defaultBrowser, 'media'),
+    };
+  }
+
+  if (typeof outputPath === 'string') {
+    if (!outputPath.startsWith(root)) {
+      outputPath = join(root, outputPath);
+    }
+    return {
+      base: outputPath,
+      browser: join(outputPath, 'browser'),
+      server: join(outputPath, 'server'),
+      media: join(outputPath, 'browser', 'media'),
+    };
+  }
+  if (outputPath.base && !outputPath.base.startsWith(root)) {
+    outputPath.base = join(root, outputPath.base);
+  }
+  if (outputPath.browser && !outputPath.browser.startsWith(root)) {
+    outputPath.browser = join(root, outputPath.browser);
+  }
+  if (outputPath.server && !outputPath.server.startsWith(root)) {
+    outputPath.server = join(root, outputPath.server);
+  }
+  if (
+    outputPath.browser &&
+    !outputPath.browser.startsWith(outputPath.browser)
+  ) {
+    outputPath.browser = join(outputPath.browser, outputPath.browser);
+  }
+
+  const providedBase = outputPath.base ?? defaultBase;
+  const providedBrowser = outputPath.browser ?? join(providedBase, 'browser');
+  return {
+    base: providedBase,
+    browser: providedBrowser,
+    server: outputPath.server ?? join(outputPath.base ?? defaultBase, 'server'),
+    media: outputPath.media ?? join(providedBrowser, 'media'),
   };
 }

@@ -26,6 +26,13 @@ export type HashFormat = {
   script: string;
 };
 
+export interface OutputPath {
+  base: string;
+  browser: string;
+  server: string;
+  media: string;
+}
+
 export interface AngularRspackPluginOptions {
   index: string;
   browser: string;
@@ -40,6 +47,9 @@ export interface AngularRspackPluginOptions {
   assets: string[];
   styles: string[];
   scripts: string[];
+  outputPath:
+    | string
+    | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
   fileReplacements: FileReplacement[];
   aot: boolean;
   inlineStyleLanguage: InlineStyleLanguage;
@@ -59,4 +69,5 @@ export interface NormalizedAngularRspackPluginOptions
   devServer: DevServerOptions & { port: number };
   optimization: boolean | OptimizationOptions;
   outputHashing: OutputHashing;
+  outputPath: OutputPath;
 }

@@ -1,6 +1,7 @@
 import { _createConfig, createConfig } from './create-config';
 import { beforeEach, expect } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
+import { join } from 'node:path';
 
 describe('createConfig', () => {
   const configBase: AngularRspackPluginOptions = {
@@ -77,6 +78,12 @@ describe('createConfig', () => {
             {
               pluginOptions: {
                 ...configBase,
+                outputPath: {
+                  base: join(process.cwd(), 'dist'),
+                  browser: join(process.cwd(), 'dist', 'browser'),
+                  server: join(process.cwd(), 'dist', 'server'),
+                  media: join(process.cwd(), 'dist', 'browser', 'media'),
+                },
                 optimization: true,
                 advancedOptimizations: true,
                 useTsProjectReferences: false,
@@ -104,6 +111,12 @@ describe('createConfig', () => {
             {
               pluginOptions: {
                 ...configBase,
+                outputPath: {
+                  base: join(process.cwd(), 'dist'),
+                  browser: join(process.cwd(), 'dist', 'browser'),
+                  server: join(process.cwd(), 'dist', 'server'),
+                  media: join(process.cwd(), 'dist', 'browser', 'media'),
+                },
                 optimization: false,
                 advancedOptimizations: false,
                 useTsProjectReferences: false,
