@@ -12,6 +12,7 @@ import {
   TS_ALL_EXT_REGEX,
 } from '@nx/angular-rspack-compiler';
 import { getStyleLoaders } from './style-config-utils';
+import { getOutputHashFormat } from './helpers';
 
 export function _createConfig(
   options: AngularRspackPluginOptions,
@@ -19,6 +20,7 @@ export function _createConfig(
 ): Configuration[] {
   const normalizedOptions = normalizeOptions(options);
   const isProduction = process.env['NODE_ENV'] === 'production';
+  const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
 
   const defaultConfig = {
     context: normalizedOptions.root,
@@ -248,9 +250,9 @@ export function _createConfig(
       publicPath: 'auto',
       clean: true,
       path: join(normalizedOptions.root, 'dist/browser'),
-      cssFilename: isProduction ? '[name].[contenthash].css' : '[name].css',
-      filename: isProduction ? '[name].[contenthash].js' : '[name].js',
-      chunkFilename: isProduction ? '[name].[contenthash].js' : '[name].js',
+      cssFilename: `[name]${hashFormat.file}.css`,
+      filename: `[name]${hashFormat.chunk}.js`,
+      chunkFilename: `[name]${hashFormat.chunk}.js`,
       scriptType: 'module',
       module: true,
     },
