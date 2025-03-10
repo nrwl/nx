@@ -27,6 +27,7 @@ export interface MigrationTimelineProps {
   currentMigrationIndex: number;
   currentMigrationRunning?: boolean;
   currentMigrationFailed?: boolean;
+  currentMigrationSuccess?: boolean;
   isDone?: boolean;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
@@ -48,6 +49,7 @@ export function MigrationTimeline({
   currentMigrationIndex,
   currentMigrationRunning,
   currentMigrationFailed,
+  currentMigrationSuccess,
   isDone,
   onRunMigration,
   onSkipMigration,
@@ -88,12 +90,15 @@ export function MigrationTimeline({
 
   const currentMigrationRef = useRef<MigrationCardHandle>(null);
 
-  // Auto-expand when entering a failed migration
+  // Auto-expand when entering a failed or successful migration
   useEffect(() => {
-    if (currentMigrationFailed && currentMigrationRef.current) {
+    if (
+      (currentMigrationFailed || currentMigrationSuccess) &&
+      currentMigrationRef.current
+    ) {
       currentMigrationRef.current.expand();
     }
-  }, [currentMigration?.id, currentMigrationFailed]);
+  }, [currentMigration?.id, currentMigrationFailed, currentMigrationSuccess]);
 
   const toggleMigrationExpanded = (migrationId: string) => {
     setExpandedMigrations((prev) => ({

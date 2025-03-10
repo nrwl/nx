@@ -230,7 +230,7 @@ export function currentMigrationHasFailed(
   return completedMigration?.type === 'failed';
 }
 
-function currentMigrationHasSucceeded(ctx: AutomaticMigrationState) {
+export function currentMigrationHasSucceeded(ctx: AutomaticMigrationState) {
   if (!ctx.currentMigration) {
     return false;
   }

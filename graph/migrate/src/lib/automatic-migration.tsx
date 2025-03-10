@@ -12,6 +12,7 @@ import {
   automaticMigrationMachine,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
+  currentMigrationHasSucceeded,
 } from './automatic-migration.machine';
 import { MigrationTimeline } from './migration-timeline';
 
@@ -75,10 +76,8 @@ export function AutomaticMigration(props: {
     currentMigrationHasFailed(state.context)
   );
 
-  const currentMigrationChangesNeedReview = useSelector(
-    actor,
-    (state) =>
-      state.matches('needsReview') && currentMigrationHasChanges(state.context)
+  const currentMigrationSuccess = useSelector(actor, (state) =>
+    currentMigrationHasSucceeded(state.context)
   );
 
   const isDone = useSelector(actor, (state) => state.matches('done'));
@@ -107,6 +106,7 @@ export function AutomaticMigration(props: {
       }
       currentMigrationRunning={currentMigrationRunning}
       currentMigrationFailed={currentMigrationFailed}
+      currentMigrationSuccess={currentMigrationSuccess}
       isDone={isDone}
       onRunMigration={props.onRunMigration}
       onSkipMigration={props.onSkipMigration}

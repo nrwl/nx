@@ -82,7 +82,9 @@ export function finishMigrationProcess(
   const parsedMigrationsJson = JSON.parse(
     readFileSync(migrationsJsonPath, 'utf-8')
   );
-  const initialGitRef = parsedMigrationsJson['nx-console'].initialGitRef;
+  const initialGitRef = (
+    parsedMigrationsJson['nx-console'] as MigrationsJsonMetadata
+  ).initialGitRef;
 
   if (existsSync(migrationsJsonPath)) {
     rmSync(migrationsJsonPath);
@@ -98,7 +100,7 @@ export function finishMigrationProcess(
   });
 
   if (squashCommits && initialGitRef) {
-    execSync(`git reset --soft ${initialGitRef}`, {
+    execSync(`git reset --soft ${initialGitRef.ref}`, {
       cwd: workspacePath,
       encoding: 'utf-8',
     });
