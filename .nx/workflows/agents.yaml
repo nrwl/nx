@@ -7,7 +7,7 @@ common-env: &common-env
   NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
   NX_NATIVE_LOGGING: 'nx::native::db'
 
-common-init-steps: &common-init-steps
+common-steps: &common-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
   - name: Cache restore
@@ -60,10 +60,10 @@ launch-templates:
     resource-class: 'docker_linux_amd64/medium+'
     image: 'ubuntu22.04-node20.11-v10'
     env: *common-env
-    init-steps: *common-init-steps
+    init-steps: *common-steps
 
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
     image: 'ubuntu22.04-node20.11-v10'
     env: *common-env
-    init-steps: *common-init-steps
+    init-steps: *common-steps
