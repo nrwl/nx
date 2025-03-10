@@ -627,13 +627,19 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent';
       const transitiveLocalPackageDependents: LocalPackageDependency[] = [];
       if (includeTransitiveDependents) {
-        for (const directDependent of allDependentProjects) {
-          // Look through localPackageDependencies to find any which have a target on the current dependent
+        const possibleDependents = [...allDependentProjects];
+        while (possibleDependents.length > 0) {
+          const dependent = possibleDependents.pop();
+
           for (const localPackageDependency of Object.values(
             localPackageDependencies
           ).flat()) {
-            if (localPackageDependency.target === directDependent.source) {
+            if (
+              localPackageDependency.target === dependent.source &&
+              !transitiveLocalPackageDependents.includes(localPackageDependency)
+            ) {
               transitiveLocalPackageDependents.push(localPackageDependency);
+              possibleDependents.push(localPackageDependency);
             }
           }
         }
@@ -926,39 +932,12 @@ To fix this you will either need to add a package.json file at that location, or
         const isAlreadyDirectDependent = allDependentProjects.some(
           (dep) => dep.source === transitiveDependentProject.source
         );
-        if (isAlreadyDirectDependent) {
-          // Don't continue directly in this scenario - we still need to update the dependency version
-          // but we don't want to bump the project's own version as it will end up being double patched
-          const dependencyProjectName = transitiveDependentProject.target;
-          const dependencyPackageRoot = projectNameToPackageRootMap.get(
-            dependencyProjectName
-          );
-          if (!dependencyPackageRoot) {
-            throw new Error(
-              `The project "${dependencyProjectName}" does not have a packageRoot available. Please report this issue on https://github.com/nrwl/nx`
-            );
-          }
-          const dependencyPackageJsonPath = joinPathFragments(
-            dependencyPackageRoot,
-            'package.json'
-          );
-          const dependencyPackageJson = readJson(
-            tree,
-            dependencyPackageJsonPath
-          );
-
-          updateDependentProjectAndAddToVersionData({
-            dependentProject: transitiveDependentProject,
-            dependencyPackageName: dependencyPackageJson.name,
-            newDependencyVersion: dependencyPackageJson.version,
-            forceVersionBump: false, // Never bump version for direct dependents
-          });
-          continue;
-        }
-
         // Check if the transitive dependent originates from a circular dependency
         const isFromCircularDependency = circularDependencies.has(
           `${transitiveDependentProject.source}:${transitiveDependentProject.target}`
+        );
+        const isInCurrentBatch = options.projects.some(
+          (project) => project.name === transitiveDependentProject.source
         );
         const dependencyProjectName = transitiveDependentProject.target;
         const dependencyPackageRoot = projectNameToPackageRootMap.get(
@@ -979,14 +958,17 @@ To fix this you will either need to add a package.json file at that location, or
           dependentProject: transitiveDependentProject,
           dependencyPackageName: dependencyPackageJson.name,
           newDependencyVersion: dependencyPackageJson.version,
-          /**
-           * For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop.
-           * The one exception being if the dependent is part of a circular dependency, in which case we don't want to force a version bump as this would come in addition to the one
-           * already applied.
-           */
-          forceVersionBump: isFromCircularDependency
-            ? false
-            : updateDependentsBump,
+          // For these additional transitive dependents we will need to force a version bump unless
+          // we know they will be updated in the current batch, either because they are a direct
+          // dependent, part of the current batch of projects, or are part of a circular
+          // dependency. In either of those cases, we don't want to force a version bump as it
+          // would double bump the version.
+          forceVersionBump:
+            isAlreadyDirectDependent ||
+            isInCurrentBatch ||
+            isFromCircularDependency
+              ? false
+              : updateDependentsBump,
         });
       }
 
