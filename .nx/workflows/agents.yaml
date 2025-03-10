@@ -30,7 +30,7 @@ common-init-steps: &common-init-steps
           curl -fsSL https://bun.sh/install | bash
           echo "BUN_INSTALL=$HOME/.bun" >> $NX_CLOUD_ENV
           echo "BUN_PATH=$HOME/.bun/bin" >> $NX_CLOUD_ENV
-      - name: Pnpm Install
+      - name: PNPM Install
         script: |
           npm install -g pnpm@9.8.0
           pnpm install --frozen-lockfile
@@ -40,7 +40,7 @@ common-init-steps: &common-init-steps
           source "$HOME/.cargo/env"
           echo "CARGO_PATH=$HOME/.cargo/bin" >> $NX_CLOUD_ENV
           rustup toolchain install 1.70.0
-  - name: Load binary paths
+  - name: Load binaries into PATH
     script: |
       echo "PATH=$BUN_PATH:$CARGO_PATH:$PATH" >> $NX_CLOUD_ENV
   - name: Check bun
