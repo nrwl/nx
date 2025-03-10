@@ -16,6 +16,7 @@ import {
   ExclamationCircleIcon,
   CheckCircleIcon,
   ClockIcon,
+  MinusIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
@@ -69,18 +70,21 @@ export function MigrationTimeline({
   const futureMigrations = migrations.slice(currentMigrationIndex + 1);
 
   // Number of visible migrations when collapsed
-  const visibleCount = 2;
+  const visiblePastCount = 0;
+  const visibleFutureCount = 2;
   const visiblePastMigrations = showAllPastMigrations
     ? pastMigrations
-    : pastMigrations.slice(Math.max(0, pastMigrations.length - visibleCount));
+    : pastMigrations.slice(
+        Math.max(0, pastMigrations.length - visiblePastCount)
+      );
   const visibleFutureMigrations = showAllFutureMigrations
     ? futureMigrations
-    : futureMigrations.slice(0, visibleCount);
+    : futureMigrations.slice(0, visibleFutureCount);
 
   const hasPastMigrationsHidden =
-    pastMigrations.length > visibleCount && !showAllPastMigrations;
+    pastMigrations.length > visiblePastCount && !showAllPastMigrations;
   const hasFutureMigrationsHidden =
-    futureMigrations.length > visibleCount && !showAllFutureMigrations;
+    futureMigrations.length > visibleFutureCount && !showAllFutureMigrations;
 
   const currentMigrationRef = useRef<MigrationCardHandle>(null);
 
@@ -125,30 +129,58 @@ export function MigrationTimeline({
       </div>
 
       <div className="relative w-full pl-10">
-        {/* Continuous timeline line that spans all migrations */}
-        <div className="absolute left-10 h-full w-0.5 bg-slate-200"></div>
+        {/* Timeline lines */}
+        {/* Solid line for visible migrations */}
+        <div
+          className="absolute left-10 top-0 w-0.5 bg-slate-200"
+          style={{
+            height: hasFutureMigrationsHidden ? 'calc(100% - 15%)' : '100%',
+          }}
+        ></div>
+
+        {/* Dashed line for the section after the last visible migration */}
+        {hasFutureMigrationsHidden && (
+          <div
+            className="absolute bottom-0 left-10 w-0.5 border-l-2 border-dashed border-slate-200"
+            style={{
+              height: '15%',
+            }}
+          ></div>
+        )}
 
         {/* Timeline container */}
         <div className="flex flex-col">
           {/* Past migrations section */}
           {pastMigrations.length > 0 && (
             <>
-              {hasPastMigrationsHidden && (
-                <button
-                  onClick={() => setShowAllPastMigrations(true)}
-                  className="mb-4 flex items-center text-sm text-slate-500 hover:text-slate-700"
+              {showAllPastMigrations && (
+                <div
+                  key="show-past-migrations"
+                  className="relative mb-6 w-full"
                 >
-                  <ChevronUpIcon className="mr-1 h-4 w-4" />
-                  Show {pastMigrations.length -
-                    visiblePastMigrations.length}{' '}
-                  more
-                </button>
+                  <TimelineButton
+                    icon={ChevronDownIcon}
+                    onClick={() => setShowAllPastMigrations(false)}
+                  />
+
+                  <div className="ml-6">
+                    <div
+                      className="flex cursor-pointer items-center"
+                      onClick={() => setShowAllPastMigrations(false)}
+                    >
+                      <span className="text-sm font-medium text-slate-600">
+                        Hide Past Migrations
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {visiblePastMigrations.map((migration) => (
                 <div key={migration.id} className="relative mb-6 w-full">
-                  <MigrationCircle
-                    type="past"
+                  <MigrationStateCircle
+                    migration={migration}
+                    nxConsoleMetadata={nxConsoleMetadata}
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
@@ -157,7 +189,14 @@ export function MigrationTimeline({
                       className="flex cursor-pointer items-center"
                       onClick={() => toggleMigrationExpanded(migration.id)}
                     >
-                      <span className="text-sm font-medium text-green-600">
+                      <span
+                        className={`text-sm font-medium ${
+                          nxConsoleMetadata.completedMigrations?.[migration.id]
+                            ?.type === 'successful'
+                            ? 'text-green-600'
+                            : 'text-slate-600'
+                        }`}
+                      >
                         {migration.name}
                       </span>
                     </div>
@@ -181,29 +220,40 @@ export function MigrationTimeline({
                 </div>
               ))}
 
-              {showAllPastMigrations && (
-                <button
-                  onClick={() => setShowAllPastMigrations(false)}
-                  className="mb-4 flex items-center text-sm text-slate-500 hover:text-slate-700"
+              {hasPastMigrationsHidden && (
+                <div
+                  key="show-past-migrations"
+                  className="relative mb-6 w-full"
                 >
-                  <ChevronDownIcon className="mr-1 h-4 w-4" />
-                  Show fewer
-                </button>
+                  <TimelineButton
+                    icon={ChevronUpIcon}
+                    onClick={() => setShowAllPastMigrations(true)}
+                  />
+
+                  <div className="ml-6">
+                    <div
+                      className="flex cursor-pointer items-center"
+                      onClick={() => setShowAllPastMigrations(true)}
+                    >
+                      <span className="text-sm font-medium text-slate-600">
+                        Show Past Migrations
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
             </>
           )}
 
           {/* Current migration */}
           <div className="relative mb-6 w-full">
-            <MigrationCircle
-              type="current"
+            <MigrationStateCircle
+              migration={migrations[currentMigrationIndex]}
+              nxConsoleMetadata={nxConsoleMetadata}
               isRunning={currentMigrationRunning}
-              isFailed={currentMigrationFailed}
-              onClick={() => {
-                if (currentMigrationRef.current) {
-                  currentMigrationRef.current.toggle();
-                }
-              }}
+              onClick={() =>
+                toggleMigrationExpanded(migrations[currentMigrationIndex].id)
+              }
             />
 
             <div className="ml-6">
@@ -296,9 +346,10 @@ export function MigrationTimeline({
           {futureMigrations.length > 0 && (
             <>
               {visibleFutureMigrations.map((migration) => (
-                <div key={migration.id} className="relative mb-6 w-full">
-                  <MigrationCircle
-                    type="future"
+                <div key={migration.id} className="relative mt-6 w-full">
+                  <MigrationStateCircle
+                    migration={migration}
+                    nxConsoleMetadata={nxConsoleMetadata}
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
@@ -334,10 +385,10 @@ export function MigrationTimeline({
               {hasFutureMigrationsHidden && (
                 <div
                   key="show-future-migrations"
-                  className="relative mb-6 w-full"
+                  className="relative mb-1 mt-9 w-full"
                 >
-                  <MigrationCircle
-                    type="button-down"
+                  <TimelineButton
+                    icon={ChevronDownIcon}
                     onClick={() => setShowAllFutureMigrations(true)}
                   />
 
@@ -357,10 +408,10 @@ export function MigrationTimeline({
               {showAllFutureMigrations && (
                 <div
                   key="show-future-migrations"
-                  className="relative mb-6 w-full"
+                  className="relative mb-1 mt-6 w-full"
                 >
-                  <MigrationCircle
-                    type="button-up"
+                  <TimelineButton
+                    icon={ChevronUpIcon}
                     onClick={() => setShowAllFutureMigrations(false)}
                   />
 
@@ -384,73 +435,76 @@ export function MigrationTimeline({
   );
 }
 
-interface MigrationCircleProps {
-  type: 'past' | 'current' | 'future' | 'button-down' | 'button-up';
-  isRunning?: boolean;
-  isFailed?: boolean;
+interface TimelineButtonProps {
+  icon: React.ElementType;
   onClick: () => void;
 }
 
-function MigrationCircle({
-  type,
+function TimelineButton({ icon: Icon, onClick }: TimelineButtonProps) {
+  return (
+    <div
+      className="absolute left-0 top-0 flex h-6 w-6 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full bg-slate-300 text-slate-700"
+      onClick={onClick}
+    >
+      <Icon className="h-4 w-4" />
+    </div>
+  );
+}
+
+interface MigrationStateCircleProps {
+  migration: MigrationDetailsWithId;
+  nxConsoleMetadata: MigrationsJsonMetadata;
+  isRunning?: boolean;
+  onClick: () => void;
+}
+
+function MigrationStateCircle({
+  migration,
+  nxConsoleMetadata,
   isRunning,
-  isFailed,
   onClick,
-}: MigrationCircleProps) {
+}: MigrationStateCircleProps) {
   let bgColor = '';
   let textColor = '';
   let Icon = ClockIcon;
 
-  switch (type) {
-    case 'past':
-      bgColor = 'bg-green-500';
-      textColor = 'text-white';
-      Icon = CheckCircleIcon;
-      break;
-    case 'current':
-      if (isFailed) {
-        bgColor = 'bg-red-500';
-        textColor = 'text-white';
-        Icon = ExclamationCircleIcon;
-      } else if (isRunning) {
-        bgColor = 'bg-blue-500';
-        textColor = 'text-white';
-        Icon = ClockIcon;
-      } else {
-        bgColor = 'bg-orange-500';
-        textColor = 'text-white';
-        Icon = CheckCircleIcon;
-      }
-      break;
-    case 'future':
-      bgColor = 'bg-slate-300';
-      textColor = 'text-slate-700';
-      Icon = ClockIcon;
-      break;
-    case 'button-down':
-      bgColor = 'bg-slate-300';
-      textColor = 'text-slate-700';
-      Icon = ChevronDownIcon;
-      break;
-    case 'button-up':
-      bgColor = 'bg-slate-300';
-      textColor = 'text-slate-700';
-      Icon = ChevronUpIcon;
-      break;
+  // Check if this migration is in the completed migrations
+  const completedMigration =
+    nxConsoleMetadata.completedMigrations?.[migration.id];
+
+  const isSkipped = completedMigration?.type === 'skipped';
+  const isError = completedMigration?.type === 'failed';
+  const isSuccess = completedMigration?.type === 'successful';
+
+  if (isSkipped) {
+    bgColor = 'bg-slate-300';
+    textColor = 'text-slate-700';
+    Icon = MinusIcon;
+  } else if (isError) {
+    bgColor = 'bg-red-500';
+    textColor = 'text-white';
+    Icon = ExclamationCircleIcon;
+  } else if (isRunning) {
+    bgColor = 'bg-blue-500';
+    textColor = 'text-white';
+    Icon = ClockIcon;
+  } else if (isSuccess) {
+    bgColor = 'bg-green-500';
+    textColor = 'text-white';
+    Icon = CheckCircleIcon;
+  } else {
+    // Future migration (none of the states above)
+    bgColor = 'bg-slate-300';
+    textColor = 'text-slate-700';
+    Icon = ClockIcon;
   }
 
   return (
     <div
-      className={`absolute left-0 top-0 flex ${
-        type.startsWith('button') ? 'h-6 w-6' : 'h-8 w-8'
-      } -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`}
+      className={`absolute left-0 top-0 flex h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`}
       onClick={onClick}
     >
-      <Icon
-        className={`${type.startsWith('button') ? 'h-4 w-4' : 'h-6 w-6'} ${
-          isRunning ? 'animate-pulse' : ''
-        }`}
-      />
+      <Icon className={`h-6 w-6 ${isRunning ? 'animate-pulse' : ''}`} />
     </div>
   );
 }

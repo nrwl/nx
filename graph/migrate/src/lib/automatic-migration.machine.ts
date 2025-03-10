@@ -285,7 +285,9 @@ function findFirstIncompleteMigration(
     migrations.find(
       (migration) =>
         nxConsoleMetadata.completedMigrations?.[migration.id]?.type !==
-        'successful'
+          'successful' &&
+        nxConsoleMetadata.completedMigrations?.[migration.id]?.type !==
+          'skipped'
     ) ?? migrations[0]
   );
 }

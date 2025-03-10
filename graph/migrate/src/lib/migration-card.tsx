@@ -66,6 +66,7 @@ export const MigrationCard = forwardRef<
   const migrationResult = nxConsoleMetadata.completedMigrations?.[migration.id];
   const succeeded = migrationResult?.type === 'successful';
   const failed = migrationResult?.type === 'failed';
+  const skipped = migrationResult?.type === 'skipped';
   const inProgress = nxConsoleMetadata.runningMigrations?.includes(
     migration.id
   );
@@ -194,6 +195,11 @@ export const MigrationCard = forwardRef<
           {failed && (
             <div>
               <Pill text="Failed" color="red" />
+            </div>
+          )}
+          {skipped && (
+            <div>
+              <Pill text="Skipped" color="grey" />
             </div>
           )}
           {(onRunMigration || forceIsRunning) && (

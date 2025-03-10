@@ -79,6 +79,7 @@ export const Manual: Story = {
           name: 'migration-1',
           type: 'successful',
           changedFiles: [],
+          ref: '123',
         },
         'migration-4': {
           name: 'migration-4',
@@ -90,6 +91,7 @@ export const Manual: Story = {
             { path: 'blub4.ts', type: 'UPDATE' },
             { path: 'blub5.ts', type: 'CREATE' },
           ],
+          ref: '456',
         },
         'migration-3': {
           name: 'migration-3',
@@ -196,14 +198,10 @@ export const Automatic: Story = {
           name: 'migration-1',
           type: 'successful',
           changedFiles: [],
+          ref: '123',
         },
         'migration-2': {
-          name: 'migration-2',
-          type: 'successful',
-          changedFiles: [
-            { path: 'libs/a/src/index.ts', type: 'UPDATE' },
-            { path: 'libs/b/src/index.ts', type: 'UPDATE' },
-          ],
+          type: 'skipped',
         },
         'migration-3': {
           name: 'migration-3',
@@ -212,6 +210,9 @@ export const Automatic: Story = {
         },
       },
       targetVersion: '20.3.2',
+    },
+    onFinish: (squash: boolean) => {
+      console.log('finished', squash);
     },
   },
 };
