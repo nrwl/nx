@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "type": "commonjs",
     "outDir": "../../dist/out-tsc",
     "types": [
       "vitest/globals",

@@ -1,5 +1,8 @@
 import { FileReplacement } from '@nx/angular-rspack-compiler';
-import { AngularRspackPluginOptions } from './angular-rspack-plugin-options';
+import type {
+  AngularRspackPluginOptions,
+  DevServerOptions,
+} from './angular-rspack-plugin-options';
 import { join, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 
@@ -111,13 +114,21 @@ export function normalizeOptions(
     hasServer: getHasServer({ server, ssr: normalizedSsr, root }),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
-    devServer: options.devServer
-      ? {
-          ...options.devServer,
-          port: options.devServer.port ?? 4200,
-        }
-      : {
-          port: 4200,
-        },
+    devServer: normalizeDevServer(options.devServer),
+  };
+}
+
+function normalizeDevServer(
+  devServer: DevServerOptions | undefined
+): DevServerOptions | undefined {
+  const defaultPort = 4200;
+
+  if (!devServer) {
+    return { port: defaultPort };
+  }
+
+  return {
+    ...devServer,
+    port: devServer.port ?? defaultPort,
   };
 }

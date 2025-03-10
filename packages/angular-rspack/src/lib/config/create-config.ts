@@ -5,7 +5,7 @@ import {
   SwcJsMinimizerRspackPlugin,
 } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { AngularRspackPluginOptions, normalizeOptions } from '../models';
 import {
   JS_ALL_EXT_REGEX,
@@ -13,16 +13,17 @@ import {
 } from '@nx/angular-rspack-compiler';
 import { getStyleLoaders } from './style-config-utils';
 import { getOutputHashFormat } from './helpers';
+import { getProxyConfig } from './dev-server-config-utils';
 
-export function _createConfig(
+export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
-): Configuration[] {
+): Promise<Configuration[]> {
   const normalizedOptions = normalizeOptions(options);
   const isProduction = process.env['NODE_ENV'] === 'production';
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
 
-  const defaultConfig = {
+  const defaultConfig: Configuration = {
     context: normalizedOptions.root,
     mode: isProduction ? 'production' : 'development',
     output: {
@@ -95,7 +96,7 @@ export function _createConfig(
 
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
-    const serverConfig = {
+    const serverConfig: Configuration = {
       ...defaultConfig,
       target: 'node',
       entry: {
@@ -139,6 +140,27 @@ export function _createConfig(
         devMiddleware: {
           writeToDisk: (file) => !file.includes('.hot-update.'),
         },
+        server: {
+          options:
+            normalizedOptions.devServer?.sslKey &&
+            normalizedOptions.devServer?.sslCert
+              ? {
+                  key: resolve(
+                    normalizedOptions.root,
+                    normalizedOptions.devServer.sslKey
+                  ),
+                  cert: resolve(
+                    normalizedOptions.root,
+                    normalizedOptions.devServer.sslCert
+                  ),
+                }
+              : {},
+          type: normalizedOptions.devServer?.ssl ? 'https' : 'http',
+        },
+        proxy: await getProxyConfig(
+          normalizedOptions.root,
+          normalizedOptions.devServer?.proxyConfig
+        ),
       },
       optimization: normalizedOptions.optimization
         ? {
@@ -183,7 +205,7 @@ export function _createConfig(
             minimizer: [],
           },
       plugins: [
-        ...defaultConfig.plugins,
+        ...(defaultConfig.plugins ?? []),
         new NgRspackPlugin({
           ...normalizedOptions,
           polyfills: ['zone.js/node'],
@@ -233,6 +255,27 @@ export function _createConfig(
         writeToDisk: (file) => !file.includes('.hot-update.'),
       },
       port: options.devServer?.port ?? 4200,
+      server: {
+        options:
+          normalizedOptions.devServer?.sslKey &&
+          normalizedOptions.devServer?.sslCert
+            ? {
+                key: resolve(
+                  normalizedOptions.root,
+                  normalizedOptions.devServer.sslKey
+                ),
+                cert: resolve(
+                  normalizedOptions.root,
+                  normalizedOptions.devServer.sslCert
+                ),
+              }
+            : {},
+        type: normalizedOptions.devServer?.ssl ? 'https' : 'http',
+      },
+      proxy: await getProxyConfig(
+        normalizedOptions.root,
+        normalizedOptions.devServer?.proxyConfig
+      ),
       onListening: (devServer) => {
         if (!devServer) {
           throw new Error('@rspack/dev-server is not defined');
@@ -299,7 +342,7 @@ export function _createConfig(
           minimizer: [],
         },
     plugins: [
-      ...defaultConfig.plugins,
+      ...(defaultConfig.plugins ?? []),
       new NgRspackPlugin({
         ...normalizedOptions,
         polyfills: ['zone.js'],
@@ -315,7 +358,7 @@ export function _createConfig(
   return configs;
 }
 
-export function createConfig(
+export async function createConfig(
   defaultOptions: {
     options: AngularRspackPluginOptions;
     rspackConfigOverrides?: Partial<Configuration>;
@@ -328,7 +371,7 @@ export function createConfig(
     }
   > = {},
   configEnvVar = 'NGRS_CONFIG'
-) {
+): Promise<Configuration[]> {
   const configurationMode = process.env[configEnvVar] ?? 'production';
   const isDefault = configurationMode === 'default';
   const isModeConfigured = configurationMode in configurations;
