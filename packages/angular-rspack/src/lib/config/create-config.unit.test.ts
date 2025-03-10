@@ -79,6 +79,7 @@ describe('createConfig', () => {
               pluginOptions: {
                 ...configBase,
                 optimization: true,
+                advancedOptimizations: true,
                 useTsProjectReferences: false,
                 polyfills: ['zone.js'],
                 devServer: {
@@ -105,6 +106,7 @@ describe('createConfig', () => {
               pluginOptions: {
                 ...configBase,
                 optimization: false,
+                advancedOptimizations: false,
                 useTsProjectReferences: false,
                 polyfills: ['zone.js'],
                 devServer: {

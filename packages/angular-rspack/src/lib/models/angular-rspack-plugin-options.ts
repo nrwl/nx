@@ -53,3 +53,11 @@ export interface AngularRspackPluginOptions {
   stylePreprocessorOptions?: StylePreprocessorOptions;
   devServer?: DevServerOptions;
 }
+
+export interface NormalizedAngularRspackPluginOptions
+  extends AngularRspackPluginOptions {
+  advancedOptimizations: boolean;
+  devServer: DevServerOptions & { port: number };
+  optimization: boolean | OptimizationOptions;
+  outputHashing: OutputHashing;
+}
