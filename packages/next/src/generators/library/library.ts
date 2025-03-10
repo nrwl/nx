@@ -28,6 +28,7 @@ import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...rawOptions,
   });
 }

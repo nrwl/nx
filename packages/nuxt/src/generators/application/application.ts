@@ -40,6 +40,13 @@ import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  return await applicationGeneratorInternal(tree, {
+    useProjectJson: true,
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(tree, {
@@ -66,13 +73,13 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   tasks.push(ensureDependencies(tree, options));
 
-  if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
-      private: true,
-    };
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
 
+  if (!options.useProjectJson) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
@@ -80,12 +87,6 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
-
-    writeJson(
-      tree,
-      joinPathFragments(options.appProjectRoot, 'package.json'),
-      packageJson
-    );
   } else {
     addProjectConfiguration(tree, options.projectName, {
       root: options.appProjectRoot,
@@ -94,6 +95,14 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       tags: options.parsedTags?.length ? options.parsedTags : undefined,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 
   generateFiles(

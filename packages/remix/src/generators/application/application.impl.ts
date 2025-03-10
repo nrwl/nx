@@ -54,6 +54,7 @@ export function remixApplicationGenerator(
 ) {
   return remixApplicationGeneratorInternal(tree, {
     addPlugin: true,
+    useProjectJson: true,
     ...options,
   });
 }
@@ -88,7 +89,7 @@ export async function remixApplicationGeneratorInternal(
     await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
-  if (!options.isUsingTsSolutionConfig) {
+  if (options.useProjectJson) {
     addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,
       sourceRoot: `${options.projectRoot}`,
@@ -161,7 +162,9 @@ export async function remixApplicationGeneratorInternal(
       options.projectRoot,
       vars
     );
+  }
 
+  if (!options.useProjectJson) {
     updateJson(
       tree,
       joinPathFragments(options.projectRoot, 'package.json'),
