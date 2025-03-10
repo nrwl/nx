@@ -74,6 +74,33 @@ describe('createConfig', () => {
             {
               pluginOptions: {
                 ...configBase,
+                optimization: true,
+                useTsProjectReferences: false,
+                polyfills: ['zone.js'],
+                devServer: {
+                  port: 4200,
+                },
+              },
+            },
+          ],
+        }),
+      ]);
+    });
+
+    it('should allow turning off optimizations', () => {
+      expect(
+        createConfig({ options: { ...configBase, optimization: false } })
+      ).toStrictEqual([
+        expect.objectContaining({
+          mode: 'development',
+          devServer: expect.objectContaining({
+            port: 4200,
+          }),
+          plugins: [
+            {
+              pluginOptions: {
+                ...configBase,
+                optimization: false,
                 useTsProjectReferences: false,
                 polyfills: ['zone.js'],
                 devServer: {

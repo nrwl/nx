@@ -8,6 +8,12 @@ export interface DevServerOptions {
   port: number;
 }
 
+export interface OptimizationOptions {
+  scripts?: boolean;
+  styles?: boolean;
+  fonts?: boolean;
+}
+
 export interface AngularRspackPluginOptions {
   root: string;
   index: string;
@@ -25,6 +31,7 @@ export interface AngularRspackPluginOptions {
   hasServer: boolean;
   skipTypeChecking: boolean;
   useTsProjectReferences?: boolean;
+  optimization?: boolean | OptimizationOptions;
   stylePreprocessorOptions?: StylePreprocessorOptions;
   devServer?: DevServerOptions;
 }
