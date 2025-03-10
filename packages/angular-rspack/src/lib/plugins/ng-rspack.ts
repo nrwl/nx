@@ -10,13 +10,13 @@ import {
 import { basename, extname, join } from 'path';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
-import { AngularRspackPluginOptions } from '../models';
+import type { NormalizedAngularRspackPluginOptions } from '../models';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
 
 export class NgRspackPlugin implements RspackPluginInstance {
-  pluginOptions: AngularRspackPluginOptions;
+  pluginOptions: NormalizedAngularRspackPluginOptions;
 
-  constructor(options: AngularRspackPluginOptions) {
+  constructor(options: NormalizedAngularRspackPluginOptions) {
     this.pluginOptions = options;
   }
 

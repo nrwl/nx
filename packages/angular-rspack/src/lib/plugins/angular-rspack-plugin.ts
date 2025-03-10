@@ -5,9 +5,9 @@ import {
   RspackPluginInstance,
 } from '@rspack/core';
 import {
-  AngularRspackPluginOptions,
   NG_RSPACK_SYMBOL_NAME,
   NgRspackCompilation,
+  type NormalizedAngularRspackPluginOptions,
 } from '../models';
 import {
   maxWorkers,
@@ -26,7 +26,7 @@ type ResolvedJavascriptTransformer = Parameters<
 >[2];
 
 export class AngularRspackPlugin implements RspackPluginInstance {
-  #_options: AngularRspackPluginOptions;
+  #_options: NormalizedAngularRspackPluginOptions;
   #typescriptFileCache: Map<string, string>;
   #javascriptTransformer: ResolvedJavascriptTransformer;
   // This will be defined in the apply method correctly
@@ -36,14 +36,14 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     ReturnType<typeof setupCompilationWithParallelCompilation>
   >;
 
-  constructor(options: AngularRspackPluginOptions) {
+  constructor(options: NormalizedAngularRspackPluginOptions) {
     this.#_options = options;
     this.#typescriptFileCache = new Map<string, string>();
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
         sourcemap: false,
         thirdPartySourcemaps: false,
-        advancedOptimizations: true,
+        advancedOptimizations: this.#_options.advancedOptimizations,
         jit: !this.#_options.aot,
       },
       maxWorkers()

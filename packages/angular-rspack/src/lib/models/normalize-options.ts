@@ -2,6 +2,7 @@ import { FileReplacement } from '@nx/angular-rspack-compiler';
 import type {
   AngularRspackPluginOptions,
   DevServerOptions,
+  NormalizedAngularRspackPluginOptions,
 } from './angular-rspack-plugin-options';
 import { join, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -72,7 +73,7 @@ export function validateOptimization(
 
 export function normalizeOptions(
   options: Partial<AngularRspackPluginOptions> = {}
-): AngularRspackPluginOptions {
+): NormalizedAngularRspackPluginOptions {
   const {
     root = process.cwd(),
     fileReplacements = [],
@@ -95,6 +96,10 @@ export function normalizeOptions(
   validateOptimization(optimization);
   const normalizedOptimization = optimization !== false; // @TODO: Add support for optimization options
 
+  const aot = options.aot ?? true;
+  // @TODO: should be `aot && normalizedOptimization.scripts` once we support optimization options
+  const advancedOptimizations = aot && normalizedOptimization;
+
   return {
     root,
     index: options.index ?? './src/index.html',
@@ -102,12 +107,13 @@ export function normalizeOptions(
     ...(server ? { server } : {}),
     ...(ssr ? { ssr: normalizedSsr } : {}),
     optimization: normalizedOptimization,
+    advancedOptimizations,
     polyfills: options.polyfills ?? [],
     assets: options.assets ?? ['./public'],
     styles: options.styles ?? ['./src/styles.css'],
     scripts: options.scripts ?? [],
     fileReplacements: resolveFileReplacements(fileReplacements, root),
-    aot: options.aot ?? true,
+    aot,
     outputHashing: options.outputHashing ?? 'all',
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     tsConfig: options.tsConfig ?? join(root, 'tsconfig.app.json'),
@@ -120,7 +126,7 @@ export function normalizeOptions(
 
 function normalizeDevServer(
   devServer: DevServerOptions | undefined
-): DevServerOptions | undefined {
+): DevServerOptions & { port: number } {
   const defaultPort = 4200;
 
   if (!devServer) {
