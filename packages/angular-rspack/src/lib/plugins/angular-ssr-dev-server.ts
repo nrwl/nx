@@ -3,6 +3,7 @@ import { ChildProcess, fork } from 'child_process';
 import { SsrReloadServer } from './server/ssr-reload-server';
 import { OutputPath } from '../models';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 
 const PLUGIN_NAME = 'AngularSsrDevServer';
 export class AngularSsrDevServer implements RspackPluginInstance {
@@ -34,6 +35,9 @@ export class AngularSsrDevServer implements RspackPluginInstance {
           if (this.#devServerProcess) {
             this.#devServerProcess.kill();
             this.#devServerProcess = undefined;
+            await new Promise<void>((res) => setTimeout(res, 50));
+          }
+          if (!existsSync(serverPath)) {
             await new Promise<void>((res) => setTimeout(res, 50));
           }
           this.#devServerProcess = fork(serverPath);
