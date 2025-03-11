@@ -1,4 +1,4 @@
-import * as createSpinner from 'ora';
+import { createSpinner } from 'nanospinner';
 import { bold } from 'chalk';
 import { execSync } from 'child_process';
 
@@ -99,10 +99,10 @@ export async function installPlugins(
       spinner.start('Installing plugin ' + plugin);
       await installPlugin(plugin, repoRoot, updatePackageScripts, verbose, pmc);
       succeededPlugins.push(plugin);
-      spinner.succeed('Installed plugin ' + plugin);
+      spinner.success('Installed plugin ' + plugin);
     } catch (e) {
       failedPlugins[plugin] = e;
-      spinner.fail('Failed to install plugin ' + plugin);
+      spinner.error('Failed to install plugin ' + plugin);
     }
   }
 
