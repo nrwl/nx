@@ -1,4 +1,4 @@
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { relative } from 'path';
 
@@ -38,11 +38,11 @@ export interface GenerateOptions {
 export function printChanges(fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
-      console.log(`${chalk.green('CREATE')} ${f.path}`);
+      console.log(`${pc.green('CREATE')} ${f.path}`);
     } else if (f.type === 'UPDATE') {
-      console.log(`${chalk.white('UPDATE')} ${f.path}`);
+      console.log(`${pc.white('UPDATE')} ${f.path}`);
     } else if (f.type === 'DELETE') {
-      console.log(`${chalk.yellow('DELETE')} ${f.path}`);
+      console.log(`${pc.yellow('DELETE')} ${f.path}`);
     }
   });
 }
@@ -117,7 +117,7 @@ async function promptForCollection(
         } else {
           choicesFromLocalPlugins.push({
             name: value,
-            message: chalk.bold(value),
+            message: pc.bold(value),
             value,
           });
         }

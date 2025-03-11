@@ -3,7 +3,7 @@ import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { loadRootEnvFiles } from '../src/utils/dotenv';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
@@ -115,10 +115,10 @@ function handleNoWorkspace(globalNxVersion?: string) {
     title: `The current directory isn't part of an Nx workspace.`,
     bodyLines: [
       `To create a workspace run:`,
-      chalk.bold.white(`npx create-nx-workspace@latest <workspace name>`),
+      pc.bold(pc.white(`npx create-nx-workspace@latest <workspace name>`)),
       '',
       `To add Nx to an existing workspace with a workspace-specific nx.json, run:`,
-      chalk.bold.white(`npx nx@latest init`),
+      pc.bold(pc.white(`npx nx@latest init`)),
     ],
   });
 
@@ -177,7 +177,7 @@ function resolveNx(workspace: WorkspaceTypeAndRoot | null) {
 function handleMissingLocalInstallation() {
   output.error({
     title: `Could not find Nx modules in this workspace.`,
-    bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
+    bodyLines: [`Have you run ${pc.bold(pc.white(`npm/yarn install`))}?`],
   });
   process.exit(1);
 }
