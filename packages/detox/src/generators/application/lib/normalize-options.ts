@@ -41,6 +41,8 @@ export async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const e2eProjectName =
     !isUsingTsSolutionConfig || options.e2eName ? projectName : importPath;
+  // We default to generate a project.json file if the new setup is not being used
+  const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
 
   return {
     ...options,
@@ -54,5 +56,6 @@ export async function normalizeOptions(
     importPath,
     isUsingTsSolutionConfig,
     js: options.js ?? false,
+    useProjectJson,
   };
 }

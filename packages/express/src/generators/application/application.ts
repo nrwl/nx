@@ -11,6 +11,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { tslibVersion } from '@nx/node/src/utils/versions';
 import { join } from 'path';
@@ -69,6 +70,7 @@ server.on('error', console.error);
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -119,10 +121,14 @@ async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPlugin;
 
+  const useProjectJson =
+    options.useProjectJson ?? !isUsingTsSolutionSetup(host);
+
   return {
     ...options,
     appProjectName,
     appProjectRoot,
+    useProjectJson,
   };
 }
 

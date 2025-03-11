@@ -47,6 +47,7 @@ export interface NormalizedSchema extends Schema {
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -70,6 +71,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   // Create `package.json` first because @nx/js:lib generator will update it.
   if (
+    !options.useProjectJson ||
     options.isUsingTsSolutionConfig ||
     options.publishable ||
     options.buildable
@@ -78,7 +80,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       name: options.importPath,
       version: '0.0.1',
       private: true,
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   }
 
@@ -91,7 +92,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       testEnvironment: 'node',
       skipFormat: true,
       setParserOptionsProject: schema.setParserOptionsProject,
-      useProjectJson: !options.isUsingTsSolutionConfig,
+      useProjectJson: options.useProjectJson,
     })
   );
 
@@ -173,6 +174,7 @@ async function normalizeOptions(
     parsedTags,
     importPath,
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 

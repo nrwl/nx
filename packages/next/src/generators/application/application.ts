@@ -40,6 +40,7 @@ import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }

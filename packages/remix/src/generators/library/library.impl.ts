@@ -19,7 +19,11 @@ export async function remixLibraryGenerator(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
-  return remixLibraryGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return remixLibraryGeneratorInternal(tree, {
+    addPlugin: false,
+    useProjectJson: true,
+    ...schema,
+  });
 }
 
 export async function remixLibraryGeneratorInternal(
@@ -53,6 +57,7 @@ export async function remixLibraryGeneratorInternal(
     buildable: options.buildable,
     bundler: options.bundler,
     addPlugin: options.addPlugin,
+    useProjectJson: options.useProjectJson,
   });
   tasks.push(libGenTask);
 

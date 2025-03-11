@@ -80,5 +80,6 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     isTsSolutionSetup,
+    useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
   };
 }

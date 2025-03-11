@@ -66,6 +66,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     hasStyles: options.style !== 'none',
     names: names(projectNames.projectSimpleName),
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;

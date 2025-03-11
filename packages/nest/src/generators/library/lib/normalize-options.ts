@@ -58,6 +58,7 @@ export async function normalizeOptions(
     testEnvironment: options.testEnvironment ?? 'node',
     unitTestRunner: options.unitTestRunner ?? 'jest',
     isUsingTsSolutionsConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionsConfig,
   };
 
   return normalized;
@@ -82,6 +83,6 @@ export function toJsLibraryGeneratorOptions(
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
-    useProjectJson: !options.isUsingTsSolutionsConfig,
+    useProjectJson: options.useProjectJson,
   };
 }

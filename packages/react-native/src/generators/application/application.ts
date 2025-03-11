@@ -37,6 +37,7 @@ export async function reactNativeApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeApplicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }

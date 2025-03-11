@@ -1,5 +1,11 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import libraryGenerator from './library';
@@ -145,6 +151,7 @@ describe('next library', () => {
         unitTestRunner: 'jest',
         style: 'css',
         component: false,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -264,6 +271,7 @@ describe('next library', () => {
         linter: 'none',
         unitTestRunner: 'none',
         style: 'css',
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -279,6 +287,7 @@ describe('next library', () => {
         linter: 'none',
         unitTestRunner: 'none',
         style: 'css',
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -291,9 +300,37 @@ describe('next library', () => {
         linter: 'none',
         unitTestRunner: 'none',
         style: 'css',
+        useProjectJson: false,
         skipFormat: true,
       });
 
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: Linter.EsLint,
+        unitTestRunner: 'jest',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "mylib",
+          "sourceRoot": "mylib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
     });
   });

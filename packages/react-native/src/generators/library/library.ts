@@ -33,11 +33,6 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
-import {
-  addReleaseConfigForNonTsSolution,
-  addReleaseConfigForTsSolution,
-  releaseTasks,
-} from '@nx/js/src/generators/library/utils/add-release-config';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
@@ -50,6 +45,7 @@ export async function reactNativeLibraryGenerator(
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -180,10 +176,14 @@ async function addProject(
     targets: {},
   };
 
-  if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
+  let packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+  };
+
+  if (!options.useProjectJson) {
+    packageJson = {
+      ...packageJson,
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
       peerDependencies: {
@@ -191,7 +191,6 @@ async function addProject(
         'react-native': reactNativeVersion,
       },
     };
-
     if (options.name !== options.importPath) {
       packageJson.nx = { name: options.name };
     }
@@ -199,14 +198,21 @@ async function addProject(
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
+  } else {
+    addProjectConfiguration(host, options.name, project);
+  }
 
+  if (
+    !options.useProjectJson ||
+    options.isUsingTsSolutionConfig ||
+    options.publishable ||
+    options.buildable
+  ) {
     writeJson(
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       packageJson
     );
-  } else {
-    addProjectConfiguration(host, options.name, project);
   }
 
   if (options.publishable || options.buildable) {
