@@ -89,7 +89,8 @@ export function createConfig(
         ? `async function (env, argv) { 
         const oldConfig = await baseWebpackConfig;
         const browserConfig = baseConfig[0];
-        return oldConfig(browserConfig);`
+        return oldConfig(browserConfig);
+      }`
         : 'webpackMerge(baseConfig[0], baseWebpackConfig)'
     }
   `
