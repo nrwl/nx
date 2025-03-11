@@ -7,7 +7,7 @@ import {
   ProgressPlugin,
   RspackPluginInstance,
 } from '@rspack/core';
-import { basename, extname, join } from 'path';
+import { resolve } from 'node:path';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { NormalizedAngularRspackPluginOptions, OutputPath } from '../models';
@@ -36,24 +36,32 @@ export class NgRspackPlugin implements RspackPluginInstance {
       });
     }
     if (!this.pluginOptions.hasServer) {
-      const styles = this.pluginOptions.styles ?? [];
+      // @TODO: properly handle global styles and scripts
+      const styles = this.pluginOptions.globalStyles ?? [];
       for (const style of styles) {
-        new EntryPlugin(compiler.context, style, {
-          name: isProduction ? this.getEntryName(style) : undefined,
-        }).apply(compiler);
+        for (const file of style.files) {
+          new EntryPlugin(compiler.context, file, {
+            name: isProduction ? style.name : undefined,
+          }).apply(compiler);
+        }
       }
-      const scripts = this.pluginOptions.scripts ?? [];
+      const scripts = this.pluginOptions.globalScripts ?? [];
       for (const script of scripts) {
-        new EntryPlugin(compiler.context, script, {
-          name: isProduction ? this.getEntryName(script) : undefined,
+        for (const file of script.files) {
+          new EntryPlugin(compiler.context, file, {
+            name: isProduction ? script.name : undefined,
+          }).apply(compiler);
+        }
+      }
+      if (this.pluginOptions.index) {
+        new HtmlRspackPlugin({
+          minify: false,
+          inject: 'body',
+          scriptLoading: 'module',
+          template: this.pluginOptions.index.input,
+          chunks: this.pluginOptions.index.insertionOrder.map(([name]) => name),
         }).apply(compiler);
       }
-      new HtmlRspackPlugin({
-        minify: false,
-        inject: 'body',
-        scriptLoading: 'module',
-        template: join(root, this.pluginOptions.index),
-      }).apply(compiler);
       if (
         this.pluginOptions.ssr &&
         typeof this.pluginOptions.ssr === 'object' &&
@@ -74,18 +82,38 @@ export class NgRspackPlugin implements RspackPluginInstance {
     }).apply(compiler);
     if (this.pluginOptions.assets) {
       new CopyRspackPlugin({
-        patterns: (this.pluginOptions.assets ?? []).map((assetPath) => ({
-          from: join(root, assetPath),
-          to: this.pluginOptions.outputPath.media,
-          noErrorOnMissing: true,
-        })),
+        patterns: (this.pluginOptions.assets ?? []).map((asset) => {
+          let { input, output = '' } = asset;
+          input = resolve(root, input).replace(/\\/g, '/');
+          input = input.endsWith('/') ? input : input + '/';
+          output = output.endsWith('/') ? output : output + '/';
+
+          if (output.startsWith('..')) {
+            throw new Error(
+              'An asset cannot be written to a location outside of the output path.'
+            );
+          }
+
+          return {
+            context: input,
+            to: output.replace(/^\//, ''),
+            from: asset.glob,
+            noErrorOnMissing: true,
+            force: true,
+            globOptions: {
+              dot: true,
+              ignore: [
+                '.gitkeep',
+                '**/.DS_Store',
+                '**/Thumbs.db',
+                ...(asset.ignore ?? []),
+              ],
+            },
+          };
+        }),
       }).apply(compiler);
     }
     new RxjsEsmResolutionPlugin().apply(compiler);
     new AngularRspackPlugin(this.pluginOptions).apply(compiler);
-  }
-
-  private getEntryName(path: string) {
-    return basename(path, extname(path));
   }
 }

@@ -33,8 +33,44 @@ export interface OutputPath {
   media: string;
 }
 
+export type AssetExpandedDefinition = {
+  glob: string;
+  input: string;
+  ignore?: string[];
+  output?: string;
+};
+export type AssetElement = AssetExpandedDefinition | string;
+export type NormalizedAssetElement = AssetExpandedDefinition & {
+  output: string;
+};
+export type ScriptOrStyleEntry =
+  | string
+  | {
+      input: string;
+      bundleName?: string;
+      inject?: boolean;
+    };
+export type GlobalEntry = {
+  name: string;
+  files: string[];
+  initial: boolean;
+};
+export type IndexExpandedDefinition = {
+  input: string;
+  output?: string;
+  preloadInitial?: boolean;
+};
+export type IndexElement = IndexExpandedDefinition | string | false;
+export type IndexHtmlTransform = (content: string) => Promise<string>;
+export type NormalizedIndexElement =
+  | (IndexExpandedDefinition & {
+      insertionOrder: [string, boolean][];
+      transformer: IndexHtmlTransform | undefined;
+    })
+  | false;
+
 export interface AngularRspackPluginOptions {
-  index: string;
+  index: IndexElement;
   browser: string;
   server?: string;
   ssr?:
@@ -44,9 +80,9 @@ export interface AngularRspackPluginOptions {
         experimentalPlatform?: 'node' | 'neutral';
       };
   polyfills: string[];
-  assets: string[];
-  styles: string[];
-  scripts: string[];
+  assets?: AssetElement[];
+  styles?: ScriptOrStyleEntry[];
+  scripts?: ScriptOrStyleEntry[];
   outputPath:
     | string
     | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
@@ -64,9 +100,13 @@ export interface AngularRspackPluginOptions {
 }
 
 export interface NormalizedAngularRspackPluginOptions
-  extends AngularRspackPluginOptions {
+  extends Omit<AngularRspackPluginOptions, 'index' | 'scripts' | 'styles'> {
   advancedOptimizations: boolean;
+  assets: NormalizedAssetElement[];
+  index: NormalizedIndexElement | undefined;
   devServer: DevServerOptions & { port: number };
+  globalScripts: GlobalEntry[];
+  globalStyles: GlobalEntry[];
   optimization: boolean | OptimizationOptions;
   outputHashing: OutputHashing;
   outputPath: OutputPath;

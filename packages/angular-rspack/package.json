@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@nx/angular-rspack-compiler": "workspace:*",
+    "@nx/devkit": "^20.0.0",
     "express": "4.21.1",
     "jsonc-parser": "^3.3.1",
     "less-loader": "^12.2.0",
