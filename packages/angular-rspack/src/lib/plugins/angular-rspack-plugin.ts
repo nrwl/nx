@@ -41,8 +41,15 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     this.#typescriptFileCache = new Map<string, string>();
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
-        sourcemap: false,
-        thirdPartySourcemaps: false,
+        /**
+         * Matches https://github.com/angular/angular-cli/blob/33ed6e875e509ebbaa0cbdb57be9e932f9915dff/packages/angular/build/src/tools/esbuild/angular/compiler-plugin.ts#L89
+         * where pluginOptions.sourcemap is set https://github.com/angular/angular-cli/blob/61d98fde122468978de9b17bd79761befdbf2fac/packages/angular/build/src/tools/esbuild/compiler-plugin-options.ts#L34
+         */
+        sourcemap: !!(
+          this.#_options.sourceMap.scripts &&
+          (this.#_options.sourceMap.hidden ? 'external' : true)
+        ),
+        thirdPartySourcemaps: this.#_options.sourceMap.vendor,
         advancedOptimizations: this.#_options.advancedOptimizations,
         jit: !this.#_options.aot,
       },

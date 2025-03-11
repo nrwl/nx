@@ -1,4 +1,5 @@
 import { StylePreprocessorOptions } from '@nx/angular-rspack-compiler';
+import { SourceMap } from '../models';
 
 export function getIncludePathOptions(includePaths?: string[]) {
   if (!includePaths || includePaths.length === 0) {
@@ -13,7 +14,8 @@ export function getIncludePathOptions(includePaths?: string[]) {
 
 export function getSassLoaderConfig(
   sassPathOptions?: { includePaths?: string[] },
-  sassOptions?: StylePreprocessorOptions['sass']
+  sassOptions?: StylePreprocessorOptions['sass'],
+  sourceMap?: SourceMap
 ) {
   return {
     test: /\.?(sa|sc|c)ss$/,
@@ -22,6 +24,7 @@ export function getSassLoaderConfig(
         loader: 'sass-loader',
         options: {
           api: 'modern-compiler',
+          sourceMap: sourceMap?.styles,
           implementation: require.resolve('sass-embedded'),
           ...(sassPathOptions ?? []),
           ...(sassOptions ?? {}),
@@ -32,13 +35,17 @@ export function getSassLoaderConfig(
   };
 }
 
-export function getLessLoaderConfig(lessPathOptions?: { paths?: string[] }) {
+export function getLessLoaderConfig(
+  lessPathOptions?: { paths?: string[] },
+  sourceMap?: SourceMap
+) {
   return {
     test: /\.less$/,
     use: [
       {
         loader: 'less-loader',
         options: {
+          sourceMap: sourceMap?.styles,
           javascriptEnabled: true,
           ...lessPathOptions,
         },
@@ -52,15 +59,21 @@ export function getLessLoaderConfig(lessPathOptions?: { paths?: string[] }) {
  * Returns an array of style loaders for sass and less. Both loader´s are always returned
  *
  * @param stylePreprocessorOptions
+ * @param sourceMap
  */
 export function getStyleLoaders(
-  stylePreprocessorOptions?: StylePreprocessorOptions
+  stylePreprocessorOptions?: StylePreprocessorOptions,
+  sourceMap?: SourceMap
 ) {
   const { less: lessPathOptions, sass: sassPathOptions } =
     getIncludePathOptions(stylePreprocessorOptions?.includePaths);
 
   return [
-    getSassLoaderConfig(sassPathOptions, stylePreprocessorOptions?.sass),
-    getLessLoaderConfig(lessPathOptions),
+    getSassLoaderConfig(
+      sassPathOptions,
+      stylePreprocessorOptions?.sass,
+      sourceMap
+    ),
+    getLessLoaderConfig(lessPathOptions, sourceMap),
   ];
 }

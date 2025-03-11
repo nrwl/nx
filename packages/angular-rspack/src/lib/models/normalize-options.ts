@@ -27,6 +27,7 @@ import type {
   NormalizedAssetElement,
   NormalizedIndexElement,
   OutputPath,
+  SourceMap,
   ScriptOrStyleEntry,
 } from './angular-rspack-plugin-options';
 
@@ -218,11 +219,39 @@ export function normalizeOptions(
     outputHashing: options.outputHashing ?? 'all',
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     tsConfig: options.tsConfig ?? join(root, 'tsconfig.app.json'),
+    sourceMap: normalizeSourceMap(options.sourceMap),
     hasServer: getHasServer({ server, ssr: normalizedSsr }),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     devServer: normalizeDevServer(options.devServer),
     extractLicenses: options.extractLicenses ?? true,
+  };
+}
+
+function normalizeSourceMap(
+  sourceMap: boolean | Partial<SourceMap> | undefined
+): SourceMap {
+  if (sourceMap === undefined || sourceMap === true) {
+    return {
+      scripts: true,
+      styles: true,
+      hidden: false,
+      vendor: false,
+    };
+  }
+  if (sourceMap === false) {
+    return {
+      scripts: false,
+      styles: false,
+      hidden: false,
+      vendor: false,
+    };
+  }
+  return {
+    scripts: sourceMap.scripts ?? true,
+    styles: sourceMap.styles ?? true,
+    hidden: sourceMap.hidden ?? false,
+    vendor: sourceMap.vendor ?? false,
   };
 }
 
