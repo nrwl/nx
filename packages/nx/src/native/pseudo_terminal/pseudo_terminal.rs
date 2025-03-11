@@ -17,6 +17,7 @@ use crossterm::{
 };
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use tracing::log::trace;
+use vt100_ctt::Parser;
 
 use super::os;
 use crate::native::pseudo_terminal::child_process::ChildProcess;
@@ -70,6 +71,8 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
     std::thread::spawn(move || {
         let mut stdout = std::io::stdout();
         let mut buf = [0; 8 * 1024];
+        let mut parser = Parser::new(h, w, 10000);
+        let mut first: bool = true;
 
         'read_loop: loop {
             if let Ok(len) = reader.read(&mut buf) {
@@ -82,11 +85,14 @@ pub fn create_pseudo_terminal() -> napi::Result<PseudoTerminal> {
                 let quiet = quiet_clone.load(Ordering::Relaxed);
                 trace!("Quiet: {}", quiet);
                 if !quiet {
-                    let mut content = String::from_utf8_lossy(&buf[0..len]).to_string();
-                    if content.contains("\x1B[6n") {
-                        trace!("Prevented terminal escape sequence ESC[6n from being printed.");
-                        content = content.replace("\x1B[6n", "");
-                    }
+                    let prev = parser.screen().clone();
+                    parser.process(&buf[0..len]);
+                    let write_buf = if first {
+                        parser.screen().all_contents_formatted()
+                    } else {
+                        parser.screen().contents_diff(&prev)
+                    };
+                    first = false;
                     let mut logged_interrupted_error = false;
                     while let Err(e) = stdout.write_all(content.as_bytes()) {
                         match e.kind() {
