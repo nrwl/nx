@@ -7,7 +7,7 @@ import {
   ProgressPlugin,
   RspackPluginInstance,
 } from '@rspack/core';
-import { resolve } from 'node:path';
+import { posix, relative, resolve } from 'node:path';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { NormalizedAngularRspackPluginOptions, OutputPath } from '../models';
@@ -112,6 +112,24 @@ export class NgRspackPlugin implements RspackPluginInstance {
           };
         }),
       }).apply(compiler);
+    }
+    if (this.pluginOptions.extractLicenses) {
+      const { LicenseWebpackPlugin } = require('license-webpack-plugin');
+      new LicenseWebpackPlugin({
+        stats: {
+          warnings: false,
+          errors: false,
+        },
+        perChunkOutput: false,
+        outputFilename: posix.join(
+          relative(
+            this.pluginOptions.outputPath.browser,
+            this.pluginOptions.outputPath.base
+          ),
+          '3rdpartylicenses.txt'
+        ),
+        skipChildCompilers: true,
+      }).apply(compiler as any);
     }
     new RxjsEsmResolutionPlugin().apply(compiler);
     new AngularRspackPlugin(this.pluginOptions).apply(compiler);

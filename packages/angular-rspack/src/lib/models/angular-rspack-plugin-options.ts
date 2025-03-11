@@ -97,6 +97,7 @@ export interface AngularRspackPluginOptions {
   outputHashing?: OutputHashing;
   stylePreprocessorOptions?: StylePreprocessorOptions;
   devServer?: DevServerOptions;
+  extractLicenses?: boolean;
 }
 
 export interface NormalizedAngularRspackPluginOptions
@@ -105,6 +106,7 @@ export interface NormalizedAngularRspackPluginOptions
   assets: NormalizedAssetElement[];
   index: NormalizedIndexElement | undefined;
   devServer: DevServerOptions & { port: number };
+  extractLicenses: boolean;
   globalScripts: GlobalEntry[];
   globalStyles: GlobalEntry[];
   optimization: boolean | OptimizationOptions;
