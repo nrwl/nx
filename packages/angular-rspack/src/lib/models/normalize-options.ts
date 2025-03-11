@@ -222,6 +222,7 @@ export function normalizeOptions(
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     devServer: normalizeDevServer(options.devServer),
+    extractLicenses: options.extractLicenses ?? true,
   };
 }
 
