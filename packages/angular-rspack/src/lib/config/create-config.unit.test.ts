@@ -8,6 +8,7 @@ describe('createConfig', () => {
     browser: './src/main.ts',
     index: './src/index.html',
     tsConfig: './tsconfig.base.json',
+    outputPath: './dist',
     inlineStyleLanguage: 'css',
     polyfills: [],
     styles: [],
@@ -66,6 +67,8 @@ describe('createConfig', () => {
     };
 
     it('should create config from options', async () => {
+      const { scripts, styles, ...rest } = configBase;
+
       await expect(
         createConfig({ options: configBase })
       ).resolves.toStrictEqual([
@@ -76,22 +79,32 @@ describe('createConfig', () => {
           }),
           plugins: [
             {
-              pluginOptions: {
-                ...configBase,
+              pluginOptions: expect.objectContaining({
+                ...rest,
                 outputPath: {
                   base: join(process.cwd(), 'dist'),
                   browser: join(process.cwd(), 'dist', 'browser'),
                   server: join(process.cwd(), 'dist', 'server'),
                   media: join(process.cwd(), 'dist', 'browser', 'media'),
                 },
+                index: expect.objectContaining({
+                  input: expect.stringMatching(/\/src\/index\.html$/),
+                  insertionOrder: [
+                    ['polyfills', true],
+                    ['main', true],
+                  ],
+                  output: 'index.html',
+                }),
                 optimization: true,
                 advancedOptimizations: true,
                 useTsProjectReferences: false,
                 polyfills: ['zone.js'],
+                globalScripts: scripts,
+                globalStyles: styles,
                 devServer: {
                   port: 4200,
                 },
-              },
+              }),
             },
           ],
         }),
@@ -109,22 +122,10 @@ describe('createConfig', () => {
           }),
           plugins: [
             {
-              pluginOptions: {
-                ...configBase,
-                outputPath: {
-                  base: join(process.cwd(), 'dist'),
-                  browser: join(process.cwd(), 'dist', 'browser'),
-                  server: join(process.cwd(), 'dist', 'server'),
-                  media: join(process.cwd(), 'dist', 'browser', 'media'),
-                },
+              pluginOptions: expect.objectContaining({
                 optimization: false,
                 advancedOptimizations: false,
-                useTsProjectReferences: false,
-                polyfills: ['zone.js'],
-                devServer: {
-                  port: 4200,
-                },
-              },
+              }),
             },
           ],
         }),

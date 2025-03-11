@@ -1,12 +1,36 @@
 import { FileReplacement } from '@nx/angular-rspack-compiler';
+import {
+  readCachedProjectGraph,
+  type ProjectGraphProjectNode,
+} from '@nx/devkit';
+import assert from 'node:assert';
+import { existsSync, statSync } from 'node:fs';
+import {
+  basename,
+  dirname,
+  extname,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
+import {
+  createProjectRootMappings,
+  findProjectForPath,
+} from 'nx/src/project-graph/utils/find-project-for-path';
 import type {
   AngularRspackPluginOptions,
+  AssetElement,
   DevServerOptions,
+  GlobalEntry,
   NormalizedAngularRspackPluginOptions,
+  NormalizedAssetElement,
+  NormalizedIndexElement,
   OutputPath,
+  ScriptOrStyleEntry,
 } from './angular-rspack-plugin-options';
-import { join, resolve } from 'node:path';
-import { existsSync } from 'node:fs';
+
+export const INDEX_HTML_CSR = 'index.csr.html';
 
 /**
  * Resolves file replacement paths to absolute paths based on the provided root directory.
@@ -73,7 +97,7 @@ export function validateOptimization(
 }
 
 export function normalizeOptions(
-  options: Partial<AngularRspackPluginOptions> = {}
+  options: AngularRspackPluginOptions
 ): NormalizedAngularRspackPluginOptions {
   const { fileReplacements = [], server, ssr, optimization } = options;
 
@@ -94,20 +118,100 @@ export function normalizeOptions(
   const root = process.cwd();
 
   const aot = options.aot ?? true;
-  // @TODO: should be `aot && normalizedOptimization.scripts` once we support optimization options
+  // @TODO: use this once we support granular optimization options
+  // const advancedOptimizations = aot && normalizedOptimization.scripts;
   const advancedOptimizations = aot && normalizedOptimization;
 
+  const project = getProject(root);
+
+  const assets =
+    project && options.assets?.length
+      ? normalizeAssetPatterns(
+          options.assets,
+          root,
+          project.data.root,
+          project.data.sourceRoot
+        )
+      : [];
+
+  const globalStyles = normalizeGlobalEntries(options.styles, 'styles');
+  const globalScripts = normalizeGlobalEntries(options.scripts, 'scripts');
+
+  if (options.index === false) {
+    console.warn(
+      'Disabling the "index" option is not yet supported. Defaulting to "src/index.html".'
+    );
+    options.index = join(root, 'src/index.html');
+  }
+
+  let index: NormalizedIndexElement | undefined;
+  // index can never have a value of `true` but in the schema it's of type `boolean`.
+  if (typeof options.index !== 'boolean') {
+    let indexOutput: string;
+    // The output file will be created within the configured output path
+    if (typeof options.index === 'string') {
+      indexOutput = options.index;
+    } else {
+      if (options.index.preloadInitial) {
+        console.warn(`The "index.preloadInitial" option is not yet supported.`);
+      }
+      if (options.index.output) {
+        console.warn(`The "index.output" option is not yet supported.`);
+      }
+
+      indexOutput = options.index.output || 'index.html';
+    }
+
+    /**
+     * If SSR is activated, create a distinct entry file for the `index.html`.
+     * This is necessary because numerous server/cloud providers automatically serve the `index.html` as a static file
+     * if it exists (handling SSG).
+     *
+     * For instance, accessing `foo.com/` would lead to `foo.com/index.html` being served instead of hitting the server.
+     *
+     * This approach can also be applied to service workers, where the `index.csr.html` is served instead of the prerendered `index.html`.
+     */
+    const indexBaseName = basename(indexOutput);
+    indexOutput =
+      // @TODO: use this once we support prerenderOptions
+      // (normalizedSsr || prerenderOptions) && indexBaseName === 'index.html'
+      normalizedSsr && indexBaseName === 'index.html'
+        ? INDEX_HTML_CSR
+        : indexBaseName;
+
+    index = {
+      input: resolve(
+        root,
+        typeof options.index === 'string' ? options.index : options.index.input
+      ),
+      output: indexOutput,
+      insertionOrder: [
+        ['polyfills', true],
+        ...globalStyles.filter((s) => s.initial).map((s) => [s.name, false]),
+        ...globalScripts.filter((s) => s.initial).map((s) => [s.name, false]),
+        ['main', true],
+        // [name, esm]
+      ] as [string, boolean][],
+      // @TODO: Add support for transformer
+      transformer: undefined,
+      // Preload initial defaults to true
+      preloadInitial:
+        typeof options.index !== 'object' ||
+        (options.index.preloadInitial ?? true),
+    };
+  }
+
   return {
-    index: options.index ?? './src/index.html',
+    index,
     browser: options.browser ?? './src/main.ts',
     ...(server ? { server } : {}),
     ...(ssr ? { ssr: normalizedSsr } : {}),
     optimization: normalizedOptimization,
     advancedOptimizations,
     polyfills: options.polyfills ?? [],
-    assets: options.assets ?? ['./public'],
-    styles: options.styles ?? ['./src/styles.css'],
-    scripts: options.scripts ?? [],
+    assets,
+    globalStyles,
+    globalScripts,
     outputPath: normalizeOutputPath(root, options.outputPath),
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     aot,
@@ -189,4 +293,164 @@ function normalizeOutputPath(
     server: outputPath.server ?? join(outputPath.base ?? defaultBase, 'server'),
     media: outputPath.media ?? join(providedBrowser, 'media'),
   };
+}
+
+function normalizeAssetPatterns(
+  assets: AssetElement[],
+  root: string,
+  projectRoot: string,
+  projectSourceRoot: string | undefined
+): NormalizedAssetElement[] {
+  if (assets.length === 0) {
+    return [];
+  }
+
+  // When sourceRoot is not available, we default to ${projectRoot}/src.
+  const sourceRoot = projectSourceRoot || join(projectRoot, 'src');
+  const resolvedSourceRoot = resolve(root, sourceRoot);
+
+  return assets.map((assetPattern) => {
+    // Normalize string asset patterns to objects.
+    if (typeof assetPattern === 'string') {
+      const assetPath = normalize(assetPattern);
+      const resolvedAssetPath = resolve(root, assetPath);
+
+      // Check if the string asset is within sourceRoot.
+      if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
+        throw new Error(
+          `The ${assetPattern} asset path must start with the project source root.`
+        );
+      }
+
+      let glob: string, input: string;
+      let isDirectory = false;
+
+      try {
+        isDirectory = statSync(resolvedAssetPath).isDirectory();
+      } catch {
+        isDirectory = true;
+      }
+
+      if (isDirectory) {
+        // Folders get a recursive star glob.
+        glob = '**/*';
+        // Input directory is their original path.
+        input = assetPath;
+      } else {
+        // Files are their own glob.
+        glob = basename(assetPath);
+        // Input directory is their original dirname.
+        input = dirname(assetPath);
+      }
+
+      // Output directory for both is the relative path from source root to input.
+      const output = relative(resolvedSourceRoot, resolve(root, input));
+
+      assetPattern = { glob, input, output };
+    } else {
+      assetPattern.output = join('.', assetPattern.output ?? '');
+    }
+
+    assert(assetPattern.output !== undefined);
+
+    if (assetPattern.output.startsWith('..')) {
+      throw new Error(
+        'An asset cannot be written to a location outside of the output path.'
+      );
+    }
+
+    return assetPattern as NormalizedAssetElement;
+  });
+}
+
+function normalizeGlobalEntries(
+  rawEntries: ScriptOrStyleEntry[] | undefined,
+  _defaultName: string
+): GlobalEntry[] {
+  if (!rawEntries?.length) {
+    return [];
+  }
+
+  const bundles = new Map<string, GlobalEntry>();
+
+  let warnForInject = false;
+  let warnForBundleName = false;
+  for (const rawEntry of rawEntries) {
+    let entry: ScriptOrStyleEntry;
+    if (typeof rawEntry === 'string') {
+      // string entries use default bundle name and inject values
+      entry = { input: rawEntry };
+    } else {
+      entry = rawEntry;
+    }
+
+    const { bundleName, input, inject = true } = entry;
+
+    // @TODO: remove this once we support inject
+    if (inject === false) {
+      warnForInject = true;
+    }
+    // @TODO: remove this once we support bundleName
+    if (bundleName) {
+      warnForBundleName = true;
+    }
+
+    // @TODO: use this once we support inject and bundleName
+    // Non-injected entries default to the file name
+    // const name =
+    //   bundleName || (inject ? defaultName : basename(input, extname(input)));
+    const name = basename(input, extname(input));
+
+    const existing = bundles.get(name);
+    if (!existing) {
+      // @TODO: use this once we support inject
+      // bundles.set(name, { name, files: [input], initial: inject });
+      bundles.set(name, { name, files: [input], initial: true });
+      continue;
+    }
+
+    // @TODO: uncomment this once we support inject
+    // if (existing.initial !== inject) {
+    //   throw new Error(
+    //     `The "${name}" bundle is mixing injected and non-injected entries. ` +
+    //       'Verify that the project options are correct.'
+    //   );
+    // }
+
+    existing.files.push(input);
+  }
+
+  if (warnForInject) {
+    console.warn(
+      `The "inject" option for scripts/styles is not yet supported.`
+    );
+  }
+  if (warnForBundleName) {
+    console.warn(
+      `The "bundleName" option for scripts/styles is not yet supported.`
+    );
+  }
+
+  return [...bundles.values()];
+}
+
+function getProject(root: string): ProjectGraphProjectNode | undefined {
+  if (global.NX_GRAPH_CREATION) {
+    return undefined;
+  }
+
+  const projectGraph = readCachedProjectGraph();
+
+  let projectName = process.env.NX_TASK_TARGET_PROJECT;
+  if (!projectName) {
+    const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
+    projectName = findProjectForPath(root, projectRootMappings) ?? undefined;
+  }
+
+  assert(
+    projectName,
+    'Cannot find the project. Please make sure to run this task with the Nx CLI and set "root" to a directory contained in a project.'
+  );
+
+  return projectGraph.nodes[projectName];
 }

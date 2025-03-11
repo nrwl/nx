@@ -23,6 +23,7 @@ module.exports = [
             '{projectRoot}/vitest*.config.{js,ts,mjs,mts}',
           ],
           ignoredDependencies: [
+            'nx',
             'less-loader',
             'sass-loader',
             'sass-embedded',
