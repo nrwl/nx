@@ -24,6 +24,7 @@ module.exports = [
           ],
           ignoredDependencies: [
             'nx',
+            'css-loader',
             'less-loader',
             'sass-loader',
             'sass-embedded',

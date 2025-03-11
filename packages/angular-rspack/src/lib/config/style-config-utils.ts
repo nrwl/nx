@@ -18,7 +18,7 @@ export function getSassLoaderConfig(
   sourceMap?: SourceMap
 ) {
   return {
-    test: /\.?(sa|sc|c)ss$/,
+    test: /\.?(sa|sc)ss$/,
     use: [
       {
         loader: 'sass-loader',
