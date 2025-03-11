@@ -246,7 +246,7 @@ export interface ExecutorContext {
   taskGraph?: TaskGraph;
 
   /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
+   * @deprecated Use projectsConfigurations or nxJsonConfiguration
    * The full workspace configuration
    * @todo(vsavkin): remove after v17
    */
