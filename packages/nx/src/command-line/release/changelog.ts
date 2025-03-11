@@ -994,7 +994,9 @@ async function applyChangesAndExit(
   }
 
   if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
-    output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+    output.logSingleLine(
+      `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+    );
     await gitPush({
       gitRemote: args.gitRemote,
       dryRun: args.dryRun,
