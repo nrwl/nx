@@ -85,6 +85,7 @@ export async function _createConfig(
 ): Promise<Configuration[]> {
   const normalizedOptions = normalizeOptions(options);
   const isProduction = process.env['NODE_ENV'] === 'production';
+  const isDevServer = process.env['WEBPACK_SERVE'];
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
   const { root } = normalizedOptions;
 
@@ -175,6 +176,7 @@ export async function _createConfig(
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = {
       ...defaultConfig,
+      name: 'server',
       target: 'node',
       entry: {
         server: {
@@ -236,7 +238,7 @@ export async function _createConfig(
       optimization: {
         chunkIds: normalizedOptions.namedChunks ? 'named' : 'deterministic',
         moduleIds: 'deterministic',
-        ...(normalizedOptions.optimization
+        ...(normalizedOptions.optimization && !isDevServer
           ? {
               minimize: true,
               runtimeChunk: 'single',
@@ -272,7 +274,6 @@ export async function _createConfig(
                 new SwcJsMinimizerRspackPlugin({
                   minimizerOptions: {
                     minify: true,
-                    mangle: true,
                     compress: {
                       passes: 2,
                     },
@@ -305,6 +306,10 @@ export async function _createConfig(
 
   const browserConfig = {
     ...defaultConfig,
+    name: 'browser',
+    ...(normalizedOptions.hasServer && isDevServer
+      ? { dependencies: ['server'] }
+      : {}),
     target: 'web',
     entry: {
       main: {
@@ -380,7 +385,7 @@ export async function _createConfig(
     optimization: {
       chunkIds: normalizedOptions.namedChunks ? 'named' : 'deterministic',
       moduleIds: 'deterministic',
-      ...(normalizedOptions.optimization
+      ...(normalizedOptions.optimization && !isDevServer
         ? {
             minimize: true,
             runtimeChunk: false,
