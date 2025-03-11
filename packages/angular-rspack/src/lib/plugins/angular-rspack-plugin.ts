@@ -58,7 +58,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   }
 
   apply(compiler: Compiler) {
-    const root = compiler.options.context ?? process.cwd();
+    const root = this.#_options.root;
     // Both of these are exclusive to each other - only one of them can be used at a time
     // But they will happen before the compiler is created - so we can use them to set up the parallel compilation once
     compiler.hooks.beforeRun.tapAsync(

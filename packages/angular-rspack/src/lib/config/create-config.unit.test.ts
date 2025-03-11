@@ -88,13 +88,14 @@ describe('createConfig', () => {
                   media: join(process.cwd(), 'dist', 'browser', 'media'),
                 },
                 index: expect.objectContaining({
-                  input: expect.stringMatching(/\/src\/index\.html$/),
+                  input: join(process.cwd(), 'src/index.html'),
                   insertionOrder: [
                     ['polyfills', true],
                     ['main', true],
                   ],
                   output: 'index.html',
                 }),
+                tsConfig: join(process.cwd(), 'tsconfig.base.json'),
                 sourceMap: {
                   scripts: true,
                   styles: true,
@@ -110,6 +111,44 @@ describe('createConfig', () => {
                 devServer: {
                   port: 4200,
                 },
+              }),
+            },
+          ]),
+        }),
+      ]);
+    });
+
+    it('should create config from options with a custom root', async () => {
+      const customRoot = join(process.cwd(), 'custom-root');
+
+      await expect(
+        createConfig({
+          options: { ...configBase, root: customRoot },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          mode: 'development',
+          devServer: expect.objectContaining({
+            port: 4200,
+          }),
+          plugins: expect.arrayContaining([
+            {
+              pluginOptions: expect.objectContaining({
+                outputPath: {
+                  base: join(customRoot, 'dist'),
+                  browser: join(customRoot, 'dist', 'browser'),
+                  server: join(customRoot, 'dist', 'server'),
+                  media: join(customRoot, 'dist', 'browser', 'media'),
+                },
+                index: expect.objectContaining({
+                  input: join(customRoot, 'src/index.html'),
+                  insertionOrder: [
+                    ['polyfills', true],
+                    ['main', true],
+                  ],
+                  output: 'index.html',
+                }),
+                tsConfig: join(customRoot, 'tsconfig.base.json'),
               }),
             },
           ]),
@@ -138,13 +177,14 @@ describe('createConfig', () => {
                   media: join(process.cwd(), 'dist', 'browser', 'media'),
                 },
                 index: expect.objectContaining({
-                  input: expect.stringMatching(/\/src\/index\.html$/),
+                  input: join(process.cwd(), 'src/index.html'),
                   insertionOrder: [
                     ['polyfills', true],
                     ['main', true],
                   ],
                   output: 'index.html',
                 }),
+                tsConfig: join(process.cwd(), 'tsconfig.base.json'),
                 sourceMap: {
                   scripts: true,
                   styles: true,
