@@ -86,7 +86,7 @@ export async function _createConfig(
   const normalizedOptions = normalizeOptions(options);
   const isProduction = process.env['NODE_ENV'] === 'production';
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
-  const root = process.cwd();
+  const { root } = normalizedOptions;
 
   const { sourceMapRules, sourceMapPlugins } = configureSourceMap(
     normalizedOptions.sourceMap

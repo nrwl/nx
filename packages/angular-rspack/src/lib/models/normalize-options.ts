@@ -50,11 +50,11 @@ export function resolveFileReplacements(
   }));
 }
 
-export function getHasServer({
-  server,
-  ssr,
-}: Pick<AngularRspackPluginOptions, 'server' | 'ssr'>): boolean {
-  const root = process.cwd();
+export function getHasServer(
+  root: string,
+  server: string | undefined,
+  ssr: AngularRspackPluginOptions['ssr']
+): boolean {
   return !!(
     server &&
     ssr &&
@@ -116,7 +116,10 @@ export function normalizeOptions(
   validateOptimization(optimization);
   const normalizedOptimization = optimization !== false; // @TODO: Add support for optimization options
 
-  const root = process.cwd();
+  const root = options.root ?? process.cwd();
+  const tsConfig = options.tsConfig
+    ? resolve(root, options.tsConfig)
+    : join(root, 'tsconfig.app.json');
 
   const aot = options.aot ?? true;
   // @TODO: use this once we support granular optimization options
@@ -218,9 +221,9 @@ export function normalizeOptions(
     aot,
     outputHashing: options.outputHashing ?? 'all',
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
-    tsConfig: options.tsConfig ?? join(root, 'tsconfig.app.json'),
+    tsConfig,
     sourceMap: normalizeSourceMap(options.sourceMap),
-    hasServer: getHasServer({ server, ssr: normalizedSsr }),
+    hasServer: getHasServer(root, server, normalizedSsr),
     skipTypeChecking: options.skipTypeChecking ?? false,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     namedChunks: options.namedChunks ?? false,
@@ -228,6 +231,7 @@ export function normalizeOptions(
     commonChunk: options.commonChunk ?? true,
     devServer: normalizeDevServer(options.devServer),
     extractLicenses: options.extractLicenses ?? true,
+    root,
   };
 }
 

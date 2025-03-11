@@ -109,6 +109,7 @@ export interface AngularRspackPluginOptions {
   commonChunk?: boolean;
   devServer?: DevServerOptions;
   extractLicenses?: boolean;
+  root?: string;
 }
 
 export interface NormalizedAngularRspackPluginOptions
@@ -126,5 +127,6 @@ export interface NormalizedAngularRspackPluginOptions
   optimization: boolean | OptimizationOptions;
   outputHashing: OutputHashing;
   outputPath: OutputPath;
+  root: string;
   sourceMap: SourceMap;
 }
