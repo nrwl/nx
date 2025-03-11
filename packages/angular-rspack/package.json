@@ -48,6 +48,7 @@
     "@nx/angular-rspack-compiler": "workspace:*",
     "@nx/devkit": "^20.0.0",
     "express": "4.21.1",
+    "source-map-loader": "^5.0.0",
     "jsonc-parser": "^3.3.1",
     "less-loader": "^12.2.0",
     "license-webpack-plugin": "^4.0.2",

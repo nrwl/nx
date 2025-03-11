@@ -77,7 +77,7 @@ describe('createConfig', () => {
           devServer: expect.objectContaining({
             port: 4200,
           }),
-          plugins: [
+          plugins: expect.arrayContaining([
             {
               pluginOptions: expect.objectContaining({
                 ...rest,
@@ -95,6 +95,12 @@ describe('createConfig', () => {
                   ],
                   output: 'index.html',
                 }),
+                sourceMap: {
+                  scripts: true,
+                  styles: true,
+                  hidden: false,
+                  vendor: false,
+                },
                 optimization: true,
                 advancedOptimizations: true,
                 useTsProjectReferences: false,
@@ -106,12 +112,13 @@ describe('createConfig', () => {
                 },
               }),
             },
-          ],
+          ]),
         }),
       ]);
     });
 
     it('should allow turning off optimizations', async () => {
+      const { scripts, styles, ...rest } = configBase;
       await expect(
         createConfig({ options: { ...configBase, optimization: false } })
       ).resolves.toStrictEqual([
@@ -120,14 +127,36 @@ describe('createConfig', () => {
           devServer: expect.objectContaining({
             port: 4200,
           }),
-          plugins: [
+          plugins: expect.arrayContaining([
             {
               pluginOptions: expect.objectContaining({
+                ...rest,
+                outputPath: {
+                  base: join(process.cwd(), 'dist'),
+                  browser: join(process.cwd(), 'dist', 'browser'),
+                  server: join(process.cwd(), 'dist', 'server'),
+                  media: join(process.cwd(), 'dist', 'browser', 'media'),
+                },
+                index: expect.objectContaining({
+                  input: expect.stringMatching(/\/src\/index\.html$/),
+                  insertionOrder: [
+                    ['polyfills', true],
+                    ['main', true],
+                  ],
+                  output: 'index.html',
+                }),
+                sourceMap: {
+                  scripts: true,
+                  styles: true,
+                  hidden: false,
+                  vendor: false,
+                },
+                polyfills: ['zone.js'],
                 optimization: false,
                 advancedOptimizations: false,
               }),
             },
-          ],
+          ]),
         }),
       ]);
     });

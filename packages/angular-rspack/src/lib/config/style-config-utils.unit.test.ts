@@ -50,6 +50,7 @@ describe('getSassLoaderConfig', () => {
           options: {
             api: 'modern-compiler',
             implementation: require.resolve('sass-embedded'),
+            sourceMap: undefined,
           },
         },
       ],
@@ -99,6 +100,7 @@ describe('getLessLoaderConfig', () => {
           loader: 'less-loader',
           options: {
             javascriptEnabled: true,
+            sourceMap: undefined,
           },
         },
       ],
@@ -132,6 +134,7 @@ describe('getStyleLoaders', () => {
             options: {
               api: 'modern-compiler',
               implementation: require.resolve('sass-embedded'),
+              sourceMap: undefined,
             },
           },
         ],
@@ -144,6 +147,7 @@ describe('getStyleLoaders', () => {
             loader: 'less-loader',
             options: {
               javascriptEnabled: true,
+              sourceMap: undefined,
             },
           },
         ],

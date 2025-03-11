@@ -69,6 +69,13 @@ export type NormalizedIndexElement =
     })
   | false;
 
+export interface SourceMap {
+  scripts: boolean;
+  styles: boolean;
+  hidden: boolean;
+  vendor: boolean;
+}
+
 export interface AngularRspackPluginOptions {
   index: IndexElement;
   browser: string;
@@ -91,6 +98,7 @@ export interface AngularRspackPluginOptions {
   inlineStyleLanguage: InlineStyleLanguage;
   tsConfig: string;
   hasServer: boolean;
+  sourceMap?: boolean | Partial<SourceMap>;
   skipTypeChecking: boolean;
   useTsProjectReferences?: boolean;
   optimization?: boolean | OptimizationOptions;
@@ -112,4 +120,5 @@ export interface NormalizedAngularRspackPluginOptions
   optimization: boolean | OptimizationOptions;
   outputHashing: OutputHashing;
   outputPath: OutputPath;
+  sourceMap: SourceMap;
 }
