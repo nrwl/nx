@@ -43,7 +43,7 @@ describe('getIncludePathOptions', () => {
 describe('getSassLoaderConfig', () => {
   it('should return sass loader config without options passed', () => {
     expect(getSassLoaderConfig()).toStrictEqual({
-      test: /\.?(sa|sc|c)ss$/,
+      test: /\.?(sa|sc)ss$/,
       use: [
         {
           loader: 'sass-loader',
@@ -127,7 +127,7 @@ describe('getStyleLoaders', () => {
   it('should return sass and less loader config without options passed', () => {
     expect(getStyleLoaders()).toStrictEqual([
       {
-        test: /\.?(sa|sc|c)ss$/,
+        test: /\.?(sa|sc)ss$/,
         use: [
           {
             loader: 'sass-loader',
@@ -162,26 +162,28 @@ describe('getStyleLoaders', () => {
         includePaths: ['path/to/a'],
         sass: { indentedSyntax: true },
       })
-    ).toStrictEqual([
-      expect.objectContaining({
-        use: [
-          expect.objectContaining({
-            options: expect.objectContaining({
-              includePaths: ['path/to/a'],
-              indentedSyntax: true,
+    ).toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          use: [
+            expect.objectContaining({
+              options: expect.objectContaining({
+                includePaths: ['path/to/a'],
+                indentedSyntax: true,
+              }),
             }),
-          }),
-        ],
-      }),
-      expect.objectContaining({
-        use: [
-          expect.objectContaining({
-            options: expect.objectContaining({
-              paths: ['path/to/a'],
+          ],
+        }),
+        expect.objectContaining({
+          use: [
+            expect.objectContaining({
+              options: expect.objectContaining({
+                paths: ['path/to/a'],
+              }),
             }),
-          }),
-        ],
-      }),
-    ]);
+          ],
+        }),
+      ])
+    );
   });
 });
