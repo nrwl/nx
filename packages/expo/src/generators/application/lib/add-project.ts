@@ -6,12 +6,10 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const hasPlugin = hasExpoPlugin(host);
@@ -28,13 +26,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  if (isUsingTsSolutionSetup(host)) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
-      private: true,
-    };
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
 
+  if (!options.useProjectJson) {
     if (options.importPath !== options.projectName) {
       packageJson.nx = { name: options.projectName };
     }
@@ -46,18 +44,20 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
-
-    writeJson(
-      host,
-      joinPathFragments(options.appProjectRoot, 'package.json'),
-      packageJson
-    );
   } else {
     addProjectConfiguration(
       host,
       options.projectName,
       projectConfiguration,
       options.standaloneConfig
+    );
+  }
+
+  if (!options.useProjectJson || options.isTsSolutionSetup) {
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
     );
   }
 }

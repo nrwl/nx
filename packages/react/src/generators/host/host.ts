@@ -38,7 +38,7 @@ export async function hostGenerator(
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, {
       ...schema,
-      alwaysGenerateProjectJson: true,
+      useProjectJson: true,
     })),
     js: schema.js ?? false,
     typescriptConfiguration: schema.js
@@ -71,7 +71,7 @@ export async function hostGenerator(
     // The target use-case is loading remotes as child routes, thus always enable routing.
     routing: true,
     skipFormat: true,
-    alwaysGenerateProjectJson: true,
+    useProjectJson: true,
   });
   tasks.push(initTask);
 

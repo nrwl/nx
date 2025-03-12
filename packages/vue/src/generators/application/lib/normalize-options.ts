@@ -43,6 +43,7 @@ export async function normalizeOptions(
     e2eProjectRoot,
     parsedTags,
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.style = options.style ?? 'css';

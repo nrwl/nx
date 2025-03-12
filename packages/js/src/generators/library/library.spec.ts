@@ -2303,6 +2303,28 @@ describe('lib', () => {
       );
     });
 
+    it('should add the project root to the package manager workspaces config when a more generic pattern would match other projects that were not previously included', async () => {
+      tree.write(
+        'not-included-dir/some-other-project-not-included/package.json',
+        '{}'
+      );
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'not-included-dir/my-lib',
+        bundler: 'tsc',
+        unitTestRunner: 'none',
+        linter: 'none',
+      });
+
+      expect(readJson(tree, 'package.json').workspaces).toContain(
+        'not-included-dir/my-lib'
+      );
+      expect(readJson(tree, 'package.json').workspaces).not.toContain(
+        'not-included-dir/*'
+      );
+    });
+
     it('should not add a pattern for a project that already matches an existing pattern', async () => {
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/**'];

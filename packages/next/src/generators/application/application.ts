@@ -40,6 +40,7 @@ import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -73,7 +74,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isTsSolutionSetup) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
   const e2eTask = await addE2e(host, options);

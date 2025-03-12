@@ -41,6 +41,7 @@ describe('Add Project', () => {
         appRoot: 'apps/my-app',
         linter: Linter.EsLint,
         framework: 'react-native',
+        useProjectJson: true,
       });
     });
 
@@ -91,6 +92,7 @@ describe('Add Project', () => {
         appRoot: 'apps/my-dir/my-app',
         linter: Linter.EsLint,
         framework: 'react-native',
+        useProjectJson: true,
       });
     });
 

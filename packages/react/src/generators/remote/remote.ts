@@ -98,7 +98,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, {
       ...schema,
-      alwaysGenerateProjectJson: true,
+      useProjectJson: true,
     })),
     // when js is set to true, we want to use the js configuration
     js: schema.js ?? false,
@@ -137,7 +137,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     name: options.projectName,
     skipFormat: true,
-    alwaysGenerateProjectJson: true,
+    useProjectJson: true,
   });
   tasks.push(initAppTask);
 

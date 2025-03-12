@@ -58,5 +58,6 @@ export async function normalizeOptions(
     parsedTags,
     useTsSolution: isUsingTsSolutionConfig,
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }

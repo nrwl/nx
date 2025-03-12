@@ -45,6 +45,7 @@ describe('Normalize Options', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -82,6 +83,7 @@ describe('Normalize Options', () => {
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -120,6 +122,7 @@ describe('Normalize Options', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -157,6 +160,7 @@ describe('Normalize Options', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -195,6 +199,7 @@ describe('Normalize Options', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 });

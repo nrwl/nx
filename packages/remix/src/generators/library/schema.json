@@ -81,6 +81,10 @@
       "default": false,
       "description": "Generate a buildable library that uses rollup to bundle.",
       "x-deprecated": "Use the `bundler` option for greater control (none, vite, rollup)."
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["directory"]
