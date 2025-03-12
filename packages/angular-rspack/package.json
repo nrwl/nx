@@ -71,6 +71,9 @@
     "name": "angular-rspack",
     "sourceRoot": "packages/angular-rspack/src",
     "projectType": "library",
+    "tags": [
+      "publishable"
+    ],
     "targets": {
       "code-pushup": {},
       "unit-test": {
