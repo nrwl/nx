@@ -6,10 +6,21 @@ import {
   TemplateUrlsResolver,
 } from '@nx/angular-rspack-compiler';
 
-const styleUrlsResolver = new StyleUrlsResolver();
-const templateUrlsResolver = new TemplateUrlsResolver();
+const _styleUrlsResolver = new StyleUrlsResolver();
+const _templateUrlsResolver = new TemplateUrlsResolver();
 
-export default function loader(this: LoaderContext<unknown>, content: string) {
+export default function loader(
+  this: LoaderContext<unknown>,
+  content: string,
+  opt?: {
+    styleUrlsResolver: StyleUrlsResolver;
+    templateUrlsResolver: TemplateUrlsResolver;
+  }
+) {
+  const {
+    styleUrlsResolver = _styleUrlsResolver,
+    templateUrlsResolver = _templateUrlsResolver,
+  } = opt ?? {};
   const callback = this.async();
   if (
     (this._compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] ===
