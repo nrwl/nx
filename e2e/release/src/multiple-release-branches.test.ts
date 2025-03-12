@@ -125,24 +125,21 @@ describe('nx release multiple release branches', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Unable to resolve the current version from git tag using pattern "v{version}". Falling back to the version on disk of 0.0.0
-      {project-name} 📄 Using the provided version specifier "0.0.7".
-      {project-name} ✍️  New version 0.0.7 written to {project-name}/package.json
+      {project-name} ⚠️  Unable to resolve the current version from git tags using pattern "v{version}". Falling back to the version 0.0.0 in manifest: {project-name}/package.json
+      {project-name} ❓ Applied explicit semver value "0.0.7", from the given specifier, to get new version 0.0.7
+      {project-name} ✍️  New version 0.0.7 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.0 already resolved from disk fallback.
-      {project-name} 📄 Using the provided version specifier "0.0.7".
-      {project-name} ✍️  New version 0.0.7 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.0 already resolved for {project-name} from the disk fallback
+      {project-name} ❓ Applied version 0.0.7 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.0.7 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.0 already resolved from disk fallback.
-      {project-name} 📄 Using the provided version specifier "0.0.7".
-      {project-name} ✍️  New version 0.0.7 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.0 already resolved for {project-name} from the disk fallback
+      {project-name} ❓ Applied version 0.0.7 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.0.7 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",
@@ -174,24 +171,21 @@ describe('nx release multiple release branches', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.7 from git tag "v0.0.7".
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} 🏷️ Resolved the current version as 0.0.7 from git tag "v0.0.7"
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.7 already resolved from git tag "v0.0.7".
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.7 already resolved for {project-name} from git tag "v0.0.7"
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.7 already resolved from git tag "v0.0.7".
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.7 already resolved for {project-name} from git tag "v0.0.7"
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",
@@ -226,24 +220,21 @@ describe('nx release multiple release branches', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.7 from git tag "v0.0.7".
-      {project-name} 📄 Using the provided version specifier "patch".
-      {project-name} ✍️  New version 0.0.8 written to {project-name}/package.json
+      {project-name} 🏷️ Resolved the current version as 0.0.7 from git tag "v0.0.7"
+      {project-name} ❓ Applied semver relative bump "patch", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.0.8 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.7 already resolved from git tag "v0.0.7".
-      {project-name} 📄 Using the provided version specifier "patch".
-      {project-name} ✍️  New version 0.0.8 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.7 already resolved for {project-name} from git tag "v0.0.7"
+      {project-name} ❓ Applied version 0.0.8 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.0.8 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.7 already resolved from git tag "v0.0.7".
-      {project-name} 📄 Using the provided version specifier "patch".
-      {project-name} ✍️  New version 0.0.8 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.7 already resolved for {project-name} from git tag "v0.0.7"
+      {project-name} ❓ Applied version 0.0.8 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.0.8 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",
@@ -321,24 +312,21 @@ describe('nx release multiple release branches', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Unable to resolve the current version from git tag using pattern "v{version}". Falling back to the version on disk of 0.0.0
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} ⚠️  Unable to resolve the current version from git tags using pattern "v{version}". Falling back to the version 0.0.0 in manifest: {project-name}/package.json
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.0 already resolved from disk fallback.
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.0 already resolved for {project-name} from the disk fallback
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.0.0 already resolved from disk fallback.
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.0.0 already resolved for {project-name} from the disk fallback
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",
@@ -373,24 +361,21 @@ describe('nx release multiple release branches', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.1.0 from git tag "v0.1.0".
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+      {project-name} 🏷️ Resolved the current version as 0.1.0 from git tag "v0.1.0"
+      {project-name} ❓ Applied semver relative bump "major", from the given specifier, to get new version 1.0.0
+      {project-name} ✍️  New version 1.0.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.1.0 already resolved from git tag "v0.1.0".
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.1.0 already resolved for {project-name} from git tag "v0.1.0"
+      {project-name} ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 1.0.0 written to manifest: {project-name}/package.json
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Using the current version 0.1.0 already resolved from git tag "v0.1.0".
-      {project-name} 📄 Using the provided version specifier "major".
-      {project-name} ✍️  New version 1.0.0 written to {project-name}/package.json
+      {project-name} ♻️  Reusing the current version 0.1.0 already resolved for {project-name} from git tag "v0.1.0"
+      {project-name} ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 1.0.0 written to manifest: {project-name}/package.json
 
 
       "name": "@proj/{project-name}",

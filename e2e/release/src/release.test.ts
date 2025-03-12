@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nx/devkit';
+import { type NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
   createFile,
@@ -6,6 +6,7 @@ import {
   killProcessAndPorts,
   newProject,
   readFile,
+  readJson,
   runCLI,
   runCommandAsync,
   runCommandUntil,
@@ -104,17 +105,24 @@ describe('nx release', () => {
     ).toEqual(3);
     expect(
       versionOutput.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
+        /Resolved the current version as 0\.0\.0 from manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
+    // First project
     expect(
       versionOutput.match(
-        /Resolved the current version as 0.0.0 from my-pkg-\d*\/package.json/g
+        /Applied explicit semver value "999\.9\.9", from the given specifier, to get new version 999\.9\.9/g
       ).length
-    ).toEqual(3);
+    ).toEqual(1);
+    // Other projects
     expect(
       versionOutput.match(
-        /New version 999.9.9 written to my-pkg-\d*\/package.json/g
+        /Applied version 999\.9\.9 directly, because the project is a member of a fixed release group containing my-pkg-\d*/g
+      ).length
+    ).toEqual(2);
+    expect(
+      versionOutput.match(
+        /New version 999\.9\.9 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -296,17 +304,12 @@ describe('nx release', () => {
       versionOutput2.match(/Running release version for project: my-pkg-\d*/g)
         .length
     ).toEqual(3);
-    expect(
-      versionOutput2.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
-      ).length
-    ).toEqual(3);
 
-    // It should resolve the current version from the registry once...
+    // It should resolve the current version from the registry once because it is a fixed release group...
     expect(
       versionOutput2.match(
         new RegExp(
-          `Resolved the current version as 999.9.9 for tag "latest" from registry ${e2eRegistryUrl}`,
+          `Resolved the current version as 999.9.9 from the remote registry: "@proj:registry=${e2eRegistryUrl}" tag=latest`,
           'g'
         )
       ).length
@@ -315,15 +318,28 @@ describe('nx release', () => {
     expect(
       versionOutput2.match(
         new RegExp(
-          `Using the current version 999.9.9 already resolved from the registry ${e2eRegistryUrl}`,
+          `Reusing the current version 999.9.9 already resolved for my-pkg-\\d* from the registry: "@proj:registry=${e2eRegistryUrl}" tag=latest`,
           'g'
         )
       ).length
     ).toEqual(2);
 
+    // First project
     expect(
       versionOutput2.match(
-        /New version 1000.0.0-next.0 written to my-pkg-\d*\/package.json/g
+        /Applied semver relative bump "premajor", from the given specifier, to get new version 1000\.0\.0-next\.0/g
+      ).length
+    ).toEqual(1);
+    // Other projects
+    expect(
+      versionOutput2.match(
+        /Applied version 1000\.0\.0-next\.0 directly, because the project is a member of a fixed release group containing my-pkg-\d*/g
+      ).length
+    ).toEqual(2);
+
+    expect(
+      versionOutput2.match(
+        /New version 1000\.0\.0-next\.0 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -421,17 +437,17 @@ describe('nx release', () => {
       execSync(
         `npm view @proj/${pkg1}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm (ERR!|error) code E404/);
     expect(() =>
       execSync(
         `npm view @proj/${pkg2}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm (ERR!|error) code E404/);
     expect(() =>
       execSync(
         `npm view @proj/${pkg3}@next version --registry=${customRegistryUrl}`
       )
-    ).toThrowError(/npm ERR! code E404/);
+    ).toThrow(/npm (ERR!|error) code E404/);
 
     // Actually publish to the custom registry (not e2e registry), and a custom dist tag of "next"
     const publishOutput3 = runCLI(publishToNext);
@@ -758,11 +774,6 @@ describe('nx release', () => {
       versionOutput3.match(/Running release version for project: my-pkg-\d*/g)
         .length
     ).toEqual(3);
-    expect(
-      versionOutput3.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
-      ).length
-    ).toEqual(3);
 
     // It should resolve the current version from the git tag once...
     expect(
@@ -777,15 +788,28 @@ describe('nx release', () => {
     expect(
       versionOutput3.match(
         new RegExp(
-          `Using the current version 1100.0.0 already resolved from git tag "xx1100.0.0"`,
+          `Reusing the current version 1100.0.0 already resolved for my-pkg-\\d* from git tag "xx1100.0.0"`,
           'g'
         )
       ).length
     ).toEqual(2);
 
+    // First project
     expect(
       versionOutput3.match(
-        /New version 1100.1.0 written to my-pkg-\d*\/package.json/g
+        /Applied semver relative bump "minor", from the given specifier, to get new version 1100\.1\.0/g
+      ).length
+    ).toEqual(1);
+    // Other projects
+    expect(
+      versionOutput3.match(
+        /Applied version 1100\.1\.0 directly, because the project is a member of a fixed release group containing my-pkg-\d*/g
+      ).length
+    ).toEqual(2);
+
+    expect(
+      versionOutput3.match(
+        /New version 1100\.1\.0 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -821,11 +845,6 @@ describe('nx release', () => {
       versionOutput4.match(/Running release version for project: my-pkg-\d*/g)
         .length
     ).toEqual(3);
-    expect(
-      versionOutput4.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
-      ).length
-    ).toEqual(3);
 
     // It should resolve the current version from the git tag once...
     expect(
@@ -840,13 +859,24 @@ describe('nx release', () => {
     expect(
       versionOutput4.match(
         new RegExp(
-          `Using the current version 1100.0.0 already resolved from git tag "xx1100.0.0"`,
+          `Reusing the current version 1100.0.0 already resolved for my-pkg-\\d* from git tag "xx1100.0.0"`,
           'g'
         )
       ).length
     ).toEqual(2);
 
-    expect(versionOutput4.match(/Skipping versioning/g).length).toEqual(3);
+    // First project
+    expect(
+      versionOutput4.match(
+        /No changes were detected using git history and the conventional commits standard/g
+      ).length
+    ).toEqual(1);
+    // Other projects
+    expect(
+      versionOutput4.match(
+        /Skipping versioning for my-pkg-\d* as it is a part of a fixed release group with my-pkg-\d* and no dependency bumps were detected/g
+      ).length
+    ).toEqual(2);
 
     await runCommandAsync(
       `git add ${pkg1}/my-file.txt && git commit -m "feat!: add new file"`
@@ -856,7 +886,7 @@ describe('nx release', () => {
 
     expect(
       versionOutput5.match(
-        /New version 1101.0.0 written to my-pkg-\d*\/package.json/g
+        /New version 1101\.0\.0 written to manifest: my-pkg-\d*\/package\.json/g
       ).length
     ).toEqual(3);
 
@@ -927,6 +957,13 @@ describe('nx release', () => {
       };
       return nxJson;
     });
+    // Remove the dependency from pkg2 on pkg1, it is not applicable to this group configuration where pkg1 and pkg2 are in separate groups
+    updateJson(`${pkg2}/package.json`, (json) => {
+      json.dependencies = {};
+      return json;
+    });
+    // Update lockfile
+    await runCommandAsync(`npm install --lockfile-only`);
 
     await runCommandAsync(`git tag zz-1300.0.0`);
     await runCommandAsync(`git tag xx-1400.0.0`);
@@ -954,7 +991,7 @@ describe('nx release', () => {
     expect(
       releaseOutput2.match(
         new RegExp(
-          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          `Resolved the specifier as "minor" using git history and the conventional commits standard`,
           'g'
         )
       ).length
@@ -977,7 +1014,7 @@ describe('nx release', () => {
     expect(
       releaseOutput3.match(
         new RegExp(
-          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          `Resolved the specifier as "minor" using git history and the conventional commits standard`,
           'g'
         )
       ).length
@@ -996,7 +1033,7 @@ describe('nx release', () => {
     expect(
       releaseOutput3.match(
         new RegExp(
-          `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+          `Resolved the specifier as "patch" using git history and the conventional commits standard`,
           'g'
         )
       ).length
@@ -1038,6 +1075,16 @@ describe('nx release', () => {
       };
       return nxJson;
     });
+    // Add back the dependency on pkg1 for pkg2
+    updateJson(`${pkg2}/package.json`, (json) => {
+      json.dependencies = {};
+      json.dependencies[`@proj/${pkg1}`] = readJson(
+        `${pkg1}/package.json`
+      ).version;
+      return json;
+    });
+    // Update lockfile
+    await runCommandAsync(`npm install --lockfile-only`);
 
     const releaseOutput4a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
@@ -1047,7 +1094,6 @@ describe('nx release', () => {
 
       NX   Running release version for project: {project-name}
 
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
 
       NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
 
@@ -1062,12 +1108,12 @@ describe('nx release', () => {
     );
 
     expect(releaseOutput4b).toMatch(
-      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.0`
+      /Unable to resolve the current version from git tags using pattern ">{version}". Falling back to the version 1400\.1\.0 in manifest: my-pkg-\d*\/package\.json/g
     );
     expect(
       releaseOutput4b.match(
         new RegExp(
-          `📄 Using the current version 1400\\.1\\.0 already resolved from disk fallback\\.`,
+          `Reusing the current version 1400\\.1\\.0 already resolved for my-pkg-\\d* from the disk fallback`,
           'g'
         )
       ).length
@@ -1082,12 +1128,12 @@ describe('nx release', () => {
     const releaseOutput5 = runCLI(`release patch --skip-publish`);
 
     expect(releaseOutput5).toMatch(
-      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.1`
+      /Unable to resolve the current version from git tags using pattern ">{version}". Falling back to the version 1400\.1\.1 in manifest: my-pkg-\d*\/package\.json/g
     );
     expect(
       releaseOutput5.match(
         new RegExp(
-          `📄 Using the current version 1400\\.1\\.1 already resolved from disk fallback\\.`,
+          `Reusing the current version 1400\\.1\\.1 already resolved for my-pkg-\\d* from the disk fallback`,
           'g'
         )
       ).length
@@ -1111,7 +1157,7 @@ describe('nx release', () => {
     expect(
       releaseOutput6a.match(
         new RegExp(
-          `NX   Unable to resolve the current version from the registry ${e2eRegistryUrl}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`,
+          `NX   Unable to resolve the current version from the registry: "@proj:registry=${e2eRegistryUrl}" tag=other. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`,
           'g'
         )
       ).length
@@ -1125,12 +1171,14 @@ describe('nx release', () => {
     );
 
     expect(releaseOutput6b).toMatch(
-      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.2`
+      new RegExp(
+        `Unable to resolve the current version from the registry: "@proj:registry=${e2eRegistryUrl}" tag=other. Falling back to the version 1400\\.1\\.2 in manifest: my-pkg-\\d*\\/package\\.json`
+      )
     );
     expect(
       releaseOutput6b.match(
         new RegExp(
-          `📄 Using the current version 1400\\.1\\.2 already resolved from disk fallback\\.`,
+          `Reusing the current version 1400\\.1\\.2 already resolved for my-pkg-\\d* from the disk fallback`,
           'g'
         )
       ).length
@@ -1145,12 +1193,14 @@ describe('nx release', () => {
     const releaseOutput7 = runCLI(`release patch --skip-publish --verbose`);
 
     expect(releaseOutput7).toMatch(
-      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.3`
+      new RegExp(
+        `Unable to resolve the current version from the registry: "@proj:registry=${e2eRegistryUrl}" tag=other. Falling back to the version 1400\\.1\\.3 in manifest: my-pkg-\\d*\\/package\\.json`
+      )
     );
     expect(
       releaseOutput7.match(
         new RegExp(
-          `📄 Using the current version 1400\\.1\\.3 already resolved from disk fallback\\.`,
+          `Reusing the current version 1400\\.1\\.3 already resolved for my-pkg-\\d* from the disk fallback`,
           'g'
         )
       ).length
