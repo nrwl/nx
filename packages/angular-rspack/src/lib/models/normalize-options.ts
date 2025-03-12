@@ -1,5 +1,6 @@
 import { FileReplacement } from '@nx/angular-rspack-compiler';
 import {
+  normalizePath,
   readCachedProjectGraph,
   type ProjectGraphProjectNode,
 } from '@nx/devkit';
@@ -14,10 +15,6 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import {
-  createProjectRootMappings,
-  findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
 import type {
   AngularRspackPluginOptions,
   AssetElement,
@@ -522,4 +519,45 @@ function getProject(root: string): ProjectGraphProjectNode | undefined {
   );
 
   return projectGraph.nodes[projectName];
+}
+
+function createProjectRootMappings(
+  nodes: Record<string, ProjectGraphProjectNode>
+): Map<string, string> {
+  const projectRootMappings = new Map<string, string>();
+  for (const projectName of Object.keys(nodes)) {
+    const root = nodes[projectName].data.root;
+
+    projectRootMappings.set(normalizeProjectRoot(root), projectName);
+  }
+  return projectRootMappings;
+}
+
+function findProjectForPath(
+  filePath: string,
+  projectRootMap: Map<string, string>
+): string | undefined {
+  /**
+   * Project Mappings are in UNIX-style file paths
+   * Windows may pass Win-style file paths
+   * Ensure filePath is in UNIX-style
+   */
+  let currentPath = normalizePath(filePath);
+  for (
+    ;
+    currentPath != dirname(currentPath);
+    currentPath = dirname(currentPath)
+  ) {
+    const p = projectRootMap.get(currentPath);
+    if (p) {
+      return p;
+    }
+  }
+
+  return projectRootMap.get(currentPath);
+}
+
+function normalizeProjectRoot(root: string) {
+  root = root === '' ? '.' : root;
+  return root && root.endsWith('/') ? root.substring(0, root.length - 1) : root;
 }
