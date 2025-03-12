@@ -81,7 +81,8 @@ export class TaskOrchestrator {
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
-    private readonly outputStyle: string
+    private readonly outputStyle: string,
+    private readonly taskGraphForHashing: TaskGraph = taskGraph
   ) {}
 
   async run() {
@@ -179,7 +180,7 @@ export class TaskOrchestrator {
       await hashTask(
         this.hasher,
         this.projectGraph,
-        this.taskGraph,
+        this.taskGraphForHashing,
         task,
         taskSpecificEnv,
         this.taskDetails
@@ -198,7 +199,7 @@ export class TaskOrchestrator {
           await hashTask(
             this.hasher,
             this.projectGraph,
-            this.taskGraph,
+            this.taskGraphForHashing,
             task,
             this.batchEnv,
             this.taskDetails
