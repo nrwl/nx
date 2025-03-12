@@ -1,23 +1,32 @@
 import { logger } from './logger';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
+import type { NxKey } from '@nx/key';
+
+export function createNxKeyLicenseeInformation(nxKey: NxKey) {
+  if ('isPowerpack' in nxKey && nxKey.isPowerpack) {
+    return `Licensed to ${nxKey.organizationName} for ${nxKey.seatCount} user${
+      nxKey.seatCount > 1 ? 's' : ''
+    } in ${
+      nxKey.workspaceCount === 9999
+        ? 'an unlimited number of'
+        : nxKey.workspaceCount
+    } workspace${nxKey.workspaceCount > 1 ? 's' : ''}.`;
+  } else {
+    return `Licensed to ${nxKey.organizationName}.`;
+  }
+}
 
 export async function printNxKey() {
   try {
-    const { organizationName, seatCount, workspaceCount } =
-      await getNxKeyInformation();
-
-    logger.log(
-      `Nx key licensed to ${organizationName} for ${seatCount} user${
-        seatCount > 1 ? 's' : ''
-      } in ${
-        workspaceCount === 9999 ? 'an unlimited number of' : workspaceCount
-      } workspace${workspaceCount > 1 ? 's' : ''}`
-    );
+    const key = await getNxKeyInformation();
+    if (key) {
+      logger.log(createNxKeyLicenseeInformation(key));
+    }
   } catch {}
 }
 
-export async function getNxKeyInformation() {
+export async function getNxKeyInformation(): Promise<NxKey | null> {
   try {
     const {
       getPowerpackLicenseInformation,

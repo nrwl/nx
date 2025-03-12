@@ -2,14 +2,14 @@ import { CommandModule } from 'yargs';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { handleErrors } from '../../utils/handle-errors';
 
-export interface ActivateKeyOptions {
+export interface RegisterOptions {
   key?: string;
   verbose?: boolean;
 }
 
-export const yargsRegisterCommand: CommandModule<{}, ActivateKeyOptions> = {
+export const yargsRegisterCommand: CommandModule<{}, RegisterOptions> = {
   command: 'register <key>',
-  aliases: ['activate-powerpack', 'activate-key'],
+  aliases: ['activate-powerpack'],
   describe: false,
   builder: (yargs) =>
     withVerbose(yargs)

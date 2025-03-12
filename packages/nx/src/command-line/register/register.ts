@@ -1,9 +1,9 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ActivateKeyOptions } from './command-object';
+import { RegisterOptions } from './command-object';
 import { prompt } from 'enquirer';
 import { requireNxKey } from '../../utils/require-nx-key';
 
-export async function handleRegister(options: ActivateKeyOptions) {
+export async function handleRegister(options: RegisterOptions) {
   const nxKey = await requireNxKey();
 
   // If a key was provided through options, activate it directly

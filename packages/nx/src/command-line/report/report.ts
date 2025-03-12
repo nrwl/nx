@@ -26,6 +26,7 @@ import { ProjectGraphError } from '../../project-graph/error-types';
 import {
   getNxKeyInformation,
   NxKeyNotInstalledError,
+  createNxKeyLicenseeInformation,
 } from '../../utils/nx-key';
 import { type NxKey } from '@nx/key';
 
@@ -102,15 +103,7 @@ export async function reportHandler() {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(chalk.green('Nx key licensed packages'));
 
-    bodyLines.push(
-      `Licensed to ${nxKey.organizationName} for ${nxKey.seatCount} user${
-        nxKey.seatCount > 1 ? 's' : ''
-      } in ${
-        nxKey.workspaceCount === 9999
-          ? 'an unlimited number of'
-          : nxKey.workspaceCount
-      } workspace${nxKey.workspaceCount > 1 ? 's' : ''}.`
-    );
+    bodyLines.push(createNxKeyLicenseeInformation(nxKey));
 
     if (nxKey.realExpiresAt || nxKey.expiresAt) {
       const licenseExpiryDate = new Date(
