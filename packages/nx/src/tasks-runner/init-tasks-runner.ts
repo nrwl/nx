@@ -90,6 +90,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
 async function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
+  taskGraphForHashing: TaskGraph,
   nxJson: NxJsonConfiguration
 ) {
   loadRootEnvFiles();
@@ -123,7 +124,7 @@ async function createOrchestrator(
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     hasher,
     projectGraph,
-    taskGraph,
+    taskGraphForHashing,
     nxJson,
     taskDetails
   );
@@ -137,16 +138,23 @@ async function createOrchestrator(
     { ...options, parallel: tasks.length },
     false,
     daemonClient,
-    undefined
+    undefined,
+    taskGraphForHashing
   );
 }
 
 export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration
 ) {
-  const orchestrator = await createOrchestrator(tasks, projectGraph, nxJson);
+  const orchestrator = await createOrchestrator(
+    tasks,
+    projectGraph,
+    taskGraph,
+    nxJson
+  );
   return tasks.map((task) =>
     orchestrator.applyFromCacheOrRunTask(true, task, 0)
   );
@@ -155,8 +163,14 @@ export async function runDiscreteTasks(
 export async function runContinuousTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
+  taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration
 ) {
-  const orchestrator = await createOrchestrator(tasks, projectGraph, nxJson);
+  const orchestrator = await createOrchestrator(
+    tasks,
+    projectGraph,
+    taskGraph,
+    nxJson
+  );
   return tasks.map((task) => orchestrator.startContinuousTask(task, 0));
 }
