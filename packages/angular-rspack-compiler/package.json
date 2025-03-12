@@ -54,6 +54,9 @@
     "sourceRoot": "packages/angular-rspack-compiler/src",
     "projectType": "library",
     "name": "angular-rspack-compiler",
+    "tags": [
+      "publishable"
+    ],
     "targets": {
       "code-pushup": {},
       "integration-test": {
