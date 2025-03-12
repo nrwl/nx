@@ -27,9 +27,13 @@ import type {
   NormalizedAssetElement,
   NormalizedIndexElement,
   OutputPath,
-  SourceMap,
   ScriptOrStyleEntry,
+  SourceMap,
 } from './angular-rspack-plugin-options';
+import {
+  DEV_SERVER_OPTIONS_PENDING_SUPPORT,
+  TOP_LEVEL_OPTIONS_PENDING_SUPPORT,
+} from './unsupported-options';
 
 export const INDEX_HTML_CSR = 'index.csr.html';
 
@@ -97,9 +101,35 @@ export function validateOptimization(
     );
 }
 
+function validateGeneralUnsupportedOptions(
+  options: AngularRspackPluginOptions
+) {
+  const topLevelUnsupportedOptions = TOP_LEVEL_OPTIONS_PENDING_SUPPORT.filter(
+    (option) => options[option] !== undefined
+  ).sort();
+  const devServerUnsupportedOptions = DEV_SERVER_OPTIONS_PENDING_SUPPORT.filter(
+    (option) => options.devServer?.[option] !== undefined
+  ).sort();
+
+  const unsupportedOptions = [
+    ...topLevelUnsupportedOptions.map((option) => `"${option}"`),
+    ...devServerUnsupportedOptions.map((option) => `"devServer.${option}"`),
+  ];
+
+  if (unsupportedOptions.length > 0) {
+    console.warn(
+      `The following options are not yet supported:\n  ${unsupportedOptions.join(
+        '\n  '
+      )}\n`
+    );
+  }
+}
+
 export function normalizeOptions(
   options: AngularRspackPluginOptions
 ): NormalizedAngularRspackPluginOptions {
+  validateGeneralUnsupportedOptions(options);
+
   const { fileReplacements = [], server, ssr, optimization } = options;
 
   validateSsr(ssr);
@@ -145,6 +175,8 @@ export function normalizeOptions(
     console.warn(
       'Disabling the "index" option is not yet supported. Defaulting to "src/index.html".'
     );
+    options.index = join(root, 'src/index.html');
+  } else if (!options.index) {
     options.index = join(root, 'src/index.html');
   }
 
@@ -206,32 +238,32 @@ export function normalizeOptions(
   }
 
   return {
-    index,
-    browser: options.browser ?? './src/main.ts',
-    ...(server ? { server } : {}),
-    ...(ssr ? { ssr: normalizedSsr } : {}),
-    optimization: normalizedOptimization,
     advancedOptimizations,
-    polyfills: options.polyfills ?? [],
     assets,
-    globalStyles,
-    globalScripts,
-    outputPath: normalizeOutputPath(root, options.outputPath),
-    fileReplacements: resolveFileReplacements(fileReplacements, root),
     aot,
-    outputHashing: options.outputHashing ?? 'all',
-    inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
-    tsConfig,
-    sourceMap: normalizeSourceMap(options.sourceMap),
-    hasServer: getHasServer(root, server, normalizedSsr),
-    skipTypeChecking: options.skipTypeChecking ?? false,
-    useTsProjectReferences: options.useTsProjectReferences ?? false,
-    namedChunks: options.namedChunks ?? false,
-    vendorChunk: options.vendorChunk ?? false,
+    browser: options.browser ?? './src/main.ts',
     commonChunk: options.commonChunk ?? true,
     devServer: normalizeDevServer(options.devServer),
     extractLicenses: options.extractLicenses ?? true,
+    fileReplacements: resolveFileReplacements(fileReplacements, root),
+    globalStyles,
+    globalScripts,
+    hasServer: getHasServer(root, server, normalizedSsr),
+    index,
+    inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
+    namedChunks: options.namedChunks ?? false,
+    optimization: normalizedOptimization,
+    outputHashing: options.outputHashing ?? 'all',
+    outputPath: normalizeOutputPath(root, options.outputPath),
+    polyfills: options.polyfills ?? [],
     root,
+    server,
+    skipTypeChecking: options.skipTypeChecking ?? false,
+    sourceMap: normalizeSourceMap(options.sourceMap),
+    ssr: normalizedSsr,
+    tsConfig,
+    useTsProjectReferences: options.useTsProjectReferences ?? false,
+    vendorChunk: options.vendorChunk ?? false,
   };
 }
 
