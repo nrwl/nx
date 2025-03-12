@@ -3,15 +3,14 @@ import { withVerbose } from '../yargs-utils/shared-options';
 import { handleErrors } from '../../utils/handle-errors';
 
 export interface ActivateKeyOptions {
-  key: string;
-  verbose: boolean;
+  key?: string;
+  verbose?: boolean;
 }
 
-export const yargsActivateKeyCommand: CommandModule<{}, ActivateKeyOptions> = {
-  command: 'activate-key <key>',
-  aliases: ['activate-powerpack'],
+export const yargsRegisterCommand: CommandModule<{}, ActivateKeyOptions> = {
+  command: 'register <key>',
+  aliases: ['activate-powerpack', 'activate-key'],
   describe: false,
-  // describe: 'Activate a Nx Powerpack license.',
   builder: (yargs) =>
     withVerbose(yargs)
       .parserConfiguration({
@@ -22,10 +21,10 @@ export const yargsActivateKeyCommand: CommandModule<{}, ActivateKeyOptions> = {
         type: 'string',
         description: 'This is a key for Nx.',
       })
-      .example('$0 activate-key <key>', 'Activate a Nx key'),
+      .example('$0 register <key>', 'Register a Nx key'),
   handler: async (args) => {
-    const exitCode = await handleErrors(args.verbose as boolean, async () => {
-      return (await import('./activate-key')).handleActivateKey(args);
+    const exitCode = await handleErrors(args.verbose ?? false, async () => {
+      return (await import('./register')).handleRegister(args);
     });
     process.exit(exitCode);
   },

@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
-import { yargsActivateKeyCommand } from './activate-key/command-object';
+import { yargsRegisterCommand } from './register/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -65,7 +65,7 @@ export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
-  .command(yargsActivateKeyCommand)
+  .command(yargsRegisterCommand)
   .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
