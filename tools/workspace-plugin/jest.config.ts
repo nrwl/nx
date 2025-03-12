@@ -7,8 +7,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/tools/workspace-plugin',
-  moduleNameMapper: {
-    '^@nx/conformance$':
-      '<rootDir>/../../node_modules/@nx/conformance/src/index.js',
-  },
 };
