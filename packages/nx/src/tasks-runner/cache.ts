@@ -12,7 +12,12 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
-import { NxCache, CachedResult as NativeCacheResult, IS_WASM } from '../native';
+import {
+  NxCache,
+  CachedResult as NativeCacheResult,
+  IS_WASM,
+  getDefaultMaxCacheSize,
+} from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
@@ -95,7 +100,9 @@ export class DbCache {
     cacheDir,
     getDbConnection(),
     undefined,
-    parseMaxCacheSize(this.nxJson.maxCacheSize)
+    this.nxJson.maxCacheSize !== undefined
+      ? parseMaxCacheSize(this.nxJson.maxCacheSize)
+      : getDefaultMaxCacheSize(cacheDir)
   );
 
   private remoteCache: RemoteCacheV2 | null;
@@ -148,6 +155,10 @@ export class DbCache {
     } else {
       return null;
     }
+  }
+
+  getUsedCacheSpace() {
+    return this.cache.getCacheSize();
   }
 
   private applyRemoteCacheResults(
@@ -603,13 +614,17 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
  *
  * @param maxCacheSize Max cache size as specified in nx.json
  */
-export function parseMaxCacheSize(maxCacheSize: string): number | undefined {
-  if (!maxCacheSize) {
+export function parseMaxCacheSize(
+  maxCacheSize: string | number
+): number | undefined {
+  if (maxCacheSize === null || maxCacheSize === undefined) {
     return undefined;
   }
-  let regexResult = maxCacheSize.match(
-    /^(?<size>[\d|.]+)\s?((?<unit>[KMG]?B)?)$/
-  );
+  let regexResult = maxCacheSize
+    // Covers folks who accidentally specify as a number rather than a string
+    .toString()
+    // Match a number followed by an optional unit (KB, MB, GB), with optional whitespace between the number and unit
+    .match(/^(?<size>[\d|.]+)\s?((?<unit>[KMG]?B)?)$/);
   if (!regexResult) {
     throw new Error(
       `Invalid max cache size specified in nx.json: ${maxCacheSize}. Must be a number followed by an optional unit (KB, MB, GB)`
@@ -638,4 +653,15 @@ export function parseMaxCacheSize(maxCacheSize: string): number | undefined {
     default:
       return size;
   }
+}
+
+export function formatCacheSize(maxCacheSize: number, decimals = 2): string {
+  const exponents = ['B', 'KB', 'MB', 'GB'];
+  let exponent = 0;
+  let size = maxCacheSize;
+  while (size >= 1024 && exponent < exponents.length - 1) {
+    size /= 1024;
+    exponent++;
+  }
+  return `${size.toFixed(decimals)} ${exponents[exponent]}`;
 }

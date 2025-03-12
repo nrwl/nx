@@ -29,6 +29,14 @@ import {
   createNxKeyLicenseeInformation,
 } from '../../utils/nx-key';
 import { type NxKey } from '@nx/key';
+import {
+  DbCache,
+  dbCacheEnabled,
+  formatCacheSize,
+  parseMaxCacheSize,
+} from '../../tasks-runner/cache';
+import { getDefaultMaxCacheSize } from '../../native';
+import { cacheDir } from '../../utils/cache-directory';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -75,6 +83,7 @@ export async function reportHandler() {
     outOfSyncPackageGroup,
     projectGraphError,
     nativeTarget,
+    cache,
   } = await getReportData();
 
   const fields = [
@@ -191,6 +200,15 @@ export async function reportHandler() {
     }
   }
 
+  if (cache) {
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(
+      `Cache Usage: ${formatCacheSize(cache.used)} / ${
+        cache.max === 0 ? '∞' : formatCacheSize(cache.max)
+      }`
+    );
+  }
+
   if (outOfSyncPackageGroup) {
     bodyLines.push(LINE_SEPARATOR);
     bodyLines.push(
@@ -241,6 +259,10 @@ export interface ReportData {
   };
   projectGraphError?: Error | null;
   nativeTarget: string | null;
+  cache: {
+    max: number;
+    used: number;
+  } | null;
 }
 
 export async function getReportData(): Promise<ReportData> {
@@ -281,6 +303,16 @@ export async function getReportData(): Promise<ReportData> {
     }
   }
 
+  let cache = dbCacheEnabled(nxJson)
+    ? {
+        max:
+          nxJson.maxCacheSize !== undefined
+            ? parseMaxCacheSize(nxJson.maxCacheSize)
+            : getDefaultMaxCacheSize(cacheDir),
+        used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
+      }
+    : null;
+
   return {
     pm,
     nxKey,
@@ -294,6 +326,7 @@ export async function getReportData(): Promise<ReportData> {
     outOfSyncPackageGroup,
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
+    cache,
   };
 }
 
