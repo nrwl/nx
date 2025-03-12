@@ -39,5 +39,6 @@ export async function normalizeOptions(
     projectRoot,
     importPath,
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }

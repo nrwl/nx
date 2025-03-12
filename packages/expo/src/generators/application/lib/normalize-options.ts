@@ -51,6 +51,7 @@ export async function normalizeOptions(
   const isTsSolutionSetup = isUsingTsSolutionSetup(host);
   const appProjectName =
     !isTsSolutionSetup || options.name ? projectName : importPath;
+  const useProjectJson = options.useProjectJson ?? !isTsSolutionSetup;
 
   const e2eProjectName = rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -71,5 +72,6 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     isTsSolutionSetup,
+    useProjectJson,
   };
 }

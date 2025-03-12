@@ -27,6 +27,7 @@ export async function libraryGenerator(
 ): Promise<GeneratorCallback> {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...rawOptions,
   });
 }

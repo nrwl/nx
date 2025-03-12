@@ -78,6 +78,7 @@ export async function normalizeOptions(
     projectRoot,
     parsedTags,
     importPath,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.

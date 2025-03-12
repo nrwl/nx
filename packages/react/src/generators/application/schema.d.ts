@@ -31,7 +31,7 @@ export interface Schema {
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'none';
-  alwaysGenerateProjectJson?: boolean; // this is needed for MF currently
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {

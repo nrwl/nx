@@ -97,5 +97,6 @@ export async function normalizeOptions(
     unitTestRunner: options.unitTestRunner || 'jest',
     importPath,
     isTsSolutionSetup,
+    useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
   };
 }

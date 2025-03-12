@@ -482,7 +482,7 @@ describe('app', () => {
       `);
     });
 
-    it('should respect provided name', async () => {
+    it('should respect the provided name', async () => {
       await expoApplicationGenerator(tree, {
         directory: 'my-app',
         name: 'my-app',
@@ -493,6 +493,7 @@ describe('app', () => {
         js: false,
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       const packageJson = readJson(tree, 'my-app/package.json');
@@ -507,6 +508,51 @@ describe('app', () => {
           "nx",
         ]
       `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: Linter.EsLint,
+        e2eTestRunner: 'cypress',
+        useProjectJson: true,
+        unitTestRunner: 'none',
+        js: false,
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-app/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-app'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-app",
+          "projectType": "application",
+          "root": "my-app",
+          "sourceRoot": "my-app/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-app/package.json').nx).toBeUndefined();
+      expect(tree.exists('my-app-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-app-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/my-app",
+          ],
+          "name": "@proj/my-app-e2e",
+          "projectType": "application",
+          "root": "my-app-e2e",
+          "sourceRoot": "my-app-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

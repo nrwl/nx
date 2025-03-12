@@ -101,6 +101,10 @@
         "type": "boolean",
         "description": "Creates an application with strict mode and strict type checking.",
         "default": true
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["directory"],
