@@ -9,17 +9,22 @@ import type {
 } from './unsupported-options';
 
 export interface DevServerOptions extends DevServerUnsupportedOptions {
+  host?: string;
   port?: number;
-  ssl?: boolean;
-  sslKey?: string;
-  sslCert?: string;
   proxyConfig?: string;
+  ssl?: boolean;
+  sslCert?: string;
+  sslKey?: string;
+}
+export interface NormalizedDevServerOptions extends DevServerOptions {
+  host: string;
+  port: number;
 }
 
 export interface OptimizationOptions {
+  fonts?: boolean;
   scripts?: boolean;
   styles?: boolean;
-  fonts?: boolean;
 }
 
 export type OutputHashing = 'none' | 'all' | 'media' | 'bundles';
@@ -33,8 +38,8 @@ export type HashFormat = {
 export interface OutputPath {
   base: string;
   browser: string;
-  server: string;
   media: string;
+  server: string;
 }
 
 export type AssetExpandedDefinition = {
@@ -55,9 +60,9 @@ export type ScriptOrStyleEntry =
       inject?: boolean;
     };
 export type GlobalEntry = {
-  name: string;
   files: string[];
   initial: boolean;
+  name: string;
 };
 export type IndexExpandedDefinition = {
   input: string;
@@ -122,7 +127,7 @@ export interface NormalizedAngularRspackPluginOptions
   assets: NormalizedAssetElement[];
   browser: string;
   commonChunk: boolean;
-  devServer: DevServerOptions & { port: number };
+  devServer: NormalizedDevServerOptions;
   extractLicenses: boolean;
   fileReplacements: FileReplacement[];
   globalScripts: GlobalEntry[];

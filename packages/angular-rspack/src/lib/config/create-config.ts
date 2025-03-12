@@ -198,8 +198,8 @@ export async function _createConfig(
         allowedHosts: 'auto',
         client: {
           webSocketURL: {
-            hostname: 'localhost',
-            port: normalizedOptions.devServer?.port ?? 4200,
+            hostname: normalizedOptions.devServer.host,
+            port: normalizedOptions.devServer.port,
           },
           overlay: {
             errors: true,
@@ -208,7 +208,8 @@ export async function _createConfig(
           },
           reconnect: true,
         },
-        port: normalizedOptions.devServer?.port ?? 4200,
+        host: normalizedOptions.devServer.host,
+        port: normalizedOptions.devServer.port,
         hot: false,
         liveReload: true,
         watchFiles: ['./src/**/*.*', './public/**/*.*'],
@@ -221,18 +222,18 @@ export async function _createConfig(
         },
         server: {
           options:
-            normalizedOptions.devServer?.sslKey &&
-            normalizedOptions.devServer?.sslCert
+            normalizedOptions.devServer.sslKey &&
+            normalizedOptions.devServer.sslCert
               ? {
                   key: resolve(root, normalizedOptions.devServer.sslKey),
                   cert: resolve(root, normalizedOptions.devServer.sslCert),
                 }
               : {},
-          type: normalizedOptions.devServer?.ssl ? 'https' : 'http',
+          type: normalizedOptions.devServer.ssl ? 'https' : 'http',
         },
         proxy: await getProxyConfig(
           root,
-          normalizedOptions.devServer?.proxyConfig
+          normalizedOptions.devServer.proxyConfig
         ),
       },
       optimization: {
@@ -323,8 +324,8 @@ export async function _createConfig(
       allowedHosts: 'auto',
       client: {
         webSocketURL: {
-          hostname: 'localhost',
-          port: options.devServer?.port ?? 4200,
+          hostname: normalizedOptions.devServer.host,
+          port: normalizedOptions.devServer.port,
         },
         overlay: {
           errors: true,
@@ -343,21 +344,22 @@ export async function _createConfig(
       devMiddleware: {
         writeToDisk: (file) => !file.includes('.hot-update.'),
       },
-      port: options.devServer?.port ?? 4200,
+      host: normalizedOptions.devServer.host,
+      port: normalizedOptions.devServer.port,
       server: {
         options:
-          normalizedOptions.devServer?.sslKey &&
-          normalizedOptions.devServer?.sslCert
+          normalizedOptions.devServer.sslKey &&
+          normalizedOptions.devServer.sslCert
             ? {
                 key: resolve(root, normalizedOptions.devServer.sslKey),
                 cert: resolve(root, normalizedOptions.devServer.sslCert),
               }
             : {},
-        type: normalizedOptions.devServer?.ssl ? 'https' : 'http',
+        type: normalizedOptions.devServer.ssl ? 'https' : 'http',
       },
       proxy: await getProxyConfig(
         root,
-        normalizedOptions.devServer?.proxyConfig
+        normalizedOptions.devServer.proxyConfig
       ),
       onListening: (devServer) => {
         if (!devServer) {
@@ -365,7 +367,8 @@ export async function _createConfig(
         }
 
         const port =
-          (devServer.server?.address() as { port: number })?.port ?? 4200;
+          (devServer.server?.address() as { port: number })?.port ??
+          normalizedOptions.devServer.port;
         console.log('Listening on port:', port);
       },
     } as DevServer,

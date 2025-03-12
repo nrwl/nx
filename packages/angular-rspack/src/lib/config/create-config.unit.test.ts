@@ -112,6 +112,7 @@ describe('createConfig', () => {
                 globalScripts: scripts,
                 globalStyles: styles,
                 devServer: {
+                  host: 'localhost',
                   port: 4200,
                 },
               }),
@@ -234,15 +235,40 @@ describe('createConfig', () => {
         createConfig({
           options: {
             ...configBase,
-            devServer: {
-              port: 8080,
-            },
+            devServer: { port: 8080 },
           },
         })
       ).resolves.toStrictEqual([
         expect.objectContaining({
           devServer: expect.objectContaining({
             port: 8080,
+            client: expect.objectContaining({
+              webSocketURL: expect.objectContaining({
+                port: 8080,
+              }),
+            }),
+          }),
+        }),
+      ]);
+    });
+
+    it('should allow changing the devServer host', async () => {
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            devServer: { host: '0.0.0.0' },
+          },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          devServer: expect.objectContaining({
+            host: '0.0.0.0',
+            client: expect.objectContaining({
+              webSocketURL: expect.objectContaining({
+                hostname: '0.0.0.0',
+              }),
+            }),
           }),
         }),
       ]);

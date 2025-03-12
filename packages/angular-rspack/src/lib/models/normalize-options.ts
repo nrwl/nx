@@ -22,6 +22,7 @@ import type {
   GlobalEntry,
   NormalizedAngularRspackPluginOptions,
   NormalizedAssetElement,
+  NormalizedDevServerOptions,
   NormalizedIndexElement,
   OutputPath,
   ScriptOrStyleEntry,
@@ -293,15 +294,17 @@ function normalizeSourceMap(
 
 function normalizeDevServer(
   devServer: DevServerOptions | undefined
-): DevServerOptions & { port: number } {
+): NormalizedDevServerOptions {
+  const defaultHost = 'localhost';
   const defaultPort = 4200;
 
   if (!devServer) {
-    return { port: defaultPort };
+    return { host: defaultHost, port: defaultPort };
   }
 
   return {
     ...devServer,
+    host: devServer.host ?? defaultHost,
     port: devServer.port ?? defaultPort,
   };
 }
