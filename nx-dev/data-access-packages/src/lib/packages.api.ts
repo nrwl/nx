@@ -115,16 +115,6 @@ export class PackagesApi {
           itemList: [],
           tags: [],
         },
-        '/nx-api/angular-rsbuild/documents/with-configurations': {
-          id: 'with-configurations',
-          name: 'withConfigurations',
-          description: 'withConfigurations for @nx/angular-rsbuild',
-          path: '/nx-api/angular-rsbuild/documents/with-configurations',
-          file: 'shared/guides/angular-rspack/api/nx-angular-rsbuild/with-configurations.md',
-          isExternal: false,
-          itemList: [],
-          tags: [],
-        },
       },
     };
   }

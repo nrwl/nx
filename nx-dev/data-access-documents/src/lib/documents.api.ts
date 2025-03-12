@@ -95,16 +95,6 @@ export class DocumentsApi {
         itemList: [],
         tags: [],
       },
-      '/nx-api/angular-rsbuild/documents/with-configurations': {
-        id: 'with-configurations',
-        name: 'withConfigurations',
-        description: 'withConfigurations for @nx/angular-rsbuild',
-        path: '/nx-api/angular-rspack/documents/with-configurations',
-        file: 'shared/guides/angular-rspack/api/nx-angular-rsbuild/with-configurations',
-        isExternal: false,
-        itemList: [],
-        tags: [],
-      },
     };
   }
 

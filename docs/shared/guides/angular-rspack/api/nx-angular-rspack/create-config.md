@@ -14,9 +14,19 @@ The `createConfig` function is used to create an Rspack configuration object set
 It takes an optional `Configuration` object as an argument, which allows for customization of the Rspack configuration.
 
 ```ts
-function createConfig(
-  options: Partial<AngularRspackPluginOptions>,
-  rspackConfigOverrides?: Partial<Configuration>
+async function createConfig(
+  defaultOptions: {
+    options: AngularRspackPluginOptions;
+    rspackConfigOverrides?: Partial<Configuration>;
+  },
+  configurations: Record<
+    string,
+    {
+      options: Partial<AngularRspackPluginOptions>;
+      rspackConfigOverrides?: Partial<Configuration>;
+    }
+  > = {},
+  configEnvVar = 'NGRS_CONFIG'
 );
 ```
 
@@ -33,9 +43,11 @@ The following example shows how to create a configuration for a SSR application:
 import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig({
-  browser: './src/main.ts',
-  server: './src/main.server.ts',
-  ssrEntry: './src/server.ts',
+  options: {
+    browser: './src/main.ts',
+    server: './src/main.server.ts',
+    ssrEntry: './src/server.ts',
+  },
 });
 ```
 
@@ -48,7 +60,9 @@ The following example shows how to create a configuration for a CSR application:
 import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig({
-  browser: './src/main.ts',
+  options: {
+    browser: './src/main.ts',
+  },
 });
 ```
 
@@ -60,16 +74,16 @@ The following example shows how to modify the base Rspack configuration:
 ```ts {% fileName="myapp/rspack.config.ts" %}
 import { createConfig } from '@nx/angular-rspack';
 
-export default createConfig(
-  {
+export default createConfig({
+  options: {
     browser: './src/main.ts',
     server: './src/main.server.ts',
     ssrEntry: './src/server.ts',
   },
-  {
+  rspackConfigOverrides: {
     mode: 'development',
-  }
-);
+  },
+});
 ```
 
 {% /tab %}
@@ -81,15 +95,17 @@ The following example shows how to use file replacements:
 import { createConfig } from '@nx/angular-rspack';
 
 export default createConfig({
-  browser: './src/main.ts',
-  server: './src/main.server.ts',
-  ssrEntry: './src/server.ts',
-  fileReplacements: [
-    {
-      replace: './src/environments/environment.ts',
-      with: './src/environments/environment.prod.ts',
-    },
-  ],
+  options: {
+    browser: './src/main.ts',
+    server: './src/main.server.ts',
+    ssrEntry: './src/server.ts',
+    fileReplacements: [
+      {
+        replace: './src/environments/environment.ts',
+        with: './src/environments/environment.prod.ts',
+      },
+    ],
+  },
 });
 ```
 
@@ -104,24 +120,111 @@ export default createConfig({
 The `AngularRspackPluginOptions` object is an object that contains the following properties:
 
 ```ts
-export interface AngularRspackPluginOptions {
-  root: string;
-  index: string;
-  browser: string;
+export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
+  aot?: boolean;
+  assets?: AssetElement[];
+  browser?: string;
+  commonChunk?: boolean;
+  devServer?: DevServerOptions;
+  extractLicenses?: boolean;
+  fileReplacements?: FileReplacement[];
+  index?: IndexElement;
+  inlineStyleLanguage?: InlineStyleLanguage;
+  namedChunks?: boolean;
+  optimization?: boolean | OptimizationOptions;
+  outputHashing?: OutputHashing;
+  outputPath?:
+    | string
+    | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
+  polyfills?: string[];
+  root?: string;
+  scripts?: ScriptOrStyleEntry[];
   server?: string;
-  ssrEntry?: string;
-  polyfills: string[];
-  assets: string[];
-  styles: string[];
-  scripts: string[];
-  fileReplacements: FileReplacement[];
-  jit: boolean;
-  inlineStylesExtension: InlineStyleExtension;
-  stylePreprocessorOptions: StylePreprocessorOptions;
-  tsconfigPath: string;
-  hasServer: boolean;
-  skipTypeChecking: boolean;
+  skipTypeChecking?: boolean;
+  sourceMap?: boolean | Partial<SourceMap>;
+  ssr?:
+    | boolean
+    | {
+        entry: string;
+        experimentalPlatform?: 'node' | 'neutral';
+      };
+  stylePreprocessorOptions?: StylePreprocessorOptions;
+  styles?: ScriptOrStyleEntry[];
+  tsConfig?: string;
   useTsProjectReferences?: boolean;
+  vendorChunk?: boolean;
+}
+
+export interface DevServerOptions extends DevServerUnsupportedOptions {
+  port?: number;
+  ssl?: boolean;
+  sslKey?: string;
+  sslCert?: string;
+  proxyConfig?: string;
+}
+
+export interface OptimizationOptions {
+  scripts?: boolean;
+  styles?: boolean;
+  fonts?: boolean;
+}
+
+export type OutputHashing = 'none' | 'all' | 'media' | 'bundles';
+export type HashFormat = {
+  chunk: string;
+  extract: string;
+  file: string;
+  script: string;
+};
+
+export interface OutputPath {
+  base: string;
+  browser: string;
+  server: string;
+  media: string;
+}
+
+export type AssetExpandedDefinition = {
+  glob: string;
+  input: string;
+  ignore?: string[];
+  output?: string;
+};
+export type AssetElement = AssetExpandedDefinition | string;
+export type NormalizedAssetElement = AssetExpandedDefinition & {
+  output: string;
+};
+export type ScriptOrStyleEntry =
+  | string
+  | {
+      input: string;
+      bundleName?: string;
+      inject?: boolean;
+    };
+export type GlobalEntry = {
+  name: string;
+  files: string[];
+  initial: boolean;
+};
+export type IndexExpandedDefinition = {
+  input: string;
+  output?: string;
+  preloadInitial?: boolean;
+};
+export type IndexElement = IndexExpandedDefinition | string | false;
+export type IndexHtmlTransform = (content: string) => Promise<string>;
+export type NormalizedIndexElement =
+  | (IndexExpandedDefinition & {
+      insertionOrder: [string, boolean][];
+      transformer: IndexHtmlTransform | undefined;
+    })
+  | false;
+
+export interface SourceMap {
+  scripts: boolean;
+  styles: boolean;
+  hidden: boolean;
+  vendor: boolean;
 }
 
 export type InlineStyleExtension = 'css' | 'scss' | 'sass' | 'less';
@@ -142,92 +245,127 @@ export interface Sass {
 
 ---
 
-### `root`
+### aot
+
+`boolean` `default: true`
+Enables or disables Ahead-of-Time compilation for Angular applications.
+
+### assets
+
+`AssetElement[]`
+Array of static assets to include in the build output. Can be either a string path or an object with glob patterns.
+
+### browser
 
 `string`
-The root directory of the project. This is the directory where the rspack.config.ts file is located.
+The entry point file for the browser bundle (e.g., 'src/main.ts').
 
-### `index`
+### commonChunk
+
+`boolean` `default: true`
+Controls whether to create a separate bundle containing shared code between multiple chunks.
+
+### devServer
+
+`DevServerOptions`
+Configuration options for the development server including port, SSL settings, and proxy configuration.
+
+### extractLicenses
+
+`boolean` `default: false`
+When true, extracts all license information from dependencies into a separate file.
+
+### fileReplacements
+
+`FileReplacement[]`
+List of files to be replaced during the build process, typically used for environment-specific configurations.
+
+### index
+
+`IndexElement`
+Configuration for the index.html file. Can be a string path, an object with specific settings, or false to disable.
+
+### inlineStyleLanguage
+
+`InlineStyleLanguage`
+Specifies the default language to use for inline styles in components.
+
+### namedChunks
+
+`boolean` `default: true`
+When true, generates named chunks instead of numerical IDs.
+
+### optimization
+
+`boolean | OptimizationOptions` `default: true`
+Controls build optimization settings for scripts, styles, and fonts.
+
+### outputHashing
+
+`OutputHashing` `default: 'none'`
+Defines the hashing strategy for output files. Can be 'none', 'all', 'media', or 'bundles'.
+
+### outputPath
+
+`string | OutputPath`
+Specifies the output directory for built files. Can be a string or an object defining paths for browser, server, and media files.
+
+### polyfills
+
+`string[]`
+Array of polyfill files to include in the build.
+
+### root
 
 `string`
-The path to the index.html file. This is used to determine the base html template to use.
+The root directory of the project where the rspack.config.ts file is located.
 
-### `browser`
+### scripts
 
-string
-The path to the browser entry file. This is used to determine the entry point for the browser build. It is usually ./src/main.ts
+`ScriptOrStyleEntry[]`
+Array of global scripts to include in the build, with options for bundling and injection.
 
-### `server`
-
-`string`
-The path to the server entry file. This is used to determine the entry point for the server build. It is usually ./src/main.server.ts
-
-### `ssrEntry`
+### server
 
 `string`
-The path to the node server entry file. This contains the express server setup. It is usually ./src/server.ts
+The entry point file for the server bundle in SSR applications.
 
-### `polyfills`
+### skipTypeChecking
 
-`Array<string>`
-An array of polyfills to include in the build. Can be either a path to a polyfill file or a package name.
+`boolean` `default: false`
+When true, skips TypeScript type checking during the build process.
 
-### `assets`
+### sourceMap
 
-`Array<string>`
-An array of assets to include in the build. Can be a path to a directory or a file. Resolved from the path provided in root.
+`boolean | Partial<SourceMap>` `default: true`
+Controls generation of source maps for debugging. Can be boolean or detailed configuration object.
 
-### `styles`
+### ssr
 
-`Array<string>`
-An array of styles to include in the build. Resolved from the path provided in root.
+`boolean | { entry: string; experimentalPlatform?: 'node' | 'neutral' }`
+Configuration for Server-Side Rendering. Can be boolean or object with specific SSR settings.
 
-### `scripts`
-
-`Array<string>`
-An array of scripts to include in the build. Resolved from the path provided in root.
-
-### `fileReplacements`
-
-`Array<FileReplacement>`
-An array of file replacements to be used in the build. This is used to replace files during the build process.
-
-### `jit`
-
-`boolean`
-`Default: false`
-A boolean value indicating whether to use the JIT mode. This is used to tell the Angular compiler to use Just-In-Time Compilation. **Not Recommended**
-
-### `inlineStylesExtension`
-
-`InlineStylesExtension`
-The inline styles extension to use. This is used to inform the compiler how to handle inline styles, setting up Sass compilation if required.
-
-### `stylePreprocessorOptions`
+### stylePreprocessorOptions
 
 `StylePreprocessorOptions`
-The options to pass to the style preprocessor. Configure the include paths and sass options.
+Options for style preprocessors, including include paths and Sass-specific configurations.
 
-### `tsconfigPath`
+### styles
+
+`ScriptOrStyleEntry[]`
+Array of global styles to include in the build, with options for bundling and injection.
+
+### tsConfig
 
 `string`
-`Default: ./tsconfig.app.json`
-The path to the TypeScript configuration file. This is used to set compilerOptions for the Angular compilation.
+Path to the TypeScript configuration file.
 
-### `hasServer`
+### useTsProjectReferences
 
-`boolean`
-`internal`
-A boolean value indicating whether the project has a server. This is inferred based on the presence of ssrEntry and server and does not need to be set manually.
+`boolean` `default: false`
+Enables usage of TypeScript project references.
 
-### `skipTypeChecking`
+### vendorChunk
 
-`boolean`
-`Default: false`
-A boolean value indicating whether to skip type checking. This is used to skip the type checking process during the build process.
-
-### `useTsProjectReferences`
-
-`boolean`
-`Default: false`
-A boolean value indicating whether to use TypeScript project references.
+`boolean` `default: true`
+When true, creates a separate bundle for vendor (third-party) code.

@@ -2490,12 +2490,6 @@
               "id": "create-server",
               "path": "/nx-api/angular-rsbuild/documents/create-server",
               "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server"
-            },
-            {
-              "name": "withConfigurations",
-              "id": "with-configurations",
-              "path": "/nx-api/angular-rsbuild/documents/with-configurations",
-              "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/with-configurations"
             }
           ]
         },
