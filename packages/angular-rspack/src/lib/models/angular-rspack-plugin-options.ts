@@ -3,8 +3,12 @@ import type {
   InlineStyleLanguage,
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
+import type {
+  DevServerUnsupportedOptions,
+  PluginUnsupportedOptions,
+} from './unsupported-options';
 
-export interface DevServerOptions {
+export interface DevServerOptions extends DevServerUnsupportedOptions {
   port?: number;
   ssl?: boolean;
   sslKey?: string;
@@ -76,57 +80,63 @@ export interface SourceMap {
   vendor: boolean;
 }
 
-export interface AngularRspackPluginOptions {
-  index: IndexElement;
-  browser: string;
+export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
+  aot?: boolean;
+  assets?: AssetElement[];
+  browser?: string;
+  commonChunk?: boolean;
+  devServer?: DevServerOptions;
+  extractLicenses?: boolean;
+  fileReplacements?: FileReplacement[];
+  index?: IndexElement;
+  inlineStyleLanguage?: InlineStyleLanguage;
+  namedChunks?: boolean;
+  optimization?: boolean | OptimizationOptions;
+  outputHashing?: OutputHashing;
+  outputPath?:
+    | string
+    | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
+  polyfills?: string[];
+  root?: string;
+  scripts?: ScriptOrStyleEntry[];
   server?: string;
+  skipTypeChecking?: boolean;
+  sourceMap?: boolean | Partial<SourceMap>;
   ssr?:
     | boolean
     | {
         entry: string;
         experimentalPlatform?: 'node' | 'neutral';
       };
-  polyfills: string[];
-  assets?: AssetElement[];
-  styles?: ScriptOrStyleEntry[];
-  scripts?: ScriptOrStyleEntry[];
-  outputPath:
-    | string
-    | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
-  fileReplacements: FileReplacement[];
-  aot: boolean;
-  inlineStyleLanguage: InlineStyleLanguage;
-  tsConfig: string;
-  hasServer: boolean;
-  sourceMap?: boolean | Partial<SourceMap>;
-  skipTypeChecking: boolean;
-  useTsProjectReferences?: boolean;
-  optimization?: boolean | OptimizationOptions;
-  outputHashing?: OutputHashing;
   stylePreprocessorOptions?: StylePreprocessorOptions;
-  namedChunks?: boolean;
+  styles?: ScriptOrStyleEntry[];
+  tsConfig?: string;
+  useTsProjectReferences?: boolean;
   vendorChunk?: boolean;
-  commonChunk?: boolean;
-  devServer?: DevServerOptions;
-  extractLicenses?: boolean;
-  root?: string;
 }
 
 export interface NormalizedAngularRspackPluginOptions
   extends Omit<AngularRspackPluginOptions, 'index' | 'scripts' | 'styles'> {
   advancedOptimizations: boolean;
+  aot: boolean;
   assets: NormalizedAssetElement[];
-  index: NormalizedIndexElement | undefined;
+  browser: string;
+  commonChunk: boolean;
   devServer: DevServerOptions & { port: number };
   extractLicenses: boolean;
-  namedChunks: boolean;
-  vendorChunk: boolean;
-  commonChunk: boolean;
+  fileReplacements: FileReplacement[];
   globalScripts: GlobalEntry[];
   globalStyles: GlobalEntry[];
+  index: NormalizedIndexElement | undefined;
+  inlineStyleLanguage: InlineStyleLanguage;
+  hasServer: boolean;
+  namedChunks: boolean;
   optimization: boolean | OptimizationOptions;
   outputHashing: OutputHashing;
   outputPath: OutputPath;
+  polyfills: string[];
   root: string;
   sourceMap: SourceMap;
+  tsConfig: string;
+  vendorChunk: boolean;
 }

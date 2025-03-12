@@ -18,13 +18,16 @@ describe('createConfig', () => {
     outputHashing: 'all',
     scripts: [],
     aot: true,
-    hasServer: false,
     skipTypeChecking: false,
   };
 
   beforeEach(() => {
     vi.stubEnv('NODE_ENV', '');
     vi.stubEnv('NGRS_CONFIG', '');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should create config for mode "production" if env variable NODE_ENV is "production"', async () => {
@@ -116,6 +119,31 @@ describe('createConfig', () => {
           ]),
         }),
       ]);
+    });
+
+    it('should create config even when known unsupported options are provided and warn about them', async () => {
+      const warnSpy = vi.spyOn(console, 'warn');
+
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            clearScreen: true,
+            devServer: { allowedHosts: ['localhost'] },
+          },
+        })
+      ).resolves.not.toContain([
+        expect.objectContaining({
+          clearScreen: true,
+          devServer: { allowedHosts: ['localhost'] },
+        }),
+      ]);
+      expect(warnSpy).toHaveBeenCalledWith(
+        `The following options are not yet supported:
+  "clearScreen"
+  "devServer.allowedHosts"
+`
+      );
     });
 
     it('should create config from options with a custom root', async () => {
