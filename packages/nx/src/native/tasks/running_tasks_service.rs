@@ -1,16 +1,24 @@
+use std::env::args;
 use crate::native::db::connection::NxDbConnection;
+use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
+use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System};
+use tracing::debug;
 
 #[napi]
 struct RunningTasksService {
     db: External<NxDbConnection>,
+    added_tasks: HashSet<String>,
 }
 
 #[napi]
 impl RunningTasksService {
     #[napi(constructor)]
     pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
-        let s = Self { db };
+        let s = Self {
+            db,
+            added_tasks: Default::default(),
+        };
 
         s.setup()?;
 
@@ -35,17 +43,35 @@ impl RunningTasksService {
     fn is_task_running_impl(&self, task_id: &str) -> anyhow::Result<bool> {
         let mut stmt = self
             .db
-            .prepare("SELECT EXISTS(SELECT 1 FROM running_tasks WHERE task_id = ?)")?;
-        let exists: bool = stmt.query_row([task_id], |row| row.get(0))?;
-        Ok(exists)
+            .prepare("SELECT pid FROM running_tasks WHERE task_id = ?")?;
+        let pid: u32 = stmt.query_row([task_id], |row| row.get(0))?;
+        debug!("Checking if {} should be running on {}", task_id, pid);
+
+        let mut sys = System::new();
+        sys.refresh_processes_specifics(
+            ProcessesToUpdate::Some(&[Pid::from(pid as usize)]),
+            true,
+            ProcessRefreshKind::everything(),
+        );
+        if let Some(process) = sys.process(sysinfo::Pid::from(pid as usize)) {
+            // Check if the process name contains "nx" or is related to nx
+            // TODO: check is the process is actually the same process
+            Ok(true)
+        } else {
+        debug!("Process {} does not exist so {} is not running", pid, task_id);
+            Ok(false)
+        }
     }
 
     #[napi]
-    pub fn add_running_task(&self, task_id: String) -> anyhow::Result<()> {
+    pub fn add_running_task(&mut self, task_id: String) -> anyhow::Result<()> {
+        let pid = std::process::id();
+        let args = args();
         let mut stmt = self
             .db
-            .prepare("INSERT INTO running_tasks (task_id) VALUES (?)")?;
-        stmt.execute([task_id])?;
+            .prepare("INSERT INTO running_tasks (task_id, pid) VALUES (?, ?, ?)")?;
+        stmt.execute([&task_id, &pid.to_string(), &args.into_iter().collect()])?;
+        self.added_tasks.insert(task_id);
         Ok(())
     }
 
@@ -62,10 +88,20 @@ impl RunningTasksService {
         self.db.execute_batch(
             "
             CREATE TABLE IF NOT EXISTS running_tasks (
-                task_id TEXT PRIMARY KEY NOT NULL
+                task_id TEXT PRIMARY KEY NOT NULL,
+                pid INTEGER NOT NULL
             );
             ",
         )?;
         Ok(())
+    }
+}
+
+impl Drop for RunningTasksService {
+    fn drop(&mut self) {
+        // Remove tasks added by this service. This might happen if process exits because of SIGKILL
+        for task_id in self.added_tasks.iter() {
+            self.remove_running_task(task_id.clone()).ok();
+        }
     }
 }
