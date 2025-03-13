@@ -163,6 +163,7 @@ describe('Remix Library Generator', () => {
         directory: 'packages/foo',
         style: 'css',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       // Make sure keys are in idiomatic order
@@ -200,6 +201,7 @@ describe('Remix Library Generator', () => {
         directory: 'test',
         style: 'css',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(tree.exists(`test/src/server.ts`)).toBeTruthy();
@@ -218,6 +220,7 @@ describe('Remix Library Generator', () => {
         name: 'my-lib', // import path contains the npm scope, so it would be different
         style: 'css',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -232,6 +235,7 @@ describe('Remix Library Generator', () => {
         name: '@proj/my-lib',
         style: 'css',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -243,9 +247,35 @@ describe('Remix Library Generator', () => {
         directory: 'packages/my-lib',
         style: 'css',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
+      expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-lib',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('packages/my-lib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-lib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-lib",
+          "projectType": "library",
+          "root": "packages/my-lib",
+          "sourceRoot": "packages/my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
       expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
     });
   });

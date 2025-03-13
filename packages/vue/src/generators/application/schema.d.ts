@@ -21,6 +21,7 @@ export interface Schema {
   addPlugin?: boolean;
   nxCloudToken?: string;
   useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {

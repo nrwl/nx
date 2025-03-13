@@ -240,6 +240,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
         unitTestRunner: 'vitest',
         linter: 'eslint',
+        useProjectJson: false,
       });
 
       expect(tree.read('myapp/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(
@@ -395,6 +396,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
         unitTestRunner: 'vitest',
         linter: 'eslint',
+        useProjectJson: false,
       });
 
       const packageJson = readJson(tree, 'myapp/package.json');
@@ -409,6 +411,47 @@ describe('app', () => {
           "nx",
         ]
       `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'vitest',
+        linter: 'eslint',
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

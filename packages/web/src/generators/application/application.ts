@@ -246,13 +246,13 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
 }
 
 async function addProject(tree: Tree, options: NormalizedSchema) {
-  if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
-      private: true,
-    };
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
 
+  if (!options.useProjectJson) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
@@ -260,12 +260,6 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
-
-    writeJson(
-      tree,
-      joinPathFragments(options.appProjectRoot, 'package.json'),
-      packageJson
-    );
   } else {
     addProjectConfiguration(tree, options.projectName, {
       projectType: 'application',
@@ -274,6 +268,14 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
       tags: options.parsedTags,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 }
 
@@ -475,19 +477,17 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    if (options.isUsingTsSolutionConfig) {
-      writeJson(
-        host,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(host, options.e2eProjectName, {
         root: options.e2eProjectRoot,
@@ -498,6 +498,15 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         implicitDependencies: [options.projectName],
       });
     }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        host,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
+
     const cypressTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
@@ -551,19 +560,17 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
       typeof import('@nx/playwright')
     >('@nx/playwright', nxVersion);
-    if (options.isUsingTsSolutionConfig) {
-      writeJson(
-        host,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(host, options.e2eProjectName, {
         root: options.e2eProjectRoot,
@@ -574,6 +581,15 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         implicitDependencies: [options.projectName],
       });
     }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        host,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
+
     const playwrightTask = await playwrightConfigGenerator(host, {
       project: options.e2eProjectName,
       skipFormat: true,
@@ -741,6 +757,7 @@ async function normalizeOptions(
     parsedTags,
     names: names(projectName),
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 

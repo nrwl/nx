@@ -33,6 +33,7 @@ export interface LibraryGeneratorOptions {
   simpleName?: boolean;
   addPlugin?: boolean;
   isUsingTsSolutionsConfig?: boolean;
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

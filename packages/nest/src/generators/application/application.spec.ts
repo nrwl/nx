@@ -1,4 +1,10 @@
-import { readJson, updateJson, writeJson, type Tree } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  updateJson,
+  writeJson,
+  type Tree,
+} from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
@@ -193,6 +199,7 @@ describe('application generator', () => {
         directory: 'myapp',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -329,6 +336,125 @@ describe('application generator', () => {
           ],
         }
       `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'jest',
+        useProjectJson: true,
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "tags": [],
+          "targets": {
+            "build": {
+              "configurations": {
+                "development": {
+                  "args": [
+                    "node-env=development",
+                  ],
+                },
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "args": [
+                  "node-env=production",
+                ],
+                "command": "webpack-cli build",
+              },
+            },
+            "serve": {
+              "configurations": {
+                "development": {
+                  "buildTarget": "@proj/myapp:build:development",
+                },
+                "production": {
+                  "buildTarget": "@proj/myapp:build:production",
+                },
+              },
+              "defaultConfiguration": "development",
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:node",
+              "options": {
+                "buildTarget": "@proj/myapp:build",
+                "runBuildTargetDependencies": false,
+              },
+            },
+            "test": {
+              "options": {
+                "passWithNoTests": true,
+              },
+            },
+          },
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "targets": {
+            "e2e": {
+              "dependsOn": [
+                "@proj/myapp:build",
+              ],
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "myapp-e2e/jest.config.ts",
+                "passWithNoTests": true,
+              },
+              "outputs": [
+                "{workspaceRoot}/coverage/{e2eProjectRoot}",
+              ],
+            },
+          },
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

@@ -55,6 +55,7 @@ export async function normalizeOptions(
     parsedTags,
     importPath,
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 
   return normalized;

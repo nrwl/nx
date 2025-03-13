@@ -46,6 +46,7 @@ export async function normalizeOptions(
     parsedTags,
     style: options.style ?? 'none',
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.unitTestRunner ??= 'vitest';

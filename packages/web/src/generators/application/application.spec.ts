@@ -768,6 +768,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -911,6 +912,7 @@ describe('app', () => {
         directory: 'apps/my-app',
         bundler: 'webpack',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -956,6 +958,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
+        useProjectJson: false,
       });
 
       const packageJson = readJson(tree, 'apps/myapp/package.json');
@@ -970,6 +973,47 @@ describe('app', () => {
           "nx",
         ]
       `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('apps/myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "apps/myapp",
+          "sourceRoot": "apps/myapp/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'apps/myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('apps/myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "apps/myapp-e2e",
+          "sourceRoot": "apps/myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'apps/myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });
