@@ -9,7 +9,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
-import { getTaskHistory, TaskHistory } from '../utils/task-history';
+import { TaskHistory, getTaskHistory } from '../utils/task-history';
 
 export interface Batch {
   executorName: string;
