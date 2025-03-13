@@ -5,6 +5,7 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  updateJson,
   writeJson,
 } from '@nx/devkit';
 import * as _configUtils from '@nx/devkit/src/utils/config-utils';
@@ -48,6 +49,11 @@ describe('convert-to-rspack', () => {
       },
     });
     writeJson(tree, 'apps/app/tsconfig.json', {});
+    updateJson(tree, 'package.json', (json) => {
+      json.scripts ??= {};
+      json.scripts.build = 'nx build';
+      return json;
+    });
 
     // ACT
     await convertToRspack(tree, { project: 'app' });
@@ -91,6 +97,79 @@ describe('convert-to-rspack', () => {
         typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
       )
     ).toBeDefined();
+    expect(pkgJson.scripts?.build).toBeUndefined();
+    expect(updatedProject.targets.build).not.toBeDefined();
+    expect(updatedProject.targets.serve).not.toBeDefined();
+  });
+
+  it('should normalize paths to libs in workspace correctly', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            polyfills: ['zone.js'],
+            tsConfig: 'apps/app/tsconfig.app.json',
+            assets: ['libs/mylib/src/favicon.ico'],
+            styles: ['apps/app/src/styles.scss'],
+            scripts: [],
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+    updateJson(tree, 'package.json', (json) => {
+      json.scripts ??= {};
+      json.scripts.build = 'nx build';
+      return json;
+    });
+    tree.write('libs/mylib/src/favicon.ico', 'libs/mylib/src/favicon.ico');
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    const updatedProject = readProjectConfiguration(tree, 'app');
+    const pkgJson = readJson(tree, 'package.json');
+    const nxJson = readNxJson(tree);
+    expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { createConfig } from '@nx/angular-rspack';
+
+      export default createConfig({
+        options: {
+          root: __dirname,
+
+          outputPath: {
+            base: '../../dist/apps/app',
+          },
+          index: './src/index.html',
+          browser: './src/main.ts',
+          polyfills: ['zone.js'],
+          tsConfig: './tsconfig.app.json',
+          assets: ['../../libs/mylib/src/favicon.ico'],
+          styles: ['./src/styles.scss'],
+          scripts: [],
+        },
+      });
+      "
+    `);
+    expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
+    expect(
+      nxJson.plugins.find((p) =>
+        typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
+      )
+    ).toBeDefined();
+    expect(pkgJson.scripts?.build).toBeUndefined();
     expect(updatedProject.targets.build).not.toBeDefined();
     expect(updatedProject.targets.serve).not.toBeDefined();
   });

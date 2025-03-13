@@ -10,7 +10,7 @@ import {
   workspaceRoot,
   joinPathFragments,
   readJson,
-  updateJson,
+  writeJson,
 } from '@nx/devkit';
 import type { ConvertToRspackSchema } from './schema';
 import { angularRspackVersion, nxVersion } from '../../utils/versions';
@@ -20,6 +20,7 @@ import { updateTsconfig } from './lib/update-tsconfig';
 import { validateSupportedBuildExecutor } from './lib/validate-supported-executor';
 import { join } from 'path/posix';
 import { relative } from 'path';
+import { existsSync } from 'fs';
 
 const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
@@ -50,7 +51,11 @@ const REMOVED_OPTIONS = [
   'browserTarget',
 ];
 
-function normalizeFromProjectRoot(path: string, projectRoot: string) {
+function normalizeFromProjectRoot(
+  tree: Tree,
+  path: string,
+  projectRoot: string
+) {
   if (projectRoot === '.') {
     if (!path.startsWith('./')) {
       return `./${path}`;
@@ -60,21 +65,33 @@ function normalizeFromProjectRoot(path: string, projectRoot: string) {
   } else if (path.startsWith(projectRoot)) {
     return path.replace(projectRoot, '.');
   } else if (!path.startsWith('./')) {
+    if (tree.exists(path)) {
+      const pathWithWorkspaceRoot = joinPathFragments(workspaceRoot, path);
+      const projectRootWithWorkspaceRoot = joinPathFragments(
+        workspaceRoot,
+        projectRoot
+      );
+      return relative(projectRootWithWorkspaceRoot, pathWithWorkspaceRoot);
+    }
     return `./${path}`;
   }
   return path;
 }
 
-const defaultNormalizer = (path: string, root: string) =>
-  normalizeFromProjectRoot(path, root);
+const defaultNormalizer = (tree: Tree, path: string, root: string) =>
+  normalizeFromProjectRoot(tree, path, root);
 
 const PATH_NORMALIZER = {
-  index: (path: string | { input: string; output: string }, root: string) => {
+  index: (
+    tree: Tree,
+    path: string | { input: string; output: string },
+    root: string
+  ) => {
     if (typeof path === 'string') {
-      return normalizeFromProjectRoot(path, root);
+      return normalizeFromProjectRoot(tree, path, root);
     }
     return {
-      input: normalizeFromProjectRoot(path.input, root),
+      input: normalizeFromProjectRoot(tree, path.input, root),
       output: path.output ?? 'index.html',
     };
   },
@@ -82,18 +99,19 @@ const PATH_NORMALIZER = {
   main: defaultNormalizer,
   server: defaultNormalizer,
   tsConfig: defaultNormalizer,
-  outputPath: (path: string, root: string) => {
+  outputPath: (tree: Tree, path: string, root: string) => {
     const relativePathFromWorkspaceRoot = relative(
       joinPathFragments(workspaceRoot, root),
       workspaceRoot
     );
     return joinPathFragments(
       relativePathFromWorkspaceRoot,
-      normalizeFromProjectRoot(path, root)
+      normalizeFromProjectRoot(tree, path, root)
     );
   },
   proxyConfig: defaultNormalizer,
   styles: (
+    tree: Tree,
     paths: Array<
       string | { input: string; bundleName: string; inject: boolean }
     >,
@@ -104,10 +122,10 @@ const PATH_NORMALIZER = {
     > = [];
     for (const path of paths) {
       if (typeof path === 'string') {
-        normalizedPaths.push(normalizeFromProjectRoot(path, root));
+        normalizedPaths.push(normalizeFromProjectRoot(tree, path, root));
       } else {
         normalizedPaths.push({
-          input: normalizeFromProjectRoot(path.input, root),
+          input: normalizeFromProjectRoot(tree, path.input, root),
           bundleName: path.bundleName,
           inject: path.inject ?? true,
         });
@@ -116,6 +134,7 @@ const PATH_NORMALIZER = {
     return normalizedPaths;
   },
   scripts: (
+    tree: Tree,
     paths: Array<
       string | { input: string; bundleName: string; inject: boolean }
     >,
@@ -126,10 +145,10 @@ const PATH_NORMALIZER = {
     > = [];
     for (const path of paths) {
       if (typeof path === 'string') {
-        normalizedPaths.push(normalizeFromProjectRoot(path, root));
+        normalizedPaths.push(normalizeFromProjectRoot(tree, path, root));
       } else {
         normalizedPaths.push({
-          input: normalizeFromProjectRoot(path.input, root),
+          input: normalizeFromProjectRoot(tree, path.input, root),
           bundleName: path.bundleName,
           inject: path.inject ?? true,
         });
@@ -138,6 +157,7 @@ const PATH_NORMALIZER = {
     return normalizedPaths;
   },
   assets: (
+    tree: Tree,
     paths: Array<string | { input: string; [key: string]: any }>,
     root: string
   ) => {
@@ -146,17 +166,18 @@ const PATH_NORMALIZER = {
     > = [];
     for (const path of paths) {
       if (typeof path === 'string') {
-        normalizedPaths.push(normalizeFromProjectRoot(path, root));
+        normalizedPaths.push(normalizeFromProjectRoot(tree, path, root));
       } else {
         normalizedPaths.push({
           ...path,
-          input: normalizeFromProjectRoot(path.input, root),
+          input: normalizeFromProjectRoot(tree, path.input, root),
         });
       }
     }
     return normalizedPaths;
   },
   fileReplacements: (
+    tree: Tree,
     paths: Array<
       { replace: string; with: string } | { src: string; replaceWith: string }
     >,
@@ -168,10 +189,12 @@ const PATH_NORMALIZER = {
     for (const path of paths) {
       normalizedPaths.push({
         replace: normalizeFromProjectRoot(
+          tree,
           'src' in path ? path.src : path.replace,
           root
         ),
         with: normalizeFromProjectRoot(
+          tree,
           'replaceWith' in path ? path.replaceWith : path.with,
           root
         ),
@@ -182,6 +205,7 @@ const PATH_NORMALIZER = {
 };
 
 function handleBuildTargetOptions(
+  tree: Tree,
   options: Record<string, any>,
   newConfigurationOptions: Record<string, any>,
   root: string
@@ -195,10 +219,16 @@ function handleBuildTargetOptions(
     customWebpackConfigPath = options.customWebpackConfig.path;
     delete options.customWebpackConfig;
   }
+
+  if (options.outputs) {
+    // handled by the Rspack inference plugin
+    delete options.outputs;
+  }
+
   for (const [key, value] of Object.entries(options)) {
     let optionName = key;
     let optionValue =
-      key in PATH_NORMALIZER ? PATH_NORMALIZER[key](value, root) : value;
+      key in PATH_NORMALIZER ? PATH_NORMALIZER[key](tree, value, root) : value;
     if (REMOVED_OPTIONS.includes(key)) {
       continue;
     }
@@ -245,6 +275,7 @@ function handleBuildTargetOptions(
 }
 
 function handleDevServerTargetOptions(
+  tree: Tree,
   options: Record<string, any>,
   newConfigurationOptions: Record<string, any>,
   root: string
@@ -252,7 +283,7 @@ function handleDevServerTargetOptions(
   for (const [key, value] of Object.entries(options)) {
     let optionName = key;
     let optionValue =
-      key in PATH_NORMALIZER ? PATH_NORMALIZER[key](value, root) : value;
+      key in PATH_NORMALIZER ? PATH_NORMALIZER[key](tree, value, root) : value;
     if (REMOVED_OPTIONS.includes(key)) {
       continue;
     }
@@ -287,6 +318,7 @@ export async function convertToRspack(
       target.executor === '@nx/angular:webpack-browser'
     ) {
       customWebpackConfigPath = handleBuildTargetOptions(
+        tree,
         target.options,
         createConfigOptions,
         project.root
@@ -297,6 +329,7 @@ export async function convertToRspack(
         )) {
           configurationOptions[configurationName] = {};
           handleBuildTargetOptions(
+            tree,
             configuration,
             configurationOptions[configurationName],
             project.root
@@ -312,6 +345,7 @@ export async function convertToRspack(
       createConfigOptions.devServer = {};
       if (target.options) {
         handleDevServerTargetOptions(
+          tree,
           target.options,
           createConfigOptions.devServer,
           project.root
@@ -324,6 +358,7 @@ export async function convertToRspack(
           configurationOptions[configurationName] ??= {};
           configurationOptions[configurationName].devServer ??= {};
           handleDevServerTargetOptions(
+            tree,
             configuration,
             configurationOptions[configurationName].devServer,
             project.root
@@ -366,7 +401,7 @@ export async function convertToRspack(
   const rootPkgJson = readJson(tree, 'package.json');
   if (rootPkgJson.scripts?.build === 'nx build') {
     delete rootPkgJson.scripts.build;
-    updateJson(tree, 'package.json', rootPkgJson);
+    writeJson(tree, 'package.json', rootPkgJson);
   }
 
   if (!schema.skipInstall) {
