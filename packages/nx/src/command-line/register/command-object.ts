@@ -8,7 +8,7 @@ export interface RegisterOptions {
 }
 
 export const yargsRegisterCommand: CommandModule<{}, RegisterOptions> = {
-  command: 'register <key>',
+  command: 'register [key]',
   aliases: ['activate-powerpack'],
   describe: false,
   builder: (yargs) =>
