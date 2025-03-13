@@ -37,12 +37,12 @@ export declare class ImportResult {
 
 export declare class NxCache {
   cacheDirectory: string
-  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null)
+  constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
-  applyRemoteCacheResults(hash: string, result: CachedResult): void
+  applyRemoteCacheResults(hash: string, result: CachedResult, outputs: Array<string>): void
   getTaskOutputsPath(hash: string): string
-  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): void
+  copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
 }
@@ -112,13 +112,14 @@ export interface CachedResult {
   code: number
   terminalOutput: string
   outputsPath: string
+  size?: number
 }
 
 export declare export function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
 
 export declare export function connectToNxDb(cacheDir: string, nxVersion: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 
-export declare export function copy(src: string, dest: string): void
+export declare export function copy(src: string, dest: string): number
 
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string

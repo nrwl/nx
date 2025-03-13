@@ -28,6 +28,7 @@ Nx.json configuration
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
+- [maxCacheSize](../../devkit/documents/NxJsonConfiguration#maxcachesize): string
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
@@ -159,6 +160,14 @@ use [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs) instea
 Configures the Nx installation for a repo. Useful for maintaining a separate
 set of dependencies for Nx + Plugins compared to the base package.json, but also
 useful for workspaces that don't have a root package.json + node_modules.
+
+---
+
+### maxCacheSize
+
+• `Optional` **maxCacheSize**: `string`
+
+Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
 
 ---
 

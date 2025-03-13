@@ -5,7 +5,6 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  names,
   offsetFromRoot,
   ProjectConfiguration,
   runTasksInSerial,
@@ -46,6 +45,7 @@ export async function expoLibraryGenerator(
 ): Promise<GeneratorCallback> {
   return await expoLibraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -70,7 +70,7 @@ export async function expoLibraryGeneratorInternal(
   }
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   const initTask = await init(host, { ...options, skipFormat: true });
@@ -157,7 +157,7 @@ export async function expoLibraryGeneratorInternal(
   }
 
   tasks.push(() => {
-    logShowProjectCommand(options.name);
+    logShowProjectCommand(options.projectName);
   });
 
   return runTasksInSerial(...tasks);
@@ -175,18 +175,24 @@ async function addProject(
     targets: {},
   };
 
+  let packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    peerDependencies: {
+      react: reactVersion,
+      'react-native': reactNativeVersion,
+    },
+  };
+
   if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.projectName,
-      version: '0.0.1',
+    packageJson = {
+      ...packageJson,
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-      peerDependencies: {
-        react: reactVersion,
-        'react-native': reactNativeVersion,
-      },
     };
+  }
 
+  if (!options.useProjectJson) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
@@ -194,14 +200,21 @@ async function addProject(
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
+  } else {
+    addProjectConfiguration(host, options.projectName, project);
+  }
 
+  if (
+    !options.useProjectJson ||
+    options.isUsingTsSolutionConfig ||
+    options.publishable ||
+    options.buildable
+  ) {
     writeJson(
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       packageJson
     );
-  } else {
-    addProjectConfiguration(host, options.name, project);
   }
 
   if (options.publishable || options.buildable) {
@@ -263,7 +276,6 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     options.projectRoot,
     {
       ...options,
-      ...names(options.name),
       tmpl: '',
       offsetFromRoot: offsetFromRoot(options.projectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(

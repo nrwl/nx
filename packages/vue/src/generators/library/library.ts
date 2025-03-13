@@ -38,7 +38,11 @@ import {
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
-  return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return libraryGeneratorInternal(tree, {
+    addPlugin: false,
+    useProjectJson: true,
+    ...schema,
+  });
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
@@ -56,17 +60,20 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
-  if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
+  let packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+  };
+
+  if (!options.useProjectJson) {
+    packageJson = {
+      ...packageJson,
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     };
-
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
@@ -74,12 +81,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
-
-    writeJson(
-      tree,
-      joinPathFragments(options.projectRoot, 'package.json'),
-      packageJson
-    );
   } else {
     addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,
@@ -88,6 +89,14 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       tags: options.parsedTags,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   }
 
   tasks.push(

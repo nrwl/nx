@@ -535,6 +535,7 @@ module.exports = [
         ...defaultSchema,
         setParserOptionsProject: true,
         linter: 'eslint',
+        useProjectJson: false,
       });
 
       expect(tree.read('my-lib/vite.config.ts', 'utf-8'))
@@ -695,6 +696,7 @@ module.exports = [
         directory: 'my-lib',
         name: 'my-lib', // import path contains the npm scope, so it would be different
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -709,6 +711,7 @@ module.exports = [
         directory: 'my-lib',
         name: '@proj/my-lib',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -720,9 +723,35 @@ module.exports = [
         ...defaultSchema, // defaultSchema has no name
         directory: 'my-lib',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-lib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-lib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });

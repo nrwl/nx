@@ -370,6 +370,7 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
         unitTestRunner: 'jest',
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -503,6 +504,7 @@ describe('lib', () => {
         name: 'my-lib', // import path contains the npm scope, so it would be different
         linter: 'none',
         unitTestRunner: 'none',
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -517,6 +519,7 @@ describe('lib', () => {
         name: '@proj/my-lib',
         linter: 'none',
         unitTestRunner: 'none',
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -528,9 +531,47 @@ describe('lib', () => {
         directory: 'mylib',
         linter: 'none',
         unitTestRunner: 'none',
+        useProjectJson: false,
         skipFormat: true,
       });
 
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "mylib",
+          "sourceRoot": "mylib/src",
+          "tags": [],
+          "targets": {
+            "lint": {
+              "executor": "@nx/eslint:lint",
+            },
+            "test": {
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "mylib/jest.config.ts",
+              },
+              "outputs": [
+                "{projectRoot}/test-output/jest/coverage",
+              ],
+            },
+          },
+        }
+      `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
     });
   });

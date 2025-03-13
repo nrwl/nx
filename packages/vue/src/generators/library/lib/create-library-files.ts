@@ -33,6 +33,7 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
 
   if (
     !options.isUsingTsSolutionConfig &&
+    options.useProjectJson &&
     (options.publishable || options.bundler !== 'none')
   ) {
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {

@@ -545,6 +545,7 @@ describe('lib', () => {
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       } as Schema);
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -660,6 +661,7 @@ describe('lib', () => {
         compiler: 'swc',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       } as Schema);
 
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
@@ -709,6 +711,7 @@ describe('lib', () => {
         linter: 'none',
         unitTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       } as Schema);
 
@@ -724,6 +727,7 @@ describe('lib', () => {
         linter: 'none',
         unitTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       } as Schema);
 
@@ -736,9 +740,35 @@ describe('lib', () => {
         linter: 'none',
         unitTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       } as Schema);
 
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(tree.exists('mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "mylib",
+          "sourceRoot": "mylib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
       expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
     });
   });

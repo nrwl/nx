@@ -6,8 +6,7 @@ import {
 import { Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
-export interface NormalizedSchema extends Schema {
-  name: string;
+export interface NormalizedSchema extends Omit<Schema, 'name'> {
   fileName: string;
   projectName: string;
   projectRoot: string;
@@ -44,17 +43,19 @@ export async function normalizeOptions(
     : [];
 
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
+
   const normalized: NormalizedSchema = {
     ...options,
     fileName: projectName,
     routePath: `/${projectNames.projectSimpleName}`,
-    name: projectName,
     projectName:
       isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,
     isUsingTsSolutionConfig,
+    useProjectJson,
   };
 
   return normalized;

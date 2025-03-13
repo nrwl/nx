@@ -26,6 +26,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [generators](../../devkit/documents/Workspace#generators): Object
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
+- [maxCacheSize](../../devkit/documents/Workspace#maxcachesize): string
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [neverConnectToCloud](../../devkit/documents/Workspace#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
@@ -199,6 +200,18 @@ useful for workspaces that don't have a root package.json + node_modules.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[installation](../../devkit/documents/NxJsonConfiguration#installation)
+
+---
+
+### maxCacheSize
+
+• `Optional` **maxCacheSize**: `string`
+
+Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[maxCacheSize](../../devkit/documents/NxJsonConfiguration#maxcachesize)
 
 ---
 

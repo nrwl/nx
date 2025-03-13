@@ -72,18 +72,18 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  if (isUsingTsSolutionSetup(host)) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
-      private: true,
-      dependencies: {
-        next: nextVersion,
-        react: reactVersion,
-        'react-dom': reactDomVersion,
-      },
-    };
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+    dependencies: {
+      next: nextVersion,
+      react: reactVersion,
+      'react-dom': reactDomVersion,
+    },
+  };
 
+  if (!options.useProjectJson) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
@@ -91,15 +91,17 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
+  } else {
+    addProjectConfiguration(host, options.projectName, {
+      ...project,
+    });
+  }
 
+  if (!options.useProjectJson || options.isTsSolutionSetup) {
     writeJson(
       host,
       joinPathFragments(options.appProjectRoot, 'package.json'),
       packageJson
     );
-  } else {
-    addProjectConfiguration(host, options.projectName, {
-      ...project,
-    });
   }
 }

@@ -471,6 +471,7 @@ describe('lib', () => {
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
+        useProjectJson: false,
       });
 
       expect(readJson(appTree, 'tsconfig.json').references)
@@ -481,8 +482,11 @@ describe('lib', () => {
           },
         ]
       `);
+      const packageJson = readJson(appTree, 'my-lib/package.json');
+      expect(packageJson.name).toBe('@proj/my-lib');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(readJson(appTree, 'my-lib/package.json')).toMatchInlineSnapshot(`
+      expect(packageJson).toMatchInlineSnapshot(`
         {
           "exports": {
             ".": {
@@ -600,6 +604,7 @@ describe('lib', () => {
         ...defaultSchema,
         directory: 'my-lib',
         name: 'my-lib', // import path contains the npm scope, so it would be different
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -613,6 +618,7 @@ describe('lib', () => {
         ...defaultSchema,
         directory: 'my-lib',
         name: '@proj/my-lib',
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -623,9 +629,33 @@ describe('lib', () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         directory: 'my-lib',
+        useProjectJson: false,
         skipFormat: true,
       });
 
+      expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(appTree.exists('my-lib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/my-lib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
       expect(readJson(appTree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });

@@ -40,6 +40,7 @@ describe('Normalize Options', () => {
       isUsingTsSolutionConfig: false,
       linter: Linter.EsLint,
       js: false,
+      useProjectJson: true,
     });
   });
 
@@ -70,6 +71,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
       js: false,
+      useProjectJson: true,
     });
   });
 
@@ -101,6 +103,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
       js: false,
+      useProjectJson: true,
     });
   });
 });

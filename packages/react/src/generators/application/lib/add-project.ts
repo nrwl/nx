@@ -5,7 +5,6 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
@@ -39,13 +38,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
-      private: true,
-    };
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
 
+  if (!options.useProjectJson) {
     if (options.projectName !== options.importPath) {
       packageJson.nx = { name: options.projectName };
     }
@@ -57,28 +56,18 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
+  } else {
+    addProjectConfiguration(host, options.projectName, {
+      ...project,
+    });
+  }
 
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
     writeJson(
       host,
       joinPathFragments(options.appProjectRoot, 'package.json'),
       packageJson
     );
-  }
-
-  if (!options.isUsingTsSolutionConfig || options.alwaysGenerateProjectJson) {
-    addProjectConfiguration(host, options.projectName, {
-      ...project,
-    });
-  } else if (
-    options.parsedTags?.length ||
-    Object.keys(project.targets).length
-  ) {
-    const updatedProject: ProjectConfiguration = {
-      root: options.appProjectRoot,
-      targets: project.targets,
-      tags: options.parsedTags?.length ? options.parsedTags : undefined,
-    };
-    updateProjectConfiguration(host, options.projectName, updatedProject);
   }
 }
 

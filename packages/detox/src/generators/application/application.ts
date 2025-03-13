@@ -18,6 +18,7 @@ import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -60,7 +61,7 @@ export async function detoxApplicationGeneratorInternal(
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
   }
 
   sortPackageJsonFields(host, options.e2eProjectRoot);

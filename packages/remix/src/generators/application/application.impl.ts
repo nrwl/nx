@@ -54,6 +54,7 @@ export function remixApplicationGenerator(
 ) {
   return remixApplicationGeneratorInternal(tree, {
     addPlugin: true,
+    useProjectJson: true,
     ...options,
   });
 }
@@ -85,10 +86,10 @@ export async function remixApplicationGeneratorInternal(
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
-  if (!options.isUsingTsSolutionConfig) {
+  if (options.useProjectJson) {
     addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,
       sourceRoot: `${options.projectRoot}`,
@@ -161,7 +162,9 @@ export async function remixApplicationGeneratorInternal(
       options.projectRoot,
       vars
     );
+  }
 
+  if (!options.useProjectJson) {
     updateJson(
       tree,
       joinPathFragments(options.projectRoot, 'package.json'),
