@@ -985,7 +985,7 @@ describe('nx release - independent projects', () => {
       expect(
         releaseOutput.match(
           new RegExp(
-            `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+            `Resolved the specifier as "minor" using git history and the conventional commits standard`,
             'g'
           )
         ).length
@@ -1004,7 +1004,7 @@ describe('nx release - independent projects', () => {
       expect(
         releaseOutput.match(
           new RegExp(
-            `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+            `Resolved the specifier as "patch" using git history and the conventional commits standard`,
             'g'
           )
         ).length

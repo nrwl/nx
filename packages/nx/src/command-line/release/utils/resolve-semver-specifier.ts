@@ -5,6 +5,7 @@ import { NxReleaseConfig } from '../config/config';
 import { getGitDiff, parseCommits } from './git';
 import { determineSemverChange } from './semver';
 import { getCommitsRelevantToProjects } from './shared';
+import { SemverBumpType } from '../version-utils/flexible-version-management';
 
 export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
@@ -25,7 +26,7 @@ export async function resolveSemverSpecifierFromConventionalCommits(
 export async function resolveSemverSpecifierFromPrompt(
   selectionMessage: string,
   customVersionMessage: string
-): Promise<string> {
+): Promise<SemverBumpType | string> {
   try {
     const reply = await prompt<{ specifier: string }>([
       {
@@ -42,7 +43,7 @@ export async function resolveSemverSpecifierFromPrompt(
       },
     ]);
     if (reply.specifier !== 'custom') {
-      return reply.specifier;
+      return reply.specifier as SemverBumpType;
     } else {
       const reply = await prompt<{ specifier: string }>([
         {
