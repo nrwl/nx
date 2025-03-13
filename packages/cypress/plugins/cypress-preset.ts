@@ -8,6 +8,7 @@ import { dirname, join, relative } from 'path';
 import type { InlineConfig } from 'vite';
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
+import * as treeKill from 'tree-kill';
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -91,9 +92,7 @@ function startWebServer(webServerCommand: string) {
         }
       }
     } else {
-      // child.kill() does not work on linux
-      // process.kill will kill the whole process group on unix
-      process.kill(-serverProcess.pid, 'SIGKILL');
+      treeKill(serverProcess.pid);
     }
   };
 }

@@ -579,6 +579,7 @@ export class TaskOrchestrator {
     if (this.runningTasksService.getRunningTasks([task.id]).length) {
       // task is already running, we need to poll and wait for the running task to finish
       do {
+        console.log(`Waiting for ${task.id} in another nx process`);
         await new Promise((resolve) => setTimeout(resolve, 100));
       } while (this.runningTasksService.getRunningTasks([task.id]).length);
       return;
