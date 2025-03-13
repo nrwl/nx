@@ -8,14 +8,15 @@ cover_image: /blog/images/2025-03-19/angular-rspack-logo-small.png
 description: Learn about how and why to use Rspack with Angular thanks to Nx's efforts for supporting Rspack for Angular.
 ---
 
-Building applications with [Angular](https://angular.dev) has always been a lesser concern for most Angular developers due to the abstractions that Angular created called `builders`. The underlying implementation details were hidden from the developer who only needed to run either `ng build` or `nx build`.  
-Despite this, most Angular developers knew that it was originally [webpack](https://webpack.js.org/) that was used to build their applications. This was a great solution at the time and it was even possible to extend their builds by leveraging custom webpack configurations and plugins.
+Configuring your build tooling for [Angular](https://angular.dev) applications has always been a lesser concern for most Angular developers due to the abstractions that Angular created called `builders`. The underlying implementation details were hidden from the developer who only needed to run either `ng build` or `nx build`.  
+Despite this, most Angular developers knew that it was originally [Webpack](https://webpack.js.org/) that was used to build their applications. This was a great solution at the time and it was even possible to extend their builds by leveraging custom webpack configurations and plugins.
 
 Over time, as applications grew in size and complexity, it became clear that the inherit slowness with Webpack build speeds was becoming more and more of an issue for Angular developers.
 
-The Angular Team decided to address this build speed issue by building out a new build pipeline that leveraged [Esbuild](https://esbuild.github.io/).
+The Angular Team decided to address this issue by creating a new build pipeline that leveraged [Esbuild](https://esbuild.github.io/).
 
-This succeeded in reducing the build times for Angular applications, however, it made one crucial mistake. It left the existing Angular applications that relied on the Webpack ecosystem behind, with either a difficult migration path or none at all.
+> Esbuild brought much-needed performance improvements to Angular builds, but existing Webpack-based applications were left with either a difficult migration path or no clear upgrade strategy.
+
 To this day, many existing Angular applications still rely on Webpack because they cannot readily replace their Webpack configurations and plugins with equivalent Esbuild plugins. Thus, they are continuing to fight with slow builds reducing their productivity.
 
 ## What about Rspack?
@@ -25,43 +26,47 @@ To this day, many existing Angular applications still rely on Webpack because th
 Because it supports the existing Webpack ecosystem, it provides an answer to teams that maintain Angular applications using Webpack and want to migrate to a faster build pipeline.
 
 However, it is crucial to understand that Rspack is not _completely_ compatible with the Webpack ecosystem with some slight nuances and low-level api differences that prevent certain plugins and loaders from working out of the box.
-One such example is the `AngularIvyPlugin` which is a Webpack plugin that is used to support Angular's Ivy compiler. Therefore, it was not possible to simply drop in Rpsack and expect it to work with Angular applications.
-Many people have tried to get Rspack working with Angular, but it has proven to be a challenge, with partial support and success being reported in the past but with a lot of limitations or actual performance degradations over the Webpack approach.
 
-Instead, a new approach was needed to support Rspack with Angular. A closer examination and replication of how Angular compiles and bundles the application was required.
+One such example is the `AngularIvyPlugin` which is a Webpack plugin that is used to support Angular's Ivy compiler. Therefore, it was not possible to simply drop in Rpsack and expect it to work with Angular applications.
+Many people have tried to get Rspack working with Angular, but it has proven to be a challenge, with partial support and partial success being reported in the past but with a lot of limitations or actual performance degradations over the Webpack approach.
+
+Previous attempts to get Rspack working with Angular focused on porting the Webpack-specific plugins, loaders and configurations to Rspack, either as-is or by reproducing them. This approach was never fully successful.
+
+Instead, a new approach was needed to support Rspack with Angular. A closer examination of how Angular compiles and bundles the application was required.
 
 ## Introducing Angular Rspack
 
-![Angular Rspack Logo](/blog/images/2025-03-19/nx-angular-rspack-logo-small.png)
+![Angular Rspack Logo](/blog/images/2025-03-19/angular-rspack-logo-small.avif)
 
 Angular Rspack started in September 2024 after I spent way too long investigating and researching how exactly Angular compiles and bundles for both their Webpack support and Esbuild support.
 
 Something that I kept coming back to was that any Rspack solution that relied too much on Angular's Webpack support had the chance of being dropped by the Angular team as they continue to build out incredible new features with Esbuild. Instead, I decided that replicating and utilizing the abstractions the Angular team provided for their Esbuild support had a much stronger chance of longevity.
 
-We are thrilled to announce that Angular Rspack is now being maintained by the Nx team and is available for use with Nx. This means that you can now use Rspack with Angular and Nx and enjoy the benefits of both.  
+But before we dive into the technical details, I am excited to announce that Angular Rspack is now being maintained by the Nx team and is available for use with Nx. This means that you can now use Rspack with Angular and Nx and enjoy the benefits of both.  
 The new package is called [@nx/angular-rspack](https://www.npmjs.com/package/@nx/angular-rspack) and it is available on npm while the repository has been moved to [nrwl/angular-rspack](https://github.com/nrwl/angular-rspack).
 
-We believe that a large portion of Angular applications still using Webpack will be able to migrate to Angular Rspack without issue.
+Nx already supports and integrates with a wide variety of build tooling across the ecosystem - filling in the gaps where developer experience (DX) needs to be improved - which makes Nx the perfect fit for continuing to maintain and build out Angular Rspack.
+
+The support is still currently experimental, however, it is in a state that may be sufficient for your current needs. We invite you to try it out and to let us know if you run into issues by raising issues on the [angular-rspack repo](https://github.com/nrwl/angular-rspack/issues/new).
 
 There are some limitations and missing features that are currently being worked on and on the roadmap to support. They have been listed at the bottom of this article.
 
 ## Migrating from Angular Webpack to Angular Rspack
 
-We have worked hard to make the migration process as smooth as possible.
-A new generator has been added to the `@nx/angular` package called `convert-to-rspack` which will help you migrate your Angular applications from Webpack to Rspack.
+To make the migration process as smooth as possible, a new generator has been added to the `@nx/angular` package called `convert-to-rspack` which will help you migrate your Angular applications from Webpack to Rspack.
 
 The steps are very simple:
 
 1. Run `nx migrate latest` to update your workspace to the latest version of Nx.
 2. Run `nx g @nx/angular:convert-to-rspack` to migrate your Angular application to Rspack.
 
-We have also created a [guide](/recipes/angular/rspack/migrate-from-webpack) that walks you through the process step-by-step.
+There is also a [guide in our documentation](/recipes/angular/rspack/migrate-from-webpack) that walks you through the process step-by-step.
 Even if you're currently using the Angular CLI, it's as simple as first running `npx nx init` in your workspace and then running `npx nx convert-to-rspack`.
 
 ## Using Angular Rspack
 
-You'll notice a that your `build` and `serve` targets have been removed from your project, and are instead inferred by the `@nx/rspack/plugin`.
-You should also notice a new `rspack.config.ts` file in your project which looks something like this:
+You'll notice that after migrating to Angular Rspack your `build` and `serve` targets have been removed from your project, and are instead [inferred](/concepts/inferred-tasks) by the `@nx/rspack/plugin`.
+In addition, a new `rspack.config.ts` file has been created in your project which looks something like this:
 
 ```ts
 import { createConfig } from '@nx/angular-rspack';
@@ -103,7 +108,7 @@ export default createConfig(
 );
 ```
 
-{% callout type="info" title="createConfig Information" %}
+{% callout type="deepdive" title="createConfig Information" %}
 The `createConfig` function is used to create an Rspack configuration object setup for Angular applications.
 You can read more about it [here](/nx-api/angular-rspack/documents/create-config).
 {% /callout %}
@@ -112,7 +117,33 @@ You can read more about it [here](/nx-api/angular-rspack/documents/create-config
 
 You can now run `nx build app` and `nx serve app` to build and serve your application via Rspack.
 
-### Running a configuration
+```{% command="nx build app" %}
+> nx run app:build
+
+> rspack build --node-env=production
+
+●  ━━━━━━━━━━━━━━━━━━━━━━━━━ (100%) emitting after emit                                               browser:
+
+
+  browser compiled successfully in 2.32 s
+```
+
+```{% command="nx serve app" %}
+> nx run app:serve
+
+> rspack serve --node-env=development
+
+<i> [webpack-dev-server] [HPM] Proxy created: /api  -> http://localhost:3000
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: http://127.0.0.1:8080/
+<i> [webpack-dev-server] Content not from webpack is served from '/Users/columferry/dev/nrwl/issues/rspack-angular/ng-rspack/e2e/fixtures/rspack-csr-css/public' directory
+<i> [webpack-dev-server] 404s will fallback to '/index.html'
+Listening on port: 8080
+●  ━━━━━━━━━━━━━━━━━━━━━━━━━ (100%) emitting after emit                                               browser:
+  browser compiled successfully in 2.33 s
+```
+
+### Using a configuration
 
 To run the build with the `production` configuration:
 
@@ -120,24 +151,28 @@ To run the build with the `production` configuration:
 NGRS_CONFIG=production nx build app
 ```
 
-{% callout type="info" title="NGRS_CONFIG" %}
 `NGRS_CONFIG` is an environment variable that you can use to specify which configuration to use. If the environment variable is not set, the `production` configuration is used by default.
-{% /callout %}
 
 ## Benchmarks
 
+![Benchmarks](/blog/images/2025-03-19/bundler-build-times.avif)
+
 Below is a table of benchmarks for the different bundlers available, run against an application consisting of ~800 lazy loaded routes with ~10 components each - totaling ~8000 components.
 
-Using a M3 Macbook Pro
+**System Info**
+
+- MacBook Pro (macOS 15.3.1)
+- Processor: M2 Max
+- Memory: 96 GB
 
 | Build/Bundler | Prod SSR (s) | Prod (s) | Dev (s) |
 | ------------- | ------------ | -------- | ------- |
-| Webpack       | 348.707      | 224.226  | 234.449 |
-| esbuild       | 28.509       | 24.521   | 18.719  |
-| Rsbuild       | 24.690       | 20.490   | 19.675  |
-| Rspack        | 19.974       | 18.239   | 16.477  |
+| Webpack       | 198.614      | 154.339  | 159.436 |
+| esbuild       | 23.701       | 19.569   | 15.358  |
+| Rsbuild       | 23.949       | 20.490   | 18.209  |
+| Rspack        | 30.589       | 19.269   | 19.940  |
 
-You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmarks](https://github.com/nrwl/ng-bundler-benchmarks)
+You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmark](https://github.com/nrwl/ng-bundler-benchmark)
 
 ## Known Limitations and Missing Features
 
