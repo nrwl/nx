@@ -58,8 +58,7 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { resolve } from 'path';
-      import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from '@nx/angular-rspack';
 
       export default createConfig({
         options: {
@@ -143,8 +142,7 @@ describe('convert-to-rspack', () => {
     const nxJson = readNxJson(tree);
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { resolve } from 'path';
-      import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from '@nx/angular-rspack';
 
       export default createConfig(
         {
@@ -255,8 +253,7 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { resolve } from 'path';
-      import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from '@nx/angular-rspack';
       import baseWebpackConfig from './webpack.config';
       import webpackMerge from 'webpack-merge';
 
@@ -376,8 +373,7 @@ describe('convert-to-rspack', () => {
     const updatedProject = readProjectConfiguration(tree, 'app');
     expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { resolve } from 'path';
-      import { createConfig } from '@nx/angular-rspack';
+      "import { createConfig } from '@nx/angular-rspack';
       import baseWebpackConfig from './webpack.config';
       import webpackMerge from 'webpack-merge';
 

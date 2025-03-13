@@ -21,7 +21,7 @@ export function createConfig(
         })
         .join(',\n')
     : '';
-  const configContents = `import { resolve } from 'path';
+  const configContents = `
   import { createConfig }from '@nx/angular-rspack';
   ${
     existingWebpackConfigPath

@@ -21,7 +21,7 @@ describe('createConfig', () => {
     };
     createConfig(tree, opts);
     expect(tree.read('root/rspack.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { resolve } from 'path';
+      "
         import { createConfig }from '@nx/angular-rspack';
         
         
@@ -70,7 +70,7 @@ describe('createConfig', () => {
     };
     createConfig(tree, opts, configurationOptions);
     expect(tree.read('root/rspack.config.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { resolve } from 'path';
+      "
         import { createConfig }from '@nx/angular-rspack';
         
         

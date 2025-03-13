@@ -9,6 +9,8 @@ import {
   updateProjectConfiguration,
   workspaceRoot,
   joinPathFragments,
+  readJson,
+  updateJson,
 } from '@nx/devkit';
 import type { ConvertToRspackSchema } from './schema';
 import { angularRspackVersion, nxVersion } from '../../utils/versions';
@@ -274,6 +276,7 @@ export async function convertToRspack(
   };
   const configurationOptions: Record<string, Record<string, any>> = {};
   const buildTargetNames: string[] = [];
+  const serveTargetNames: string[] = [];
   let customWebpackConfigPath: string | undefined;
 
   validateSupportedBuildExecutor(Object.values(project.targets));
@@ -307,11 +310,13 @@ export async function convertToRspack(
       target.executor === '@nx/angular:module-federation-dev-server'
     ) {
       createConfigOptions.devServer = {};
-      handleDevServerTargetOptions(
-        target.options,
-        createConfigOptions.devServer,
-        project.root
-      );
+      if (target.options) {
+        handleDevServerTargetOptions(
+          target.options,
+          createConfigOptions.devServer,
+          project.root
+        );
+      }
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
           target.configurations
@@ -326,6 +331,7 @@ export async function convertToRspack(
         }
       }
     }
+    serveTargetNames.push(targetName);
   }
 
   const customWebpackConfigInfo = customWebpackConfigPath
@@ -341,7 +347,7 @@ export async function convertToRspack(
   );
   updateTsconfig(tree, project.root);
 
-  for (const targetName of buildTargetNames) {
+  for (const targetName of [...buildTargetNames, ...serveTargetNames]) {
     delete project.targets[targetName];
   }
 
@@ -355,6 +361,13 @@ export async function convertToRspack(
   await rspackInitGenerator(tree, {
     addPlugin: true,
   });
+
+  // This is needed to prevent a circular execution of the build target
+  const rootPkgJson = readJson(tree, 'package.json');
+  if (rootPkgJson.scripts?.build === 'nx build') {
+    delete rootPkgJson.scripts.build;
+    updateJson(tree, 'package.json', rootPkgJson);
+  }
 
   if (!schema.skipInstall) {
     const installTask = addDependenciesToPackageJson(
