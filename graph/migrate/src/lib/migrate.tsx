@@ -10,8 +10,9 @@ import { useRef, useState } from 'react';
 import { MigrationList } from './migration-list';
 import { AutomaticMigration } from './automatic-migration';
 import { MigrationSettingsPanel } from './migration-settings-panel';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { Popover } from './popover';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -46,6 +47,8 @@ export function MigrateUI(props: MigrateUIProps) {
   const [createCommits, setCreateCommits] = useState(true);
   const [automaticMode, setAutomaticMode] = useState(true);
   const [commitPrefix, setCommitPrefix] = useState('');
+  // For popover
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="p-2">
@@ -114,35 +117,58 @@ export function MigrateUI(props: MigrateUIProps) {
             <button
               onClick={() => props.onFinish(squashCommits)}
               type="button"
-              className="whitespace-nowrap rounded-l-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+              title="Finish"
+              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
             >
               {squashCommits
                 ? 'Finish (squash commits)'
                 : 'Finish without squashing commits'}
             </button>
-            <Tooltip
-              placement="top"
-              openAction="click"
-              content={
-                <span
-                  onClick={() => {
-                    setSquashCommits(!squashCommits);
-                  }}
-                  className="cursor-pointer "
-                >
-                  {squashCommits
-                    ? 'Finish without squashing commits'
-                    : 'Finish (squash commits)'}
-                </span>
-              }
-            >
+            <div className="relative flex">
               <button
                 type="button"
-                className="flex items-center rounded-r-md border border-l-0 border-blue-500 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+                onClick={() => setIsOpen((prev) => !prev)}
+                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
               >
                 <ChevronDownIcon className="h-4 w-4" />
               </button>
-            </Tooltip>
+              <Popover
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                position={{ left: '-14rem', top: '-6rem' }}
+              >
+                <ul className="p-1">
+                  <li
+                    className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                    onClick={() => {
+                      setSquashCommits(true);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span
+                      className={!!squashCommits ? 'inline-block' : 'opacity-0'}
+                    >
+                      <CheckIcon className="h-4 w-4" />
+                    </span>
+                    <span>Squash commits</span>
+                  </li>
+                  <li
+                    className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                    onClick={() => {
+                      setSquashCommits(false);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span
+                      className={!squashCommits ? 'inline-block' : 'opacity-0'}
+                    >
+                      <CheckIcon className="h-4 w-4" />
+                    </span>
+                    <span>Do not squash commits</span>
+                  </li>
+                </ul>
+              </Popover>
+            </div>
           </div>
         </div>
       </div>

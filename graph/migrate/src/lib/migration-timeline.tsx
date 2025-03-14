@@ -92,13 +92,10 @@ export function MigrationTimeline({
 
   // Auto-expand when entering a failed or successful migration
   useEffect(() => {
-    if (
-      (currentMigrationFailed || currentMigrationSuccess) &&
-      currentMigrationRef.current
-    ) {
+    if (currentMigrationFailed && currentMigrationRef.current) {
       currentMigrationRef.current.expand();
     }
-  }, [currentMigration?.id, currentMigrationFailed, currentMigrationSuccess]);
+  }, [currentMigration?.id, currentMigrationFailed]);
 
   const toggleMigrationExpanded = (migrationId: string) => {
     setExpandedMigrations((prev) => ({
@@ -189,7 +186,7 @@ export function MigrationTimeline({
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
-                  <div className="ml-6">
+                  <div className="ml-6 mt-1">
                     <div
                       className="flex cursor-pointer items-center"
                       onClick={() => toggleMigrationExpanded(migration.id)}
@@ -260,8 +257,7 @@ export function MigrationTimeline({
                 toggleMigrationExpanded(migrations[currentMigrationIndex].id)
               }
             />
-
-            <div className="ml-6">
+            <div className="ml-6 mt-1">
               <div
                 className="flex cursor-pointer items-center"
                 onClick={() => {
@@ -358,7 +354,7 @@ export function MigrationTimeline({
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
-                  <div className="ml-6">
+                  <div className="ml-6 mt-1">
                     <div
                       className="flex cursor-pointer items-center"
                       onClick={() => toggleMigrationExpanded(migration.id)}
