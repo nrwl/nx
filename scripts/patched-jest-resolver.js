@@ -62,9 +62,24 @@ module.exports = function (path, options) {
     return require.resolve('identity-obj-proxy');
   }
   // Try to use the defaultResolver
+
+  const excludedPackages = [
+    '@nx/conformance',
+    '@nx/owners',
+    '@nx/key',
+    '@nx/s3-cache',
+    '@nx/azure-cache',
+    '@nx/gcs-cache',
+    '@nx/shared-fs-cache',
+  ];
+
   try {
     // powerpack packages are installed via npm and resolved like any other packages
-    if (path.startsWith('@nx/') && !path.startsWith('@nx/powerpack-')) {
+    if (
+      path.startsWith('@nx/') &&
+      !path.startsWith('@nx/powerpack-') &&
+      !excludedPackages.some((pkg) => path.startsWith(pkg))
+    ) {
       throw new Error('custom resolution');
     }
     if (path.startsWith('nx/')) throw new Error('custom resolution');
