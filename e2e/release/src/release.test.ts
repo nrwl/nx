@@ -963,7 +963,7 @@ describe('nx release', () => {
       return json;
     });
     // Update lockfile
-    await runCommandAsync(`npm install --lockfile-only`);
+    await runCommandAsync(`npm install --lockfile-only --legacy-peer-deps`);
 
     await runCommandAsync(`git tag zz-1300.0.0`);
     await runCommandAsync(`git tag xx-1400.0.0`);
@@ -1084,7 +1084,7 @@ describe('nx release', () => {
       return json;
     });
     // Update lockfile
-    await runCommandAsync(`npm install --lockfile-only`);
+    await runCommandAsync(`npm install --lockfile-only --legy`);
 
     const releaseOutput4a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
