@@ -30,12 +30,16 @@ export function getSassLoaderConfig(
           importLoaders: 1,
         },
       },
-      {
-        loader: require.resolve('resolve-url-loader'),
-        options: {
-          sourceMap: sourceMap?.styles,
-        },
-      },
+      ...(sourceMap?.styles
+        ? [
+            {
+              loader: require.resolve('resolve-url-loader'),
+              options: {
+                sourceMap: sourceMap?.styles,
+              },
+            },
+          ]
+        : []),
       {
         loader: 'sass-loader',
         options: {
