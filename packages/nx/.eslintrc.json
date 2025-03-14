@@ -132,7 +132,9 @@
               "@nx/nx-freebsd-x64",
               "@nx/powerpack-license",
               // Powerpack plugin conditionally available dynamically at runtime
-              "@nx/powerpack-conformance"
+              "@nx/powerpack-conformance",
+              // Only used in test-utils at the time of writing
+              "@ltd/j-toml"
             ]
           }
         ]

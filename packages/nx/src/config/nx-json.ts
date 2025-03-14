@@ -314,6 +314,12 @@ export interface NxReleaseConfiguration {
      * with the NX_DRY_RUN environment variable set to 'true'.
      */
     preVersionCommand?: string;
+    /**
+     * Whether or not to use the legacy versioning implementation.
+     *
+     * In Nx v20 this `true` by default, it will become `false` by default in Nx v21, and will be removed entirely in Nx v22.
+     */
+    useLegacyVersioning?: boolean;
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth

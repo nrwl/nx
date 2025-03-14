@@ -133,16 +133,14 @@ describe('nx release preserve local dependency protocols', () => {
     expect(runCLI(`release version minor -d --verbose`, { cwd: workspacePath }))
       .toMatchInlineSnapshot(`
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
+      {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
-      {project-name} ✍️  Applying new version 0.1.0 to 1 package which depends on {project-name}
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",
@@ -185,16 +183,13 @@ describe('nx release preserve local dependency protocols', () => {
     expect(runCLI(`release version minor -d --verbose`, { cwd: workspacePath }))
       .toMatchInlineSnapshot(`
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 0.1.0
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-      {project-name} 📄 Using the provided version specifier "minor".
-      {project-name} ✍️  New version 0.1.0 written to {project-name}/package.json
-      {project-name} ✍️  Applying new version 0.1.0 to 1 package which depends on {project-name}
+      {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+      {project-name} ❓ Applied version 0.1.0 directly, because the project is a member of a fixed release group containing {project-name}
+      {project-name} ✍️  New version 0.1.0 written to manifest: {project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.0",
       +   "version": "0.1.0",

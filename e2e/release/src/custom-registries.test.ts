@@ -306,7 +306,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "alpha" from registry ${e2eRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${e2eRegistryUrl}" tag=alpha`,
           'g'
         )
       ).length
@@ -315,7 +315,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "next" from registry ${customRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${customRegistryUrl}" tag=next`,
           'g'
         )
       ).length
@@ -324,7 +324,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "beta" from registry ${customRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "registry=${customRegistryUrl}" tag=beta`,
           'g'
         )
       ).length
@@ -333,7 +333,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "prev" from registry ${e2eRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${e2eRegistryUrl}" tag=prev`,
           'g'
         )
       ).length

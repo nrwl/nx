@@ -259,6 +259,9 @@ export async function createNxReleaseConfig(
     projectsRelationship: workspaceProjectsRelationship,
     git: gitDefaults,
     version: {
+      // TODO(v21): change this to false by default
+      // TODO(v22): remove this property entirely
+      useLegacyVersioning: true,
       git: versionGitDefaults,
       conventionalCommits: userConfig.version?.conventionalCommits || false,
       generator: '@nx/js:release-version',

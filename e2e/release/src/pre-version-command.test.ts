@@ -63,7 +63,7 @@ describe('nx release pre-version command', () => {
 
     // command should fail because @nx/js:library configures the packageRoot to be dist/{project-name}, which doesn't exist yet
     expect(result1).toContain(
-      `NX   The project "${pkg1}" does not have a package.json available at dist/${pkg1}/package.json.`
+      `NX   The project "${pkg1}" does not have a manifest available at dist/${pkg1}/package.json.`
     );
 
     updateJson(`nx.json`, (json) => {
