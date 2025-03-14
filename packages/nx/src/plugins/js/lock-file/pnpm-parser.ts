@@ -1,3 +1,4 @@
+import { satisfies } from 'semver';
 import type {
   Lockfile,
   PackageSnapshot,
@@ -26,6 +27,7 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
+import { node } from 'globals';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, Set<ProjectGraphExternalNode>>();
@@ -580,8 +582,7 @@ function mapRootSnapshot(
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
         const version = packageJson[depType][packageName];
-        const node =
-          nodes[`npm:${packageName}@${version}`] || nodes[`npm:${packageName}`];
+        const node = findCompatibleNode(nodes, packageName, version);
         snapshot.specifiers[packageName] = version;
         // peer dependencies are mapped to dependencies
         let section = depType === 'peerDependencies' ? 'dependencies' : depType;
@@ -600,6 +601,27 @@ function mapRootSnapshot(
   });
 
   return snapshot;
+}
+
+function findCompatibleNode(nodes: Record<string, ProjectGraphExternalNode>, packageName: string, packageJsonVersion: string): ProjectGraphExternalNode {
+  const nodeKeyPrefix = `npm:${packageName}`;
+  const exactMatchedNode = nodes[`${nodeKeyPrefix}}@${packageJsonVersion}`] 
+    || nodes[`${nodeKeyPrefix}}@${packageJsonVersion.replace(/^~/, '')}`] 
+    || nodes[nodeKeyPrefix];
+
+  if (exactMatchedNode) {
+    return exactMatchedNode;
+  }
+
+  for (const nodeKey in nodes) {
+    if (!nodeKey.startsWith(`${nodeKeyPrefix}@`)) {
+      continue;
+    }
+    const version = getVersion(nodeKey, nodeKeyPrefix);
+    if (satisfies(version, packageJsonVersion)) {
+      return nodes[nodeKey];
+    }
+  }
 }
 
 function findVersion(
