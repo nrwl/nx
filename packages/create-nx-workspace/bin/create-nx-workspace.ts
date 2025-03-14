@@ -167,7 +167,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('workspaces', {
             describe: chalk.dim`Use package manager workspaces.`,
             type: 'boolean',
-            default: false,
+            default: true,
           })
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
@@ -280,6 +280,8 @@ async function normalizeArgsMiddleware(
     title:
       "Let's create a new workspace [https://nx.dev/getting-started/intro]",
   });
+
+  argv.workspaces ??= true;
 
   try {
     argv.name = await determineFolder(argv);
@@ -414,8 +416,7 @@ async function determineStack(
         {
           name: `none`,
           message:
-            process.env.NX_ADD_PLUGINS !== 'false' &&
-            process.env.NX_ADD_TS_PLUGIN !== 'false'
+            process.env.NX_ADD_PLUGINS !== 'false' && parsedArgs.workspaces
               ? `None:          Configures a TypeScript/JavaScript monorepo.`
               : `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
         },
@@ -519,7 +520,7 @@ async function determineNoneOptions(
   if (
     (!parsedArgs.preset || parsedArgs.preset === Preset.TS) &&
     process.env.NX_ADD_PLUGINS !== 'false' &&
-    process.env.NX_ADD_TS_PLUGIN !== 'false'
+    parsedArgs.workspaces
   ) {
     return {
       preset: Preset.TS,
@@ -595,7 +596,7 @@ async function determineReactOptions(
   let linter: undefined | 'none' | 'eslint';
   let formatter: undefined | 'none' | 'prettier';
 
-  const workspaces = parsedArgs.workspaces ?? false;
+  const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -764,7 +765,7 @@ async function determineVueOptions(
   let linter: undefined | 'none' | 'eslint';
   let formatter: undefined | 'none' | 'prettier';
 
-  const workspaces = parsedArgs.workspaces ?? false;
+  const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
@@ -1032,7 +1033,7 @@ async function determineNodeOptions(
   let linter: undefined | 'none' | 'eslint';
   let formatter: undefined | 'none' | 'prettier';
   let unitTestRunner: undefined | 'none' | 'jest' = undefined;
-  const workspaces = parsedArgs.workspaces ?? false;
+  const workspaces = parsedArgs.workspaces;
 
   if (parsedArgs.preset) {
     preset = parsedArgs.preset;
