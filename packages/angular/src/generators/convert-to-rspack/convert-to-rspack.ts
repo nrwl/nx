@@ -21,6 +21,8 @@ import { validateSupportedBuildExecutor } from './lib/validate-supported-executo
 import { join } from 'path/posix';
 import { relative } from 'path';
 import { existsSync } from 'fs';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { prompt } from 'enquirer';
 
 const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
@@ -104,10 +106,7 @@ const PATH_NORMALIZER = {
       joinPathFragments(workspaceRoot, root),
       workspaceRoot
     );
-    return joinPathFragments(
-      relativePathFromWorkspaceRoot,
-      normalizeFromProjectRoot(tree, path, root)
-    );
+    return joinPathFragments(relativePathFromWorkspaceRoot, path);
   },
   proxyConfig: defaultNormalizer,
   polyfills: (tree: Tree, paths: string | string[], root: string) => {
@@ -316,11 +315,31 @@ function handleDevServerTargetOptions(
   }
 }
 
+async function getProjectToConvert(tree: Tree) {
+  const projects = new Set<string>();
+  for (const executor of SUPPORTED_EXECUTORS) {
+    forEachExecutorOptions(tree, executor, (_, project) => {
+      projects.add(project);
+    });
+  }
+  const { project } = await prompt<{ project: string }>({
+    type: 'select',
+    name: 'project',
+    message: 'Which project would you like to convert to rspack?',
+    choices: Array.from(projects),
+  });
+
+  return project;
+}
+
 export async function convertToRspack(
   tree: Tree,
   schema: ConvertToRspackSchema
 ) {
-  const { project: projectName } = schema;
+  let { project: projectName } = schema;
+  if (!projectName) {
+    projectName = await getProjectToConvert(tree);
+  }
   const project = readProjectConfiguration(tree, projectName);
   const tasks: GeneratorCallback[] = [];
 

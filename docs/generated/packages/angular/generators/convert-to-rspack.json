@@ -14,8 +14,6 @@
         "aliases": ["name", "projectName"],
         "description": "Project for which to convert to rspack.",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "Which project do you want to convert to rspack?",
-        "x-dropdown": "projects",
         "x-priority": "important"
       },
       "skipFormat": {
