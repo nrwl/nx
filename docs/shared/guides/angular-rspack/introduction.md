@@ -30,3 +30,9 @@ Because it supports the existing Webpack ecosystem, it provides an answer to tea
 Rsbuild is a build tool based on Rspack, however it does not support the Webpack ecosystem. It does provide out-of-the-box (OOTB) Module Federation support and a plugin system for extending the build with build speeds comparable to Esbuild.
 
 This makes it a great solution for teams that want to migrate to a faster build pipeline, but still want the ability to easily extend their builds and use [Module Federation](https://module-federation.io).
+
+{% callout type="warning" title="Angular Rspack Status" %}
+
+Please not that Angular Rspack support is still experimental and is not yet considered production ready. We are actively working on improving the experience and stability of Angular Rspack, and we will continue to update this page as we make progress.
+
+{% /callout %}

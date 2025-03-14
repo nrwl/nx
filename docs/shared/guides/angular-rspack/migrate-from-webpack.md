@@ -12,15 +12,15 @@ By migrating to Rspack, you can gain an immediate build performance benefit whil
 ## Step 1: Initialize Nx
 
 {% callout type="warning" title="Optional Step" %}
-If you are already using Nx with version 0.0.0-pr-29860-2cec332 or greater, you can skip this step.
+If you are already using Nx with version 20.6.0 or greater, you can skip this step.
 {% /callout %}
 
-Nx provides a generator to convert existing Angular Webpack projects to use `@nx/angular-rspack`. This generator is currently available in Nx `0.0.0-pr-29860-2cec332`.
+Nx provides a generator to convert existing Angular Webpack projects to use `@nx/angular-rspack`. This generator is currently available in Nx `20.6.0`.
 
 At the root of your project, run the following command:
 
 ```bash
-npx nx@0.0.0-pr-29860-2cec332 init
+npx nx@latest init
 ```
 
 ## Step 2: Run the Convert to Rspack Generator
