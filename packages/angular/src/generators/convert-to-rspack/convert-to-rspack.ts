@@ -110,6 +110,28 @@ const PATH_NORMALIZER = {
     );
   },
   proxyConfig: defaultNormalizer,
+  polyfills: (tree: Tree, paths: string | string[], root: string) => {
+    const normalizedPaths: string[] = [];
+    const normalizeFn = (path: string) => {
+      try {
+        const resolvedPath = require.resolve(path, {
+          paths: [join(workspaceRoot, 'node_modules')],
+        });
+        normalizedPaths.push(path);
+      } catch {
+        normalizedPaths.push(normalizeFromProjectRoot(tree, path, root));
+      }
+    };
+
+    if (typeof paths === 'string') {
+      normalizeFn(paths);
+    } else {
+      for (const path of paths) {
+        normalizeFn(path);
+      }
+    }
+    return normalizedPaths;
+  },
   styles: (
     tree: Tree,
     paths: Array<

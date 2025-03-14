@@ -35,7 +35,7 @@ describe('convert-to-rspack', () => {
             outputPath: 'dist/apps/app',
             index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['zone.js'],
+            polyfills: ['tslib'], // zone.js is not in nx repo's node_modules so simulating it with a package that is
             tsConfig: 'apps/app/tsconfig.app.json',
             assets: [
               'apps/app/src/favicon.ico',
@@ -75,7 +75,7 @@ describe('convert-to-rspack', () => {
           },
           index: './src/index.html',
           browser: './src/main.ts',
-          polyfills: ['zone.js'],
+          polyfills: ['tslib'],
           tsConfig: './tsconfig.app.json',
           assets: [
             './src/favicon.ico',
@@ -117,7 +117,7 @@ describe('convert-to-rspack', () => {
             outputPath: 'dist/apps/app',
             index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['zone.js'],
+            polyfills: ['tslib', 'apps/app/src/polyfills.ts'],
             tsConfig: 'apps/app/tsconfig.app.json',
             assets: ['libs/mylib/src/favicon.ico'],
             styles: ['apps/app/src/styles.scss'],
@@ -154,7 +154,7 @@ describe('convert-to-rspack', () => {
           },
           index: './src/index.html',
           browser: './src/main.ts',
-          polyfills: ['zone.js'],
+          polyfills: ['tslib', './src/polyfills.ts'],
           tsConfig: './tsconfig.app.json',
           assets: ['../../libs/mylib/src/favicon.ico'],
           styles: ['./src/styles.scss'],
@@ -189,7 +189,7 @@ describe('convert-to-rspack', () => {
             outputPath: 'dist/apps/app',
             index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['zone.js'],
+            polyfills: ['tslib'],
             tsConfig: 'apps/app/tsconfig.app.json',
             assets: [
               'apps/app/src/favicon.ico',
@@ -233,7 +233,7 @@ describe('convert-to-rspack', () => {
             },
             index: './src/index.html',
             browser: './src/main.ts',
-            polyfills: ['zone.js'],
+            polyfills: ['tslib'],
             tsConfig: './tsconfig.app.json',
             assets: [
               './src/favicon.ico',
@@ -287,7 +287,7 @@ describe('convert-to-rspack', () => {
             outputPath: 'dist/apps/app',
             index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['zone.js'],
+            polyfills: ['tslib'],
             tsConfig: 'apps/app/tsconfig.app.json',
             assets: [
               'apps/app/src/favicon.ico',
@@ -345,7 +345,7 @@ describe('convert-to-rspack', () => {
           },
           index: './src/index.html',
           browser: './src/main.ts',
-          polyfills: ['zone.js'],
+          polyfills: ['tslib'],
           tsConfig: './tsconfig.app.json',
           assets: [
             './src/favicon.ico',
@@ -397,7 +397,7 @@ describe('convert-to-rspack', () => {
             outputPath: 'dist/apps/app',
             index: 'apps/app/src/index.html',
             main: 'apps/app/src/main.ts',
-            polyfills: ['zone.js'],
+            polyfills: ['tslib'],
             tsConfig: 'apps/app/tsconfig.app.json',
             assets: [
               'apps/app/src/favicon.ico',
@@ -465,7 +465,7 @@ describe('convert-to-rspack', () => {
           },
           index: './src/index.html',
           browser: './src/main.ts',
-          polyfills: ['zone.js'],
+          polyfills: ['tslib'],
           tsConfig: './tsconfig.app.json',
           assets: [
             './src/favicon.ico',
