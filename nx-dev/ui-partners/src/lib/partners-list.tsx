@@ -10,7 +10,7 @@ import {
 export function PartnersList(): JSX.Element {
   return (
     <section>
-      <div className="col-span-2 border-y border-slate-200 bg-slate-50 py-24 sm:py-32 md:col-span-4 dark:border-slate-800 dark:bg-slate-900">
+      <div className="col-span-2 border-y border-slate-200 bg-slate-50 px-6 py-24 sm:py-32 md:col-span-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl text-center">
           <div className="mx-auto max-w-3xl">
             <SectionHeading
@@ -30,7 +30,7 @@ export function PartnersList(): JSX.Element {
           </div>
 
           <div className="mt-16">
-            <dl className="grid grid-cols-2 justify-between gap-4 sm:grid-cols-4">
+            <dl className="grid grid-cols-2 justify-between gap-4 md:grid-cols-3 lg:grid-cols-4">
               <a
                 rel="noreferrer"
                 href="https://github.com/tanstack"
