@@ -119,7 +119,7 @@
       "workspaces": {
         "description": "Whether to use package manager workspaces.",
         "type": "boolean",
-        "default": false
+        "default": true
       }
     },
     "required": ["preset", "name"],

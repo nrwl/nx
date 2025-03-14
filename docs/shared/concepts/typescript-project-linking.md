@@ -29,11 +29,15 @@ There are two different methods that Nx supports for linking TypeScript projects
 
 ## Project Linking with Workspaces
 
-To create a new Nx workspace that links projects with package manager workspaces, use the `--workspaces` flag.
+Create a new Nx workspace that links projects with package manager workspaces:
 
 ```shell
-npx create-nx-workspace --workspaces
+npx create-nx-workspace
 ```
+
+{% callout type="note" title="Opt-out of Workspaces" %}
+You can opt-out of workspaces by running `npx create-nx-workspace --no-workspaces`.
+{% /callout %}
 
 ### Set Up Package Manager Workspaces
 

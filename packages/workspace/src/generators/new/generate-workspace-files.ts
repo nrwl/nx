@@ -275,8 +275,8 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
-          process.env.NX_ADD_PLUGINS !== 'false' &&
-          process.env.NX_ADD_TS_PLUGIN !== 'false') ||
+          options.workspaces &&
+          process.env.NX_ADD_PLUGINS !== 'false') ||
         options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
@@ -294,7 +294,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
 async function createReadme(
   tree: Tree,
-  { name, appName, directory, preset, nxCloud }: NormalizedSchema,
+  { name, appName, directory, preset, nxCloud, workspaces }: NormalizedSchema,
   nxCloudToken?: string
 ) {
   const formattedNames = names(name);
@@ -314,8 +314,7 @@ async function createReadme(
     isJsStandalone: preset === Preset.TsStandalone,
     isTsPreset: preset === Preset.TS,
     isUsingNewTsSolutionSetup:
-      process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false',
+      process.env.NX_ADD_PLUGINS !== 'false' && workspaces,
     isEmptyRepo: !appName,
     appName,
     generateAppCmd: presetInfo.generateAppCmd,
@@ -416,7 +415,7 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NPM ||
     (options.preset === Preset.TS &&
       process.env.NX_ADD_PLUGINS !== 'false' &&
-      process.env.NX_ADD_TS_PLUGIN !== 'false') ||
+      options.workspaces) ||
     ((options.preset === Preset.Expo ||
       options.preset === Preset.NextJs ||
       options.preset === Preset.ReactMonorepo ||
