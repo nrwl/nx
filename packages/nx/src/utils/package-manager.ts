@@ -166,12 +166,9 @@ export function getPackageManagerCommand(
       };
     },
     npm: () => {
-      // TODO: Remove this
-      process.env.npm_config_legacy_peer_deps ??= 'true';
-
       return {
         install: 'npm install',
-        ciInstall: 'npm ci --legacy-peer-deps',
+        ciInstall: 'npm ci',
         updateLockFile: 'npm install --package-lock-only',
         add: 'npm install',
         addDev: 'npm install -D',

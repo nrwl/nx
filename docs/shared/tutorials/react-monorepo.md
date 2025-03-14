@@ -1153,7 +1153,7 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
       - run: npx cypress install
       - uses: nrwl/nx-set-shas@v4
 
