@@ -1456,6 +1456,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "React Router with Nx",
+                "path": "/recipes/react/react-router",
+                "id": "react-router",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Use Environment Variables in React",
                 "path": "/recipes/react/use-environment-variables-in-react",
                 "id": "use-environment-variables-in-react",
@@ -2838,6 +2846,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "React Router with Nx",
+            "path": "/recipes/react/react-router",
+            "id": "react-router",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Use Environment Variables in React",
             "path": "/recipes/react/use-environment-variables-in-react",
             "id": "use-environment-variables-in-react",
@@ -2900,6 +2916,14 @@
         "name": "Remix with Nx",
         "path": "/recipes/react/remix",
         "id": "remix",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Router with Nx",
+        "path": "/recipes/react/react-router",
+        "id": "react-router",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

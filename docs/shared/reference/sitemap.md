@@ -101,6 +101,7 @@
     - [React](/recipes/react)
       - [React Native with Nx](/recipes/react/react-native)
       - [Remix with Nx](/recipes/react/remix)
+      - [React Router with Nx](/recipes/react/react-router)
       - [Use Environment Variables in React](/recipes/react/use-environment-variables-in-react)
       - [Using Tailwind CSS in React](/recipes/react/using-tailwind-css-in-react)
       - [Adding Images, Fonts, and Files](/recipes/react/adding-assets-react)

@@ -660,6 +660,11 @@
                   "file": "shared/guides/remix"
                 },
                 {
+                  "name": "React Router with Nx",
+                  "id": "react-router",
+                  "file": "shared/guides/react-router"
+                },
+                {
                   "name": "Use Environment Variables in React",
                   "id": "use-environment-variables-in-react",
                   "tags": ["environment-variables"],
