@@ -7315,6 +7315,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "convert-to-rspack",
+                "path": "/nx-api/angular/generators/convert-to-rspack",
+                "name": "convert-to-rspack",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "directive",
                 "path": "/nx-api/angular/generators/directive",
                 "name": "directive",

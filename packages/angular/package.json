@@ -50,6 +50,7 @@
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@typescript-eslint/type-utils": "^8.0.0",
+    "enquirer": "~2.3.6",
     "picocolors": "^1.1.0",
     "magic-string": "~0.30.2",
     "minimatch": "9.0.3",
@@ -60,6 +61,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/rspack": "file:../rspack",
     "@nx/module-federation": "file:../module-federation",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",
