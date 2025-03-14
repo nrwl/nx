@@ -185,7 +185,7 @@ export async function _createConfig(
       },
       output: {
         ...defaultConfig.output,
-        publicPath: 'auto',
+        publicPath: '/',
         clean: true,
         path: normalizedOptions.outputPath.server,
         filename: '[name].js',
