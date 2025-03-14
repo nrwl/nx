@@ -37,6 +37,9 @@ export class ProjectLogger {
   }
 
   flush() {
+    if (this.logs.length === 0) {
+      return;
+    }
     output.logSingleLine(
       `Running release version for project: ${this.color.instance.bold(
         this.projectName

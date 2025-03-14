@@ -1071,37 +1071,37 @@ Valid values are: ${validReleaseVersionPrefixes
         groupBumped = bumpType !== 'none';
       }
     } else {
+      // TODO: Figure out if this code path is ever actually needed, it does not seem to be across our e2e or unit tests...
+      //
       // For independent groups, we need to check each project individually
-      for (const project of releaseGroupFilteredProjects) {
-        const dependencies = this.projectGraph.dependencies[project] || [];
-        const hasDependencyInChangedGroup = dependencies.some(
-          (dep) =>
-            this.findGroupForProject(dep.target) === changedDependencyGroup
-        );
-
-        if (hasDependencyInChangedGroup) {
-          const dependencyBumpType = await this.getGroupBumpType(
-            changedDependencyGroup
-          );
-          const projectBumpType = this.determineSideEffectBump(
-            releaseGroup,
-            dependencyBumpType as SemverBumpType
-          );
-          if (projectBumpType !== 'none') {
-            groupBumped = true;
-            if (!this.bumpedProjects.has(project)) {
-              await this.bumpVersionForProject(
-                project,
-                projectBumpType,
-                // TODO: Figure out if this code path is ever hit
-                'UNHANDLED' as any,
-                {}
-              );
-              this.bumpedProjects.add(project);
-            }
-          }
-        }
-      }
+      // for (const project of releaseGroupFilteredProjects) {
+      //   const dependencies = this.projectGraph.dependencies[project] || [];
+      //   const hasDependencyInChangedGroup = dependencies.some(
+      //     (dep) =>
+      //       this.findGroupForProject(dep.target) === changedDependencyGroup
+      //   );
+      //   if (hasDependencyInChangedGroup) {
+      //     const dependencyBumpType = await this.getGroupBumpType(
+      //       changedDependencyGroup
+      //     );
+      //     const projectBumpType = this.determineSideEffectBump(
+      //       releaseGroup,
+      //       dependencyBumpType as SemverBumpType
+      //     );
+      //     if (projectBumpType !== 'none') {
+      //       groupBumped = true;
+      //       if (!this.bumpedProjects.has(project)) {
+      //         await this.bumpVersionForProject(
+      //           project,
+      //           projectBumpType,
+      //           'UNHANDLED' as any,
+      //           {}
+      //         );
+      //         this.bumpedProjects.add(project);
+      //       }
+      //     }
+      //   }
+      // }
     }
 
     if (groupBumped) {

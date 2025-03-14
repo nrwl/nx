@@ -126,10 +126,9 @@ describe('nx release - independent projects', () => {
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-package.1".
-        {project-name} ✍️  New version 999.9.9-package.1 written to {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-package.1", from the given specifier, to get new version 999.9.9-package.1
+        {project-name} ✍️  New version 999.9.9-package.1 written to manifest: {project-name}/package.json
 
 
         "name": "@proj/{project-name}",
@@ -155,10 +154,9 @@ describe('nx release - independent projects', () => {
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-package.2".
-        {project-name} ✍️  New version 999.9.9-package.2 written to {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-package.2", from the given specifier, to get new version 999.9.9-package.2
+        {project-name} ✍️  New version 999.9.9-package.2 written to manifest: {project-name}/package.json
 
 
         "name": "@proj/{project-name}",
@@ -187,11 +185,16 @@ describe('nx release - independent projects', () => {
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-package.3".
-        {project-name} ✍️  New version 999.9.9-package.3 written to {project-name}/package.json
-        {project-name} ✍️  Applying new version 999.9.9-package.3 to 1 package which depends on {project-name}
+        {project-name} 📄 Resolved the current version as 999.9.9-package.2 from manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+        {project-name} ❓ Applied semver relative bump "patch", because a dependency was bumped, to get new version 999.9.9
+        {project-name} ✍️  New version 999.9.9 written to manifest: {project-name}/package.json
+
+        NX   Running release version for project: {project-name}
+
+        {project-name} 📄 Resolved the current version as 0.0.0 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-package.3", from the given specifier, to get new version 999.9.9-package.3
+        {project-name} ✍️  New version 999.9.9-package.3 written to manifest: {project-name}/package.json
 
 
         "name": "@proj/{project-name}",
@@ -238,10 +241,9 @@ describe('nx release - independent projects', () => {
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.1 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-version-git-operations-test.2".
-        {project-name} ✍️  New version 999.9.9-version-git-operations-test.2 written to {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.1 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.2", from the given specifier, to get new version 999.9.9-version-git-operations-test.2
+        {project-name} ✍️  New version 999.9.9-version-git-operations-test.2 written to manifest: {project-name}/package.json
 
 
         "name": "@proj/{project-name}",
@@ -317,24 +319,28 @@ describe('nx release - independent projects', () => {
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.2 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-version-git-operations-test.3".
-        {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 999.9.9-package.3 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+        {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 999.9.9 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-version-git-operations-test.3".
-        {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 999.9.9-version-git-operations-test.2 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+        {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
 
         NX   Running release version for project: {project-name}
 
-        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-        {project-name} 📄 Resolved the current version as 999.9.9-package.3 from {project-name}/package.json
-        {project-name} 📄 Using the provided version specifier "999.9.9-version-git-operations-test.3".
-        {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 999.9.9 from manifest: {project-name}/package.json
+        {project-name} ❓ Applied explicit semver value "999.9.9-version-git-operations-test.3", from the given specifier, to get new version 999.9.9-version-git-operations-test.3
+        {project-name} ✍️  New version 999.9.9-version-git-operations-test.3 written to manifest: {project-name}/package.json
+        {project-name} ✍️  Updated 1 dependency in manifest: {project-name}/package.json
+
+
+        "name": "@proj/{project-name}",
+        -   "version": "999.9.9-package.3",
+        +   "version": "999.9.9-version-git-operations-test.3",
+        "scripts": {
 
 
         "name": "@proj/{project-name}",
@@ -348,14 +354,11 @@ describe('nx release - independent projects', () => {
         +   "version": "999.9.9-version-git-operations-test.3",
         "scripts": {
 
+        "dependencies": {
+        -     "@proj/{project-name}": "999.9.9-package.3"
+        +     "@proj/{project-name}": "999.9.9-version-git-operations-test.3"
+        }
 
-        "name": "@proj/{project-name}",
-        -   "version": "999.9.9-package.3",
-        +   "version": "999.9.9-version-git-operations-test.3",
-        "scripts": {
-
-
-        Skipped lock file update because {package-manager} workspaces are not enabled.
 
         Skipped lock file update because {package-manager} workspaces are not enabled.
 
@@ -662,15 +665,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
-
-
-
-        NX   Successfully ran target nx-release-publish for project {project-name}
-
-
-
-      `);
+              Would publish to `);
 
       // Should only contain 2 projects
       expect(runCLI(`release publish -p ${pkg1} -p ${pkg3} -d`))
@@ -711,52 +706,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
-
-
-
-        NX   Successfully ran target nx-release-publish for project {project-name}
-
-
-
-        NX   Running target nx-release-publish for project {project-name}:
-
-        - {project-name}
-
-        With additional flags:
-        --dryRun=true
-
-
-
-        > nx run {project-name}:nx-release-publish
-
-
-        📦  @proj/{project-name}@X.X.X-dry-run
-        === Tarball Contents ===
-
-        XXXB CHANGELOG.md
-        XXB  index.js
-        XXXB package.json
-        XXB  project.json
-        === Tarball Details ===
-        name:          @proj/{project-name}
-        version:       X.X.X-dry-run
-        filename:      proj-{project-name}-X.X.X-dry-run.tgz
-        package size: XXXB
-        unpacked size: XXXB
-        shasum:        {SHASUM}
-        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
-
-        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
-
-
-
-        NX   Successfully ran target nx-release-publish for project {project-name}
-
-
-
-      `);
+              Would publish to `);
     });
 
     it('should only run the publish task for the filtered projects', async () => {
@@ -793,37 +743,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
-
-        > nx run {project-name}:nx-release-publish
-
-
-        📦  @proj/{project-name}@X.X.X-dry-run
-        === Tarball Contents ===
-
-        XXXB CHANGELOG.md
-        XXB  index.js
-        XXXB package.json
-        XXB  project.json
-        === Tarball Details ===
-        name:          @proj/{project-name}
-        version:       X.X.X-dry-run
-        filename:      proj-{project-name}-X.X.X-dry-run.tgz
-        package size: XXXB
-        unpacked size: XXXB
-        shasum:        {SHASUM}
-        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        total files:   4
-
-        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
-
-
-
-        NX   Successfully ran target nx-release-publish for 2 projects
-
-
-
-      `);
+              Would publish to `);
 
       // Should only contain the 1 project from group2
       expect(runCLI(`release publish -g group2 -d`)).toMatchInlineSnapshot(`
@@ -857,15 +777,7 @@ describe('nx release - independent projects', () => {
           integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
           total files:   4
 
-          Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
-
-
-
-          NX   Successfully ran target nx-release-publish for project {project-name}
-
-
-
-      `);
+                Would publish to `);
     });
   });
 
@@ -992,7 +904,10 @@ describe('nx release - independent projects', () => {
       ).toEqual(1);
       expect(
         releaseOutput.match(
-          new RegExp(`New version 1\\.4\\.0 written to my-pkg-1\\d*`, 'g')
+          new RegExp(
+            `New version 1\\.4\\.0 written to manifest: my-pkg-1\\d*`,
+            'g'
+          )
         ).length
       ).toEqual(1);
       expect(
@@ -1011,7 +926,10 @@ describe('nx release - independent projects', () => {
       ).toEqual(1);
       expect(
         releaseOutput.match(
-          new RegExp(`New version 1\\.8\\.1 written to my-pkg-3\\d*`, 'g')
+          new RegExp(
+            `New version 1\\.8\\.1 written to manifest: my-pkg-3\\d*`,
+            'g'
+          )
         ).length
       ).toEqual(1);
       expect(
@@ -1021,7 +939,7 @@ describe('nx release - independent projects', () => {
 
       expect(
         releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
-      ).toEqual(2);
+      ).toEqual(3);
 
       expect(
         releaseOutput.match(
