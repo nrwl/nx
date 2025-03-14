@@ -954,6 +954,7 @@ module.exports = withNx(
         bundler: 'vite',
         unitTestRunner: 'vitest',
         directory: 'libs/mylib',
+        useProjectJson: false,
       });
 
       expect(tree.read('libs/mylib/vite.config.ts', 'utf-8'))
@@ -999,7 +1000,7 @@ module.exports = withNx(
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
@@ -1145,6 +1146,7 @@ module.exports = withNx(
         bundler: 'none',
         unitTestRunner: 'none',
         directory: 'libs/mylib',
+        useProjectJson: false,
       });
 
       await libraryGenerator(tree, {
@@ -1153,6 +1155,7 @@ module.exports = withNx(
         unitTestRunner: 'none',
         directory: 'libs/myjslib',
         js: true,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
@@ -1192,6 +1195,7 @@ module.exports = withNx(
         bundler: 'rollup',
         unitTestRunner: 'none',
         directory: 'libs/mylib',
+        useProjectJson: false,
       });
 
       expect(tree.read('libs/mylib/rollup.config.cjs', 'utf-8'))
@@ -1234,6 +1238,7 @@ module.exports = withNx(
         directory: 'libs/mylib',
         publishable: true,
         importPath: '@acme/mylib',
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
@@ -1269,6 +1274,7 @@ module.exports = withNx(
         unitTestRunner: 'none',
         directory: 'mylib',
         name: 'mylib',
+        useProjectJson: false,
       });
       const pnpmContent = tree.read('pnpm-workspace.yaml', 'utf-8');
       const pnpmWorkspaceFile = load(pnpmContent);
@@ -1281,6 +1287,7 @@ module.exports = withNx(
         ...defaultSchema,
         directory: 'libs/my-lib',
         name: 'my-lib', // import path contains the npm scope, so it would be different
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1294,6 +1301,7 @@ module.exports = withNx(
         ...defaultSchema,
         directory: 'libs/my-lib',
         name: '@proj/my-lib',
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1304,10 +1312,37 @@ module.exports = withNx(
       await libraryGenerator(tree, {
         ...defaultSchema,
         directory: 'libs/my-lib',
+        useProjectJson: false,
         skipFormat: true,
       });
 
       expect(readJson(tree, 'libs/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        directory: 'libs/mylib',
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('libs/mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "libs/mylib",
+          "sourceRoot": "libs/mylib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'libs/mylib/package.json').nx).toBeUndefined();
     });
   });
 });

@@ -1,4 +1,5 @@
 import {
+  globAsync,
   joinPathFragments,
   offsetFromRoot,
   output,
@@ -11,6 +12,7 @@ import {
 import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
 import {
+  getPackageManagerWorkspacesPatterns,
   getProjectPackageManagerWorkspaceState,
   isUsingPackageManagerWorkspaces,
 } from '../package-manager-workspaces';
@@ -211,7 +213,7 @@ export function updateTsconfigFiles(
   }
 }
 
-export function addProjectToTsSolutionWorkspace(
+export async function addProjectToTsSolutionWorkspace(
   tree: Tree,
   projectDir: string
 ) {
@@ -220,11 +222,26 @@ export function addProjectToTsSolutionWorkspace(
     return;
   }
 
-  // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
-  // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
-  // If the dir is just "foo" then we have to add it as is.
+  // If dir is "libs/foo", we try to use "libs/*" but we only do it if it's
+  // safe to do so. So, we first check if adding that pattern doesn't result
+  // in extra projects being matched. If extra projects are matched, or the
+  // dir is just "foo" then we add it as is.
   const baseDir = dirname(projectDir);
-  const pattern = baseDir === '.' ? projectDir : `${baseDir}/*`;
+  let pattern = projectDir;
+  if (baseDir !== '.') {
+    const patterns = getPackageManagerWorkspacesPatterns(tree);
+    const projectsBefore = await globAsync(tree, patterns);
+    patterns.push(`${baseDir}/*/package.json`);
+    const projectsAfter = await globAsync(tree, patterns);
+
+    if (projectsBefore.length + 1 === projectsAfter.length) {
+      // Adding the pattern to the parent directory only results in one extra
+      // project being matched, which is the project we're adding. It's safe
+      // to add the pattern to the parent directory.
+      pattern = `${baseDir}/*`;
+    }
+  }
+
   if (tree.exists('pnpm-workspace.yaml')) {
     const { load, dump } = require('@zkochan/js-yaml');
     const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');

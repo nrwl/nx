@@ -47,17 +47,28 @@ export async function installPlugin(
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ): Promise<void> {
   try {
-    getGeneratorInformation(plugin, 'init', workspaceRoot, {});
-    execSync(
-      `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-        updatePackageScripts ? '--updatePackageScripts' : ''
-      } ${verbose ? '--verbose' : ''}`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-        windowsHide: false,
-      }
+    const { schema } = getGeneratorInformation(
+      plugin,
+      'init',
+      workspaceRoot,
+      {}
     );
+
+    let command = `${pmc.exec} nx g ${plugin}:init ${
+      verbose ? '--verbose' : ''
+    }`;
+
+    if (!!schema.properties['keepExistingVersions']) {
+      command += ` --keepExistingVersions`;
+    }
+    if (updatePackageScripts && !!schema.properties['updatePackageScripts']) {
+      command += ` --updatePackageScripts`;
+    }
+    execSync(command, {
+      stdio: [0, 1, 2],
+      cwd: repoRoot,
+      windowsHide: false,
+    });
   } catch {
     // init generator does not exist, so this function should noop
     output.log({

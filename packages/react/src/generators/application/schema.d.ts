@@ -14,6 +14,7 @@ export interface Schema {
   linter: Linter | LinterType;
   classComponent?: boolean;
   routing?: boolean;
+  useReactRouter?: boolean;
   skipNxJson?: boolean;
   js?: boolean;
   globalCss?: boolean;
@@ -31,7 +32,7 @@ export interface Schema {
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'none';
-  alwaysGenerateProjectJson?: boolean; // this is needed for MF currently
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {

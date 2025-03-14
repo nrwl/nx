@@ -46,6 +46,7 @@ import type { PackageJson } from 'nx/src/utils/package-json';
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -60,10 +61,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
-
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
 
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
@@ -80,14 +77,14 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  if (options.isUsingTsSolutionConfig) {
-    const packageJson: PackageJson = {
-      name: options.importPath,
-      version: '0.0.1',
-      ...determineEntryFields(options),
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-    };
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    ...determineEntryFields(options),
+    files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+  };
 
+  if (!options.useProjectJson) {
     if (options.name !== options.importPath) {
       packageJson.nx = { name: options.name };
     }
@@ -95,8 +92,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
     }
-
-    writeJson(host, `${options.projectRoot}/package.json`, packageJson);
   } else {
     addProjectConfiguration(host, options.name, {
       root: options.projectRoot,
@@ -107,7 +102,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(host, `${options.projectRoot}/package.json`, packageJson);
+  }
+
   createFiles(host, options);
+
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);

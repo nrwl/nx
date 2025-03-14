@@ -60,6 +60,7 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   appProjectRoot: string;
@@ -206,23 +207,32 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   }
   project.targets.serve = getServeConfig(options);
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: options.importPath,
-      version: '0.0.1',
-      private: true,
-      nx: {
-        name: options.name !== options.importPath ? options.name : undefined,
-        targets: project.targets,
-        tags: project.tags?.length ? project.tags : undefined,
-      },
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    packageJson.nx = {
+      name: options.name !== options.importPath ? options.name : undefined,
+      targets: project.targets,
+      tags: project.tags?.length ? project.tags : undefined,
+    };
   } else {
     addProjectConfiguration(
       tree,
       options.name,
       project,
       options.standaloneConfig
+    );
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
     );
   }
 }
@@ -435,6 +445,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -516,7 +527,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
 
   updateTsConfigOptions(tree, options);
@@ -646,6 +657,7 @@ async function normalizeOptions(
 
   const appProjectName =
     !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+  const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
 
   return {
     addPlugin,
@@ -669,6 +681,7 @@ async function normalizeOptions(
         ),
     isUsingTsSolutionConfig,
     swcJest,
+    useProjectJson,
   };
 }
 

@@ -32,11 +32,13 @@ export async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPlugin;
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   return {
     ...options,
     importPath,
     projectRoot,
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }

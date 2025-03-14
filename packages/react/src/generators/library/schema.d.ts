@@ -27,6 +27,7 @@ export interface Schema {
   minimal?: boolean;
   simpleName?: boolean;
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

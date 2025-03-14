@@ -349,7 +349,7 @@
     "@types/three": "^0.166.0",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",
-    "axios": "^1.7.4",
+    "axios": "^1.8.3",
     "classnames": "^2.5.1",
     "cliui": "^8.0.1",
     "core-js": "3.36.1",

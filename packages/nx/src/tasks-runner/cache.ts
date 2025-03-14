@@ -12,7 +12,12 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cacheDir } from '../utils/cache-directory';
 import { Task } from '../config/task-graph';
 import { machineId } from 'node-machine-id';
-import { NxCache, CachedResult as NativeCacheResult, IS_WASM } from '../native';
+import {
+  NxCache,
+  CachedResult as NativeCacheResult,
+  IS_WASM,
+  getDefaultMaxCacheSize,
+} from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
@@ -89,7 +94,16 @@ export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
 }
 
 export class DbCache {
-  private cache = new NxCache(workspaceRoot, cacheDir, getDbConnection());
+  private nxJson = readNxJson();
+  private cache = new NxCache(
+    workspaceRoot,
+    cacheDir,
+    getDbConnection(),
+    undefined,
+    this.nxJson.maxCacheSize !== undefined
+      ? parseMaxCacheSize(this.nxJson.maxCacheSize)
+      : getDefaultMaxCacheSize(cacheDir)
+  );
 
   private remoteCache: RemoteCacheV2 | null;
   private remoteCachePromise: Promise<RemoteCacheV2>;
@@ -129,7 +143,7 @@ export class DbCache {
       );
 
       if (res) {
-        this.applyRemoteCacheResults(task.hash, res);
+        this.applyRemoteCacheResults(task.hash, res, task.outputs);
 
         return {
           ...res,
@@ -143,8 +157,16 @@ export class DbCache {
     }
   }
 
-  private applyRemoteCacheResults(hash: string, res: NativeCacheResult) {
-    return this.cache.applyRemoteCacheResults(hash, res);
+  getUsedCacheSpace() {
+    return this.cache.getCacheSize();
+  }
+
+  private applyRemoteCacheResults(
+    hash: string,
+    res: NativeCacheResult,
+    outputs: string[]
+  ) {
+    return this.cache.applyRemoteCacheResults(hash, res, outputs);
   }
 
   async put(
@@ -573,4 +595,65 @@ function tryAndRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
   };
   return _try();
+}
+
+/**
+ * Converts a string representation of a max cache size to a number.
+ *
+ * e.g. '1GB' -> 1024 * 1024 * 1024
+ *      '1MB' -> 1024 * 1024
+ *      '1KB' -> 1024
+ *
+ * @param maxCacheSize Max cache size as specified in nx.json
+ */
+export function parseMaxCacheSize(
+  maxCacheSize: string | number
+): number | undefined {
+  if (maxCacheSize === null || maxCacheSize === undefined) {
+    return undefined;
+  }
+  let regexResult = maxCacheSize
+    // Covers folks who accidentally specify as a number rather than a string
+    .toString()
+    // Match a number followed by an optional unit (KB, MB, GB), with optional whitespace between the number and unit
+    .match(/^(?<size>[\d|.]+)\s?((?<unit>[KMG]?B)?)$/);
+  if (!regexResult) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize}. Must be a number followed by an optional unit (KB, MB, GB)`
+    );
+  }
+  let sizeString = regexResult.groups.size;
+  let unit = regexResult.groups.unit;
+  if ([...sizeString].filter((c) => c === '.').length > 1) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize} (multiple decimal points in size)`
+    );
+  }
+  let size = parseFloat(sizeString);
+  if (isNaN(size)) {
+    throw new Error(
+      `Invalid max cache size specified in nx.json: ${maxCacheSize} (${sizeString} is not a number)`
+    );
+  }
+  switch (unit) {
+    case 'KB':
+      return size * 1024;
+    case 'MB':
+      return size * 1024 * 1024;
+    case 'GB':
+      return size * 1024 * 1024 * 1024;
+    default:
+      return size;
+  }
+}
+
+export function formatCacheSize(maxCacheSize: number, decimals = 2): string {
+  const exponents = ['B', 'KB', 'MB', 'GB'];
+  let exponent = 0;
+  let size = maxCacheSize;
+  while (size >= 1024 && exponent < exponents.length - 1) {
+    size /= 1024;
+    exponent++;
+  }
+  return `${size.toFixed(decimals)} ${exponents[exponent]}`;
 }

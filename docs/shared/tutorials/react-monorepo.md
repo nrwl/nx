@@ -52,7 +52,7 @@ title="Nx React Monorepo Tutorial Walkthrough"
 
 Create a new React monorepo with the following command:
 
-```{% command="npx create-nx-workspace@latest react-monorepo --preset=react-monorepo --workspaces" path="~" %}
+```{% command="npx create-nx-workspace@latest react-monorepo --preset=react-monorepo" path="~" %}
 
 NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
