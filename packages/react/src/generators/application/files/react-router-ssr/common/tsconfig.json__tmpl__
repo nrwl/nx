@@ -1,0 +1,27 @@
+{
+  "extends": "<%= offsetFromRoot %>tsconfig.base.json",
+  "compilerOptions": {
+      "lib": ["DOM", "DOM.Iterable", "ES2019"],
+      "types": ["@react-router/node", "vite/client"],
+      "isolatedModules": true,
+      "esModuleInterop": true,
+      "jsx": "react-jsx",
+      "module": "ESNext",
+      "moduleResolution": "Bundler",
+      "resolveJsonModule": true,
+      "target": "ES2022",
+      "strict": true,
+      "allowJs": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      // Vite takes care of building everything.
+      "noEmit": true
+    },
+    "include": [],
+    "files": [],
+    "references": [
+      {
+        "path": "./tsconfig.app.json"
+      }
+    ]
+}

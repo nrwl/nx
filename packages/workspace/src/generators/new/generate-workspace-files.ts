@@ -76,18 +76,6 @@ const presetToPluginMap: { [key in Preset]: PresetInfo } = {
     learnMoreLink:
       'https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
   },
-  [Preset.RemixMonorepo]: {
-    generateAppCmd: '@nx/remix',
-    generateLibCmd: '@nx/react',
-    learnMoreLink:
-      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
-  },
-  [Preset.RemixStandalone]: {
-    generateAppCmd: '@nx/remix',
-    generateLibCmd: '@nx/react',
-    learnMoreLink:
-      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
-  },
   [Preset.ReactNative]: {
     generateAppCmd: '@nx/react-native',
     generateLibCmd: '@nx/react',
@@ -271,7 +259,6 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
-    options.preset === Preset.RemixStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
       : (options.preset === Preset.TS &&
@@ -420,7 +407,6 @@ function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
       options.preset === Preset.NextJs ||
       options.preset === Preset.ReactMonorepo ||
       options.preset === Preset.ReactNative ||
-      options.preset === Preset.RemixMonorepo ||
       options.preset === Preset.VueMonorepo ||
       options.preset === Preset.Nuxt ||
       options.preset === Preset.NodeMonorepo ||

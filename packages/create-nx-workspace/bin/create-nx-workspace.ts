@@ -48,11 +48,13 @@ interface ReactArguments extends BaseArguments {
   stack: 'react';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  framework: 'none' | 'next' | 'remix';
+  framework: 'none' | 'next';
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
   nextSrcDir: boolean;
+  useReactRouter: boolean;
+  routing: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
@@ -156,9 +158,13 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             default: true,
           })
           .option('routing', {
-            describe: chalk.dim`Add a routing setup for an Angular app.`,
+            describe: chalk.dim`Add a routing setup for an Angular or React app.`,
             type: 'boolean',
             default: true,
+          })
+          .option('useReactRouter', {
+            describe: chalk.dim`Generate a Server-Side Rendered (SSR) React app using React Router.`,
+            type: 'boolean',
           })
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app.`,
@@ -378,8 +384,6 @@ async function determineStack(
       case Preset.ReactMonorepo:
       case Preset.NextJs:
       case Preset.NextJsStandalone:
-      case Preset.RemixStandalone:
-      case Preset.RemixMonorepo:
       case Preset.ReactNative:
       case Preset.Expo:
         return 'react';
@@ -591,6 +595,8 @@ async function determineReactOptions(
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let useReactRouter = false;
+  let routing = true;
   let nextAppDir = false;
   let nextSrcDir = false;
   let linter: undefined | 'none' | 'eslint';
@@ -602,8 +608,7 @@ async function determineReactOptions(
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
-      preset === Preset.NextJsStandalone ||
-      preset === Preset.RemixStandalone
+      preset === Preset.NextJsStandalone
     ) {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
@@ -629,17 +634,12 @@ async function determineReactOptions(
       } else {
         preset = Preset.NextJs;
       }
-    } else if (framework === 'remix') {
-      if (isStandalone) {
-        preset = Preset.RemixStandalone;
-      } else {
-        preset = Preset.RemixMonorepo;
-      }
     } else if (framework === 'react-native') {
       preset = Preset.ReactNative;
     } else if (framework === 'expo') {
       preset = Preset.Expo;
     } else {
+      useReactRouter = await determineReactRouter(parsedArgs);
       if (isStandalone) {
         preset = Preset.ReactStandalone;
       } else {
@@ -649,7 +649,7 @@ async function determineReactOptions(
   }
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
-    bundler = await determineReactBundler(parsedArgs);
+    bundler = useReactRouter ? 'vite' : await determineReactBundler(parsedArgs);
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       preferVitest: bundler === 'vite',
     });
@@ -659,14 +659,6 @@ async function determineReactOptions(
     nextSrcDir = await determineNextSrcDir(parsedArgs);
     unitTestRunner = await determineUnitTestRunner(parsedArgs, {
       exclude: 'vitest',
-    });
-    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-  } else if (
-    preset === Preset.RemixMonorepo ||
-    preset === Preset.RemixStandalone
-  ) {
-    unitTestRunner = await determineUnitTestRunner(parsedArgs, {
-      preferVitest: true,
     });
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.ReactNative || preset === Preset.Expo) {
@@ -748,6 +740,8 @@ async function determineReactOptions(
     nextSrcDir,
     unitTestRunner,
     e2eTestRunner,
+    useReactRouter,
+    routing,
     linter,
     formatter,
     workspaces,
@@ -1221,9 +1215,9 @@ async function determineAppName(
 
 async function determineReactFramework(
   parsedArgs: yargs.Arguments<ReactArguments>
-): Promise<'none' | 'nextjs' | 'remix' | 'expo' | 'react-native'> {
+): Promise<'none' | 'nextjs' | 'expo' | 'react-native'> {
   const reply = await enquirer.prompt<{
-    framework: 'none' | 'nextjs' | 'remix' | 'expo' | 'react-native';
+    framework: 'none' | 'nextjs' | 'expo' | 'react-native';
   }>([
     {
       name: 'framework',
@@ -1233,23 +1227,19 @@ async function determineReactFramework(
         {
           name: 'none',
           message: 'None',
-          hint: '         I only want react and react-dom',
+          hint: '         I only want react, react-dom or react-router',
         },
         {
           name: 'nextjs',
-          message: 'Next.js       [ https://nextjs.org/      ]',
-        },
-        {
-          name: 'remix',
-          message: 'Remix         [ https://remix.run/       ]',
+          message: 'Next.js       [ https://nextjs.org/       ]',
         },
         {
           name: 'expo',
-          message: 'Expo          [ https://expo.io/         ]',
+          message: 'Expo          [ https://expo.io/          ]',
         },
         {
           name: 'react-native',
-          message: 'React Native  [ https://reactnative.dev/ ]',
+          message: 'React Native  [ https://reactnative.dev/  ]',
         },
       ],
       initial: 0,
@@ -1493,4 +1483,36 @@ async function determineE2eTestRunner(
     },
   ]);
   return reply.e2eTestRunner;
+}
+
+async function determineReactRouter(
+  parsedArgs: yargs.Arguments<{
+    useReactRouter?: boolean;
+  }>
+): Promise<boolean> {
+  if (parsedArgs.routing !== undefined && parsedArgs.routing === false)
+    return false;
+  if (parsedArgs.useReactRouter !== undefined) return parsedArgs.useReactRouter;
+  const reply = await enquirer.prompt<{
+    response: 'Yes' | 'No';
+  }>([
+    {
+      message:
+        'Would you like to use React Router for server-side rendering [https://reactrouter.com/]?',
+      type: 'autocomplete',
+      name: 'response',
+      skip: !parsedArgs.interactive || isCI(),
+      choices: [
+        {
+          name: 'Yes',
+          hint: 'I want to use React Router',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+  return reply.response === 'Yes';
 }
