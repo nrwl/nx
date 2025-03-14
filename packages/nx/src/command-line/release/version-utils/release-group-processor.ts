@@ -111,6 +111,7 @@ export class ReleaseGroupProcessor {
     string, // project name
     VersionData
   > = new Map();
+  private allProjectsConfiguredForNxRelease: Set<string>;
   private projectsToProcess: Set<string>;
   private allProjectsToProcess: Set<string>;
   private userGivenSpecifier: string | undefined;
@@ -168,11 +169,19 @@ export class ReleaseGroupProcessor {
       (this.nxReleaseConfig.version?.generatorOptions?.updateDependents as
         | 'auto'
         | 'never') || 'auto';
-    this.projectsToProcess = new Set(
-      this.options.filters.projects || Object.keys(this.projectGraph.nodes)
-    );
 
+    this.allProjectsConfiguredForNxRelease = new Set();
+    for (const group of Object.values(this.nxReleaseConfig.groups)) {
+      for (const project of group.projects) {
+        this.allProjectsConfiguredForNxRelease.add(project);
+      }
+    }
+
+    this.projectsToProcess = new Set(
+      this.options.filters.projects || this.allProjectsConfiguredForNxRelease
+    );
     this.allProjectsToProcess = new Set(this.projectsToProcess);
+
     const projectsToProcess = Array.from(this.projectsToProcess);
     let dependents = this.getAllNonImplicitDependents(projectsToProcess);
     while (dependents.length > 0) {
@@ -199,7 +208,14 @@ export class ReleaseGroupProcessor {
   private getNonImplicitDependentsForProject(project: string): string[] {
     return Object.entries(this.projectGraph.dependencies)
       .filter(([_, deps]) =>
-        deps.some((dep) => dep.target === project && dep.type !== 'implicit')
+        deps.some((dep) => {
+          // Is a dep, but not an implicit one, and the dep.source is included in at least one release group in the nx release config
+          return (
+            dep.target === project &&
+            dep.type !== 'implicit' &&
+            this.allProjectsConfiguredForNxRelease.has(dep.source)
+          );
+        })
       )
       .map(([projectName]) => projectName);
   }

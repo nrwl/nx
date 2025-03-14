@@ -1,4 +1,8 @@
-import { type NxJsonConfiguration } from '@nx/devkit';
+import {
+  type NxJsonConfiguration,
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '@nx/devkit';
 import {
   cleanupProject,
   createFile,
@@ -91,6 +95,10 @@ describe('nx release', () => {
     await runCommandAsync(
       `git remote add origin https://github.com/nrwl/fake-repo.git`
     );
+
+    const packageManager = detectPackageManager();
+    const updateLockFileCommand =
+      getPackageManagerCommand(packageManager).updateLockFile;
 
     const versionOutput = runCLI(`release version 999.9.9`);
 
@@ -963,7 +971,7 @@ describe('nx release', () => {
       return json;
     });
     // Update lockfile
-    await runCommandAsync(`npm install --lockfile-only --legacy-peer-deps`);
+    await runCommandAsync(updateLockFileCommand);
 
     await runCommandAsync(`git tag zz-1300.0.0`);
     await runCommandAsync(`git tag xx-1400.0.0`);
@@ -1084,7 +1092,7 @@ describe('nx release', () => {
       return json;
     });
     // Update lockfile
-    await runCommandAsync(`npm install --lockfile-only --legy`);
+    await runCommandAsync(updateLockFileCommand);
 
     const releaseOutput4a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
