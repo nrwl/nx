@@ -6,6 +6,7 @@ import {
   SourceMapDevToolPlugin,
   RspackPluginInstance,
   RuleSetRule,
+  CssExtractRspackPlugin,
 } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
 import { resolve } from 'path';
@@ -18,7 +19,7 @@ import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
 } from '@nx/angular-rspack-compiler';
-import { getStyleLoaders } from './style-config-utils';
+import { getStyleLoaders, getStylesEntry } from './style-config-utils';
 import { getOutputHashFormat } from './helpers';
 import { getProxyConfig } from './dev-server-config-utils';
 import { DevToolsIgnorePlugin } from '../plugins/tools/dev-tools-ignore-plugin';
@@ -116,17 +117,11 @@ export async function _createConfig(
         configFile: normalizedOptions.tsConfig,
       },
     },
-    experiments: {
-      css: true,
-    },
     module: {
       parser: {
         javascript: {
           requireContext: false,
           url: false,
-        },
-        'css/auto': {
-          esModule: true,
         },
       },
       rules: [
@@ -169,7 +164,12 @@ export async function _createConfig(
         },
       ],
     },
-    plugins: [...sourceMapPlugins],
+    plugins: [
+      ...sourceMapPlugins,
+      new CssExtractRspackPlugin({
+        filename: `[name]${hashFormat.extract}.css`,
+      }),
+    ],
   };
 
   const configs: Configuration[] = [];
@@ -315,6 +315,9 @@ export async function _createConfig(
     entry: {
       main: {
         import: [normalizedOptions.browser],
+      },
+      styles: {
+        import: getStylesEntry(normalizedOptions),
       },
     },
     devServer: {

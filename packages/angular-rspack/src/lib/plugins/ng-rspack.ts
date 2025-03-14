@@ -30,21 +30,15 @@ export class NgRspackPlugin implements RspackPluginInstance {
       compiler.hooks.entryOption.tap('NgRspackPlugin', (context, entry) => {
         const keys = Object.keys(entry);
         for (const key of keys) {
+          if (key === 'styles') {
+            continue;
+          }
           const entryValue = entry[key];
           entryValue.import = [...polyfills, ...entryValue.import];
         }
       });
     }
     if (!this.pluginOptions.hasServer) {
-      // @TODO: properly handle global styles and scripts
-      const styles = this.pluginOptions.globalStyles ?? [];
-      for (const style of styles) {
-        for (const file of style.files) {
-          new EntryPlugin(compiler.context, file, {
-            name: isProduction ? style.name : undefined,
-          }).apply(compiler);
-        }
-      }
       const scripts = this.pluginOptions.globalScripts ?? [];
       for (const script of scripts) {
         for (const file of script.files) {

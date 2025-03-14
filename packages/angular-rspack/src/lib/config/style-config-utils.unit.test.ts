@@ -5,6 +5,7 @@ import {
   getSassLoaderConfig,
   getStyleLoaders,
 } from './style-config-utils';
+import { CssExtractRspackPlugin } from '@rspack/core';
 
 describe('getIncludePathOptions', () => {
   it('should return empty object if includePaths is not provided', () => {
@@ -44,17 +45,25 @@ describe('getSassLoaderConfig', () => {
   it('should return sass loader config without options passed', () => {
     expect(getSassLoaderConfig()).toStrictEqual({
       test: /\.?(sa|sc)ss$/,
-      use: [
+      use: expect.arrayContaining([
+        expect.objectContaining({
+          loader: require.resolve('css-loader'),
+          options: {
+            url: false,
+            sourceMap: undefined,
+            importLoaders: 1,
+          },
+        }),
         {
           loader: 'sass-loader',
           options: {
             api: 'modern-compiler',
             implementation: require.resolve('sass-embedded'),
             sourceMap: undefined,
+            sourceMapIncludeSources: true,
           },
         },
-      ],
-      type: 'css/auto',
+      ]),
     });
   });
 
@@ -63,13 +72,15 @@ describe('getSassLoaderConfig', () => {
       getSassLoaderConfig({ includePaths: ['path/to/sass'] })
     ).toStrictEqual(
       expect.objectContaining({
-        use: [
+        use: expect.arrayContaining([
           expect.objectContaining({
             options: expect.objectContaining({
               includePaths: ['path/to/sass'],
+              sourceMap: undefined,
+              sourceMapIncludeSources: true,
             }),
           }),
-        ],
+        ]),
       })
     );
   });
@@ -79,13 +90,13 @@ describe('getSassLoaderConfig', () => {
       getSassLoaderConfig(undefined, { indentedSyntax: true })
     ).toStrictEqual(
       expect.objectContaining({
-        use: [
+        use: expect.arrayContaining([
           expect.objectContaining({
             options: expect.objectContaining({
               indentedSyntax: true,
             }),
           }),
-        ],
+        ]),
       })
     );
   });
@@ -95,7 +106,15 @@ describe('getLessLoaderConfig', () => {
   it('should return less loader config without options passed', () => {
     expect(getLessLoaderConfig()).toStrictEqual({
       test: /\.less$/,
-      use: [
+      use: expect.arrayContaining([
+        expect.objectContaining({
+          loader: require.resolve('css-loader'),
+          options: {
+            url: false,
+            sourceMap: undefined,
+            importLoaders: 1,
+          },
+        }),
         {
           loader: 'less-loader',
           options: {
@@ -103,21 +122,20 @@ describe('getLessLoaderConfig', () => {
             sourceMap: undefined,
           },
         },
-      ],
-      type: 'css/auto',
+      ]),
     });
   });
 
   it('should return less loader config with lessPathOptions', () => {
     expect(getLessLoaderConfig({ paths: ['path/to/less'] })).toStrictEqual(
       expect.objectContaining({
-        use: [
+        use: expect.arrayContaining([
           expect.objectContaining({
             options: expect.objectContaining({
               paths: ['path/to/less'],
             }),
           }),
-        ],
+        ]),
       })
     );
   });
@@ -127,22 +145,36 @@ describe('getStyleLoaders', () => {
   it('should return sass and less loader config without options passed', () => {
     expect(getStyleLoaders()).toStrictEqual([
       {
-        test: /\.?(sa|sc)ss$/,
+        test: /\.css$/i,
         use: [
+          CssExtractRspackPlugin.loader,
+          {
+            loader: require.resolve('css-loader'),
+            options: {
+              url: false,
+              sourceMap: undefined,
+              importLoaders: 1,
+            },
+          },
+        ],
+      },
+      {
+        test: /\.?(sa|sc)ss$/,
+        use: expect.arrayContaining([
           {
             loader: 'sass-loader',
             options: {
               api: 'modern-compiler',
               implementation: require.resolve('sass-embedded'),
               sourceMap: undefined,
+              sourceMapIncludeSources: true,
             },
           },
-        ],
-        type: 'css/auto',
+        ]),
       },
       {
         test: /\.less$/,
-        use: [
+        use: expect.arrayContaining([
           {
             loader: 'less-loader',
             options: {
@@ -150,8 +182,7 @@ describe('getStyleLoaders', () => {
               sourceMap: undefined,
             },
           },
-        ],
-        type: 'css/auto',
+        ]),
       },
     ]);
   });
@@ -165,23 +196,23 @@ describe('getStyleLoaders', () => {
     ).toStrictEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          use: [
+          use: expect.arrayContaining([
             expect.objectContaining({
               options: expect.objectContaining({
                 includePaths: ['path/to/a'],
                 indentedSyntax: true,
               }),
             }),
-          ],
+          ]),
         }),
         expect.objectContaining({
-          use: [
+          use: expect.arrayContaining([
             expect.objectContaining({
               options: expect.objectContaining({
                 paths: ['path/to/a'],
               }),
             }),
-          ],
+          ]),
         }),
       ])
     );

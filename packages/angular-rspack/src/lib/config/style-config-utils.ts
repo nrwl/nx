@@ -1,5 +1,6 @@
 import { StylePreprocessorOptions } from '@nx/angular-rspack-compiler';
-import { SourceMap } from '../models';
+import { NormalizedAngularRspackPluginOptions, SourceMap } from '../models';
+import { CssExtractRspackPlugin } from '@rspack/core';
 
 export function getIncludePathOptions(includePaths?: string[]) {
   if (!includePaths || includePaths.length === 0) {
@@ -20,18 +21,33 @@ export function getSassLoaderConfig(
   return {
     test: /\.?(sa|sc)ss$/,
     use: [
+      CssExtractRspackPlugin.loader,
+      {
+        loader: require.resolve('css-loader'),
+        options: {
+          url: false,
+          sourceMap: sourceMap?.styles,
+          importLoaders: 1,
+        },
+      },
+      {
+        loader: require.resolve('resolve-url-loader'),
+        options: {
+          sourceMap: sourceMap?.styles,
+        },
+      },
       {
         loader: 'sass-loader',
         options: {
           api: 'modern-compiler',
           sourceMap: sourceMap?.styles,
+          sourceMapIncludeSources: true,
           implementation: require.resolve('sass-embedded'),
           ...(sassPathOptions ?? []),
           ...(sassOptions ?? {}),
         },
       },
     ],
-    type: 'css/auto',
   };
 }
 
@@ -42,6 +58,15 @@ export function getLessLoaderConfig(
   return {
     test: /\.less$/,
     use: [
+      CssExtractRspackPlugin.loader,
+      {
+        loader: require.resolve('css-loader'),
+        options: {
+          url: false,
+          sourceMap: sourceMap?.styles,
+          importLoaders: 1,
+        },
+      },
       {
         loader: 'less-loader',
         options: {
@@ -51,7 +76,6 @@ export function getLessLoaderConfig(
         },
       },
     ],
-    type: 'css/auto',
   };
 }
 
@@ -69,6 +93,20 @@ export function getStyleLoaders(
     getIncludePathOptions(stylePreprocessorOptions?.includePaths);
 
   return [
+    {
+      test: /\.css$/i,
+      use: [
+        CssExtractRspackPlugin.loader,
+        {
+          loader: require.resolve('css-loader'),
+          options: {
+            url: false,
+            sourceMap: sourceMap?.styles,
+            importLoaders: 1,
+          },
+        },
+      ],
+    },
     getSassLoaderConfig(
       sassPathOptions,
       stylePreprocessorOptions?.sass,
@@ -76,4 +114,17 @@ export function getStyleLoaders(
     ),
     getLessLoaderConfig(lessPathOptions, sourceMap),
   ];
+}
+
+export function getStylesEntry(
+  options: NormalizedAngularRspackPluginOptions
+): string[] {
+  const styles = options.globalStyles ?? [];
+  const allStyleEntries: string[] = [];
+  for (const style of styles) {
+    for (const file of style.files) {
+      allStyleEntries.push(file);
+    }
+  }
+  return allStyleEntries;
 }
