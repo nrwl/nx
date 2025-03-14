@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
-import { yargsRegisterCommand } from './register/command-object';
+import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -65,7 +65,7 @@ export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
-  .command(yargsRegisterCommand)
+  .command(yargsActivatePowerpackCommand)
   .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
@@ -121,7 +121,7 @@ function createMissingConformanceCommand(
       output.error({
         title: `${command} is not available`,
         bodyLines: [
-          `In order to use the \`nx ${command}\` command you must have an active Nx key and the \`@nx/conformance\` plugin installed.`,
+          `In order to use the \`nx ${command}\` command you must have an active Powerpack license and the \`@nx/powerpack-conformance\` plugin installed.`,
           '',
           'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
         ],
@@ -133,13 +133,7 @@ function createMissingConformanceCommand(
 
 function resolveConformanceCommandObject() {
   try {
-    const { yargsConformanceCommand } = (() => {
-      try {
-        return require('@nx/powerpack-conformance');
-      } catch {
-        return require('@nx/conformance');
-      }
-    })();
+    const { yargsConformanceCommand } = require('@nx/powerpack-conformance');
     return yargsConformanceCommand;
   } catch {
     return createMissingConformanceCommand('conformance');
@@ -148,13 +142,9 @@ function resolveConformanceCommandObject() {
 
 function resolveConformanceCheckCommandObject() {
   try {
-    const { yargsConformanceCheckCommand } = (() => {
-      try {
-        return require('@nx/powerpack-conformance');
-      } catch {
-        return require('@nx/conformance');
-      }
-    })();
+    const {
+      yargsConformanceCheckCommand,
+    } = require('@nx/powerpack-conformance');
     return yargsConformanceCheckCommand;
   } catch {
     return createMissingConformanceCommand('conformance:check');

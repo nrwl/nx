@@ -131,10 +131,8 @@
               "@nx/nx-win32-arm64-msvc",
               "@nx/nx-freebsd-x64",
               "@nx/powerpack-license",
-              "@nx/key",
               // Powerpack plugin conditionally available dynamically at runtime
-              "@nx/powerpack-conformance",
-              "@nx/conformance"
+              "@nx/powerpack-conformance"
             ]
           }
         ]
