@@ -81,6 +81,7 @@ export interface WebpackExecutorOptions {
   index?: string;
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
+  sassImplementation?: 'sass' | 'sass-embedded';
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;

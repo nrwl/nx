@@ -27,9 +27,10 @@ export async function determineNxCloud(
 }
 
 export async function determineIfGitHubWillBeUsed(
-  nxCloud: NxCloud
+  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud; useGitHub?: boolean }>
 ): Promise<boolean> {
-  if (nxCloud === 'yes' || nxCloud === 'circleci') {
+  if (parsedArgs.nxCloud === 'yes' || parsedArgs.nxCloud === 'circleci') {
+    if (parsedArgs?.useGitHub) return true;
     const reply = await enquirer.prompt<{ github: 'Yes' | 'No' }>([
       {
         name: 'github',

@@ -1,3 +1,8 @@
+---
+title: Nx Console Generate Command
+description: Learn how to use the Nx Console Generate UI to create projects, libraries, and components with a visual form interface that provides real-time previews.
+---
+
 # Nx Console Generate Command
 
 The `Generate` action allows you to choose a generator and then opens a form listing out all the options for that generator. As you make changes to the form, the generator is executed in `--dry-run` mode in a terminal so you can preview the results of running the generator in real time.

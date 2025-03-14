@@ -1,3 +1,8 @@
+---
+title: 'Runtime Cache Inputs'
+description: 'Learn about the transition from runtimeCacheInputs in tasksRunnerOptions to the new inputs and namedInputs configuration for runtime cache inputs.'
+---
+
 # runtimeCacheInputs
 
 The `runtimeCacheInputs` property was used as a way to add extra inputs to the Nx cache, like the version of node on that particular machine.

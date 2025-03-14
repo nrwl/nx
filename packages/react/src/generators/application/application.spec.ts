@@ -1,5 +1,6 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   getProjects,
   ProjectGraph,
@@ -29,6 +30,7 @@ jest.mock('@nx/devkit', () => {
     createProjectGraphAsync: jest
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
+    detectPackageManager: jest.fn(),
   };
 });
 
@@ -53,6 +55,9 @@ describe('app', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
+    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
+      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    );
   });
 
   describe('not nested', () => {
@@ -1312,6 +1317,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
+        useProjectJson: false,
       });
 
       expect(readJson(appTree, 'tsconfig.json').references)
@@ -1325,9 +1331,11 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(appTree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
@@ -1359,9 +1367,9 @@ describe('app', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1468,6 +1476,33 @@ describe('app', () => {
       `);
     });
 
+    it('should respect the provided name', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        name: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
     it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
@@ -1477,6 +1512,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested1',
@@ -1507,6 +1543,12 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      updateJson(appTree, 'package.json', (json) => {
+        delete json.workspaces;
+        return json;
+      });
+      appTree.write('pnpm-lock.yaml', '');
       appTree.write('pnpm-workspace.yaml', `packages:`);
 
       await applicationGenerator(appTree, {
@@ -1517,6 +1559,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested1',
@@ -1526,6 +1569,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested2',
@@ -1535,6 +1579,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'packages/shared/util',
@@ -1544,6 +1589,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
 
       const pnpmContent = appTree.read('pnpm-workspace.yaml', 'utf-8');
@@ -1564,6 +1610,7 @@ describe('app', () => {
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1616,6 +1663,7 @@ describe('app', () => {
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: false,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1633,6 +1681,7 @@ describe('app', () => {
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: false,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1640,6 +1689,51 @@ describe('app', () => {
         readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
           .outputPath
       ).toBe('apps/my-app/dist');
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+        useProjectJson: true,
+      });
+
+      expect(appTree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(appTree, 'myapp/package.json').nx).toBeUndefined();
+      expect(appTree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(appTree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 

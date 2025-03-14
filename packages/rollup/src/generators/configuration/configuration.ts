@@ -111,7 +111,7 @@ module.exports = withNx(
     format: ${JSON.stringify(options.format ?? ['esm'])},${
       !isTsSolutionSetup
         ? `
-    assets: [{ input: '.', output: '.', glob:'*.md' }],`
+    assets: [{ input: '{projectRoot}', output: '.', glob:'*.md' }],`
         : ''
     }
   },

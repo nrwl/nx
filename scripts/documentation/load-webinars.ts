@@ -123,7 +123,7 @@ const propertyParsers = {
     return prop.url;
   },
   date: (prop: DateProperty): string => {
-    return prop.date.start;
+    return prop.date?.start;
   },
   files: (prop: FilesProperty): string => {
     return prop.files.map((entry) => {
@@ -168,22 +168,16 @@ async function main() {
       });
     }
     if (imageFiles.length > 0) {
-      download(
-        imageFiles[0].file.url,
+      const imageFilePath =
         BLOG_ROOT +
-          `/images/${webinar.Date.date.start}/${imageFiles[0].name.replaceAll(
-            ' ',
-            '-'
-          )}`
-      );
-      console.log(
-        'Downloaded image',
-        BLOG_ROOT +
-          `/images/${webinar.Date.date.start}/${imageFiles[0].name.replaceAll(
-            ' ',
-            '-'
-          )}`
-      );
+        `/images/${webinar.Date.date.start}/${imageFiles[0].name.replaceAll(
+          ' ',
+          '-'
+        )}`;
+      if (!existsSync(imageFilePath)) {
+        download(imageFiles[0].file.url, imageFilePath);
+        console.log('Downloaded image', imageFilePath);
+      }
       cover_image = `/blog/images/${
         webinar.Date.date.start
       }/${imageFiles[0].name.replaceAll(' ', '-')}`;
@@ -192,9 +186,11 @@ async function main() {
     const webinarMarkdown = `---
 title: "${processedWebinar.Title}"
 description: "${processedWebinar.Description}"
+date: ${processedWebinar['Publish Date'] || processedWebinar.Date}
 slug: '${slugify(processedWebinar.Title)}'
 authors: [${processedWebinar['Speaker(s)']
       .replace(', and ', ', ')
+      .replace(' and ', ', ')
       .split(', ')
       .map((author) => `'${author}'`)
       .join(', ')}]
@@ -225,25 +221,25 @@ youtubeUrl: ${processedWebinar['YouTube Link']}`
 registrationUrl: ${processedWebinar['Link to Landing Page']}`
         : ''
     }
----
+---${
+      processedWebinar.Time
+        ? `
 
-${
-  processedWebinar.Time
-    ? `**${new Date(
-        processedWebinar.Date + ' ' + new Date().toTimeString()
-      ).toLocaleDateString('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-      })} - ${processedWebinar.Time}**`
-    : ''
-}
+**${new Date(
+            processedWebinar.Date + ' ' + new Date().toTimeString()
+          ).toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+          })} - ${processedWebinar.Time}**`
+        : ''
+    }${
+      processedWebinar['Speaker(s)']
+        ? `
 
-${
-  processedWebinar['Speaker(s)']
-    ? `Presented by ${processedWebinar['Speaker(s)']}`
-    : ''
-}
+Presented by ${processedWebinar['Speaker(s)']}`
+        : ''
+    }
 
 ${processedWebinar.Description}
 

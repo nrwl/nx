@@ -47,17 +47,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "TypeScript Packages",
+                "name": "TypeScript Monorepo",
                 "path": "/getting-started/tutorials/typescript-packages-tutorial",
                 "id": "typescript-packages-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "React Standalone",
-                "path": "/getting-started/tutorials/react-standalone-tutorial",
-                "id": "react-standalone-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -71,25 +63,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular Standalone",
-                "path": "/getting-started/tutorials/angular-standalone-tutorial",
-                "id": "angular-standalone-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Angular Monorepo",
                 "path": "/getting-started/tutorials/angular-monorepo-tutorial",
                 "id": "angular-monorepo-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Vue Standalone",
-                "path": "/getting-started/tutorials/vue-standalone-tutorial",
-                "id": "vue-standalone-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -147,17 +123,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "TypeScript Packages",
+            "name": "TypeScript Monorepo",
             "path": "/getting-started/tutorials/typescript-packages-tutorial",
             "id": "typescript-packages-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "React Standalone",
-            "path": "/getting-started/tutorials/react-standalone-tutorial",
-            "id": "react-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -171,25 +139,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Angular Standalone",
-            "path": "/getting-started/tutorials/angular-standalone-tutorial",
-            "id": "angular-standalone-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Angular Monorepo",
             "path": "/getting-started/tutorials/angular-monorepo-tutorial",
             "id": "angular-monorepo-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Vue Standalone",
-            "path": "/getting-started/tutorials/vue-standalone-tutorial",
-            "id": "vue-standalone-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -206,17 +158,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "TypeScript Packages",
+        "name": "TypeScript Monorepo",
         "path": "/getting-started/tutorials/typescript-packages-tutorial",
         "id": "typescript-packages-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Standalone",
-        "path": "/getting-started/tutorials/react-standalone-tutorial",
-        "id": "react-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -230,25 +174,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Angular Standalone",
-        "path": "/getting-started/tutorials/angular-standalone-tutorial",
-        "id": "angular-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Angular Monorepo",
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "id": "angular-monorepo-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Vue Standalone",
-        "path": "/getting-started/tutorials/vue-standalone-tutorial",
-        "id": "vue-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -303,6 +231,14 @@
             "name": "Generate Code",
             "path": "/features/generate-code",
             "id": "generate-code",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Maintain TypeScript Monorepos",
+            "path": "/features/maintain-ts-monorepos",
+            "id": "maintain-ts-monorepos",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -427,6 +363,14 @@
         "name": "Generate Code",
         "path": "/features/generate-code",
         "id": "generate-code",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Maintain TypeScript Monorepos",
+        "path": "/features/maintain-ts-monorepos",
+        "id": "maintain-ts-monorepos",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4268,9 +4212,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Large Repo and DTE",
-                "path": "/showcase/benchmarks/dte",
-                "id": "dte",
+                "name": "Large Repo and Nx Agents",
+                "path": "/showcase/benchmarks/nx-agents",
+                "id": "nx-agents",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -4569,9 +4513,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Large Repo and DTE",
-            "path": "/showcase/benchmarks/dte",
-            "id": "dte",
+            "name": "Large Repo and Nx Agents",
+            "path": "/showcase/benchmarks/nx-agents",
+            "id": "nx-agents",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4596,9 +4540,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Large Repo and DTE",
-        "path": "/showcase/benchmarks/dte",
-        "id": "dte",
+        "name": "Large Repo and Nx Agents",
+        "path": "/showcase/benchmarks/nx-agents",
+        "id": "nx-agents",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6035,6 +5979,63 @@
             "disableCollapsible": false
           },
           {
+            "name": "Manual Distributed Task Execution",
+            "path": "/ci/recipes/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "GitHub Actions Manual DTE",
+                "path": "/ci/recipes/dte/github-dte",
+                "id": "github-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Circle CI Manual DTE",
+                "path": "/ci/recipes/dte/circle-ci-dte",
+                "id": "circle-ci-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Azure Pipelines Manual DTE",
+                "path": "/ci/recipes/dte/azure-dte",
+                "id": "azure-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Bitbucket Pipelines Manual DTE",
+                "path": "/ci/recipes/dte/bitbucket-dte",
+                "id": "bitbucket-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "GitLab Manual DTE",
+                "path": "/ci/recipes/dte/gitlab-dte",
+                "id": "gitlab-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Jenkins Manual DTE",
+                "path": "/ci/recipes/dte/jenkins-dte",
+                "id": "jenkins-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Enterprise",
             "path": "/ci/recipes/enterprise",
             "id": "enterprise",
@@ -6098,63 +6099,6 @@
                     "name": "Custom GitHub App",
                     "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
                     "id": "custom-github-app",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  }
-                ],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Custom Distributed Task Execution",
-                "path": "/ci/recipes/enterprise/dte",
-                "id": "dte",
-                "isExternal": false,
-                "children": [
-                  {
-                    "name": "GitHub Actions Custom DTE",
-                    "path": "/ci/recipes/enterprise/dte/github-dte",
-                    "id": "github-dte",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Circle CI Custom DTE",
-                    "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-                    "id": "circle-ci-dte",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Azure Pipelines Custom DTE",
-                    "path": "/ci/recipes/enterprise/dte/azure-dte",
-                    "id": "azure-dte",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Bitbucket Pipelines Custom DTE",
-                    "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-                    "id": "bitbucket-dte",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "GitLab Custom DTE",
-                    "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-                    "id": "gitlab-dte",
-                    "isExternal": false,
-                    "children": [],
-                    "disableCollapsible": false
-                  },
-                  {
-                    "name": "Jenkins Custom DTE",
-                    "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-                    "id": "jenkins-dte",
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
@@ -6478,6 +6422,111 @@
         "disableCollapsible": false
       },
       {
+        "name": "Manual Distributed Task Execution",
+        "path": "/ci/recipes/dte",
+        "id": "dte",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "GitHub Actions Manual DTE",
+            "path": "/ci/recipes/dte/github-dte",
+            "id": "github-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Circle CI Manual DTE",
+            "path": "/ci/recipes/dte/circle-ci-dte",
+            "id": "circle-ci-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Azure Pipelines Manual DTE",
+            "path": "/ci/recipes/dte/azure-dte",
+            "id": "azure-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Bitbucket Pipelines Manual DTE",
+            "path": "/ci/recipes/dte/bitbucket-dte",
+            "id": "bitbucket-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "GitLab Manual DTE",
+            "path": "/ci/recipes/dte/gitlab-dte",
+            "id": "gitlab-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Jenkins Manual DTE",
+            "path": "/ci/recipes/dte/jenkins-dte",
+            "id": "jenkins-dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Actions Manual DTE",
+        "path": "/ci/recipes/dte/github-dte",
+        "id": "github-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Circle CI Manual DTE",
+        "path": "/ci/recipes/dte/circle-ci-dte",
+        "id": "circle-ci-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Azure Pipelines Manual DTE",
+        "path": "/ci/recipes/dte/azure-dte",
+        "id": "azure-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Bitbucket Pipelines Manual DTE",
+        "path": "/ci/recipes/dte/bitbucket-dte",
+        "id": "bitbucket-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitLab Manual DTE",
+        "path": "/ci/recipes/dte/gitlab-dte",
+        "id": "gitlab-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Jenkins Manual DTE",
+        "path": "/ci/recipes/dte/jenkins-dte",
+        "id": "jenkins-dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Enterprise",
         "path": "/ci/recipes/enterprise",
         "id": "enterprise",
@@ -6541,63 +6590,6 @@
                 "name": "Custom GitHub App",
                 "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
                 "id": "custom-github-app",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Custom Distributed Task Execution",
-            "path": "/ci/recipes/enterprise/dte",
-            "id": "dte",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "GitHub Actions Custom DTE",
-                "path": "/ci/recipes/enterprise/dte/github-dte",
-                "id": "github-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Circle CI Custom DTE",
-                "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-                "id": "circle-ci-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Azure Pipelines Custom DTE",
-                "path": "/ci/recipes/enterprise/dte/azure-dte",
-                "id": "azure-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Bitbucket Pipelines Custom DTE",
-                "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-                "id": "bitbucket-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "GitLab Custom DTE",
-                "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-                "id": "gitlab-dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Jenkins Custom DTE",
-                "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-                "id": "jenkins-dte",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6750,111 +6742,6 @@
         "name": "Custom GitHub App",
         "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
         "id": "custom-github-app",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Custom Distributed Task Execution",
-        "path": "/ci/recipes/enterprise/dte",
-        "id": "dte",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "GitHub Actions Custom DTE",
-            "path": "/ci/recipes/enterprise/dte/github-dte",
-            "id": "github-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Circle CI Custom DTE",
-            "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-            "id": "circle-ci-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Azure Pipelines Custom DTE",
-            "path": "/ci/recipes/enterprise/dte/azure-dte",
-            "id": "azure-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Bitbucket Pipelines Custom DTE",
-            "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-            "id": "bitbucket-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "GitLab Custom DTE",
-            "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-            "id": "gitlab-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Jenkins Custom DTE",
-            "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-            "id": "jenkins-dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "GitHub Actions Custom DTE",
-        "path": "/ci/recipes/enterprise/dte/github-dte",
-        "id": "github-dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Circle CI Custom DTE",
-        "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-        "id": "circle-ci-dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Azure Pipelines Custom DTE",
-        "path": "/ci/recipes/enterprise/dte/azure-dte",
-        "id": "azure-dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Bitbucket Pipelines Custom DTE",
-        "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-        "id": "bitbucket-dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "GitLab Custom DTE",
-        "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-        "id": "gitlab-dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Jenkins Custom DTE",
-        "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-        "id": "jenkins-dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

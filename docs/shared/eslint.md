@@ -1,3 +1,8 @@
+---
+title: 'Configuring ESLint with TypeScript'
+description: 'Learn how to properly configure ESLint with TypeScript in your Nx workspace, including setting up type-checking and managing parser options for optimal performance.'
+---
+
 # Configuring ESLint with TypeScript
 
 ESLint is powerful linter by itself, able to work on the syntax of your source files and assert things about based on the rules you configure. It gets even more powerful, however, when TypeScript type-checker is layered on top of it when analyzing TypeScript files, which is something that `@typescript-eslint` allows us to do.

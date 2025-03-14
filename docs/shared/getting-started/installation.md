@@ -1,3 +1,8 @@
+---
+title: Installation
+description: Learn how to install Nx in a new workspace, add it to an existing repository, install it globally, or set it up in a non-JavaScript repository with step-by-step instructions.
+---
+
 # Installation
 
 Create a new Nx workspace using the following command:
@@ -136,10 +141,7 @@ To avoid potential issues, it is [recommended to update one major version of Nx 
 
 Try one of these tutorials for a full walkthrough of what to do after you install Nx
 
-- [TypeScript Packages Tutorial](/getting-started/tutorials/typescript-packages-tutorial)
-- [Single React App Tutorial](/getting-started/tutorials/react-standalone-tutorial)
-- [Single Angular App Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
-- [Single Vue App Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
+- [TypeScript Monorepo Tutorial](/getting-started/tutorials/typescript-packages-tutorial)
 - [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 

@@ -70,7 +70,8 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
 
   if (
     (options.publishable || options.buildable) &&
-    !options.isUsingTsSolutionConfig
+    !options.isUsingTsSolutionConfig &&
+    options.useProjectJson
   ) {
     if (options.bundler === 'vite') {
       writeJson(host, `${options.projectRoot}/package.json`, {

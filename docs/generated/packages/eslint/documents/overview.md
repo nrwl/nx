@@ -1,3 +1,8 @@
+---
+title: ESLint Plugin for Nx
+description: Learn how to set up and use the @nx/eslint plugin to integrate ESLint with Nx, enabling caching and providing code generators for ESLint configuration.
+---
+
 The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows you to run ESLint through Nx with caching enabled. It also includes code generators to help you set up ESLint in your workspace.
 
 ## Setting Up @nx/eslint
@@ -25,11 +30,13 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 
 - `.eslintrc`
 - `.eslintrc.js`
+- `.eslintrc.mjs`
 - `.eslintrc.cjs`
 - `.eslintrc.yaml`
 - `.eslintrc.yml`
 - `.eslintrc.json`
 - `eslint.config.js`
+- `eslint.config.mjs`
 - `eslint.config.cjs`
 
 Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.

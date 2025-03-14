@@ -1,3 +1,8 @@
+---
+title: Create a Conformance Rule
+description: Learn how to create custom conformance rules for Nx Powerpack to enforce standards and best practices across your Nx workspace.
+---
+
 # Create a Conformance Rule
 
 For local conformance rules, the resolution utilities from `@nx/js` are used in the same way they are for all other JavaScript/TypeScript files in Nx. Therefore, you can simply reference an adhoc JavaScript file or TypeScript file in your `"rule"` property (as long as the path is resolvable based on your package manager and/or tsconfig setup), and the rule will be loaded/transpiled as needed. The rule implementation file should also have a `schema.json` file next to it that defines the available rule options, if any.

@@ -1,6 +1,6 @@
 import { detectPackageManager, type CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { mkdirSync, rmdirSync } from 'node:fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
@@ -655,6 +655,77 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       await expect(
         invokeCreateNodesOnMatchingFiles(context, {})
       ).resolves.not.toThrow();
+    });
+
+    it('should not infer typecheck target when nx.addTypecheckTarget is false in tsconfig.json', async () => {
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': JSON.stringify({
+          nx: { addTypecheckTarget: false },
+        }),
+        'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+          compilerOptions: { outDir: 'out-tsc/my-lib', rootDir: 'src' },
+          files: ['src/main.ts'],
+        }),
+        'libs/my-lib/package.json': `{}`,
+      });
+
+      await expect(
+        invokeCreateNodesOnMatchingFiles(context, {
+          build: {
+            configName: 'tsconfig.lib.json',
+          },
+        })
+      ).resolves.toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/out-tsc/my-lib",
+                    "{projectRoot}/out-tsc/*.tsbuildinfo",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
     });
 
     describe('inputs', () => {
@@ -3784,7 +3855,7 @@ async function applyFilesToTempFsAndContext(
   await tempFs.createFiles(fileSys);
   // @ts-expect-error update otherwise readonly property for testing
   context.configFiles = Object.keys(fileSys).filter((file) =>
-    minimatch(file, createNodesV2[0], { dot: true })
+    picomatch(createNodesV2[0], { dot: true })(file)
   );
   setupWorkspaceContext(tempFs.tempDir);
 }

@@ -392,20 +392,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   </Card>
                   <Card>
                     <Link
-                      href="/getting-started/tutorials/vue-standalone-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
-                      prefetch={false}
-                      title="Nx with Vue"
-                      className="h-full w-full p-2 sm:p-4"
-                    >
-                      <span className="absolute inset-0" />
-                      <VueIcon
-                        aria-hidden="true"
-                        className="h-full w-full shrink-0"
-                      />
-                    </Link>
-                  </Card>
-                  <Card>
-                    <Link
                       href="/nx-api/nuxt?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Nuxt"
@@ -864,20 +850,6 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 >
                   <span className="absolute inset-0" />
                   <RustIcon
-                    aria-hidden="true"
-                    className="h-full w-full shrink-0"
-                  />
-                </Link>
-              </Card>
-              <Card>
-                <Link
-                  href="/getting-started/tutorials/vue-standalone-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
-                  prefetch={false}
-                  title="Nx with Vue"
-                  className="h-full w-full p-2 sm:p-4"
-                >
-                  <span className="absolute inset-0" />
-                  <VueIcon
                     aria-hidden="true"
                     className="h-full w-full shrink-0"
                   />

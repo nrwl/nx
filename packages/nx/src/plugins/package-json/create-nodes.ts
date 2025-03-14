@@ -143,6 +143,9 @@ export function createNodeFromPackageJson(
     ...json,
     root: projectRoot,
     isInPackageManagerWorkspaces,
+    // change this to bust the cache when making changes that result in different
+    // results for the same hash
+    bust: 1,
   });
 
   const cached = cache[hash];
@@ -209,7 +212,6 @@ export function buildProjectConfigurationFromPackageJson(
 
   const projectConfiguration: ProjectConfiguration & { name: string } = {
     root: projectRoot,
-    sourceRoot: projectRoot,
     name,
     ...packageJson.nx,
     targets: readTargetsFromPackageJson(packageJson, nxJson),

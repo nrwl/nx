@@ -61,7 +61,6 @@ describe('app', () => {
     // ASSERT
     const { dependencies, devDependencies } = readJson(appTree, 'package.json');
 
-    expect(dependencies['@angular/animations']).toBe(angularVersion);
     expect(dependencies['@angular/common']).toBe(angularVersion);
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);

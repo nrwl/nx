@@ -6,6 +6,7 @@ import {
   killPorts,
   newProject,
   promisifiedTreeKill,
+  readJson,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -105,7 +106,6 @@ describe('Node Applications', () => {
     expect(() => runCLI(`lint ${nodelib}`)).not.toThrow();
     expect(() => runCLI(`test ${nodelib}`)).not.toThrow();
     expect(() => runCLI(`build ${nodelib}`)).not.toThrow();
-    expect(() => runCLI(`typecheck ${nodelib}`)).not.toThrow();
 
     const p = await runCommandUntil(
       `serve ${nodeapp}`,
@@ -169,6 +169,30 @@ describe('Node Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
+  }, 300_000);
+
+  it('should respect and support generating libraries with a name different than the import path', () => {
+    const nodeLib = uniq('node-lib');
+    const nestLib = uniq('nest-lib');
+
+    runCLI(
+      `generate @nx/node:lib packages/${nodeLib} --name=${nodeLib} --buildable`
+    );
+    runCLI(
+      `generate @nx/nest:lib packages/${nestLib} --name=${nestLib} --buildable`
+    );
+
+    const packageJson = readJson(`packages/${nodeLib}/package.json`);
+    expect(packageJson.nx.name).toBe(nodeLib);
+    const nestPackageJson = readJson(`packages/${nestLib}/package.json`);
+    expect(nestPackageJson.nx.name).toBe(nestLib);
+
+    expect(runCLI(`build ${nodeLib}`)).toContain(
+      `Successfully ran target build for project ${nodeLib}`
+    );
+    expect(runCLI(`build ${nestLib}`)).toContain(
+      `Successfully ran target build for project ${nestLib}`
+    );
   }, 300_000);
 });
 

@@ -235,14 +235,14 @@ function applyNxDependentConfig(
 
   // New TS Solution already has a typecheck target
   if (!options?.skipTypeChecking && !isUsingTsSolution) {
-    const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+    const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
     plugins.push(
-      new ForkTsCheckerWebpackPlugin({
+      new TsCheckerRspackPlugin({
         typescript: {
           configFile: path.isAbsolute(tsConfig)
             ? tsConfig
             : path.join(options.root, tsConfig),
-          memoryLimit: options.memoryLimit || 2018,
+          memoryLimit: options.memoryLimit || 8192, // default memory limit is 8192
         },
       })
     );

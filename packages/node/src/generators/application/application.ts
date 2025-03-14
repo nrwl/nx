@@ -1,4 +1,3 @@
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -24,7 +23,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { configurationGenerator } from '@nx/jest';
 import {
@@ -61,11 +60,13 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   appProjectRoot: string;
   parsedTags: string[];
   outputPath: string;
+  importPath: string;
   isUsingTsSolutionConfig: boolean;
 }
 
@@ -206,25 +207,32 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   }
   project.targets.serve = getServeConfig(options);
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
-      version: '0.0.1',
-      private: true,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: project.sourceRoot,
-        targets: project.targets,
-        tags: project.tags?.length ? project.tags : undefined,
-      },
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    packageJson.nx = {
+      name: options.name !== options.importPath ? options.name : undefined,
+      targets: project.targets,
+      tags: project.tags?.length ? project.tags : undefined,
+    };
   } else {
     addProjectConfiguration(
       tree,
       options.name,
       project,
       options.standaloneConfig
+    );
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
     );
   }
 }
@@ -437,6 +445,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -514,6 +523,12 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   addAppFiles(tree, options);
   addProject(tree, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
 
   updateTsConfigOptions(tree, options);
 
@@ -595,12 +610,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
-  }
-
   sortPackageJsonFields(tree, options.appProjectRoot);
 
   if (!options.skipFormat) {
@@ -618,14 +627,17 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
   options.rootProject = appProjectRoot === '.';
 
   options.bundler = options.bundler ?? 'esbuild';
@@ -643,6 +655,10 @@ async function normalizeOptions(
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
   const swcJest = options.swcJest ?? isUsingTsSolutionConfig;
 
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+  const useProjectJson = options.useProjectJson ?? !isUsingTsSolutionConfig;
+
   return {
     addPlugin,
     ...options,
@@ -651,6 +667,7 @@ async function normalizeOptions(
       ? names(options.frontendProject).fileName
       : undefined,
     appProjectRoot,
+    importPath,
     parsedTags,
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
@@ -660,10 +677,11 @@ async function normalizeOptions(
       ? joinPathFragments(appProjectRoot, 'dist')
       : joinPathFragments(
           'dist',
-          options.rootProject ? options.name : appProjectRoot
+          options.rootProject ? appProjectName : appProjectRoot
         ),
     isUsingTsSolutionConfig,
     swcJest,
+    useProjectJson,
   };
 }
 

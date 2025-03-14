@@ -7,8 +7,16 @@ assignment-rules:
       - build*
     run-on:
       - agent: linux-extra-large
+        parallelism: 1
+
+  - targets:
+      - lint
+    run-on:
+      - agent: linux-medium
+        parallelism: 6
 
   - targets:
       - '*'
     run-on:
       - agent: linux-medium
+        parallelism: 3

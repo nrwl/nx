@@ -1,3 +1,8 @@
+---
+title: 'Angular Schematics and Builders'
+description: 'Learn about the deprecation of Angular schematics and builders in Nx 17, and how to handle interoperability between Nx and Angular CLI tools.'
+---
+
 # Angular Schematics and Builders
 
 As of Nx 17, official Nx plugins no longer export [schematics](https://angular.dev/tools/cli/schematics) and [builders](https://angular.dev/tools/cli/cli-builder) that can be directly consumed by the Angular CLI. Since Angular CLI users are not a large portion of Nx's user base, it made sense to stop maintaining that code.

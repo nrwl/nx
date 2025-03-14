@@ -8,4 +8,10 @@ export interface NxModuleFederationDevServerConfig {
   sslCert?: string;
   sslKey?: string;
   parallel?: number;
+  devRemoteFindOptions?: DevRemoteFindOptions;
+}
+
+export interface DevRemoteFindOptions {
+  retries?: number;
+  retryDelay?: number;
 }

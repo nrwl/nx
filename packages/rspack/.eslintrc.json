@@ -49,7 +49,10 @@
               "@module-federation/sdk",
               "@module-federation/enhanced",
               "css-loader",
-              "webpack"
+              "webpack",
+              "sass-embedded",
+              "sass",
+              "ts-checker-rspack-plugin"
             ]
           }
         ]

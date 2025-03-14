@@ -9,4 +9,5 @@ export interface Schema {
   isNest?: boolean;
   skipFormat?: boolean;
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }

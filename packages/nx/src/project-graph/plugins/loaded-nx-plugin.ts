@@ -17,7 +17,7 @@ import type {
 } from './public-api';
 import { createNodesFromFiles } from './utils';
 import { isIsolationEnabled } from './isolation/enabled';
-import { isDaemonEnabled } from '../../daemon/client/enabled';
+import { isDaemonEnabled } from '../../daemon/client/client';
 
 export class LoadedNxPlugin {
   index?: number;
@@ -123,10 +123,7 @@ export class LoadedNxPlugin {
       this.preTasksExecution = async (context: PreTasksExecutionContext) => {
         const updates = {};
         let originalEnv = process.env;
-        if (
-          isIsolationEnabled() ||
-          isDaemonEnabled(context.nxJsonConfiguration)
-        ) {
+        if (isIsolationEnabled() || isDaemonEnabled()) {
           process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
             set: (target, key: string, value) => {
               target[key] = value;

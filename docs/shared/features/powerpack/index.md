@@ -1,3 +1,8 @@
+---
+title: 'Nx Powerpack Features'
+description: 'Explore the enterprise-focused features available in Nx Powerpack, including conformance rules, code ownership management, and self-hosted remote caching solutions.'
+---
+
 # Powerpack Features
 
 Nx PowerPack is a suite of paid extensions for the Nx CLI specifically designed for enterprises. Powerpack is available for Nx version 19.8 and higher.

@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using Jenkins and Nx
+description: Learn how to set up Jenkins CI for your Nx workspace with examples of Groovy pipeline configuration for building and testing affected projects efficiently.
+---
+
 # Configuring CI Using Jenkins and Nx
 
 Below is an example of a Jenkins setup, building and testing only what is affected.

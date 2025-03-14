@@ -35,7 +35,7 @@ export function Hero(): ReactElement {
         <div className="mx-auto max-w-2xl lg:mx-0 lg:-mt-12 lg:shrink-0">
           <p>
             <a
-              href="https://bit.ly/4aRmrRb"
+              href="https://bit.ly/3XvOwIl"
               title="See live event in details"
               className="group/event-link inline-flex space-x-6"
             >
@@ -43,7 +43,7 @@ export function Hero(): ReactElement {
                 Live event
               </span>
               <span className="inline-flex items-center space-x-2 text-sm/6 font-medium">
-                <span>Webinar + live Q&A on February 26th</span>
+                <span>Webinar + live Q&A on March 19th</span>
                 <ChevronRightIcon
                   aria-hidden="true"
                   className="size-5 transform transition-all group-hover/event-link:translate-x-1"

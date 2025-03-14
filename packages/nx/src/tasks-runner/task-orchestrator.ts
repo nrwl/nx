@@ -235,7 +235,11 @@ export class TaskOrchestrator {
 
     const outputs = task.outputs;
     const shouldCopyOutputsFromCache =
+      // No output files to restore
       !!outputs.length &&
+      // Remote caches are restored to output dirs when applied
+      !cachedResult.remote &&
+      // Output files have not been touched since last run
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);

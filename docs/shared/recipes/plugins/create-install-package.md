@@ -1,3 +1,8 @@
+---
+title: Creating an Install Package
+description: Learn how to create a custom "create-x" package for your Nx plugin to provide a seamless project bootstrapping experience with npm, yarn, or other package managers.
+---
+
 # Creating an Install Package
 
 {% youtube

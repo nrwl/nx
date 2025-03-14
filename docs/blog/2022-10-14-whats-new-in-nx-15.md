@@ -181,7 +181,6 @@ It is an ongoing process, and we have a lot of content to cover! We follow the [
 
 Besides the two new [package-based](/getting-started/tutorials/typescript-packages-tutorial) and [integrated style tutorials](/getting-started/tutorials/react-monorepo-tutorial) we also have two brand new reworked tutorials
 
-- [/getting-started/tutorials/react-standalone-tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [/getting-started/tutorials](/getting-started/tutorials)
 
 Stay tuned for more updates to come.

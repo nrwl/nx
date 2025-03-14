@@ -1,3 +1,8 @@
+---
+title: Enable TypeScript Batch Mode
+description: Learn how to use TypeScript's batch mode in Nx to significantly improve build performance by batching TypeScript compilation tasks into a single process.
+---
+
 # Enable Typescript Batch Mode
 
 {% callout type="check" title="Available since Nx 16.6.0" %}

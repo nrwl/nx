@@ -55,6 +55,14 @@ describe('findMatchingProjects', () => {
         tags: [],
       },
     },
+    '@acme/foo-e2e': {
+      name: '@acme/foo-e2e',
+      type: 'lib',
+      data: {
+        root: 'lib/foo-e2e',
+        tags: [],
+      },
+    },
     '@acme/bar': {
       name: '@acme/bar',
       type: 'lib',
@@ -102,6 +110,7 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
@@ -115,6 +124,7 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
@@ -162,6 +172,7 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
@@ -176,7 +187,7 @@ describe('findMatchingProjects', () => {
       projectGraph
     );
     expect(matches).toEqual(expect.arrayContaining(['a', 'b', 'nested']));
-    expect(matches.length).toEqual(7);
+    expect(matches.length).toEqual(8);
   });
 
   it('should expand generic glob patterns for tags', () => {
@@ -202,6 +213,7 @@ describe('findMatchingProjects', () => {
       'a',
       'b',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
     ]);
@@ -218,6 +230,7 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
@@ -226,6 +239,7 @@ describe('findMatchingProjects', () => {
       'b',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
@@ -236,6 +250,7 @@ describe('findMatchingProjects', () => {
       'b',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
@@ -248,6 +263,9 @@ describe('findMatchingProjects', () => {
       '@acme/foo',
       'foo_bar1',
       '@acme/nested/foo',
+    ]);
+    expect(findMatchingProjects(['foo-e2e'], projectGraph)).toEqual([
+      '@acme/foo-e2e',
     ]);
     expect(findMatchingProjects(['bar'], projectGraph)).toEqual(['@acme/bar']);
     // Case insensitive

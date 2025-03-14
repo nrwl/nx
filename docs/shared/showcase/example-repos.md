@@ -1,3 +1,8 @@
+---
+title: Nx Integration with Technologies and Frameworks
+description: Explore example repositories demonstrating how Nx integrates with various technologies and frameworks across different platforms.
+---
+
 # Nx Integration with Technologies and Frameworks
 
 ## Examples across platforms

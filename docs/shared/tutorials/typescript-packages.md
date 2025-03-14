@@ -1,9 +1,9 @@
 ---
-title: 'TypeScript Packages Tutorial'
+title: 'TypeScript Monorepo Tutorial'
 description: In this tutorial you'll add Nx to an existing TypeScript repo
 ---
 
-# TypeScript Packages Tutorial
+# TypeScript Monorepo Tutorial
 
 In this tutorial, you'll learn how to add Nx to a repository with an existing TypeScript project. The starting repository uses [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for project linking and is configured to build with [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html).
 

@@ -8,7 +8,10 @@ import { readJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
@@ -24,10 +27,12 @@ import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
   initCloud,
+  isCRA,
   isMonorepo,
   printFinalMessage,
   updateGitIgnore,
 } from './implementation/utils';
+import { addNxToCraRepo } from './implementation/react';
 
 export interface InitArgs {
   interactive: boolean;
@@ -35,6 +40,7 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
+  force?: boolean;
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
@@ -85,6 +91,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   const packageJson: PackageJson = readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
   const _isMonorepo = isMonorepo(packageJson);
+  const _isCRA = isCRA(packageJson);
 
   const learnMoreLink = _isTurborepo
     ? 'https://nx.dev/recipes/adopting-nx/from-turborepo'
@@ -108,7 +115,18 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  if (_isMonorepo) {
+  const pmc = getPackageManagerCommand();
+
+  if (_isCRA) {
+    await addNxToCraRepo({
+      addE2e: false,
+      force: options.force,
+      vite: true,
+      integrated: false,
+      interactive: options.interactive,
+      nxCloud: false,
+    });
+  } else if (_isMonorepo) {
     await addNxToMonorepo({
       interactive: options.interactive,
       nxCloud: false,
@@ -125,7 +143,6 @@ export async function initHandler(options: InitArgs): Promise<void> {
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   const repoRoot = process.cwd();
-  const pmc = getPackageManagerCommand();
 
   createNxJsonFile(repoRoot, [], [], {});
   updateGitIgnore(repoRoot);
@@ -134,10 +151,18 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '🧐 Checking dependencies' });
 
-  const { plugins, updatePackageScripts } = await detectPlugins(
-    nxJson,
-    options.interactive
-  );
+  let plugins: string[];
+  let updatePackageScripts: boolean;
+
+  if (_isCRA) {
+    plugins = ['@nx/vite'];
+    updatePackageScripts = true;
+  } else {
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, options.interactive);
+    plugins = _plugins;
+    updatePackageScripts = _updatePackageScripts;
+  }
 
   output.log({ title: '📦 Installing Nx' });
 

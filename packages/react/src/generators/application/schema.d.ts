@@ -1,3 +1,4 @@
+import type { names } from '@nx/devkit';
 import type { Linter, LinterType } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings/style';
 
@@ -30,7 +31,7 @@ export interface Schema {
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'none';
-  alwaysGenerateProjectJson?: boolean; // this is needed for MF currently
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema<T extends Schema = Schema> extends T {
@@ -38,11 +39,13 @@ export interface NormalizedSchema<T extends Schema = Schema> extends T {
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  importPath: string;
   parsedTags: string[];
   fileName: string;
   styledModule: null | SupportedStyles;
   hasStyles: boolean;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   addPlugin?: boolean;
+  names: ReturnType<typeof names>;
   isUsingTsSolutionConfig?: boolean;
 }

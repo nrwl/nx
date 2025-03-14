@@ -17,7 +17,7 @@ import {
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import {
   basename,
@@ -35,7 +35,11 @@ import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import type { ParsedCommandLine, System } from 'typescript';
-import { addBuildAndWatchDepsTargets } from './util';
+import {
+  addBuildAndWatchDepsTargets,
+  isValidPackageJsonBuildConfig,
+  ParsedTsconfigData,
+} from './util';
 
 export interface TscPluginOptions {
   typecheck?:
@@ -72,12 +76,7 @@ interface NormalizedPluginOptions {
 }
 
 type TscProjectResult = Pick<ProjectConfiguration, 'targets'>;
-type ParsedTsconfigData = Pick<
-  ParsedCommandLine,
-  'options' | 'projectReferences' | 'raw'
-> & {
-  extendedConfigFile: { filePath: string; externalPackage?: string } | null;
-};
+
 type TsconfigCacheData = {
   data: ParsedTsconfigData;
   hash: string;
@@ -380,7 +379,11 @@ function buildTscTargets(
 
   let internalProjectReferences: Record<string, ParsedTsconfigData>;
   // Typecheck target
-  if (basename(configFilePath) === 'tsconfig.json' && options.typecheck) {
+  if (
+    basename(configFilePath) === 'tsconfig.json' &&
+    options.typecheck &&
+    tsConfig.raw?.['nx']?.addTypecheckTarget !== false
+  ) {
     internalProjectReferences = resolveInternalProjectReferences(
       tsConfig,
       context.workspaceRoot,
@@ -555,8 +558,8 @@ function getInputs(
         if (
           !otherFilesInclude.some(
             (includePath) =>
-              minimatch(normalize(includePath), normalize(excludePath)) ||
-              minimatch(normalize(excludePath), normalize(includePath))
+              picomatch(normalize(excludePath))(normalize(includePath)) ||
+              picomatch(normalize(includePath))(normalize(excludePath))
           )
         ) {
           excludePaths.add(excludePath);
@@ -752,103 +755,6 @@ function getOutputs(
   return Array.from(outputs);
 }
 
-/**
- * Validates the build configuration of a `package.json` file by ensuring that paths in the `exports`, `module`,
- * and `main` fields reference valid output paths within the `outDir` defined in the TypeScript configuration.
- * Priority is given to the `exports` field, specifically the `.` export if defined. If `exports` is not defined,
- * the function falls back to validating `main` and `module` fields. If `outFile` is specified, it validates that the file
- * is located within the output directory.
- * If no `package.json` file exists, it assumes the configuration is valid.
- *
- * @param tsConfig The TypeScript configuration object.
- * @param workspaceRoot The workspace root path.
- * @param projectRoot The project root path.
- * @returns `true` if the package has a valid build configuration; otherwise, `false`.
- */
-function isValidPackageJsonBuildConfig(
-  tsConfig: ParsedTsconfigData,
-  workspaceRoot: string,
-  projectRoot: string
-): boolean {
-  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
-  if (!existsSync(packageJsonPath)) {
-    // If the package.json file does not exist.
-    // Assume it's valid because it would be using `project.json` instead.
-    return true;
-  }
-  const packageJson = readJsonFile(packageJsonPath);
-
-  const outDir = tsConfig.options.outFile
-    ? dirname(tsConfig.options.outFile)
-    : tsConfig.options.outDir;
-  const resolvedOutDir = outDir
-    ? resolve(workspaceRoot, projectRoot, outDir)
-    : undefined;
-
-  const isPathSourceFile = (path: string): boolean => {
-    if (resolvedOutDir) {
-      const pathToCheck = resolve(workspaceRoot, projectRoot, path);
-      return !pathToCheck.startsWith(resolvedOutDir);
-    }
-
-    const ext = extname(path);
-    // Check that the file extension is a TS file extension. As the source files are in the same directory as the output files.
-    return ['.ts', '.tsx', '.cts', '.mts'].includes(ext);
-  };
-
-  // Checks if the value is a path within the `src` directory.
-  const containsInvalidPath = (
-    value: string | Record<string, string>
-  ): boolean => {
-    if (typeof value === 'string') {
-      return isPathSourceFile(value);
-    } else if (typeof value === 'object') {
-      return Object.entries(value).some(([currentKey, subValue]) => {
-        // Skip types field
-        if (currentKey === 'types') {
-          return false;
-        }
-        if (typeof subValue === 'string') {
-          return isPathSourceFile(subValue);
-        }
-        return false;
-      });
-    }
-    return false;
-  };
-
-  const exports = packageJson?.exports;
-
-  // Check the `.` export if `exports` is defined.
-  if (exports) {
-    if (typeof exports === 'string') {
-      return !isPathSourceFile(exports);
-    }
-    if (typeof exports === 'object' && '.' in exports) {
-      return !containsInvalidPath(exports['.']);
-    }
-
-    // Check other exports if `.` is not defined or valid.
-    for (const key in exports) {
-      if (key !== '.' && containsInvalidPath(exports[key])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // If `exports` is not defined, fallback to `main` and `module` fields.
-  const buildPaths = ['main', 'module'];
-  for (const field of buildPaths) {
-    if (packageJson[field] && isPathSourceFile(packageJson[field])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 function pathToInputOrOutput(
   path: string,
   workspaceRoot: string,
@@ -1032,7 +938,7 @@ function isExternalProjectReference(
   workspaceRoot: string,
   projectRoot: string
 ): boolean {
-  const relativePath = posix.relative(workspaceRoot, refTsConfigPath);
+  const relativePath = posixRelative(workspaceRoot, refTsConfigPath);
   if (cache.isExternalProjectReference[relativePath] !== undefined) {
     return cache.isExternalProjectReference[relativePath];
   }
@@ -1074,7 +980,7 @@ function retrieveTsConfigFromCache(
   tsConfigPath: string,
   workspaceRoot: string
 ): ParsedTsconfigData {
-  const relativePath = posix.relative(workspaceRoot, tsConfigPath);
+  const relativePath = posixRelative(workspaceRoot, tsConfigPath);
 
   // we don't need to check the hash if it's in the cache, because we've already
   // checked it when we initially populated the cache
@@ -1103,7 +1009,7 @@ function readTsConfigAndCache(
   tsConfigPath: string,
   workspaceRoot: string
 ): ParsedTsconfigData {
-  const relativePath = posix.relative(workspaceRoot, tsConfigPath);
+  const relativePath = posixRelative(workspaceRoot, tsConfigPath);
   const hash = getFileHash(tsConfigPath, workspaceRoot);
 
   let extendedFilesHash: string;
@@ -1261,7 +1167,7 @@ function resolveExtendedTsConfigPath(
 }
 
 function getFileHash(filePath: string, workspaceRoot: string): string {
-  const relativePath = posix.relative(workspaceRoot, filePath);
+  const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.fileHashes[relativePath]) {
     const content = readFile(filePath, workspaceRoot);
     cache.fileHashes[relativePath] = hashArray([content]);
@@ -1271,7 +1177,7 @@ function getFileHash(filePath: string, workspaceRoot: string): string {
 }
 
 function readFile(filePath: string, workspaceRoot: string): string {
-  const relativePath = posix.relative(workspaceRoot, filePath);
+  const relativePath = posixRelative(workspaceRoot, filePath);
   if (!cache.rawFiles[relativePath]) {
     const content = readFileSync(filePath, 'utf8');
     cache.rawFiles[relativePath] = content;
@@ -1291,6 +1197,9 @@ function toAbsolutePaths(
     updatedCache[key] = {
       data: {
         options: { noEmit: data.options.noEmit },
+        raw: {
+          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        },
         extendedConfigFile: data.extendedConfigFile,
       },
       extendedFilesHash,
@@ -1347,47 +1256,57 @@ function toRelativePaths(
     updatedCache[key] = {
       data: {
         options: { noEmit: data.options.noEmit },
+        raw: {
+          nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
+        },
         extendedConfigFile: data.extendedConfigFile,
       },
       extendedFilesHash,
       hash,
     };
     if (data.options.rootDir) {
-      updatedCache[key].data.options.rootDir = posix.relative(
+      updatedCache[key].data.options.rootDir = posixRelative(
         workspaceRoot,
         data.options.rootDir
       );
     }
     if (data.options.outDir) {
-      updatedCache[key].data.options.outDir = posix.relative(
+      updatedCache[key].data.options.outDir = posixRelative(
         workspaceRoot,
         data.options.outDir
       );
     }
     if (data.options.outFile) {
-      updatedCache[key].data.options.outFile = posix.relative(
+      updatedCache[key].data.options.outFile = posixRelative(
         workspaceRoot,
         data.options.outFile
       );
     }
     if (data.options.tsBuildInfoFile) {
-      updatedCache[key].data.options.tsBuildInfoFile = posix.relative(
+      updatedCache[key].data.options.tsBuildInfoFile = posixRelative(
         workspaceRoot,
         data.options.tsBuildInfoFile
       );
     }
     if (data.extendedConfigFile?.filePath) {
-      updatedCache[key].data.extendedConfigFile.filePath = posix.relative(
+      updatedCache[key].data.extendedConfigFile.filePath = posixRelative(
         workspaceRoot,
         data.extendedConfigFile.filePath
       );
     }
     if (data.projectReferences) {
       updatedCache[key].data.projectReferences = data.projectReferences.map(
-        (ref) => ({ ...ref, path: posix.relative(workspaceRoot, ref.path) })
+        (ref) => ({
+          ...ref,
+          path: posixRelative(workspaceRoot, ref.path),
+        })
       );
     }
   }
 
   return updatedCache;
+}
+
+function posixRelative(workspaceRoot: string, path: string): string {
+  return posix.normalize(relative(workspaceRoot, path));
 }

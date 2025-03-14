@@ -23,12 +23,6 @@ launch-templates:
       - name: Install zip and unzip
         script: sudo apt-get -yqq install zip unzip
 
-      # TODO: Remove this once the PR to set it on agents by default is merged
-      - name: Set SHELL environment variable
-        script: |
-          # We need $SHELL to be set for the bun installation to correctly link `bunx`
-          echo "SHELL=/usr/bin/bash" >> $NX_CLOUD_ENV
-
       - name: Install bun
         script: |
           curl -fsSL https://bun.sh/install | bash
@@ -93,12 +87,6 @@ launch-templates:
 
       - name: Install zip and unzip
         script: sudo apt-get -yqq install zip unzip
-
-      # TODO: Remove this once the PR to set it on agents by default is merged
-      - name: Set SHELL environment variable
-        script: |
-          # We need $SHELL to be set for the bun installation to correctly link `bunx`
-          echo "SHELL=/usr/bin/bash" >> $NX_CLOUD_ENV
 
       - name: Install bun
         script: |

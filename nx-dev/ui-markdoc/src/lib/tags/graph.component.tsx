@@ -69,7 +69,7 @@ export function Graph({
   if (!jsonFile && !parsedProps) {
     if (!children || !children.hasOwnProperty('props')) {
       return (
-        <div className="no-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
+        <div className="no-prose block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">
             No JSON provided for graph, use JSON code fence to embed data for
             the graph.
@@ -82,7 +82,7 @@ export function Graph({
       setParsedProps(JSON.parse(children?.props.children as any));
     } catch {
       return (
-        <div className="not-prose my-6 block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
+        <div className="not-prose block rounded-md bg-red-50 p-4 text-red-700 ring-1 ring-red-100 dark:bg-red-900/30 dark:text-red-600 dark:ring-red-900">
           <p className="mb-4">Could not parse JSON for graph:</p>
           <pre className="p-4 text-sm">{children?.props.children as any}</pre>
         </div>
@@ -94,7 +94,7 @@ export function Graph({
   }
 
   return (
-    <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+    <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       <div className="relative flex justify-center border-b border-slate-200 bg-slate-100/50 p-2 font-bold dark:border-slate-700 dark:bg-slate-700/50">
         {title}
       </div>

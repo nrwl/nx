@@ -98,6 +98,8 @@ export function applyWebConfig(
   // Determine hashing format.
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
 
+  const sassOptions = options.stylePreprocessorOptions?.sassOptions;
+  const lessOptions = options.stylePreprocessorOptions?.lessOptions;
   const includePaths: string[] = [];
   if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
     options.stylePreprocessorOptions.includePaths.forEach(
@@ -140,11 +142,16 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            implementation:
+              options.sassImplementation === 'sass-embedded'
+                ? require.resolve('sass-embedded')
+                : require.resolve('sass'),
+            api: 'modern-compiler',
             sassOptions: {
               fiber: false,
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -160,6 +167,7 @@ export function applyWebConfig(
           options: {
             lessOptions: {
               paths: includePaths,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -199,13 +207,18 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass-embedded'
+                ? require.resolve('sass-embedded')
+                : require.resolve('sass'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -223,6 +236,7 @@ export function applyWebConfig(
             lessOptions: {
               javascriptEnabled: true,
               ...lessPathOptions,
+              ...(lessOptions ?? {}),
             },
           },
         },
@@ -263,13 +277,18 @@ export function applyWebConfig(
         {
           loader: require.resolve('sass-loader'),
           options: {
-            implementation: require('sass'),
+            api: 'modern-compiler',
+            implementation:
+              options.sassImplementation === 'sass-embedded'
+                ? require.resolve('sass-embedded')
+                : require.resolve('sass'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
+              ...(sassOptions ?? {}),
             },
           },
         },
@@ -287,6 +306,7 @@ export function applyWebConfig(
             lessOptions: {
               javascriptEnabled: true,
               ...lessPathOptions,
+              ...(lessOptions ?? {}),
             },
           },
         },

@@ -1,3 +1,8 @@
+---
+title: Inferred Tasks (Project Crystal)
+description: Learn how Nx plugins automatically infer tasks from tool configurations, enabling caching, task dependencies, and optimized execution without manual setup.
+---
+
 # Inferred Tasks (Project Crystal)
 
 In Nx version 18, Nx plugins can automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).

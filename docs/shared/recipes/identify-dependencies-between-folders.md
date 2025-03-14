@@ -1,3 +1,8 @@
+---
+title: Identify Dependencies Between Folders
+description: Learn how to analyze and visualize dependencies between folders in your Nx workspace to help identify which code should be extracted into separate libraries.
+---
+
 # Identify Dependencies Between Folders
 
 As projects grow in size, you often need to split out a particular folder in that project into its own library. In order to do this properly, you need to:
