@@ -665,7 +665,15 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-              Would publish to `);
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
+
+
+
+        NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+      `);
 
       // Should only contain 2 projects
       expect(runCLI(`release publish -p ${pkg1} -p ${pkg3} -d`))
@@ -706,7 +714,52 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-              Would publish to `);
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
+
+
+
+        NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+        NX   Running target nx-release-publish for project {project-name}:
+
+        - {project-name}
+
+        With additional flags:
+        --dryRun=true
+
+
+
+        > nx run {project-name}:nx-release-publish
+
+
+        📦  @proj/{project-name}@X.X.X-dry-run
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
+
+
+
+        NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+      `);
     });
 
     it('should only run the publish task for the filtered projects', async () => {
@@ -743,7 +796,37 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-              Would publish to `);
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
+
+        > nx run {project-name}:nx-release-publish
+
+
+        📦  @proj/{project-name}@X.X.X-dry-run
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       X.X.X-dry-run
+        filename:      proj-{project-name}-X.X.X-dry-run.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
+
+
+
+        NX   Successfully ran target nx-release-publish for 2 projects
+
+
+
+      `);
 
       // Should only contain the 1 project from group2
       expect(runCLI(`release publish -g group2 -d`)).toMatchInlineSnapshot(`
@@ -777,7 +860,15 @@ describe('nx release - independent projects', () => {
           integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
           total files:   4
 
-                Would publish to `);
+          Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
+
+
+
+          NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+      `);
     });
   });
 

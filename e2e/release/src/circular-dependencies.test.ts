@@ -710,6 +710,7 @@ describe('nx release circular dependencies', () => {
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
+        Determined --from ref for {project-name} from the first commit in which it exists: {COMMIT_SHA}
 
         NX   Staging changed files with git
 
