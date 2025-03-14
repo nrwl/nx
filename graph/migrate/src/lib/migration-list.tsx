@@ -97,7 +97,7 @@ export function MigrationList(props: {
       <div
         className={`my-2 gap-2 rounded-md border border-slate-200 p-2 dark:border-slate-700/60`}
       >
-        <div className="flex h-4 w-4 w-full items-center gap-4">
+        <div className="flex h-4 w-full items-center gap-4">
           <input
             ref={selectAllCheckboxRef}
             onClick={handleHeaderCheckboxClick}
