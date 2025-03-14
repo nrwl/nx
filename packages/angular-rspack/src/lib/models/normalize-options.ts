@@ -2,6 +2,7 @@ import { FileReplacement } from '@nx/angular-rspack-compiler';
 import {
   normalizePath,
   readCachedProjectGraph,
+  workspaceRoot,
   type ProjectGraphProjectNode,
 } from '@nx/devkit';
 import assert from 'node:assert';
@@ -375,8 +376,9 @@ function normalizeAssetPatterns(
   }
 
   // When sourceRoot is not available, we default to ${projectRoot}/src.
-  const sourceRoot = projectSourceRoot || join(projectRoot, 'src');
-  const resolvedSourceRoot = resolve(root, sourceRoot);
+  const resolvedSourceRoot = projectSourceRoot
+    ? join(workspaceRoot, projectSourceRoot)
+    : join(workspaceRoot, projectRoot, 'src');
 
   return assets.map((assetPattern) => {
     // Normalize string asset patterns to objects.
