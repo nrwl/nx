@@ -53,7 +53,6 @@ export class NgRspackPlugin implements RspackPluginInstance {
           inject: 'body',
           scriptLoading: 'module',
           template: this.pluginOptions.index.input,
-          chunks: this.pluginOptions.index.insertionOrder.map(([name]) => name),
         }).apply(compiler);
       }
       if (
