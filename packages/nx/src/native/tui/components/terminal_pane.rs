@@ -10,36 +10,23 @@ use ratatui::{
         ScrollbarState, StatefulWidget, Widget,
     },
 };
-use std::io;
+use std::{io, sync::Arc};
 use tui_term::widget::PseudoTerminal;
 
-use super::tasks_list::TaskStatus;
 use crate::native::tui::pty::PtyInstance;
 
+use super::tasks_list::TaskStatus;
+
 pub struct TerminalPaneData {
-    pub pty: Option<PtyInstance>,
-    pub status: TaskStatus,
+    pub pty: Option<Arc<PtyInstance>>,
     pub is_interactive: bool,
     pub is_continuous: bool,
-}
-
-pub struct TerminalPane<'a> {
-    task_name: String,
-    pty_data: Option<&'a mut TerminalPaneData>,
-    is_focused: bool,
-    is_continuous: bool,
-}
-
-pub struct TerminalPaneState {
-    pub scroll_offset: usize,
-    pub scrollbar_state: ScrollbarState,
 }
 
 impl TerminalPaneData {
     pub fn new() -> Self {
         Self {
             pty: None,
-            status: TaskStatus::NotStarted,
             is_interactive: false,
             is_continuous: false,
         }
@@ -47,21 +34,22 @@ impl TerminalPaneData {
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
         if let Some(pty) = &mut self.pty {
+            let mut pty_mut = pty.as_ref().clone();
             match key.code {
                 // Handle arrow key based scrolling regardless of interactive mode
                 KeyCode::Up => {
-                    pty.scroll_up();
+                    pty_mut.scroll_up();
                     return Ok(());
                 }
                 KeyCode::Down => {
-                    pty.scroll_down();
+                    pty_mut.scroll_down();
                     return Ok(());
                 }
                 // Handle j/k for scrolling when not in interactive mode
                 KeyCode::Char('k') | KeyCode::Char('j') if !self.is_interactive => {
                     match key.code {
-                        KeyCode::Char('k') => pty.scroll_up(),
-                        KeyCode::Char('j') => pty.scroll_down(),
+                        KeyCode::Char('k') => pty_mut.scroll_up(),
+                        KeyCode::Char('j') => pty_mut.scroll_down(),
                         _ => {}
                     }
                     return Ok(());
@@ -72,7 +60,7 @@ impl TerminalPaneData {
                 {
                     // Scroll up a somewhat arbitrary "chunk" (12 lines)
                     for _ in 0..12 {
-                        pty.scroll_up();
+                        pty_mut.scroll_up();
                     }
                     return Ok(());
                 }
@@ -81,7 +69,7 @@ impl TerminalPaneData {
                 {
                     // Scroll down a somewhat arbitrary "chunk" (12 lines)
                     for _ in 0..12 {
-                        pty.scroll_down();
+                        pty_mut.scroll_down();
                     }
                     return Ok(());
                 }
@@ -118,16 +106,16 @@ impl TerminalPaneData {
                 // Only send input to PTY if we're in interactive mode
                 _ if self.is_interactive => match key.code {
                     KeyCode::Char(c) => {
-                        pty.write_input(c.to_string().as_bytes())?;
+                        pty_mut.write_input(c.to_string().as_bytes())?;
                     }
                     KeyCode::Enter => {
-                        pty.write_input(b"\r")?;
+                        pty_mut.write_input(b"\r")?;
                     }
                     KeyCode::Esc => {
-                        pty.write_input(&[0x1b])?;
+                        pty_mut.write_input(&[0x1b])?;
                     }
                     KeyCode::Backspace => {
-                        pty.write_input(&[0x7f])?;
+                        pty_mut.write_input(&[0x7f])?;
                     }
                     _ => {}
                 },
@@ -152,28 +140,51 @@ impl Default for TerminalPaneData {
     }
 }
 
+pub struct TerminalPaneState {
+    pub task_name: String,
+    pub task_status: TaskStatus,
+    pub is_continuous: bool,
+    pub is_focused: bool,
+    pub scroll_offset: usize,
+    pub scrollbar_state: ScrollbarState,
+    pub has_pty: bool,
+}
+
+impl TerminalPaneState {
+    pub fn new(
+        task_name: String,
+        task_status: TaskStatus,
+        is_continuous: bool,
+        is_focused: bool,
+        has_pty: bool,
+    ) -> Self {
+        Self {
+            task_name,
+            task_status,
+            is_continuous,
+            is_focused,
+            scroll_offset: 0,
+            scrollbar_state: ScrollbarState::default(),
+            has_pty,
+        }
+    }
+}
+
+pub struct TerminalPane<'a> {
+    pty_data: Option<&'a mut TerminalPaneData>,
+    is_continuous: bool,
+}
+
 impl<'a> TerminalPane<'a> {
     pub fn new() -> Self {
         Self {
-            task_name: String::new(),
             pty_data: None,
-            is_focused: false,
             is_continuous: false,
         }
     }
 
-    pub fn task_name(mut self, name: String) -> Self {
-        self.task_name = name;
-        self
-    }
-
     pub fn pty_data(mut self, data: &'a mut TerminalPaneData) -> Self {
         self.pty_data = Some(data);
-        self
-    }
-
-    pub fn focused(mut self, focused: bool) -> Self {
-        self.is_focused = focused;
         self
     }
 
@@ -240,7 +251,7 @@ impl<'a> TerminalPane<'a> {
         })
     }
 
-    /// Calculates the PTY dimensions taking into account borders and padding
+    /// Calculates appropriate pty dimensions by applying relevant borders and padding adjustments to the given area
     pub fn calculate_pty_dimensions(area: Rect) -> (u16, u16) {
         // Account for borders and padding correctly
         let pty_height = area
@@ -250,7 +261,8 @@ impl<'a> TerminalPane<'a> {
         let pty_width = area
             .width
             .saturating_sub(2) // borders
-            .saturating_sub(4); // padding (2 left + 2 right)
+            .saturating_sub(4) // padding (2 left + 2 right)
+            .saturating_sub(1); // 1 extra (based on empirical testing) to ensure characters are not cut off
 
         // Ensure minimum sizes
         let pty_height = pty_height.max(3);
@@ -259,50 +271,8 @@ impl<'a> TerminalPane<'a> {
         (pty_height, pty_width)
     }
 
-    /// Handles resizing of the terminal pane and its PTY.
-    /// Returns true if the dimensions changed and a sort is needed.
-    pub fn handle_resize(&mut self, area: Rect) -> io::Result<bool> {
-        if let Some(pty_data) = &mut self.pty_data {
-            if let Some(pty) = &mut pty_data.pty {
-                // Get current dimensions before resize
-                let old_rows = if let Some(screen) = pty.get_screen() {
-                    let (rows, _) = screen.size();
-                    rows
-                } else {
-                    0
-                };
-
-                let (pty_height, pty_width) = Self::calculate_pty_dimensions(area);
-                pty.resize(pty_height, pty_width)?;
-
-                // Return true if dimensions changed
-                Ok(old_rows != pty_height)
-            } else {
-                Ok(false)
-            }
-        } else {
-            Ok(false)
-        }
-    }
-
-    /// Updates the PTY data from a task and returns a cloned PTY if one exists
-    pub fn update_pty_from_task(
-        &mut self,
-        task_pty: Option<PtyInstance>,
-        task_status: TaskStatus,
-    ) -> Option<PtyInstance> {
-        if let Some(pty_data) = &mut self.pty_data {
-            pty_data.pty = task_pty;
-            pty_data.status = task_status;
-            pty_data.is_continuous = self.is_continuous;
-            pty_data.pty.clone()
-        } else {
-            None
-        }
-    }
-
     /// Returns whether currently in interactive mode.
-    pub fn is_interactive(&self) -> bool {
+    pub fn is_currently_interactive(&self) -> bool {
         self.pty_data
             .as_ref()
             .map(|data| data.is_interactive)
@@ -314,28 +284,19 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
     type State = TerminalPaneState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        let status = self
-            .pty_data
-            .as_ref()
-            .map(|data| data.status)
-            .unwrap_or(TaskStatus::NotStarted);
-        let is_interactive = self
-            .pty_data
-            .as_ref()
-            .map(|data| data.is_interactive)
-            .unwrap_or(false);
-        let base_style = self.get_base_style(status);
-        let border_style = if self.is_focused {
+        let base_style = self.get_base_style(state.task_status);
+        let border_style = if state.is_focused {
             base_style
         } else {
             base_style.add_modifier(Modifier::DIM)
         };
 
-        let status_icon = self.get_status_icon(status);
+        let status_icon = self.get_status_icon(state.task_status);
         let block = Block::default()
             .title(Line::from(vec![
                 status_icon.clone(),
-                Span::raw(format!("{}  ", self.task_name)).style(Style::default().fg(Color::White)),
+                Span::raw(format!("{}  ", state.task_name))
+                    .style(Style::default().fg(Color::White)),
             ]))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
@@ -344,10 +305,33 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             .padding(Padding::new(2, 2, 1, 1));
 
         // If task hasn't started yet, show pending message
-        if matches!(status, TaskStatus::NotStarted) {
+        if matches!(state.task_status, TaskStatus::NotStarted) {
             let message = vec![Line::from(vec![Span::styled(
                 "Task is pending...",
                 Style::default().fg(Color::DarkGray),
+            )])];
+
+            let paragraph = Paragraph::new(message)
+                .block(block)
+                .alignment(Alignment::Center)
+                .style(Style::default());
+
+            Widget::render(paragraph, area, buf);
+            return;
+        }
+
+        // If the task is in progress, we need to check if a pty instance is available, and if not
+        // it implies that the task is being run outside the pseudo-terminal and all we can do is
+        // wait for the task results to arrive
+        if matches!(state.task_status, TaskStatus::InProgress) && !state.has_pty {
+            let message = vec![Line::from(vec![Span::styled(
+                "Waiting for task results...",
+                if state.is_focused {
+                    self.get_base_style(TaskStatus::InProgress)
+                } else {
+                    self.get_base_style(TaskStatus::InProgress)
+                        .add_modifier(Modifier::DIM)
+                },
             )])];
 
             let paragraph = Paragraph::new(message)
@@ -399,9 +383,9 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
 
                     // Show interactive/readonly status for continuous tasks
-                    if self.is_focused && self.is_continuous {
+                    if state.is_focused && state.is_continuous {
                         // Bottom right status
-                        let bottom_text = if is_interactive {
+                        let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
                                 Span::raw("  "),
                                 Span::styled("<ctrl>+z", Style::default().fg(Color::Cyan)),
@@ -440,7 +424,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .render(bottom_right_area, buf);
 
                         // Top right status
-                        let top_text = if is_interactive {
+                        let top_text = if self.is_currently_interactive() {
                             Line::from(vec![Span::styled(
                                 "  INTERACTIVE  ",
                                 Style::default().fg(Color::White),
@@ -502,15 +486,6 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
                 }
             }
-        }
-    }
-}
-
-impl Default for TerminalPaneState {
-    fn default() -> Self {
-        Self {
-            scroll_offset: 0,
-            scrollbar_state: ScrollbarState::default(),
         }
     }
 }

@@ -1,28 +1,37 @@
-use super::task::Task;
-use super::{
-    action::Action,
-    components::{help_popup::HelpPopup, tasks_list::TasksList, Component},
-    tui,
-};
-use crate::native::tui::tui::Tui;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
+use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::Modifier;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
+use std::default::Default;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
 
+use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::tui::components::tasks_list::TaskStatus;
+use crate::native::tui::tui::Tui;
+
+use super::task::{Task, TaskResult};
+use super::utils::is_cache_hit;
+use super::{
+    action::Action,
+    components::{help_popup::HelpPopup, tasks_list::TasksList, Component},
+    tui,
+};
+
+#[derive(Default)]
+pub struct AppState {}
+
 pub struct App {
-    pub tick_rate: f64,
-    pub frame_rate: f64,
     pub components: Vec<Box<dyn Component>>,
     pub should_quit: bool,
     pub last_tick_key_events: Vec<KeyEvent>,
+    state: AppState,
     focus: Focus,
     previous_focus: Focus,
     done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
@@ -36,27 +45,80 @@ pub enum Focus {
 }
 
 impl App {
-    pub fn new(
-        tick_rate: f64,
-        frame_rate: f64,
-        tasks: Vec<Task>,
-        target_names: Vec<String>,
-    ) -> Result<Self> {
+    pub fn new(tasks: Vec<Task>, target_names: Vec<String>) -> Result<Self> {
         let tasks_list = TasksList::new(tasks, target_names);
         let help_popup = HelpPopup::new();
-
         let components: Vec<Box<dyn Component>> = vec![Box::new(tasks_list), Box::new(help_popup)];
 
         Ok(Self {
-            tick_rate,
-            frame_rate,
             components,
+            state: Default::default(),
             should_quit: false,
             last_tick_key_events: Vec::new(),
             focus: Focus::TaskList,
             previous_focus: Focus::TaskList,
             done_callback: None,
         })
+    }
+
+    pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            tasks_list.start_tasks(tasks, &mut self.state);
+        }
+    }
+
+    pub fn print_task_terminal_output(
+        &mut self,
+        task_id: String,
+        status: TaskStatus,
+        output: String,
+    ) {
+        // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
+        if is_cache_hit(status) {
+            let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
+            TasksList::write_output_to_parser(parser, output);
+
+            if let Some(tasks_list) = self
+                .components
+                .iter_mut()
+                .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+            {
+                tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
+                tasks_list.update_task_status(task_id.clone(), status);
+                let _ = tasks_list.handle_resize(None);
+            }
+        }
+    }
+
+    pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            tasks_list.end_tasks(task_results, &mut self.state);
+        }
+    }
+
+    // A pseudo-terminal running task will provide the parser and writer directly
+    pub fn register_running_task(
+        &mut self,
+        task_id: String,
+        parser_and_writer: External<(ParserArc, WriterArc)>,
+        task_status: TaskStatus,
+    ) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
+            tasks_list.update_task_status(task_id.clone(), task_status);
+        }
     }
 
     pub fn handle_event(
@@ -456,11 +518,11 @@ impl App {
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
-                    tasks_list.handle_resize(w, h).ok();
+                    tasks_list.handle_resize(Some((w, h))).ok();
                 }
                 tui.draw(|f| {
                     for component in self.components.iter_mut() {
-                        let r = component.draw(f, f.area());
+                        let r = component.draw(f, f.area(), &mut self.state);
                         if let Err(e) = r {
                             action_tx
                                 .send(Action::Error(format!("Failed to draw: {:?}", e)))
@@ -518,7 +580,7 @@ impl App {
                             tasks_list.set_dimmed(matches!(current_focus, Focus::HelpPopup));
                             tasks_list.set_focus(current_focus);
                         }
-                        let r = component.draw(f, f.area());
+                        let r = component.draw(f, f.area(), &mut self.state);
                         if let Err(e) = r {
                             action_tx
                                 .send(Action::Error(format!("Failed to draw: {:?}", e)))
@@ -532,7 +594,7 @@ impl App {
 
         // Update components
         for component in self.components.iter_mut() {
-            if let Ok(Some(new_action)) = component.update(action.clone()) {
+            if let Ok(Some(new_action)) = component.update(action.clone(), &mut self.state) {
                 action_tx.send(new_action).ok();
             }
         }

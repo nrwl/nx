@@ -1,3 +1,15 @@
+use anyhow::anyhow;
+use crossbeam_channel::{bounded, unbounded, Receiver};
+use crossterm::{
+    terminal,
+    terminal::{disable_raw_mode, enable_raw_mode},
+    tty::IsTty,
+};
+use napi::bindgen_prelude::*;
+use nom::AsBytes;
+use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
+use std::io::stdout;
+use std::sync::{Mutex, PoisonError, RwLock, RwLockReadGuard};
 use std::{
     collections::HashMap,
     env,
@@ -8,18 +20,9 @@ use std::{
     },
     time::Instant,
 };
-
-use anyhow::anyhow;
-use crossbeam_channel::{bounded, unbounded, Receiver};
-use crossterm::{
-    terminal,
-    terminal::{disable_raw_mode, enable_raw_mode},
-    tty::IsTty,
-};
-use napi::bindgen_prelude::*;
-use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
+use tracing::debug;
 use tracing::log::trace;
-use vt100_ctt::Parser;
+use vt100_ctt::{Parser, Screen};
 
 use super::os;
 use crate::native::pseudo_terminal::child_process::ChildProcess;
@@ -30,6 +33,9 @@ pub struct PseudoTerminal {
     pub printing_rx: Receiver<()>,
     pub quiet: Arc<AtomicBool>,
     pub running: Arc<AtomicBool>,
+    pub writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    pub parser: ParserArc,
+    is_within_nx_tui: bool,
 }
 
 pub struct PseudoTerminalOptions {
@@ -39,13 +45,16 @@ pub struct PseudoTerminalOptions {
 
 impl Default for PseudoTerminalOptions {
     fn default() -> Self {
-        let (w, h) = terminal::size().unwrap_or((80, 24));
+        let (w, h) = terminal::size().unwrap();
         Self {
             size: (w, h),
             passthrough_stdin: !env::var("NX_TUI").is_ok_and(|s| s == "true"),
         }
     }
 }
+
+pub type ParserArc = Arc<RwLock<Parser>>;
+pub type WriterArc = Arc<Mutex<Box<dyn Write + Send>>>;
 
 impl PseudoTerminal {
     pub fn new(options: PseudoTerminalOptions) -> Result<Self> {
@@ -63,17 +72,22 @@ impl PseudoTerminal {
             pixel_height: 0,
         })?;
 
-        let mut writer = pty_pair.master.take_writer()?;
-        if options.passthrough_stdin && std::io::stdout().is_tty() {
-            // Stdin -> pty stdin
-            trace!("Passing through stdin");
-            std::thread::spawn(move || {
-                let mut stdin = std::io::stdin();
-                if let Err(e) = os::write_to_pty(&mut stdin, &mut writer) {
-                    trace!("Error writing to pty: {:?}", e);
-                }
-            });
-        }
+        let writer = pty_pair.master.take_writer()?;
+        let writer_arc = Arc::new(Mutex::new(writer));
+        // let writer_clone = writer_arc.clone();
+
+        let is_within_nx_tui =
+            std::env::var("NX_TUI").unwrap_or_else(|_| String::from("false")) == "true";
+        // if options.passthrough_stdin && std::io::stdout().is_tty() {
+        //     // Stdin -> pty stdin
+        //     trace!("Passing through stdin");
+        //     std::thread::spawn(move || {
+        //         let mut stdin = std::io::stdin();
+        //         if let Err(e) = os::write_to_pty(&mut stdin, &mut writer_clone.lock().unwrap()) {
+        //             trace!("Error writing to pty: {:?}", e);
+        //         }
+        //     });
+        // }
 
         let mut reader = pty_pair.master.try_clone_reader()?;
         let (message_tx, message_rx) = unbounded();
@@ -81,12 +95,15 @@ impl PseudoTerminal {
         // Output -> stdout handling
         let quiet_clone = quiet.clone();
         let running_clone = running.clone();
+
+        let parser = Arc::new(RwLock::new(Parser::new(h, w, 10000)));
+        let parser_clone = parser.clone();
         std::thread::spawn(move || {
             let mut stdout = std::io::stdout();
             let mut buf = [0; 8 * 1024];
-            let mut parser = Parser::new(h, w, 10000);
             let mut first: bool = true;
 
+            // let mut processed_buf = Vec::new();
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
                     if len == 0 {
@@ -97,35 +114,73 @@ impl PseudoTerminal {
                         .ok();
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
-                    if !quiet {
+                    let contains_clear = buf[..len]
+                        .windows(4)
+                        .any(|window| window == [0x1B, 0x5B, 0x32, 0x4A]);
+                    debug!("Contains clear: {}", contains_clear);
+                    debug!("Read {} bytes", len);
+                    if let Ok(mut parser) = parser_clone.write() {
                         let prev = parser.screen().clone();
-                        parser.process(&buf[0..len]);
+
+                        // // Check if this buffer contains a clear screen sequence
+                        // let contains_clear = buf[..len]
+                        //     .windows(4)
+                        //     .any(|window| window == [0x1B, 0x5B, 0x32, 0x4A]);
+                        //
+                        // if contains_clear {
+                        //     // If we detect a clear screen sequence, start fresh
+                        //     processed_buf.clear();
+                        //     processed_buf.extend_from_slice(&buf[..len]);
+                        //
+                        //     let mut parser = parser_clone.write().unwrap();
+                        //     // Get current dimensions
+                        //     let (rows, cols) = parser.screen().size();
+                        //     // Create a fresh parser
+                        //     let mut new_parser = Parser::new(rows, cols, 10000);
+                        //     // Process just this buffer
+                        //     new_parser.process(&processed_buf);
+                        //     *parser = new_parser;
+                        // } else {
+                        //     // Normal processing
+                        //     processed_buf.extend_from_slice(&buf[..len]);
+                        //     let mut parser = parser_clone.write().unwrap();
+                        //     parser.process(&processed_buf);
+                        // }
+                        //
+                        // processed_buf.clear();
+
+                        parser.process(&buf[..len]);
+                        debug!("{}", parser.get_raw_output().len());
+
                         let write_buf = if first {
-                            parser.screen().all_contents_formatted()
+                            parser.screen().contents_formatted()
                         } else {
                             parser.screen().contents_diff(&prev)
                         };
                         first = false;
-
-                        let mut logged_interrupted_error = false;
-                        while let Err(e) = stdout.write_all(&write_buf) {
-                            match e.kind() {
-                                std::io::ErrorKind::Interrupted => {
-                                    if !logged_interrupted_error {
-                                        trace!("Interrupted error writing to stdout: {:?}", e);
-                                        logged_interrupted_error = true;
+                        if !quiet {
+                            let mut logged_interrupted_error = false;
+                            while let Err(e) = stdout.write_all(&write_buf) {
+                                match e.kind() {
+                                    std::io::ErrorKind::Interrupted => {
+                                        if !logged_interrupted_error {
+                                            trace!("Interrupted error writing to stdout: {:?}", e);
+                                            logged_interrupted_error = true;
+                                        }
+                                        continue;
                                     }
-                                    continue;
-                                }
-                                _ => {
-                                    // We should figure out what to do for more error types as they appear.
-                                    trace!("Error writing to stdout: {:?}", e);
-                                    trace!("Error kind: {:?}", e.kind());
-                                    break 'read_loop;
+                                    _ => {
+                                        // We should figure out what to do for more error types as they appear.
+                                        trace!("Error writing to stdout: {:?}", e);
+                                        trace!("Error kind: {:?}", e.kind());
+                                        break 'read_loop;
+                                    }
                                 }
                             }
+                            let _ = stdout.flush();
                         }
-                        let _ = stdout.flush();
+                    } else {
+                        println!("Failed to lock parser");
                     }
                 }
                 if !running_clone.load(Ordering::SeqCst) {
@@ -137,11 +192,18 @@ impl PseudoTerminal {
         });
         Ok(PseudoTerminal {
             quiet,
+            writer: writer_arc,
             running,
+            parser,
             pty_pair,
             message_rx,
             printing_rx,
+            is_within_nx_tui,
         })
+    }
+
+    pub fn get_parser_clone(&self) -> Arc<RwLock<Parser>> {
+        self.parser.clone()
     }
 
     pub fn default() -> Result<PseudoTerminal> {
@@ -156,6 +218,7 @@ impl PseudoTerminal {
         exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
+        prepend_command_to_output: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         let command_dir = get_directory(command_dir)?;
 
@@ -181,10 +244,24 @@ impl PseudoTerminal {
 
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
         trace!("Running {}", command);
+
+        // Prepend the command to the output if needed
+        if prepend_command_to_output.unwrap_or(false) {
+            self.writer
+                .lock()
+                .unwrap()
+                // Sadly ANSI escape codes don't seem to work properly when writing directly to the writer...
+                .write_all(format!("> {}\n\n", command).as_bytes())
+                .unwrap();
+        }
+
         let mut child = pair.slave.spawn_command(cmd)?;
         self.running.store(true, Ordering::SeqCst);
+
         let is_tty = tty.unwrap_or_else(|| std::io::stdout().is_tty());
-        if is_tty {
+        // Do not manipulate raw mode if running within the context of the NX_TUI, it handles it itself
+        let should_control_raw_mode = is_tty && !self.is_within_nx_tui;
+        if should_control_raw_mode {
             trace!("Enabling raw mode");
             enable_raw_mode().expect("Failed to enter raw terminal mode");
         }
@@ -218,7 +295,7 @@ impl PseudoTerminal {
                     }
                     trace!("Printing finished");
                 }
-                if is_tty {
+                if should_control_raw_mode {
                     trace!("Disabling raw mode");
                     disable_raw_mode().expect("Failed to restore non-raw terminal");
                 }
@@ -230,10 +307,23 @@ impl PseudoTerminal {
 
         trace!("Returning ChildProcess");
         Ok(ChildProcess::new(
+            self.parser.clone(),
+            self.writer.clone(),
             process_killer,
             self.message_rx.clone(),
             exit_to_process_rx,
         ))
+    }
+}
+
+#[napi]
+pub fn show_info_about_parser(terminal: External<&PseudoTerminal>) {
+    if let Ok(a) = terminal.get_parser_clone().read() {
+        stdout()
+            .write_all(a.screen().contents().as_bytes())
+            .unwrap();
+    } else {
+        println!("Failed to lock parser");
     }
 }
 

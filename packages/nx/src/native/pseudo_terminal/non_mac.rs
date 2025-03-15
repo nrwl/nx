@@ -32,9 +32,17 @@ impl RustPseudoTerminal {
         exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
+        prepend_command_to_output: Option<bool>,
     ) -> napi::Result<ChildProcess> {
-        self.pseudo_terminal
-            .run_command(command, command_dir, js_env, exec_argv, quiet, tty)
+        self.pseudo_terminal.run_command(
+            command,
+            command_dir,
+            js_env,
+            exec_argv,
+            quiet,
+            tty,
+            prepend_command_to_output,
+        )
     }
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
@@ -49,6 +57,7 @@ impl RustPseudoTerminal {
         js_env: Option<HashMap<String, String>>,
         exec_argv: Option<Vec<String>>,
         quiet: bool,
+        prepend_command_to_output: Option<bool>,
     ) -> napi::Result<ChildProcess> {
         let command = format!(
             "node {} {} {}",
@@ -65,6 +74,7 @@ impl RustPseudoTerminal {
             exec_argv,
             Some(quiet),
             Some(true),
+            prepend_command_to_output,
         )
     }
 }

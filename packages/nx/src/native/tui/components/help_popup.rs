@@ -13,6 +13,7 @@ use ratatui::{
         ScrollbarState,
     },
 };
+use crate::native::tui::app::AppState;
 
 pub struct HelpPopup {
     scroll_offset: usize,
@@ -331,7 +332,7 @@ impl Clone for HelpPopup {
 }
 
 impl Component for HelpPopup {
-    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect, _: &mut AppState) -> Result<()> {
         if self.visible {
             self.render(f, rect);
         }

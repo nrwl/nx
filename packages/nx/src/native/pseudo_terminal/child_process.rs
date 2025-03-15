@@ -1,5 +1,7 @@
+use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{bounded, Receiver};
+use napi::bindgen_prelude::External;
 use napi::{
   threadsafe_function::{
     ErrorStrategy::Fatal, ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking,
@@ -7,7 +9,11 @@ use napi::{
   Env, JsFunction,
 };
 use portable_pty::ChildKiller;
-use tracing::warn;
+use std::io::Write;
+use std::sync::{Arc, Mutex, RwLock};
+use std::thread::spawn;
+use tracing::{debug, warn};
+use vt100_ctt::Parser;
 
 pub enum ChildProcessMessage {
     Kill,
@@ -15,24 +21,35 @@ pub enum ChildProcessMessage {
 
 #[napi]
 pub struct ChildProcess {
+    parser: Arc<RwLock<Parser>>,
     process_killer: Box<dyn ChildKiller + Sync + Send>,
     message_receiver: Receiver<String>,
     pub(crate) wait_receiver: Receiver<String>,
     thread_handles: Vec<Sender<()>>,
+    writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
 }
 #[napi]
 impl ChildProcess {
     pub fn new(
+        parser: Arc<RwLock<Parser>>,
+        writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
         process_killer: Box<dyn ChildKiller + Sync + Send>,
         message_receiver: Receiver<String>,
         exit_receiver: Receiver<String>,
     ) -> Self {
         Self {
+            parser,
+            writer_arc,
             process_killer,
             message_receiver,
             wait_receiver: exit_receiver,
             thread_handles: vec![],
         }
+    }
+
+    #[napi]
+    pub fn get_parser_and_writer(&mut self) -> External<(ParserArc, WriterArc)> {
+        External::new((self.parser.clone(), self.writer_arc.clone()))
     }
 
     #[napi]
