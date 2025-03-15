@@ -37,6 +37,8 @@ export async function getProjectReportLines(
     projectReportBuffer = await execGradleAsync(gradlewFile, [
       'projectReportAll',
       process.env.NX_VERBOSE_LOGGING === 'true' ? '--info' : '',
+      '--exclude-task',
+      'htmlDependencyReport',
     ]);
   } catch (e: Buffer | Error | any) {
     if (e.toString()?.includes('ERROR: JAVA_HOME')) {
