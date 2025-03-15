@@ -1,6 +1,6 @@
 import { TaskDetails, NxCache } from '../index';
 import { join } from 'path';
-import { TempFs } from '../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../generators/testing-utils/temp-fs';
 import { rmSync } from 'fs';
 import { getDbConnection } from '../../utils/db-connection';
 import { randomBytes } from 'crypto';

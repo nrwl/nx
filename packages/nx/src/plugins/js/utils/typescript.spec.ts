@@ -1,6 +1,6 @@
 import { readTsConfigOptions } from './typescript';
 import { join } from 'path';
-import { TempFs } from '../../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../../generators/testing-utils/temp-fs';
 
 describe('readTsConfigOptions', () => {
   let fs: TempFs;

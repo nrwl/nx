@@ -1,5 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import { join } from 'path';
 import { createNodesV2 } from './plugin';
 

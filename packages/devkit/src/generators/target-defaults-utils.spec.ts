@@ -1,7 +1,8 @@
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { readNxJson, updateNxJson, type Tree } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from 'nx/src/generators/testing-utils/temp-fs';
 import { addE2eCiTargetDefaults } from './target-defaults-utils';
+
 describe('target-defaults-utils', () => {
   describe('addE2eCiTargetDefaults', () => {
     let tree: Tree;

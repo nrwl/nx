@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { TempFs } from '../../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../../generators/testing-utils/temp-fs';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from './config';
 import { ReleaseGroupWithName } from './filter-release-groups';
 import {
@@ -1150,6 +1150,7 @@ describe('version-plans', () => {
   });
 
   let createdOnAccumulator = 1;
+
   function versionPlan({
     name,
     content,
