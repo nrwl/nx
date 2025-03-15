@@ -1,0 +1,20 @@
+{
+  "name": "gradlew",
+  "batchImplementation": "./src/executors/gradlew/gradlew.impl#batchGradlew",
+  "implementation": "/packages/gradle/src/executors/gradlew/gradlew.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "version": 2,
+    "title": "GradlewImpl executor",
+    "description": "The GradlewImpl executor is used to run Gradle tasks.",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "gradlew.impl executor",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/gradle/src/executors/gradlew/schema.json",
+  "type": "executor"
+}
