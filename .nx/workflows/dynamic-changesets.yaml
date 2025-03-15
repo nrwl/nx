@@ -20,3 +20,5 @@ assignment-rules:
     run-on:
       - agent: linux-medium
         parallelism: 3
+      - agent: linux-extra-large
+        parallelism: 3
