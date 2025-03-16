@@ -146,7 +146,9 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(
       await e2eProjectGenerator(host, {
         pluginName: options.projectName,
-        projectDirectory: options.projectDirectory,
+        projectDirectory: options.e2eRootDirectory
+          ? `${options.e2eRootDirectory}/${options.projectDirectory}`
+          : options.projectDirectory,
         pluginOutputPath: joinPathFragments(
           'dist',
           options.rootProject ? options.projectName : options.projectRoot

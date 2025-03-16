@@ -8,6 +8,7 @@ export interface Schema {
   skipFormat?: boolean; // default is false
   skipLintChecks?: boolean; // default is false
   e2eTestRunner?: 'jest' | 'none';
+  e2eRootDirectory?: string;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter | LinterType;
