@@ -8,7 +8,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(projectNames: Array<string>, tasks: Array<Task>, nxArgs: object, overrides: object)
+  constructor(tasks: Array<Task>, pinnedTasks: Array<string>, nxArgs: object)
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void

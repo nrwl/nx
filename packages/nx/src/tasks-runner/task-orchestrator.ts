@@ -3,10 +3,7 @@ import { performance } from 'perf_hooks';
 import { relative } from 'path';
 import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
-import {
-  normalizeOptions,
-  runCommands,
-} from '../executors/run-commands/run-commands.impl';
+import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { Cache, DbCache, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
@@ -480,14 +477,11 @@ export class TaskOrchestrator {
           ...combinedOptions,
           env,
           usePty:
-            !this.tasksSchedule.hasTasks() &&
-            this.runningContinuousTasks.size === 0,
+            TUI_ENABLED ||
+            (!this.tasksSchedule.hasTasks() &&
+              this.runningContinuousTasks.size === 0),
           streamOutput,
         };
-        if (TUI_ENABLED) {
-          // Preprocess options on the JS side before sending to Rust
-          runCommandsOptions = normalizeOptions(runCommandsOptions);
-        }
 
         const runningTask = await runCommands(runCommandsOptions, {
           root: workspaceRoot, // only root is needed in runCommands

@@ -121,10 +121,9 @@ pub struct AppLifeCycle {
 impl AppLifeCycle {
     #[napi(constructor)]
     pub fn new(
-        _project_names: Vec<String>,
         tasks: Vec<Task>,
+        pinned_tasks: Vec<String>,
         nx_args: JsObject,
-        _overrides: JsObject,
     ) -> Self {
         // Get the target names from nx_args.targets array
         let target_names: Vec<String> = nx_args
@@ -137,7 +136,7 @@ impl AppLifeCycle {
 
         Self {
             app: Arc::new(std::sync::Mutex::new(
-                App::new(tasks.into_iter().map(|t| t.into()).collect(), target_names).unwrap(),
+                App::new(tasks.into_iter().map(|t| t.into()).collect(), target_names, pinned_tasks).unwrap(),
             )),
         }
     }

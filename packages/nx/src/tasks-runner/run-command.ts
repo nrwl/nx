@@ -40,7 +40,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraph } from './create-task-graph';
+import { createTaskGraph, createTaskId } from './create-task-graph';
 import {
   CompositeLifeCycle,
   LifeCycle,
@@ -72,6 +72,7 @@ async function getTerminalOutputLifeCycle(
   initiatingProject: string,
   projectNames: string[],
   tasks: Task[],
+  taskGraph: TaskGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
@@ -79,7 +80,24 @@ async function getTerminalOutputLifeCycle(
   if (process.env.NX_TUI === 'true') {
     const { AppLifeCycle, restoreTerminal } = await import('../native');
 
-    const lifeCycle = new AppLifeCycle(projectNames, tasks, nxArgs, overrides);
+    const isRunOne = initiatingProject != null;
+
+    const pinnedTasks: string[] = [];
+    if (isRunOne) {
+      const mainTaskId = createTaskId(
+        initiatingProject,
+        nxArgs.targets[0],
+        nxArgs.configuration
+      );
+      pinnedTasks.push(mainTaskId);
+      const mainContinuousDependencies =
+        taskGraph.continuousDependencies[mainTaskId];
+      if (mainContinuousDependencies.length > 0) {
+        pinnedTasks.push(mainContinuousDependencies[0]);
+      }
+    }
+
+    const lifeCycle = new AppLifeCycle(tasks, pinnedTasks, nxArgs);
 
     const renderIsDone = new Promise<void>((resolve) => {
       lifeCycle.__init(() => {
@@ -315,6 +333,7 @@ export async function runCommandForTasks(
     initiatingProject,
     projectNames,
     tasks,
+    taskGraph,
     nxArgs,
     nxJson,
     overrides
