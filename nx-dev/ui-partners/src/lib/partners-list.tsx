@@ -5,6 +5,7 @@ import {
   ZyphyrCloudIcon,
   HeroDevsIcon,
   CallstackIcon,
+  ESquareIcon,
 } from '@nx/nx-dev/ui-icons';
 import { Partner } from './partner';
 import { useState, useEffect, useMemo } from 'react';
@@ -14,28 +15,33 @@ export function PartnersList(): JSX.Element {
     () => [
       {
         name: 'Zyphyr Cloud',
-        logo: <ZyphyrCloudIcon aria-hidden="true" className="mb-4 h-14 w-14" />,
+        logo: <ZyphyrCloudIcon aria-hidden="true" className="mb-4 h-14" />,
         href: 'https://zephyr-cloud.io/',
       },
       {
         name: 'HeroDevs',
-        logo: <HeroDevsIcon aria-hidden="true" className="mb-4 h-12 w-12" />,
+        logo: <HeroDevsIcon aria-hidden="true" className="mb-4 h-12" />,
         href: 'https://www.herodevs.com/',
       },
       {
         name: 'Bitovi',
-        logo: <BitoviIcon aria-hidden="true" className="mb-4 h-12" />,
+        logo: <BitoviIcon aria-hidden="true" className="mb-4 h-12 w-24" />,
         href: 'https://www.bitovi.com/',
       },
       {
         name: 'Push Based',
-        logo: <PushBasedIcon aria-hidden="true" className="mb-4 h-12 w-12" />,
+        logo: <PushBasedIcon aria-hidden="true" className="mb-4 h-12" />,
         href: 'https://push-based.io/',
       },
       {
         name: 'Callstack',
         logo: <CallstackIcon aria-hidden="true" className="mb-4 h-12" />,
         href: 'https://callstack.com/',
+      },
+      {
+        name: 'E-Square',
+        logo: <ESquareIcon aria-hidden="true" className="mb-4 h-12 w-32" />,
+        href: 'https://e-square.io/',
       },
     ],
     []
