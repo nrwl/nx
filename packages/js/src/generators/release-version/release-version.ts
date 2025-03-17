@@ -998,7 +998,9 @@ To fix this you will either need to add a package.json file at that location, or
      * Ensure that formatting is applied so that version bump diffs are as minimal as possible
      * within the context of the user's workspace.
      */
-    await formatFiles(tree);
+    if (!options.skipFormat) {
+      await formatFiles(tree);
+    }
 
     // Return the version data so that it can be leveraged by the overall version command
     return {

@@ -45,6 +45,7 @@ export type VersionOptions = NxReleaseArgs &
     preid?: string;
     stageChanges?: boolean;
     generatorOptionsOverrides?: Record<string, unknown>;
+    skipFormat?: boolean;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -88,6 +89,7 @@ export type ReleaseOptions = NxReleaseArgs &
     yes?: boolean;
     preid?: VersionOptions['preid'];
     skipPublish?: boolean;
+    skipFormat?: boolean;
   };
 
 export type VersionPlanArgs = {
@@ -204,6 +206,12 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         description:
           'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
       })
+      .option('skip-format', {
+        type: 'boolean',
+        describe:
+          'Skip formatting files with Prettier after updating version information.',
+        default: false,
+      })
       .check((argv) => {
         if (argv.yes !== undefined && argv.skipPublish !== undefined) {
           throw new Error(
@@ -247,6 +255,12 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             type: 'boolean',
             describe:
               'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+          })
+          .option('skip-format', {
+            type: 'boolean',
+            describe:
+              'Skip formatting files with Prettier after updating version information.',
+            default: false,
           })
       )
     ),

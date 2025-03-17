@@ -101,6 +101,11 @@ export interface ReleaseVersionGeneratorSchema {
    * still present in the package.json.
    */
   preserveLocalDependencyProtocols?: boolean;
+  
+  /**
+   * Whether to skip formatting files with Prettier after updating version information.
+   */
+  skipFormat?: boolean;
 }
 
 export interface NxReleaseVersionResult {
