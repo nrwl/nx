@@ -52,3 +52,24 @@ The following are known limitations and missing features of Angular Rspack:
 - Hot Module Replacement (HMR) is partially supported.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
+
+## Benchmarks
+
+![Benchmarks](/shared/guides/angular-rspack/bundler-build-times.png)
+
+Below is a table of benchmarks for different bundlers, tested on an application with ~800 lazy-loaded routes and ~10 components per route—totaling ~8000 components.
+
+**System Info**
+
+- MacBook Pro (macOS 15.3.1)
+- Processor: M2 Max
+- Memory: 96 GB
+
+| Build/Bundler | Prod SSR (s) | Prod (s) | Dev (s) |
+| ------------- | ------------ | -------- | ------- |
+| Webpack       | 198.614      | 154.339  | 159.436 |
+| esbuild       | 23.701       | 19.569   | 15.358  |
+| Rsbuild       | 23.949       | 20.490   | 18.209  |
+| Rspack        | 30.589       | 19.269   | 19.940  |
+
+You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmark](https://github.com/nrwl/ng-bundler-benchmark)
