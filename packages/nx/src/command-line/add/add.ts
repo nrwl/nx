@@ -1,7 +1,6 @@
 import { exec } from 'child_process';
 import { existsSync } from 'fs';
-import * as ora from 'ora';
-import * as yargsParser from 'yargs-parser';
+import { createSpinner } from 'nanospinner';
 import { readNxJson, type NxJsonConfiguration } from '../../config/nx-json';
 import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -44,7 +43,7 @@ async function installPackage(
   version: string,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const spinner = ora(`Installing ${pkgName}@${version}...`);
+  const spinner = createSpinner(`Installing ${pkgName}@${version}...`);
   spinner.start();
 
   if (existsSync('package.json')) {
@@ -65,7 +64,7 @@ async function installPackage(
         },
         (error, stdout) => {
           if (error) {
-            spinner.fail();
+            spinner.error();
             output.addNewline();
             logger.error(stdout);
             output.error({
@@ -93,7 +92,7 @@ async function installPackage(
       nxJson.installation.plugins[pkgName] = undefined;
       writeJsonFile('nx.json', nxJson);
 
-      spinner.fail();
+      spinner.error();
       output.addNewline();
       logger.error(e.message);
       output.error({
@@ -103,7 +102,7 @@ async function installPackage(
     }
   }
 
-  spinner.succeed();
+  spinner.success();
 }
 
 async function initializePlugin(
@@ -122,7 +121,7 @@ async function initializePlugin(
     updatePackageScripts = true;
   }
 
-  const spinner = ora(`Initializing ${pkgName}...`);
+  const spinner = createSpinner(`Initializing ${pkgName}...`);
   spinner.start();
 
   try {
@@ -133,7 +132,7 @@ async function initializePlugin(
       options.verbose
     );
   } catch (e) {
-    spinner.fail();
+    spinner.error();
     output.addNewline();
     output.error({
       title: `Failed to initialize ${pkgName}`,
@@ -142,7 +141,7 @@ async function initializePlugin(
     process.exit(1);
   }
 
-  spinner.succeed();
+  spinner.success();
 }
 
 function parsePackageSpecifier(
