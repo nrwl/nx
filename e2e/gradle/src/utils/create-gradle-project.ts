@@ -77,7 +77,7 @@ export function createGradleProject(
 
   e2eConsoleLogger(
     execSync(`${gradleCommand} publishToMavenLocal`, {
-      cwd: `${__dirname}/../../../../packages/gradle/native`,
+      cwd: `${__dirname}/../../../../packages/gradle/project-graph-plugin`,
     }).toString()
   );
 }

@@ -229,33 +229,13 @@ exports[`create ci targets replaceTargetNameWithOptions should not replace test 
     },
     "parallelism": false,
   },
-  "createNodes": {
-    "cache": true,
-    "command": "./gradlew :list:createNodes",
-    "dependsOn": [
-      "list:createNodesLocal",
-    ],
-    "metadata": {
-      "description": "Print nodes report for Nx",
-      "help": {
-        "command": "./gradlew help --task :list:createNodes",
-      },
-      "technologies": [
-        "gradle",
-      ],
-    },
-    "options": {
-      "cwd": ".",
-    },
-    "parallelism": false,
-  },
   "createNodesLocal": {
     "cache": true,
-    "command": "./gradlew :list:createNodesLocal",
+    "command": "./gradlew :list:nxProjectGraphLocal",
     "metadata": {
       "description": "Create nodes and dependencies for Nx",
       "help": {
-        "command": "./gradlew help --task :list:createNodesLocal",
+        "command": "./gradlew help --task :list:nxProjectGraphLocal",
       },
       "technologies": [
         "gradle",
@@ -472,6 +452,26 @@ exports[`create ci targets replaceTargetNameWithOptions should not replace test 
       "description": "Displays the configuration model of project ':list'. [deprecated]",
       "help": {
         "command": "./gradlew help --task :list:model",
+      },
+      "technologies": [
+        "gradle",
+      ],
+    },
+    "options": {
+      "cwd": ".",
+    },
+    "parallelism": false,
+  },
+  "nxProjectGraph": {
+    "cache": true,
+    "command": "./gradlew :list:nxProjectGraph",
+    "dependsOn": [
+      "list:nxProjectGraphLocal",
+    ],
+    "metadata": {
+      "description": "Print nodes report for Nx",
+      "help": {
+        "command": "./gradlew help --task :list:nxProjectGraph",
       },
       "technologies": [
         "gradle",
@@ -1090,37 +1090,13 @@ exports[`create ci targets replaceTargetNameWithOptions should replace test in d
     },
     "parallelism": false,
   },
-  "createNodes": {
-    "cache": true,
-    "command": "./gradlew :list:createNodes",
-    "dependsOn": [
-      "list:createNodesLocal",
-    ],
-    "metadata": {
-      "description": "Print nodes report for Nx",
-      "help": {
-        "command": "./gradlew help --task :list:createNodes",
-      },
-      "technologies": [
-        "gradle",
-      ],
-    },
-    "options": {
-      "args": [
-        "--exclude-task",
-        "test",
-      ],
-      "cwd": ".",
-    },
-    "parallelism": false,
-  },
   "createNodesLocal": {
     "cache": true,
-    "command": "./gradlew :list:createNodesLocal",
+    "command": "./gradlew :list:nxProjectGraphLocal",
     "metadata": {
       "description": "Create nodes and dependencies for Nx",
       "help": {
-        "command": "./gradlew help --task :list:createNodesLocal",
+        "command": "./gradlew help --task :list:nxProjectGraphLocal",
       },
       "technologies": [
         "gradle",
@@ -1381,6 +1357,30 @@ exports[`create ci targets replaceTargetNameWithOptions should replace test in d
       "description": "Displays the configuration model of project ':list'. [deprecated]",
       "help": {
         "command": "./gradlew help --task :list:model",
+      },
+      "technologies": [
+        "gradle",
+      ],
+    },
+    "options": {
+      "args": [
+        "--exclude-task",
+        "test",
+      ],
+      "cwd": ".",
+    },
+    "parallelism": false,
+  },
+  "nxProjectGraph": {
+    "cache": true,
+    "command": "./gradlew :list:nxProjectGraph",
+    "dependsOn": [
+      "list:nxProjectGraphLocal",
+    ],
+    "metadata": {
+      "description": "Print nodes report for Nx",
+      "help": {
+        "command": "./gradlew help --task :list:nxProjectGraph",
       },
       "technologies": [
         "gradle",

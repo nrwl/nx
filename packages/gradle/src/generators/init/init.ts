@@ -14,7 +14,7 @@ import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { dirname, join, basename } from 'path';
 
-const nativePluginName = 'dev.nx.gradle.native';
+const nativePluginName = 'dev.nx.gradle';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -68,15 +68,15 @@ export async function addBuildGradleFileNextToSettingsGradle(tree: Tree) {
     '**/settings.gradle?(.kts)',
   ]);
   settingsGradleFiles.forEach((settingsGradleFile) => {
-    addCreateNodesPluginToBuildGradle(settingsGradleFile, tree);
+    addNxProjectGraphPluginToBuildGradle(settingsGradleFile, tree);
   });
 }
 
 /**
  * - creates a build.gradle file next to the settings.gradle file if it does not exist.
- * - adds the createNodes plugin to the build.gradle file if it does not exist.
+ * - adds the NxProjectGraphPlugin plugin to the build.gradle file if it does not exist.
  */
-function addCreateNodesPluginToBuildGradle(
+function addNxProjectGraphPluginToBuildGradle(
   settingsGradleFile: string,
   tree: Tree
 ) {
@@ -93,7 +93,7 @@ function addCreateNodesPluginToBuildGradle(
     buildGradleContent = tree.read(gradleFilePath).toString();
   }
 
-  const nodesPlugin = filename.endsWith('.kts')
+  const nxProjectGraphReportPlugin = filename.endsWith('.kts')
     ? `id("${nativePluginName}") version("+")`
     : `id "${nativePluginName}" version "+"`;
   if (buildGradleContent.includes('plugins {')) {
@@ -101,16 +101,16 @@ function addCreateNodesPluginToBuildGradle(
       buildGradleContent = buildGradleContent.replace(
         'plugins {',
         `plugins {
-    ${nodesPlugin}`
+    ${nxProjectGraphReportPlugin}`
       );
     }
   } else {
     buildGradleContent = `plugins {
-    ${nodesPlugin}
+    ${nxProjectGraphReportPlugin}
 }\n\r${buildGradleContent}`;
   }
 
-  const applyNodesPlugin = `plugin("${nativePluginName}")`;
+  const applyNxProjectGraphReportPlugin = `plugin("${nativePluginName}")`;
   if (buildGradleContent.includes('allprojects {')) {
     if (
       !buildGradleContent.includes(`plugin("${nativePluginName}")`) &&
@@ -120,7 +120,7 @@ function addCreateNodesPluginToBuildGradle(
         `Please add the ${nativePluginName} plugin to your ${gradleFilePath}:
 allprojects {
   apply {
-      ${applyNodesPlugin}
+      ${applyNxProjectGraphReportPlugin}
   }
 }`
       );
@@ -128,7 +128,7 @@ allprojects {
   } else {
     buildGradleContent = `${buildGradleContent}\n\rallprojects {
     apply {
-        ${applyNodesPlugin}
+        ${applyNxProjectGraphReportPlugin}
     }
   }`;
   }
