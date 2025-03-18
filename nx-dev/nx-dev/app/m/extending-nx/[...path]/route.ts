@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { nxDocumentationApi } from '../../../lib/nx.api';
-import { rewriteMarkdownLinks } from '../../../lib/markdown-utils';
+import { nxPluginsApi } from '../../../../lib/plugins.api';
+import { rewriteMarkdownLinks } from '../../../../lib/markdown-utils';
 
 export async function GET(
   request: Request,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     // Get the document using the document API
-    const document = nxDocumentationApi.getDocument(params.path);
+    const document = nxPluginsApi.getDocument(['extending-nx', ...params.path]);
 
     // Process the content to rewrite local links with the /m prefix
     const processedContent = rewriteMarkdownLinks(document.content);
@@ -36,14 +36,10 @@ export async function GET(
 
 // Define which paths should be statically generated at build time
 export function generateStaticParams() {
-  const reservedPaths = ['/ci', '/nx-api', '/changelog'];
-
-  // Get all document paths and filter out reserved ones
-  const documentPaths = nxDocumentationApi
+  // Get all document paths for the extending-nx section
+  const documentPaths = nxPluginsApi
     .getSlugsStaticDocumentPaths()
-    .filter(
-      (path) => !reservedPaths.some((reserved) => path.startsWith(reserved))
-    );
+    .map((path) => path.replace(/^\/extending-nx\//, '')); // Remove the /extending-nx/ prefix
 
   // Convert paths to segment arrays for Next.js App Router
   return documentPaths.map((path) => ({

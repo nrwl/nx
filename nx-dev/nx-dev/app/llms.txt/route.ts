@@ -112,7 +112,7 @@ function generateMenuItemMarkdown(
   const description = descriptions[item.path] || '';
   const link = item.path.startsWith('http')
     ? `[${item.name}](${item.path})`
-    : `[${item.name}](${item.path}.md)`;
+    : `[${item.name}](/m${item.path})`;
 
   // Place description after the link, not inside it
   let markdown = `${spacing}- ${link}${
