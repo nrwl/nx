@@ -1,3 +1,20 @@
+use color_eyre::eyre::Result;
+use crossterm::event::KeyEvent;
+use napi::bindgen_prelude::External;
+use ratatui::{
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style, Stylize},
+    text::{Line, Span},
+    widgets::{Block, Borders, Cell, Paragraph, Row, Table},
+    Frame,
+};
+use std::collections::HashMap;
+use std::io::Write;
+use std::sync::{Arc, Mutex, RwLock};
+use std::{any::Any, io};
+use vt100_ctt::Parser;
+
+use crate::native::tui::utils::{normalize_newlines, sort_task_items};
 use crate::native::tui::{
     action::Action,
     app::Focus,
@@ -6,54 +23,21 @@ use crate::native::tui::{
     task::{Task, TaskResult},
     utils,
 };
-use color_eyre::eyre::Result;
-use crossterm::event::KeyEvent;
-use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style, Stylize},
-    text::{Line, Span},
-    widgets::{Block, Borders, Cell, Paragraph, Row, ScrollbarState, Table},
-    Frame,
+use crate::native::{
+    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    tui::app::AppState,
 };
-use std::any::Any;
-use std::io;
 
 use super::pagination::Pagination;
 use super::task_selection_manager::TaskSelectionManager;
 use super::terminal_pane::{TerminalPane, TerminalPaneData};
 use super::{help_text::HelpText, terminal_pane::TerminalPaneState};
-use crate::native::tui::utils::sort_task_items;
 
 const CACHE_STATUS_LOCAL_KEPT_EXISTING: &str = "Kept Existing";
 const CACHE_STATUS_LOCAL: &str = "Local";
 const CACHE_STATUS_REMOTE: &str = "Remote";
 const CACHE_STATUS_NOT_YET_KNOWN: &str = "...";
 const CACHE_STATUS_NOT_APPLICABLE: &str = "-";
-
-/// A list component that displays and manages tasks in a terminal UI.
-/// Provides filtering, sorting, and output display capabilities.
-pub struct TasksList {
-    selection_manager: TaskSelectionManager,
-    tasks: Vec<TaskItem>,        // Source of truth - all tasks
-    filtered_names: Vec<String>, // Names of tasks that match the filter
-    throbber_counter: usize,
-    pub filter_mode: bool,
-    filter_text: String,
-    filter_persisted: bool, // Whether the filter is in a persisted state
-    focus: Focus,
-    last_box_area: Rect,
-    scroll_offset: usize,
-    scrollbar_state: ScrollbarState,
-    content_height: usize,
-    pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
-    focused_pane: Option<usize>,     // Currently focused pane (if any)
-    is_dimmed: bool,
-    spacebar_mode: bool, // Whether we're in spacebar mode (output follows selection)
-    terminal_pane_data: [TerminalPaneData; 2],
-    target_names: Vec<String>,
-    task_list_hidden: bool, // New field to track if task list is hidden
-    cloud_message: Option<String>,
-}
 
 /// Represents an individual task with its current state and execution details.
 pub struct TaskItem {
@@ -65,7 +49,6 @@ pub struct TaskItem {
     pub status: TaskStatus,
     terminal_output: String,
     continuous: bool,
-    pty: Option<PtyInstance>,
     start_time: Option<u128>,
     // Public to aid with sorting utility and testing
     pub end_time: Option<u128>,
@@ -80,7 +63,6 @@ impl Clone for TaskItem {
             status: self.status.clone(),
             continuous: self.continuous,
             terminal_output: self.terminal_output.clone(),
-            pty: None,
             start_time: self.start_time,
             end_time: self.end_time,
         }
@@ -91,7 +73,11 @@ impl TaskItem {
     pub fn new(name: String, continuous: bool) -> Self {
         Self {
             name,
-            duration: "".to_string(),
+            duration: if continuous {
+                "Continuous".to_string()
+            } else {
+                "".to_string()
+            },
             cache_status: if continuous {
                 // We know upfront that the cache status will not be applicable
                 CACHE_STATUS_NOT_APPLICABLE.to_string()
@@ -101,7 +87,6 @@ impl TaskItem {
             status: TaskStatus::NotStarted,
             continuous,
             terminal_output: String::new(),
-            pty: None,
             start_time: None,
             end_time: None,
         }
@@ -120,38 +105,6 @@ impl TaskItem {
                 TaskStatus::RemoteCache => CACHE_STATUS_REMOTE.to_string(),
                 _ => CACHE_STATUS_NOT_APPLICABLE.to_string(),
             }
-        }
-    }
-
-    pub fn update_output_and_status(&mut self, output: &str, status: TaskStatus) {
-        self.terminal_output = output.to_string();
-        self.update_status(status);
-
-        // Get terminal size
-        let terminal_size = crossterm::terminal::size().unwrap_or((80, 24));
-        let (width, height) = terminal_size;
-
-        // Calculate dimensions using the same logic as handle_resize
-        let output_width = (width / 3) * 2; // Two-thirds of width for PTY panes
-        let area = Rect::new(0, 0, output_width, height);
-
-        // Use TerminalPane to calculate dimensions
-        let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(area);
-
-        // Create a new PTY with the output
-        if let Ok(mut pty) = PtyInstance::new_with_output(pty_height, pty_width, output.as_bytes())
-        {
-            // Mark the PTY as completed with the appropriate exit code
-            let exit_code = match status {
-                TaskStatus::Success
-                | TaskStatus::LocalCacheKeptExisting
-                | TaskStatus::LocalCache
-                | TaskStatus::RemoteCache => 0,
-                TaskStatus::Failure => 1,
-                _ => 0, // Default to 0 for other statuses
-            };
-            pty.mark_as_completed(exit_code).ok();
-            self.pty = Some(pty);
         }
     }
 }
@@ -195,6 +148,29 @@ impl std::str::FromStr for TaskStatus {
     }
 }
 
+/// A list component that displays and manages tasks in a terminal UI.
+/// Provides filtering, sorting, and output display capabilities.
+pub struct TasksList {
+    // task id -> pty instance
+    pub pty_instances: HashMap<String, Arc<PtyInstance>>,
+    selection_manager: TaskSelectionManager,
+    tasks: Vec<TaskItem>,        // Source of truth - all tasks
+    filtered_names: Vec<String>, // Names of tasks that match the filter
+    throbber_counter: usize,
+    pub filter_mode: bool,
+    filter_text: String,
+    filter_persisted: bool, // Whether the filter is in a persisted state
+    focus: Focus,
+    pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
+    focused_pane: Option<usize>,     // Currently focused pane (if any)
+    is_dimmed: bool,
+    spacebar_mode: bool, // Whether we're in spacebar mode (output follows selection)
+    terminal_pane_data: [TerminalPaneData; 2],
+    target_names: Vec<String>,
+    task_list_hidden: bool, // New field to track if task list is hidden
+    cloud_message: Option<String>,
+}
+
 impl TasksList {
     /// Creates a new TasksList with the given tasks.
     /// Converts the input tasks into TaskItems and initializes the UI state.
@@ -209,6 +185,7 @@ impl TasksList {
         let selection_manager = TaskSelectionManager::new(5); // Default 5 items per page
 
         Self {
+            pty_instances: HashMap::new(),
             selection_manager,
             filtered_names,
             tasks: task_items,
@@ -217,10 +194,6 @@ impl TasksList {
             filter_text: String::new(),
             filter_persisted: false,
             focus: Focus::TaskList,
-            last_box_area: Rect::default(),
-            scroll_offset: 0,
-            scrollbar_state: ScrollbarState::default(),
-            content_height: 0,
             pane_tasks: [None, None],
             focused_pane: None,
             is_dimmed: false,
@@ -236,39 +209,14 @@ impl TasksList {
     /// If in spacebar mode, updates the output pane to show the newly selected task.
     pub fn next(&mut self) {
         self.selection_manager.next();
-
-        // Only update pane 1 if we're in spacebar mode
-        if self.spacebar_mode {
-            if let Some(task_name) = self.selection_manager.get_selected_task_name() {
-                self.pane_tasks[0] = Some(task_name.clone());
-            }
-        }
-        self.reset_scroll();
+        self.update_pane_visibility_after_selection_change();
     }
 
     /// Moves the selection to the previous task in the list.
     /// If in spacebar mode, updates the output pane to show the newly selected task.
     pub fn previous(&mut self) {
         self.selection_manager.previous();
-
-        // Only update pane 1 if we're in spacebar mode
-        if self.spacebar_mode {
-            if let Some(task_name) = self.selection_manager.get_selected_task_name() {
-                self.pane_tasks[0] = Some(task_name.clone());
-            }
-        }
-        self.reset_scroll();
-    }
-
-    /// Updates the output pane visibility after a page change.
-    /// Only affects the display if in spacebar mode.
-    fn update_pane_visibility_after_page_change(&mut self) {
-        // Only update pane visibility if we're in spacebar mode
-        if self.spacebar_mode {
-            if let Some(task_name) = self.selection_manager.get_selected_task_name() {
-                self.pane_tasks[0] = Some(task_name.clone());
-            }
-        }
+        self.update_pane_visibility_after_selection_change();
     }
 
     /// Moves to the next page of tasks.
@@ -278,8 +226,7 @@ impl TasksList {
             return;
         }
         self.selection_manager.next_page();
-        self.update_pane_visibility_after_page_change();
-        self.reset_scroll();
+        self.update_pane_visibility_after_selection_change();
     }
 
     /// Moves to the previous page of tasks.
@@ -289,8 +236,20 @@ impl TasksList {
             return;
         }
         self.selection_manager.previous_page();
-        self.update_pane_visibility_after_page_change();
-        self.reset_scroll();
+        self.update_pane_visibility_after_selection_change();
+    }
+
+    /// Updates the output pane visibility after a task selection change.
+    /// Only affects the display if in spacebar mode.
+    fn update_pane_visibility_after_selection_change(&mut self) {
+        // Only update pane visibility if we're in spacebar mode
+        if self.spacebar_mode {
+            if let Some(task_name) = self.selection_manager.get_selected_task_name() {
+                self.pane_tasks[0] = Some(task_name.clone());
+                // Re-evaluate the optimal size of the terminal pane and pty because the newly selected task may never have been shown before
+                let _ = self.handle_resize(None);
+            }
+        }
     }
 
     /// Creates a list of task entries with separators between different status groups.
@@ -444,38 +403,6 @@ impl TasksList {
         }
     }
 
-    /// Scrolls the content up by one line if possible.
-    pub fn scroll_up(&mut self) {
-        if self.is_scrollable() && self.scroll_offset > 0 {
-            self.scroll_offset -= 1;
-            self.scrollbar_state = self.scrollbar_state.position(self.scroll_offset);
-        }
-    }
-
-    /// Scrolls the content down by one line if possible.
-    pub fn scroll_down(&mut self) {
-        if self.is_scrollable() {
-            let max_scroll = self
-                .content_height
-                .saturating_sub(self.last_box_area.height as usize);
-            if self.scroll_offset < max_scroll {
-                self.scroll_offset += 1;
-                self.scrollbar_state = self.scrollbar_state.position(self.scroll_offset);
-            }
-        }
-    }
-
-    /// Checks if the content is scrollable based on content height and viewport area.
-    fn is_scrollable(&self) -> bool {
-        self.content_height > self.last_box_area.height as usize
-    }
-
-    /// Resets the scroll position to the top and updates the scrollbar state.
-    pub fn reset_scroll(&mut self) {
-        self.scroll_offset = 0;
-        self.scrollbar_state = self.scrollbar_state.position(0);
-    }
-
     /// Toggles the visibility of the output pane for the currently selected task.
     /// In spacebar mode, the output follows the task selection.
     pub fn toggle_output_visibility(&mut self) {
@@ -492,6 +419,9 @@ impl TasksList {
                 self.pane_tasks = [Some(task_name.clone()), None];
                 self.focused_pane = None;
                 self.spacebar_mode = true; // Enter spacebar mode
+
+                // Re-evaluate the optimal size of the terminal pane and pty
+                let _ = self.handle_resize(None);
             }
         }
     }
@@ -515,28 +445,29 @@ impl TasksList {
             if self.spacebar_mode && pane_idx == 0 {
                 self.spacebar_mode = false;
                 self.focused_pane = Some(0);
-                return;
-            }
+            } else {
+                // Check if the task is already pinned to the pane
+                if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
+                    // Unpin the task if it's already pinned
+                    self.pane_tasks[pane_idx] = None;
 
-            // Check if the task is already pinned to the pane
-            if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
-                // Unpin the task if it's already pinned
-                self.pane_tasks[pane_idx] = None;
-
-                // Adjust focused pane if necessary
-                if !self.has_visible_panes() {
-                    self.focused_pane = None;
+                    // Adjust focused pane if necessary
+                    if !self.has_visible_panes() {
+                        self.focused_pane = None;
+                        self.focus = Focus::TaskList;
+                        self.spacebar_mode = false;
+                    }
+                } else {
+                    // Pin the task to the specified pane
+                    self.pane_tasks[pane_idx] = Some(task_name.clone());
+                    self.focused_pane = Some(pane_idx);
                     self.focus = Focus::TaskList;
-                    self.spacebar_mode = false;
+                    self.spacebar_mode = false; // Exit spacebar mode when pinning
                 }
-                return;
             }
 
-            // Pin the task to the specified pane
-            self.pane_tasks[pane_idx] = Some(task_name.clone());
-            self.focused_pane = Some(pane_idx);
-            self.focus = Focus::TaskList;
-            self.spacebar_mode = false; // Exit spacebar mode when pinning
+            // Always re-evaluate the optimal size of the terminal pane(s) and pty(s)
+            let _ = self.handle_resize(None);
         }
     }
 
@@ -634,35 +565,53 @@ impl TasksList {
         }
     }
 
+    // TODO: Investigate forcing the cursor, and therefore scroll position, to be at the bottom of the pty when scrolling is required, right now it is relative to the top of the output
+    // and if a task is in progress this can feel a bit "off"
+    //
     /// Handles window resize events by updating PTY dimensions.
-    pub fn handle_resize(&mut self, width: u16, height: u16) -> io::Result<()> {
-        let output_area = if self.has_visible_panes() {
-            let width = (width / 3) * 2; // Two-thirds of width for PTY panes
-            Rect::new(0, 0, width, height)
+    pub fn handle_resize(&mut self, area_size: Option<(u16, u16)>) -> io::Result<()> {
+        let (width, height) = area_size.unwrap_or(
+            // Fallback to detecting the overall terminal size
+            crossterm::terminal::size()
+                // And ultimately fallback so a sane default
+                .unwrap_or((80, 24)),
+        );
+
+        // The pane_area will be 2/3s of the total width if one pane is visible/pinned, or 1/3 if two are visible/only the 2nd is pinned
+        let total_panes = self.pane_tasks.iter().filter(|t| t.is_some()).count();
+        // If the 2nd pane is pinned, regardless of if the 1st is visible or not, the terminal pane area need to be 1/2
+        let terminal_pane_area = if self.pane_tasks[1].is_some() || total_panes == 2 {
+            Rect::new(0, 0, width / 3, height) // One-third of width for two terminal panes
+        } else if total_panes == 1 {
+            Rect::new(0, 0, (width / 3) * 2, height) // Two-thirds of width for one terminal pane
         } else {
             Rect::new(0, 0, width, height)
         };
 
         let mut needs_sort = false;
 
-        // Handle resize for each visible pane
-        for (pane_idx, task_name) in self.pane_tasks.iter().enumerate() {
+        // Handle resize for each visible pane's pty
+        for (_, task_name) in self.pane_tasks.iter().enumerate() {
             if let Some(task_name) = task_name {
                 if let Some(task) = self.tasks.iter_mut().find(|t| t.name == *task_name) {
-                    let mut terminal_pane = TerminalPane::new()
-                        .task_name(task.name.clone())
-                        .pty_data(&mut self.terminal_pane_data[pane_idx]);
+                    if let Some(pty) = self.pty_instances.get_mut(&task.name) {
+                        let (pty_height, pty_width) =
+                            TerminalPane::calculate_pty_dimensions(terminal_pane_area);
 
-                    // Update PTY data and handle resize
-                    if terminal_pane.handle_resize(output_area)? {
-                        needs_sort = true;
-                    }
+                        // Get current dimensions before resize
+                        let old_rows = if let Some(screen) = pty.clone().get_screen() {
+                            let (rows, _) = screen.size();
+                            rows
+                        } else {
+                            0
+                        };
+                        let mut pty_clone = pty.as_ref().clone();
+                        pty_clone.resize(pty_height, pty_width)?;
 
-                    // Update task's PTY with any changes
-                    if let Some(updated_pty) =
-                        terminal_pane.update_pty_from_task(task.pty.clone(), task.status)
-                    {
-                        task.pty = Some(updated_pty);
+                        // If dimensions changed, mark for sort
+                        if old_rows != pty_height {
+                            needs_sort = true;
+                        }
                     }
                 }
             }
@@ -812,43 +761,17 @@ impl TasksList {
         self.is_dimmed = is_dimmed;
     }
 
-    // In the TS driven case, we need to load tasks in given to us by the TS and render them as pending tasks
-    pub fn load_tasks(&mut self, tasks: Vec<Task>) {
-        let mut task_items = Vec::new();
-        for task in tasks {
-            task_items.push(TaskItem::new(task.id, task.continuous.unwrap_or(false)));
-        }
-        self.tasks = task_items;
-        self.sort_tasks();
-    }
-
     /// Updates their status to InProgress and triggers a sort.
-    pub fn start_tasks(&mut self, tasks: Vec<Task>) {
+    pub fn start_tasks(&mut self, tasks: Vec<Task>, _app_state: &mut AppState) {
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
                 task_item.update_status(TaskStatus::InProgress);
-
-                // Get terminal size
-                let terminal_size = crossterm::terminal::size().unwrap_or((80, 24));
-                let (width, height) = terminal_size;
-
-                // Calculate dimensions using the same logic as handle_resize
-                let output_width = (width / 3) * 2; // Two-thirds of width for PTY panes
-                let area = Rect::new(0, 0, output_width, height);
-
-                // Use TerminalPane to calculate dimensions
-                let (pty_height, pty_width) = TerminalPane::calculate_pty_dimensions(area);
-
-                // Create PTY with empty output, the command and args will be executed by the lifecycle method
-                if let Ok(pty) = PtyInstance::new_with_output(pty_height, pty_width, b"") {
-                    task_item.pty = Some(pty);
-                }
             }
         }
         self.sort_tasks();
     }
 
-    pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
+    pub fn end_tasks(&mut self, task_results: Vec<TaskResult>, _app_state: &mut AppState) {
         for task_result in task_results {
             if let Some(task) = self
                 .tasks
@@ -856,18 +779,7 @@ impl TasksList {
                 .find(|t| t.name == task_result.task.id)
             {
                 let parsed_status = task_result.status.parse().unwrap();
-
-                // In the case of tasks that actually ran (i.e. not cache hits), there will be a final terminal output
-                // copy on the task result. We need to update the task's terminal output and create a new PTY in this case.
-                if task_result.terminal_output.is_some() {
-                    task.update_output_and_status(
-                        task_result.terminal_output.unwrap_or_default().as_str(),
-                        parsed_status,
-                    );
-                } else {
-                    // We always need to make sure the status is updated, even if there is no terminal output
-                    task.update_status(parsed_status);
-                }
+                task.update_status(parsed_status);
 
                 if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
                     task.start_time = Some(task_result.task.start_time.unwrap() as u128);
@@ -877,40 +789,34 @@ impl TasksList {
                         task_result.task.end_time.unwrap() as u128,
                     );
                 }
+
+                // If the task never had a pty, it must mean that it was run outside of the pseudo-terminal.
+                // We create a new parser and writer for the task and register it and then write the final output to the parser
+                if !self.pty_instances.contains_key(&task.name) {
+                    let (parser, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
+                    if let Some(task_result_output) = task_result.terminal_output {
+                        Self::write_output_to_parser(parser, task_result_output);
+                    }
+                    let task_name = task.name.clone();
+                    self.create_and_register_pty_instance(&task_name, parser_and_writer);
+                }
             }
         }
-        // Force a sort to update the UI
         self.sort_tasks();
+        // Re-evaluate the optimal size of the terminal pane and pty because the newly available task outputs might already be being displayed
+        let _ = self.handle_resize(None);
     }
 
-    pub fn update_task_pty(&mut self, task_id: String, pty: PtyInstance) {
+    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task) = self.tasks.iter_mut().find(|t| t.name == task_id) {
-            task.pty = Some(pty);
+            task.update_status(status);
             self.sort_tasks();
         }
     }
 
-    pub fn update_task_output_and_status(
-        &mut self,
-        task_id: &str,
-        status: TaskStatus,
-        output: Option<&str>,
-    ) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.name == task_id) {
-            task.update_output_and_status(output.unwrap_or_default(), status);
-        }
-    }
-
-    pub fn get_active_pty_for_task(&self, task_id: &str) -> Option<&PtyInstance> {
-        self.tasks
-            .iter()
-            .find(|t| t.name == task_id)
-            .and_then(|t| t.pty.as_ref())
-    }
-
     /// Toggles the visibility of the task list panel
     pub fn toggle_task_list(&mut self) {
-        // Only allow hiding if at least one pane is visible
+        // Only allow hiding if at least one pane is visible, otherwise the screen will be blank
         if self.has_visible_panes() {
             self.task_list_hidden = !self.task_list_hidden;
         }
@@ -919,10 +825,47 @@ impl TasksList {
     pub fn set_cloud_message(&mut self, message: Option<String>) {
         self.cloud_message = message;
     }
+
+    // TODO: move to app level when the focus and pty data handling are moved up
+    pub fn create_and_register_pty_instance(
+        &mut self,
+        task_id: &str,
+        parser_and_writer: External<(ParserArc, WriterArc)>,
+    ) {
+        // Access the contents of the External
+        let parser_and_writer_clone = parser_and_writer.clone();
+        let (parser, writer) = &parser_and_writer_clone;
+        let pty = Arc::new(
+            PtyInstance::new(task_id.to_string(), parser.clone(), writer.clone())
+                .map_err(|e| napi::Error::from_reason(format!("Failed to create PTY: {}", e)))
+                .unwrap(),
+        );
+
+        self.pty_instances.insert(task_id.to_string(), pty.clone());
+    }
+
+    // TODO: move to app level when the focus and pty data handling are moved up
+    pub fn create_empty_parser_and_noop_writer() -> (ParserArc, External<(ParserArc, WriterArc)>) {
+        // Use sane defaults for rows, cols and scrollback buffer size. The dimensions will be adjusted dynamically later.
+        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 10000)));
+        let writer: Arc<Mutex<Box<dyn Write + Send>>> =
+            Arc::new(Mutex::new(Box::new(std::io::sink())));
+        (parser.clone(), External::new((parser, writer)))
+    }
+
+    // TODO: move to app level when the focus and pty data handling are moved up
+    // Writes the given output to the given parser, used for the case where a task is a cache hit, or when it is run outside of the rust pseudo-terminal
+    pub fn write_output_to_parser(parser: ParserArc, output: String) {
+        parser
+            .write()
+            .unwrap()
+            .write_all(&normalize_newlines(output.as_bytes()))
+            .unwrap();
+    }
 }
 
 impl Component for TasksList {
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, _app_state: &mut AppState) -> Result<()> {
         // Determine if we should use collapsed mode based on viewport width
         let collapsed_mode = self.has_visible_panes() || area.width < 100;
 
@@ -1511,11 +1454,12 @@ impl Component for TasksList {
                             if let Some(task) = self.tasks.iter_mut().find(|t| t.name == *task_name)
                             {
                                 let mut terminal_pane_data = &mut self.terminal_pane_data[1];
-                                terminal_pane_data.status = task.status;
                                 terminal_pane_data.is_continuous = task.continuous;
 
-                                if let Some(pty) = &mut task.pty {
+                                let mut has_pty = false;
+                                if let Some(pty) = self.pty_instances.get(task_name) {
                                     terminal_pane_data.pty = Some(pty.clone());
+                                    has_pty = true;
                                 }
 
                                 let is_focused = match self.focus {
@@ -1524,12 +1468,17 @@ impl Component for TasksList {
                                     }
                                     _ => false,
                                 };
-                                let mut state = TerminalPaneState::default();
+
+                                let mut state = TerminalPaneState::new(
+                                    task.name.clone(),
+                                    task.status,
+                                    task.continuous,
+                                    is_focused,
+                                    has_pty,
+                                );
 
                                 let terminal_pane = TerminalPane::new()
-                                    .task_name(task.name.clone())
                                     .pty_data(&mut terminal_pane_data)
-                                    .focused(is_focused)
                                     .continuous(task.continuous);
 
                                 f.render_stateful_widget(
@@ -1547,23 +1496,29 @@ impl Component for TasksList {
                     {
                         if let Some(task) = self.tasks.iter_mut().find(|t| t.name == *task_name) {
                             let mut terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                            terminal_pane_data.status = task.status;
                             terminal_pane_data.is_continuous = task.continuous;
 
-                            if let Some(pty) = &mut task.pty {
+                            let mut has_pty = false;
+                            if let Some(pty) = self.pty_instances.get(task_name) {
                                 terminal_pane_data.pty = Some(pty.clone());
+                                has_pty = true;
                             }
 
                             let is_focused = match self.focus {
                                 Focus::MultipleOutput(focused_pane_idx) => 0 == focused_pane_idx,
                                 _ => false,
                             };
-                            let mut state = TerminalPaneState::default();
+
+                            let mut state = TerminalPaneState::new(
+                                task.name.clone(),
+                                task.status,
+                                task.continuous,
+                                is_focused,
+                                has_pty,
+                            );
 
                             let terminal_pane = TerminalPane::new()
-                                .task_name(task.name.clone())
                                 .pty_data(&mut terminal_pane_data)
-                                .focused(is_focused)
                                 .continuous(task.continuous);
 
                             f.render_stateful_widget(terminal_pane, output_area, &mut state);
@@ -1582,11 +1537,12 @@ impl Component for TasksList {
                             if let Some(task) = self.tasks.iter_mut().find(|t| t.name == *task_name)
                             {
                                 let mut terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
-                                terminal_pane_data.status = task.status;
                                 terminal_pane_data.is_continuous = task.continuous;
 
-                                if let Some(pty) = &mut task.pty {
+                                let mut has_pty = false;
+                                if let Some(pty) = self.pty_instances.get(task_name) {
                                     terminal_pane_data.pty = Some(pty.clone());
+                                    has_pty = true;
                                 }
 
                                 let is_focused = match self.focus {
@@ -1595,12 +1551,17 @@ impl Component for TasksList {
                                     }
                                     _ => false,
                                 };
-                                let mut state = TerminalPaneState::default();
+
+                                let mut state = TerminalPaneState::new(
+                                    task.name.clone(),
+                                    task.status,
+                                    task.continuous,
+                                    is_focused,
+                                    has_pty,
+                                );
 
                                 let terminal_pane = TerminalPane::new()
-                                    .task_name(task.name.clone())
                                     .pty_data(&mut terminal_pane_data)
-                                    .focused(is_focused)
                                     .continuous(task.continuous);
 
                                 f.render_stateful_widget(terminal_pane, *chunk, &mut state);
@@ -1629,13 +1590,13 @@ impl Component for TasksList {
 
     /// Updates the component state in response to an action.
     /// Returns an optional follow-up action.
-    fn update(&mut self, action: Action) -> Result<Option<Action>> {
+    fn update(&mut self, action: Action, _app_state: &mut AppState) -> Result<Option<Action>> {
         match action {
             Action::Tick => {
                 self.throbber_counter = self.throbber_counter.wrapping_add(1);
             }
             Action::Resize(w, h) => {
-                self.handle_resize(w, h)?;
+                self.handle_resize(Some((w, h)))?;
             }
             Action::EnterFilterMode => {
                 if self.filter_mode {
@@ -1657,16 +1618,6 @@ impl Component for TasksList {
                     self.remove_filter_char();
                 }
             }
-            Action::ScrollUp => {
-                if self.is_scrollable() {
-                    self.scroll_up();
-                }
-            }
-            Action::ScrollDown => {
-                if self.is_scrollable() {
-                    self.scroll_down();
-                }
-            }
             _ => {}
         }
         Ok(None)
@@ -1684,6 +1635,7 @@ impl Component for TasksList {
 impl Default for TasksList {
     fn default() -> Self {
         Self {
+            pty_instances: HashMap::new(),
             selection_manager: TaskSelectionManager::default(),
             tasks: Vec::new(),
             filtered_names: Vec::new(),
@@ -1692,10 +1644,6 @@ impl Default for TasksList {
             filter_text: String::new(),
             filter_persisted: false,
             focus: Focus::TaskList,
-            last_box_area: Rect::default(),
-            scroll_offset: 0,
-            scrollbar_state: ScrollbarState::default(),
-            content_height: 0,
             pane_tasks: [None, None],
             focused_pane: None,
             is_dimmed: false,

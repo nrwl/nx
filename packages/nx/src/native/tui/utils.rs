@@ -69,6 +69,31 @@ pub fn format_duration_since(start_ms: u128, end_ms: u128) -> String {
     format_duration(end_ms.saturating_sub(start_ms))
 }
 
+/// Ensures that all newlines in the output are properly handled by converting
+/// lone \n to \r\n sequences. This mimics terminal driver behavior.
+pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
+    let mut output = Vec::with_capacity(input.len());
+    let mut i = 0;
+    while i < input.len() {
+        if input[i] == b'\n' {
+            // If this \n isn't preceded by \r, add the \r
+            if i == 0 || input[i - 1] != b'\r' {
+                output.push(b'\r');
+            }
+        }
+        output.push(input[i]);
+        i += 1;
+    }
+    output
+}
+
+pub fn is_cache_hit(status: TaskStatus) -> bool {
+    matches!(
+        status,
+        TaskStatus::LocalCacheKeptExisting | TaskStatus::LocalCache | TaskStatus::RemoteCache
+    )
+}
+
 /// Sorts a list of TaskItems with a stable, total ordering.
 ///
 /// The sort order is:

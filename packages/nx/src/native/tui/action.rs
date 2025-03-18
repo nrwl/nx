@@ -20,8 +20,6 @@ pub enum Action {
     NextPage,
     PreviousPage,
     ToggleOutput,
-    ToggleMark,
-    UnmarkAll,
     FocusNext,
     FocusPrevious,
     ScrollPaneUp(usize),
