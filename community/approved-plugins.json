@@ -513,5 +513,10 @@
     "name": "nx-foundry",
     "description": "Foundry generators and inferred tasks for Nx",
     "url": "https://github.com/juliangsibecas/nx-foundry"
+  },
+  {
+    "name": "@robby-rabbitman/nx-plus-web-test-runner",
+    "description": "Web Test Runner plugin for Nx workspaces.",
+    "url": "https://github.com/RobbyRabbitman/nx-plus/tree/main/libs/web-test-runner"
   }
 ]
