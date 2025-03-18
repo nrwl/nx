@@ -175,7 +175,7 @@ impl NxCache {
         &self,
         hash: String,
         result: CachedResult,
-        outputs: Vec<String>,
+        outputs: Option<Vec<String>>,
     ) -> anyhow::Result<()> {
         trace!(
             "applying remote cache results: {:?} ({})",
@@ -184,9 +184,12 @@ impl NxCache {
         );
         let terminal_output = result.terminal_output.clone();
         let mut size = terminal_output.len() as i64;
-        if outputs.len() > 0 && result.code == 0 {
-            size += try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
-        };
+        if let Some(outputs) = outputs {
+            if outputs.len() > 0 && result.code == 0 {
+                size +=
+                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
+            };
+        }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
