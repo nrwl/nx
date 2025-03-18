@@ -192,7 +192,15 @@ impl TasksList {
             selection_manager.select_task(main_task.clone());
             focus = Focus::MultipleOutput(0);
             focused_pane = Some(0);
-            main_terminal_pane_data.set_interactive(true);
+            // If the main task is continuous, automatically enter interactive mode
+            if task_items
+                .iter()
+                .find(|t| t.name == *main_task)
+                .unwrap()
+                .continuous
+            {
+                main_terminal_pane_data.set_interactive(true);
+            }
         }
 
         let mut iter = pinned_tasks.into_iter().take(2);
@@ -591,15 +599,27 @@ impl TasksList {
                 .unwrap_or((80, 24)),
         );
 
-        // The pane_area will be 2/3s of the total width if one pane is visible/pinned, or 1/3 if two are visible/only the 2nd is pinned
+        // Calculate terminal pane area based on task list visibility and number of panes
         let total_panes = self.pane_tasks.iter().filter(|t| t.is_some()).count();
-        // If the 2nd pane is pinned, regardless of if the 1st is visible or not, the terminal pane area need to be 1/2
-        let terminal_pane_area = if self.pane_tasks[1].is_some() || total_panes == 2 {
-            Rect::new(0, 0, width / 3, height) // One-third of width for two terminal panes
-        } else if total_panes == 1 {
-            Rect::new(0, 0, (width / 3) * 2, height) // Two-thirds of width for one terminal pane
+
+        let terminal_pane_area = if self.task_list_hidden {
+            // When task list is hidden, use full width for panes
+            if total_panes == 2 {
+                Rect::new(0, 0, width / 2, height) // 50:50 split for two panes
+            } else if total_panes == 1 {
+                Rect::new(0, 0, width, height) // 100% width for one pane
+            } else {
+                Rect::new(0, 0, width, height)
+            }
         } else {
-            Rect::new(0, 0, width, height)
+            // When task list is visible, allocate space accordingly
+            if self.pane_tasks[1].is_some() || total_panes == 2 {
+                Rect::new(0, 0, width / 3, height) // One-third of width for two terminal panes (the other third is for the task list)
+            } else if total_panes == 1 {
+                Rect::new(0, 0, (width / 3) * 2, height) // Two-thirds of width for one terminal pane (the other third is for the task list)
+            } else {
+                Rect::new(0, 0, width, height)
+            }
         };
 
         let mut needs_sort = false;
@@ -834,6 +854,7 @@ impl TasksList {
         if self.has_visible_panes() {
             self.task_list_hidden = !self.task_list_hidden;
         }
+        let _ = self.handle_resize(None);
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
