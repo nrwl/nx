@@ -12,8 +12,6 @@ export async function getProjectReportLines(
   gradlewFile: string
 ): Promise<string[]> {
   let projectReportBuffer: Buffer;
-
-  // Attempt to run projectReport or projectReportAll task, regardless of build.gradle or build.gradle.kts location
   try {
     projectReportBuffer = await execGradleAsync(gradlewFile, [
       'projectReportAll',

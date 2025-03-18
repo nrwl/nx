@@ -21,9 +21,9 @@ import {
   splitConfigFiles,
 } from '../utils/split-config-files';
 import {
-  getCurrentNodesReport,
-  populateNodes,
-} from './utils/get-nodes-from-gradle-plugin';
+  getCurrentProjectGraphReport,
+  populateProjectGraph,
+} from './utils/get-project-graph-from-gradle-plugin';
 import {
   GradlePluginOptions,
   normalizeOptions,
@@ -55,11 +55,11 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
     );
     const targetsCache = readTargetsCache(cachePath);
 
-    await populateNodes(
+    await populateProjectGraph(
       context.workspaceRoot,
       gradlewFiles.map((f) => join(context.workspaceRoot, f))
     );
-    const { nodes, externalNodes } = getCurrentNodesReport();
+    const { nodes, externalNodes } = getCurrentProjectGraphReport();
 
     try {
       return createNodesFromFiles(
