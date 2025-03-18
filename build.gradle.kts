@@ -1,14 +1,14 @@
 plugins {
-    id("dev.nx.gradle.native") version("+")
+    // id("dev.nx.gradle") version("+")
     id("com.ncorti.ktfmt.gradle") version("+")
 }
 
-group = "dev.nx.gradle"
+group = "dev.nx"
 
 allprojects {
   apply {
       plugin("project-report")
-      plugin("dev.nx.gradle.native")
+      // plugin("dev.nx.gradle")
       plugin("com.ncorti.ktfmt.gradle")
   }
 }
