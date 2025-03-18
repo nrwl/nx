@@ -218,15 +218,15 @@
       },
       "options": { "cwd": "." }
     },
-    "createNodes": {
+    "nxProjectGraph": {
       "cache": true,
       "parallelism": false,
-      "dependsOn": ["list:createNodesLocal"],
-      "command": "./gradlew :list:createNodes",
+      "dependsOn": ["list:nxProjectGraphLocal"],
+      "command": "./gradlew :list:nxProjectGraph",
       "metadata": {
         "description": "Print nodes report for Nx",
         "technologies": ["gradle"],
-        "help": { "command": "./gradlew help --task :list:createNodes" }
+        "help": { "command": "./gradlew help --task :list:nxProjectGraph" }
       },
       "options": { "cwd": "." }
     },
@@ -234,12 +234,12 @@
       "cache": true,
       "parallelism": false,
       "outputs": ["{projectRoot}/build/nx/list.json"],
-      "command": "./gradlew :list:createNodesLocal",
+      "command": "./gradlew :list:nxProjectGraphLocal",
       "metadata": {
         "description": "Create nodes and dependencies for Nx",
         "technologies": ["gradle"],
         "help": {
-          "command": "./gradlew help --task :list:createNodesLocal"
+          "command": "./gradlew help --task :list:nxProjectGraphLocal"
         }
       },
       "options": { "cwd": "." }

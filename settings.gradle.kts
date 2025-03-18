@@ -15,4 +15,4 @@ pluginManagement {
 }
 
 rootProject.name = "nx"
-includeBuild("./packages/gradle/native")
+includeBuild("./packages/gradle/project-graph-plugin")
