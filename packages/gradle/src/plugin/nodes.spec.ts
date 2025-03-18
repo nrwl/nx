@@ -1,14 +1,16 @@
 import { CreateNodesContext, readJsonFile } from '@nx/devkit';
 import { join } from 'path';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { type NodesReport } from './utils/get-nodes-from-gradle-plugin';
+import { type ProjectGraphReport } from './utils/get-project-graph-from-gradle-plugin';
 
-let gradleReport: NodesReport;
-jest.mock('./utils/get-nodes-from-gradle-plugin', () => {
+let gradleReport: ProjectGraphReport;
+jest.mock('./utils/get-project-graph-from-gradle-plugin', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
-    populateNodes: jest.fn().mockImplementation(() => void 0),
-    getCurrentNodesReport: jest.fn().mockImplementation(() => gradleReport),
+    populateProjectGraph: jest.fn().mockImplementation(() => void 0),
+    getCurrentProjectGraphReport: jest
+      .fn()
+      .mockImplementation(() => gradleReport),
   };
 });
 
