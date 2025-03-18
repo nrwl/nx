@@ -134,8 +134,7 @@ export class ForkedProcessTaskRunner {
     if (
       PseudoTerminal.isSupported() &&
       !disablePseudoTerminal &&
-      streamOutput &&
-      !shouldPrefix
+      (TUI_ENABLED || (streamOutput && !shouldPrefix))
     ) {
       return this.forkProcessWithPseudoTerminal(task, {
         temporaryOutputPath,

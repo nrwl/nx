@@ -37,7 +37,7 @@ export function getEnvVariablesForTask(
   captureStderr: boolean,
   outputPath: string,
   streamOutput: boolean
-) {
+): NodeJS.ProcessEnv {
   const res = {
     // Start With Dotenv Variables
     ...taskSpecificEnv,
@@ -95,7 +95,7 @@ function getNxEnvVariablesForTask(
   captureStderr: boolean,
   outputPath: string,
   streamOutput: boolean
-) {
+): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     NX_TASK_TARGET_PROJECT: task.target.project,
     NX_TASK_TARGET_TARGET: task.target.target,
@@ -119,6 +119,7 @@ function getNxEnvVariablesForTask(
       streamOutput
     ),
     ...env,
+    NX_TUI: 'false',
   };
 }
 

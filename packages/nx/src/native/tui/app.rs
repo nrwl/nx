@@ -45,9 +45,14 @@ pub enum Focus {
 }
 
 impl App {
-    pub fn new(tasks: Vec<Task>, target_names: Vec<String>) -> Result<Self> {
-        let tasks_list = TasksList::new(tasks, target_names);
+    pub fn new(
+        tasks: Vec<Task>,
+        target_names: Vec<String>,
+        pinned_tasks: Vec<String>,
+    ) -> Result<Self> {
+        let tasks_list = TasksList::new(tasks, target_names, pinned_tasks);
         let help_popup = HelpPopup::new();
+        let focus = tasks_list.get_focus();
         let components: Vec<Box<dyn Component>> = vec![Box::new(tasks_list), Box::new(help_popup)];
 
         Ok(Self {
@@ -55,7 +60,7 @@ impl App {
             state: Default::default(),
             should_quit: false,
             last_tick_key_events: Vec::new(),
-            focus: Focus::TaskList,
+            focus,
             previous_focus: Focus::TaskList,
             done_callback: None,
         })

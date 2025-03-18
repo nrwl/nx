@@ -33,7 +33,7 @@ pub struct PseudoTerminal {
     pub printing_rx: Receiver<()>,
     pub quiet: Arc<AtomicBool>,
     pub running: Arc<AtomicBool>,
-    pub writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    pub writer: WriterArc,
     pub parser: ParserArc,
     is_within_nx_tui: bool,
 }
@@ -74,20 +74,20 @@ impl PseudoTerminal {
 
         let writer = pty_pair.master.take_writer()?;
         let writer_arc = Arc::new(Mutex::new(writer));
-        // let writer_clone = writer_arc.clone();
+        let writer_clone = writer_arc.clone();
 
         let is_within_nx_tui =
             std::env::var("NX_TUI").unwrap_or_else(|_| String::from("false")) == "true";
-        // if options.passthrough_stdin && std::io::stdout().is_tty() {
-        //     // Stdin -> pty stdin
-        //     trace!("Passing through stdin");
-        //     std::thread::spawn(move || {
-        //         let mut stdin = std::io::stdin();
-        //         if let Err(e) = os::write_to_pty(&mut stdin, &mut writer_clone.lock().unwrap()) {
-        //             trace!("Error writing to pty: {:?}", e);
-        //         }
-        //     });
-        // }
+        if options.passthrough_stdin && stdout().is_tty() {
+            // Stdin -> pty stdin
+            trace!("Passing through stdin");
+            std::thread::spawn(move || {
+                let mut stdin = std::io::stdin();
+                if let Err(e) = os::write_to_pty(&mut stdin, writer_clone) {
+                    trace!("Error writing to pty: {:?}", e);
+                }
+            });
+        }
 
         let mut reader = pty_pair.master.try_clone_reader()?;
         let (message_tx, message_rx) = unbounded();

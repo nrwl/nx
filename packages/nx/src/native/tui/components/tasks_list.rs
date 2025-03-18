@@ -174,7 +174,7 @@ pub struct TasksList {
 impl TasksList {
     /// Creates a new TasksList with the given tasks.
     /// Converts the input tasks into TaskItems and initializes the UI state.
-    pub fn new(tasks: Vec<Task>, target_names: Vec<String>) -> Self {
+    pub fn new(tasks: Vec<Task>, target_names: Vec<String>, pinned_tasks: Vec<String>) -> Self {
         let mut task_items = Vec::new();
 
         for task in tasks {
@@ -182,7 +182,21 @@ impl TasksList {
         }
 
         let filtered_names = Vec::new();
-        let selection_manager = TaskSelectionManager::new(5); // Default 5 items per page
+        let mut selection_manager = TaskSelectionManager::new(5); // Default 5 items per page
+
+        let mut focus = Focus::TaskList;
+        let mut focused_pane = None;
+
+        let mut main_terminal_pane_data = TerminalPaneData::new();
+        if let Some(main_task) = pinned_tasks.first() {
+            selection_manager.select_task(main_task.clone());
+            focus = Focus::MultipleOutput(0);
+            focused_pane = Some(0);
+            main_terminal_pane_data.set_interactive(true);
+        }
+
+        let mut iter = pinned_tasks.into_iter().take(2);
+        let pane_tasks = [iter.next(), iter.next()];
 
         Self {
             pty_instances: HashMap::new(),
@@ -193,12 +207,12 @@ impl TasksList {
             filter_mode: false,
             filter_text: String::new(),
             filter_persisted: false,
-            focus: Focus::TaskList,
-            pane_tasks: [None, None],
-            focused_pane: None,
+            focus,
+            pane_tasks,
+            focused_pane,
             is_dimmed: false,
             spacebar_mode: false,
-            terminal_pane_data: [TerminalPaneData::new(), TerminalPaneData::new()],
+            terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             target_names,
             task_list_hidden: false,
             cloud_message: None,

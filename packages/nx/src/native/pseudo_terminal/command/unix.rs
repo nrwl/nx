@@ -5,6 +5,7 @@ use std::{
 
 use mio::{unix::SourceFd, Events};
 use tracing::trace;
+use crate::native::pseudo_terminal::pseudo_terminal::WriterArc;
 
 pub fn handle_path_space(path: String) -> String {
     if path.contains(' ') {
@@ -14,7 +15,7 @@ pub fn handle_path_space(path: String) -> String {
     }
 }
 
-pub fn write_to_pty(stdin: &mut Stdin, writer: &mut impl Write) -> anyhow::Result<()> {
+pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {
     let mut buffer = [0; 1024];
 
     let mut poll = mio::Poll::new()?;
@@ -45,6 +46,8 @@ pub fn write_to_pty(stdin: &mut Stdin, writer: &mut impl Write) -> anyhow::Resul
                 mio::Token(0) => {
                     // Read data from stdin
                     loop {
+                        let mut writer = writer.lock().expect("Failed to lock writer");
+
                         match stdin.read(&mut buffer) {
                             Ok(n) => {
                                 writer.write_all(&buffer[..n])?;

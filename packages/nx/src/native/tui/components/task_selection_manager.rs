@@ -66,6 +66,10 @@ impl TaskSelectionManager {
         }
     }
 
+    pub fn select_task(&mut self, task_id: String) {
+        self.selected_task_name = Some(task_id);
+    }
+
     pub fn next(&mut self) {
         if let Some(current_idx) = self.get_selected_index() {
             // Find next non-empty entry

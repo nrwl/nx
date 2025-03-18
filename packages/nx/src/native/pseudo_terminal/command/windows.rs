@@ -3,6 +3,7 @@ use std::os::windows::ffi::OsStrExt;
 use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 
 use winapi::um::fileapi::GetShortPathNameW;
+use crate::native::pseudo_terminal::pseudo_terminal::WriterArc;
 
 pub fn handle_path_space(path: String) -> String {
     let wide: Vec<u16> = std::path::PathBuf::from(&path)
@@ -24,8 +25,9 @@ pub fn handle_path_space(path: String) -> String {
     }
 }
 
-pub fn write_to_pty(stdin: &mut Stdin, writer: &mut impl Write) -> anyhow::Result<()> {
-    std::io::copy(stdin, writer)
+pub fn write_to_pty(stdin: &mut Stdin, writer: WriterArc) -> anyhow::Result<()> {
+    let mut writer = writer.lock().expect("Failed to lock writer");
+    std::io::copy(stdin, &mut writer)
         .map_err(|e| anyhow::anyhow!(e))
         .map(|_| ())
 }
