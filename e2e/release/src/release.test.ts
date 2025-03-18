@@ -54,8 +54,13 @@ describe('nx release', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
+  let previousPackageManager: string;
 
   beforeAll(() => {
+    previousPackageManager = process.env.SELECTED_PM;
+    // Ensure consistent package manager usage in all environments for this file
+    process.env.SELECTED_PM = 'npm';
+
     newProject({
       packages: ['@nx/js'],
     });
@@ -76,7 +81,10 @@ describe('nx release', () => {
       return json;
     });
   });
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    cleanupProject();
+    process.env.SELECTED_PM = previousPackageManager;
+  });
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
