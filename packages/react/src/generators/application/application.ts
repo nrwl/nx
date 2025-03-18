@@ -5,6 +5,7 @@ import {
   readNxJson,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -43,6 +44,7 @@ import {
 } from './lib/bundlers/add-vite';
 import { Schema } from './schema';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -72,6 +74,34 @@ export async function applicationGeneratorInternal(
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(tree, schema);
+
+  options.useReactRouter = options.routing
+    ? options.useReactRouter ??
+      (await promptWhenInteractive<{
+        response: 'Yes' | 'No';
+      }>(
+        {
+          name: 'response',
+          message:
+            'Would you like to use react-router for server-side rendering?',
+          type: 'autocomplete',
+          choices: [
+            {
+              name: 'Yes',
+              message:
+                'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
+            },
+            {
+              name: 'No',
+              message:
+                'I do not want to use react-router for server-side rendering',
+            },
+          ],
+          initial: 0,
+        },
+        { response: 'No' }
+      ).then((r) => r.response === 'Yes'))
+    : false;
 
   showPossibleWarnings(tree, options);
 
@@ -158,18 +188,41 @@ export async function applicationGeneratorInternal(
 
   // Handle tsconfig.spec.json for jest or vitest
   updateSpecConfig(tree, options);
-  const stylePreprocessorTask = await installCommonDependencies(tree, options);
-  tasks.push(stylePreprocessorTask);
+  const commonDependencyTask = await installCommonDependencies(tree, options);
+  tasks.push(commonDependencyTask);
   const styledTask = addStyledModuleDependencies(tree, options);
   tasks.push(styledTask);
-  const routingTask = addRouting(tree, options);
-  tasks.push(routingTask);
+  if (!options.useReactRouter) {
+    const routingTask = addRouting(tree, options);
+    tasks.push(routingTask);
+  }
   setDefaults(tree, options);
 
   if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
     handleStyledJsxForRspack(tasks, tree, options);
   }
 
+  if (options.useReactRouter) {
+    updateJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+      (json) => {
+        const types = new Set(json.compilerOptions?.types || []);
+        types.add('@react-router/node');
+        return {
+          ...json,
+          compilerOptions: {
+            ...json.compilerOptions,
+            jsx: 'react-jsx',
+            moduleResolution: 'bundler',
+            types: Array.from(types),
+          },
+        };
+      }
+    );
+  }
+
+  // Only for the new TS solution
   updateTsconfigFiles(
     tree,
     options.appProjectRoot,

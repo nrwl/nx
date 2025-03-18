@@ -40,8 +40,9 @@ export declare class NxCache {
   constructor(workspaceRoot: string, cachePath: string, dbConnection: ExternalObject<NxDbConnection>, linkTaskDetails?: boolean | undefined | null, maxCacheSize?: number | undefined | null)
   get(hash: string): CachedResult | null
   put(hash: string, terminalOutput: string, outputs: Array<string>, code: number): void
-  applyRemoteCacheResults(hash: string, result: CachedResult, outputs: Array<string>): void
+  applyRemoteCacheResults(hash: string, result: CachedResult, outputs?: Array<string> | undefined | null): void
   getTaskOutputsPath(hash: string): string
+  getCacheSize(): number
   copyFilesFromCache(cachedResult: CachedResult, outputs: Array<string>): number
   removeOldCacheRecords(): void
   checkCacheFsInSync(): boolean
@@ -165,6 +166,8 @@ export interface FileSetInput {
 export declare export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 
 export declare export function getBinaryTarget(): string
+
+export declare export function getDefaultMaxCacheSize(cachePath: string): number
 
 /**
  * Expands the given outputs into a list of existing files.

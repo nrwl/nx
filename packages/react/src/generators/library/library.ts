@@ -62,10 +62,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   const options = await normalizeOptions(host, schema);
 
-  if (options.isUsingTsSolutionConfig) {
-    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
-
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
@@ -111,6 +107,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   createFiles(host, options);
+
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);

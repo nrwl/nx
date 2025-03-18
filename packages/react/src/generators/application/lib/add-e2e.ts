@@ -59,19 +59,29 @@ export async function addE2e(
       options.devServerPort ?? 4200
     );
   } else if (options.bundler === 'vite') {
-    const { getViteE2EWebServerInfo } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
-    e2eWebServerInfo = await getViteE2EWebServerInfo(
-      tree,
-      options.projectName,
-      joinPathFragments(
-        options.appProjectRoot,
-        `vite.config.${options.js ? 'js' : 'ts'}`
-      ),
-      options.addPlugin,
-      options.devServerPort ?? 4200
-    );
+    const { getViteE2EWebServerInfo, getReactRouterE2EWebServerInfo } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
+    e2eWebServerInfo = options.useReactRouter
+      ? await getReactRouterE2EWebServerInfo(
+          tree,
+          options.projectName,
+          joinPathFragments(
+            options.appProjectRoot,
+            `vite.config.${options.js ? 'js' : 'ts'}`
+          ),
+          options.addPlugin,
+          options.devServerPort ?? 4200
+        )
+      : await getViteE2EWebServerInfo(
+          tree,
+          options.projectName,
+          joinPathFragments(
+            options.appProjectRoot,
+            `vite.config.${options.js ? 'js' : 'ts'}`
+          ),
+          options.addPlugin,
+          options.devServerPort ?? 4200
+        );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);
     const { getRsbuildE2EWebServerInfo } = await import(

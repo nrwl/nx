@@ -6,6 +6,7 @@ use fs_extra::remove_items;
 use napi::bindgen_prelude::*;
 use regex::Regex;
 use rusqlite::params;
+use sysinfo::Disks;
 use tracing::trace;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
@@ -29,7 +30,7 @@ pub struct NxCache {
     cache_path: PathBuf,
     db: External<NxDbConnection>,
     link_task_details: bool,
-    max_cache_size: Option<i64>,
+    max_cache_size: i64,
 }
 
 #[napi]
@@ -46,6 +47,8 @@ impl NxCache {
 
         create_dir_all(&cache_path)?;
         create_dir_all(cache_path.join("terminalOutputs"))?;
+
+        let max_cache_size = max_cache_size.unwrap_or(0);
 
         let r = Self {
             db: db_connection,
@@ -172,7 +175,7 @@ impl NxCache {
         &self,
         hash: String,
         result: CachedResult,
-        outputs: Vec<String>,
+        outputs: Option<Vec<String>>,
     ) -> anyhow::Result<()> {
         trace!(
             "applying remote cache results: {:?} ({})",
@@ -181,9 +184,12 @@ impl NxCache {
         );
         let terminal_output = result.terminal_output.clone();
         let mut size = terminal_output.len() as i64;
-        if outputs.len() > 0 && result.code == 0 {
-            size += try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
-        };
+        if let Some(outputs) = outputs {
+            if outputs.len() > 0 && result.code == 0 {
+                size +=
+                    try_and_retry(|| self.copy_files_from_cache(result.clone(), outputs.clone()))?;
+            };
+        }
         write(self.get_task_outputs_path(hash.clone()), terminal_output)?;
 
         let code: i16 = result.code;
@@ -207,48 +213,63 @@ impl NxCache {
             "INSERT OR REPLACE INTO cache_outputs (hash, code, size) VALUES (?1, ?2, ?3)",
             params![hash, code, size],
         )?;
-        if self.max_cache_size.is_some() {
+        if self.max_cache_size != 0 {
             self.ensure_cache_size_within_limit()?
         }
         Ok(())
     }
 
-    fn ensure_cache_size_within_limit(&self) -> anyhow::Result<()> {
-        if let Some(user_specified_max_cache_size) = self.max_cache_size {
-            let buffer_amount = (0.1 * user_specified_max_cache_size as f64) as i64;
-            let target_cache_size = user_specified_max_cache_size - buffer_amount;
+    #[napi]
+    pub fn get_cache_size(&self) -> anyhow::Result<i64> {
+        self.db
+            .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
+                row.get::<_, Option<i64>>(0)
+                    // If there are no cache entries, the result is
+                    // a single row with a NULL value. This would look like:
+                    // Ok(None). We need to convert this to Ok(0).
+                    .transpose()
+                    .unwrap_or(Ok(0))
+            })
+            // The query_row returns an Result<Option<T>> to account for
+            // a query that returned no rows. This isn't possible when using
+            // SUM, so we can safely unwrap the Option, but need to transpose
+            // to access it. The result represents a db error or mapping error.
+            .transpose()
+            .unwrap_or(Ok(0))
+    }
 
-            let full_cache_size = self
-                .db
-                .query_row("SELECT SUM(size) FROM cache_outputs", [], |row| {
-                    row.get::<_, i64>(0)
-                })?
-                .unwrap_or(0);
-            if user_specified_max_cache_size < full_cache_size {
-                let mut cache_size = full_cache_size;
-                let mut stmt = self.db.prepare(
-                    "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
-                )?;
-                'outer: while cache_size > target_cache_size {
-                    let rows = stmt.query_map([], |r| {
-                        let hash: String = r.get(0)?;
-                        let size: i64 = r.get(1)?;
-                        Ok((hash, size))
-                    })?;
-                    for row in rows {
-                        if let Ok((hash, size)) = row {
-                            cache_size -= size;
-                            self.db.execute(
-                                "DELETE FROM cache_outputs WHERE hash = ?1",
-                                params![hash],
-                            )?;
-                            remove_items(&[self.cache_path.join(&hash)])?;
-                        }
-                        // We've deleted enough cache entries to be under the
-                        // target cache size, stop looking for more.
-                        if cache_size < target_cache_size {
-                            break 'outer;
-                        }
+    fn ensure_cache_size_within_limit(&self) -> anyhow::Result<()> {
+        // 0 is equivalent to being unlimited.
+        if self.max_cache_size == 0 {
+            return Ok(());
+        }
+        let user_specified_max_cache_size = self.max_cache_size;
+        let buffer_amount = (0.1 * user_specified_max_cache_size as f64) as i64;
+        let target_cache_size = user_specified_max_cache_size - buffer_amount;
+
+        let full_cache_size = self.get_cache_size()?;
+        if user_specified_max_cache_size < full_cache_size {
+            let mut cache_size = full_cache_size;
+            let mut stmt = self.db.prepare(
+                "SELECT hash, size FROM cache_outputs ORDER BY accessed_at ASC LIMIT 100",
+            )?;
+            'outer: while cache_size > target_cache_size {
+                let rows = stmt.query_map([], |r| {
+                    let hash: String = r.get(0)?;
+                    let size: i64 = r.get(1)?;
+                    Ok((hash, size))
+                })?;
+                for row in rows {
+                    if let Ok((hash, size)) = row {
+                        cache_size -= size;
+                        self.db
+                            .execute("DELETE FROM cache_outputs WHERE hash = ?1", params![hash])?;
+                        remove_items(&[self.cache_path.join(&hash)])?;
+                    }
+                    // We've deleted enough cache entries to be under the
+                    // target cache size, stop looking for more.
+                    if cache_size < target_cache_size {
+                        break 'outer;
                     }
                 }
             }
@@ -344,6 +365,21 @@ impl NxCache {
             Ok(true)
         }
     }
+}
+
+#[napi]
+fn get_default_max_cache_size(cache_path: String) -> i64 {
+    let disks = Disks::new_with_refreshed_list();
+    let cache_path = PathBuf::from(cache_path);
+
+    for disk in disks.list() {
+        if cache_path.starts_with(disk.mount_point()) {
+            return (disk.total_space() as f64 * 0.1) as i64;
+        }
+    }
+
+    // Default to 100gb
+    100 * 1024 * 1024 * 1024
 }
 
 fn try_and_retry<T, F>(mut f: F) -> anyhow::Result<T>

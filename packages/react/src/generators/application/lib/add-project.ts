@@ -5,6 +5,7 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
+  updateJson,
   writeJson,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
@@ -63,11 +64,25 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   }
 
   if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
-    writeJson(
-      host,
-      joinPathFragments(options.appProjectRoot, 'package.json'),
-      packageJson
-    );
+    // React Router already adds a package.json to the project root
+    if (options.useReactRouter) {
+      updateJson(
+        host,
+        joinPathFragments(options.appProjectRoot, 'package.json'),
+        (json) => {
+          return {
+            name: packageJson.name,
+            ...json,
+          };
+        }
+      );
+    } else {
+      writeJson(
+        host,
+        joinPathFragments(options.appProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
   }
 }
 
