@@ -24,12 +24,10 @@ import {
   startStaticRemotesFileServer,
 } from '../../utils';
 import { NxModuleFederationDevServerConfig } from '../../models';
-import { ChildProcess, fork } from 'node:child_process';
 
 const PLUGIN_NAME = 'NxModuleFederationDevServerPlugin';
 
 export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
-  private devServerProcess: ChildProcess | undefined;
   private nxBin = require.resolve('nx/bin/nx');
 
   constructor(
@@ -44,42 +42,52 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
   }
 
   apply(compiler: Compiler) {
-    compiler.hooks.beforeCompile.tapAsync(
+    const isDevServer = process.env['WEBPACK_SERVE'];
+    if (!isDevServer) {
+      return;
+    }
+    compiler.hooks.watchRun.tapAsync(
       PLUGIN_NAME,
-      async (params, callback) => {
-        const staticRemotesConfig = await this.setup(compiler);
+      async (compiler, callback) => {
+        compiler.hooks.beforeCompile.tapAsync(
+          PLUGIN_NAME,
+          async (params, callback) => {
+            const staticRemotesConfig = await this.setup();
 
-        logger.info(
-          `NX Starting module federation dev-server for ${pc.bold(
-            this._options.config.name
-          )} with ${Object.keys(staticRemotesConfig).length} remotes`
+            logger.info(
+              `NX Starting module federation dev-server for ${pc.bold(
+                this._options.config.name
+              )} with ${Object.keys(staticRemotesConfig).length} remotes`
+            );
+
+            const mappedLocationOfRemotes = await buildStaticRemotes(
+              staticRemotesConfig,
+              this._options.devServerConfig,
+              this.nxBin
+            );
+            startStaticRemotesFileServer(
+              staticRemotesConfig,
+              workspaceRoot,
+              this._options.devServerConfig.staticRemotesPort
+            );
+            startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
+              pathToCert: this._options.devServerConfig.sslCert,
+              pathToKey: this._options.devServerConfig.sslCert,
+            });
+
+            new DefinePlugin({
+              'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
+            }).apply(compiler);
+
+            callback();
+          }
         );
-
-        const mappedLocationOfRemotes = await buildStaticRemotes(
-          staticRemotesConfig,
-          this._options.devServerConfig,
-          this.nxBin
-        );
-        startStaticRemotesFileServer(
-          staticRemotesConfig,
-          workspaceRoot,
-          this._options.devServerConfig.staticRemotesPort
-        );
-        startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
-          pathToCert: this._options.devServerConfig.sslCert,
-          pathToKey: this._options.devServerConfig.sslCert,
-        });
-
-        new DefinePlugin({
-          'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
-        }).apply(compiler);
-
         callback();
       }
     );
   }
 
-  private async setup(compiler: Compiler) {
+  private async setup() {
     const projectGraph = readCachedProjectGraph();
     const { projects: workspaceProjects } =
       readProjectsConfigurationFromProjectGraph(projectGraph);

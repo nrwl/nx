@@ -59,7 +59,9 @@ function collectRemoteProjects(
   collected.add(remote);
 
   const remoteProjectRoot = remoteProject.root;
-  const remoteProjectTsConfig = remoteProject.targets['build'].options.tsConfig;
+  const remoteProjectTsConfig =
+    remoteProject.targets['build'].options.tsConfig ??
+    join(remoteProjectRoot, 'tsconfig.app.json');
   const remoteProjectConfig = getModuleFederationConfig(
     remoteProjectTsConfig,
     context.root,

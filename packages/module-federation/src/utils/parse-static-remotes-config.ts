@@ -1,5 +1,6 @@
-import type { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import { basename, dirname } from 'path';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export type StaticRemoteConfig = {
   basePath: string;
@@ -22,8 +23,21 @@ export function parseStaticRemotesConfig(
 
   const config: Record<string, StaticRemoteConfig> = {};
   for (const app of staticRemotes) {
-    const outputPath =
-      context.projectGraph.nodes[app].data.targets['build'].options.outputPath; // dist || dist/checkout
+    const projectGraph = context.projectGraph;
+    const projectRoot = projectGraph.nodes[app].data.root;
+    let outputPath = interpolate(
+      projectGraph.nodes[app].data.targets?.['build']?.options?.outputPath ??
+        projectGraph.nodes[app].data.targets?.['build']?.outputs?.[0] ??
+        `${context.root}/${projectGraph.nodes[app].data.root}/dist`,
+      {
+        projectName: projectGraph.nodes[app].data.name,
+        projectRoot,
+        workspaceRoot: context.root,
+      }
+    );
+    if (outputPath.startsWith(projectRoot)) {
+      outputPath = joinPathFragments(context.root, outputPath);
+    }
     const basePath = ['', '/', '.'].some((p) => dirname(outputPath) === p)
       ? outputPath
       : dirname(outputPath); // dist || dist/checkout -> dist
@@ -45,10 +59,22 @@ export function parseStaticSsrRemotesConfig(
   }
   const config: Record<string, StaticRemoteConfig> = {};
   for (const app of staticRemotes) {
-    let outputPath = context.projectGraph.nodes[app].data.targets['build']
-      .options.outputPath as string;
-    outputPath = dirname(outputPath); // dist/browser => dist || dist/checkout/browser -> checkout
-
+    const projectGraph = context.projectGraph;
+    const projectRoot = projectGraph.nodes[app].data.root;
+    let outputPath = interpolate(
+      projectGraph.nodes[app].data.targets?.['build']?.options?.outputPath ??
+        projectGraph.nodes[app].data.targets?.['build']?.outputs?.[0] ??
+        `${context.root}/${projectGraph.nodes[app].data.root}/dist`,
+      {
+        projectName: projectGraph.nodes[app].data.name,
+        projectRoot,
+        workspaceRoot: context.root,
+      }
+    );
+    if (outputPath.startsWith(projectRoot)) {
+      outputPath = joinPathFragments(context.root, outputPath);
+    }
+    outputPath = dirname(outputPath);
     const basePath = ['', '/', '.'].some((p) => dirname(outputPath) === p)
       ? outputPath
       : dirname(outputPath); // dist || dist/checkout -> dist
