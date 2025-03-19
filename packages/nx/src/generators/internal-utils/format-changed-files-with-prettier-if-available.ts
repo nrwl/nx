@@ -1,6 +1,7 @@
-import type { Tree } from '../tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
+import { isUsingPrettier } from '../../utils/is-using-prettier';
+import type { Tree } from '../tree';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -41,18 +42,10 @@ export async function formatFilesWithPrettierIfAvailable(
     prettier = await import('prettier');
     /**
      * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
-     * before proceeding to format with it. Therefore we attempt to resolve a config file from the root of the workspace.
-     * The promise will reject if there is an issue processing the config file, and it will resolve to null if there is no file.
-     *
-     * To avoid a breaking change for unit tests in Nx v20, we do not apply this check when NODE_ENV=test.
+     * before proceeding to format with it.
      */
-    if (process.env.NODE_ENV !== 'test') {
-      const resolvedConfig = await prettier.resolveConfig(
-        path.join(root, 'package.json')
-      );
-      if (!resolvedConfig) {
-        return results;
-      }
+    if (!isUsingPrettier(root)) {
+      return results;
     }
   } catch {}
 
