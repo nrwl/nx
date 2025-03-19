@@ -17,6 +17,14 @@ export function isValidSemverSpecifier(specifier: string): boolean {
   );
 }
 
+/**
+ * TODO: We would be able to make the logging for the conventional commits use-case
+ * for fixed release groups more clear/precise if we passed through which project
+ * the conventional commits were detected for.
+ *
+ * It would then flow up through deriveSpecifierFromConventionalCommits back to
+ * ReleaseGroupProcessor.
+ */
 // https://github.com/unjs/changelogen/blob/main/src/semver.ts
 export function determineSemverChange(
   commits: GitCommit[],

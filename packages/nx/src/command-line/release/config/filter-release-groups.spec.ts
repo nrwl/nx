@@ -27,6 +27,7 @@ describe('filterReleaseGroups()', () => {
         automaticFromRef: false,
       },
       version: {
+        useLegacyVersioning: true,
         conventionalCommits: false,
         generator: '',
         generatorOptions: {},

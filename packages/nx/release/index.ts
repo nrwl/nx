@@ -7,4 +7,6 @@ export {
   releaseChangelog,
   releasePublish,
   releaseVersion,
+  VersionActions,
+  ManifestData,
 } from '../src/command-line/release';

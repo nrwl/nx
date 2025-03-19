@@ -33,7 +33,7 @@ import {
   VersionData,
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
-} from 'nx/src/command-line/release/version';
+} from 'nx/src/command-line/release/version-legacy';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { ReleaseType, gt, inc, prerelease } from 'semver';
@@ -103,7 +103,6 @@ Valid values are: ${validReleaseVersionPrefixes
     ) as ReleaseType;
 
     // Sort the projects topologically if update dependents is enabled
-    // TODO: maybe move this sorting to the command level?
     const projects =
       updateDependents === 'never' ||
       options.releaseGroup.projectsRelationship !== 'independent'
@@ -446,8 +445,6 @@ To fix this you will either need to add a package.json file at that location, or
               break;
             }
 
-            // TODO: reevaluate this prerelease logic/workflow for independent projects
-            //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
             if (prerelease(currentVersion ?? '')) {
@@ -1012,7 +1009,12 @@ To fix this you will either need to add a package.json file at that location, or
         }
 
         const cwd = tree.root;
-        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        changedFiles.push(
+          ...(await updateLockFile(cwd, {
+            ...opts,
+            useLegacyVersioning: true,
+          }))
+        );
         return { changedFiles, deletedFiles };
       },
     };
@@ -1044,7 +1046,8 @@ function createResolvePackageRoot(customPackageRoot?: string) {
       return projectNode.data.root;
     }
     if (projectNode.data.root === '.') {
-      // TODO This is a temporary workaround to fix NXC-574 until NXC-573 is resolved
+      // This is a temporary workaround to fix NXC-574 until NXC-573 is resolved.
+      // This has been fixed in "versioning v2"
       return projectNode.data.root;
     }
     return interpolate(customPackageRoot, {
