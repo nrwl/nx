@@ -177,9 +177,7 @@ export class TaskOrchestrator {
   }
 
   // region Processing Scheduled Tasks
-  private async processScheduledTask(
-    taskId: string
-  ): Promise<NodeJS.ProcessEnv> {
+  async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
     const taskSpecificEnv = getTaskSpecificEnv(task);
 
@@ -227,7 +225,7 @@ export class TaskOrchestrator {
     for (const taskId of scheduledTasks) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processScheduledTask(taskId));
+        this.processedTasks.set(taskId, this.processTask(taskId));
       }
     }
   }
