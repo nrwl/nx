@@ -16,14 +16,20 @@ export async function updateLockFile(
   {
     dryRun,
     verbose,
-    generatorOptions,
+    useLegacyVersioning,
+    options,
   }: {
     dryRun?: boolean;
     verbose?: boolean;
-    generatorOptions?: Record<string, unknown>;
+    useLegacyVersioning?: boolean;
+    options?: {
+      skipLockFileUpdate?: boolean;
+      installArgs?: string;
+      installIgnoreScripts?: boolean;
+    };
   }
 ) {
-  if (generatorOptions?.skipLockFileUpdate) {
+  if (options?.skipLockFileUpdate) {
     if (verbose) {
       console.log(
         '\nSkipped lock file update because skipLockFileUpdate was set.'
@@ -65,13 +71,13 @@ export async function updateLockFile(
 
   const packageManagerCommands = getPackageManagerCommand(packageManager);
 
-  let installArgs = generatorOptions?.installArgs || '';
+  let installArgs = options?.installArgs || '';
 
   output.logSingleLine(`Updating ${packageManager} lock file`);
 
   let env: object = {};
 
-  if (generatorOptions?.installIgnoreScripts) {
+  if (options?.installIgnoreScripts) {
     if (packageManager === 'yarn') {
       env = { YARN_ENABLE_SCRIPTS: 'false' };
     } else {
@@ -99,7 +105,7 @@ export async function updateLockFile(
     return [];
   }
 
-  execLockFileUpdate(command, cwd, env);
+  execLockFileUpdate(command, cwd, env, useLegacyVersioning);
 
   if (isDaemonEnabled) {
     try {
@@ -122,7 +128,8 @@ export async function updateLockFile(
 function execLockFileUpdate(
   command: string,
   cwd: string,
-  env: object = {}
+  env: object,
+  useLegacyVersioning: boolean
 ): void {
   try {
     const LARGE_BUFFER = 1024 * 1000000;
@@ -136,13 +143,17 @@ function execLockFileUpdate(
       windowsHide: false,
     });
   } catch (e) {
+    const configPathStart = useLegacyVersioning
+      ? 'release.version.generatorOptions'
+      : 'release.version.versionActionsOptions';
+
     output.error({
       title: `Error updating lock file with command '${command}'`,
       bodyLines: [
         `Verify that '${command}' succeeds when run from the workspace root.`,
-        `To configure a string of arguments to be passed to this command, set the 'release.version.generatorOptions.installArgs' property in nx.json.`,
-        `To ignore install lifecycle scripts, set 'release.version.generatorOptions.installIgnoreScripts' to true in nx.json.`,
-        `To disable this step entirely, set 'release.version.generatorOptions.skipLockFileUpdate' to true in nx.json.`,
+        `To configure a string of arguments to be passed to this command, set the '${configPathStart}.installArgs' property in nx.json.`,
+        `To ignore install lifecycle scripts, set '${configPathStart}.installIgnoreScripts' to true in nx.json.`,
+        `To disable this step entirely, set '${configPathStart}.skipLockFileUpdate' to true in nx.json.`,
       ],
     });
     throw e;

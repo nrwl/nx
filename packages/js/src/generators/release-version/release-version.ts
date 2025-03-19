@@ -1012,7 +1012,12 @@ To fix this you will either need to add a package.json file at that location, or
         }
 
         const cwd = tree.root;
-        changedFiles.push(...(await updateLockFile(cwd, opts)));
+        changedFiles.push(
+          ...(await updateLockFile(cwd, {
+            ...opts,
+            useLegacyVersioning: true,
+          }))
+        );
         return { changedFiles, deletedFiles };
       },
     };

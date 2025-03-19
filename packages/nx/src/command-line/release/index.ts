@@ -49,3 +49,8 @@ export const releaseVersion = defaultClient.releaseVersion.bind(
 export const release = defaultClient.release.bind(
   defaultClient
 ) as typeof defaultClient.release;
+
+/**
+ * @public
+ */
+export { VersionActions, ManifestData } from './version/version-actions';
