@@ -48,7 +48,7 @@ export async function formatFilesWithPrettierIfAvailable(
       path.join(root, 'package.json')
     );
     if (!resolvedConfig) {
-      return;
+      return results;
     }
   } catch {}
 
