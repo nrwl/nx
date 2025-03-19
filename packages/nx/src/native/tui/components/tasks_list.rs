@@ -187,20 +187,12 @@ impl TasksList {
         let mut focus = Focus::TaskList;
         let mut focused_pane = None;
 
-        let mut main_terminal_pane_data = TerminalPaneData::new();
+        let main_terminal_pane_data = TerminalPaneData::new();
         if let Some(main_task) = pinned_tasks.first() {
             selection_manager.select_task(main_task.clone());
+            // Auto-focus the main task
             focus = Focus::MultipleOutput(0);
             focused_pane = Some(0);
-            // If the main task is continuous, automatically enter interactive mode
-            if task_items
-                .iter()
-                .find(|t| t.name == *main_task)
-                .unwrap()
-                .continuous
-            {
-                main_terminal_pane_data.set_interactive(true);
-            }
         }
 
         let mut iter = pinned_tasks.into_iter().take(2);

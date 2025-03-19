@@ -91,9 +91,7 @@ impl TerminalPaneData {
                 }
                 // Handle 'i' to enter interactive mode for continuous tasks
                 KeyCode::Char('i') if !self.is_interactive => {
-                    if self.is_continuous {
-                        self.set_interactive(true);
-                    }
+                    self.set_interactive(true);
                     return Ok(());
                 }
                 // Handle Ctrl+Z to exit interactive mode
@@ -382,8 +380,8 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         scrollbar.render(area, buf, &mut state.scrollbar_state);
                     }
 
-                    // Show interactive/readonly status for continuous tasks
-                    if state.is_focused && state.is_continuous {
+                    // Show interactive/readonly status for focused tasks
+                    if state.is_focused {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
