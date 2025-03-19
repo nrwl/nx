@@ -9,14 +9,12 @@ import { getOutputs } from './utils';
 import { loadRootEnvFiles } from '../utils/dotenv';
 import { TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
-import {
-  getTaskDetails,
-  hashTasksThatDoNotDependOnOutputsOfOtherTasks,
-} from '../hasher/hash-task';
+import { getTaskDetails } from '../hasher/hash-task';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import type { ProjectGraph } from '../config/project-graph';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
+import { RunningTask } from './running-tasks/running-task';
 
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
@@ -117,19 +115,8 @@ async function createOrchestrator(
       return acc;
     }, {} as any),
   };
-  // this is used for two reasons: to fetch all remote cache hits AND
-  // to submit everything that is known in advance to Nx Cloud to run in
-  // a distributed fashion
 
-  await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    hasher,
-    projectGraph,
-    taskGraphForHashing,
-    nxJson,
-    taskDetails
-  );
-
-  return new TaskOrchestrator(
+  const orchestrator = new TaskOrchestrator(
     hasher,
     null,
     projectGraph,
@@ -141,18 +128,22 @@ async function createOrchestrator(
     undefined,
     taskGraphForHashing
   );
+
+  await Promise.all(tasks.map((task) => orchestrator.processTask(task.id)));
+
+  return orchestrator;
 }
 
 export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
-  taskGraph: TaskGraph,
+  taskGraphForHashing: TaskGraph,
   nxJson: NxJsonConfiguration
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
-    taskGraph,
+    taskGraphForHashing,
     nxJson
   );
   return tasks.map((task) =>
@@ -163,14 +154,17 @@ export async function runDiscreteTasks(
 export async function runContinuousTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
-  taskGraph: TaskGraph,
+  taskGraphForHashing: TaskGraph,
   nxJson: NxJsonConfiguration
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
-    taskGraph,
+    taskGraphForHashing,
     nxJson
   );
-  return tasks.map((task) => orchestrator.startContinuousTask(task, 0));
+  return tasks.reduce((current, task) => {
+    current[task.id] = orchestrator.startContinuousTask(task, 0);
+    return current;
+  }, {} as Record<string, Promise<RunningTask>>);
 }
