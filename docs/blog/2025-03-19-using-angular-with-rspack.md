@@ -1,10 +1,10 @@
 ---
-title: 'Using Angular with Rspack'
+title: 'Using Rspack with Angular'
 date: 2025-03-19
-slug: using-angular-with-rspack
+slug: using-rspack-with-angular
 authors: [Colum Ferry]
 tags: [angular, webpack, rspack, nx]
-cover_image: /blog/images/2025-03-19/angular-rspack-logo-small.png
+cover_image: /blog/images/2025-03-19/rspack.avif
 description: Learn about how and why to use Rspack with Angular thanks to Nx's efforts for supporting Rspack for Angular.
 ---
 
@@ -61,7 +61,7 @@ The steps are very simple:
 2. Run `nx g @nx/angular:convert-to-rspack` to migrate your Angular application to Rspack.
 
 There is also a [guide in our documentation](/recipes/angular/rspack/migrate-from-webpack) that walks you through the process step-by-step.
-Even if you're currently using the Angular CLI, it's as simple as first running `npx nx init` in your workspace and then running `npx nx convert-to-rspack`.
+Even if you're currently using the Angular CLI, it's as simple as first running `npx nx init` in your workspace and then running `npx nx g convert-to-rspack`.
 
 ## Using Angular Rspack
 
@@ -113,7 +113,7 @@ The `createConfig` function is used to create an Rspack configuration object set
 You can read more about it [here](/nx-api/angular-rspack/documents/create-config).
 {% /callout %}
 
-### Build and Serving your Application
+### Building and Serving your Application
 
 You can now run `nx build app` and `nx serve app` to build and serve your application via Rspack.
 
@@ -153,6 +153,17 @@ NGRS_CONFIG=production nx build app
 
 `NGRS_CONFIG` is an environment variable that you can use to specify which configuration to use. If the environment variable is not set, the `production` configuration is used by default.
 
+## Creating a new Angular Rspack application
+
+We currently do not have a generator for creating a new Angular Rspack application, but we will soon and it will be available under a `--bundler=rspack` option on the `@nx/angular:application` generator.
+
+However, you can still create a new Angular Rspack application by running the following commands:
+
+```shell
+nx g @nx/angular:application myapp --bundler=webpack
+nx g @nx/angular:convert-to-rspack myapp
+```
+
 ## Benchmarks
 
 ![Benchmarks](/blog/images/2025-03-19/bundler-build-times.avif)
@@ -164,6 +175,8 @@ Below is a table of benchmarks for the different bundlers available, run against
 - MacBook Pro (macOS 15.3.1)
 - Processor: M2 Max
 - Memory: 96 GB
+- `@nx/angular-rspack` version: 20.6.2
+- Angular version: ~19.2.0
 
 | Build/Bundler | Prod SSR (s) | Prod (s) | Dev (s) |
 | ------------- | ------------ | -------- | ------- |
@@ -172,7 +185,11 @@ Below is a table of benchmarks for the different bundlers available, run against
 | Rsbuild       | 23.949       | 20.490   | 18.209  |
 | Rspack        | 30.589       | 19.269   | 19.940  |
 
-You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmark](https://github.com/nrwl/ng-bundler-benchmark)
+> You can find the benchmarks and run them yourself: [https://github.com/nrwl/ng-bundler-benchmark](https://github.com/nrwl/ng-bundler-benchmark)
+
+As can be seen by the benchmarks above, Rspack is significantly faster than Webpack and very close to Esbuild.
+
+Given that the primary goal for Angular Rspack is to provide a faster build system for Angular Webpack applications while supporting their existing Webpack configurations and plugins, we are confident that Angular Rspack will be a great choice for teams that want to migrate to a faster build system.
 
 ## Known Limitations and Missing Features
 
@@ -189,6 +206,14 @@ The following are known limitations and missing features of Angular Rspack:
 - Hot Module Replacement (HMR) is partially supported.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
+
+## What's Next?
+
+We are actively working on improving the experience, stability and performance of Angular Rspack. Our next steps will revolve around getting to feature parity with Angular's build system - addressing the items listed above to achieve this.
+
+The `@nx/angular` plugin will also be updated to support generating new Angular Rspack applications as well as supporting Rspack Module Federation with Angular.
+
+Exciting times ahead! You can follow our progress by starring the [Angular Rspack repository](https://github.com/nrwl/angular-rspack) and following us on [X](https://X.com/nxdevtools).
 
 ## Further Reading
 
