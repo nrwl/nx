@@ -81,7 +81,8 @@ export class TaskOrchestrator {
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
-    private readonly outputStyle: string
+    private readonly outputStyle: string,
+    private readonly taskGraphForHashing: TaskGraph = taskGraph
   ) {}
 
   async run() {
@@ -169,9 +170,7 @@ export class TaskOrchestrator {
   }
 
   // region Processing Scheduled Tasks
-  private async processScheduledTask(
-    taskId: string
-  ): Promise<NodeJS.ProcessEnv> {
+  async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
     const taskSpecificEnv = getTaskSpecificEnv(task);
 
@@ -179,7 +178,7 @@ export class TaskOrchestrator {
       await hashTask(
         this.hasher,
         this.projectGraph,
-        this.taskGraph,
+        this.taskGraphForHashing,
         task,
         taskSpecificEnv,
         this.taskDetails
@@ -198,7 +197,7 @@ export class TaskOrchestrator {
           await hashTask(
             this.hasher,
             this.projectGraph,
-            this.taskGraph,
+            this.taskGraphForHashing,
             task,
             this.batchEnv,
             this.taskDetails
@@ -219,7 +218,7 @@ export class TaskOrchestrator {
     for (const taskId of scheduledTasks) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processScheduledTask(taskId));
+        this.processedTasks.set(taskId, this.processTask(taskId));
       }
     }
   }
@@ -230,6 +229,7 @@ export class TaskOrchestrator {
   private async applyCachedResults(tasks: Task[]): Promise<
     {
       task: Task;
+      code: number;
       status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
     }[]
   > {
@@ -244,6 +244,7 @@ export class TaskOrchestrator {
 
   private async applyCachedResult(task: Task): Promise<{
     task: Task;
+    code: number;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
     const cachedResult = await this.cache.get(task);
@@ -271,6 +272,7 @@ export class TaskOrchestrator {
       cachedResult.terminalOutput
     );
     return {
+      code: cachedResult.code,
       task,
       status,
     };
@@ -369,7 +371,7 @@ export class TaskOrchestrator {
   // endregion Batch
 
   // region Single Task
-  private async applyFromCacheOrRunTask(
+  async applyFromCacheOrRunTask(
     doNotSkipCache: boolean,
     task: Task,
     groupId: number
@@ -411,6 +413,7 @@ export class TaskOrchestrator {
 
     let results: {
       task: Task;
+      code: number;
       status: TaskStatus;
       terminalOutput?: string;
     }[] = doNotSkipCache ? await this.applyCachedResults([task]) : [];
@@ -428,11 +431,13 @@ export class TaskOrchestrator {
       const { code, terminalOutput } = await childProcess.getResults();
       results.push({
         task,
+        code,
         status: code === 0 ? 'success' : 'failure',
         terminalOutput,
       });
     }
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
+    return results[0];
   }
 
   private async runTask(
@@ -571,7 +576,7 @@ export class TaskOrchestrator {
     }
   }
 
-  private async startContinuousTask(task: Task, groupId: number) {
+  async startContinuousTask(task: Task, groupId: number) {
     const taskSpecificEnv = await this.processedTasks.get(task.id);
     await this.preRunSteps([task], { groupId });
 
