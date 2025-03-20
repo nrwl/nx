@@ -34,3 +34,4 @@ export * from './project-graph/error-types';
 export { registerTsProject } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
 export { isCI } from './utils/is-ci';
+export { isUsingPrettierInTree } from './utils/is-using-prettier';
