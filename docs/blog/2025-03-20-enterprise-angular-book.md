@@ -1,5 +1,5 @@
 ---
-title: 'Enteprise Angular Monorepo Patterns'
+title: 'Enterprise Angular Monorepo Patterns'
 date: 2025-03-20
 slug: enterprise-angular-book
 authors: [Mike Hartington]
