@@ -1,5 +1,5 @@
 import { DependencyType, ProjectGraph, TaskGraph } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from '@nx/devkit/testing';
 import { readFileSync } from 'fs';
 import {
   calculateDependenciesFromTaskGraph,

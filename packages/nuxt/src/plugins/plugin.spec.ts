@@ -1,6 +1,6 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 
 jest.mock('@nx/devkit/src/utils/config-utils', () => ({
   loadConfigFile: jest.fn().mockImplementation(() => {

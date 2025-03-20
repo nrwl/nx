@@ -1,4 +1,5 @@
-import { TempFs } from '../../../../internal-testing-utils/temp-fs';
+import { TempFs } from '../../../../generators/testing-utils/temp-fs';
+
 const tempFs = new TempFs('explicit-package-json');
 
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
