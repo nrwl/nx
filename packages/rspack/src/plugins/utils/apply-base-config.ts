@@ -65,11 +65,11 @@ function applyNxIndependentConfig(
     process.env.NODE_ENV === 'production' || options.mode === 'production';
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
-  config.target ??= options.target as 'node' | 'web';
+  config.target ??= options.target as 'async-node' | 'node' | 'web';
   config.node = false;
   config.mode =
     // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
-    config.target === 'node'
+    config.target === 'node' || config.target === 'async-node'
       ? 'none'
       : // Otherwise, make sure it matches `process.env.NODE_ENV`.
         // When mode is development or production, rspack will automatically
@@ -86,7 +86,11 @@ function applyNxIndependentConfig(
           : 'none');
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
-  config.cache = options.target === 'node' && options.watch ? true : undefined;
+  config.cache =
+    (options.target === 'node' || options.target === 'async-node') &&
+    options.watch
+      ? true
+      : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
@@ -94,8 +98,11 @@ function applyNxIndependentConfig(
   config.output = {
     ...(config.output ?? {}),
     libraryTarget:
-      (config as Configuration).output?.libraryTarget ??
-      (options.target === 'node' ? 'commonjs' : undefined),
+      options.target === 'node'
+        ? 'commonjs'
+        : options.target === 'async-node'
+        ? 'commonjs-module'
+        : undefined,
     path:
       config.output?.path ??
       (options.outputPath
@@ -333,7 +340,10 @@ function applyNxDependentConfig(
   }
 
   const externals = [];
-  if (options.target === 'node' && options.externalDependencies === 'all') {
+  if (
+    (options.target === 'node' || options.target === 'async-node') &&
+    options.externalDependencies === 'all'
+  ) {
     const modulesDir = `${options.root}/node_modules`;
     externals.push(nodeExternals({ modulesDir }));
   } else if (Array.isArray(options.externalDependencies)) {
