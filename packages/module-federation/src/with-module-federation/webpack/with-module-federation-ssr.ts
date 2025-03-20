@@ -25,9 +25,9 @@ export async function withModuleFederationForSSR(
       ...(config.optimization ?? {}),
       runtimeChunk: false,
     };
-
+    
     config.plugins.push(
-      new (require('@module-federation/enhanced').ModuleFederationPlugin)(
+      new (require('@module-federation/node').StreamingTargetPlugin)(
         {
           name: options.name.replace(/-/g, '_'),
           filename: 'remoteEntry.js',
