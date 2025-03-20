@@ -244,6 +244,7 @@ export class TaskOrchestrator {
 
   private async applyCachedResult(task: Task): Promise<{
     task: Task;
+    code: number;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
     const cachedResult = await this.cache.get(task);
@@ -271,6 +272,7 @@ export class TaskOrchestrator {
       cachedResult.terminalOutput
     );
     return {
+      code: cachedResult.code,
       task,
       status,
     };

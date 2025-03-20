@@ -94,15 +94,19 @@ async function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
   taskGraphForHashing: TaskGraph,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  lifeCycle: LifeCycle
 ) {
   loadRootEnvFiles();
 
-  const lifeCycle = new InvokeRunnerTerminalOutputLifeCycle(tasks);
+  const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
+    tasks
+  );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(lifeCycle),
+    ...constructLifeCycles(invokeRunnerTerminalLifecycle),
     taskResultsLifecycle,
+    lifeCycle,
   ]);
 
   const { runnerOptions: options } = getRunner({}, nxJson);
@@ -147,13 +151,15 @@ export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
   taskGraphForHashing: TaskGraph,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  lifeCycle: LifeCycle
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     taskGraphForHashing,
-    nxJson
+    nxJson,
+    lifeCycle
   );
   return tasks.map((task) =>
     orchestrator.applyFromCacheOrRunTask(true, task, 0)
@@ -164,13 +170,15 @@ export async function runContinuousTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
   taskGraphForHashing: TaskGraph,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  lifeCycle: LifeCycle
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
     taskGraphForHashing,
-    nxJson
+    nxJson,
+    lifeCycle
   );
   return tasks.reduce((current, task) => {
     current[task.id] = orchestrator.startContinuousTask(task, 0);
