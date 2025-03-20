@@ -80,7 +80,7 @@ function startWebServer(webServerCommand: string) {
     windowsHide: false,
   });
 
-  return () => {
+  return async () => {
     if (process.platform === 'win32') {
       try {
         execSync('taskkill /pid ' + serverProcess.pid + ' /T /F', {
@@ -92,7 +92,14 @@ function startWebServer(webServerCommand: string) {
         }
       }
     } else {
-      treeKill(serverProcess.pid);
+      return new Promise<void>((res, rej) => {
+        treeKill(serverProcess.pid, (err) => {
+          if (err) {
+            rej(err);
+          }
+          res();
+        });
+      });
     }
   };
 }
@@ -171,7 +178,7 @@ export function nxE2EPreset(
         const killWebServer = startWebServer(webServerCommand);
 
         on('after:run', () => {
-          killWebServer();
+          return killWebServer();
         });
         await waitForServer(config.baseUrl, options.webServerConfig);
       }
