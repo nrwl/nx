@@ -86,6 +86,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes by defau
             },
             "watch-deps": {
               "command": "npx nx watch --projects acme --includeDependentProjects -- npx nx build-deps acme",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],
@@ -174,6 +175,7 @@ exports[`@nx/react/react-router-plugin React Router should create nodes without 
             },
             "watch-deps": {
               "command": "npx nx watch --projects acme --includeDependentProjects -- npx nx build-deps acme",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],

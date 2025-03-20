@@ -407,6 +407,7 @@ describe('application generator', () => {
                   "buildTarget": "@proj/myapp:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
