@@ -19,7 +19,7 @@ This article is part of the Angular Week series:
 
 {% /callout %}
 
-Building applications is often a challenge when you're in the enterprise. But thankfully, Nx can help teams keep on the happy path when building for these challenging environments. We've had a book available since 2018 to help teams follow established patterns and ensure high quality code, however 2018 was quite a long time ago. Times have changed and so has the best practices for building Angular applications.
+Building applications is often a challenge when you're working as an enterprise developer. But thankfully, Nx can help teams keep on the happy path when building for these challenging environments. We've had a book available since 2018 to help teams follow established patterns and ensure high quality code, however 2018 was quite a long time ago. Times have changed and so has the best practices for building Angular applications.
 
 As part of our Week of Angular, I'm thrilled to share that we've revised our book "Enterprise Angular Monorepo Patterns" and have updated it for 2025!
 
