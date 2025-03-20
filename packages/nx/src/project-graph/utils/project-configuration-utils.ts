@@ -409,7 +409,7 @@ export async function createProjectConfigurationsWithPlugins(
             e
           : // This represents a single plugin erroring out with a hard error.
             new AggregateCreateNodesError([[null, e]], []);
-        if (pluginIndex) {
+        if (pluginIndex !== undefined) {
           error.pluginIndex = pluginIndex;
         }
         formatAggregateCreateNodesError(error, pluginName);

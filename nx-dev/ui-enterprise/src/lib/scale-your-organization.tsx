@@ -1,17 +1,9 @@
 import { ReactElement } from 'react';
 import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
-import {
-  AcademicCapIcon,
-  ArrowPathIcon,
-  CheckBadgeIcon,
-  CodeBracketSquareIcon,
-  DocumentMagnifyingGlassIcon,
-  DocumentTextIcon,
-  EyeIcon,
-  ShieldExclamationIcon,
-  UsersIcon,
-} from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { VisibilityAnimation } from './animations/visibility';
+import { ConformanceAnimation } from './animations/conformance';
+import { OwnershipAnimation } from './animations/ownership';
 
 export function ScaleYourOrganization(): ReactElement {
   return (
@@ -78,22 +70,13 @@ export function ScaleYourOrganization(): ReactElement {
 
         <div className="mx-auto mt-16 max-w-4xl sm:mt-20 lg:mt-24">
           <dl className="mx-auto mt-10 flex flex-col">
-            <div className="group/section flex items-center gap-16">
-              <div className="hidden shrink-0 p-6 sm:p-12 lg:block">
-                <div className="relative grid size-12 place-items-center">
-                  <EyeIcon
-                    aria-hidden="true"
-                    className="size-8 transition-all group-hover/section:-translate-x-2"
-                  />
-                  <DocumentMagnifyingGlassIcon
-                    aria-hidden="true"
-                    className="absolute inset-0 size-8 opacity-0 transition-all group-hover/section:-translate-y-2 group-hover/section:translate-x-8 group-hover/section:opacity-100"
-                  />
-                  <CodeBracketSquareIcon
-                    aria-hidden="true"
-                    className="absolute inset-0 size-8 opacity-0 transition-all group-hover/section:translate-x-7 group-hover/section:translate-y-6 group-hover/section:opacity-100"
-                  />
-                </div>
+            <div className="group/section flex items-center items-stretch gap-16">
+              <div className="hidden max-w-[35%] shrink-0 lg:block">
+                <VisibilityAnimation
+                  autoPlay={true}
+                  speed={1}
+                  className="max-w-full scale-75"
+                />
               </div>
               <div className="relative flex gap-x-4">
                 <div className="absolute -bottom-6 left-0 top-0 flex w-6 justify-center">
@@ -125,21 +108,12 @@ export function ScaleYourOrganization(): ReactElement {
               </div>
             </div>
             <div className="group/section flex items-center gap-16">
-              <div className="hidden shrink-0 p-6 sm:p-12 lg:block">
-                <div className="relative grid size-12 place-items-center">
-                  <CheckBadgeIcon
-                    aria-hidden="true"
-                    className="size-8 transition-all group-hover/section:-translate-x-2"
-                  />
-                  <DocumentTextIcon
-                    aria-hidden="true"
-                    className="absolute inset-0 size-8 opacity-0 transition-all group-hover/section:-translate-y-2 group-hover/section:translate-x-8 group-hover/section:opacity-100"
-                  />
-                  <ArrowPathIcon
-                    aria-hidden="true"
-                    className="absolute inset-0 size-8 opacity-0 transition-all group-hover/section:translate-x-7 group-hover/section:translate-y-6 group-hover/section:opacity-100"
-                  />
-                </div>
+              <div className="hidden max-w-[35%] shrink-0 lg:block">
+                <ConformanceAnimation
+                  autoPlay={true}
+                  speed={1}
+                  className="max-w-full scale-75"
+                />
               </div>
               <div className="group/section relative flex gap-x-4">
                 <div className="absolute -bottom-6 left-0 top-0 flex w-6 justify-center">
@@ -208,21 +182,12 @@ export function ScaleYourOrganization(): ReactElement {
               </div>
             </div>
             <div className="group/section flex items-center gap-16">
-              <div className="hidden shrink-0 p-6 sm:p-12 lg:block">
-                <div className="relative grid size-12 place-items-center">
-                  <UsersIcon
-                    aria-hidden="true"
-                    className="size-8 transition-all group-hover/section:-translate-x-2"
-                  />
-                  <AcademicCapIcon
-                    aria-hidden="true"
-                    className="absolute inset-0 size-8 opacity-0 transition-all group-hover/section:-translate-y-2 group-hover/section:translate-x-8 group-hover/section:opacity-100"
-                  />
-                  <ShieldExclamationIcon
-                    aria-hidden="true"
-                    className="absolute inset-0 size-8 opacity-0 transition-all group-hover/section:translate-x-8 group-hover/section:translate-y-6 group-hover/section:opacity-100"
-                  />
-                </div>
+              <div className="hidden max-w-[35%] shrink-0 lg:block">
+                <OwnershipAnimation
+                  autoPlay={true}
+                  speed={1}
+                  className="max-w-full"
+                />
               </div>
               <div className="relative flex gap-x-4">
                 <div className="absolute -bottom-6 left-0 top-0 flex w-6 justify-center">
