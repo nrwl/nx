@@ -229,6 +229,7 @@ export class TaskOrchestrator {
   private async applyCachedResults(tasks: Task[]): Promise<
     {
       task: Task;
+      code: number;
       status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
     }[]
   > {
@@ -410,6 +411,7 @@ export class TaskOrchestrator {
 
     let results: {
       task: Task;
+      code: number;
       status: TaskStatus;
       terminalOutput?: string;
     }[] = doNotSkipCache ? await this.applyCachedResults([task]) : [];
@@ -427,6 +429,7 @@ export class TaskOrchestrator {
       const { code, terminalOutput } = await childProcess.getResults();
       results.push({
         task,
+        code,
         status: code === 0 ? 'success' : 'failure',
         terminalOutput,
       });
