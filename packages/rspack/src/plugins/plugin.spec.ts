@@ -100,6 +100,7 @@ describe('@nx/rspack', () => {
                   },
                   "preview": {
                     "command": "rspack serve",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--node-env=production",
@@ -112,6 +113,7 @@ describe('@nx/rspack', () => {
                   },
                   "serve": {
                     "command": "rspack serve",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--node-env=development",
@@ -123,6 +125,7 @@ describe('@nx/rspack', () => {
                     },
                   },
                   "serve-static": {
+                    "continuous": true,
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build",
@@ -131,6 +134,7 @@ describe('@nx/rspack', () => {
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
                     "dependsOn": [
                       "build-deps",
                     ],
