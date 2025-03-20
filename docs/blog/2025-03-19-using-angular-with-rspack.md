@@ -8,6 +8,17 @@ cover_image: /blog/images/2025-03-19/rspack.avif
 description: Learn about how and why to use Rspack with Angular thanks to Nx's efforts for supporting Rspack for Angular.
 ---
 
+{% callout type="deepdive" title="Angular Week Series" expanded=true %}
+
+This article is part of the Angular Week series:
+
+- [Modern Angular Testing with Nx](/blog/modern-angular-testing-with-nx)
+- [Angular Architecture Guide To Building Maintainable Applications at Scale](/blog/architecting-angular-applications)
+- **Using Rspack with Angular**
+- [Enterprise Patterns](/blog/enterprise-angular-book)
+
+{% /callout %}
+
 Configuring your build tooling for [Angular](https://angular.dev) applications has always been a lesser concern for most Angular developers due to the abstractions that Angular created called `builders`. The underlying implementation details were hidden from the developer who only needed to run either `ng build` or `nx build`.  
 Despite this, most Angular developers knew that it was originally [Webpack](https://webpack.js.org/) that was used to build their applications. This was a great solution at the time and it was even possible to extend their builds by leveraging custom webpack configurations and plugins.
 
