@@ -31,6 +31,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
+    // Allow prettier formatting to be applied to the tree
+    tree.write('.prettierrc', '{}');
     // we need an actual path for the package manager version check
     tree.root = process.cwd();
   });
