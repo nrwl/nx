@@ -2,12 +2,16 @@ import { readNxJson } from '../config/configuration';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { getRunner, invokeTasksRunner } from './run-command';
+import {
+  constructLifeCycles,
+  getRunner,
+  invokeTasksRunner,
+} from './run-command';
 import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
 import { performance } from 'perf_hooks';
 import { getOutputs } from './utils';
 import { loadRootEnvFiles } from '../utils/dotenv';
-import { TaskResult } from './life-cycle';
+import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { getTaskDetails } from '../hasher/hash-task';
 import { createTaskHasher } from '../hasher/create-task-hasher';
@@ -15,6 +19,7 @@ import type { ProjectGraph } from '../config/project-graph';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
+import { TaskResultsLifeCycle } from 'nx/src/tasks-runner/life-cycles/task-results-life-cycle';
 
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
@@ -93,8 +98,12 @@ async function createOrchestrator(
 ) {
   loadRootEnvFiles();
 
-  // this needs to be done before we start to run the tasks
-  const taskDetails = getTaskDetails();
+  const lifeCycle = new InvokeRunnerTerminalOutputLifeCycle(tasks);
+  const taskResultsLifecycle = new TaskResultsLifeCycle();
+  const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
+    ...constructLifeCycles(lifeCycle),
+    taskResultsLifecycle,
+  ]);
 
   const { runnerOptions: options } = getRunner({}, nxJson);
 
@@ -122,7 +131,7 @@ async function createOrchestrator(
     projectGraph,
     taskGraph,
     nxJson,
-    { ...options, parallel: tasks.length },
+    { ...options, parallel: tasks.length, lifeCycle: compositedLifeCycle },
     false,
     daemonClient,
     undefined,
