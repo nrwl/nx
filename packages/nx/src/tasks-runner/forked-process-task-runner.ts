@@ -20,6 +20,7 @@ import {
   PseudoTerminal,
 } from './pseudo-terminal';
 import { signalToCode } from '../utils/exit-codes';
+import { ProjectGraph } from '../config/project-graph';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -47,6 +48,7 @@ export class ForkedProcessTaskRunner {
   // TODO: vsavkin delegate terminal output printing
   public forkProcessForBatch(
     { executorName, taskGraph: batchTaskGraph }: Batch,
+    projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
   ) {
@@ -113,6 +115,7 @@ export class ForkedProcessTaskRunner {
         p.send({
           type: BatchMessageType.RunTasks,
           executorName,
+          projectGraph,
           batchTaskGraph,
           fullTaskGraph,
         });
