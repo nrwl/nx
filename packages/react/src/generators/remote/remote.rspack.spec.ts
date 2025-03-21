@@ -242,7 +242,9 @@ describe('remote generator', () => {
       });
 
       const mainFile = tree.read('test/server.ts', 'utf-8');
-      expect(mainFile).toContain(`join(process.cwd(), 'dist/test/browser')`);
+      expect(mainFile).toContain(
+        `join(process.cwd(), '../dist/test', 'browser')`
+      );
       expect(mainFile).toContain('nx.server.ready');
     });
 
@@ -262,14 +264,10 @@ describe('remote generator', () => {
         bundler: 'rspack',
       });
 
-      expect(tree.exists('test/rspack.server.config.js')).toBeTruthy();
       expect(
         tree.exists('test/module-federation.server.config.js')
       ).toBeTruthy();
 
-      expect(
-        tree.read('test/rspack.server.config.js', 'utf-8')
-      ).toMatchSnapshot();
       expect(
         tree.read('test/module-federation.server.config.js', 'utf-8')
       ).toMatchSnapshot();
@@ -291,14 +289,10 @@ describe('remote generator', () => {
         bundler: 'rspack',
       });
 
-      expect(tree.exists('test/rspack.server.config.ts')).toBeTruthy();
       expect(
         tree.exists('test/module-federation.server.config.ts')
       ).toBeTruthy();
 
-      expect(
-        tree.read('test/rspack.server.config.ts', 'utf-8')
-      ).toMatchSnapshot();
       expect(
         tree.read('test/module-federation.server.config.ts', 'utf-8')
       ).toMatchSnapshot();

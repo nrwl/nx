@@ -33,9 +33,11 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
   constructor(
     private _options: {
       config: ModuleFederationConfig;
-      devServerConfig: NxModuleFederationDevServerConfig;
+      devServerConfig?: NxModuleFederationDevServerConfig;
     }
-  ) {}
+  ) {
+    this._options.devServerConfig ??= {};
+  }
 
   apply(compiler: Compiler) {
     compiler.hooks.beforeCompile.tapAsync(
