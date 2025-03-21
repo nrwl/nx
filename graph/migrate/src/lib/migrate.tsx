@@ -6,17 +6,11 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MigrationList } from './migration-list';
 import { AutomaticMigration } from './automatic-migration';
 import { MigrationSettingsPanel } from './migration-settings-panel';
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  PauseIcon,
-  PlayIcon,
-} from '@heroicons/react/24/outline';
-import { Tooltip } from '@nx/graph/legacy/tooltips';
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Popover } from '@nx/graph/ui-common';
 import { useInterpret, useSelector } from '@xstate/react';
 import { automaticMigrationMachine } from './automatic-migration.machine';
@@ -75,6 +69,7 @@ export function MigrateUI(props: MigrateUIProps) {
       },
     },
   });
+  const isDone = useSelector(actor, (state) => state.matches('done'));
 
   useEffect(() => {
     console.log('loading initial data');
@@ -93,6 +88,12 @@ export function MigrateUI(props: MigrateUIProps) {
       metadata: props.nxConsoleMetadata,
     });
   }, [props.nxConsoleMetadata, actor]);
+
+  useEffect(() => {
+    if (isDone) {
+      setPrimaryAction(PrimaryAction.FinishSquashingCommits);
+    }
+  }, [isDone, primaryAction]);
 
   const running = useSelector(actor, (state) => state.matches('running'));
 
@@ -120,8 +121,6 @@ export function MigrateUI(props: MigrateUIProps) {
       props.onFinish(primaryAction === PrimaryAction.FinishSquashingCommits);
     }
   };
-
-  const isDone = useSelector(actor, (state) => state.matches('done'));
 
   return (
     <div className="p-2">
@@ -185,7 +184,7 @@ export function MigrateUI(props: MigrateUIProps) {
           }
         />
       )}
-      <div className="sticky bottom-0 flex justify-end gap-2 bg-white py-4 dark:bg-slate-900">
+      <div className="sticky bottom-0 flex justify-end gap-2 py-4 dark:bg-slate-900">
         <div className="flex gap-2">
           <button
             onClick={props.onCancel}
@@ -194,7 +193,6 @@ export function MigrateUI(props: MigrateUIProps) {
           >
             Cancel
           </button>
-
           <div className="flex">
             <button
               onClick={handlePrimaryActionSelection}
@@ -215,38 +213,60 @@ export function MigrateUI(props: MigrateUIProps) {
               <Popover
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                position={{ left: '-14rem', top: '-9.75rem' }}
+                position={{
+                  left: '-14rem',
+                  top: isDone ? '2.75rem' : '-9.75rem',
+                }}
               >
                 <ul className="p-2">
+                  {!isDone && (
+                    <>
+                      {' '}
+                      {!running && (
+                        <li
+                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          onClick={() => {
+                            setPrimaryAction(PrimaryAction.RunMigrations);
+                            setIsOpen(false);
+                          }}
+                        >
+                          <span
+                            className={
+                              primaryAction === PrimaryAction.RunMigrations
+                                ? 'inline-block'
+                                : 'opacity-0'
+                            }
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </span>
+                          <span>{'Run Migrations'}</span>
+                        </li>
+                      )}
+                      {running && (
+                        <li
+                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          onClick={() => {
+                            setPrimaryAction(PrimaryAction.PauseMigrations);
+                            setIsOpen(false);
+                          }}
+                        >
+                          <span
+                            className={
+                              primaryAction === PrimaryAction.PauseMigrations
+                                ? 'inline-block'
+                                : 'opacity-0'
+                            }
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </span>
+                          <span>{'Pause Migrations'}</span>
+                        </li>
+                      )}
+                      <div className="my-1 h-0.5 w-full bg-slate-300/30" />
+                    </>
+                  )}
                   <li
-                    className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-                    onClick={() => {
-                      setPrimaryAction(
-                        !running
-                          ? PrimaryAction.RunMigrations
-                          : PrimaryAction.PauseMigrations
-                      );
-                      setIsOpen(false);
-                    }}
-                  >
-                    <span
-                      className={
-                        primaryAction === PrimaryAction.RunMigrations ||
-                        primaryAction === PrimaryAction.PauseMigrations
-                          ? 'inline-block'
-                          : 'opacity-0'
-                      }
-                    >
-                      <CheckIcon className="h-4 w-4" />
-                    </span>
-                    <span>
-                      {!running ? 'Run Migrations' : 'Pause Migrations'}
-                    </span>
-                  </li>
-                  {/* Separator */}
-                  <div className="my-1 h-0.5 w-full bg-slate-300/30" />
-                  <li
-                    className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                    className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                     onClick={() => {
                       setPrimaryAction(PrimaryAction.FinishSquashingCommits);
                       setIsOpen(false);
@@ -264,7 +284,7 @@ export function MigrateUI(props: MigrateUIProps) {
                     <span>Squash commits</span>
                   </li>
                   <li
-                    className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                    className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                     onClick={() => {
                       setPrimaryAction(
                         PrimaryAction.FinishWithoutSquashingCommits

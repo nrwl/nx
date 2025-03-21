@@ -5,8 +5,6 @@ import { FileChange } from '@nx/devkit';
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-// nx-ignore-next-line
-import type { SuccessfulMigration } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
   ChevronUpIcon,
@@ -28,6 +26,7 @@ export interface MigrationTimelineProps {
   currentMigrationRunning?: boolean;
   currentMigrationFailed?: boolean;
   currentMigrationSuccess?: boolean;
+  currentMigrationHasChanges?: boolean;
   isDone?: boolean;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
@@ -38,9 +37,7 @@ export interface MigrationTimelineProps {
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
   onCancel?: () => void;
-  onPauseResume?: () => void;
-  isPaused?: boolean;
-  onReviewMigration?: (migrationId: string) => void;
+  onReviewMigration: (migrationId: string) => void;
 }
 
 export function MigrationTimeline({
@@ -50,6 +47,7 @@ export function MigrationTimeline({
   currentMigrationRunning,
   currentMigrationFailed,
   currentMigrationSuccess,
+  currentMigrationHasChanges,
   isDone,
   onRunMigration,
   onSkipMigration,
@@ -57,8 +55,6 @@ export function MigrationTimeline({
   onViewImplementation,
   onViewDocumentation,
   onCancel,
-  onPauseResume,
-  isPaused = false,
   onReviewMigration,
 }: MigrationTimelineProps) {
   const [showAllPastMigrations, setShowAllPastMigrations] = useState(false);
@@ -90,17 +86,17 @@ export function MigrationTimeline({
 
   const currentMigrationRef = useRef<MigrationCardHandle>(null);
 
-  // Auto-expand when entering a failed migration
+  // Auto-expand when entering a failed migration or requires review
   useEffect(() => {
-    if (currentMigrationFailed && currentMigrationRef.current) {
-      currentMigrationRef.current.expand();
+    if (currentMigrationFailed || currentMigrationHasChanges) {
+      toggleMigrationExpanded(currentMigration.id, true);
     }
-  }, [currentMigration?.id, currentMigrationFailed]);
+  }, [currentMigrationHasChanges, currentMigrationFailed, currentMigration]);
 
-  const toggleMigrationExpanded = (migrationId: string) => {
+  const toggleMigrationExpanded = (migrationId: string, state?: boolean) => {
     setExpandedMigrations((prev) => ({
       ...prev,
-      [migrationId]: !prev[migrationId],
+      [migrationId]: state ?? !prev[migrationId],
     }));
   };
 
@@ -192,10 +188,10 @@ export function MigrationTimeline({
                     )}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="font-medium">
+                      <div className="flex w-full items-center gap-4 font-medium">
                         <span
                           onClick={() => toggleMigrationExpanded(migration.id)}
-                          className={`text-base cursor-pointer${
+                          className={`flex-shrink-0 cursor-pointer whitespace-nowrap text-base ${
                             nxConsoleMetadata.completedMigrations?.[
                               migration.id
                             ]?.type === 'successful'
@@ -206,7 +202,7 @@ export function MigrationTimeline({
                           {migration.name}
                         </span>
                         {!expandedMigrations[migration.id] && (
-                          <span className="ml-4 overflow-hidden text-ellipsis text-sm">
+                          <span className="w-0 flex-1 truncate text-sm text-slate-600/50">
                             {' '}
                             {migration.description}{' '}
                           </span>
@@ -217,7 +213,10 @@ export function MigrationTimeline({
                           {nxConsoleMetadata.completedMigrations?.[migration.id]
                             ?.type === 'failed' && (
                             <button
-                              onClick={() => onRunMigration(migration)}
+                              onClick={() => {
+                                toggleMigrationExpanded(migration.id);
+                                onRunMigration(migration);
+                              }}
                               type="button"
                               className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
                             >
@@ -291,9 +290,9 @@ export function MigrationTimeline({
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <div className="font-medium">
+                  <div className="flex w-full items-center gap-4 font-medium">
                     <span
-                      className="cursor-pointer"
+                      className="flex-shrink-0 cursor-pointer whitespace-nowrap"
                       onClick={() =>
                         toggleMigrationExpanded(currentMigration.id)
                       }
@@ -301,18 +300,19 @@ export function MigrationTimeline({
                       {currentMigration.name}
                     </span>
                     {!expandedMigrations[currentMigration.id] && (
-                      <span className="ml-4 overflow-hidden text-ellipsis text-sm">
-                        {currentMigration.description}{' '}
-                      </span>
+                      <p className="w-0 flex-1 truncate text-sm">
+                        {currentMigration.description}
+                      </p>
                     )}
                   </div>
                   {expandedMigrations[currentMigration.id] && (
-                    <div className="flex gap-2">
-                      {nxConsoleMetadata.completedMigrations?.[
-                        currentMigration.id
-                      ]?.type === 'failed' && (
+                    <div className="flex flex-shrink-0 gap-2">
+                      {currentMigrationFailed && (
                         <button
-                          onClick={() => onRunMigration(currentMigration)}
+                          onClick={() => {
+                            onRunMigration(currentMigration);
+                            toggleMigrationExpanded(currentMigration.id);
+                          }}
                           type="button"
                           className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
                         >
@@ -320,33 +320,28 @@ export function MigrationTimeline({
                         </button>
                       )}
                       <button
-                        onClick={() => onSkipMigration(currentMigration)}
+                        onClick={() => {
+                          toggleMigrationExpanded(currentMigration.id);
+                          onSkipMigration(currentMigration);
+                        }}
                         type="button"
                         className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
                       >
                         Skip
                       </button>
 
-                      {!currentMigrationFailed &&
-                        onReviewMigration &&
-                        nxConsoleMetadata.completedMigrations?.[
-                          currentMigration.id
-                        ]?.type === 'successful' &&
-                        (
-                          nxConsoleMetadata.completedMigrations?.[
-                            currentMigration.id
-                          ] as SuccessfulMigration
-                        )?.changedFiles?.length > 0 && (
-                          <button
-                            onClick={() =>
-                              onReviewMigration(currentMigration.id)
-                            }
-                            type="button"
-                            className="flex items-center rounded-md border border-green-500 bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 dark:border-green-700 dark:bg-green-600 dark:text-white hover:dark:bg-green-700"
-                          >
-                            Approve Changes
-                          </button>
-                        )}
+                      {currentMigrationHasChanges && (
+                        <button
+                          onClick={() => {
+                            toggleMigrationExpanded(currentMigration.id);
+                            onReviewMigration(currentMigration.id);
+                          }}
+                          type="button"
+                          className="flex items-center rounded-md border border-green-500 bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 dark:border-green-700 dark:bg-green-600 dark:text-white hover:dark:bg-green-700"
+                        >
+                          Approve Changes
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -355,58 +350,6 @@ export function MigrationTimeline({
                   className="mt-2 w-full rounded-md border border-slate-300/60"
                   isOpen={expandedMigrations[currentMigration.id]}
                 >
-                  {/* Controls */}
-                  {/* <div className="mb-4 flex gap-2">
-                  {onPauseResume && (
-                    <button
-                      onClick={onPauseResume}
-                      type="button"
-                      className="flex items-center rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
-                    >
-                      {isPaused ? (
-                        <PlayIcon className="mr-2 h-4 w-4" />
-                      ) : (
-                        <PauseIcon className="mr-2 h-4 w-4" />
-                      )}
-                      {isPaused ? 'Run Migrations' : 'Pause Migrations'}
-                    </button>
-                  )}
-                  {currentMigrationFailed && (
-                    <>
-                      <button
-                        onClick={() => onRunMigration(currentMigration)}
-                        type="button"
-                        className="flex items-center rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
-                      >
-                        Rerun
-                      </button>
-                      <button
-                        onClick={() => onSkipMigration(currentMigration)}
-                        type="button"
-                        className="flex items-center rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
-                      >
-                        Skip
-                      </button>
-                    </>
-                  )}
-                  {!currentMigrationFailed &&
-                    onReviewMigration &&
-                    nxConsoleMetadata.completedMigrations?.[currentMigration.id]
-                      ?.type === 'successful' &&
-                    (
-                      nxConsoleMetadata.completedMigrations?.[
-                        currentMigration.id
-                      ] as SuccessfulMigration
-                    )?.changedFiles?.length > 0 && (
-                      <button
-                        onClick={() => onReviewMigration(currentMigration.id)}
-                        type="button"
-                        className="flex items-center rounded-md border border-green-500 bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 dark:border-green-700 dark:bg-green-600 dark:text-white hover:dark:bg-green-700"
-                      >
-                        Approve Changes
-                      </button>
-                    )}
-                </div> */}
                   {/* Migration Card */}
                   <MigrationCard
                     ref={currentMigrationRef}
@@ -447,14 +390,16 @@ export function MigrationTimeline({
                         : ''
                     )}
                   >
-                    <div className="flex items-center justify-between">
-                      <div
-                        className="cursor-pointer font-medium"
-                        onClick={() => toggleMigrationExpanded(migration.id)}
-                      >
-                        <span>{migration.name}</span>
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex w-full items-center gap-4">
+                        <span
+                          className="flex-shrink-0 cursor-pointer whitespace-nowrap"
+                          onClick={() => toggleMigrationExpanded(migration.id)}
+                        >
+                          {migration.name}
+                        </span>
                         {!expandedMigrations[migration.id] && (
-                          <span className="ml-4 overflow-hidden text-ellipsis text-sm">
+                          <span className="w-0 flex-1 truncate text-sm text-slate-600/50">
                             {migration.description}{' '}
                           </span>
                         )}
@@ -464,9 +409,12 @@ export function MigrationTimeline({
                         !nxConsoleMetadata.completedMigrations?.[
                           migration.id
                         ] && (
-                          <div className="flex gap-2">
+                          <div className="flex flex-shrink-0 gap-2">
                             <button
-                              onClick={() => onSkipMigration(migration)}
+                              onClick={() => {
+                                toggleMigrationExpanded(migration.id);
+                                onSkipMigration(migration);
+                              }}
                               type="button"
                               className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
                             >

@@ -32,36 +32,6 @@ export function AutomaticMigration(props: {
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
   actor: Interpreter<any, any, any, any, any>; // TODO Update with correct type
 }) {
-  // const actor = useInterpret(automaticMigrationMachine, {
-  //   actions: {
-  //     runMigration: (ctx) => {
-  //       console.log('runMigration', ctx.currentMigration);
-  //       if (ctx.currentMigration) {
-  //         props.onRunMigration(ctx.currentMigration);
-  //       }
-  //     },
-  //   },
-  // });
-
-  // useEffect(() => {
-  //   console.log('loading initial data');
-  //   actor.send({
-  //     type: 'loadInitialData',
-  //     migrations: props.migrations,
-  //     metadata: props.nxConsoleMetadata,
-  //   });
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps -- only load initial data when migrations change
-  // }, [JSON.stringify(props.migrations)]);
-
-  // useEffect(() => {
-  //   actor.send({
-  //     type: 'updateMetadata',
-  //     metadata: props.nxConsoleMetadata,
-  //   });
-  // }, [props.nxConsoleMetadata, actor]);
-
-  const running = useSelector(props.actor, (state) => state.matches('running'));
-
   const currentMigration = useSelector(
     props.actor,
     (state) => state.context.currentMigration
@@ -84,15 +54,11 @@ export function AutomaticMigration(props: {
     currentMigrationHasSucceeded(state.context)
   );
 
-  const isDone = useSelector(props.actor, (state) => state.matches('done'));
+  const currentMigrationChanges = useSelector(props.actor, (state) =>
+    currentMigrationHasChanges(state.context)
+  );
 
-  const handlePauseResume = () => {
-    if (running) {
-      props.actor.send({ type: 'pause' });
-    } else {
-      props.actor.send({ type: 'startRunning' });
-    }
-  };
+  const isDone = useSelector(props.actor, (state) => state.matches('done'));
 
   const handleReviewMigration = (migrationId: string) => {
     props.actor.send({
@@ -111,14 +77,13 @@ export function AutomaticMigration(props: {
       currentMigrationRunning={currentMigrationRunning}
       currentMigrationFailed={currentMigrationFailed}
       currentMigrationSuccess={currentMigrationSuccess}
+      currentMigrationHasChanges={currentMigrationChanges}
       isDone={isDone}
       onRunMigration={props.onRunMigration}
       onSkipMigration={props.onSkipMigration}
       onFileClick={props.onFileClick}
       onViewImplementation={props.onViewImplementation}
       onViewDocumentation={props.onViewDocumentation}
-      onPauseResume={handlePauseResume}
-      isPaused={!running}
       onReviewMigration={handleReviewMigration}
     />
   );
