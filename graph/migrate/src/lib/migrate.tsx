@@ -6,13 +6,20 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MigrationList } from './migration-list';
 import { AutomaticMigration } from './automatic-migration';
 import { MigrationSettingsPanel } from './migration-settings-panel';
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  PauseIcon,
+  PlayIcon,
+} from '@heroicons/react/24/outline';
 import { Tooltip } from '@nx/graph/legacy/tooltips';
-import { Popover } from './popover';
+import { Popover } from '@nx/graph/ui-common';
+import { useInterpret, useSelector } from '@xstate/react';
+import { automaticMigrationMachine } from './automatic-migration.machine';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -41,33 +48,107 @@ export interface MigrateUIProps {
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }
 
-export function MigrateUI(props: MigrateUIProps) {
-  const [squashCommits, setSquashCommits] = useState(true);
+enum PrimaryAction {
+  RunMigrations = 'Run Migrations',
+  PauseMigrations = 'Pause Migrations',
+  FinishWithoutSquashingCommits = 'Finish without squashing commits',
+  FinishSquashingCommits = 'Finish (squash commits)',
+}
 
+export function MigrateUI(props: MigrateUIProps) {
   const [createCommits, setCreateCommits] = useState(true);
   const [automaticMode, setAutomaticMode] = useState(true);
   const [commitPrefix, setCommitPrefix] = useState('');
+  const [primaryAction, setPrimaryAction] = useState<PrimaryAction>(
+    PrimaryAction.RunMigrations
+  );
   // For popover
   const [isOpen, setIsOpen] = useState(false);
+
+  const actor = useInterpret(automaticMigrationMachine, {
+    actions: {
+      runMigration: (ctx) => {
+        console.log('runMigration', ctx.currentMigration);
+        if (ctx.currentMigration) {
+          props.onRunMigration(ctx.currentMigration, { createCommits });
+        }
+      },
+    },
+  });
+
+  useEffect(() => {
+    console.log('loading initial data');
+    actor.send({
+      type: 'loadInitialData',
+      migrations: props.migrations,
+      metadata: props.nxConsoleMetadata,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only load initial data when migrations change
+  }, [JSON.stringify(props.migrations)]);
+
+  useEffect(() => {
+    console.log('updating metadata');
+    actor.send({
+      type: 'updateMetadata',
+      metadata: props.nxConsoleMetadata,
+    });
+  }, [props.nxConsoleMetadata, actor]);
+
+  const running = useSelector(actor, (state) => state.matches('running'));
+
+  const handlePauseResume = () => {
+    if (running) {
+      actor.send({ type: 'pause' });
+    } else {
+      actor.send({ type: 'startRunning' });
+    }
+  };
+
+  const handlePrimaryActionSelection = () => {
+    if (
+      primaryAction === PrimaryAction.RunMigrations ||
+      primaryAction === PrimaryAction.PauseMigrations
+    ) {
+      handlePauseResume();
+      setPrimaryAction(
+        !running ? PrimaryAction.PauseMigrations : PrimaryAction.RunMigrations
+      );
+    } else if (
+      primaryAction === PrimaryAction.FinishWithoutSquashingCommits ||
+      primaryAction === PrimaryAction.FinishSquashingCommits
+    ) {
+      props.onFinish(primaryAction === PrimaryAction.FinishSquashingCommits);
+    }
+  };
+
+  const isDone = useSelector(actor, (state) => state.matches('done'));
 
   return (
     <div className="p-2">
       {/* Page Header */}
       <div className="flex items-center justify-between pb-4">
-        <h2 className="text-xl font-semibold">
-          Migrating to {props.nxConsoleMetadata.targetVersion}
-        </h2>
-        <MigrationSettingsPanel
-          automaticMode={automaticMode}
-          setAutomaticMode={setAutomaticMode}
-          createCommits={createCommits}
-          setCreateCommits={setCreateCommits}
-          commitPrefix={commitPrefix}
-          setCommitPrefix={setCommitPrefix}
-        />
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-semibold">
+            Migrating to {props.nxConsoleMetadata.targetVersion}
+          </h2>
+
+          {/* Migration Controls */}
+        </div>
+
+        {
+          <MigrationSettingsPanel
+            automaticMode={automaticMode}
+            setAutomaticMode={setAutomaticMode}
+            createCommits={createCommits}
+            setCreateCommits={setCreateCommits}
+            commitPrefix={commitPrefix}
+            setCommitPrefix={setCommitPrefix}
+          />
+        }
       </div>
       {automaticMode ? (
         <AutomaticMigration
+          actor={actor}
           migrations={props.migrations}
           nxConsoleMetadata={props.nxConsoleMetadata}
           onRunMigration={(migration) =>
@@ -113,16 +194,15 @@ export function MigrateUI(props: MigrateUIProps) {
           >
             Cancel
           </button>
+
           <div className="flex">
             <button
-              onClick={() => props.onFinish(squashCommits)}
+              onClick={handlePrimaryActionSelection}
               type="button"
               title="Finish"
               className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
             >
-              {squashCommits
-                ? 'Finish (squash commits)'
-                : 'Finish without squashing commits'}
+              {primaryAction}
             </button>
             <div className="relative flex">
               <button
@@ -135,18 +215,49 @@ export function MigrateUI(props: MigrateUIProps) {
               <Popover
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                position={{ left: '-14rem', top: '-6rem' }}
+                position={{ left: '-14rem', top: '-9.75rem' }}
               >
-                <ul className="p-1">
+                <ul className="p-2">
                   <li
                     className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                     onClick={() => {
-                      setSquashCommits(true);
+                      setPrimaryAction(
+                        !running
+                          ? PrimaryAction.RunMigrations
+                          : PrimaryAction.PauseMigrations
+                      );
                       setIsOpen(false);
                     }}
                   >
                     <span
-                      className={!!squashCommits ? 'inline-block' : 'opacity-0'}
+                      className={
+                        primaryAction === PrimaryAction.RunMigrations ||
+                        primaryAction === PrimaryAction.PauseMigrations
+                          ? 'inline-block'
+                          : 'opacity-0'
+                      }
+                    >
+                      <CheckIcon className="h-4 w-4" />
+                    </span>
+                    <span>
+                      {!running ? 'Run Migrations' : 'Pause Migrations'}
+                    </span>
+                  </li>
+                  {/* Separator */}
+                  <div className="my-1 h-0.5 w-full bg-slate-300/30" />
+                  <li
+                    className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                    onClick={() => {
+                      setPrimaryAction(PrimaryAction.FinishSquashingCommits);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span
+                      className={
+                        primaryAction === PrimaryAction.FinishSquashingCommits
+                          ? 'inline-block'
+                          : 'opacity-0'
+                      }
                     >
                       <CheckIcon className="h-4 w-4" />
                     </span>
@@ -155,12 +266,19 @@ export function MigrateUI(props: MigrateUIProps) {
                   <li
                     className="relative flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                     onClick={() => {
-                      setSquashCommits(false);
+                      setPrimaryAction(
+                        PrimaryAction.FinishWithoutSquashingCommits
+                      );
                       setIsOpen(false);
                     }}
                   >
                     <span
-                      className={!squashCommits ? 'inline-block' : 'opacity-0'}
+                      className={
+                        primaryAction ===
+                        PrimaryAction.FinishWithoutSquashingCommits
+                          ? 'inline-block'
+                          : 'opacity-0'
+                      }
                     >
                       <CheckIcon className="h-4 w-4" />
                     </span>

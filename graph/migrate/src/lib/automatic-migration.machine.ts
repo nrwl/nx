@@ -9,7 +9,7 @@ import { assign } from '@xstate/immer';
 import { createMachine } from 'xstate';
 import { log } from 'xstate/lib/actions';
 
-type AutomaticMigrationState = {
+export type AutomaticMigrationState = {
   migrations?: MigrationDetailsWithId[];
   nxConsoleMetadata?: MigrationsJsonMetadata;
   currentMigration?: MigrationDetailsWithId;
@@ -17,7 +17,7 @@ type AutomaticMigrationState = {
   reviewedMigrations: string[];
 };
 
-type AutomaticMigrationEvents =
+export type AutomaticMigrationEvents =
   | {
       type: 'loadInitialData';
       migrations: MigrationDetailsWithId[];

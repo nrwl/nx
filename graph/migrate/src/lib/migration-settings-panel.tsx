@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Popover } from './popover';
+import { Popover } from '@nx/graph/ui-common';
 
 export interface MigrationSettingsPanelProps {
   automaticMode: boolean;
@@ -35,7 +35,7 @@ export function MigrationSettingsPanel({
         position={{ left: '-12rem', top: '2.75rem' }}
       >
         <div className="p-4">
-          <div className="flex gap-2 self-center pb-2">
+          {/* <div className="flex gap-2 self-center pb-2">
             <button
               className="rounded-md border border-slate-300 bg-white mx-auto px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={() => setAutomaticMode(!automaticMode)}
@@ -45,7 +45,7 @@ export function MigrationSettingsPanel({
                 : 'Switch to automatic mode'}
             </button>
           </div>
-          <div className="border-b border-slate-200/25 dark:border-slate-700/25"></div>
+          <div className="border-b border-slate-200/25 dark:border-slate-700/25"></div> */}
           <div className="flex items-center gap-2 py-2">
             <input
               checked={createCommits}

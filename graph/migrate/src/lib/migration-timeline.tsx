@@ -11,8 +11,6 @@ import type { SuccessfulMigration } from 'nx/src/command-line/migrate/migrate-ui
 import {
   ChevronUpIcon,
   ChevronDownIcon,
-  PauseIcon,
-  PlayIcon,
   ExclamationCircleIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -20,6 +18,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
+import { Collapsible } from '@nx/graph/ui-common';
+import { twMerge } from 'tailwind-merge';
 
 export interface MigrationTimelineProps {
   migrations: MigrationDetailsWithId[];
@@ -90,7 +90,7 @@ export function MigrationTimeline({
 
   const currentMigrationRef = useRef<MigrationCardHandle>(null);
 
-  // Auto-expand when entering a failed or successful migration
+  // Auto-expand when entering a failed migration
   useEffect(() => {
     if (currentMigrationFailed && currentMigrationRef.current) {
       currentMigrationRef.current.expand();
@@ -177,7 +177,6 @@ export function MigrationTimeline({
                   </div>
                 </div>
               )}
-
               {visiblePastMigrations.map((migration) => (
                 <div key={migration.id} className="relative mb-6 w-full">
                   <MigrationStateCircle
@@ -186,38 +185,66 @@ export function MigrationTimeline({
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
-                  <div className="ml-6 mt-1">
-                    <div
-                      className="flex cursor-pointer items-center"
-                      onClick={() => toggleMigrationExpanded(migration.id)}
-                    >
-                      <span
-                        className={`text-sm font-medium ${
-                          nxConsoleMetadata.completedMigrations?.[migration.id]
-                            ?.type === 'successful'
-                            ? 'text-green-600'
-                            : 'text-slate-600'
-                        }`}
-                      >
-                        {migration.name}
-                      </span>
+                  <div
+                    className={twMerge(
+                      `ml-6 mt-1`,
+                      expandedMigrations[currentMigration.id] ? '-mt-1' : ''
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">
+                        <span
+                          onClick={() => toggleMigrationExpanded(migration.id)}
+                          className={`text-base cursor-pointer${
+                            nxConsoleMetadata.completedMigrations?.[
+                              migration.id
+                            ]?.type === 'successful'
+                              ? 'text-green-600'
+                              : 'text-slate-600'
+                          }`}
+                        >
+                          {migration.name}
+                        </span>
+                        {!expandedMigrations[migration.id] && (
+                          <span className="ml-4 overflow-hidden text-ellipsis text-sm">
+                            {' '}
+                            {migration.description}{' '}
+                          </span>
+                        )}
+                      </div>
+                      {expandedMigrations[migration.id] && (
+                        <div className="flex gap-2">
+                          {nxConsoleMetadata.completedMigrations?.[migration.id]
+                            ?.type === 'failed' && (
+                            <button
+                              onClick={() => onRunMigration(migration)}
+                              type="button"
+                              className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
+                            >
+                              Rerun
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {expandedMigrations[migration.id] && (
-                      <div className="mt-2 w-full rounded-md border border-slate-300 p-3">
-                        <MigrationCard
-                          migration={migration}
-                          nxConsoleMetadata={nxConsoleMetadata}
-                          onFileClick={(file) => onFileClick(migration, file)}
-                          onViewImplementation={() =>
-                            onViewImplementation(migration)
-                          }
-                          onViewDocumentation={() =>
-                            onViewDocumentation(migration)
-                          }
-                        />
-                      </div>
-                    )}
+                    <Collapsible
+                      isOpen={expandedMigrations[migration.id]}
+                      className="mt-2 w-full rounded-md border border-slate-300 p-3"
+                    >
+                      <MigrationCard
+                        migration={migration}
+                        isExpanded={expandedMigrations[migration.id]}
+                        nxConsoleMetadata={nxConsoleMetadata}
+                        onFileClick={(file) => onFileClick(migration, file)}
+                        onViewImplementation={() =>
+                          onViewImplementation(migration)
+                        }
+                        onViewDocumentation={() =>
+                          onViewDocumentation(migration)
+                        }
+                      />
+                    </Collapsible>
                   </div>
                 </div>
               ))}
@@ -248,32 +275,88 @@ export function MigrationTimeline({
           )}
 
           {/* Current migration */}
-          <div className="relative mb-6 w-full">
-            <MigrationStateCircle
-              migration={migrations[currentMigrationIndex]}
-              nxConsoleMetadata={nxConsoleMetadata}
-              isRunning={currentMigrationRunning}
-              onClick={() =>
-                toggleMigrationExpanded(migrations[currentMigrationIndex].id)
-              }
-            />
-            <div className="ml-6 mt-1">
+          <div className="relative">
+            {/* TODO: Change this to be a clickable element li, button etc... */}
+            <div>
+              <MigrationStateCircle
+                migration={migrations[currentMigrationIndex]}
+                nxConsoleMetadata={nxConsoleMetadata}
+                isRunning={currentMigrationRunning}
+                onClick={() => toggleMigrationExpanded(currentMigration.id)}
+              />
               <div
-                className="flex cursor-pointer items-center"
-                onClick={() => {
-                  if (currentMigrationRef.current) {
-                    currentMigrationRef.current.toggle();
-                  }
-                }}
+                className={twMerge(
+                  `ml-6 mt-1`,
+                  expandedMigrations[currentMigration.id] ? '-mt-1' : ''
+                )}
               >
-                <span className="text-sm font-medium">
-                  {currentMigration.name}
-                </span>
-              </div>
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">
+                    <span
+                      className="cursor-pointer"
+                      onClick={() =>
+                        toggleMigrationExpanded(currentMigration.id)
+                      }
+                    >
+                      {currentMigration.name}
+                    </span>
+                    {!expandedMigrations[currentMigration.id] && (
+                      <span className="ml-4 overflow-hidden text-ellipsis text-sm">
+                        {currentMigration.description}{' '}
+                      </span>
+                    )}
+                  </div>
+                  {expandedMigrations[currentMigration.id] && (
+                    <div className="flex gap-2">
+                      {nxConsoleMetadata.completedMigrations?.[
+                        currentMigration.id
+                      ]?.type === 'failed' && (
+                        <button
+                          onClick={() => onRunMigration(currentMigration)}
+                          type="button"
+                          className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
+                        >
+                          Rerun
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onSkipMigration(currentMigration)}
+                        type="button"
+                        className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
+                      >
+                        Skip
+                      </button>
 
-              <div className="mt-2 w-full rounded-md border border-slate-300 p-3">
-                {/* Controls */}
-                <div className="mb-4 flex gap-2">
+                      {!currentMigrationFailed &&
+                        onReviewMigration &&
+                        nxConsoleMetadata.completedMigrations?.[
+                          currentMigration.id
+                        ]?.type === 'successful' &&
+                        (
+                          nxConsoleMetadata.completedMigrations?.[
+                            currentMigration.id
+                          ] as SuccessfulMigration
+                        )?.changedFiles?.length > 0 && (
+                          <button
+                            onClick={() =>
+                              onReviewMigration(currentMigration.id)
+                            }
+                            type="button"
+                            className="flex items-center rounded-md border border-green-500 bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 dark:border-green-700 dark:bg-green-600 dark:text-white hover:dark:bg-green-700"
+                          >
+                            Approve Changes
+                          </button>
+                        )}
+                    </div>
+                  )}
+                </div>
+
+                <Collapsible
+                  className="mt-2 w-full rounded-md border border-slate-300/60"
+                  isOpen={expandedMigrations[currentMigration.id]}
+                >
+                  {/* Controls */}
+                  {/* <div className="mb-4 flex gap-2">
                   {onPauseResume && (
                     <button
                       onClick={onPauseResume}
@@ -323,22 +406,23 @@ export function MigrationTimeline({
                         Approve Changes
                       </button>
                     )}
-                </div>
-
-                {/* Migration Card */}
-                <MigrationCard
-                  ref={currentMigrationRef}
-                  migration={currentMigration}
-                  nxConsoleMetadata={nxConsoleMetadata}
-                  onFileClick={(file) => onFileClick(currentMigration, file)}
-                  forceIsRunning={currentMigrationRunning}
-                  onViewImplementation={() =>
-                    onViewImplementation(currentMigration)
-                  }
-                  onViewDocumentation={() =>
-                    onViewDocumentation(currentMigration)
-                  }
-                />
+                </div> */}
+                  {/* Migration Card */}
+                  <MigrationCard
+                    ref={currentMigrationRef}
+                    migration={currentMigration}
+                    isExpanded={expandedMigrations[currentMigration.id]}
+                    nxConsoleMetadata={nxConsoleMetadata}
+                    onFileClick={(file) => onFileClick(currentMigration, file)}
+                    forceIsRunning={currentMigrationRunning}
+                    onViewImplementation={() =>
+                      onViewImplementation(currentMigration)
+                    }
+                    onViewDocumentation={() =>
+                      onViewDocumentation(currentMigration)
+                    }
+                  />
+                </Collapsible>
               </div>
             </div>
           </div>
@@ -354,31 +438,60 @@ export function MigrationTimeline({
                     onClick={() => toggleMigrationExpanded(migration.id)}
                   />
 
-                  <div className="ml-6 mt-1">
-                    <div
-                      className="flex cursor-pointer items-center"
-                      onClick={() => toggleMigrationExpanded(migration.id)}
-                    >
-                      <span className="text-sm font-medium text-slate-600">
-                        {migration.name}
-                      </span>
-                    </div>
-
-                    {expandedMigrations[migration.id] && (
-                      <div className="mt-2 w-full rounded-md border border-slate-300 p-3">
-                        <MigrationCard
-                          migration={migration}
-                          nxConsoleMetadata={nxConsoleMetadata}
-                          onFileClick={(file) => onFileClick(migration, file)}
-                          onViewImplementation={() =>
-                            onViewImplementation(migration)
-                          }
-                          onViewDocumentation={() =>
-                            onViewDocumentation(migration)
-                          }
-                        />
-                      </div>
+                  <div
+                    className={twMerge(
+                      `ml-6 mt-1`,
+                      expandedMigrations[migration.id] &&
+                        !nxConsoleMetadata.completedMigrations?.[migration.id]
+                        ? '-mt-1'
+                        : ''
                     )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="cursor-pointer font-medium"
+                        onClick={() => toggleMigrationExpanded(migration.id)}
+                      >
+                        <span>{migration.name}</span>
+                        {!expandedMigrations[migration.id] && (
+                          <span className="ml-4 overflow-hidden text-ellipsis text-sm">
+                            {migration.description}{' '}
+                          </span>
+                        )}
+                      </div>
+                      {/* ONLY SHOW BUTTONS FOR PENDING MIGRATIONS */}
+                      {expandedMigrations[migration.id] &&
+                        !nxConsoleMetadata.completedMigrations?.[
+                          migration.id
+                        ] && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => onSkipMigration(migration)}
+                              type="button"
+                              className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
+                            >
+                              Skip
+                            </button>
+                          </div>
+                        )}
+                    </div>
+                    <Collapsible
+                      isOpen={expandedMigrations[migration.id]}
+                      className="mt-2 w-full rounded-md border border-slate-300/50 p-3"
+                    >
+                      <MigrationCard
+                        migration={migration}
+                        nxConsoleMetadata={nxConsoleMetadata}
+                        isExpanded={expandedMigrations[migration.id]}
+                        onFileClick={(file) => onFileClick(migration, file)}
+                        onViewImplementation={() =>
+                          onViewImplementation(migration)
+                        }
+                        onViewDocumentation={() =>
+                          onViewDocumentation(migration)
+                        }
+                      />
+                    </Collapsible>
                   </div>
                 </div>
               ))}
@@ -505,7 +618,11 @@ function MigrationStateCircle({
       className={`absolute left-0 top-0 flex h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`}
       onClick={onClick}
     >
-      <Icon className={`h-6 w-6 ${isRunning ? 'animate-pulse' : ''}`} />
+      {isRunning ? (
+        <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      ) : (
+        <Icon className="h-6 w-6" />
+      )}
     </div>
   );
 }

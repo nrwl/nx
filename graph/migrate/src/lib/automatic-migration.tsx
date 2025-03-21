@@ -9,12 +9,15 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 import { useInterpret, useSelector } from '@xstate/react';
 import { useEffect } from 'react';
 import {
+  AutomaticMigrationEvents,
   automaticMigrationMachine,
+  AutomaticMigrationState,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
   currentMigrationHasSucceeded,
 } from './automatic-migration.machine';
 import { MigrationTimeline } from './migration-timeline';
+import { Interpreter } from 'xstate';
 
 export function AutomaticMigration(props: {
   migrations: MigrationDetailsWithId[];
@@ -27,39 +30,40 @@ export function AutomaticMigration(props: {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  actor: Interpreter<any, any, any, any, any>; // TODO Update with correct type
 }) {
-  const actor = useInterpret(automaticMigrationMachine, {
-    actions: {
-      runMigration: (ctx) => {
-        console.log('runMigration', ctx.currentMigration);
-        if (ctx.currentMigration) {
-          props.onRunMigration(ctx.currentMigration);
-        }
-      },
-    },
-  });
+  // const actor = useInterpret(automaticMigrationMachine, {
+  //   actions: {
+  //     runMigration: (ctx) => {
+  //       console.log('runMigration', ctx.currentMigration);
+  //       if (ctx.currentMigration) {
+  //         props.onRunMigration(ctx.currentMigration);
+  //       }
+  //     },
+  //   },
+  // });
 
-  useEffect(() => {
-    console.log('loading initial data');
-    actor.send({
-      type: 'loadInitialData',
-      migrations: props.migrations,
-      metadata: props.nxConsoleMetadata,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only load initial data when migrations change
-  }, [JSON.stringify(props.migrations)]);
+  // useEffect(() => {
+  //   console.log('loading initial data');
+  //   actor.send({
+  //     type: 'loadInitialData',
+  //     migrations: props.migrations,
+  //     metadata: props.nxConsoleMetadata,
+  //   });
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps -- only load initial data when migrations change
+  // }, [JSON.stringify(props.migrations)]);
 
-  useEffect(() => {
-    actor.send({
-      type: 'updateMetadata',
-      metadata: props.nxConsoleMetadata,
-    });
-  }, [props.nxConsoleMetadata, actor]);
+  // useEffect(() => {
+  //   actor.send({
+  //     type: 'updateMetadata',
+  //     metadata: props.nxConsoleMetadata,
+  //   });
+  // }, [props.nxConsoleMetadata, actor]);
 
-  const running = useSelector(actor, (state) => state.matches('running'));
+  const running = useSelector(props.actor, (state) => state.matches('running'));
 
   const currentMigration = useSelector(
-    actor,
+    props.actor,
     (state) => state.context.currentMigration
   );
 
@@ -68,30 +72,30 @@ export function AutomaticMigration(props: {
   );
 
   const currentMigrationRunning = useSelector(
-    actor,
+    props.actor,
     (state) => state.context.currentMigrationRunning
   );
 
-  const currentMigrationFailed = useSelector(actor, (state) =>
+  const currentMigrationFailed = useSelector(props.actor, (state) =>
     currentMigrationHasFailed(state.context)
   );
 
-  const currentMigrationSuccess = useSelector(actor, (state) =>
+  const currentMigrationSuccess = useSelector(props.actor, (state) =>
     currentMigrationHasSucceeded(state.context)
   );
 
-  const isDone = useSelector(actor, (state) => state.matches('done'));
+  const isDone = useSelector(props.actor, (state) => state.matches('done'));
 
   const handlePauseResume = () => {
     if (running) {
-      actor.send({ type: 'pause' });
+      props.actor.send({ type: 'pause' });
     } else {
-      actor.send({ type: 'startRunning' });
+      props.actor.send({ type: 'startRunning' });
     }
   };
 
   const handleReviewMigration = (migrationId: string) => {
-    actor.send({
+    props.actor.send({
       type: 'reviewMigration',
       migrationId,
     });

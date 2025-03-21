@@ -8,15 +8,14 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 /* eslint-enable @nx/enforce-module-boundaries */
 import {
   ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  CheckCircleIcon,
   CodeBracketIcon,
   ExclamationCircleIcon,
   ListBulletIcon,
   PlayIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal/ui-project-details';
-import { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export interface MigrationCardHandle {
   expand: () => void;
@@ -36,6 +35,7 @@ export const MigrationCard = forwardRef<
     onViewImplementation: () => void;
     onViewDocumentation: () => void;
     forceIsRunning?: boolean;
+    isExpanded?: boolean;
   }
 >(function MigrationCard(
   {
@@ -48,10 +48,11 @@ export const MigrationCard = forwardRef<
     onViewImplementation,
     onViewDocumentation,
     forceIsRunning,
+    isExpanded: isExpandedProp,
   },
   ref
 ) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(isExpandedProp ?? false);
 
   useImperativeHandle(
     ref,
@@ -62,6 +63,12 @@ export const MigrationCard = forwardRef<
     }),
     []
   );
+
+  useEffect(() => {
+    if (isExpandedProp !== undefined) {
+      setIsExpanded(isExpandedProp);
+    }
+  }, [isExpandedProp]);
 
   const migrationResult = nxConsoleMetadata.completedMigrations?.[migration.id];
   const succeeded = migrationResult?.type === 'successful';
@@ -81,13 +88,7 @@ export const MigrationCard = forwardRef<
   return (
     <div
       key={migration.id}
-      className={`my-2 gap-2 rounded-md border p-2 transition-colors ${
-        succeeded
-          ? 'border-green-200 bg-green-50/30 text-green-600 dark:border-green-900/30 dark:bg-green-900/10 dark:text-green-500'
-          : failed
-          ? 'border-red-200 bg-red-50/30 text-red-600 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-500'
-          : 'border-slate-200 text-gray-500 dark:border-slate-700/60'
-      }`}
+      className={`gap-2 rounded-md p-2 transition-colors`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -121,51 +122,18 @@ export const MigrationCard = forwardRef<
                 }
               }}
             >
-              <div>{migration.name}</div>
+              {/* <div>{migration.name}</div>
               {isNxMigration && (
                 <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-              )}
+              )} */}
             </div>
-            <span className="text-sm">{migration.description}</span>
+            <span className="mb-2 text-sm">{migration.description}</span>
             <div className="flex gap-2">
               {migration.package && (
                 <Pill
-                  text={migration.package}
-                  color={succeeded ? 'green' : failed ? 'red' : 'grey'}
+                  text={`${migration.package}: ${migration.version}`}
+                  color={'grey'}
                 />
-              )}
-              <Pill
-                text={migration.version}
-                color={succeeded ? 'green' : failed ? 'red' : 'grey'}
-              />
-              <span
-                onClick={() => onViewImplementation()}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
-              >
-                <CodeBracketIcon className="h-4 w-4" />
-                View Source
-              </span>
-              {failed && (
-                <span
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
-                  onClick={() => {
-                    setIsExpanded(!isExpanded);
-                  }}
-                >
-                  <ExclamationCircleIcon className="h-4 w-4" />
-                  {isExpanded ? 'Hide Errors' : 'View Errors'}
-                </span>
-              )}
-              {succeeded && madeChanges && (
-                <span
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
-                  onClick={() => {
-                    setIsExpanded(!isExpanded);
-                  }}
-                >
-                  <ListBulletIcon className="h-4 w-4" />
-                  {isExpanded ? 'Hide Changes' : 'View Changes'}
-                </span>
               )}
             </div>
           </div>
@@ -234,32 +202,80 @@ export const MigrationCard = forwardRef<
           )}
         </div>
       </div>
-      {failed && isExpanded && (
-        <div className="flex pl-8 pt-2">
-          <pre>{migrationResult?.error}</pre>
-        </div>
-      )}
-      {succeeded && madeChanges && isExpanded && (
-        <div>
-          <div className="my-2 border-t border-slate-200 dark:border-slate-700/60"></div>
-          <span className="pb-2 text-sm font-bold">File Changes</span>
-          <ul className="flex flex-col gap-2">
-            {migrationResult?.changedFiles.map((file) => {
-              return (
-                <li
-                  className="cursor-pointer text-sm hover:underline"
-                  key={`${migration.id}-${file.path}`}
-                  onClick={() => {
-                    onFileClick(file);
-                  }}
-                >
-                  {file.path}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
+      <div className="mt-4 flex justify-end gap-2">
+        <button
+          onClick={() => onViewImplementation()}
+          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+        >
+          <CodeBracketIcon className="h-4 w-4" />
+          View Source
+        </button>
+        {failed && (
+          <button
+            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+            onClick={() => {
+              setIsExpanded(!isExpanded);
+            }}
+          >
+            <ExclamationCircleIcon className="h-4 w-4" />
+            {isExpanded ? 'Hide Errors' : 'View Errors'}
+          </button>
+        )}
+        {succeeded && madeChanges && (
+          <button
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-sm"
+            onClick={() => {
+              setIsExpanded(!isExpanded);
+            }}
+          >
+            <ListBulletIcon className="h-4 w-4" />
+            {isExpanded ? 'Hide Changes' : 'View Changes'}
+          </button>
+        )}
+      </div>
+      <AnimatePresence>
+        {failed && isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: isExpanded ? 'auto' : 0 }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="flex overflow-hidden pt-2"
+          >
+            <pre>{migrationResult?.error}</pre>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {succeeded && madeChanges && isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: isExpanded ? 'auto' : 0 }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="my-2 border-t border-slate-200 dark:border-slate-700/60"></div>
+            <span className="pb-2 text-sm font-bold">File Changes</span>
+            <ul className="flex flex-col gap-2">
+              {migrationResult?.changedFiles.map((file) => {
+                return (
+                  <li
+                    className="cursor-pointer text-sm hover:underline"
+                    key={`${migration.id}-${file.path}`}
+                    onClick={() => {
+                      onFileClick(file);
+                    }}
+                  >
+                    {file.path}
+                  </li>
+                );
+              })}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });
