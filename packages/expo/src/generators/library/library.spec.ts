@@ -467,6 +467,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(appTree, 'tsconfig.json', {
@@ -630,13 +631,14 @@ describe('lib', () => {
         {
           "exports": {
             ".": {
-              "default": "./src/index.ts",
-              "import": "./src/index.ts",
+              "default": "./dist/index.cjs.js",
+              "development": "./src/index.ts",
+              "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
             "./package.json": "./package.json",
           },
-          "main": "./src/index.ts",
+          "main": "./dist/index.cjs.js",
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
@@ -647,6 +649,25 @@ describe('lib', () => {
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(appTree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await expoLibraryGenerator(appTree, {
+        ...defaultSchema,
+        buildable: true,
+        strict: false,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(appTree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
