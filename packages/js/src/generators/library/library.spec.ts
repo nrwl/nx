@@ -1817,6 +1817,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -1954,6 +1955,7 @@ describe('lib', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -1987,6 +1989,7 @@ describe('lib', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -2427,6 +2430,27 @@ describe('lib', () => {
 
       expect(readJson(tree, 'my-lib/project.json').name).toBe('my-lib');
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        name: 'my-lib',
+        useProjectJson: true,
+        bundler: 'tsc',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
   });
 });

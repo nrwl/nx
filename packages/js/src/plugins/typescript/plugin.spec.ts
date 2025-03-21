@@ -2206,6 +2206,111 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
       `);
     });
 
+    it('should not create build target when the entry points point to source files', async () => {
+      // Sibling package.json
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/package.json': JSON.stringify({
+          exports: {
+            '.': {
+              default: './src/index.ts',
+            },
+          },
+        }),
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          // Reduce noise in build snapshots by disabling default typecheck target
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {},
+            },
+          },
+        }
+      `);
+    });
+
+    it('should create build target when the entry points point to dist files', async () => {
+      // Sibling package.json
+      await applyFilesToTempFsAndContext(tempFs, context, {
+        'libs/my-lib/tsconfig.json': `{}`,
+        'libs/my-lib/tsconfig.lib.json': `{"compilerOptions": {"outDir": "dist"}}`,
+        'libs/my-lib/package.json': JSON.stringify({
+          exports: {
+            '.': {
+              // should ignore the fact that the development condition points to source
+              development: './src/index.ts',
+              types: './dist/index.d.ts',
+              default: './dist/index.js',
+            },
+          },
+        }),
+      });
+      expect(
+        await invokeCreateNodesOnMatchingFiles(context, {
+          // Reduce noise in build snapshots by disabling default typecheck target
+          typecheck: false,
+          build: true,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "projects": {
+            "libs/my-lib": {
+              "projectType": "library",
+              "targets": {
+                "build": {
+                  "cache": true,
+                  "command": "tsc --build tsconfig.lib.json",
+                  "dependsOn": [
+                    "^build",
+                  ],
+                  "inputs": [
+                    "production",
+                    "^production",
+                    {
+                      "externalDependencies": [
+                        "typescript",
+                      ],
+                    },
+                  ],
+                  "metadata": {
+                    "description": "Builds the project with \`tsc\`.",
+                    "help": {
+                      "command": "npx tsc --build --help",
+                      "example": {
+                        "args": [
+                          "--force",
+                        ],
+                      },
+                    },
+                    "technologies": [
+                      "typescript",
+                    ],
+                  },
+                  "options": {
+                    "cwd": "libs/my-lib",
+                  },
+                  "outputs": [
+                    "{projectRoot}/dist",
+                  ],
+                  "syncGenerators": [
+                    "@nx/js:typescript-sync",
+                  ],
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
     it('should create a node with a build target when enabled, for a project level tsconfig.lib.json build file by default', async () => {
       // Sibling package.json
       await applyFilesToTempFsAndContext(tempFs, context, {
