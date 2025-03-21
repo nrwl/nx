@@ -1,0 +1,14 @@
+{
+  "name": "gradle-batch-runner",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "command": "./gradlew :batch-runner:build",
+      "cache": true
+    },
+    "lint": {
+      "command": "./gradlew :batch-runner:check",
+      "cache": true
+    }
+  }
+}

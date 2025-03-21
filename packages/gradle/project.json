@@ -49,6 +49,11 @@
             "output": "/"
           },
           {
+            "input": "packages/gradle",
+            "glob": "**/nx-batch-runner.jar",
+            "output": "/"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"

@@ -43,7 +43,7 @@ gradlePlugin {
   // Define the plugin
   plugins {
     create("NxProjectGraphReportPlugin") {
-      id = "dev.nx.gradle"
+      id = "dev.nx.gradle.native"
       implementationClass = "dev.nx.gradle.NxProjectGraphReportPlugin"
       displayName = "The Nx Plugin for Gradle to generate nodes, dependencies and external nodes"
       description =

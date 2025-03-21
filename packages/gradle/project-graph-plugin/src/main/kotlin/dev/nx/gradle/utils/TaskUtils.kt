@@ -14,7 +14,6 @@ import org.gradle.api.tasks.TaskProvider
  * - outputs
  * - command
  * - metadata
- * - options with cwd and args
  */
 fun processTask(
     task: Task,
@@ -51,8 +50,7 @@ fun processTask(
     target["dependsOn"] = dependsOn
   }
 
-  val gradlewCommand = getGradlewCommand()
-  target["command"] = "$gradlewCommand ${projectBuildPath}:${task.name}"
+  target["executor"] = "@nx/gradle:gradlew"
 
   val metadata = getMetadata(task.description ?: "Run ${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
@@ -61,7 +59,8 @@ fun processTask(
   if (cwd.startsWith(workspaceRoot)) {
     cwd = cwd.replace(workspaceRoot, ".")
   }
-  target["options"] = mapOf("cwd" to cwd)
+  target["options"] =
+      mapOf("taskName" to "${projectBuildPath}:${task.name}", "args" to "--no-build-cache")
 
   return target
 }
@@ -139,7 +138,6 @@ fun addTestCiTargets(
       testCiTarget["metadata"] = metadata
       testCiTarget["dependsOn"] = ciDependsOn
       testCiTarget["cache"] = true
-      // testCiTarget["parallelism"] = false
       targets["ci"] = testCiTarget
       if (targetGroups[testCiTargetGroup]?.contains(("ci")) == false) {
         targetGroups[testCiTargetGroup]?.add("ci")
