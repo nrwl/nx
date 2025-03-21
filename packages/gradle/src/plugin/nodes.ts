@@ -101,15 +101,7 @@ export const makeCreateNodesForGradleConfigFile =
       return {};
     }
 
-    const gradlewFileDirectory = dirname(
-      findGraldewFile(gradleFilePath, context.workspaceRoot)
-    );
-
-    project.targets = replaceTargetNameWithOptions(
-      project.targets,
-      options,
-      gradlewFileDirectory
-    );
+    project.targets = replaceTargetNameWithOptions(project.targets, options);
     if (project.metadata?.targetGroups) {
       replaceTargeGroupNameWithOptions(project.metadata?.targetGroups, options);
     }

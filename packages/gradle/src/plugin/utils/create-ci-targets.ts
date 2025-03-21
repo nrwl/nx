@@ -10,8 +10,7 @@ import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.i
  */
 export function replaceTargetNameWithOptions(
   targets: Record<string, TargetConfiguration<RunCommandsOptions>>,
-  options: GradlePluginOptions,
-  cwd: string
+  options: GradlePluginOptions
 ): Record<string, TargetConfiguration> {
   let targetsWithReplacedName: Record<string, TargetConfiguration> = {};
   // rename target name if it is provided
@@ -23,7 +22,6 @@ export function replaceTargetNameWithOptions(
     target.options ??= {
       __unparsed__: [],
     };
-    target.options.cwd = cwd;
 
     if (taskName.startsWith('ci')) {
       if (options.ciTargetName) {
