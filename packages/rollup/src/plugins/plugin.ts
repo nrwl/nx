@@ -187,9 +187,8 @@ async function buildRollupTarget(
 
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
-    command: `rollup -c ${basename(configFilePath)}${
-      isTsConfig ? ` --configPlugin ${tsConfigPlugin}` : ''
-    }`,
+    command: `rollup -c ${basename(configFilePath)}${isTsConfig ? " --configPlugin typescript={tsconfig:\'tsconfig.lib.json\'}" : ''
+      }`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
@@ -250,16 +249,16 @@ function getOutputs(
         const outputPathFromConfig = output.dir
           ? output.dir
           : output.file
-          ? dirname(output.file)
-          : 'dist';
+            ? dirname(output.file)
+            : 'dist';
         const outputPath =
           projectRoot === '.'
             ? joinPathFragments(`{workspaceRoot}`, outputPathFromConfig)
             : joinPathFragments(
-                `{workspaceRoot}`,
-                projectRoot,
-                outputPathFromConfig
-              );
+              `{workspaceRoot}`,
+              projectRoot,
+              outputPathFromConfig
+            );
         outputs.add(outputPath);
       }
     }
