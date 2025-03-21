@@ -46,7 +46,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.4.1
           run_install: false
 
       - name: Set node
@@ -400,7 +400,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 10.4.1
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
