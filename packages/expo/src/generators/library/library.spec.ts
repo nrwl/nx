@@ -1,7 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import {
-  getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -380,7 +379,16 @@ describe('lib', () => {
       });
 
       const packageJson = readJson(appTree, 'my-lib/package.json');
-      expect(packageJson.name).toEqual('@proj/my-lib');
+      expect(packageJson).toMatchInlineSnapshot(`
+        {
+          "name": "@proj/my-lib",
+          "peerDependencies": {
+            "react": "~18.3.1",
+            "react-native": "0.76.3",
+          },
+          "version": "0.0.1",
+        }
+      `);
       expect(appTree.exists('my-lib/.babelrc'));
     });
   });
@@ -630,13 +638,13 @@ describe('lib', () => {
         {
           "exports": {
             ".": {
-              "default": "./src/index.ts",
-              "import": "./src/index.ts",
+              "default": "./dist/index.cjs.js",
+              "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
             "./package.json": "./package.json",
           },
-          "main": "./src/index.ts",
+          "main": "./dist/index.cjs.js",
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
