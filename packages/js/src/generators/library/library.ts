@@ -10,6 +10,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -631,6 +632,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         options.isUsingTsSolutionConfig &&
         !['none', 'rollup', 'vite'].includes(options.bundler)
       ) {
+        // the file must exist in the TS solution setup
+        const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -639,6 +643,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
           generateExportsField: true,
           packageJsonPath,
           format: ['esm'],
+          skipDevelopmentExports:
+            !tsconfigBase.compilerOptions?.customConditions?.includes(
+              'development'
+            ),
         });
       }
 
@@ -664,6 +672,8 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       options.isUsingTsSolutionConfig &&
       !['none', 'rollup', 'vite'].includes(options.bundler)
     ) {
+      const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
       packageJson = getUpdatedPackageJsonContent(packageJson, {
         main: join(options.projectRoot, 'src/index.ts'),
         outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -672,6 +682,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         generateExportsField: true,
         packageJsonPath,
         format: ['esm'],
+        skipDevelopmentExports:
+          !tsconfigBase.compilerOptions?.customConditions?.includes(
+            'development'
+          ),
       });
     }
 
