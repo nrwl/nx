@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { WebinarNotifier } from '@nx/nx-dev/ui-common';
 import { FrontendObservability } from '../lib/components/frontend-observability';
 
+//bump
 export default function CustomApp({
   Component,
   pageProps,
