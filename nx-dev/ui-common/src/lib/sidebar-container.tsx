@@ -81,6 +81,9 @@ export function SidebarContainer({
   // TODO(colum): Remove this angular-rspack modification once we move angular rspack into main repo (when stable).
   const menuWithAngularRspack = useMemo(() => {
     const angularIdx = menu.sections.findIndex((s) => s.id === 'angular');
+    if (angularIdx === -1) {
+      return menu;
+    }
     const sections = [
       ...menu.sections.slice(0, angularIdx),
       angularRspackSection,
