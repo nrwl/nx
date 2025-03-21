@@ -1957,6 +1957,132 @@ Valid values are: "auto", "", "~", "^", "="`,
     });
   });
 
+  describe('local dependency protocols', () => {
+    it('should resolve all local `file:` references', async () => {
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'package-a': {
+          projectRoot: 'packages/package-a',
+          packageName: 'package-a',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-a/package.json',
+          localDependencies: [
+            {
+              projectName: 'package-b',
+              dependencyCollection: 'dependencies',
+              version: 'file:../package-b',
+            },
+            {
+              projectName: 'package-c',
+              dependencyCollection: 'dependencies',
+              version: 'file:../package-c',
+            },
+          ],
+        },
+        'package-b': {
+          projectRoot: 'packages/package-b',
+          packageName: 'package-b',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-b/package.json',
+          localDependencies: [],
+        },
+        'package-c': {
+          projectRoot: 'packages/package-c',
+          packageName: 'package-c',
+          version: '1.0.0',
+          packageJsonPath: 'packages/package-c/package.json',
+          localDependencies: [],
+        },
+      });
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "file:../package-b",
+          },
+          "name": "package-a",
+          "version": "1.0.0",
+        }
+      `);
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "1.0.0",
+        }
+      `);
+
+      expect(
+        await releaseVersionGenerator(tree, {
+          projects: [projectGraph.nodes['package-b']], // version only package-b
+          projectGraph,
+          specifier: '2.0.0',
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+          updateDependents: 'auto',
+          preserveLocalDependencyProtocols: false,
+        })
+      ).toMatchInlineSnapshot(`
+        {
+          "callback": [Function],
+          "data": {
+            "package-a": {
+              "currentVersion": "1.0.0",
+              "dependentProjects": [],
+              "newVersion": "1.0.1",
+            },
+            "package-b": {
+              "currentVersion": "1.0.0",
+              "dependentProjects": [
+                {
+                  "dependencyCollection": "dependencies",
+                  "rawVersionSpec": "file:../package-b",
+                  "source": "package-a",
+                  "target": "package-b",
+                  "type": "static",
+                },
+              ],
+              "newVersion": "2.0.0",
+            },
+            "package-c": {
+              "currentVersion": "1.0.0",
+              "TODO": "what is expected here?",
+            }
+          },
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-a/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "package-b": "2.0.0",
+            "package-c": "1.0.0",
+          },
+          "name": "package-a",
+          "version": "1.0.1",
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-b/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-b",
+          "version": "2.0.0",
+        }
+      `);
+
+      expect(readJson(tree, 'packages/package-c/package.json'))
+        .toMatchInlineSnapshot(`
+        {
+          "name": "package-c",
+          "version": "1.0.0",
+        }
+      `);
+    });
+  });
+
   describe('preserveLocalDependencyProtocols', () => {
     it('should preserve local `workspace:` references when preserveLocalDependencyProtocols is true', async () => {
       // Supported package manager for workspace: protocol
