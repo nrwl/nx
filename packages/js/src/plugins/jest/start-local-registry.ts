@@ -49,24 +49,28 @@ export function startLocalRegistry({
         );
 
         const registry = `http://${listenAddress}:${port}`;
+        const authToken = 'secretVerdaccioToken';
 
         console.log(`Local registry started on ${registry}`);
 
         process.env.npm_config_registry = registry;
         execSync(
-          `npm config set //${listenAddress}:${port}/:_authToken "secretVerdaccioToken" --ws=false`,
+          `npm config set //${listenAddress}:${port}/:_authToken "${authToken}" --ws=false`,
           {
             windowsHide: false,
           }
         );
 
+        // bun
+        process.env.BUN_CONFIG_REGISTRY = registry;
+        process.env.BUN_CONFIG_TOKEN = authToken;
         // yarnv1
         process.env.YARN_REGISTRY = registry;
         // yarnv2
         process.env.YARN_NPM_REGISTRY_SERVER = registry;
         process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
 
-        console.log('Set npm and yarn config registry to ' + registry);
+        console.log('Set npm, bun, and yarn config registry to ' + registry);
 
         resolve(() => {
           childProcess.kill();
