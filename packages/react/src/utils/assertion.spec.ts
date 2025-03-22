@@ -1,4 +1,4 @@
-import { assertValidStyle } from './assertion';
+import { assertValidStyle, assertValidReactRouter } from './assertion';
 
 describe('assertValidStyle', () => {
   it('should accept style option values from app, lib, component schematics', () => {
@@ -18,5 +18,18 @@ describe('assertValidStyle', () => {
 
   it('should throw for invalid values', () => {
     expect(() => assertValidStyle('bad')).toThrow(/Unsupported/);
+  });
+
+  it('should throw for invalid react-router and bundler combination', () => {
+    expect(() => assertValidReactRouter(true, 'webpack')).toThrow(
+      /Unsupported/
+    );
+    expect(() => assertValidReactRouter(true, 'rspack')).toThrow(/Unsupported/);
+    expect(() => assertValidReactRouter(true, 'rsbuild')).toThrow(
+      /Unsupported/
+    );
+    expect(() => assertValidReactRouter(true, 'vite')).not.toThrow(
+      /Unsupported/
+    );
   });
 });

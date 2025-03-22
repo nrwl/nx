@@ -3,7 +3,10 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertValidStyle } from '../../../utils/assertion';
+import {
+  assertValidReactRouter,
+  assertValidStyle,
+} from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -52,8 +55,11 @@ export async function normalizeOptions<T extends Schema = Schema>(
     : options.style;
 
   assertValidStyle(options.style);
+  assertValidReactRouter(options.useReactRouter, options.bundler);
 
-  options.bundler = options.useReactRouter ? 'vite' : options.bundler;
+  if (options.useReactRouter && !options.bundler) {
+    options.bundler = 'vite';
+  }
   options.useReactRouter = options.routing ? options.useReactRouter : false;
 
   const normalized = {
