@@ -13,4 +13,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = "project-graph-plugin"
+rootProject.name = "native"

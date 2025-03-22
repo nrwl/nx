@@ -1,5 +1,8 @@
 import { ExecutorContext, logger, TaskGraph } from '@nx/devkit';
-import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
+import {
+  LARGE_BUFFER,
+  RunCommandsOptions,
+} from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
 import { GraldewExecutorSchema } from './schema';
 import { findGraldewFile } from '../../utils/exec-gradle';
@@ -30,7 +33,7 @@ export default async function gradlewBatch(
 
     const args =
       typeof overrides?.args === 'string'
-        ? overrides.args
+        ? overrides.args.trim()
         : Array.isArray(overrides?.args)
         ? overrides.args.join(' ')
         : '';
@@ -38,9 +41,14 @@ export default async function gradlewBatch(
     const batchResults = execSync(
       `java -jar ${batchRunnerPath} --taskNames=${rootGradlewTaskNames.join(
         ','
-      )} --workspaceRoot=${root} --args=${args} ${
+      )} --workspaceRoot=${root} ${args ? '--args=' + args : ''} ${
         process.env.NX_VERBOSE_LOGGING === 'true' ? '--verbose' : '--quiet'
-      }`
+      }`,
+      {
+        windowsHide: true,
+        env: process.env,
+        maxBuffer: LARGE_BUFFER,
+      }
     );
     const gradlewBatchResults = JSON.parse(
       batchResults.toString()

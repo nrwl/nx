@@ -1,9 +1,24 @@
 {
   "name": "gradle-batch-runner",
   "$schema": "node_modules/nx/schemas/project-schema.json",
+  "projectRoot": "packages/gradle/batch-runner",
+  "sourceRoot": "packages/gradle/batch-runner/src",
   "targets": {
-    "build": {
+    "build-base": {
       "command": "./gradlew :batch-runner:build",
+      "output": ["{projectRoot}/build"]
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "mkdir -p build/packages/gradle/batch-runner/build/libs",
+          "cp -f packages/gradle/batch-runner/build/libs/nx-batch-runner.jar build/packages/gradle/batch-runner/build/libs/"
+        ],
+        "parallel": false
+      },
+      "inputs": ["{projectRoot}/build/libs/nx-batch-runner.jar"],
+      "outputs": ["{workspaceRoot}/build/packages/gradle/batch-runner/build/libs/nx-batch-runner.jar"],
       "cache": true
     },
     "lint": {

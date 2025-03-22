@@ -68,5 +68,6 @@
         "command": "node ./scripts/copy-readme.js gradle"
       }
     }
-  }
+  },
+  "implicitDependencies": ["gradle-batch-runner", "gradle-project-graph-plugin"]
 }

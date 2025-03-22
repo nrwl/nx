@@ -1,6 +1,8 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
+import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskDependency
@@ -272,7 +274,18 @@ fun getDependsOnForTask(task: Task, dependencies: MutableSet<Dependency>?): List
             when (dep) {
               is Task -> listOf(dep)
 
-              is TaskProvider<*> -> listOfNotNull(dep.orNull)
+              is TaskProvider<*>,
+              is NamedDomainObjectProvider<*> -> {
+                val providerName = (dep as Named).name
+                val foundTask = task.project.tasks.findByName(providerName)
+                if (foundTask != null) {
+                  listOf(foundTask)
+                } else {
+                  task.logger.info(
+                      "${dep::class.simpleName} '$providerName' did not resolve to a task in project ${task.project.name}")
+                  emptyList()
+                }
+              }
 
               is String -> {
                 val foundTask = task.project.tasks.findByPath(dep)
