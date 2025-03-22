@@ -51,7 +51,6 @@ export function MigrationTimeline({
   currentMigrationSuccess,
   currentMigrationHasChanges,
   isDone,
-  isInit,
   onRunMigration,
   onSkipMigration,
   onFileClick,

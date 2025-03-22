@@ -14,6 +14,7 @@ import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Popover } from '@nx/graph/ui-common';
 import { useInterpret, useSelector } from '@xstate/react';
 import { automaticMigrationMachine } from './automatic-migration.machine';
+import { MigrationInitScreen } from './migration-init';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -130,6 +131,14 @@ export function MigrateUI(props: MigrateUIProps) {
       props.onFinish(primaryAction === PrimaryAction.FinishSquashingCommits);
     }
   };
+
+  if (isInit) {
+    return (
+      <MigrationInitScreen
+        onStart={() => actor.send({ type: 'startRunning' })}
+      />
+    );
+  }
 
   return (
     <div className="p-2">

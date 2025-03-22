@@ -6,11 +6,9 @@ import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { useInterpret, useSelector } from '@xstate/react';
-import { useEffect } from 'react';
+import { useSelector } from '@xstate/react';
 import {
   AutomaticMigrationEvents,
-  automaticMigrationMachine,
   AutomaticMigrationState,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
@@ -30,7 +28,13 @@ export function AutomaticMigration(props: {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
-  actor: Interpreter<any, any, any, any, any>; // TODO Update with correct type
+  actor: Interpreter<
+    AutomaticMigrationState,
+    any,
+    AutomaticMigrationEvents,
+    any,
+    any
+  >; // TODO Update with correct type
 }) {
   const currentMigration = useSelector(
     props.actor,
