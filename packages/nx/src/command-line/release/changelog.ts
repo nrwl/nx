@@ -74,6 +74,7 @@ import {
   handleDuplicateGitTags,
   noDiffInChangelogMessage,
 } from './utils/shared';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 
 export interface NxReleaseChangelogResult {
   workspaceChangelog?: {
@@ -129,7 +130,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -449,7 +456,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           .map((dep) => {
             return {
               dependencyName: dep.source,
-              newVersion: projectsVersionData[dep.source].newVersion,
+              newVersion: projectsVersionData[dep.source]?.newVersion ?? null,
             };
           })
           .filter((b) => b.newVersion !== null);
@@ -994,7 +1001,9 @@ async function applyChangesAndExit(
   }
 
   if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
-    output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+    output.logSingleLine(
+      `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+    );
     await gitPush({
       gitRemote: args.gitRemote,
       dryRun: args.dryRun,
