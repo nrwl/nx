@@ -26,34 +26,28 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 interface ActiveTask {
   id: string;
   killed: boolean;
-  promise: Promise<void>;
+  promise: Promise<{ success: boolean }>;
   childProcess: null | ChildProcess;
   start: () => Promise<void>;
   stop: (signal: NodeJS.Signals) => Promise<void>;
 }
 
 function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: NodeJS.Timeout | null = null;
   let pendingPromise: Promise<T> | null = null;
 
   return () => {
-    clearTimeout(timeoutId);
-
-    if (!pendingPromise) {
-      pendingPromise = new Promise<T>((resolve, reject) => {
-        timeoutId = setTimeout(() => {
-          fn()
-            .then((result) => {
-              pendingPromise = null;
-              resolve(result);
-            })
-            .catch((error) => {
-              pendingPromise = null;
-              reject(error);
-            });
-        }, wait);
-      });
+    if (timeoutId) {
+      return pendingPromise;
     }
+
+    pendingPromise = new Promise<T>((resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        fn().then(resolve, reject);
+        timeoutId = null;
+        pendingPromise = null;
+      }, wait);
+    });
 
     return pendingPromise;
   };
@@ -133,17 +127,30 @@ export async function* nodeExecutor(
     );
 
     const addToQueue = async (
-      childProcess: null | ChildProcess,
-      buildResult: Promise<{ success: boolean }>
+      createBuildProcess: (() => ChildProcess) | ActiveTask['promise']
     ) => {
       const task: ActiveTask = {
         id: randomUUID(),
         killed: false,
-        childProcess,
+        childProcess: null,
         promise: null,
         start: async () => {
+          if (typeof createBuildProcess === 'function') {
+            // Create and execute the build process.
+            task.promise = new Promise(async (resolve) => {
+              task.childProcess = createBuildProcess();
+              task.childProcess.once('exit', (code) => {
+                if (code === 0) resolve({ success: true });
+                // If process is killed due to current task being killed, then resolve with success.
+                else resolve({ success: !!currentTask?.killed });
+              });
+            });
+          } else {
+            task.promise = createBuildProcess;
+          }
+
           // Wait for build to finish.
-          const result = await buildResult;
+          const result = await task.promise;
 
           if (result && !result.success) {
             // If in watch-mode, don't throw or else the process exits.
@@ -162,7 +169,7 @@ export async function* nodeExecutor(
           if (task.killed) return;
 
           // Run the program
-          task.promise = new Promise<void>((resolve, reject) => {
+          task.promise = new Promise((resolve, reject) => {
             task.childProcess = fork(
               joinPathFragments(__dirname, 'node-with-require-overrides'),
               options.args ?? [],
@@ -200,7 +207,7 @@ export async function* nodeExecutor(
                   done();
                 }
               }
-              resolve();
+              resolve({ success: true });
             });
 
             next({ success: true, options: buildOptions });
@@ -254,9 +261,8 @@ export async function* nodeExecutor(
       // If a all dependencies need to be rebuild on changes, then register with watcher
       // and run through CLI, otherwise only the current project will rebuild.
       const runBuild = async () => {
-        let childProcess: ChildProcess = null;
-        const whenReady = new Promise<{ success: boolean }>(async (resolve) => {
-          childProcess = fork(
+        await addToQueue(() =>
+          fork(
             require.resolve('nx'),
             [
               'run',
@@ -268,16 +274,11 @@ export async function* nodeExecutor(
               cwd: context.root,
               stdio: 'inherit',
             }
-          );
-          childProcess.once('exit', (code) => {
-            if (code === 0) resolve({ success: true });
-            // If process is killed due to current task being killed, then resolve with success.
-            else resolve({ success: !!currentTask?.killed });
-          });
-        });
-        await addToQueue(childProcess, whenReady);
+          )
+        );
         await debouncedProcessQueue();
       };
+
       if (isDaemonEnabled()) {
         additionalExitHandler = await daemonClient.registerFileWatcher(
           {
@@ -318,7 +319,7 @@ export async function* nodeExecutor(
       );
       while (true) {
         const event = await output.next();
-        await addToQueue(null, Promise.resolve(event.value));
+        await addToQueue(Promise.resolve(event.value));
         await debouncedProcessQueue();
         if (event.done || !options.watch) {
           break;
@@ -395,7 +396,7 @@ function getFileToRun(
   // If using run-commands or another custom executor, then user should set
   // outputFileName, but we can try the default value that we use.
   if (!buildOptions?.outputPath && !buildOptions?.outputFileName) {
-    // If we are using crystal for infering the target, we can use the output path from the target.
+    // If we are using crystal for inferring the target, we can use the output path from the target.
     // Since the output path has a token for the project name, we need to interpolate it.
     // {workspaceRoot}/dist/{projectRoot} -> dist/my-app
     const outputPath = project.data.targets[buildOptions.target]?.outputs?.[0];
