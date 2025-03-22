@@ -256,7 +256,7 @@ export async function resolveCurrentVersionFromGitTag(
   if (latestMatchingGitTag && latestMatchingGitTag.extractedVersion) {
     const currentVersion = latestMatchingGitTag.extractedVersion;
     logger.buffer(
-      `🏷️  Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}"`
+      `🏷️  Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}", based on releaseTagPattern "${releaseTagPattern}"`
     );
     // Write to the cache if the release group is fixed
     if (releaseGroup.projectsRelationship === 'fixed') {
@@ -270,7 +270,7 @@ export async function resolveCurrentVersionFromGitTag(
   }
 
   const noMatchingGitTagsError = new Error(
-    `No git tags matching pattern "${releaseGroup.releaseTagPattern}" for project "${projectGraphNode.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
+    `No git tags matching pattern "${releaseTagPattern}" for project "${projectGraphNode.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
   );
   if (fallbackCurrentVersionResolver !== 'disk') {
     throw noMatchingGitTagsError;

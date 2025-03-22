@@ -105,7 +105,7 @@ async function releaseVersionGeneratorForTest(
     projectGraph: ProjectGraph;
     releaseGroups: ReleaseGroupWithName[];
     releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>;
-    userGivenSpecifier: SemverBumpType;
+    userGivenSpecifier: SemverBumpType | undefined;
     filters?: {
       projects?: string[];
       groups?: string[];
@@ -540,8 +540,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
           nxReleaseConfig,
           projectGraph,
           filters,
-          // TODO: fix the need for as any
-          userGivenSpecifier: '' as any,
+          userGivenSpecifier: undefined,
           releaseGroups,
           releaseGroupToFilteredProjects,
         });
@@ -1740,7 +1739,7 @@ Valid values are: "auto", "", "~", "^", "="`,
             userGivenSpecifier: '2.0.0' as SemverBumpType,
           })
           /**
-           * TODO: Note that this one captures a breaking change in versioning v2.
+           * Note that this one captures a breaking change in versioning v2.
            *
            * In the legacy versioning, the dependentProjects array would be empty when only versioning package-a
            * with updateDependents: 'never'. Now the dependentProjects array contains the dependent project even

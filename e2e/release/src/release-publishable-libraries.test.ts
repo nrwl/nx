@@ -88,7 +88,7 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🏷️  Resolved the current version as 0.0.0 from git tag "v0.0.0"
+      {project-name} 🏷️  Resolved the current version as 0.0.0 from git tag "v0.0.0", based on the releaseTagPattern "v{version}"
       {project-name} ❓ Applied explicit semver value "0.0.2", from the given specifier, to get new version 0.0.2
       {project-name} ✍️  New version 0.0.2 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
@@ -143,7 +143,7 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🏷️  Resolved the current version as 0.0.2 from git tag "v0.0.2"
+      {project-name} 🏷️  Resolved the current version as 0.0.2 from git tag "v0.0.2", based on the releaseTagPattern "v{version}"
       {project-name} ❓ Applied explicit semver value "0.0.3", from the given specifier, to get new version 0.0.3
       {project-name} ✍️  New version 0.0.3 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
@@ -200,7 +200,7 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🏷️  Resolved the current version as 0.0.3 from git tag "v0.0.3"
+      {project-name} 🏷️  Resolved the current version as 0.0.3 from git tag "v0.0.3", based on the releaseTagPattern "v{version}"
       {project-name} ❓ Applied explicit semver value "0.0.4", from the given specifier, to get new version 0.0.4
       {project-name} ✍️  New version 0.0.4 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
@@ -257,7 +257,7 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🏷️  Resolved the current version as 0.0.4 from git tag "v0.0.4"
+      {project-name} 🏷️  Resolved the current version as 0.0.4 from git tag "v0.0.4", based on the releaseTagPattern "v{version}"
       {project-name} ❓ Applied explicit semver value "0.0.5", from the given specifier, to get new version 0.0.5
       {project-name} ✍️  New version 0.0.5 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
