@@ -65,6 +65,13 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+          cache: gradle
+
       - name: Check Documentation
         run: pnpm nx documentation
         timeout-minutes: 20
