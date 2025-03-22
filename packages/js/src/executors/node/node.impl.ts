@@ -23,6 +23,8 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 
+const TERMINAL_RESET = '\x1b[0m';
+
 interface ActiveTask {
   id: string;
   killed: boolean;
@@ -175,7 +177,7 @@ export async function* nodeExecutor(
               options.args ?? [],
               {
                 execArgv: getExecArgv(options),
-                stdio: [0, 1, 'pipe', 'ipc'],
+                stdio: [0, 'pipe', 'pipe', 'ipc'],
                 env: {
                   ...process.env,
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
@@ -184,6 +186,16 @@ export async function* nodeExecutor(
               }
             );
 
+            // Handle stdout with careful buffering
+            const handleStdOut = (data) => {
+              if (options.watch && task.killed) return;
+
+              // Just pipe the data directly
+              process.stdout.write(data);
+            };
+            task.childProcess.stdout.on('data', handleStdOut);
+
+            // Handle stderr similarly
             const handleStdErr = (data) => {
               // Don't log out error if task is killed and new one has started.
               // This could happen if a new build is triggered while new process is starting, since the operation is not atomic.
@@ -193,8 +205,10 @@ export async function* nodeExecutor(
               }
             };
             task.childProcess.stderr.on('data', handleStdErr);
+
             task.childProcess.once('exit', (code) => {
-              task.childProcess.off('data', handleStdErr);
+              task.childProcess.stdout.removeListener('data', handleStdOut);
+              task.childProcess.stderr.removeListener('data', handleStdErr);
               if (options.watch && !task.killed) {
                 logger.info(
                   `NX Process exited with code ${code}, waiting for changes to restart...`
@@ -219,6 +233,13 @@ export async function* nodeExecutor(
           // NOTE: `childProcess` may not have been set yet if the task did not have a chance to start.
           // e.g. multiple file change events in a short time (like git checkout).
           if (task.childProcess) {
+            // Pause streams before killing
+            if (task.childProcess.stdout) task.childProcess.stdout.pause();
+            if (task.childProcess.stderr) task.childProcess.stderr.pause();
+
+            // Reset terminal state
+            process.stdout.write(TERMINAL_RESET);
+
             await killTree(task.childProcess.pid, signal);
           }
           try {
@@ -226,6 +247,12 @@ export async function* nodeExecutor(
           } catch {
             // Doesn't matter if task fails, we just need to wait until it finishes.
           }
+
+          // Small delay to ensure terminal processing is complete
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          // Reset terminal state again
+          process.stdout.write(TERMINAL_RESET);
         },
       };
 
