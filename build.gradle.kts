@@ -1,9 +1,9 @@
 plugins {
-    // id("dev.nx.gradle") version("+")
+    // id("dev.nx.gradle.native") version("0.0.1-alpha.4")
     id("com.ncorti.ktfmt.gradle") version("+")
 }
 
-group = "dev.nx"
+group = "dev.nx.gradle"
 
 allprojects {
   apply {
