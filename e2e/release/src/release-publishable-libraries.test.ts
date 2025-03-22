@@ -52,7 +52,13 @@ describe('release publishable libraries', () => {
 
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js', '@nx/react', '@nx/angular', '@nx/vue'],
+      packages: [
+        '@nx/js',
+        '@nx/react',
+        '@nx/angular',
+        '@nx/vue',
+        '@nx/react-native',
+      ],
     });
 
     // Normalize git committer information so it is deterministic in snapshots
@@ -295,6 +301,65 @@ describe('release publishable libraries', () => {
       filename:      proj-{project-name}-0.0.5.tgz
       package size: XXXB
       unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files: X
+      Published to ${e2eRegistryUrl} with tag "latest"
+      NX   Successfully ran target nx-release-publish for project {project-name}
+    `);
+  });
+
+  it('should be able to release publishable react native library', async () => {
+    const reactNativeLib = uniq('my-pkg-');
+    runCLI(
+      `generate @nx/react-native:lib packages/${reactNativeLib} --publishable --importPath=@proj/${reactNativeLib} --no-interactive`
+    );
+
+    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`);
+    expect(releaseOutput).toMatchInlineSnapshot(`
+      NX   Executing pre-version command
+      NX   Running release version for project: {project-name}
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from dist/packages/{project-name}/package.json
+      {project-name} 📄 Resolved the current version as 0.0.5 from git tag "v0.0.5".
+      {project-name} 📄 Using the provided version specifier "0.0.6".
+      {project-name} ✍️  New version 0.0.6 written to dist/packages/{project-name}/package.json
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.1",
+      +   "version": "0.0.6",
+      "peerDependencies": {
+      }
+      +
+      NX   Staging changed files with git
+      No files to stage. Skipping git add.
+      NX   Generating an entry in CHANGELOG.md for v0.0.6
+      + ## 0.0.6 (YYYY-MM-DD)
+      +
+      + This was a version bump only, there were no code changes.
+      +
+      ## 0.0.5 (YYYY-MM-DD)
+      This was a version bump only, there were no code changes.
+      NX   Staging changed files with git
+      NX   Committing changes with git
+      NX   Tagging commit with git
+      NX   Running target nx-release-publish for project {project-name}:
+      - {project-name}
+      > nx run {project-name}:nx-release-publish
+      📦  @proj/{project-name}@0.0.6
+      === Tarball Contents ===
+      XXX.XXX kb README.md
+      XXB index.cjs.d.ts
+      XXB index.cjs.js
+      XXB index.esm.d.ts
+      XXB index.esm.js
+      XXXB package.json
+      XXB src/index.d.ts
+      XXB src/lib/{project-name}.d.ts
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       0.0.6
+      filename:      proj-{project-name}-0.0.6.tgz
+      package size:  XXX.XXX kb
+      unpacked size: XXX.XXX kb
       shasum:        {SHASUM}
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files: X
