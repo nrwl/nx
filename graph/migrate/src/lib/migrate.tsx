@@ -70,6 +70,8 @@ export function MigrateUI(props: MigrateUIProps) {
     },
   });
   const isDone = useSelector(actor, (state) => state.matches('done'));
+  const isInit = useSelector(actor, (state) => state.matches('init'));
+  const running = useSelector(actor, (state) => state.matches('running'));
 
   useEffect(() => {
     console.log('loading initial data');
@@ -95,7 +97,17 @@ export function MigrateUI(props: MigrateUIProps) {
     }
   }, [isDone, primaryAction]);
 
-  const running = useSelector(actor, (state) => state.matches('running'));
+  useEffect(() => {
+    if (
+      (primaryAction === PrimaryAction.RunMigrations ||
+        primaryAction === PrimaryAction.PauseMigrations) &&
+      !isInit
+    ) {
+      setPrimaryAction(
+        running ? PrimaryAction.PauseMigrations : PrimaryAction.RunMigrations
+      );
+    }
+  }, [running, primaryAction, isInit]);
 
   const handlePauseResume = () => {
     if (running) {
@@ -111,9 +123,6 @@ export function MigrateUI(props: MigrateUIProps) {
       primaryAction === PrimaryAction.PauseMigrations
     ) {
       handlePauseResume();
-      setPrimaryAction(
-        !running ? PrimaryAction.PauseMigrations : PrimaryAction.RunMigrations
-      );
     } else if (
       primaryAction === PrimaryAction.FinishWithoutSquashingCommits ||
       primaryAction === PrimaryAction.FinishSquashingCommits

@@ -18,6 +18,7 @@ import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
 import { Collapsible } from '@nx/graph/ui-common';
 import { twMerge } from 'tailwind-merge';
+import { motion } from 'framer-motion';
 
 export interface MigrationTimelineProps {
   migrations: MigrationDetailsWithId[];
@@ -28,6 +29,7 @@ export interface MigrationTimelineProps {
   currentMigrationSuccess?: boolean;
   currentMigrationHasChanges?: boolean;
   isDone?: boolean;
+  isInit: boolean;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
   onFileClick: (
@@ -49,6 +51,7 @@ export function MigrationTimeline({
   currentMigrationSuccess,
   currentMigrationHasChanges,
   isDone,
+  isInit,
   onRunMigration,
   onSkipMigration,
   onFileClick,
@@ -102,14 +105,40 @@ export function MigrationTimeline({
 
   if (isDone) {
     return (
-      <div className="flex flex-col">
-        <div className="rounded-md border border-green-500 bg-green-50 p-3 text-green-600 dark:border-green-900/30 dark:bg-green-900/10 dark:text-green-500">
-          <h2 className="flex items-center gap-2 text-lg font-bold">
-            <CheckCircleIcon className="h-6 w-6" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="flex flex-col items-center justify-center gap-4 py-10"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 10,
+            delay: 0.3,
+          }}
+          className="flex h-16 w-16 items-center justify-center text-6xl"
+        >
+          <span role="img" aria-label="thumbs up">
+            👍
+          </span>
+        </motion.div>
+
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="rounded-md border border-green-500 bg-green-50 px-6 py-5 text-green-600 shadow-lg dark:border-green-900/30 dark:bg-green-900/10 dark:text-green-500"
+        >
+          <h2 className="flex items-center gap-3 text-xl font-bold">
+            <CheckCircleIcon className="h-7 w-7" />
             All migrations completed
           </h2>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 
@@ -310,8 +339,8 @@ export function MigrationTimeline({
                       {currentMigrationFailed && (
                         <button
                           onClick={() => {
-                            onRunMigration(currentMigration);
                             toggleMigrationExpanded(currentMigration.id);
+                            onRunMigration(currentMigration);
                           }}
                           type="button"
                           className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"

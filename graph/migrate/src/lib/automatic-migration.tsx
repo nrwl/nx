@@ -60,6 +60,8 @@ export function AutomaticMigration(props: {
 
   const isDone = useSelector(props.actor, (state) => state.matches('done'));
 
+  const isInit = useSelector(props.actor, (state) => state.matches('init'));
+
   const handleReviewMigration = (migrationId: string) => {
     props.actor.send({
       type: 'reviewMigration',
@@ -79,6 +81,7 @@ export function AutomaticMigration(props: {
       currentMigrationSuccess={currentMigrationSuccess}
       currentMigrationHasChanges={currentMigrationChanges}
       isDone={isDone}
+      isInit={isInit}
       onRunMigration={props.onRunMigration}
       onSkipMigration={props.onSkipMigration}
       onFileClick={props.onFileClick}

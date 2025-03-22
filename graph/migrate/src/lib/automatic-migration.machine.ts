@@ -88,11 +88,20 @@ export const automaticMigrationMachine = createMachine<
     predictableActionArguments: true,
     preserveActionOrder: true,
     id: 'migrate',
-    initial: 'paused',
+    initial: 'init',
     context: {
       reviewedMigrations: [],
     },
     states: {
+      init: {
+        on: {
+          startRunning: [
+            {
+              target: 'running',
+            },
+          ],
+        },
+      },
       paused: {
         on: {
           startRunning: [
