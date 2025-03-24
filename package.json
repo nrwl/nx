@@ -189,7 +189,7 @@
     "esbuild": "0.25.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.16",
-    "eslint-config-prettier": "9.1.0",
+    "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-cypress": "2.14.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-jsx-a11y": "6.10.1",
