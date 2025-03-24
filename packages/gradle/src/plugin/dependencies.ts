@@ -9,6 +9,7 @@ import {
 import { relative } from 'node:path';
 
 import { getCurrentProjectGraphReport } from './utils/get-project-graph-from-gradle-plugin';
+import { populateGradleReport } from '../plugin-v1/utils/get-gradle-report';
 
 export const createDependencies: CreateDependencies = async (
   _,
@@ -39,7 +40,9 @@ export const createDependencies: CreateDependencies = async (
         source: sourceProjectName,
         target: targetProjectName,
         type: DependencyType.static,
-        sourceFile: relative(workspaceRoot, dependencyFromPlugin.sourceFile),
+        sourceFile: normalizePath(
+          relative(workspaceRoot, dependencyFromPlugin.sourceFile)
+        ),
       };
       validateDependency(dependency, context);
       dependencies.push(dependency);
@@ -48,3 +51,6 @@ export const createDependencies: CreateDependencies = async (
 
   return dependencies;
 };
+function normalizePath(arg0: string): string {
+  throw new Error('Function not implemented.');
+}

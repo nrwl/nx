@@ -68,7 +68,7 @@ export function execGradleAsync(
  * @returns the relative path of the gradlew file to workspace root, throws an error if gradlew file is not found
  * It will return gradlew.bat file on windows and gradlew file on other platforms
  */
-export function findGraldewFile(
+export function findGradlewFile(
   originalFileToSearch: string,
   wr: string = workspaceRoot,
   currentSearchPath?: string
@@ -100,5 +100,5 @@ export function findGraldewFile(
     }
   }
 
-  return findGraldewFile(originalFileToSearch, wr, parent);
+  return findGradlewFile(originalFileToSearch, wr, parent);
 }

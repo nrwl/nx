@@ -9,19 +9,49 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     project.logger.info("${Date()} Applying NxProjectGraphReportPlugin to ${project.name}")
 
-    val hashProperty = project.findProperty("hash")?.toString() ?: "default-hash"
+    val hashProperty =
+        project.findProperty("hash")?.toString()
+            ?: run {
+              project.logger.warn(
+                  "No 'hash' property was provided for $project. Using default hash value: 'default-hash'")
+              "default-hash"
+            }
 
-    // Lazily register the task without forcing realization
+    val cwdProperty =
+        project.findProperty("cwd")?.toString()
+            ?: run {
+              project.logger.warn(
+                  "No 'cwd' property was provided for $project. Using default hash value: ${System.getProperty("user.dir")}")
+              System.getProperty("user.dir")
+            }
+
+    val workspaceRootProperty =
+        project.findProperty("workspaceRoot")?.toString()
+            ?: run {
+              project.logger.warn(
+                  "No 'workspaceRoot' property was provided for $project. Using default hash value: ${System.getProperty("user.dir")}")
+              System.getProperty("user.dir")
+            }
+
+    val targetNameOverrides: Map<String, String> =
+        project.properties
+            .filterKeys { it.endsWith("TargetName") }
+            .mapValues { it.value.toString() }
+
+    project.logger.info("Resolved target name overrides: $targetNameOverrides")
+
     val nxProjectReportTask: TaskProvider<NxProjectReportTask> =
         project.tasks.register("nxProjectReport", NxProjectReportTask::class.java) { task ->
           task.projectName.set(project.name)
-          task.projectRef.set(project) // Pass project reference for execution-time processing
+          task.projectRef.set(project)
           task.hash.set(hashProperty)
+          task.targetNameOverrides.set(targetNameOverrides)
+          task.cwd.set(cwdProperty)
+          task.workspaceRoot.set(workspaceRootProperty)
 
           task.description = "Create Nx project report for ${project.name}"
           task.group = "Reporting"
 
-          // Avoid logging during configuration phase
           task.doFirst { it.logger.info("${Date()} Running nxProjectReport for ${project.name}") }
         }
 
@@ -38,20 +68,16 @@ class NxProjectGraphReportPlugin : Plugin<Project> {
       }
     }
 
-    // Register a finalizer task lazily
     project.tasks.register("nxProjectGraph").configure { task ->
-      task.dependsOn(nxProjectReportTask) // Ensure it runs AFTER nxProjectReportTask
+      task.dependsOn(nxProjectReportTask)
       task.description = "Create Nx project graph for ${project.name}"
       task.group = "Reporting"
 
-      // Use lazy evaluation to avoid realizing the task early
       val outputFileProvider = nxProjectReportTask.map { it.outputFile }
 
       task.doFirst { it.logger.info("${Date()} Running nxProjectGraph for ${project.name}") }
 
-      task.doLast {
-        println(outputFileProvider.get().path) // This ensures lazy evaluation
-      }
+      task.doLast { println(outputFileProvider.get().path) }
     }
 
     // Ensure all included builds are processed only once using lazy evaluation
