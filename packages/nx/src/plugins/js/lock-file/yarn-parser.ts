@@ -306,9 +306,30 @@ function getDependencies(
           (section) => {
             if (section) {
               Object.entries(section).forEach(([name, versionRange]) => {
-                const target =
+                let target =
                   keyMap.get(`${name}@npm:${versionRange}`) ||
                   keyMap.get(`${name}@${versionRange}`);
+                if (!target) {
+                  const shortRange = versionRange.replace(/^npm:/, '');
+                  // for range like 'npm:*' the above will not be a match
+                  if (shortRange === '*') {
+                    const foundKey = Array.from(keyMap.keys()).find((k) =>
+                      k.startsWith(`${name}@`)
+                    );
+                    if (foundKey) {
+                      target = keyMap.get(foundKey);
+                    }
+                  } else if (shortRange.includes('||')) {
+                    // when range is a union of ranges, we need to treat it as an array
+                    const ranges = shortRange.split('||').map((r) => r.trim());
+                    target = Object.values(keyMap).find((n) => {
+                      return (
+                        n.data.packageName === name &&
+                        ranges.some((r) => satisfies(n.data.version, r))
+                      );
+                    })?.[1];
+                  }
+                }
                 if (target) {
                   const dep: RawProjectGraphDependency = {
                     source: node.name,
@@ -400,13 +421,13 @@ function addPackageVersion(
     collection.set(packageName, new Set());
   }
   collection.get(packageName).add(`${packageName}@${version}`);
-  if (isBerry && !version.startsWith('npm:')) {
+  if (isBerry && !version.startsWith('npm:') && !version.startsWith('patch:')) {
     collection.get(packageName).add(`${packageName}@npm:${version}`);
   }
 }
 
 function mapSnapshots(
-  dependencies: Record<string, YarnDependency>,
+  rootDependencies: Record<string, YarnDependency>,
   nodes: Record<string, ProjectGraphExternalNode>,
   packageJson: NormalizedPackageJson,
   isBerry: boolean
@@ -421,9 +442,12 @@ function mapSnapshots(
     ...packageJson.optionalDependencies,
     ...packageJson.peerDependencies,
   };
+  const resolutions = {
+    ...packageJson.resolutions,
+  };
 
   // yarn classic splits keys when parsing so we need to stich them back together
-  const groupedDependencies = groupDependencies(dependencies, isBerry);
+  const groupedDependencies = groupDependencies(rootDependencies, isBerry);
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
@@ -461,6 +485,21 @@ function mapSnapshots(
         snapshotMap.get(snapshot).add(requestedKey);
       }
     }
+    const resolvedVersion = getPackageJsonVersion(resolutions, node);
+    if (resolvedVersion) {
+      addPackageVersion(
+        node.data.packageName,
+        resolvedVersion,
+        existingKeys,
+        isBerry
+      );
+      const requestedKey = isBerry
+        ? reverseMapBerryKey(node, resolvedVersion, snapshot)
+        : `${node.data.packageName}@${resolvedVersion}`;
+      if (!snapshotMap.get(snapshot).has(requestedKey)) {
+        snapshotMap.get(snapshot).add(requestedKey);
+      }
+    }
 
     if (isBerry) {
       // look for patched versions
@@ -473,7 +512,7 @@ function mapSnapshots(
   });
 
   // remove keys that match version ranges that have been pruned away
-  snapshotMap.forEach((snapshotValue, snapshotKey) => {
+  snapshotMap.forEach((snapshotValue, snapshot) => {
     for (const key of snapshotValue.values()) {
       const packageName = key.slice(0, key.indexOf('@', 1));
       let normalizedKey = key;
@@ -513,8 +552,8 @@ function reverseMapBerryKey(
   snapshot: YarnDependency
 ): string {
   // alias packages already have version
-  if (version.startsWith('npm:')) {
-    `${node.data.packageName}@${version}`;
+  if (version.startsWith('patch:')) {
+    return `${node.data.packageName}@${version}`;
   }
   // check for berry tarball packages
   if (
@@ -528,17 +567,17 @@ function reverseMapBerryKey(
 }
 
 function getPackageJsonVersion(
-  combinedDependencies: Record<string, string>,
+  dependencies: Record<string, string>,
   node: ProjectGraphExternalNode
 ): string {
   const { packageName, version } = node.data;
 
-  if (combinedDependencies[packageName]) {
-    if (
-      combinedDependencies[packageName] === version ||
-      satisfies(version, combinedDependencies[packageName])
-    ) {
-      return combinedDependencies[packageName];
+  if (dependencies[packageName]) {
+    const versionRange = dependencies[packageName]
+      .replace(/^patch:|#.*$/g, '')
+      .replace(`${packageName}@`, '');
+    if (versionRange === version || satisfies(version, versionRange)) {
+      return dependencies[packageName];
     }
   }
 }

@@ -2923,6 +2923,84 @@ __metadata:
       `);
     });
   });
+
+  describe('resolutions and patches', () => {
+    it('should parse yarn.lock with resolutions and patches', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/yarn.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/package.json'
+      ));
+      const appLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/app/yarn.lock'
+      )).default;
+      const manualLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/app/manual.yarn.lock'
+      )).default;
+      const appPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/resolutions-and-patches/app/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+      const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      expect(prunedGraph.externalNodes['npm:@types/react'])
+        .toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "10/5f2f6091623f13375a5bbc7e5c222cd212b5d6366ead737b76c853f6f52b314db24af5ae3f688d2d49814c668c216858a75433f145311839d8989d46bb3cbecf",
+            "packageName": "@types/react",
+            "version": "18.2.60",
+          },
+          "name": "npm:@types/react",
+          "type": "npm",
+        }
+      `);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        appPackageJson
+      );
+      // expect(result).toEqual(appLockFile);
+      expect(result).toEqual(manualLockFile);
+    });
+  });
 });
 
 function uniq(str: string) {
