@@ -43,6 +43,7 @@ interface Schema {
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
