@@ -13,7 +13,7 @@ import {
 import { basename, join } from 'path';
 import { nxVersion } from '../../utils/versions';
 import { createComponentStories } from './lib/component-story';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -43,7 +43,7 @@ export async function createAllStories(
     visitNotIgnoredFiles(tree, p, (path) => {
       // Ignore private files starting with "_".
       if (basename(path).startsWith('_')) return;
-      if (ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
+      if (ignorePaths?.some((pattern) => picomatch(pattern)(path))) return;
       if (path.endsWith('.vue')) {
         // Let's see if the .stories.* file exists
         const ext = path.slice(path.lastIndexOf('.'));
