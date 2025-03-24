@@ -8,6 +8,7 @@ import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.ProjectLayout
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
@@ -23,6 +24,12 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
 
   @get:Input abstract val hash: Property<String>
 
+  @get:Input abstract val cwd: Property<String>
+
+  @get:Input abstract val workspaceRoot: Property<String>
+
+  @get:Input abstract val targetNameOverrides: MapProperty<String, String>
+
   // Don't compute report at configuration time, move it to execution time
   @get:Internal // Prevent Gradle from caching this reference
   abstract val projectRef: Property<Project>
@@ -35,8 +42,14 @@ abstract class NxProjectReportTask @Inject constructor(private val projectLayout
   fun action() {
     logger.info("${Date()} Apply task action NxProjectReportTask for ${projectName.get()}")
     logger.info("${Date()} Hash input: ${hash.get()}")
+    logger.info("${Date()} Target Name Overrides ${targetNameOverrides.get()}")
     val project = projectRef.get() // Get project reference at execution time
-    val report = createNodeForProject(project) // Compute report at execution time
+    val report =
+        createNodeForProject(
+            project,
+            targetNameOverrides.get(),
+            workspaceRoot.get(),
+            cwd.get()) // Compute report at execution time
     val reportJson = gson.toJson(report)
 
     if (outputFile.exists() && outputFile.readText() == reportJson) {

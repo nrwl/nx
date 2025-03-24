@@ -1,5 +1,3 @@
-import { isCI } from 'nx/src/devkit-internals';
-
 export interface GradlePluginOptions {
   testTargetName?: string;
   ciTargetName?: string;

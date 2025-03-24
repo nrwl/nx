@@ -13,4 +13,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = "native"
+rootProject.name = "gradle"

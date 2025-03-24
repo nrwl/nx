@@ -2,18 +2,33 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   DependencyType,
+  normalizePath,
   StaticDependency,
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
 import { relative } from 'node:path';
 
-import { getCurrentProjectGraphReport } from './utils/get-project-graph-from-gradle-plugin';
+import {
+  getCurrentProjectGraphReport,
+  populateProjectGraph,
+} from './utils/get-project-graph-from-gradle-plugin';
+import { GradlePluginOptions } from './utils/gradle-plugin-options';
+import { GRALDEW_FILES, splitConfigFiles } from '../utils/split-config-files';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 
-export const createDependencies: CreateDependencies = async (
-  _,
+export const createDependencies: CreateDependencies<
+  GradlePluginOptions
+> = async (
+  options: GradlePluginOptions,
   context: CreateDependenciesContext
 ) => {
+  const files = await globWithWorkspaceContext(
+    workspaceRoot,
+    Array.from(GRALDEW_FILES)
+  );
+  const { gradlewFiles } = splitConfigFiles(files);
+  await populateProjectGraph(context.workspaceRoot, gradlewFiles, options);
   const { dependencies: dependenciesFromReport } =
     getCurrentProjectGraphReport();
 
@@ -39,7 +54,9 @@ export const createDependencies: CreateDependencies = async (
         source: sourceProjectName,
         target: targetProjectName,
         type: DependencyType.static,
-        sourceFile: relative(workspaceRoot, dependencyFromPlugin.sourceFile),
+        sourceFile: normalizePath(
+          relative(workspaceRoot, dependencyFromPlugin.sourceFile)
+        ),
       };
       validateDependency(dependency, context);
       dependencies.push(dependency);

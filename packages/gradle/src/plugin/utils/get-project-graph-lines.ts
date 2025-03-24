@@ -1,11 +1,18 @@
-import { AggregateCreateNodesError, output } from '@nx/devkit';
+import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
+import { GradlePluginOptions } from './gradle-plugin-options';
+import { dirname } from 'node:path';
 
 export async function getNxProjectGraphLines(
   gradlewFile: string,
-  gradleConfigHash: string
+  gradleConfigHash: string,
+  gradlePluginOptions: GradlePluginOptions
 ): Promise<string[]> {
   let nxProjectGraphBuffer: Buffer;
+
+  const gradlePluginOptionsArgs = Object.entries(gradlePluginOptions).map(
+    ([key, value]) => `-P${key}=${value}`
+  );
 
   try {
     nxProjectGraphBuffer = await execGradleAsync(gradlewFile, [
@@ -16,6 +23,9 @@ export async function getNxProjectGraphLines(
       '--build-cache', // enable build cache
       '--warning-mode',
       'none',
+      ...gradlePluginOptionsArgs,
+      `-Pcwd=${dirname(gradlewFile)}`,
+      `-PworkspaceRoot=${workspaceRoot}`,
       process.env.NX_VERBOSE_LOGGING ? '--info' : '',
     ]);
   } catch (e: Buffer | Error | any) {

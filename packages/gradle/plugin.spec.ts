@@ -88,7 +88,7 @@ describe('@nx/gradle/plugin', () => {
                       ],
                     },
                     "options": {
-                      "cwd": ".",
+                      "cwd": "proj",
                     },
                   },
                 },

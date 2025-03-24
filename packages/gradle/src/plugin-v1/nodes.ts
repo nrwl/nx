@@ -27,7 +27,7 @@ import {
   gradleConfigGlob,
   splitConfigFiles,
 } from '../utils/split-config-files';
-import { getGradleExecFile, findGraldewFile } from '../utils/exec-gradle';
+import { getGradleExecFile, findGradlewFile } from '../utils/exec-gradle';
 
 const cacheableTaskType = new Set(['Build', 'Verification']);
 const dependsOnMap = {
@@ -255,7 +255,7 @@ async function createGradleTargets(
 }> {
   const inputsMap = createInputsMap(context);
   const gradlewFileDirectory = dirname(
-    findGraldewFile(gradleBuildFilePath, context.workspaceRoot)
+    findGradlewFile(gradleBuildFilePath, context.workspaceRoot)
   );
 
   const targets: Record<string, TargetConfiguration> = {};
