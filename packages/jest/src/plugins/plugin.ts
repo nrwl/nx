@@ -253,13 +253,21 @@ async function buildJestTargets(
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
 
+  const existingTsNodeCompilerOptions = process.env['TS_NODE_COMPILER_OPTIONS'];
+  const tsNodeCompilerOptions = JSON.stringify({
+    ...(existingTsNodeCompilerOptions
+      ? JSON.parse(existingTsNodeCompilerOptions)
+      : {}),
+    moduleResolution: 'node10',
+    customConditions: null,
+  });
   const target: TargetConfiguration = (targets[options.targetName] = {
     command: 'jest',
     options: {
       cwd: projectRoot,
       // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
       // We want to support of ESM via 'module':'nodenext', we need to override the resolution until Jest supports it.
-      env: { TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}' },
+      env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
     },
     metadata: {
       technologies: ['jest'],
@@ -341,7 +349,7 @@ async function buildJestTargets(
           outputs,
           options: {
             cwd: projectRoot,
-            env: { TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}' },
+            env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
           },
           metadata: {
             technologies: ['jest'],
@@ -481,9 +489,7 @@ async function buildJestTargets(
             outputs,
             options: {
               cwd: projectRoot,
-              env: {
-                TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}',
-              },
+              env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
             },
             metadata: {
               technologies: ['jest'],
