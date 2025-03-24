@@ -1,15 +1,14 @@
 package dev.nx.gradle.utils
 
 import dev.nx.gradle.data.*
+import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.TaskDependency
 import org.gradle.api.tasks.TaskProvider
 
 /**
  * Process a task and convert it into target Going to populate:
  * - cache
- * - parallelism
  * - inputs
  * - outputs
  * - command
@@ -21,32 +20,33 @@ fun processTask(
     projectBuildPath: String,
     projectRoot: String,
     workspaceRoot: String,
+    cwd: String,
     externalNodes: MutableMap<String, ExternalNode>,
-    dependencies: MutableSet<Dependency>
+    dependencies: MutableSet<Dependency>,
+    targetNameOverrides: Map<String, String>
 ): MutableMap<String, Any?> {
   val logger = task.logger
   logger.info("NxProjectReportTask: process $task for $projectRoot")
   val target = mutableMapOf<String, Any?>()
   target["cache"] = true // set cache to be always true
-  // target["parallelism"] = false // set parallelism always false
 
   // process inputs
   val inputs = getInputsForTask(task, projectRoot, workspaceRoot, externalNodes)
-  if (inputs?.isEmpty() == false) {
+  if (!inputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${inputs.size} inputs")
     target["inputs"] = inputs
   }
 
   // process outputs
   val outputs = getOutputsForTask(task, projectRoot, workspaceRoot)
-  if (outputs?.isEmpty() == false) {
+  if (!outputs.isNullOrEmpty()) {
     logger.info("${task}: processed ${outputs.size} outputs")
     target["outputs"] = outputs
   }
 
   // process dependsOn
-  val dependsOn = getDependsOnForTask(task, dependencies)
-  if (dependsOn?.isEmpty() == false) {
+  val dependsOn = getDependsOnForTask(task, dependencies, targetNameOverrides)
+  if (!dependsOn.isNullOrEmpty()) {
     logger.info("${task}: processed ${dependsOn.size} dependsOn")
     target["dependsOn"] = dependsOn
   }
@@ -57,95 +57,9 @@ fun processTask(
   val metadata = getMetadata(task.description ?: "Run ${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  var cwd = System.getProperty("user.dir")
-  if (cwd.startsWith(workspaceRoot)) {
-    cwd = cwd.replace(workspaceRoot, ".")
-  }
   target["options"] = mapOf("cwd" to cwd)
 
   return target
-}
-
-const val testCiTargetGroup = "verification"
-
-/**
- * Add atomized ci test targets Going to loop through each test files and create a target for each
- * It is going to modify targets and targetGroups in place
- */
-fun addTestCiTargets(
-    testFiles: FileCollection,
-    projectBuildPath: String,
-    testTask: Task,
-    targets: NxTargets,
-    targetGroups: TargetGroups,
-    projectRoot: String,
-    workspaceRoot: String
-) {
-  if (!targetGroups.contains(testCiTargetGroup)) { // add target group if not exist
-    targetGroups[testCiTargetGroup] = mutableListOf()
-  }
-  val ciDependsOn = mutableListOf<Map<String, String>>()
-  val gradlewCommand = getGradlewCommand()
-  testFiles
-      .filter { testFile ->
-        val fileName = testFile.getName().split(".").first()
-        val regex =
-            "^(?!abstract).*?(Test)(s)?\\d*"
-                .toRegex(
-                    RegexOption.IGNORE_CASE) // find the files that match Test(any number) regex
-        testFile.startsWith(workspaceRoot) && regex.matches(fileName)
-      }
-      .forEach { testFile ->
-        val fileName = testFile.getName().split(".").first()
-        val testCiTarget = mutableMapOf<String, Any?>()
-        testCiTarget["command"] = "$gradlewCommand ${projectBuildPath}:test --tests $fileName"
-        val metadata = getMetadata("Runs Gradle test $fileName in CI", projectBuildPath, "test")
-        testCiTarget["metadata"] = metadata
-        testCiTarget["cache"] = true
-        // testCiTarget["parallelism"] = false
-        testCiTarget["inputs"] =
-            arrayOf(replaceRootInPath(testFile.path, projectRoot, workspaceRoot))
-
-        val fileCiDependsOn = getDependsOnForTask(testTask, null)
-        if (fileCiDependsOn?.isEmpty() == false) {
-          testTask.logger.info("${testTask}: processed ${fileCiDependsOn.size} dependsOn")
-          testCiTarget["dependsOn"] = fileCiDependsOn
-        }
-
-        val fileCiOutputs = getOutputsForTask(testTask, projectRoot, workspaceRoot)
-        if (fileCiOutputs?.isEmpty() == false) {
-          testTask.logger.info("${testTask}: processed ${fileCiOutputs.size} outputs")
-          testCiTarget["outputs"] = fileCiOutputs
-        }
-
-        val targetName = "ci--${fileName}"
-        targets[targetName] = testCiTarget
-        targetGroups[testCiTargetGroup]?.add(targetName)
-        ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
-      }
-  testTask.logger.info("$testTask ci tasks: $ciDependsOn")
-  if (ciDependsOn.isNotEmpty()) {
-    if (targets["ci"] != null) {
-      val ciTarget =
-          targets["ci"] as? MutableMap<String, Any?>
-              ?: mutableMapOf<String, Any?>().also { targets["ci"] = it }
-      val dependsOnList =
-          ciTarget.getOrPut("dependsOn") { mutableListOf<Any?>() } as MutableList<Any?>
-      dependsOnList.addAll(ciDependsOn)
-    } else {
-      val testCiTarget = mutableMapOf<String, Any?>()
-      val metadata = getMetadata("Runs Gradle Tests in CI", projectBuildPath, "test")
-      testCiTarget["executor"] = "nx:noop"
-      testCiTarget["metadata"] = metadata
-      testCiTarget["dependsOn"] = ciDependsOn
-      testCiTarget["cache"] = true
-      // testCiTarget["parallelism"] = false
-      targets["ci"] = testCiTarget
-      if (targetGroups[testCiTargetGroup]?.contains(("ci")) == false) {
-        targetGroups[testCiTargetGroup]?.add("ci")
-      }
-    }
-  }
 }
 
 fun getGradlewCommand(): String {
@@ -187,11 +101,10 @@ fun getInputsForTask(
           }
           // if the path is outside of workspace
           if (pathWithReplacedRoot == null &&
-              path.endsWith(".jar") &&
               externalNodes != null) { // add it to external dependencies
             try {
-              val externalDep = getExternalDepFromInputFile(path, externalNodes)
-              externalDependencies.add(externalDep)
+              val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
+              externalDep?.let { externalDependencies.add(it) }
             } catch (e: Exception) {
               task.logger.info("${task}: get external dependency error $e")
             }
@@ -238,12 +151,20 @@ fun getOutputsForTask(task: Task, projectRoot: String, workspaceRoot: String): L
 }
 
 /**
- * Get dependsOn for task, handling configuration timing safely
+ * Get dependsOn for task, handling configuration timing safely. Rewrites dependency task names
+ * based on targetNameOverrides (e.g., test -> ci).
  *
  * @param task task to process
- * @return list of dependsOn tasks, null if empty or an error occurred
+ * @param dependencies optional set to collect inter-project Dependency objects
+ * @param targetNameOverrides optional map of overrides (e.g., test -> ci)
+ * @return list of dependsOn task names (possibly replaced), or null if none found or error occurred
  */
-fun getDependsOnForTask(task: Task, dependencies: MutableSet<Dependency>?): List<String>? {
+fun getDependsOnForTask(
+    task: Task,
+    dependencies: MutableSet<Dependency>?,
+    targetNameOverrides: Map<String, String> = emptyMap()
+): List<String>? {
+
   fun mapTasksToNames(tasks: Collection<Task>): List<String> {
     return tasks.map { depTask ->
       val depProject = depTask.project
@@ -257,37 +178,56 @@ fun getDependsOnForTask(task: Task, dependencies: MutableSet<Dependency>?): List
                 taskProject.buildFile.path))
       }
 
-      if (depProject == taskProject) {
-        depTask.name
-      } else {
-        "${depProject.name}:${depTask.name}"
+      // Check if this task name needs to be overridden
+      var taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
+      val ciTargetName = targetNameOverrides.getOrDefault("ciTargetName", null)
+      if (depTask.name === "test" && ciTargetName != null && System.getenv("CI").equals("true")) {
+        taskName = ciTargetName
       }
+      val overriddenTaskName =
+          if (depProject == taskProject) {
+            taskName
+          } else {
+            "${depProject.name}:${taskName}"
+          }
+
+      overriddenTaskName
     }
   }
 
   return try {
-    // 1. Try to resolve from task.dependsOn first
     val dependsOnEntries = task.dependsOn
+
+    // Prefer task.dependsOn
     if (dependsOnEntries.isNotEmpty()) {
       val resolvedTasks =
           dependsOnEntries.flatMap { dep ->
             when (dep) {
               is Task -> listOf(dep)
 
-              is TaskProvider<*> -> listOfNotNull(dep.orNull)
-
-              is String -> {
-                val foundTask = task.project.tasks.findByPath(dep)
-                if (foundTask == null) {
-                  task.logger.info(
-                      "Task string '$dep' could not be resolved in project ${task.project.name}")
-                  emptyList()
-                } else {
+              is TaskProvider<*>,
+              is NamedDomainObjectProvider<*> -> {
+                val providerName = (dep as Named).name
+                val foundTask = task.project.tasks.findByName(providerName)
+                if (foundTask != null) {
                   listOf(foundTask)
+                } else {
+                  task.logger.info(
+                      "${dep::class.simpleName} '$providerName' did not resolve to a task in project ${task.project.name}")
+                  emptyList()
                 }
               }
 
-              is TaskDependency -> dep.getDependencies(task).toList()
+              is String -> {
+                val foundTask = task.project.tasks.findByPath(dep)
+                if (foundTask != null) {
+                  listOf(foundTask)
+                } else {
+                  task.logger.info(
+                      "Task string '$dep' could not be resolved in project ${task.project.name}")
+                  emptyList()
+                }
+              }
 
               else -> {
                 task.logger.info(
@@ -300,23 +240,22 @@ fun getDependsOnForTask(task: Task, dependencies: MutableSet<Dependency>?): List
       if (resolvedTasks.isNotEmpty()) {
         return mapTasksToNames(resolvedTasks)
       }
-    } else {
-      // 2. Fallback to task.taskDependencies.getDependencies(task)
-      val resolvedDepTasks =
-          try {
-            task.taskDependencies.getDependencies(null)
-          } catch (e: Exception) {
-            task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
-            task.logger.debug("Stack trace:", e)
-            emptySet<Task>()
-          }
-
-      if (resolvedDepTasks.isNotEmpty()) {
-        return mapTasksToNames(resolvedDepTasks)
-      }
     }
 
-    // 3. If both are empty, return null
+    // Fallback: taskDependencies.getDependencies(task)
+    val fallbackDeps =
+        try {
+          task.taskDependencies.getDependencies(null)
+        } catch (e: Exception) {
+          task.logger.info("Error calling getDependencies for ${task.path}: ${e.message}")
+          task.logger.debug("Stack trace:", e)
+          emptySet<Task>()
+        }
+
+    if (fallbackDeps.isNotEmpty()) {
+      return mapTasksToNames(fallbackDeps)
+    }
+
     null
   } catch (e: Exception) {
     task.logger.info("Unexpected error getting dependencies for ${task.path}: ${e.message}")
@@ -333,39 +272,68 @@ fun getDependsOnForTask(task: Task, dependencies: MutableSet<Dependency>?): List
 fun getMetadata(
     description: String?,
     projectBuildPath: String,
-    taskName: String
+    taskName: String,
+    nonAtomizedTarget: String? = null
 ): Map<String, Any?> {
   val gradlewCommand = getGradlewCommand()
   return mapOf(
       "description" to description,
       "technologies" to arrayOf("gradle"),
-      "help" to mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${taskName}"))
+      "help" to mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${taskName}"),
+      "nonAtomizedTarget" to nonAtomizedTarget)
 }
 
 /**
- * convert path
+ * Converts a file path like:
  * org.apache.commons/commons-lang3/3.13.0/b7263237aa89c1f99b327197c41d0669707a462e/commons-lang3-3.13.0.jar
- * to external dep: "gradle:commons-lang3-3.13.0": { "type": "gradle", "name": "commons-lang3",
- * "data": { "version": "3.13.0", "packageName": "org.apache.commons.commons-lang3", "hash":
- * "b7263237aa89c1f99b327197c41d0669707a462e",} }
  *
- * @return key of external dep (e.g. gradle:commons-lang3-3.13.0)
+ * Into an external dependency with key: "gradle:commons-lang3-3.13.0" with value: { "type":
+ * "gradle", "name": "commons-lang3", "data": { "version": "3.13.0", "packageName":
+ * "org.apache.commons.commons-lang3", "hash": "b7263237aa89c1f99b327197c41d0669707a462e",} }
+ *
+ * @param inputFile Path to the dependency jar.
+ * @param externalNodes Map to populate with the resulting ExternalNode.
+ * @return The external dependency key (e.g., gradle:commons-lang3-3.13.0), or null if parsing
+ *   fails.
  */
 fun getExternalDepFromInputFile(
     inputFile: String,
-    externalNodes: MutableMap<String, ExternalNode>
-): String {
-  val segments: List<String> = inputFile.split("/")
-  val nameKey = segments.last().replace(".jar", "")
-  val hash = segments[segments.size - 2]
-  val version = segments[segments.size - 3]
-  val packageName = segments[segments.size - 4]
-  val packageGroup = segments[segments.size - 5]
+    externalNodes: MutableMap<String, ExternalNode>,
+    logger: org.gradle.api.logging.Logger
+): String? {
+  try {
+    val segments = inputFile.split("/")
 
-  val data = ExternalDepData(version, "${packageGroup}.${packageName}", hash)
-  val node = ExternalNode("gradle", "gradle:${nameKey}", data)
-  externalNodes["gradle:${nameKey}"] = node
-  return "gradle:${nameKey}"
+    // Expecting at least 5 segments to safely extract group, package, version, hash, filename
+    if (segments.size < 5) {
+      logger.warn("Invalid input path: '$inputFile'. Expected at least 5 segments.")
+      return null
+    }
+
+    val fileName = segments.last()
+
+    // Remove any file extension (after the last dot), if present
+    val nameKey = fileName.substringBeforeLast(".", fileName)
+
+    val hash = segments[segments.size - 2]
+    val version = segments[segments.size - 3]
+    val packageName = segments[segments.size - 4]
+    val packageGroup = segments[segments.size - 5]
+
+    val fullPackageName = "$packageGroup.$packageName"
+
+    val data = ExternalDepData(version, fullPackageName, hash)
+    val externalKey = "gradle:$nameKey"
+    val node = ExternalNode("gradle", externalKey, data)
+
+    externalNodes[externalKey] = node
+
+    return externalKey
+  } catch (e: Exception) {
+    logger.warn("Failed to parse inputFile '$inputFile': ${e.message}")
+    logger.debug("Stack trace:", e)
+    return null
+  }
 }
 
 /**

@@ -1,9 +1,0 @@
-{
-  "$schema": "https://json-schema.org/schema",
-  "version": 2,
-  "title": "GradlewImpl executor",
-  "description": "The GradlewImpl executor is used to run Gradle tasks.",
-  "type": "object",
-  "properties": {},
-  "required": []
-}

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import {
   AggregateCreateNodesError,
+  hashArray,
   ProjectConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
@@ -14,6 +15,8 @@ import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
+import { GradlePluginOptions } from './gradle-plugin-options';
+import { hashObject } from 'nx/src/devkit-internals';
 
 // the output json file from the gradle plugin
 export interface ProjectGraphReport {
@@ -90,10 +93,13 @@ export function getCurrentProjectGraphReport(): ProjectGraphReport {
  */
 export async function populateProjectGraph(
   workspaceRoot: string,
-  gradlewFiles: string[]
+  gradlewFiles: string[],
+  options: GradlePluginOptions
 ): Promise<void> {
-  const gradleConfigHash = await hashWithWorkspaceContext(workspaceRoot, [
-    gradleConfigAndTestGlob,
+  const gradleConfigHash = hashArray([
+    await hashWithWorkspaceContext(workspaceRoot, [gradleConfigAndTestGlob]),
+    hashObject(options),
+    process.env.CI,
   ]);
   projectGraphReportCache ??= readProjectGraphReportCache(
     projectGraphReportCachePath,
@@ -121,7 +127,8 @@ export async function populateProjectGraph(
       const allLines = await projectGraphLines;
       const currentLines = await getNxProjectGraphLines(
         gradlewFile,
-        gradleConfigHash
+        gradleConfigHash,
+        options
       );
       const getNxProjectGraphLinesEnd = performance.mark(
         `${gradlewFile}GetNxProjectGraphLines:end`
