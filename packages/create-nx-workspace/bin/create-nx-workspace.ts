@@ -35,6 +35,7 @@ interface BaseArguments extends CreateWorkspaceOptions {
   linter?: 'none' | 'eslint';
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
+  useProjectJson?: boolean;
 }
 
 interface NoneArguments extends BaseArguments {
@@ -175,6 +176,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'boolean',
             default: true,
           })
+          .option('useProjectJson', {
+            describe: chalk.dim`Use a 'project.json' file for the Nx configuration instead of a 'package.json' file. This defaults to 'true' when '--no-workspaces' is used. Otherwise, it defaults to 'false'.`,
+            type: 'boolean',
+          })
           .option('formatter', {
             describe: chalk.dim`Code formatter to use.`,
             type: 'string',
@@ -288,6 +293,7 @@ async function normalizeArgsMiddleware(
   });
 
   argv.workspaces ??= true;
+  argv.useProjectJson ??= !argv.workspaces;
 
   try {
     argv.name = await determineFolder(argv);
