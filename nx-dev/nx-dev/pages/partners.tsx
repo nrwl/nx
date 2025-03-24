@@ -44,7 +44,7 @@ export function Partners(): JSX.Element {
         <div className="mt-16 lg:mt-32">
           <PartnersList />
         </div>
-        <div className="mt-32 lg:mt-56">
+        <div className="mt-16 lg:mt-32">
           <CallToAction />
         </div>
       </DefaultLayout>
