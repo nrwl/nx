@@ -6,7 +6,6 @@ import {
   readJsonFile,
   writeJsonFile,
   CreateNodesFunction,
-  joinPathFragments,
   workspaceRoot,
   ProjectGraphExternalNode,
 } from '@nx/devkit';
@@ -28,15 +27,10 @@ import {
   GradlePluginOptions,
   normalizeOptions,
 } from './utils/gradle-plugin-options';
-import {
-  replaceTargeGroupNameWithOptions,
-  replaceTargetNameWithOptions,
-} from './utils/create-ci-targets';
-import { findGraldewFile } from '../utils/exec-gradle';
 
 type GradleTargets = Record<string, Partial<ProjectConfiguration>>;
 
-function readTargetsCache(cachePath: string): GradleTargets {
+function readProjectsCache(cachePath: string): GradleTargets {
   return existsSync(cachePath) ? readJsonFile(cachePath) : {};
 }
 
@@ -53,23 +47,24 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
       workspaceDataDirectory,
       `gradle-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const projectsCache = readProjectsCache(cachePath);
 
     await populateProjectGraph(
       context.workspaceRoot,
-      gradlewFiles.map((f) => join(context.workspaceRoot, f))
+      gradlewFiles.map((f) => join(context.workspaceRoot, f)),
+      options
     );
     const { nodes, externalNodes } = getCurrentProjectGraphReport();
 
     try {
       return createNodesFromFiles(
-        makeCreateNodesForGradleConfigFile(nodes, targetsCache, externalNodes),
+        makeCreateNodesForGradleConfigFile(nodes, projectsCache, externalNodes),
         buildFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      writeTargetsToCache(cachePath, projectsCache);
     }
   },
 ];
@@ -77,7 +72,7 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
 export const makeCreateNodesForGradleConfigFile =
   (
     projects: Record<string, Partial<ProjectConfiguration>>,
-    targetsCache: GradleTargets = {},
+    projectsCache: GradleTargets = {},
     externalNodes: Record<string, ProjectGraphExternalNode> = {}
   ): CreateNodesFunction =>
   async (
@@ -93,25 +88,11 @@ export const makeCreateNodesForGradleConfigFile =
       options ?? {},
       context
     );
-    targetsCache[hash] ??=
-      projects[projectRoot] ??
-      projects[joinPathFragments(workspaceRoot, projectRoot)];
-    const project = targetsCache[hash];
+    projectsCache[hash] ??=
+      projects[projectRoot] ?? projects[join(workspaceRoot, projectRoot)];
+    const project = projectsCache[hash];
     if (!project) {
       return {};
-    }
-
-    const gradlewFileDirectory = dirname(
-      findGraldewFile(gradleFilePath, context.workspaceRoot)
-    );
-
-    project.targets = replaceTargetNameWithOptions(
-      project.targets,
-      options,
-      gradlewFileDirectory
-    );
-    if (project.metadata?.targetGroups) {
-      replaceTargeGroupNameWithOptions(project.metadata?.targetGroups, options);
     }
     project.root = projectRoot;
 

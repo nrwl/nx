@@ -5,7 +5,12 @@ import java.util.*
 import org.gradle.api.Project
 
 /** Loops through a project and populate dependencies and nodes for each target */
-fun createNodeForProject(project: Project): GradleNodeReport {
+fun createNodeForProject(
+    project: Project,
+    targetNameOverrides: Map<String, String>,
+    workspaceRoot: String,
+    cwd: String
+): GradleNodeReport {
   val logger = project.logger
   logger.info("${Date()} ${project.name} createNodeForProject: get nodes and dependencies")
 
@@ -25,7 +30,8 @@ fun createNodeForProject(project: Project): GradleNodeReport {
   var externalNodes: Map<String, ExternalNode>
 
   try {
-    val gradleTargets: GradleTargets = processTargetsForProject(project, dependencies)
+    val gradleTargets: GradleTargets =
+        processTargetsForProject(project, dependencies, targetNameOverrides, workspaceRoot, cwd)
     val projectRoot = project.projectDir.path
     val projectNode =
         ProjectNode(
@@ -52,14 +58,15 @@ fun createNodeForProject(project: Project): GradleNodeReport {
  */
 fun processTargetsForProject(
     project: Project,
-    dependencies: MutableSet<Dependency>
+    dependencies: MutableSet<Dependency>,
+    targetNameOverrides: Map<String, String>,
+    workspaceRoot: String,
+    cwd: String
 ): GradleTargets {
   val targets: NxTargets = mutableMapOf<String, MutableMap<String, Any?>>()
   val targetGroups: TargetGroups = mutableMapOf<String, MutableList<String>>()
   val externalNodes = mutableMapOf<String, ExternalNode>()
   val projectRoot = project.projectDir.path
-  val workspaceRoot =
-      workspaceRootInner(System.getProperty("user.dir"), System.getProperty("user.dir"))
   project.logger.info("Using workspace root $workspaceRoot")
 
   var projectBuildPath: String =
@@ -81,6 +88,7 @@ fun processTargetsForProject(
   project.tasks.forEach { task ->
     try {
       logger.info("${Date()} ${project.name}: Processing $task")
+      val taskName = targetNameOverrides.getOrDefault(task.name + "TargetName", task.name)
       // add task to target groups
       val group: String? = task.group
       if (!group.isNullOrBlank()) {
@@ -93,25 +101,35 @@ fun processTargetsForProject(
 
       val target =
           processTask(
-              task, projectBuildPath, projectRoot, workspaceRoot, externalNodes, dependencies)
-      targets[task.name] = target
-
-      if (task.name.startsWith("compileTest")) {
-        val testTask = project.getTasksByName("test", false)
-        if (testTask.isNotEmpty()) {
-          addTestCiTargets(
-              task.inputs.sourceFiles,
+              task,
               projectBuildPath,
-              testTask.first(),
-              targets,
-              targetGroups,
               projectRoot,
-              workspaceRoot)
+              workspaceRoot,
+              cwd,
+              externalNodes,
+              dependencies,
+              targetNameOverrides)
+      targets[taskName] = target
+
+      val ciTargetName = targetNameOverrides.getOrDefault("ciTargetName", null)
+      ciTargetName?.let {
+        if (task.name.startsWith("compileTest")) {
+          val testTask = project.getTasksByName("test", false)
+          if (testTask.isNotEmpty()) {
+            addTestCiTargets(
+                task.inputs.sourceFiles,
+                projectBuildPath,
+                testTask.first(),
+                targets,
+                targetGroups,
+                projectRoot,
+                workspaceRoot,
+                it)
+          }
         }
-      }
-      // disable test in CI, use test-ci instead
-      if (task.name.equals("test") && System.getenv("CI").equals("true")) {
-        task.enabled = false
+        if (task.name.equals("test")) {
+          task.enabled = false
+        }
       }
       logger.info("${Date()} ${project.name}: Processed $task")
     } catch (e: Exception) {
