@@ -52,7 +52,6 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   const libTask = await reactLibraryGenerator(host, {
     ...options,
-    bundler: 'none',
     skipFormat: true,
   });
   tasks.push(libTask);
