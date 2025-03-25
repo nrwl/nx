@@ -18,12 +18,8 @@ export function Hero(): ReactElement {
             variant="subtitle"
             className="mt-6 text-left sm:text-lg"
           >
-            At Nx, we believe in the power of collaboration to drive innovation,
-            scalability and improve developer productivity. Our{' '}
-            <Strong>Certified Community Partners</Strong> play a crucial role in
-            expanding the reach of Nx by providing high-quality services, expert
-            guidance, and valuable resources to developers and organizations
-            using Nx.
+            Hire Nx Certified Experts to help you adopt best practices,
+            implement Nx Cloud, and accelerate your CI.
           </SectionHeading>
         </div>
       </div>

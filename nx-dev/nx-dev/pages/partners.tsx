@@ -39,12 +39,9 @@ export function Partners(): JSX.Element {
           <Hero />
         </div>
         <div className="mt-16">
-          <PartnerProgramDescription />
-        </div>
-        <div className="mt-16 lg:mt-32">
           <PartnersList />
         </div>
-        <div className="mt-16 lg:mt-32">
+        <div className="mt-16">
           <CallToAction />
         </div>
       </DefaultLayout>
