@@ -31,18 +31,19 @@ export default async function gradlewBatch(
     const gradlewPath = findGraldewFile(join(projectRoot, 'project.json')); // find gradlew near project root
     const root = join(context.root, dirname(gradlewPath));
 
+    const input = inputs[taskGraph.roots[0]];
     const args =
-      typeof overrides?.args === 'string'
-        ? overrides.args.trim()
-        : Array.isArray(overrides?.args)
-        ? overrides.args.join(' ')
+      typeof input.args === 'string'
+        ? input.args.trim()
+        : Array.isArray(input.args)
+        ? input.args.join(' ')
         : '';
 
     const batchResults = execSync(
       `java -jar ${batchRunnerPath} --taskNames=${rootGradlewTaskNames.join(
         ','
       )} --workspaceRoot=${root} ${args ? '--args=' + args : ''} ${
-        process.env.NX_VERBOSE_LOGGING === 'true' ? '--verbose' : '--quiet'
+        process.env.NX_VERBOSE_LOGGING === 'true' ? '--info' : '--quiet'
       }`,
       {
         windowsHide: true,

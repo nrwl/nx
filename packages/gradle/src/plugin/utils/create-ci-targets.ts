@@ -64,8 +64,13 @@ function replaceTargetDependsOnWithTestToCi(
     if (target.dependsOn?.length) {
       // replace test with ci in dependsOn
       target.dependsOn = target.dependsOn.map((dep) => {
-        if (typeof dep === 'string' && dep.endsWith(':test')) {
-          dep = dep.replace(':test', `:${options.ciTargetName}`);
+        if (typeof dep === 'string') {
+          if (dep.endsWith(':test')) {
+            dep = dep.replace(':test', `:${options.ciTargetName}`);
+          }
+          if (dep === 'test') {
+            dep = options.ciTargetName;
+          }
         }
         return dep;
       });

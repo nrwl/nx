@@ -30,7 +30,8 @@ fun main(args: Array<String>) {
     if (options.workspaceRoot.isBlank()) {
         logger.severe("❌ Missing required arguments --workspaceRoot")
         exitProcess(1)
-    } else if (options.taskNames.isEmpty()) {
+    }
+    if (options.taskNames.isEmpty()) {
         logger.severe("❌ Missing required arguments --taskNames")
         exitProcess(1)
     }
@@ -41,15 +42,26 @@ fun main(args: Array<String>) {
     logger.info("  Extra Args: ${options.args}")
     logger.info("  Quiet: ${options.quiet}")
 
-    val connection = GradleConnector.newConnector()
-            .forProjectDirectory(File(options.workspaceRoot))
-            .connect()
+    var connection: ProjectConnection? = null
 
-    connection.use { connection ->
+    try {
+        connection = GradleConnector.newConnector()
+                .forProjectDirectory(File(options.workspaceRoot))
+                .connect()
+
         val results = runTasksInParallel(connection, options.taskNames, options.args)
-
         val reportJson = Gson().toJson(results)
         println(reportJson)
+    } catch (e: Exception) {
+        logger.severe("💥 Failed to run tasks: ${e.message}")
+        exitProcess(1)
+    } finally {
+        try {
+            connection?.close()
+            logger.info("✅ Gradle connection closed.")
+        } catch (e: Exception) {
+            logger.warning("⚠️ Failed to close Gradle connection cleanly: ${e.message}")
+        }
     }
 }
 
@@ -94,17 +106,21 @@ data class TaskResult(
         var terminalOutput: String
 )
 
-fun runTasksInParallel(connection: ProjectConnection, taskNames: List<String>, additionalArgs: String): Map<String, TaskResult> {
+fun runTasksInParallel(
+        connection: ProjectConnection,
+        taskNames: List<String>,
+        additionalArgs: String
+): Map<String, TaskResult> {
     logger.info("▶️ Running tasks in parallel: ${taskNames.joinToString(", ")}")
 
     val buildLauncher: BuildLauncher = connection.newBuild()
-
     val outputStream = ByteArrayOutputStream()
     val errorStream = ByteArrayOutputStream()
 
     val args = buildList {
         add("--continue")
         add("--parallel")
+        add("-Dorg.gradle.daemon.idletimeout=10000")
         addAll(additionalArgs.split(" ").filter { it.isNotEmpty() })
     }
 
@@ -114,17 +130,23 @@ fun runTasksInParallel(connection: ProjectConnection, taskNames: List<String>, a
     buildLauncher.setStandardOutput(outputStream)
     buildLauncher.setStandardError(errorStream)
 
+    val taskStartTimes = mutableMapOf<String, Long>()
     val taskResults = mutableMapOf<String, TaskResult>()
 
     buildLauncher.addProgressListener({ event: ProgressEvent ->
         when (event) {
+            is org.gradle.tooling.events.task.TaskStartEvent -> {
+                taskStartTimes[event.descriptor.taskPath] = System.currentTimeMillis()
+            }
+
             is TaskFinishEvent -> {
                 val taskPath = event.descriptor.taskPath
                 if (taskNames.contains(taskPath)) {
-
                     val result = event.result
                     val success: Boolean
-                    val errorMessage: String?
+                    val endTime = System.currentTimeMillis()
+                    val startTime = taskStartTimes[taskPath] ?: endTime
+                    val duration = endTime - startTime
 
                     when (result) {
                         is TaskSuccessResult -> {
@@ -134,25 +156,24 @@ fun runTasksInParallel(connection: ProjectConnection, taskNames: List<String>, a
 
                         is TaskFailureResult -> {
                             success = false
-                            errorMessage = result.failures.joinToString("\n") { it.message ?: "Unknown error" }
+                            val errorMessage = result.failures.joinToString("\n") { it.message ?: "Unknown error" }
                             logger.warning("❌ Task failed: $taskPath")
                             logger.warning("   Failures: $errorMessage")
                         }
 
                         else -> {
                             success = true
-                            logger.warning("⚠️ Task finished with unknown result: $taskPath")
+                            logger.warning("⚠️ Task finished with unknown result: $taskPath $result")
                         }
                     }
 
                     taskResults[taskPath] = TaskResult(
                             success = success,
-                            startTime = result.startTime,
-                            endTime = result.endTime,
+                            startTime = startTime,
+                            endTime = endTime,
                             terminalOutput = ""
                     )
 
-                    val duration = result.endTime - result.startTime
                     logger.info("⏱️ Task '$taskPath' duration: ${duration}ms")
                 }
             }

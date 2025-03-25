@@ -61,8 +61,14 @@ fun processTask(
   if (cwd.startsWith(workspaceRoot)) {
     cwd = cwd.replace(workspaceRoot, ".")
   }
-  target["options"] =
-      mapOf("taskName" to "${projectBuildPath}:${task.name}", "args" to "--no-build-cache")
+  val args = mutableListOf("--no-build-cache")
+
+  // Add --exclude-task test only if task is not "test" and we're in CI
+  if (task.name != "test" && System.getenv("CI") == "true") {
+    args.add("--exclude-task")
+    args.add("test")
+  }
+  target["options"] = mapOf("taskName" to "${projectBuildPath}:${task.name}", "args" to args)
 
   return target
 }

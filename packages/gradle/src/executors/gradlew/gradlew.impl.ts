@@ -1,13 +1,15 @@
 import { ExecutorContext } from '@nx/devkit';
 import { GraldewExecutorSchema } from './schema';
 import { execGradleAsync, findGraldewFile } from '../../utils/exec-gradle';
+import { join } from 'node:path';
 
 export default async function graldewExecutor(
   options: GraldewExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  const root = context.root;
-  const gradlewPath = findGraldewFile(root);
+  let projectRoot =
+    context.projectGraph.nodes[context.projectName]?.data?.root ?? '';
+  const gradlewPath = findGraldewFile(join(projectRoot, 'project.json')); // find gradlew near project root
   try {
     const output = await execGradleAsync(gradlewPath, [
       options.taskName,
