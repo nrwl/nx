@@ -60,8 +60,6 @@
     "semver": "^7.5.3",
     "source-map-support": "0.5.19",
     "tinyglobby": "^0.2.12",
-    "ts-node": "10.9.1",
-    "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
