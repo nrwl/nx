@@ -46,7 +46,7 @@ export interface InitArgs {
 export async function initHandler(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
+    process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
   }
