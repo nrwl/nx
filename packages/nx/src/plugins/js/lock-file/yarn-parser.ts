@@ -584,6 +584,40 @@ function getPackageJsonVersion(
   }
 }
 
+function isStandardPackage(snapshot: YarnDependency, version: string): boolean {
+  return snapshot.version === version;
+}
+
+function isBerryAlias(snapshot: YarnDependency, version: string): boolean {
+  return snapshot.resolution && `npm:${snapshot.resolution}` === version;
+}
+
+function isClassicAlias(
+  node: ProjectGraphExternalNode,
+  keys: string[]
+): boolean {
+  return (
+    node.data.version.startsWith('npm:') &&
+    keys.some((k) => k === `${node.data.packageName}@${node.data.version}`)
+  );
+}
+
+function isPatch(
+  snapshot: YarnDependency,
+  node: ProjectGraphExternalNode,
+  keys: string[],
+  version: string
+): boolean {
+  return (
+    snapshot.version === node.data.version &&
+    keys.some(
+      (k) =>
+        k.split('::locator')[0] ===
+        `${node.data.packageName}@${version.split('::locator')[0]}`
+    )
+  );
+}
+
 function findOriginalKeys(
   dependencies: Record<string, YarnDependency>,
   node: ProjectGraphExternalNode
@@ -594,21 +628,10 @@ function findOriginalKeys(
     if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
     }
-    // standard package
-    if (snapshot.version === node.data.version) {
-      return [keys, snapshot];
-    }
-    // berry alias package
     if (
-      snapshot.resolution &&
-      `npm:${snapshot.resolution}` === node.data.version
-    ) {
-      return [keys, snapshot];
-    }
-    // classic alias
-    if (
-      node.data.version.startsWith('npm:') &&
-      keys.some((k) => k === `${node.data.packageName}@${node.data.version}`)
+      isStandardPackage(snapshot, node.data.version) ||
+      isBerryAlias(snapshot, node.data.version) ||
+      isClassicAlias(node, keys)
     ) {
       return [keys, snapshot];
     }

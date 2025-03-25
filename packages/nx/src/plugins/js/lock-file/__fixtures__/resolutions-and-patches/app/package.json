@@ -82,7 +82,7 @@
     "@babel/preset-typescript": "<8",
     "@babel/register": "<8",
     "react": "18.2.0",
-    "react-dom": "patch:react-dom@18.2.0#.yarn/patches/react-dom.patch",
+    "react-dom": "patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A.h",
     "@types/react": "18.2.60",
     "@types/react-router": "patch:@types/react-router@5.1.20#.yarn/patches/types-react-router.patch",
     "sass": "1.58.3",

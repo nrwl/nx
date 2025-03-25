@@ -2938,10 +2938,6 @@ __metadata:
         __dirname,
         '__fixtures__/resolutions-and-patches/app/yarn.lock'
       )).default;
-      const manualLockFile = require(joinPathFragments(
-        __dirname,
-        '__fixtures__/resolutions-and-patches/app/manual.yarn.lock'
-      )).default;
       const appPackageJson = require(joinPathFragments(
         __dirname,
         '__fixtures__/resolutions-and-patches/app/package.json'
@@ -2992,13 +2988,23 @@ __metadata:
           "type": "npm",
         }
       `);
+      expect(prunedGraph.externalNodes['npm:react-dom']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "10/ca5e7762ec8c17a472a3605b6f111895c9f87ac7d43a610ab7024f68cd833d08eda0625ce02ec7178cc1f3c957cf0b9273cdc17aa2cd02da87544331c43b1d21",
+            "packageName": "react-dom",
+            "version": "18.2.0",
+          },
+          "name": "npm:react-dom",
+          "type": "npm",
+        }
+      `);
       const result = stringifyYarnLockfile(
         prunedGraph,
         lockFile,
         appPackageJson
       );
-      // expect(result).toEqual(appLockFile);
-      expect(result).toEqual(manualLockFile);
+      expect(result).toEqual(appLockFile);
     });
   });
 });
