@@ -426,4 +426,29 @@ export const champions: Champion[] = [
     ],
     location: 'London, United Kingdom',
   },
+  {
+    name: 'Kevin Oliveira',
+    expertise: 'Frontend Architect. Nx Plugins, DDD, Angular, NestJS, DevOps',
+    imageUrl: '/images/champions/kevin-oliveira.webp',
+    contact: [
+      {
+        label: '@koliveira',
+        link: 'https://twitter.com/koliveira',
+      },
+    ],
+    location: 'Rhode Island, USA',
+  },
+  {
+    name: 'Guilherme Siquinelli',
+    expertise:
+      'Talks, Conferences, Community, Monorepos with NX / Angular / NestJS Architecture, , Repository Structure, Writing Plugins, Dev Tools, Releases, Blog Posts, Youtube Videos, Open Source',
+    imageUrl: '/images/champions/guilherme-siquinelli.webp',
+    contact: [
+      {
+        label: 'guilherme@devpr.org',
+        link: 'mailto:guilherme@devpr.org',
+      },
+    ],
+    location: 'Paraná, Brazil',
+  },
 ];
