@@ -503,7 +503,11 @@ function mapSnapshots(
 
     if (isBerry) {
       // look for patched versions
-      const patch = findPatchedKeys(groupedDependencies, node);
+      const patch = findPatchedKeys(
+        groupedDependencies,
+        node,
+        resolutions[node.data.packageName]
+      );
       if (patch) {
         const [matchedKeys, snapshot] = patch;
         snapshotMap.set(snapshot, new Set(matchedKeys));
@@ -647,7 +651,8 @@ function findOriginalKeys(
 
 function findPatchedKeys(
   dependencies: Record<string, YarnDependency>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
+  resolutionVersion: string
 ): [string[], YarnDependency] | void {
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
@@ -655,9 +660,17 @@ function findPatchedKeys(
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
       continue;
     }
-    // local patches are currently not supported
-    if (keys[0].includes('.yarn/patches')) {
-      continue;
+    // local patches can have different location from than the root lock file
+    if (keyExpr.includes('.yarn/patches')) {
+      if (!resolutionVersion) {
+        continue;
+      }
+      const key = `${node.data.packageName}@${resolutionVersion}`;
+      if (key.split('::locator')[0] !== keyExpr.split('::locator')[0]) {
+        continue;
+      } else {
+        return [[key], { ...snapshot, resolution: key }];
+      }
     }
     if (snapshot.version === node.data.version) {
       return [keys, snapshot];

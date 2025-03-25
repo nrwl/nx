@@ -82,12 +82,11 @@
     "@babel/preset-typescript": "<8",
     "@babel/register": "<8",
     "react": "18.2.0",
-    "react-dom": "patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A.h",
+    "react-dom": "patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A.",
     "@types/react": "18.2.60",
     "@types/react-router": "patch:@types/react-router@5.1.20#.yarn/patches/types-react-router.patch",
     "sass": "1.58.3",
     "@vitejs/plugin-react@4.0.1": "patch:@vitejs/plugin-react@npm%3A4.0.1#.yarn/patches/@vitejs-plugin-react-npm-4.0.1-13fe9aab7e.patch",
-    "@snowplow/webview-tracker@^0.2.1": "patch:@snowplow/webview-tracker@npm%3A0.2.1#.yarn/patches/@snowplow-webview-tracker-npm-0.2.1-9d395f3487.patch",
     "storybook-design-token@^3.1.0": "patch:storybook-design-token@npm%3A3.1.0#.yarn/patches/storybook-design-token-npm-3.1.0-5e1cc47002.patch"
   }
 }

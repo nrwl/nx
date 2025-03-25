@@ -5930,7 +5930,7 @@ __metadata:
 
 "react-dom@patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A.":
   version: 18.2.0
-  resolution: "react-dom@patch:react-dom@npm%3A18.2.0#.yarn/patches/react-dom.patch::version=18.2.0&hash=b35f36&locator=demo-app%40workspace%3A."
+  resolution: "react-dom@patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A."
   dependencies:
     loose-envify: "npm:^1.1.0"
     scheduler: "npm:^0.23.0"
