@@ -552,7 +552,7 @@ function reverseMapBerryKey(
   snapshot: YarnDependency
 ): string {
   // alias packages already have version
-  if (version.startsWith('patch:')) {
+  if (version.startsWith('npm:') || version.startsWith('patch:')) {
     return `${node.data.packageName}@${version}`;
   }
   // check for berry tarball packages
@@ -573,9 +573,11 @@ function getPackageJsonVersion(
   const { packageName, version } = node.data;
 
   if (dependencies[packageName]) {
-    const versionRange = dependencies[packageName]
-      .replace(/^patch:|#.*$/g, '')
-      .replace(`${packageName}@`, '');
+    const patchRegex = new RegExp(`^patch:${packageName}@(.*)|#.*$`);
+    // extract the version from the patch or use the full version
+    const versionRange =
+      dependencies[packageName].match(patchRegex)?.[1] ||
+      dependencies[packageName];
     if (versionRange === version || satisfies(version, versionRange)) {
       return dependencies[packageName];
     }
