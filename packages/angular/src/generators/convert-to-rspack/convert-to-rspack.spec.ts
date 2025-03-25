@@ -484,4 +484,164 @@ describe('convert-to-rspack', () => {
       "
     `);
   });
+
+  it('should configure ts-node in the tsconfig.json file', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            polyfills: ['tslib'], // zone.js is not in nx repo's node_modules so simulating it with a package that is
+            tsConfig: 'apps/app/tsconfig.app.json',
+            assets: [
+              'apps/app/src/favicon.ico',
+              'apps/app/src/assets',
+              { input: 'apps/app/public', glob: '**/*' },
+            ],
+            styles: ['apps/app/src/styles.scss'],
+            scripts: [],
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+    updateJson(tree, 'package.json', (json) => {
+      json.scripts ??= {};
+      json.scripts.build = 'nx build';
+      return json;
+    });
+
+    await convertToRspack(tree, { project: 'app', skipFormat: true });
+
+    expect(tree.read('apps/app/tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "ts-node": {
+          "compilerOptions": {
+            "module": "CommonJS",
+            "moduleResolution": "Node10"
+          }
+        }
+      }
+      "
+    `);
+  });
+
+  it('should configure ts-node in the tsconfig.json file to unset "customConditions" when it is defined in the root tsconfig.json file', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'tsconfig.base.json', (json) => {
+      json.compilerOptions ??= {};
+      json.compilerOptions.customConditions = ['development'];
+      return json;
+    });
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            polyfills: ['tslib'], // zone.js is not in nx repo's node_modules so simulating it with a package that is
+            tsConfig: 'apps/app/tsconfig.app.json',
+            assets: [
+              'apps/app/src/favicon.ico',
+              'apps/app/src/assets',
+              { input: 'apps/app/public', glob: '**/*' },
+            ],
+            styles: ['apps/app/src/styles.scss'],
+            scripts: [],
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+    updateJson(tree, 'package.json', (json) => {
+      json.scripts ??= {};
+      json.scripts.build = 'nx build';
+      return json;
+    });
+
+    await convertToRspack(tree, { project: 'app', skipFormat: true });
+
+    expect(tree.read('apps/app/tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "ts-node": {
+          "compilerOptions": {
+            "module": "CommonJS",
+            "moduleResolution": "Node10",
+            "customConditions": null
+          }
+        }
+      }
+      "
+    `);
+  });
+
+  it('should configure ts-node in the tsconfig.json file to unset "customConditions" when it is defined in the project tsconfig.json file', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            polyfills: ['tslib'], // zone.js is not in nx repo's node_modules so simulating it with a package that is
+            tsConfig: 'apps/app/tsconfig.app.json',
+            assets: [
+              'apps/app/src/favicon.ico',
+              'apps/app/src/assets',
+              { input: 'apps/app/public', glob: '**/*' },
+            ],
+            styles: ['apps/app/src/styles.scss'],
+            scripts: [],
+          },
+        },
+      },
+    });
+    writeJson(tree, 'apps/app/tsconfig.json', {
+      compilerOptions: {
+        customConditions: ['development'],
+      },
+    });
+    updateJson(tree, 'package.json', (json) => {
+      json.scripts ??= {};
+      json.scripts.build = 'nx build';
+      return json;
+    });
+
+    await convertToRspack(tree, { project: 'app', skipFormat: true });
+
+    expect(tree.read('apps/app/tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
+      "{
+        "compilerOptions": {
+          "customConditions": [
+            "development"
+          ]
+        },
+        "ts-node": {
+          "compilerOptions": {
+            "module": "CommonJS",
+            "moduleResolution": "Node10",
+            "customConditions": null
+          }
+        }
+      }
+      "
+    `);
+  });
 });
