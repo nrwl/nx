@@ -485,17 +485,20 @@ function mapSnapshots(
         snapshotMap.get(snapshot).add(requestedKey);
       }
     }
-    const resolvedVersion = getPackageJsonVersion(resolutions, node);
-    if (resolvedVersion) {
+    const requestedResolutionsVersion = getPackageJsonVersion(
+      resolutions,
+      node
+    );
+    if (requestedResolutionsVersion) {
       addPackageVersion(
         node.data.packageName,
-        resolvedVersion,
+        requestedResolutionsVersion,
         existingKeys,
         isBerry
       );
       const requestedKey = isBerry
-        ? reverseMapBerryKey(node, resolvedVersion, snapshot)
-        : `${node.data.packageName}@${resolvedVersion}`;
+        ? reverseMapBerryKey(node, requestedResolutionsVersion, snapshot)
+        : `${node.data.packageName}@${requestedResolutionsVersion}`;
       if (!snapshotMap.get(snapshot).has(requestedKey)) {
         snapshotMap.get(snapshot).add(requestedKey);
       }
@@ -660,12 +663,14 @@ function findPatchedKeys(
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
       continue;
     }
-    // local patches can have different location from than the root lock file
     if (keyExpr.includes('.yarn/patches')) {
       if (!resolutionVersion) {
         continue;
       }
       const key = `${node.data.packageName}@${resolutionVersion}`;
+      // local patches can have different location from than the root lock file
+      // use the one from local package.json as the source of truth as long as the rest of the patch matches
+      // this obviously doesn't cover the case of patch over a patch, but that's a super rare case and one can argue one can just join those two patches
       if (key.split('::locator')[0] !== keyExpr.split('::locator')[0]) {
         continue;
       } else {
