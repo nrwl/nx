@@ -441,12 +441,12 @@ export const champions: Champion[] = [
   {
     name: 'Guilherme Siquinelli',
     expertise:
-      'Talks, Conferences, Community, Monorepos with NX / Angular / NestJS Architecture, , Repository Structure, Writing Plugins, Dev Tools, Releases, Blog Posts, Youtube Videos, Open Source',
+      'Talks, Conferences, Community, Monorepos with NX / Angular / NestJS Architecture, Repository Structure, Writing Plugins, Dev Tools, Releases, Blog Posts, Youtube Videos, Open Source',
     imageUrl: '/images/champions/guilherme-siquinelli.webp',
     contact: [
       {
-        label: 'guilherme@devpr.org',
-        link: 'mailto:guilherme@devpr.org',
+        label: 'email@guiseek.dev',
+        link: 'mailto:email@guiseek.dev',
       },
     ],
     location: 'Paraná, Brazil',
