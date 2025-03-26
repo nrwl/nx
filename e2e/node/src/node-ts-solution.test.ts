@@ -106,6 +106,7 @@ describe('Node Applications', () => {
     expect(() => runCLI(`lint ${nodelib}`)).not.toThrow();
     expect(() => runCLI(`test ${nodelib}`)).not.toThrow();
     expect(() => runCLI(`build ${nodelib}`)).not.toThrow();
+    expect(() => runCLI(`typecheck ${nodelib}`)).not.toThrow();
 
     const p = await runCommandUntil(
       `serve ${nodeapp}`,
