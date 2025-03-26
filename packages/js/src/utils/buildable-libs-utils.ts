@@ -214,7 +214,7 @@ function readTsConfigWithRemappedPaths(
     normalizedTsConfig
   );
   generatedTsConfig.compilerOptions.paths = computeCompilerOptionsPaths(
-    originalTsconfigPath,
+    normalizedTsConfig,
     dependencies
   );
 
