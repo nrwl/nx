@@ -4,8 +4,10 @@ export const Partner: FC<{
   name: string;
   logo: React.ReactNode;
   href: string;
+  location: string;
+  tagline: string;
   capabilities: string[];
-}> = ({ name, logo, href, capabilities }) => {
+}> = ({ name, logo, href, location, tagline, capabilities }) => {
   return (
     <a
       rel="noreferrer"
@@ -23,6 +25,9 @@ export const Partner: FC<{
       <div className="flex-grow p-12 pt-8">
         <div className="mb-4">
           <strong>{name}</strong>
+          <p className="text-sm text-slate-500">{tagline}</p>
+          <br />
+          <span className="ml-2 text-sm text-slate-500">({location})</span>
         </div>
         <div>
           {capabilities.map((capability) => (
