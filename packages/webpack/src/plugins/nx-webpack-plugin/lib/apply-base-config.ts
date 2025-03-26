@@ -26,6 +26,10 @@ const IGNORED_WEBPACK_WARNINGS = [
   /could not find any license/i,
 ];
 
+const extensionAlias = {
+  '.js': ['.ts', '.js'],
+  '.mjs': ['.mts', '.mjs'],
+};
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
@@ -356,6 +360,10 @@ function applyNxDependentConfig(
   config.resolve = {
     ...config.resolve,
     extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    extensionAlias: {
+      ...(config.resolve?.extensionAlias ?? {}),
+      ...extensionAlias,
+    },
     alias: {
       ...(config.resolve?.alias ?? {}),
       ...(options.fileReplacements?.reduce(
