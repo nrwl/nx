@@ -8,9 +8,10 @@ import {
   CreateMetadataContext,
   CreateNodesContextV2,
 } from '../public-api';
-import { LoadedNxPlugin } from '../internal-api';
-import { Serializable } from 'child_process';
-import { Socket } from 'net';
+import type { LoadedNxPlugin } from '../internal-api';
+import type { Serializable } from 'child_process';
+import type { Socket } from 'net';
+import { MESSAGE_END_SEQ } from '../../../utils/consume-messages-from-socket';
 
 export interface PluginWorkerLoadMessage {
   type: 'load';
@@ -219,5 +220,5 @@ export function sendMessageOverSocket(
   socket: Socket,
   message: PluginWorkerMessage | PluginWorkerResult
 ) {
-  socket.write(JSON.stringify(message) + String.fromCodePoint(4));
+  socket.write(JSON.stringify(message) + MESSAGE_END_SEQ);
 }
