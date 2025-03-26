@@ -263,7 +263,7 @@ function createWorkerHandler(
         }
       },
       createDependenciesResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.dependencies);
         } else if (result.success === false) {
@@ -271,7 +271,7 @@ function createWorkerHandler(
         }
       },
       createNodesResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.result);
         } else if (result.success === false) {
@@ -279,7 +279,7 @@ function createWorkerHandler(
         }
       },
       createMetadataResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.metadata);
         } else if (result.success === false) {
@@ -287,7 +287,7 @@ function createWorkerHandler(
         }
       },
       preTasksExecutionResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver(result.mutations);
         } else if (result.success === false) {
@@ -295,7 +295,7 @@ function createWorkerHandler(
         }
       },
       postTasksExecutionResult: ({ tx, ...result }) => {
-        const { resolver, rejector } = pending.get(tx);
+        const { resolver, rejector } = getPendingPromise(tx, pending);
         if (result.success) {
           resolver();
         } else if (result.success === false) {
@@ -320,6 +320,23 @@ function createWorkerExitHandler(
         )
       );
     }
+  };
+}
+
+function getPendingPromise(tx: string, pending: Map<string, PendingPromise>) {
+  const pendingPromise = pending.get(tx);
+
+  if (!pendingPromise) {
+    throw new Error(
+      `No pending promise found for transaction "${tx}". This may indicate a bug in the plugin pool. Currently pending promises:` +
+        Object.keys(pending).map((t) => `  -  ${t}`)
+    );
+  }
+
+  const { rejector, resolver } = pendingPromise;
+  return {
+    rejector,
+    resolver,
   };
 }
 
