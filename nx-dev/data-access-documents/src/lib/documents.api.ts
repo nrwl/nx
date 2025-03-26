@@ -131,6 +131,9 @@ export class DocumentsApi {
   }
 
   getDocument(path: string[]): ProcessedDocument {
+    path = path.map((p) => p.replace('.md', ''));
+    console.log('🔥 ath', path);
+
     const document: DocumentMetadata | null =
       this.manifest[this.getManifestKey(path.join('/'))] || null;
 
