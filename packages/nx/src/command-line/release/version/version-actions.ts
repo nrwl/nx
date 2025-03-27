@@ -252,11 +252,11 @@ To fix this you will either need to add a ${this.manifestFilename} file at that 
    * the implementation to provide more specific information to the user about what registry URL
    * was used, what dist-tag etc.
    *
-   * If the version actions implementation does not support a manifest file, this method can either throw
-   * an error or return null. In this case, nx release will handle showing the user a relevant error about
-   * their currentVersionResolver configuration being fundamentally incompatible with the current version
-   * actions implementation resolved for the project being versioned and they can change it to something else
-   * (e.g. "disk" or "git-tag").
+   * If the version actions implementation does not support resolving from a remote registry, this method
+   * can either throw an error or return null. In this case, nx release will handle showing the user a relevant
+   * error about their currentVersionResolver configuration being fundamentally incompatible with the current
+   * version actions implementation resolved for the project being versioned and they can change it to something
+   * else (e.g. "disk" or "git-tag").
    *
    * NOTE: The version actions implementation does not need to provide the method for handling resolution
    * from git tags, this is done directly by nx release.
