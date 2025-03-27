@@ -185,7 +185,7 @@ fun runTasksInParallel(
         buildTerminalOutput(outputStream, errorStream)
     } catch (e: Exception) {
         logger.info("💥 Exception while running tasks: ${e.message}")
-        buildTerminalOutput(outputStream, errorStream) + "\n💥 Exception occurred: ${e.message}\n"
+        buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}\n"
     } finally {
         outputStream.close()
         errorStream.close()

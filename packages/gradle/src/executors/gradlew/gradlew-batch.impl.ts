@@ -39,17 +39,28 @@ export default async function gradlewBatch(
         ? input.args.join(' ')
         : '';
 
+    const gradlewBatchStart = performance.mark(
+      `gradlew-batch:start`
+    );
     const batchResults = execSync(
       `java -jar ${batchRunnerPath} --taskNames=${rootGradlewTaskNames.join(
         ','
       )} --workspaceRoot=${root} ${args ? '--args=' + args : ''} ${
-        process.env.NX_VERBOSE_LOGGING === 'true' ? '--info' : '--quiet'
+        process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
       }`,
       {
         windowsHide: true,
         env: process.env,
         maxBuffer: LARGE_BUFFER,
       }
+    );
+    const gradlewBatchEnd = performance.mark(
+      `gradlew-batch:start`
+    );
+    performance.measure(
+      `gradlew-batch`,
+      gradlewBatchStart.name,
+      gradlewBatchEnd.name
     );
     const gradlewBatchResults = JSON.parse(
       batchResults.toString()
@@ -66,6 +77,7 @@ export default async function gradlewBatch(
       },
       {} as BatchResults
     );
+    
 
     return mappedResults;
   } catch (e) {
