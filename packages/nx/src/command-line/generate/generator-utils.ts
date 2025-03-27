@@ -73,7 +73,12 @@ export function getGeneratorInformation(
       isNxGenerator: !isNgCompat,
       generatorConfiguration: normalizedGeneratorConfiguration,
     };
-  } finally {
+  } catch (e) {
+    throw new Error(
+      `Unable to resolve ${collectionName}:${generatorName}.\n${
+        process.env.NX_VERBOSE_LOGGING === 'true' ? e.stack : e.message
+      }`
+    );
   }
 }
 
