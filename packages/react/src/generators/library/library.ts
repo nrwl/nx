@@ -251,7 +251,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(componentTask);
   }
 
-  if (options.publishable || options.buildable) {
+  if (options.publishable) {
     const projectConfiguration = readProjectConfiguration(host, options.name);
     if (options.isUsingTsSolutionConfig) {
       await addReleaseConfigForTsSolution(

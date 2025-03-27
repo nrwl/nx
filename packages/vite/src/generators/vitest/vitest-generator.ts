@@ -171,7 +171,9 @@ getTestBed().initTestEnvironment(
     nxJson.targetDefaults ??= {};
     nxJson.targetDefaults[testTarget] ??= {};
     nxJson.targetDefaults[testTarget].dependsOn ??= [];
-    nxJson.targetDefaults[testTarget].dependsOn.push('^build');
+    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
+      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
+    );
     updateNxJson(tree, nxJson);
   }
 

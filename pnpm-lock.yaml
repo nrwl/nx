@@ -315,7 +315,7 @@ importers:
         version: 20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
       '@nx/eslint-plugin':
         specifier: 20.7.0-beta.3
-        version: 20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@typescript-eslint/parser@8.20.0(eslint@8.57.0)(typescript@5.7.3))(eslint-config-prettier@9.1.0(eslint@8.57.0))(eslint@8.57.0)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
+        version: 20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@typescript-eslint/parser@8.20.0(eslint@8.57.0)(typescript@5.7.3))(eslint-config-prettier@10.1.1(eslint@8.57.0))(eslint@8.57.0)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
       '@nx/jest':
         specifier: 20.7.0-beta.3
         version: 20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.7.3))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
@@ -656,8 +656,8 @@ importers:
         specifier: 14.2.16
         version: 14.2.16(eslint@8.57.0)(typescript@5.7.3)
       eslint-config-prettier:
-        specifier: 9.1.0
-        version: 9.1.0(eslint@8.57.0)
+        specifier: ^10.0.0
+        version: 10.1.1(eslint@8.57.0)
       eslint-plugin-cypress:
         specifier: 2.14.0
         version: 2.14.0(eslint@8.57.0)
@@ -10479,8 +10479,8 @@ packages:
       typescript:
         optional: true
 
-  eslint-config-prettier@9.1.0:
-    resolution: {integrity: sha512-NSWl5BFQWEPi1j4TjVNItzYV7dZXZ+wP6I6ZhrBGpChQhZRUaElihE9uRRkcbRnNb76UMKDF3r+WTmNcGPKsqw==}
+  eslint-config-prettier@10.1.1:
+    resolution: {integrity: sha512-4EQQr6wXwS+ZJSzaR5ZCrYgLxqvUjdXctaEtBqHcbkW944B1NQyO4qpdHQbXBONfwxXdkAY81HH4+LUfrg+zPw==}
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
@@ -23399,7 +23399,7 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/eslint-plugin@20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@typescript-eslint/parser@8.20.0(eslint@8.57.0)(typescript@5.7.3))(eslint-config-prettier@9.1.0(eslint@8.57.0))(eslint@8.57.0)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))':
+  '@nx/eslint-plugin@20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(@typescript-eslint/parser@8.20.0(eslint@8.57.0)(typescript@5.7.3))(eslint-config-prettier@10.1.1(eslint@8.57.0))(eslint@8.57.0)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))':
     dependencies:
       '@nx/devkit': 20.7.0-beta.3(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/js': 20.7.0-beta.3(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(nx@20.7.0-beta.3(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.12)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
@@ -23413,7 +23413,7 @@ snapshots:
       semver: 7.7.1
       tslib: 2.8.1
     optionalDependencies:
-      eslint-config-prettier: 9.1.0(eslint@8.57.0)
+      eslint-config-prettier: 10.1.1(eslint@8.57.0)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -30117,7 +30117,7 @@ snapshots:
       - eslint-plugin-import-x
       - supports-color
 
-  eslint-config-prettier@9.1.0(eslint@8.57.0):
+  eslint-config-prettier@10.1.1(eslint@8.57.0):
     dependencies:
       eslint: 8.57.0
 

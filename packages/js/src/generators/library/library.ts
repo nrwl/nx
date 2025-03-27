@@ -1060,12 +1060,6 @@ function createProjectTsConfigs(
         json.references.push({
           path: './tsconfig.lib.json',
         });
-        // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
-        // This applies to `@nx/js/typescript` plugin only.
-        if (options.bundler === 'tsc') {
-          json['nx'] ??= {};
-          json['nx'].addTypecheckTarget = false;
-        }
         return json;
       });
     } else {
@@ -1076,12 +1070,6 @@ function createProjectTsConfigs(
         include: [],
         references: [{ path: './tsconfig.lib.json' }],
       };
-      // If using `tsc` to build, then we do not want a typecheck target that duplicates the work, since both run `tsc`.
-      // This applies to `@nx/js/typescript` plugin only.
-      if (options.bundler === 'tsc') {
-        tsconfig['nx'] ??= {};
-        tsconfig['nx'].addTypecheckTarget = false;
-      }
       writeJson(
         tree,
         joinPathFragments(options.projectRoot, 'tsconfig.json'),
