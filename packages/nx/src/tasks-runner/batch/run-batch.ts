@@ -125,3 +125,7 @@ process.on('message', async (message: BatchMessage) => {
     }
   }
 });
+
+process.on('SIGTERM', () => {
+  process.exit(0);
+});
