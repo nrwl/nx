@@ -1,90 +1,86 @@
 package dev.nx.gradle.utils
 
-import dev.nx.gradle.data.*
+import dev.nx.gradle.data.NxTargets
+import dev.nx.gradle.data.TargetGroups
 import java.io.File
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 
 const val testCiTargetGroup = "verification"
 
-/**
- * Add atomized ci test targets Going to loop through each test files and create a target for each
- * It is going to modify targets and targetGroups in place
- */
+private val testFileNameRegex =
+    Regex("^(?!(abstract|fake)).*?(Test)(s)?\\d*", RegexOption.IGNORE_CASE)
+
+private val classDeclarationRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+
 fun addTestCiTargets(
     testFiles: FileCollection,
     projectBuildPath: String,
     testTask: Task,
+    testTargetName: String,
     targets: NxTargets,
     targetGroups: TargetGroups,
     projectRoot: String,
     workspaceRoot: String,
-    ciTargetName: String
+    ciTestTargetName: String
 ) {
   ensureTargetGroupExists(targetGroups, testCiTargetGroup)
 
-  val gradlewCommand = getGradlewCommand()
   val ciDependsOn = mutableListOf<Map<String, String>>()
 
-  val filteredTestFiles = testFiles.filter { isTestFile(it, workspaceRoot) }
+  testFiles
+      .filter { isTestFile(it, workspaceRoot) }
+      .forEach { testFile ->
+        val className = getTestClassNameIfAnnotated(testFile) ?: return@forEach
 
-  filteredTestFiles.forEach { testFile ->
-    val className = getTestClassNameIfAnnotated(testFile) ?: return@forEach
+        val targetName = "$ciTestTargetName--$className"
+        targets[targetName] =
+            buildTestCiTarget(
+                projectBuildPath, className, testFile, testTask, projectRoot, workspaceRoot)
+        targetGroups[testCiTargetGroup]?.add(targetName)
 
-    val testCiTarget =
-        buildTestCiTarget(
-            gradlewCommand = gradlewCommand,
-            projectBuildPath = projectBuildPath,
-            testClassName = className,
-            testFile = testFile,
-            testTask = testTask,
-            projectRoot = projectRoot,
-            workspaceRoot = workspaceRoot)
+        ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
+      }
 
-    val targetName = "$ciTargetName--$className"
-    targets[targetName] = testCiTarget
-    targetGroups[testCiTargetGroup]?.add(targetName)
-
-    ciDependsOn.add(mapOf("target" to targetName, "projects" to "self", "params" to "forward"))
-  }
-
-  testTask.logger.info("$testTask ci tasks: $ciDependsOn")
+  testTask.logger.info("${testTask.path} generated CI targets: ${ciDependsOn.map { it["target"] }}")
 
   if (ciDependsOn.isNotEmpty()) {
     ensureParentCiTarget(
-        targets = targets,
-        targetGroups = targetGroups,
-        ciTargetName = ciTargetName,
-        projectBuildPath = projectBuildPath,
-        dependsOn = ciDependsOn)
+        targets,
+        targetGroups,
+        ciTestTargetName,
+        projectBuildPath,
+        testTask,
+        testTargetName,
+        ciDependsOn)
   }
 }
 
 private fun getTestClassNameIfAnnotated(file: File): String? {
-  if (!file.exists()) return null
-
-  val content = file.readText()
-  if (!content.contains("@Test")) return null
-
-  val classRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
-  val match = classRegex.find(content)
-  return match?.groupValues?.get(1)
+  return file
+      .takeIf { it.exists() }
+      ?.readText()
+      ?.takeIf { it.contains("@Test") || it.contains("@TestTemplate") }
+      ?.let { content ->
+        val className = classDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
+        return if (className != null && !className.startsWith("Fake")) {
+          className
+        } else {
+          null
+        }
+      }
 }
 
 fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
-  if (!targetGroups.containsKey(group)) {
-    targetGroups[group] = mutableListOf()
-  }
+  targetGroups.getOrPut(group) { mutableListOf() }
 }
 
 private fun isTestFile(file: File, workspaceRoot: String): Boolean {
   val fileName = file.name.substringBefore(".")
-  val regex = "^(?!abstract).*?(Test)(s)?\\d*".toRegex(RegexOption.IGNORE_CASE)
-  return file.path.startsWith(workspaceRoot) && regex.matches(fileName)
+  return file.path.startsWith(workspaceRoot) && testFileNameRegex.matches(fileName)
 }
 
 private fun buildTestCiTarget(
-    gradlewCommand: String,
     projectBuildPath: String,
     testClassName: String,
     testFile: File,
@@ -94,7 +90,11 @@ private fun buildTestCiTarget(
 ): MutableMap<String, Any?> {
   val target =
       mutableMapOf<String, Any?>(
-          "command" to "$gradlewCommand ${projectBuildPath}:test --tests $testClassName",
+          "executor" to "@nx/gradle:gradlew",
+          "options" to
+              mapOf(
+                  "taskName" to "${projectBuildPath}:${testTask.name}",
+                  "testClassName" to testClassName),
           "metadata" to
               getMetadata("Runs Gradle test $testClassName in CI", projectBuildPath, "test"),
           "cache" to true,
@@ -103,14 +103,14 @@ private fun buildTestCiTarget(
   getDependsOnForTask(testTask, null)
       ?.takeIf { it.isNotEmpty() }
       ?.let {
-        testTask.logger.info("$testTask: processed ${it.size} dependsOn")
+        testTask.logger.info("${testTask.path}: found ${it.size} dependsOn entries")
         target["dependsOn"] = it
       }
 
   getOutputsForTask(testTask, projectRoot, workspaceRoot)
       ?.takeIf { it.isNotEmpty() }
       ?.let {
-        testTask.logger.info("$testTask: processed ${it.size} outputs")
+        testTask.logger.info("${testTask.path}: found ${it.size} outputs entries")
         target["outputs"] = it
       }
 
@@ -120,24 +120,31 @@ private fun buildTestCiTarget(
 private fun ensureParentCiTarget(
     targets: NxTargets,
     targetGroups: TargetGroups,
-    ciTargetName: String,
+    ciTestTargetName: String,
     projectBuildPath: String,
+    testTask: Task,
+    testTargetName: String,
     dependsOn: List<Map<String, String>>
 ) {
   val ciTarget =
-      targets.getOrPut(ciTargetName) {
-        mutableMapOf<String, Any?>().apply {
-          put("executor", "nx:noop")
-          put("metadata", getMetadata("Runs Gradle Tests in CI", projectBuildPath, "test", "test"))
-          put("dependsOn", mutableListOf<Map<String, String>>())
-          put("cache", true)
-        }
+      targets.getOrPut(ciTestTargetName) {
+        mutableMapOf<String, Any?>(
+            "executor" to "nx:noop",
+            "metadata" to
+                getMetadata(
+                    "Runs Gradle ${testTask.name} in CI",
+                    projectBuildPath,
+                    testTask.name,
+                    testTargetName),
+            "dependsOn" to mutableListOf<Any?>(),
+            "cache" to true)
       }
 
-  val dependsOnList = ciTarget.getOrPut("dependsOn") { mutableListOf<Any?>() } as MutableList<Any?>
+  @Suppress("UNCHECKED_CAST")
+  val dependsOnList = ciTarget["dependsOn"] as? MutableList<Any?> ?: mutableListOf()
   dependsOnList.addAll(dependsOn)
 
-  if (targetGroups[testCiTargetGroup]?.contains(ciTargetName) != true) {
-    targetGroups[testCiTargetGroup]?.add(ciTargetName)
+  if (!targetGroups[testCiTargetGroup].orEmpty().contains(ciTestTargetName)) {
+    targetGroups[testCiTargetGroup]?.add(ciTestTargetName)
   }
 }

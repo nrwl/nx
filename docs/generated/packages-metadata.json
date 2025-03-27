@@ -2087,7 +2087,17 @@
         "originalFilePath": "shared/packages/gradle/gradle-plugin"
       }
     ],
-    "executors": [],
+    "executors": [
+      {
+        "description": "gradlew.impl executor",
+        "file": "generated/packages/gradle/executors/gradlew.json",
+        "hidden": false,
+        "name": "gradlew",
+        "originalFilePath": "/packages/gradle/src/executors/gradlew/schema.json",
+        "path": "gradle/executors/gradlew",
+        "type": "executor"
+      }
+    ],
     "generators": [
       {
         "description": "Initializes a Gradle project in the current workspace",

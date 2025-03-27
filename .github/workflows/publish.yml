@@ -223,6 +223,12 @@ jobs:
         if: ${{ !matrix.settings.docker }}
         with:
           targets: ${{ matrix.settings.target }}
+    
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -270,7 +276,13 @@ jobs:
         with:
           image: ${{ matrix.settings.docker }}
           options: --user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build
-          run: ${{ matrix.settings.build }}
+          run: |
+            apt-get update
+            apt-get install -y openjdk-17-jdk
+            export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+            export PATH=$JAVA_HOME/bin:$PATH
+            ./gradlew build
+            ${{ matrix.settings.build }}
 
       - name: Build
         run: ${{ matrix.settings.build }}
@@ -372,6 +384,12 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
       - name: Setup node
         uses: actions/setup-node@v4

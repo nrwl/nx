@@ -76,7 +76,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
       - name: Check Documentation
         run: pnpm nx documentation

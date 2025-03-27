@@ -1,3 +1,10 @@
 {
-  "executors": {}
+  "executors": {
+    "gradlew": {
+      "batchImplementation": "./src/executors/gradlew/gradlew-batch.impl",
+      "implementation": "./src/executors/gradlew/gradlew.impl",
+      "schema": "./src/executors/gradlew/schema.json",
+      "description": "gradlew.impl executor"
+    }
+  }
 }
