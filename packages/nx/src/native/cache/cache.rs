@@ -18,7 +18,7 @@ use crate::native::utils::Normalize;
 #[derive(Default, Clone, Debug)]
 pub struct CachedResult {
     pub code: i16,
-    pub terminal_output: String,
+    pub terminal_output: Option<String>,
     pub outputs_path: String,
     pub size: Option<i64>,
 }
@@ -117,7 +117,7 @@ impl NxCache {
 
                     Ok(CachedResult {
                         code,
-                        terminal_output,
+                        terminal_output: Some(terminal_output),
                         outputs_path: task_dir.to_normalized_string(),
                         size: Some(size),
                     })
@@ -182,7 +182,7 @@ impl NxCache {
             &hash,
             &result.outputs_path
         );
-        let terminal_output = result.terminal_output.clone();
+        let terminal_output = result.terminal_output.clone().unwrap_or(String::from(""));
         let mut size = terminal_output.len() as i64;
         if let Some(outputs) = outputs {
             if outputs.len() > 0 && result.code == 0 {

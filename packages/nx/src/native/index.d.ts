@@ -111,7 +111,7 @@ export declare class WorkspaceContext {
 
 export interface CachedResult {
   code: number
-  terminalOutput: string
+  terminalOutput?: string
   outputsPath: string
   size?: number
 }
