@@ -24,24 +24,30 @@ import {
   startStaticRemotesFileServer,
 } from '../../utils';
 import { NxModuleFederationDevServerConfig } from '../../models';
+import { ChildProcess, fork } from 'node:child_process';
 
 const PLUGIN_NAME = 'NxModuleFederationDevServerPlugin';
 
 export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
+  private devServerProcess: ChildProcess | undefined;
   private nxBin = require.resolve('nx/bin/nx');
 
   constructor(
     private _options: {
       config: ModuleFederationConfig;
-      devServerConfig: NxModuleFederationDevServerConfig;
+      devServerConfig?: NxModuleFederationDevServerConfig;
     }
-  ) {}
+  ) {
+    this._options.devServerConfig ??= {
+      host: 'localhost',
+    };
+  }
 
   apply(compiler: Compiler) {
     compiler.hooks.beforeCompile.tapAsync(
       PLUGIN_NAME,
       async (params, callback) => {
-        const staticRemotesConfig = await this.setup();
+        const staticRemotesConfig = await this.setup(compiler);
 
         logger.info(
           `NX Starting module federation dev-server for ${pc.bold(
@@ -67,12 +73,13 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
         new DefinePlugin({
           'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
         }).apply(compiler);
+
         callback();
       }
     );
   }
 
-  private async setup() {
+  private async setup(compiler: Compiler) {
     const projectGraph = readCachedProjectGraph();
     const { projects: workspaceProjects } =
       readProjectsConfigurationFromProjectGraph(projectGraph);

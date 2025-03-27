@@ -339,6 +339,7 @@ describe('NxPlugin Plugin Generator', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -447,6 +448,7 @@ describe('NxPlugin Plugin Generator', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -464,9 +466,6 @@ describe('NxPlugin Plugin Generator', () => {
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
-          "nx": {
-            "addTypecheckTarget": false,
-          },
           "references": [
             {
               "path": "./tsconfig.lib.json",
@@ -530,6 +529,25 @@ describe('NxPlugin Plugin Generator', () => {
           ],
         }
       `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await pluginGenerator(
+        tree,
+        getSchema({
+          e2eTestRunner: 'jest',
+          skipFormat: true,
+        })
+      );
+
+      expect(
+        readJson(tree, 'my-plugin/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name and "useProjectJson" is "false"', async () => {

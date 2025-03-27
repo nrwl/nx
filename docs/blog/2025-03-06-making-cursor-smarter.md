@@ -6,6 +6,7 @@ tags: ['nx']
 cover_image: /blog/images/articles/cursor-nx-mcp-heroimg.jpg
 description: 'Learn how Nx enhances Cursor IDE with a dedicated MCP server, providing AI assistants with rich monorepo metadata for smarter code assistance.'
 youtubeUrl: https://youtu.be/V2W94Sq_v6A
+pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}

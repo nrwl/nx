@@ -844,6 +844,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
+              "moduleResolution": "node10",
             },
           },
         }

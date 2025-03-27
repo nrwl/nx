@@ -5,7 +5,7 @@ import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { Cache, DbCache, getCache } from './cache';
+import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
@@ -237,8 +237,8 @@ export class TaskOrchestrator {
     const shouldCopyOutputsFromCache =
       // No output files to restore
       !!outputs.length &&
-      // Remote caches are restored to output dirs when applied
-      !cachedResult.remote &&
+      // Remote caches are restored to output dirs when applied and using db cache
+      (!cachedResult.remote || !dbCacheEnabled(this.nxJson)) &&
       // Output files have not been touched since last run
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
     if (shouldCopyOutputsFromCache) {
@@ -326,6 +326,7 @@ export class TaskOrchestrator {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
+        this.projectGraph,
         this.taskGraph,
         env
       );

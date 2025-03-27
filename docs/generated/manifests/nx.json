@@ -1994,6 +1994,17 @@
             "tags": []
           },
           {
+            "id": "react-router",
+            "name": "React Router with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/react-router",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/react-router",
+            "tags": []
+          },
+          {
             "id": "use-environment-variables-in-react",
             "name": "Use Environment Variables in React",
             "description": "",
@@ -3888,6 +3899,17 @@
         "tags": []
       },
       {
+        "id": "react-router",
+        "name": "React Router with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/react-router",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-router",
+        "tags": []
+      },
+      {
         "id": "use-environment-variables-in-react",
         "name": "Use Environment Variables in React",
         "description": "",
@@ -3978,6 +4000,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/react/remix",
+    "tags": []
+  },
+  "/recipes/react/react-router": {
+    "id": "react-router",
+    "name": "React Router with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/react-router",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-router",
     "tags": []
   },
   "/recipes/react/use-environment-variables-in-react": {
