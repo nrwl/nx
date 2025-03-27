@@ -33,14 +33,21 @@ export interface GenerateOptions {
   interactive: boolean;
   defaults: boolean;
   quiet: boolean;
+  verbose?: boolean;
 }
 
-export function printChanges(fileChanges: FileChange[]) {
+export function printChanges(fileChanges: FileChange[], verbose: boolean) {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
       console.log(`${chalk.green('CREATE')} ${f.path}`);
+      if (verbose) {
+        console.log(f.content?.toString());
+      }
     } else if (f.type === 'UPDATE') {
       console.log(`${chalk.white('UPDATE')} ${f.path}`);
+      if (verbose) {
+        console.log(f.content?.toString());
+      }
     } else if (f.type === 'DELETE') {
       console.log(`${chalk.yellow('DELETE')} ${f.path}`);
     }
@@ -255,6 +262,7 @@ async function convertToGenerateOptions(
     interactive,
     defaults: generatorOptions.defaults as boolean,
     quiet: generatorOptions.quiet,
+    verbose: generatorOptions.verbose,
   };
 
   delete generatorOptions.d;
@@ -396,7 +404,7 @@ export async function generate(args: { [k: string]: any }) {
       const changes = host.listChanges();
 
       if (!opts.quiet) {
-        printChanges(changes);
+        printChanges(changes, opts.verbose);
       }
       if (!opts.dryRun) {
         flushChanges(workspaceRoot, changes);
