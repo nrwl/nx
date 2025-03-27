@@ -96,7 +96,7 @@ export class ForkedProcessTaskRunner {
         p.on('message', (message: BatchMessage) => {
           switch (message.type) {
             case BatchMessageType.CompleteBatchExecution: {
-              p.kill('SIGTERM');
+              this.processes.delete(p);
               res(message.results);
               break;
             }
