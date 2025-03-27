@@ -13,7 +13,6 @@ import org.gradle.api.tasks.TaskProvider
  * - outputs
  * - command
  * - metadata
- * - options with cwd and args
  */
 fun processTask(
     task: Task,
@@ -51,13 +50,13 @@ fun processTask(
     target["dependsOn"] = dependsOn
   }
 
-  val gradlewCommand = getGradlewCommand()
-  target["command"] = "$gradlewCommand ${projectBuildPath}:${task.name}"
+  target["executor"] = "@nx/gradle:gradlew"
 
   val metadata = getMetadata(task.description ?: "Run ${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] = mapOf("cwd" to cwd)
+  target["options"] =
+      mapOf("taskName" to "${projectBuildPath}:${task.name}", "cwd" to cwd)
 
   return target
 }
