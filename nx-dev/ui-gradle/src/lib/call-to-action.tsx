@@ -63,11 +63,12 @@ export function CallToAction(): ReactElement {
         </div>
 
         <h2 className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white">
-          Ready to
-          <br />
-          supercharge your Gradle builds?
+          Ready To Get Started?
         </h2>
-
+        <p className="mt-8">
+          Check out the documentation for the <code>@nx/gradle</code> plugin to
+          learn more
+        </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link
             href="/nx-api/gradle/documents/overview"
@@ -75,7 +76,13 @@ export function CallToAction(): ReactElement {
             prefetch={false}
             className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
-            Get started with the tutorial
+            Read the Docs{' '}
+            <span
+              aria-hidden="true"
+              className="inline-block transition group-hover:translate-x-1"
+            >
+              →
+            </span>
           </Link>
 
           {/* <Link

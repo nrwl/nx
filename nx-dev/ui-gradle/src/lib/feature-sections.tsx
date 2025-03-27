@@ -4,15 +4,15 @@ import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 export function FeatureSections(): ReactElement {
   return (
     <section className="feature-sections py-16 sm:py-24">
-      <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto px-6 lg:max-w-7xl">
         <SectionHeading id="nx-gradle-features" as="h2" variant="title">
-          Supercharge your Gradle builds{' '}
+          Supercharge your Java Projects{' '}
           <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
             with Nx
           </span>
         </SectionHeading>
 
-        <div className="mt-10 grid grid-cols-1 gap-8 sm:mt-16">
+        <div className="mt-10 grid grid-cols-1 gap-8 sm:mt-16 md:grid-cols-2 lg:grid-cols-3 ">
           {/* Affected Section */}
           <FeatureSection
             title="Affected"
@@ -21,7 +21,6 @@ export function FeatureSections(): ReactElement {
             alt="Nx Affected: Run tasks only on affected projects"
             tag="Affected"
             href="/ci/features/affected"
-            reversed={false}
           />
 
           {/* Remote Caching Section */}
@@ -32,7 +31,6 @@ export function FeatureSections(): ReactElement {
             alt="Nx Replay: Remote caching"
             tag="Nx Replay"
             href="/features/cache-task-results"
-            reversed={true}
           />
 
           {/* Distribution Section */}
@@ -43,7 +41,6 @@ export function FeatureSections(): ReactElement {
             alt="Nx Agents: Task distribution"
             tag="Nx Agents"
             href="/ci/features/distribute-task-execution"
-            reversed={false}
           />
 
           {/* Atomizer Section */}
@@ -54,7 +51,6 @@ export function FeatureSections(): ReactElement {
             alt="Nx Atomizer: Split large test tasks"
             tag="Atomizer"
             href="/ci/features/split-e2e-tasks"
-            reversed={true}
           />
 
           {/* Flaky Test Retries Section */}
@@ -65,7 +61,6 @@ export function FeatureSections(): ReactElement {
             alt="Nx flaky task detection & rerun"
             tag="Flaky test retries"
             href="/nx-api/gradle/documents/overview"
-            reversed={false}
           />
         </div>
       </div>
@@ -90,15 +85,12 @@ function FeatureSection({
   alt,
   tag,
   href,
-  reversed = false,
 }: FeatureSectionProps): ReactElement {
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5 lg:flex-row dark:bg-slate-950 dark:ring-white/10 ${
-        reversed ? 'lg:flex-row-reverse' : ''
-      }`}
+      className={`feature-section flex flex-col overflow-hidden rounded-2xl bg-white shadow ring-1 ring-black/5  dark:bg-slate-950 dark:ring-white/10 `}
     >
-      <div className="h-80 lg:h-96 lg:w-2/5 xl:w-1/2">
+      <div className="h-0 w-full md:h-72">
         <img
           alt={alt}
           src={imageSrc}

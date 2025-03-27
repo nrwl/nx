@@ -10,7 +10,7 @@ export function Features(): ReactElement {
       </SectionHeading>
 
       <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-        The Nx Plugin for Gradle integrates seamlessly with your existing Gradle
+        The Nx Plugin for Java integrates seamlessly with your existing Gradle
         builds, adding powerful capabilities to your workflow.
       </p>
 
@@ -45,7 +45,7 @@ export function Features(): ReactElement {
         />
         <FeatureCard
           title="Distributed Task Execution"
-          description="Run your Gradle tasks across multiple machines, dramatically reducing build times for large repositories."
+          description="Run your project tasks across multiple machines, dramatically reducing build times for large repositories."
           href="/ci/features/distribute-task-execution"
           icon={
             <svg
@@ -84,7 +84,7 @@ export function Features(): ReactElement {
           }
         />
         <FeatureCard
-          title="Affected Commands"
+          title="Affected Targets"
           description="Run tasks only on projects affected by your changes, saving time and computing resources."
           href="/ci/features/affected"
           icon={
@@ -112,8 +112,8 @@ export function Features(): ReactElement {
           }
         />
         <FeatureCard
-          title="Automatic Project Graph"
-          description="Nx automatically infers your project graph from Gradle's configuration, providing visualization and dependency analysis."
+          title="Project Graph"
+          description="Nx automatically infers your project graph from project's configuration, providing visualization and dependency analysis."
           href="/features/explore-graph"
           icon={
             <svg
@@ -159,7 +159,7 @@ export function Features(): ReactElement {
         />
         <FeatureCard
           title="Split E2E Tests"
-          description="Automatically split your E2E tests for faster parallel execution in CI environments with the Atomizer feature."
+          description="Automatically split your E2E tests for faster parallel execution in CI environments with Atomizer."
           href="/ci/features/split-e2e-tasks"
           icon={
             <svg
@@ -201,7 +201,7 @@ export function Features(): ReactElement {
         />
         <FeatureCard
           title="Zero Configuration"
-          description="Add Nx to your Gradle project in minutes with no changes to your existing Gradle setup required."
+          description="Add Nx to your project in minutes with no changes to your existing setup required."
           href="/nx-api/gradle/documents/overview"
           icon={
             <svg

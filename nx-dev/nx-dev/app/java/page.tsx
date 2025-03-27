@@ -41,14 +41,6 @@ export default function GradlePage(): JSX.Element {
     <DefaultLayout>
       <Hero />
 
-      <div className="mt-16 scroll-mt-16 lg:mt-32">
-        <GettingStarted />
-      </div>
-
-      <div className="mt-16 scroll-mt-16 lg:mt-32" id="feature-sections">
-        <FeatureSections />
-      </div>
-
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mt-16 scroll-mt-16 lg:mt-32" id="features">
           <Features />
@@ -59,7 +51,14 @@ export default function GradlePage(): JSX.Element {
         </div>
       </div>
 
-      <div className="py-16 sm:py-20">
+      {/* <div className="mt-16 scroll-mt-16 lg:mt-32" id="feature-sections"> */}
+      {/*   <FeatureSections /> */}
+      {/* </div> */}
+
+      <div className="mt-16 scroll-mt-16 lg:mt-32">
+        <GettingStarted />
+      </div>
+      <div className="overflow-hidden py-8 sm:py-8">
         <CallToAction />
       </div>
     </DefaultLayout>

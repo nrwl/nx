@@ -9,7 +9,7 @@ export function Resources(): ReactElement {
         Resources
       </SectionHeading>
       <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-        Learn more about using Nx with Gradle projects with these resources.
+        Learn more about using Nx with Java projects with these resources.
       </p>
 
       <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">

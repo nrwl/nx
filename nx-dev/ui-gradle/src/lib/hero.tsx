@@ -1,5 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import {
+  ButtonLink,
+  SectionHeading,
+  Strong,
+  SectionDescription,
+} from '@nx/nx-dev/ui-common';
 import { GradleIcon } from '@nx/nx-dev/ui-icons';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ReactElement } from 'react';
@@ -15,18 +20,14 @@ export function Hero(): ReactElement {
           </div>
         </div>
 
-        <SectionHeading as="h1" variant="display">
-          Nx Gradle
+        <SectionHeading as="h1" variant="title" className="mt-6">
+          Supercharge Your Java Projects
         </SectionHeading>
-
-        <SectionHeading as="p" variant="subtitle" className="mt-6">
-          Supercharge your Gradle projects with Nx.{' '}
-          <Strong className="text-blue-600 dark:text-sky-500">
-            Get distributed task execution, intelligent caching, and affected
-            commands
-          </Strong>{' '}
-          to optimize your build process and CI pipeline.
-        </SectionHeading>
+        <SectionDescription as="h2" className="mt-6">
+          Get distributed tasks, intelligent caching, and target affected
+          packages to optimize your build process and CI pipeline. Support for{' '}
+          <Strong>Gradle</Strong> and <Strong>Maven</Strong> (coming soon)
+        </SectionDescription>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
           <ButtonLink
@@ -35,7 +36,7 @@ export function Hero(): ReactElement {
             size="default"
             title="Get Started"
           >
-            Get Started with Nx Gradle
+            Get Started with Nx for Java
           </ButtonLink>
 
           <a
@@ -65,27 +66,27 @@ export function GettingStarted(): ReactElement {
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Get Started with Nx Gradle
+            Add Nx To An Existing Project
           </h2>
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
           <GetStartedCard
-            title="Add Nx to Gradle project"
+            title="Add Nx To Your Project"
             command="npx nx@latest init"
-            description="Select @nx/gradle when prompted."
+            description="Select <code>@nx/gradle</code> when prompted."
           />
 
           <GetStartedCard
-            title="Run tasks with Nx"
+            title="Run Tasks With Nx"
             command="nx build <project>"
-            description="Nx automatically infers Gradle tasks from your projects."
+            description="Nx will automatically infers tasks from your projects."
           />
 
           <GetStartedCard
-            title="Run affected tasks"
+            title="Run Affected Tasks"
             command="nx affected -t build"
-            description="Nx adds caching, distribution, and affected commands without changing your Gradle setup."
+            description="Nx adds caching, distribution, and affected commands without changing your setup."
           />
         </div>
 
@@ -135,9 +136,10 @@ function GetStartedCard({
       <div className="mt-3 overflow-hidden rounded-md bg-slate-800 px-4 py-3 text-sm text-white dark:bg-slate-950">
         <code>{command}</code>
       </div>
-      <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-        {description}
-      </p>
+      <p
+        className="mt-3 text-sm text-slate-600 dark:text-slate-300"
+        dangerouslySetInnerHTML={{ __html: description }}
+      ></p>
     </div>
   );
 }
