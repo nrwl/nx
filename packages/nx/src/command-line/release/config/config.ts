@@ -276,8 +276,7 @@ export async function createNxReleaseConfig(
             generatorOptions: defaultGeneratorOptions,
           }
         : {
-            versionActions:
-              '@nx/js/src/generators/release-version/version-actions',
+            versionActions: '@nx/js/src/release/version-actions',
             versionActionsOptions: {},
             currentVersionResolver:
               defaultGeneratorOptions.currentVersionResolver,
@@ -366,8 +365,7 @@ export async function createNxReleaseConfig(
         >)
       : ({
           conventionalCommits: false,
-          versionActions:
-            '@nx/js/src/generators/release-version/version-actions',
+          versionActions: '@nx/js/src/release/version-actions',
           versionActionsOptions: {},
           groupPreVersionCommand: '',
         } as DeepRequired<

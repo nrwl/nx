@@ -26,10 +26,13 @@ describe('resolveCurrentVersion', () => {
     };
 
     class TestVersionActions extends VersionActions {
-      manifestFilename = 'package.json';
+      validManifestFilenames = ['package.json'];
 
       async readCurrentVersionFromSourceManifest() {
-        return '1.2.3';
+        return {
+          currentVersion: '1.2.3',
+          manifestPath: 'package.json',
+        };
       }
       async readCurrentVersionFromRegistry() {
         return {
@@ -142,7 +145,7 @@ describe('resolveCurrentVersion', () => {
       } as unknown as ReleaseGroupWithName;
 
       class TestVersionActionsWithoutManifest extends VersionActions {
-        manifestFilename = null;
+        validManifestFilenames = null;
 
         async readCurrentVersionFromSourceManifest() {
           return null;

@@ -12170,9 +12170,7 @@ describe('createNxReleaseConfig()', () => {
       });
       const version = res.nxReleaseConfig
         .version as NxReleaseVersionV2Configuration;
-      expect(version.versionActions).toBe(
-        '@nx/js/src/generators/release-version/version-actions'
-      );
+      expect(version.versionActions).toBe('@nx/js/src/release/version-actions');
       expect(version.versionActionsOptions).toEqual({});
 
       expect((version as any).generator).toBeUndefined();

@@ -8,5 +8,5 @@ export {
   releasePublish,
   releaseVersion,
   VersionActions,
-  ManifestData,
+  AfterAllProjectsVersioned,
 } from '../src/command-line/release';

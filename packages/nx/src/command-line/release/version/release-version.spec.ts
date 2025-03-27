@@ -308,7 +308,7 @@ describe('releaseVersionGenerator (ported tests)', () => {
 
       expect(outputSpy).toHaveBeenCalledWith({
         title: expect.stringContaining(
-          'The project "my-lib" does not have a package.json file available at my-lib/package.json'
+          'The project "my-lib" does not have a package.json file available in ./my-lib'
         ),
       });
 

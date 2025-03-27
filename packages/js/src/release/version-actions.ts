@@ -8,43 +8,50 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { exec } from 'node:child_process';
-import { dirname } from 'node:path';
-import { VersionActions } from 'nx/release';
+import { join } from 'node:path';
+import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
 import type { NxReleaseVersionV2Configuration } from 'nx/src/config/nx-json';
-import { parseRegistryOptions } from '../../utils/npm-config';
+import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
+
+export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
+  cwd: string,
+  opts: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    versionActionsOptions?: Record<string, unknown>;
+  }
+) => {
+  return {
+    changedFiles: await updateLockFile(cwd, {
+      ...opts,
+      useLegacyVersioning: false,
+    }),
+    deletedFiles: [],
+  };
+};
 
 // Cache at the module level to avoid re-detecting the package manager for each instance
 let pm: PackageManager | undefined;
 
 export default class JsVersionActions extends VersionActions {
-  manifestFilename = 'package.json';
+  validManifestFilenames = ['package.json'];
 
-  static createAfterAllProjectsVersionedCallback(
-    cwd: string,
-    opts: {
-      dryRun?: boolean;
-      verbose?: boolean;
-      versionActionsOptions?: Record<string, unknown>;
-    }
-  ) {
-    return async () => {
-      return {
-        changedFiles: await updateLockFile(cwd, {
-          ...opts,
-          useLegacyVersioning: false,
-        }),
-        deletedFiles: [],
-      };
-    };
-  }
-
-  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<string> {
-    const sourcePackageJsonPath = this.getSourceManifestPath();
+  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
+    currentVersion: string;
+    manifestPath: string;
+  }> {
+    const sourcePackageJsonPath = join(
+      this.projectGraphNode.data.root,
+      'package.json'
+    );
     try {
       const packageJson = readJson(tree, sourcePackageJsonPath);
-      return packageJson.version;
+      return {
+        manifestPath: sourcePackageJsonPath,
+        currentVersion: packageJson.version,
+      };
     } catch {
       throw new Error(
         `Unable to determine the current version for project "${this.projectGraphNode.name}" from ${sourcePackageJsonPath}, please ensure that the "version" field is set within the package.json file`
@@ -59,9 +66,11 @@ export default class JsVersionActions extends VersionActions {
     currentVersion: string;
     logText: string;
   }> {
-    const sourceManifestPath = this.getSourceManifestPath();
-    const sourceManifestRoot = dirname(sourceManifestPath);
-    const packageJson = readJson(tree, sourceManifestPath);
+    const sourcePackageJsonPath = join(
+      this.projectGraphNode.data.root,
+      'package.json'
+    );
+    const packageJson = readJson(tree, sourcePackageJsonPath);
     const packageName = packageJson.name;
 
     const metadata = currentVersionResolverMetadata;
@@ -75,7 +84,7 @@ export default class JsVersionActions extends VersionActions {
     const { registry, tag, registryConfigKey } = await parseRegistryOptions(
       workspaceRoot,
       {
-        packageRoot: sourceManifestRoot,
+        packageRoot: this.projectGraphNode.data.root,
         packageJson,
       },
       {
@@ -122,7 +131,11 @@ export default class JsVersionActions extends VersionActions {
     currentVersion: string | null;
     dependencyCollection: string | null;
   }> {
-    const json = readJson(tree, this.getSourceManifestPath());
+    const sourcePackageJsonPath = join(
+      this.projectGraphNode.data.root,
+      'package.json'
+    );
+    const json = readJson(tree, sourcePackageJsonPath);
     // Resolve the package name from the project graph metadata, as it may not match the project name
     const dependencyPackageName =
       projectGraph.nodes[dependencyProjectName].data.metadata?.js?.packageName;

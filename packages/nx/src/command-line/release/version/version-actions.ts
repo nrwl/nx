@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { ReleaseType } from 'semver';
 import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
 import type {
@@ -25,6 +25,32 @@ function resolveVersionActionsPath(path: string): string {
   }
 }
 
+/**
+ * Implementation details of performing any actions after all projects have been versioned.
+ * An example might be updating a workspace level lock file.
+ *
+ * NOTE: By the time this function is invoked, the tree will have been flushed back to disk,
+ * so it is not accessible here.
+ *
+ * The function should return lists of changed and deleted files so that they can be staged
+ * and committed if appropriate.
+ *
+ * NOTE: The versionActionsOptions passed here are the ones at the root of release.version config,
+ * different values per release group or project will not be respected here because this takes
+ * place after all projects have been versioned.
+ */
+export type AfterAllProjectsVersioned = (
+  cwd: string,
+  opts: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    versionActionsOptions?: Record<string, unknown>;
+  }
+) => Promise<{
+  changedFiles: string[];
+  deletedFiles: string[];
+}>;
+
 type VersionActionsConstructor = {
   new (
     versionActionsOptions: Record<string, unknown>,
@@ -32,19 +58,14 @@ type VersionActionsConstructor = {
     projectGraphNode: ProjectGraphProjectNode,
     manifestRootsToUpdate: string[]
   ): VersionActions;
-  createAfterAllProjectsVersionedCallback: (
-    cwd: string,
-    opts: {
-      dryRun?: boolean;
-      verbose?: boolean;
-      versionActionsOptions?: Record<string, unknown>;
-    }
-  ) => any;
 };
 
 const versionActionsResolutionCache = new Map<
   string,
-  VersionActionsConstructor
+  {
+    VersionActionsClass: VersionActionsConstructor;
+    afterAllProjectsVersioned: AfterAllProjectsVersioned;
+  }
 >();
 
 export async function resolveVersionActionsForProject(
@@ -54,8 +75,8 @@ export async function resolveVersionActionsForProject(
   manifestRootsToUpdate: string[]
 ): Promise<{
   versionActionsPath: string;
-  VersionActionsClass: typeof VersionActions;
   versionActions: VersionActions;
+  afterAllProjectsVersioned: AfterAllProjectsVersioned;
 }> {
   // Project level release version config takes priority, if set
   const projectVersionConfig = projectGraphNode.data.release?.version as
@@ -87,16 +108,35 @@ export async function resolveVersionActionsForProject(
     releaseGroupVersionConfig?.versionActionsOptions ??
     {};
 
-  let VersionActionsClass = versionActionsResolutionCache.get(
-    versionActionsPathConfig
-  );
+  let cachedData = versionActionsResolutionCache.get(versionActionsPathConfig);
   const versionActionsPath = resolveVersionActionsPath(
     versionActionsPathConfig
   );
-  if (!VersionActionsClass) {
+
+  let VersionActionsClass: VersionActionsConstructor | undefined;
+  let afterAllProjectsVersioned: AfterAllProjectsVersioned | undefined;
+
+  if (cachedData) {
+    VersionActionsClass = cachedData.VersionActionsClass;
+    afterAllProjectsVersioned = cachedData.afterAllProjectsVersioned;
+  } else {
     const loaded = require(versionActionsPath);
     VersionActionsClass = loaded.default ?? loaded;
-    versionActionsResolutionCache.set(versionActionsPath, VersionActionsClass);
+    if (!VersionActionsClass) {
+      throw new Error(
+        `For project "${projectGraphNode.name}" it was not possible to resolve the VersionActions implementation from: "${versionActionsPath}"`
+      );
+    }
+    if (!loaded.afterAllProjectsVersioned) {
+      throw new Error(
+        `For project "${projectGraphNode.name}" it was not possible to resolve the afterAllProjectsVersioned implementation from: "${versionActionsPath}"`
+      );
+    }
+    versionActionsResolutionCache.set(versionActionsPath, {
+      VersionActionsClass,
+      afterAllProjectsVersioned: loaded.afterAllProjectsVersioned,
+    });
+    afterAllProjectsVersioned = loaded.afterAllProjectsVersioned;
   }
   const versionActions: VersionActions = new VersionActionsClass(
     versionActionsOptions,
@@ -108,32 +148,21 @@ export async function resolveVersionActionsForProject(
   await versionActions.init(tree);
   return {
     versionActionsPath,
-    VersionActionsClass,
     versionActions,
+    afterAllProjectsVersioned,
   };
 }
 
-export type ManifestData = {
-  name: string;
-  currentVersion: string;
-  dependencies: Record<
-    string,
-    Record<
-      string,
-      {
-        resolvedVersion: string;
-        rawVersionSpec: string;
-      }
-    >
-  >;
-};
-
 export abstract class VersionActions {
   /**
-   * The filename of the manifest file, such as package.json/Cargo.toml/etc, or null if a manifest
-   * is not applicable for this type of project.
+   * The available valid filenames of the manifest file relevant to the current versioning use-case.
+   *
+   * E.g. for JavaScript projects this would be ["package.json"], but for Gradle it would be
+   * ["build.gradle", "build.gradle.kts"].
+   *
+   * If a manifest file is not applicable to the current versioning use-case, this should be set to null.
    */
-  abstract manifestFilename: string | null;
+  abstract validManifestFilenames: string[] | null;
   /**
    * The interpolated manifest paths to update, if applicable based on the user's configuration, when new
    * versions and dependencies are determined. If no manifest files should be updated based on the user's
@@ -153,82 +182,58 @@ export abstract class VersionActions {
    * Asynchronous initialization of the version actions and validation of certain configuration options.
    */
   async init(tree: Tree): Promise<void> {
-    // Default to the source manifest root, if set, if no custom manifest roots are provided
-    const sourceManifestPath = this.getSourceManifestPath();
-    if (sourceManifestPath && this.manifestRootsToUpdate.length === 0) {
-      this.manifestRootsToUpdate.push(dirname(sourceManifestPath));
+    // Default to the first available source manifest root, if applicable, if no custom manifest roots are provided
+    if (
+      this.validManifestFilenames?.length &&
+      this.manifestRootsToUpdate.length === 0
+    ) {
+      for (const manifestFilename of this.validManifestFilenames) {
+        if (
+          tree.exists(join(this.projectGraphNode.data.root, manifestFilename))
+        ) {
+          this.manifestRootsToUpdate.push(this.projectGraphNode.data.root);
+          break;
+        }
+      }
     }
 
-    // Create a final collection of interpolated manifest paths to update when new versions and dependencies are written
-    this.manifestsToUpdate = this.manifestRootsToUpdate.map((manifestRoot) => {
-      const interpolatedManifestRoot = interpolate(manifestRoot, {
-        workspaceRoot: '',
-        projectRoot: this.projectGraphNode.data.root,
-        projectName: this.projectGraphNode.name,
-      });
-      return join(interpolatedManifestRoot, this.manifestFilename);
-    });
+    const interpolatedManifestRoots = this.manifestRootsToUpdate.map(
+      (manifestRoot) => {
+        return interpolate(manifestRoot, {
+          workspaceRoot: '',
+          projectRoot: this.projectGraphNode.data.root,
+          projectName: this.projectGraphNode.name,
+        });
+      }
+    );
 
-    // Ensure any configured manifests exist at the expected locations
-    const allManifestPaths = [...this.manifestsToUpdate];
-    if (sourceManifestPath) {
-      allManifestPaths.unshift(sourceManifestPath);
-    }
-    const allUniqueManifestPaths = new Set(allManifestPaths);
-    for (const manifestPath of allUniqueManifestPaths) {
-      if (!tree.exists(manifestPath)) {
+    for (const interpolatedManifestRoot of interpolatedManifestRoots) {
+      let hasValidManifest = false;
+      for (const manifestFilename of this.validManifestFilenames) {
+        const manifestPath = join(interpolatedManifestRoot, manifestFilename);
+        if (tree.exists(manifestPath)) {
+          this.manifestsToUpdate.push(manifestPath);
+          hasValidManifest = true;
+          break;
+        }
+      }
+      if (!hasValidManifest) {
+        const validManifestFilenames =
+          this.validManifestFilenames?.join(' or ');
+
         throw new Error(
-          `The project "${this.projectGraphNode.name}" does not have a ${this.manifestFilename} file available at ${manifestPath}
-
-To fix this you will either need to add a ${this.manifestFilename} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the package.json should be.`
+          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available at ${interpolatedManifestRoot}.
+          
+To fix this you will either need to add a ${validManifestFilenames} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.`
         );
       }
     }
   }
 
   /**
-   * Implementation details of performing any actions after all projects have been versioned.
-   * An example might be updating a workspace level lock file.
-   *
-   * NOTE: By the time the returned callback is invoked, the tree will have been flushed back
-   * to disk, so it is not accessible here.
-   *
-   * The callback should return lists of changed and deleted files so that they can be staged
-   * and committed if appropriate.
-   *
-   * NOTE: The versionActionsOptions passed here are the ones at the root of release.version config,
-   * different values per release group or project will not be respected here because this takes
-   * place after all projects have been versioned.
-   */
-  static createAfterAllProjectsVersionedCallback(
-    cwd: string,
-    opts: {
-      dryRun?: boolean;
-      verbose?: boolean;
-      versionActionsOptions?: Record<string, unknown>;
-    }
-  ): () => Promise<{
-    changedFiles: string[];
-    deletedFiles: string[];
-  }> {
-    return async () => ({
-      changedFiles: [],
-      deletedFiles: [],
-    });
-  }
-
-  /**
-   * Returns the default source manifest path (the standard manifest filename at the project root).
-   */
-  getSourceManifestPath(): string | null {
-    if (!this.manifestFilename) {
-      return null;
-    }
-    return join(this.projectGraphNode.data.root, this.manifestFilename);
-  }
-
-  /**
-   * Implementation details of resolving a project's current version from its source manifest file.
+   * Implementation details of resolving a project's current version from a valid manifest file. It should
+   * return an object with the current version and the filename of the resolved manifest path so that the
+   * logs provided to the user are as specific as possible.
    *
    * This method will only be called if the user has configured their currentVersionResolver to be "disk".
    *
@@ -241,14 +246,15 @@ To fix this you will either need to add a ${this.manifestFilename} file at that 
    * NOTE: The version actions implementation does not need to provide the method for handling resolution
    * from git tags, this is done directly by nx release.
    */
-  abstract readCurrentVersionFromSourceManifest(
-    tree: Tree
-  ): Promise<string | null>;
+  abstract readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
+    currentVersion: string;
+    manifestPath: string;
+  } | null>;
 
   /**
    * Implementation details of resolving a project's current version from a remote registry.
    *
-   * The specific logText will be combined with the generic remote registry log text and allows
+   * The specific logText it returns will be combined with the generic remote registry log text and allows
    * the implementation to provide more specific information to the user about what registry URL
    * was used, what dist-tag etc.
    *

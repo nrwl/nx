@@ -25,6 +25,7 @@ import { ProjectLogger } from './project-logger';
 import { resolveCurrentVersion } from './resolve-current-version';
 import { topologicalSort } from './topological-sort';
 import {
+  AfterAllProjectsVersioned,
   resolveVersionActionsForProject,
   SemverBumpType,
   VersionActions,
@@ -116,11 +117,13 @@ export class ReleaseGroupProcessor {
   private sortedProjects: Map<string, string[]> = new Map();
 
   /**
-   * Track the unique versionActions involved in the current versioning process so that we can
-   * reliably invoke certain static lifecycle methods once per versionActions type, rather than
-   * simply once per project.
+   * Track the unique afterAllProjectsVersioned functions involved in the current versioning process,
+   * so that we can ensure they are only invoked once per versioning execution.
    */
-  private uniqueVersionActions: Map<string, typeof VersionActions> = new Map();
+  private uniqueAfterAllProjectsVersioned: Map<
+    string,
+    AfterAllProjectsVersioned
+  > = new Map();
 
   /**
    * Track the versionActions for each project so that we can invoke certain instance methods.
@@ -272,12 +275,8 @@ export class ReleaseGroupProcessor {
     // Precompute project to release group mapping for O(1) lookups
     this.setupProjectReleaseGroupMapping();
 
-    // Setup projects to process
-    this.setupProjectsToProcess();
-
-    // Resolve all version action implementations for the projects and cache them
-    await this.resolveVersionActionsForProjects();
-
+    // Setup projects to process and resolve version actions
+    await this.setupProjectsToProcess();
     // Precompute dependency relationships
     await this.precomputeDependencyRelationships();
 
@@ -379,15 +378,18 @@ export class ReleaseGroupProcessor {
         releaseGroupVersionConfig?.manifestRootsToUpdate ??
         [];
 
-      const { versionActionsPath, VersionActionsClass, versionActions } =
+      const { versionActionsPath, versionActions, afterAllProjectsVersioned } =
         await resolveVersionActionsForProject(
           this.tree,
           releaseGroup,
           projectGraphNode,
           manifestRootsToUpdate
         );
-      if (!this.uniqueVersionActions.has(versionActionsPath)) {
-        this.uniqueVersionActions.set(versionActionsPath, VersionActionsClass);
+      if (!this.uniqueAfterAllProjectsVersioned.has(versionActionsPath)) {
+        this.uniqueAfterAllProjectsVersioned.set(
+          versionActionsPath,
+          afterAllProjectsVersioned
+        );
       }
       this.projectsToVersionActions.set(projectName, versionActions);
     }
@@ -411,9 +413,9 @@ export class ReleaseGroupProcessor {
   }
 
   /**
-   * Determine which projects should be processed
+   * Determine which projects should be processed and resolve their version actions
    */
-  private setupProjectsToProcess(): void {
+  private async setupProjectsToProcess(): Promise<void> {
     // Track the projects being directly versioned
     let projectsToProcess = new Set<string>();
 
@@ -433,6 +435,50 @@ export class ReleaseGroupProcessor {
         } else if (this.options.filters.projects?.includes(project)) {
           projectsToProcess.add(project);
         }
+
+        // Resolve the version actions for the project
+        const projectGraphNode = this.projectGraph.nodes[project];
+        const projectVersionConfig = projectGraphNode.data.release?.version as
+          | NxReleaseVersionV2Configuration
+          | undefined;
+        const releaseGroupVersionConfig =
+          group.version as NxReleaseVersionV2Configuration;
+        const manifestRootsToUpdate =
+          projectVersionConfig?.manifestRootsToUpdate ??
+          releaseGroupVersionConfig?.manifestRootsToUpdate ??
+          [];
+
+        /**
+         * Try and resolve a cached ReleaseGroupWithName for the project. It may not be present
+         * if the user filtered by group and excluded this parent group from direct versioning,
+         * so fallback to the release group config and apply the name manually.
+         */
+        let releaseGroup = this.projectToReleaseGroup.get(project);
+        if (!releaseGroup) {
+          releaseGroup = {
+            ...group,
+            name: groupName,
+            resolvedVersionPlans: false,
+          };
+        }
+
+        const {
+          versionActionsPath,
+          versionActions,
+          afterAllProjectsVersioned,
+        } = await resolveVersionActionsForProject(
+          this.tree,
+          releaseGroup,
+          projectGraphNode,
+          manifestRootsToUpdate
+        );
+        if (!this.uniqueAfterAllProjectsVersioned.has(versionActionsPath)) {
+          this.uniqueAfterAllProjectsVersioned.set(
+            versionActionsPath,
+            afterAllProjectsVersioned
+          );
+        }
+        this.projectsToVersionActions.set(project, versionActions);
       }
     }
 
@@ -629,11 +675,11 @@ export class ReleaseGroupProcessor {
   }
 
   /**
-   * Invoke the static afterAllProjectsVersioned method for each unique versionActions type.
+   * Invoke the afterAllProjectsVersioned functions for each unique versionActions type.
    * This can be useful for performing actions like updating a workspace level lock file.
    *
    * Because the tree has already been flushed to disk at this point, each afterAllProjectsVersioned
-   * callback is responsible for returning the list of changed and deleted files that it affected.
+   * function is responsible for returning the list of changed and deleted files that it affected.
    */
   async afterAllProjectsVersioned(
     versionActionsOptions: Record<string, unknown>
@@ -644,27 +690,22 @@ export class ReleaseGroupProcessor {
     const changedFiles = new Set<string>();
     const deletedFiles = new Set<string>();
 
-    for (const [, VersionActionsClass] of this.uniqueVersionActions) {
-      if (VersionActionsClass.createAfterAllProjectsVersionedCallback) {
-        const afterAllProjectsVersioned =
-          VersionActionsClass.createAfterAllProjectsVersionedCallback(
-            this.tree.root,
-            {
-              dryRun: this.options.dryRun,
-              verbose: this.options.verbose,
-              versionActionsOptions,
-            }
-          );
-        const {
-          changedFiles: changedFilesForVersionActions,
-          deletedFiles: deletedFilesForVersionActions,
-        } = await afterAllProjectsVersioned();
-        for (const file of changedFilesForVersionActions) {
-          changedFiles.add(file);
-        }
-        for (const file of deletedFilesForVersionActions) {
-          deletedFiles.add(file);
-        }
+    for (const [, afterAllProjectsVersioned] of this
+      .uniqueAfterAllProjectsVersioned) {
+      const {
+        changedFiles: changedFilesForVersionActions,
+        deletedFiles: deletedFilesForVersionActions,
+      } = await afterAllProjectsVersioned(this.tree.root, {
+        dryRun: this.options.dryRun,
+        verbose: this.options.verbose,
+        versionActionsOptions,
+      });
+
+      for (const file of changedFilesForVersionActions) {
+        changedFiles.add(file);
+      }
+      for (const file of deletedFilesForVersionActions) {
+        deletedFiles.add(file);
       }
     }
 

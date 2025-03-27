@@ -80,25 +80,35 @@ export async function resolveCurrentVersionFromDisk(
   versionActions: VersionActions,
   logger: ProjectLogger
 ): Promise<string> {
-  const diskUnsupportedError = new Error(
-    `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
-  );
-  if (!versionActions.getSourceManifestPath()) {
-    throw diskUnsupportedError;
+  if (!versionActions.validManifestFilenames?.length) {
+    throw new Error(
+      `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
+    );
   }
   try {
-    const currentVersion =
-      await versionActions.readCurrentVersionFromSourceManifest(tree);
-    if (!currentVersion) {
-      throw diskUnsupportedError;
+    const res = await versionActions.readCurrentVersionFromSourceManifest(tree);
+    if (!res) {
+      throw new Error(
+        `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" and it is using "versionActions" of type "${versionActions.constructor.name}" which failed to resolve the current version from the manifest file on disk`
+      );
     }
-    const sourceManifestPath = versionActions.getSourceManifestPath();
+    const { currentVersion, manifestPath } = res;
     logger.buffer(
-      `📄 Resolved the current version as ${currentVersion} from manifest: ${sourceManifestPath}`
+      `📄 Resolved the current version as ${currentVersion} from manifest: ${manifestPath}`
     );
     return currentVersion;
   } catch {
-    throw diskUnsupportedError;
+    throw new Error(
+      `The project "${
+        projectGraphNode.name
+      }" does not have a ${versionActions.validManifestFilenames.join(
+        ' or '
+      )} file available in ./${projectGraphNode.data.root}.
+
+To fix this you will either need to add a ${versionActions.validManifestFilenames.join(
+        ' or '
+      )} file at that location, or configure "release" within your nx.json to use a different "currentVersionResolver" or "versionActions" implementation that supports this setup`
+    );
   }
 }
 
@@ -177,28 +187,28 @@ export async function resolveCurrentVersionFromRegistry(
     spinner.stop();
 
     if (finalConfigForProject.fallbackCurrentVersionResolver === 'disk') {
-      if (!versionActions.getSourceManifestPath()) {
+      if (!versionActions.validManifestFilenames?.length) {
         throw new Error(
           `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "registry" with a "fallbackCurrentVersionResolver" of "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "fallbackCurrentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
         );
       }
 
-      const currentVersionFromDisk =
+      const fromDiskRes =
         await versionActions.readCurrentVersionFromSourceManifest(tree);
       // Fallback on disk is available, return it directly
-      if (currentVersionFromDisk) {
+      if (fromDiskRes && fromDiskRes.currentVersion) {
         logger.buffer(
-          `⚠️  Unable to resolve the current version from the registry${registryTxt}. Falling back to the version ${currentVersionFromDisk} in manifest: ${versionActions.getSourceManifestPath()}`
+          `⚠️  Unable to resolve the current version from the registry${registryTxt}. Falling back to the version ${fromDiskRes.currentVersion} in manifest: ${fromDiskRes.manifestPath}`
         );
         // Write to the cache if the release group is fixed
         if (releaseGroup.projectsRelationship === 'fixed') {
           cachedCurrentVersionsPerFixedReleaseGroup.set(releaseGroup.name, {
-            currentVersion: currentVersionFromDisk,
+            currentVersion: fromDiskRes.currentVersion,
             originatingProjectName: projectGraphNode.name,
             logText: `from the disk fallback`,
           });
         }
-        return currentVersionFromDisk;
+        return fromDiskRes.currentVersion;
       }
     }
 
@@ -287,22 +297,23 @@ export async function resolveCurrentVersionFromGitTag(
     throw noMatchingGitTagsError;
   }
 
-  const currentVersionFromDisk =
-    await versionActions.readCurrentVersionFromSourceManifest(tree);
+  const fromDiskRes = await versionActions.readCurrentVersionFromSourceManifest(
+    tree
+  );
   // Fallback on disk is available, return it directly
-  if (currentVersionFromDisk) {
+  if (fromDiskRes && fromDiskRes.currentVersion) {
     logger.buffer(
-      `⚠️  Unable to resolve the current version from git tags using pattern "${releaseTagPattern}". Falling back to the version ${currentVersionFromDisk} in manifest: ${versionActions.getSourceManifestPath()}`
+      `⚠️  Unable to resolve the current version from git tags using pattern "${releaseTagPattern}". Falling back to the version ${fromDiskRes.currentVersion} in manifest: ${fromDiskRes.manifestPath}`
     );
     // Write to the cache if the release group is fixed
     if (releaseGroup.projectsRelationship === 'fixed') {
       cachedCurrentVersionsPerFixedReleaseGroup.set(releaseGroup.name, {
-        currentVersion: currentVersionFromDisk,
+        currentVersion: fromDiskRes.currentVersion,
         originatingProjectName: projectGraphNode.name,
         logText: `from the disk fallback`,
       });
     }
-    return currentVersionFromDisk;
+    return fromDiskRes.currentVersion;
   }
 
   // At this point the fallback on disk is also not available/configured, allow one final interactive fallback, but only when using version-plans or conventional-commits
@@ -351,10 +362,17 @@ async function handleNoAvailableDiskFallback({
   currentVersionSourceMessage: string;
   resolutionSuggestion: string;
 }): Promise<string> {
-  const sourceManifestPath = versionActions.getSourceManifestPath();
+  if (!versionActions.validManifestFilenames?.length) {
+    throw new Error(
+      `Unable to resolve the current version ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version. To resolve this, ${resolutionSuggestion}, or set use a versionActions implementation that supports a manifest file`
+    );
+  }
+
+  const validManifestFilenames =
+    versionActions.validManifestFilenames.join(' or ');
 
   const unresolvableCurrentVersionError = new Error(
-    `Unable to resolve the current version ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version. To resolve this, ${resolutionSuggestion}, or set an appropriate value for "version" in ${sourceManifestPath}`
+    `Unable to resolve the current version ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version. To resolve this, ${resolutionSuggestion}, or set an appropriate version in a supported manifest file such as ${validManifestFilenames}`
   );
   if (process.env.CI === 'true') {
     // We can't prompt in CI, so error immediately
@@ -365,7 +383,7 @@ async function handleNoAvailableDiskFallback({
       {
         name: 'useZero',
         message: `\n${chalk.yellow(
-          `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate value for "version" in ${sourceManifestPath}`
+          `Warning: Unable to resolve the current version for "${projectName}" ${currentVersionSourceMessage} and there is no version on disk to fall back to. This is invalid with ${specifierSource} because the new version is determined by relatively bumping the current version.\n\nTo resolve this, ${resolutionSuggestion}, or set an appropriate version in a supported manifest file such as ${validManifestFilenames}`
         )}. \n\nAlternatively, would you like to continue now by using 0.0.0 as the current version?`,
         type: 'confirm',
         initial: false,

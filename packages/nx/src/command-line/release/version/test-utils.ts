@@ -13,7 +13,7 @@ import { writeJson } from '../../../generators/utils/json';
 import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
 import { filterReleaseGroups } from '../config/filter-release-groups';
-import { ManifestData, VersionActions } from './version-actions';
+import { VersionActions } from './version-actions';
 
 export async function createNxReleaseConfigAndPopulateWorkspace(
   tree: Tree,
@@ -95,7 +95,7 @@ interface CargoToml {
 }
 
 export class ExampleRustVersionActions extends VersionActions {
-  manifestFilename = 'Cargo.toml';
+  validManifestFilenames = ['Cargo.toml'];
 
   private parseCargoToml(cargoString: string): CargoToml {
     return TOML.parse(cargoString, {
@@ -125,12 +125,18 @@ export class ExampleRustVersionActions extends VersionActions {
         : value;
   }
 
-  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<string> {
+  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<{
+    currentVersion: string;
+    manifestPath: string;
+  }> {
     const cargoTomlPath = join(this.projectGraphNode.data.root, 'Cargo.toml');
     const cargoTomlString = tree.read(cargoTomlPath, 'utf-8')!.toString();
     const cargoToml = this.parseCargoToml(cargoTomlString);
     const currentVersion = cargoToml.package?.version || '0.0.0';
-    return currentVersion;
+    return {
+      currentVersion,
+      manifestPath: cargoTomlPath,
+    };
   }
 
   async readCurrentVersionFromRegistry(
@@ -142,7 +148,8 @@ export class ExampleRustVersionActions extends VersionActions {
   }> {
     // Real registry resolver not needed for this test example
     return {
-      currentVersion: await this.readCurrentVersionFromSourceManifest(tree),
+      currentVersion: (await this.readCurrentVersionFromSourceManifest(tree))
+        .currentVersion,
       logText: 'https://example.com/fake-registry',
     };
   }
@@ -525,15 +532,15 @@ export async function mockResolveVersionActionsForProjectImplementation(
     await versionActions.init(tree);
     return {
       versionActionsPath: exampleRustVersionActions,
-      VersionActionsClass: ExampleRustVersionActions,
       versionActions,
+      afterAllProjectsVersioned: () => ({ changedFiles: [], deletedFiles: [] }),
     };
   }
 
-  const versionActionsPath =
-    '@nx/js/src/generators/release-version/version-actions';
+  const versionActionsPath = '@nx/js/src/release/version-actions';
   // @ts-ignore
-  const JsVersionActions = jest.requireActual(versionActionsPath).default;
+  const loaded = jest.requireActual(versionActionsPath);
+  const JsVersionActions = loaded.default;
   const versionActions: VersionActions = new JsVersionActions(
     {},
     releaseGroup,
@@ -544,7 +551,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
   await versionActions.init(tree);
   return {
     versionActionsPath,
-    VersionActionsClass: JsVersionActions,
     versionActions: versionActions,
+    afterAllProjectsVersioned: loaded.afterAllProjectsVersioned,
   };
 }

@@ -37,6 +37,7 @@ import {
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { ReleaseType, gt, inc, prerelease } from 'semver';
+import { updateLockFile } from '../../release/utils/update-lock-file';
 import { isLocallyLinkedPackageVersion } from '../../utils/is-locally-linked-package-version';
 import { parseRegistryOptions } from '../../utils/npm-config';
 import { ReleaseVersionGeneratorSchema } from './schema';
@@ -45,7 +46,6 @@ import {
   resolveLocalPackageDependencies,
 } from './utils/resolve-local-package-dependencies';
 import { sortProjectsTopologically } from './utils/sort-projects-topologically';
-import { updateLockFile } from './utils/update-lock-file';
 
 function resolvePreIdSpecifier(currentSpecifier: string, preid?: string) {
   if (!currentSpecifier.startsWith('pre') && preid) {

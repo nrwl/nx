@@ -53,4 +53,7 @@ export const release = defaultClient.release.bind(
 /**
  * @public
  */
-export { VersionActions, ManifestData } from './version/version-actions';
+export {
+  AfterAllProjectsVersioned,
+  VersionActions,
+} from './version/version-actions';
