@@ -61,7 +61,7 @@ export function applyWebConfig(
         sri: options.subresourceIntegrity,
         outputPath: path.basename(options.index),
         indexPath: path.join(options.root, options.index),
-        baseHref: options.baseHref,
+        baseHref: options.baseHref !== false ? options.baseHref : undefined,
         deployUrl: options.deployUrl,
         scripts: options.scripts,
         styles: options.styles,
