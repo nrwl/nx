@@ -222,7 +222,7 @@ export abstract class VersionActions {
           this.validManifestFilenames?.join(' or ');
 
         throw new Error(
-          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available at ${interpolatedManifestRoot}.
+          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available in ./${interpolatedManifestRoot}.
           
 To fix this you will either need to add a ${validManifestFilenames} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.`
         );
