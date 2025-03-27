@@ -73,22 +73,27 @@ export function GettingStarted(): ReactElement {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 ">
+          <GetStartedCard
+            title="Install Nx"
+            command="brew install nx"
+            description="Get the <code>nx</code> executable from homebrew"
+          />
           <GetStartedCard
             title="Add Nx To Your Project"
-            command="npx nx@latest init"
+            command="nx init"
             description="Select <code>@nx/gradle</code> when prompted."
           />
 
           <GetStartedCard
             title="Run Tasks With Nx"
-            command="./nx build <project>"
+            command="nx build <project>"
             description="Nx will automatically infers tasks from your projects."
           />
 
           <GetStartedCard
             title="Run Affected Tasks"
-            command="./nx affected -t build"
+            command="nx affected -t build"
             description="Nx adds caching, distribution, and affected commands without changing your setup."
           />
         </div>
@@ -137,7 +142,7 @@ function GetStartedCard({
         {title}
       </h3>
       <div className="mt-3 overflow-hidden rounded-md bg-slate-800 px-4 py-3 text-sm text-white dark:bg-slate-950">
-        <code>{command}</code>
+        <code style={{ whiteSpace: 'pre-line' }}>{command}</code>
       </div>
       <p
         className="mt-3 text-sm text-slate-600 dark:text-slate-300"
