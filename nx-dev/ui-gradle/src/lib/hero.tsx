@@ -5,7 +5,7 @@ import {
   Strong,
   SectionDescription,
 } from '@nx/nx-dev/ui-common';
-import { GradleIcon } from '@nx/nx-dev/ui-icons';
+import { JavaIcon } from '@nx/nx-dev/ui-icons';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ReactElement } from 'react';
 
@@ -16,7 +16,7 @@ export function Hero(): ReactElement {
         {/* Logo displayed above the title */}
         <div className="mb-6 flex justify-center">
           <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
-            <GradleIcon className="h-20 w-20" />
+            <JavaIcon className="h-20 w-20" />
           </div>
         </div>
 

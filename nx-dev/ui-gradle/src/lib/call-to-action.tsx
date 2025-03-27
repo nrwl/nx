@@ -63,7 +63,7 @@ export function CallToAction(): ReactElement {
         </div>
 
         <h2 className="text-3xl font-medium tracking-tight text-slate-950 sm:text-5xl dark:text-white">
-          Ready To Get Started?
+          Get Started With Gradle
         </h2>
         <p className="mt-8">
           Check out the documentation for the <code>@nx/gradle</code> plugin to
@@ -99,6 +99,30 @@ export function CallToAction(): ReactElement {
               →
             </span>
           </Link> */}
+        </div>
+
+        <h3 className="mt-16 text-3xl font-medium tracking-tight text-slate-950 dark:text-white">
+          Looking for Maven?
+        </h3>
+        <p className="mt-8"> Maven support is coming soon. </p>
+        <p className="mt-4">
+          Join the Nx Community Discord to be notified when it is released.{' '}
+        </p>
+        <div className="mt-10 flex items-center justify-center gap-x-6">
+          <Link
+            href="https://go.nx.dev/community"
+            title="Join the Nx Community Discord"
+            prefetch={false}
+            className="rounded-md bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-sm hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+          >
+            Join Us On Discord{' '}
+            <span
+              aria-hidden="true"
+              className="inline-block transition group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </Link>
         </div>
       </div>
     </section>
