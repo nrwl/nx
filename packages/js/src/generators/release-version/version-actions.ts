@@ -9,10 +9,9 @@ import {
 } from '@nx/devkit';
 import { exec } from 'node:child_process';
 import { dirname } from 'node:path';
-import { ManifestData, VersionActions } from 'nx/release';
+import { VersionActions } from 'nx/release';
 import type { NxReleaseVersionV2Configuration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../../utils/npm-config';
-import { resolveVersionSpec } from './utils/resolve-version-spec';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
 
@@ -39,23 +38,6 @@ export default class JsVersionActions extends VersionActions {
         deletedFiles: [],
       };
     };
-  }
-
-  async readSourceManifestData(tree: Tree): Promise<ManifestData> {
-    const sourcePackageJsonPath = this.getSourceManifestPath();
-    try {
-      const packageJson = readJson(tree, sourcePackageJsonPath);
-      const dependencies = this.parseDependencies(packageJson);
-      return {
-        name: packageJson.name,
-        currentVersion: packageJson.version,
-        dependencies,
-      };
-    } catch {
-      throw new Error(
-        `Unable to read the package.json file at ${sourcePackageJsonPath}, please ensure that the file exists and is valid`
-      );
-    }
   }
 
   async readCurrentVersionFromSourceManifest(tree: Tree): Promise<string> {
@@ -167,7 +149,7 @@ export default class JsVersionActions extends VersionActions {
   }
 
   // NOTE: The TODOs were carried over from the original implementation, they are not yet implemented
-  isLocalDependencyProtocol(versionSpecifier: string): boolean {
+  async isLocalDependencyProtocol(versionSpecifier: string): Promise<boolean> {
     const localPackageProtocols = [
       'file:', // all package managers
       'workspace:', // not npm
@@ -274,49 +256,5 @@ export default class JsVersionActions extends VersionActions {
       );
     }
     return logMessages;
-  }
-
-  private parseDependencies(
-    packageJson: Record<string, unknown>
-  ): Record<
-    string,
-    Record<string, { resolvedVersion: string; rawVersionSpec: string }>
-  > {
-    const result: Record<
-      string, // dependency collection
-      Record<
-        string, // dependency name
-        {
-          resolvedVersion: string;
-          rawVersionSpec: string;
-        }
-      >
-    > = {};
-    const dependencyCollections = [
-      'dependencies',
-      'devDependencies',
-      'peerDependencies',
-      'optionalDependencies',
-    ];
-
-    for (const depCollection of dependencyCollections) {
-      if (packageJson[depCollection]) {
-        result[depCollection] = {};
-        for (const [dep, spec] of Object.entries(packageJson[depCollection])) {
-          const resolvedSpec = resolveVersionSpec(
-            dep,
-            packageJson.version as string,
-            spec as string,
-            this.projectGraphNode.data.root
-          );
-          result[depCollection][dep] = {
-            resolvedVersion: resolvedSpec,
-            rawVersionSpec: spec,
-          };
-        }
-      }
-    }
-
-    return result;
   }
 }

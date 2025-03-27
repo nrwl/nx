@@ -3,6 +3,7 @@ import { ReleaseType } from 'semver';
 import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
 import type {
   ProjectGraph,
+  ProjectGraphDependency,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
@@ -134,13 +135,14 @@ export abstract class VersionActions {
    */
   abstract manifestFilename: string | null;
   /**
-   * The interpolated manifest paths to update, if applicable, when new versions and dependencies are written.
+   * The interpolated manifest paths to update, if applicable based on the user's configuration, when new
+   * versions and dependencies are determined. If no manifest files should be updated based on the user's
+   * configuration, this will be an empty array.
    */
   manifestsToUpdate: string[] = [];
-  protected sourceManifestData: ManifestData | null = null;
 
   constructor(
-    // Any implementation specific options provided via user configuration
+    // Any implementation specific options provided via the user's configuration
     public versionActionsOptions: Record<string, unknown>,
     public releaseGroup: ReleaseGroupWithName,
     public projectGraphNode: ProjectGraphProjectNode,
@@ -148,8 +150,7 @@ export abstract class VersionActions {
   ) {}
 
   /**
-   * Asynchronous initialization of the version actions, such as reading the initial source manifest data, if applicable, and
-   * validation of certain configuration options.
+   * Asynchronous initialization of the version actions and validation of certain configuration options.
    */
   async init(tree: Tree): Promise<void> {
     // Default to the source manifest root, if set, if no custom manifest roots are provided
@@ -182,11 +183,6 @@ export abstract class VersionActions {
 To fix this you will either need to add a ${this.manifestFilename} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the package.json should be.`
         );
       }
-    }
-
-    // Populate the source manifest data cache up front, if applicable
-    if (sourceManifestPath) {
-      await this.readCachedSourceManifestData(tree);
     }
   }
 
@@ -232,29 +228,22 @@ To fix this you will either need to add a ${this.manifestFilename} file at that 
   }
 
   /**
-   * Reads and caches the initial manifest data, if applicable. This can be used when evaluating dependency relationships,
-   * but cannot be used for tree updates because it would get out of sync with the actual manifest data in
-   * the tree.
-   */
-  async readCachedSourceManifestData(tree: Tree): Promise<ManifestData> {
-    if (!this.sourceManifestData) {
-      this.sourceManifestData = await this.readSourceManifestData(tree);
-    }
-    return this.sourceManifestData;
-  }
-
-  /**
-   * Implementation details of resolving a project's manifest file such as a package.json/Cargo.toml/etc,
-   * if applicable, from disk.
-   */
-  abstract readSourceManifestData(tree: Tree): Promise<ManifestData>;
-
-  /**
    * Implementation details of resolving a project's current version from its source manifest file.
-   * Used as part of the current version resolver, and should throw if the version cannot be read
-   * from the manifest file for whatever reason.
+   *
+   * This method will only be called if the user has configured their currentVersionResolver to be "disk".
+   *
+   * If the version actions implementation does not support a manifest file, this method can either throw
+   * an error or return null. In this case, nx release will handle showing the user a relevant error about
+   * their currentVersionResolver configuration being fundamentally incompatible with the current version
+   * actions implementation resolved for the project being versioned and they can change it to something else
+   * (e.g. "registry" or "git-tag").
+   *
+   * NOTE: The version actions implementation does not need to provide the method for handling resolution
+   * from git tags, this is done directly by nx release.
    */
-  abstract readCurrentVersionFromSourceManifest(tree: Tree): Promise<string>;
+  abstract readCurrentVersionFromSourceManifest(
+    tree: Tree
+  ): Promise<string | null>;
 
   /**
    * Implementation details of resolving a project's current version from a remote registry.
@@ -262,20 +251,57 @@ To fix this you will either need to add a ${this.manifestFilename} file at that 
    * The specific logText will be combined with the generic remote registry log text and allows
    * the implementation to provide more specific information to the user about what registry URL
    * was used, what dist-tag etc.
+   *
+   * If the version actions implementation does not support a manifest file, this method can either throw
+   * an error or return null. In this case, nx release will handle showing the user a relevant error about
+   * their currentVersionResolver configuration being fundamentally incompatible with the current version
+   * actions implementation resolved for the project being versioned and they can change it to something else
+   * (e.g. "disk" or "git-tag").
+   *
+   * NOTE: The version actions implementation does not need to provide the method for handling resolution
+   * from git tags, this is done directly by nx release.
    */
   abstract readCurrentVersionFromRegistry(
     tree: Tree,
     currentVersionResolverMetadata: NxReleaseVersionV2Configuration['currentVersionResolverMetadata']
   ): Promise<{
-    currentVersion: string;
+    currentVersion: string | null;
     logText: string;
-  }>;
+  } | null>;
+
+  /**
+   * Implementation details of resolving the dependencies of a project.
+   *
+   * The default implementation will read dependencies from the Nx project graph. In many cases this will be sufficient,
+   * because the project graph will have been constructed using plugins from relevant ecosystems that should have applied
+   * any and all relevant metadata to the project nodes and dependency edges.
+   *
+   * If, however, the project graph cannot be used as the source of truth for whatever reason, then this default method
+   * can simply be overridden in the final version actions implementation.
+   */
+  async readDependencies(
+    tree: Tree,
+    projectGraph: ProjectGraph
+  ): Promise<ProjectGraphDependency[]> {
+    return (projectGraph.dependencies[this.projectGraphNode.name] ?? []).filter(
+      // Skip implicit dependencies for now to match legacy versioning behavior
+      // TODO: holistically figure out how to handle implicit dependencies with nx release
+      (dep) => dep.type !== 'implicit'
+    );
+  }
 
   /**
    * Implementation details of resolving the current version of a specific dependency of the project.
    *
    * The dependency collection is the type of dependency collection to which the dependency belongs, such as 'dependencies',
    * 'devDependencies', 'peerDependencies', 'optionalDependencies', etc. This is ecosystem and use-case specific.
+   *
+   * The currentVersion and dependencyCollection fields will be used to populate the rawVersionSpec and dependencyCollection
+   * fields on the VersionData that gets returned from the programmatic API. `null` values are accepted for these if the current
+   * version or dependencyCollection is not applicable/resolvable at all, but they should be provided if possible.
+   *
+   * The currentVersion will also be used when calculating the final versionPrefix to apply for the new dependency
+   * version, based on the user's configuration, if applicable.
    */
   abstract readCurrentVersionOfDependency(
     tree: Tree,
@@ -288,9 +314,11 @@ To fix this you will either need to add a ${this.manifestFilename} file at that 
 
   /**
    * Implementation details of determining if a version specifier uses a local dependency protocol that is relevant to this
-   * specific project. E.g. in a package.json manifest, `file:` and `workspace:` protocols should return true here.
+   * specific project. E.g. in a package.json context, `file:` and `workspace:` protocols should return true here.
    */
-  abstract isLocalDependencyProtocol(versionSpecifier: string): boolean;
+  abstract isLocalDependencyProtocol(
+    versionSpecifier: string
+  ): Promise<boolean>;
 
   /**
    * Implementation details of updating a newly derived version in some source of truth.

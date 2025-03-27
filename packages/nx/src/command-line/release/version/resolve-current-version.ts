@@ -68,24 +68,38 @@ export async function resolveCurrentVersion(
   }
 }
 
+/**
+ * Attempt to resolve the current version from the manifest file on disk.
+ *
+ * Not all VersionActions implementations support a manifest file, in which case the logic will handle either thrown errors
+ * or null values being returned from the readCurrentVersionFromSourceManifest method and throw a clear user-facing error.
+ */
 export async function resolveCurrentVersionFromDisk(
   tree: Tree,
   projectGraphNode: ProjectGraphProjectNode,
   versionActions: VersionActions,
   logger: ProjectLogger
 ): Promise<string> {
-  if (!versionActions.manifestFilename) {
-    throw new Error(
-      `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
-    );
-  }
-  const currentVersion =
-    await versionActions.readCurrentVersionFromSourceManifest(tree);
-  const sourceManifestPath = versionActions.getSourceManifestPath();
-  logger.buffer(
-    `📄 Resolved the current version as ${currentVersion} from manifest: ${sourceManifestPath}`
+  const diskUnsupportedError = new Error(
+    `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
   );
-  return currentVersion;
+  if (!versionActions.getSourceManifestPath()) {
+    throw diskUnsupportedError;
+  }
+  try {
+    const currentVersion =
+      await versionActions.readCurrentVersionFromSourceManifest(tree);
+    if (!currentVersion) {
+      throw diskUnsupportedError;
+    }
+    const sourceManifestPath = versionActions.getSourceManifestPath();
+    logger.buffer(
+      `📄 Resolved the current version as ${currentVersion} from manifest: ${sourceManifestPath}`
+    );
+    return currentVersion;
+  } catch {
+    throw diskUnsupportedError;
+  }
 }
 
 export async function resolveCurrentVersionFromRegistry(
@@ -129,15 +143,22 @@ export async function resolveCurrentVersionFromRegistry(
   spinner.start();
 
   try {
-    const { currentVersion, logText } =
-      await versionActions.readCurrentVersionFromRegistry(
-        tree,
-        finalConfigForProject.currentVersionResolverMetadata
+    const res = await versionActions.readCurrentVersionFromRegistry(
+      tree,
+      finalConfigForProject.currentVersionResolverMetadata
+    );
+    if (!res) {
+      // Not a user-facing error
+      throw new Error(
+        'Registry not applicable for this version actions implementation'
       );
+    }
+    const { currentVersion, logText } = res;
     spinner.stop();
 
     registryTxt = logText?.length > 0 ? `: ${logText}` : '';
     if (!currentVersion) {
+      // Not a user-facing error
       throw new Error('No version found in the registry');
     }
     logger.buffer(
@@ -156,6 +177,12 @@ export async function resolveCurrentVersionFromRegistry(
     spinner.stop();
 
     if (finalConfigForProject.fallbackCurrentVersionResolver === 'disk') {
+      if (!versionActions.getSourceManifestPath()) {
+        throw new Error(
+          `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "registry" with a "fallbackCurrentVersionResolver" of "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "fallbackCurrentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
+        );
+      }
+
       const currentVersionFromDisk =
         await versionActions.readCurrentVersionFromSourceManifest(tree);
       // Fallback on disk is available, return it directly

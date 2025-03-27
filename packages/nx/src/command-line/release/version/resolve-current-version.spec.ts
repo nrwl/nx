@@ -37,13 +37,6 @@ describe('resolveCurrentVersion', () => {
           logText: 'https://example.com/fake-registry',
         };
       }
-      async readSourceManifestData() {
-        return {
-          name: 'test',
-          currentVersion: '1.2.3',
-          dependencies: {},
-        };
-      }
       async updateProjectVersion() {
         return [];
       }
@@ -53,7 +46,7 @@ describe('resolveCurrentVersion', () => {
           dependencyCollection: 'dependencies',
         };
       }
-      isLocalDependencyProtocol() {
+      async isLocalDependencyProtocol() {
         return false;
       }
       async updateProjectDependencies() {
@@ -160,9 +153,6 @@ describe('resolveCurrentVersion', () => {
             logText: 'https://example.com/fake-registry',
           };
         }
-        async readSourceManifestData() {
-          return null;
-        }
         async updateProjectVersion() {
           return [];
         }
@@ -172,7 +162,7 @@ describe('resolveCurrentVersion', () => {
             dependencyCollection: 'dependencies',
           };
         }
-        isLocalDependencyProtocol() {
+        async isLocalDependencyProtocol() {
           return false;
         }
         async updateProjectDependencies() {

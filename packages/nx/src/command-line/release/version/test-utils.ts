@@ -125,38 +125,12 @@ export class ExampleRustVersionActions extends VersionActions {
         : value;
   }
 
-  async readSourceManifestData(tree: Tree): Promise<ManifestData> {
+  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<string> {
     const cargoTomlPath = join(this.projectGraphNode.data.root, 'Cargo.toml');
     const cargoTomlString = tree.read(cargoTomlPath, 'utf-8')!.toString();
     const cargoToml = this.parseCargoToml(cargoTomlString);
-
     const currentVersion = cargoToml.package?.version || '0.0.0';
-    const name = cargoToml.package?.name || 'unknown';
-
-    const dependencies: ManifestData['dependencies'] = {
-      dependencies: {},
-    };
-
-    if (cargoToml.dependencies) {
-      for (const [dep, version] of Object.entries(cargoToml.dependencies)) {
-        const resolvedVersion =
-          typeof version === 'string' ? version : version.version;
-        dependencies.dependencies[dep] = {
-          resolvedVersion,
-          rawVersionSpec: resolvedVersion,
-        };
-      }
-    }
-
-    return {
-      name,
-      currentVersion,
-      dependencies,
-    };
-  }
-
-  async readCurrentVersionFromSourceManifest(tree: Tree): Promise<string> {
-    return (await this.readSourceManifestData(tree)).currentVersion;
+    return currentVersion;
   }
 
   async readCurrentVersionFromRegistry(
@@ -215,7 +189,7 @@ export class ExampleRustVersionActions extends VersionActions {
     };
   }
 
-  isLocalDependencyProtocol(_versionSpecifier: string): boolean {
+  async isLocalDependencyProtocol(_versionSpecifier: string): Promise<boolean> {
     return false;
   }
 

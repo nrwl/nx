@@ -275,8 +275,11 @@ export class ReleaseGroupProcessor {
     // Setup projects to process
     this.setupProjectsToProcess();
 
+    // Resolve all version action implementations for the projects and cache them
+    await this.resolveVersionActionsForProjects();
+
     // Precompute dependency relationships
-    this.precomputeDependencyRelationships();
+    await this.precomputeDependencyRelationships();
 
     // Process dependency graph to find dependents to process
     this.findDependentsToProcess();
@@ -295,78 +298,52 @@ export class ReleaseGroupProcessor {
       for (const projectName of releaseGroupNode.group.projects) {
         const projectGraphNode = this.projectGraph.nodes[projectName];
 
-        // Resolve the appropriate versionActions instance for the project
-        if (!this.projectsToVersionActions.has(projectName)) {
-          const projectVersionConfig = projectGraphNode.data.release
-            ?.version as NxReleaseVersionV2Configuration | undefined;
-          const releaseGroupVersionConfig = releaseGroupNode.group
-            .version as NxReleaseVersionV2Configuration;
+        // Check if the project has been filtered out of explicit versioning before continuing any further
+        if (!this.allProjectsToProcess.has(projectName)) {
+          continue;
+        }
 
-          const manifestRootsToUpdate =
-            projectVersionConfig?.manifestRootsToUpdate ??
-            releaseGroupVersionConfig?.manifestRootsToUpdate ??
-            [];
+        const versionActions = this.projectsToVersionActions.get(projectName);
 
-          const { versionActionsPath, VersionActionsClass, versionActions } =
-            await resolveVersionActionsForProject(
-              this.tree,
-              releaseGroupNode.group,
-              projectGraphNode,
-              manifestRootsToUpdate
-            );
-          if (!this.uniqueVersionActions.has(versionActionsPath)) {
-            this.uniqueVersionActions.set(
-              versionActionsPath,
-              VersionActionsClass
-            );
-          }
-          this.projectsToVersionActions.set(projectName, versionActions);
+        // Resolve the final configuration for the project
+        const finalConfigForProject = this.resolveFinalConfigForProject(
+          releaseGroupNode.group,
+          projectGraphNode
+        );
+        this.finalConfigsByProject.set(projectName, finalConfigForProject);
 
-          // Check if the project has been filtered out of explicit versioning before continuing any further
-          if (!this.allProjectsToProcess.has(projectName)) {
-            continue;
-          }
-
-          // Resolve the final configuration for the project
-          const finalConfigForProject = this.resolveFinalConfigForProject(
-            releaseGroupNode.group,
-            projectGraphNode
-          );
-          this.finalConfigsByProject.set(projectName, finalConfigForProject);
-
-          let latestMatchingGitTag:
-            | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
-            | undefined;
-          const releaseTagPattern = releaseGroupNode.group.releaseTagPattern;
-          // Cache the last matching git tag for relevant projects
-          if (finalConfigForProject.currentVersionResolver === 'git-tag') {
-            latestMatchingGitTag = await getLatestGitTagForPattern(
-              releaseTagPattern,
-              {
-                projectName: projectGraphNode.name,
-              },
-              releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen
-            );
-            this.cachedLatestMatchingGitTag.set(
-              projectName,
-              latestMatchingGitTag
-            );
-          }
-
-          // Cache the current version for the project
-          const currentVersion = await resolveCurrentVersion(
-            this.tree,
-            projectGraphNode,
-            releaseGroupNode.group,
-            versionActions,
-            this.projectLoggers.get(projectName)!,
-            this.currentVersionsPerFixedReleaseGroup,
-            finalConfigForProject,
+        let latestMatchingGitTag:
+          | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
+          | undefined;
+        const releaseTagPattern = releaseGroupNode.group.releaseTagPattern;
+        // Cache the last matching git tag for relevant projects
+        if (finalConfigForProject.currentVersionResolver === 'git-tag') {
+          latestMatchingGitTag = await getLatestGitTagForPattern(
             releaseTagPattern,
+            {
+              projectName: projectGraphNode.name,
+            },
+            releaseGroupNode.group.releaseTagPatternCheckAllBranchesWhen
+          );
+          this.cachedLatestMatchingGitTag.set(
+            projectName,
             latestMatchingGitTag
           );
-          this.cachedCurrentVersions.set(projectName, currentVersion);
         }
+
+        // Cache the current version for the project
+        const currentVersion = await resolveCurrentVersion(
+          this.tree,
+          projectGraphNode,
+          releaseGroupNode.group,
+          versionActions,
+          this.projectLoggers.get(projectName)!,
+          this.currentVersionsPerFixedReleaseGroup,
+          finalConfigForProject,
+          releaseTagPattern,
+          latestMatchingGitTag
+        );
+        this.cachedCurrentVersions.set(projectName, currentVersion);
       }
     }
 
@@ -386,6 +363,34 @@ export class ReleaseGroupProcessor {
 
     // Populate the dependent projects data
     await this.populateDependentProjectsData();
+  }
+
+  private async resolveVersionActionsForProjects() {
+    for (const projectName of this.allProjectsConfiguredForNxRelease) {
+      const projectGraphNode = this.projectGraph.nodes[projectName];
+      const releaseGroup = this.projectToReleaseGroup.get(projectName);
+      const projectVersionConfig = projectGraphNode.data.release?.version as
+        | NxReleaseVersionV2Configuration
+        | undefined;
+      const releaseGroupVersionConfig =
+        releaseGroup.version as NxReleaseVersionV2Configuration;
+      const manifestRootsToUpdate =
+        projectVersionConfig?.manifestRootsToUpdate ??
+        releaseGroupVersionConfig?.manifestRootsToUpdate ??
+        [];
+
+      const { versionActionsPath, VersionActionsClass, versionActions } =
+        await resolveVersionActionsForProject(
+          this.tree,
+          releaseGroup,
+          projectGraphNode,
+          manifestRootsToUpdate
+        );
+      if (!this.uniqueVersionActions.has(versionActionsPath)) {
+        this.uniqueVersionActions.set(versionActionsPath, VersionActionsClass);
+      }
+      this.projectsToVersionActions.set(projectName, versionActions);
+    }
   }
 
   /**
@@ -1245,7 +1250,9 @@ Valid values are: ${validReleaseVersionPrefixes
           // If preserveLocalDependencyProtocols is true, and the dependency uses a local dependency protocol, skip updating the dependency
           if (
             cachedFinalConfigForProject.preserveLocalDependencyProtocols &&
-            versionActions.isLocalDependencyProtocol(currentDependencyVersion)
+            (await versionActions.isLocalDependencyProtocol(
+              currentDependencyVersion
+            ))
           ) {
             continue;
           }
@@ -1552,27 +1559,23 @@ Valid values are: ${validReleaseVersionPrefixes
   /**
    * Precompute project -> dependents/dependencies relationships for O(1) lookups
    */
-  private precomputeDependencyRelationships(): void {
-    for (const [projectName, deps] of Object.entries(
-      this.projectGraph.dependencies
-    )) {
-      // Skip if project is not in the release config
-      if (!this.allProjectsConfiguredForNxRelease.has(projectName)) {
-        continue;
-      }
+  private async precomputeDependencyRelationships(): Promise<void> {
+    for (const projectName of this.allProjectsConfiguredForNxRelease) {
+      const versionActions = this.projectsToVersionActions.get(projectName);
 
       // Create a new set for this project's dependencies
       if (!this.projectToDependencies.has(projectName)) {
         this.projectToDependencies.set(projectName, new Set());
       }
 
+      const deps = await versionActions.readDependencies(
+        this.tree,
+        this.projectGraph
+      );
+
       for (const dep of deps) {
-        // Skip implicit dependencies or dependencies not in the release config
-        // TODO: holistically figure out how to handle implicit dependencies with nx release
-        if (
-          dep.type === 'implicit' ||
-          !this.allProjectsConfiguredForNxRelease.has(dep.target)
-        ) {
+        // Skip dependencies not covered by nx release
+        if (!this.allProjectsConfiguredForNxRelease.has(dep.target)) {
           continue;
         }
 
