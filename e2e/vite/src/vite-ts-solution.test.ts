@@ -106,7 +106,7 @@ ${content}`
 
     // check typecheck
     expect(runCLI(`typecheck ${reactApp}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${reactApp} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${reactApp} and 6 tasks it depends on`
     );
   }, 300_000);
 });
