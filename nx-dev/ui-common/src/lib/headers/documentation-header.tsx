@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, ReactElement } from 'react';
+import { Fragment, type MouseEvent, ReactElement } from 'react';
 import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 import {
   Bars3Icon,
@@ -73,6 +73,11 @@ export function DocumentationHeader({
     !isPlugins &&
     !isChangelog &&
     !isAiChat;
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push('/brands');
+  };
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
@@ -217,8 +222,11 @@ export function DocumentationHeader({
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link

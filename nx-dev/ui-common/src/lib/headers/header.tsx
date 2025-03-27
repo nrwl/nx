@@ -17,13 +17,20 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Fragment, ReactElement, useEffect, useState } from 'react';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useEffect,
+  useState,
+} from 'react';
 import { ButtonLink, ButtonLinkProps } from '../button';
 import { resourceMenuItems } from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { GitHubIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
@@ -31,6 +38,13 @@ interface HeaderProps {
 
 export function Header({ ctaButtons }: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
+
+  const router = useRouter();
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push('/brands');
+  };
 
   // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
   const checkSizeAndClosePopover = () => {
@@ -78,8 +92,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             href="/"
             className="mr-4 flex items-center text-slate-900 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <nav
