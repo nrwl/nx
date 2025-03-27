@@ -1,7 +1,5 @@
 import { AggregateCreateNodesError, logger, output } from '@nx/devkit';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
-import { existsSync } from 'fs';
-import { dirname, join } from 'path';
 
 /**
  * This function executes the gradle projectReportAll task and returns the output as an array of lines.

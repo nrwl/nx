@@ -4,6 +4,7 @@ import {
   BatchMessageType,
   CompleteTaskMessage,
   BatchResults,
+  PerformanceMessage,
 } from './batch-messages';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor } from '../../utils/params';
@@ -68,6 +69,7 @@ async function runTasks(
     );
   }
 
+  const runBatchStart = performance.mark(`batch:start`);
   try {
     const results = await batchExecutor.batchImplementationFactory()(
       batchTaskGraph,
@@ -106,6 +108,13 @@ async function runTasks(
     const isVerbose = tasks[0].overrides.verbose;
     console.error(isVerbose ? e : e.message);
     process.exit(1);
+  } finally {
+    const runBatchEnd = performance.mark(`run-batch:end`);
+    process.send({
+      type: BatchMessageType.Performance,
+      start: runBatchStart,
+      end: runBatchEnd,
+    } as PerformanceMessage);
   }
 }
 

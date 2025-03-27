@@ -30,6 +30,7 @@ export class ForkedProcessTaskRunner {
   cliPath = getCliPath();
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  private addedMessageListener = false;
   private processes = new Set<ChildProcess | PseudoTtyProcess>();
 
   private pseudoTerminal: PseudoTerminal | null = PseudoTerminal.isSupported()
@@ -78,13 +79,6 @@ export class ForkedProcessTaskRunner {
           this.processes.delete(p);
           if (code === null) code = signalToCode(signal);
           if (code !== 0) {
-            const results: BatchResults = {};
-            for (const rootTaskId of batchTaskGraph.roots) {
-              results[rootTaskId] = {
-                success: false,
-                terminalOutput: '',
-              };
-            }
             rej(
               new Error(
                 `"${executorName}" exited unexpectedly with code: ${code}`
@@ -97,6 +91,14 @@ export class ForkedProcessTaskRunner {
           switch (message.type) {
             case BatchMessageType.CompleteBatchExecution: {
               res(message.results);
+              break;
+            }
+            case BatchMessageType.Performance: {
+              performance.measure(
+                `run-batch`,
+                message.start.name,
+                message.end.name
+              );
               break;
             }
             case BatchMessageType.RunTasks: {
@@ -242,6 +244,7 @@ export class ForkedProcessTaskRunner {
 
     return new Promise((res) => {
       p.onExit((code) => {
+        this.processes.delete(p);
         // If the exit code is greater than 128, it's a special exit code for a signal
         if (code >= 128) {
           process.exit(code);
@@ -413,7 +416,8 @@ export class ForkedProcessTaskRunner {
           isVerbose: this.verbose,
         });
 
-        p.on('exit', (code, signal) => {
+        p.once('exit', (code, signal) => {
+          this.processes.delete(p);
           if (code === null) code = signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output
@@ -463,52 +467,54 @@ export class ForkedProcessTaskRunner {
       });
     }
 
-    // When the nx process gets a message, it will be sent into the task's process
-    process.on('message', (message: Serializable) => {
+    const messageLisnter = (message: Serializable) => {
       // this.publisher.publish(message.toString());
       if (this.pseudoTerminal) {
         this.pseudoTerminal.sendMessageToChildren(message);
       }
 
       this.processes.forEach((p) => {
-        if ('connected' in p && p.connected) {
-          p.send(message);
+        if ('connected' in p) {
+          if (p.connected) {
+            p.send(message);
+          } else {
+            p.kill();
+          }
         }
       });
-    });
+    };
+
+    // When the nx process gets a message, it will be sent into the task's process
+    if (!this.addedMessageListener) {
+      process.on('message', messageLisnter);
+      this.addedMessageListener = true;
+    }
+
+    const cleanupListeners = (signal?: NodeJS.Signals) => {
+      this.processes.forEach((p) => {
+        if ('connected' in p ? p.connected : p.isAlive) {
+          p.kill(signal);
+        }
+      });
+      process.off('message', messageLisnter);
+    };
 
     // Terminate any task processes on exit
-    process.on('exit', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill();
-        }
-      });
+    process.once('exit', () => {
+      cleanupListeners();
     });
-    process.on('SIGINT', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill('SIGTERM');
-        }
-      });
+    process.once('SIGINT', () => {
+      cleanupListeners('SIGINT');
       // we exit here because we don't need to write anything to cache.
       process.exit(signalToCode('SIGINT'));
     });
-    process.on('SIGTERM', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill('SIGTERM');
-        }
-      });
+    process.once('SIGTERM', () => {
+      cleanupListeners('SIGTERM');
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
-    process.on('SIGHUP', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill('SIGTERM');
-        }
-      });
+    process.once('SIGHUP', () => {
+      cleanupListeners('SIGHUP');
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
