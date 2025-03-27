@@ -1,11 +1,12 @@
 import type { TaskResult } from '../../config/misc-interfaces';
 import type { TaskGraph } from '../../config/task-graph';
 import type { ProjectGraph } from '../../config/project-graph';
+import type { PerformanceMark } from 'perf_hooks';
 
 export enum BatchMessageType {
-  RunTasks,
-  CompleteTask,
-  CompleteBatchExecution,
+  RunTasks = 'RunTasks',
+  CompleteTask = 'CompleteTask',
+  CompleteBatchExecution = 'CompleteBatchExecution',
 }
 
 /**

@@ -49,6 +49,11 @@
             "output": "/"
           },
           {
+            "input": "packages/gradle/batch-runner",
+            "glob": "**/*.jar",
+            "output": "/batch-runner"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"
@@ -63,5 +68,6 @@
         "command": "node ./scripts/copy-readme.js gradle"
       }
     }
-  }
+  },
+  "implicitDependencies": ["gradle-batch-runner", "gradle-project-graph"]
 }

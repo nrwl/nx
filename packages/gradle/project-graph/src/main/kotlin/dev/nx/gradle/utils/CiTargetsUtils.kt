@@ -29,19 +29,19 @@ fun addTestCiTargets(
   val filteredTestFiles = testFiles.filter { isTestFile(it, workspaceRoot) }
 
   filteredTestFiles.forEach { testFile ->
-    val fileName = testFile.name.substringBefore(".")
+    val className = getTestClassNameIfAnnotated(testFile) ?: return@forEach
 
     val testCiTarget =
         buildTestCiTarget(
             gradlewCommand = gradlewCommand,
             projectBuildPath = projectBuildPath,
-            fileName = fileName,
+            fileName = className,
             testFile = testFile,
             testTask = testTask,
             projectRoot = projectRoot,
             workspaceRoot = workspaceRoot)
 
-    val targetName = "$ciTargetName--$fileName"
+    val targetName = "$ciTargetName--$className"
     targets[targetName] = testCiTarget
     targetGroups[testCiTargetGroup]?.add(targetName)
 
@@ -58,6 +58,17 @@ fun addTestCiTargets(
         projectBuildPath = projectBuildPath,
         dependsOn = ciDependsOn)
   }
+}
+
+private fun getTestClassNameIfAnnotated(file: File): String? {
+  if (!file.exists()) return null
+
+  val content = file.readText()
+  if (!content.contains("@Test")) return null
+
+  val classRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+  val match = classRegex.find(content)
+  return match?.groupValues?.get(1)
 }
 
 private fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
