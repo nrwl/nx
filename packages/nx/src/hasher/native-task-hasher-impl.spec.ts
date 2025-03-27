@@ -1,4 +1,4 @@
-import { TempFs } from '../internal-testing-utils/temp-fs';
+import { TempFs } from '../generators/testing-utils/temp-fs';
 import { retrieveWorkspaceFiles } from '../project-graph/utils/retrieve-workspace-files';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
