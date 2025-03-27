@@ -31,7 +31,7 @@ export function Hero(): ReactElement {
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
           <ButtonLink
-            href="https://nx.dev/recipes/gradle/intro"
+            href="https://nx.dev/getting-started/tutorials/gradle-tutorial"
             variant="primary"
             size="default"
             title="Get Started"
@@ -68,6 +68,9 @@ export function GettingStarted(): ReactElement {
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
             Add Nx To An Existing Project
           </h2>
+          <p className="mt-8">
+            Currently Nx only supports Gradle. Support for Maven will come soon
+          </p>
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -79,13 +82,13 @@ export function GettingStarted(): ReactElement {
 
           <GetStartedCard
             title="Run Tasks With Nx"
-            command="nx build <project>"
+            command="./nx build <project>"
             description="Nx will automatically infers tasks from your projects."
           />
 
           <GetStartedCard
             title="Run Affected Tasks"
-            command="nx affected -t build"
+            command="./nx affected -t build"
             description="Nx adds caching, distribution, and affected commands without changing your setup."
           />
         </div>

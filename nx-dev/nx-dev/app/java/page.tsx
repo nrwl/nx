@@ -11,23 +11,23 @@ import {
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Nx Gradle Plugin',
+  title: 'Nx For Java',
   description:
-    'Add Nx to your Gradle project for distributed task execution, intelligent caching, and affected commands.',
+    'Add Nx to your Java project for distributed task execution, intelligent caching, and affected commands.',
   alternates: {
-    canonical: 'https://nx.dev/gradle',
+    canonical: 'https://nx.dev/java',
   },
   openGraph: {
-    url: 'https://nx.dev/gradle',
-    title: 'Nx Gradle Plugin',
+    url: 'https://nx.dev/java',
+    title: 'Nx For Java',
     description:
-      'Add Nx to your Gradle project for distributed task execution, intelligent caching, and affected commands.',
+      'Add Nx to your Java project for distributed task execution, intelligent caching, and affected commands.',
     images: [
       {
         url: 'https://nx.dev/socials/nx-gradle-media.png',
         width: 800,
         height: 421,
-        alt: 'Nx Gradle Plugin',
+        alt: 'Nx For Java',
         type: 'image/jpeg',
       },
     ],
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function GradlePage(): JSX.Element {
+export default function JavaPage(): JSX.Element {
   return (
     <DefaultLayout>
       <Hero />
@@ -46,9 +46,9 @@ export default function GradlePage(): JSX.Element {
           <Features />
         </div>
 
-        <div className="mt-16 scroll-mt-16 lg:mt-32" id="resources">
-          <Resources />
-        </div>
+        {/* <div className="mt-16 scroll-mt-16 lg:mt-32" id="resources"> */}
+        {/*   <Resources /> */}
+        {/* </div> */}
       </div>
 
       {/* <div className="mt-16 scroll-mt-16 lg:mt-32" id="feature-sections"> */}
