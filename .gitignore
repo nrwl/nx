@@ -62,3 +62,6 @@ target
 /wasi-sdk*
 
 vite.config.*.timestamp*
+
+
+storybook-static
