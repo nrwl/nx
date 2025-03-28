@@ -481,6 +481,8 @@
   - [gradle](/nx-api/gradle)
     - [documents](/nx-api/gradle/documents)
       - [Overview](/nx-api/gradle/documents/overview)
+    - [executors](/nx-api/gradle/executors)
+      - [gradlew](/nx-api/gradle/executors/gradlew)
     - [generators](/nx-api/gradle/generators)
       - [init](/nx-api/gradle/generators/init)
       - [ci-workflow](/nx-api/gradle/generators/ci-workflow)

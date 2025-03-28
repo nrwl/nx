@@ -68,6 +68,9 @@ async function runTasks(
     );
   }
 
+  const runBatchStart = performance.mark(
+    `batch:start`
+  );
   try {
     const results = await batchExecutor.batchImplementationFactory()(
       batchTaskGraph,
@@ -106,6 +109,15 @@ async function runTasks(
     const isVerbose = tasks[0].overrides.verbose;
     console.error(isVerbose ? e : e.message);
     process.exit(1);
+  } finally {
+    const runBatchEnd = performance.mark(
+      `run-batch:end`
+    );
+    performance.measure(
+      `run-batch`,
+      runBatchStart.name,
+      runBatchEnd.name
+    );
   }
 }
 
@@ -118,10 +130,18 @@ process.on('message', async (message: BatchMessage) => {
         message.batchTaskGraph,
         message.fullTaskGraph
       );
-      process.send({
-        type: BatchMessageType.CompleteBatchExecution,
-        results,
-      } as CompleteBatchExecutionMessage);
+      process.send(
+        {
+          type: BatchMessageType.CompleteBatchExecution,
+          results,
+        } as CompleteBatchExecutionMessage,
+        (err) => {
+          // if (err) {
+          //   process.exit(1);
+          // }
+          process.exit(0);
+        }
+      );
     }
   }
 });
