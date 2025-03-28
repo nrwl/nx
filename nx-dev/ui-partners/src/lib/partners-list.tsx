@@ -18,8 +18,8 @@ export function PartnersList(): JSX.Element {
         logo: <ZyphyrCloudIcon aria-hidden="true" className="mb-4 h-14" />,
         href: 'https://zephyr-cloud.io/',
         location: 'US',
-        tagline: 'The only sane way to do micro-frontends',
-        capabilities: ['SaaS'],
+        tagline: 'The only sane way to do micro-frontends and mini-apps.',
+        capabilities: ['SaaS', 'Mobile', 'Web', 'DevOps'],
       },
       {
         name: 'HeroDevs',
