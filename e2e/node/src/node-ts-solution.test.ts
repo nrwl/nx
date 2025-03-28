@@ -1,8 +1,8 @@
 import {
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   getPackageManagerCommand,
-  getSelectedPackageManager,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -21,11 +21,12 @@ import * as http from 'http';
 let originalEnvPort;
 
 describe('Node Applications', () => {
-  const pm = getSelectedPackageManager();
+  const pm = detectPackageManager();
+  let workspaceName: string;
 
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
-    newProject({
+    workspaceName = newProject({
       packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
       preset: 'ts',
     });
@@ -84,18 +85,18 @@ describe('Node Applications', () => {
 
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
     updateFile(`apps/${nodeapp}/src/main.ts`, (content) => {
-      return `import { ${nodelib} } from '@proj/${nodelib}';\n${content}\nconsole.log(${nodelib}());`;
+      return `import { ${nodelib} } from '@${workspaceName}/${nodelib}';\n${content}\nconsole.log(${nodelib}());`;
     });
     // pnpm does not link packages unless they are deps
     // npm, yarn, and bun will link them in the root node_modules regardless
     if (pm === 'pnpm') {
       updateJson(`apps/${nodeapp}/package.json`, (json) => {
         json.dependencies = {
-          [`@proj/${nodelib}`]: 'workspace:',
+          [`@${workspaceName}/${nodelib}`]: 'workspace:*',
         };
         return json;
       });
-      runCommand(getPackageManagerCommand().install);
+      runCommand(`cd apps/${nodeapp} && ${getPackageManagerCommand().install}`);
     }
     runCLI(`sync`);
 
@@ -143,6 +144,63 @@ describe('Node Applications', () => {
 
     expect(() => runCLI(`lint ${nestapp}`)).not.toThrow();
     expect(() => runCLI(`test ${nestapp}`)).not.toThrow();
+
+    runCLI(`build ${nestapp}`);
+    checkFilesExist(`apps/${nestapp}/dist/main.js`);
+
+    const p = await runCommandUntil(
+      `serve ${nestapp}`,
+      (output) =>
+        output.includes(
+          `Application is running on: http://localhost:${port}/api`
+        ),
+
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
+    );
+
+    const result = await getData(port, '/api');
+    expect(result.message).toMatch('Hello');
+
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300_000);
+
+  it('should be able to import a lib into a nest application', async () => {
+    const nestapp = uniq('nodeapp');
+    const nestLib = uniq('nestlib');
+
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+    runCLI(
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
+    );
+
+    runCLI(
+      `generate @nx/nest:lib libs/${nestLib} --name=${nestLib} --no-interactive`
+    );
+
+    updateFile(`apps/${nestapp}/src/app/app.module.ts`, (content) => {
+      return `import '@${workspaceName}/${nestLib}';\n${content}\n`;
+    });
+
+    if (pm === 'pnpm') {
+      updateJson(`apps/${nestapp}/package.json`, (json) => {
+        json.dependencies = {
+          [`@${workspaceName}/${nestLib}`]: 'workspace:*',
+        };
+        return json;
+      });
+      runCommand(`cd apps/${nestapp} && ${getPackageManagerCommand().install}`);
+    }
+    runCLI(`sync`);
 
     runCLI(`build ${nestapp}`);
     checkFilesExist(`apps/${nestapp}/dist/main.js`);
