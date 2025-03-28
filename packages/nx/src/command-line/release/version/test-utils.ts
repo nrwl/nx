@@ -17,6 +17,7 @@ import {
   NxReleaseConfig,
 } from '../config/config';
 import { filterReleaseGroups } from '../config/filter-release-groups';
+import { FinalConfigForProject } from './release-group-processor';
 import { VersionActions } from './version-actions';
 
 export async function createNxReleaseConfigAndPopulateWorkspace(
@@ -66,7 +67,7 @@ export async function createNxReleaseConfigAndPopulateWorkspace(
   mockResolveCurrentVersion?.mockImplementation((_, { name }) => {
     for (const [projectName, project] of Object.entries(graph.projects)) {
       if (projectName === name) {
-        return (project as any).version;
+        return (project as any).version ?? null;
       }
     }
     throw new Error(`Unknown project name in test utils: ${name}`);
@@ -242,6 +243,63 @@ export class ExampleRustVersionActions extends VersionActions {
   }
 }
 
+export class ExampleNonSemverVersionActions extends VersionActions {
+  validManifestFilenames = null;
+
+  async readCurrentVersionFromSourceManifest() {
+    return null;
+  }
+
+  async readCurrentVersionFromRegistry() {
+    return null;
+  }
+
+  async readCurrentVersionOfDependency() {
+    return {
+      currentVersion: null,
+      dependencyCollection: null,
+    };
+  }
+
+  async isLocalDependencyProtocol() {
+    return false;
+  }
+
+  async updateProjectVersion(tree, newVersion) {
+    tree.write(
+      join(this.projectGraphNode.data.root, 'version.txt'),
+      newVersion
+    );
+    return [];
+  }
+
+  async updateProjectDependencies() {
+    return [];
+  }
+
+  // Overwrite the default calculateNewVersion method to return the new version directly and not consider semver
+  async calculateNewVersion(
+    currentVersion: string | null,
+    newVersionInput: string,
+    newVersionInputReason: string,
+    newVersionInputReasonData: Record<string, unknown>,
+    preid: string
+  ): Promise<{ newVersion: string; logText: string }> {
+    if (newVersionInput === 'patch') {
+      return {
+        newVersion:
+          '{SOME_NEW_VERSION_DERIVED_AS_A_SIDE_EFFECT_OF_DEPENDENCY_BUMP}',
+        logText: `Determined new version as a side effect of dependency bump: ${newVersionInput}`,
+      };
+    }
+
+    return {
+      newVersion: newVersionInput,
+      logText: `Applied new version directly: ${newVersionInput}`,
+    };
+  }
+}
+
 export function parseGraphDefinition(definition: string) {
   const graph = { projects: {} as any };
   const lines = definition.trim().split('\n');
@@ -269,7 +327,7 @@ export function parseGraphDefinition(definition: string) {
 
     // Match project definitions with optional per-project JSON config
     const projectMatch = line.match(
-      /^- ([\w-]+)(?:\[([\w\/-]+)\])?@([\d\.]+) \[(\w+)(?::([^[\]]+))?\](?:\s*\(\s*(\{.*?\})\s*\))?$/
+      /^- ([\w-]+)(?:\[([\w\/-]+)\])?(?:@([\w\.-]+))? \[([\w-]+)(?::([^[\]]+))?\](?:\s*\(\s*(\{.*?\})\s*\))?$/
     );
     if (projectMatch) {
       const [
@@ -289,7 +347,11 @@ export function parseGraphDefinition(definition: string) {
       }
       if (language === 'rust') {
         projectData = {
-          release: { versionActions: '__EXAMPLE_RUST_VERSION_ACTIONS__' },
+          release: { versionActions: exampleRustVersionActions },
+        };
+      } else if (language === 'non-semver') {
+        projectData = {
+          release: { versionActions: exampleNonSemverVersionActions },
         };
       }
 
@@ -300,7 +362,7 @@ export function parseGraphDefinition(definition: string) {
       }
 
       graph.projects[name] = {
-        version,
+        version: version ?? null,
         language,
         group: currentGroup,
         relationship: groupRelationship,
@@ -459,6 +521,8 @@ function setupGraph(tree: any, graph: any) {
           tree.write(join(root, 'Cargo.toml'), contents);
         });
       }
+    } else if (language === 'non-semver') {
+      tree.write(join(data.root ?? projectName, 'version.txt'), version ?? '');
     }
 
     // Add to projectGraph nodes
@@ -470,12 +534,14 @@ function setupGraph(tree: any, graph: any) {
         ...data, // Merge any additional data from project config
       },
     };
-    // Always add the js package metadata to match the @nx/js plugin
-    projectGraphProjectNode.data.metadata = {
-      js: {
-        packageName,
-      },
-    };
+    if (language === 'js') {
+      // Always add the js package metadata to match the @nx/js plugin
+      projectGraphProjectNode.data.metadata = {
+        js: {
+          packageName,
+        },
+      };
+    }
 
     // Add project level release config overrides
     if (releaseConfigOverrides) {
@@ -514,30 +580,48 @@ function setupGraph(tree: any, graph: any) {
   return { groups, projectGraph };
 }
 
+const exampleRustVersionActions = '__EXAMPLE_RUST_VERSION_ACTIONS__';
+const exampleNonSemverVersionActions = '__EXAMPLE_NON_SEMVER_VERSION_ACTIONS__';
+
 export async function mockResolveVersionActionsForProjectImplementation(
   tree: Tree,
   releaseGroup: any,
   projectGraphNode: any,
-  manifestRootsToUpdate: string[]
+  finalConfigForProject: FinalConfigForProject
 ) {
-  const exampleRustVersionActions = '__EXAMPLE_RUST_VERSION_ACTIONS__';
   if (
     projectGraphNode.data.release?.versionActions ===
       exampleRustVersionActions ||
     releaseGroup.versionActions === exampleRustVersionActions
   ) {
     const versionActions = new ExampleRustVersionActions(
-      {},
       releaseGroup,
       projectGraphNode,
-      manifestRootsToUpdate
+      finalConfigForProject
     );
     // Initialize the versionActions with all the required manifest paths etc
     await versionActions.init(tree);
     return {
       versionActionsPath: exampleRustVersionActions,
       versionActions,
-      afterAllProjectsVersioned: () => ({ changedFiles: [], deletedFiles: [] }),
+    };
+  }
+
+  if (
+    projectGraphNode.data.release?.versionActions ===
+      exampleNonSemverVersionActions ||
+    releaseGroup.versionActions === exampleNonSemverVersionActions
+  ) {
+    const versionActions = new ExampleNonSemverVersionActions(
+      releaseGroup,
+      projectGraphNode,
+      finalConfigForProject
+    );
+    // Initialize the versionActions with all the required manifest paths etc
+    await versionActions.init(tree);
+    return {
+      versionActionsPath: exampleNonSemverVersionActions,
+      versionActions,
     };
   }
 
@@ -546,10 +630,9 @@ export async function mockResolveVersionActionsForProjectImplementation(
   const loaded = jest.requireActual(versionActionsPath);
   const JsVersionActions = loaded.default;
   const versionActions: VersionActions = new JsVersionActions(
-    {},
     releaseGroup,
     projectGraphNode,
-    manifestRootsToUpdate
+    finalConfigForProject
   );
   // Initialize the versionActions with all the required manifest paths etc
   await versionActions.init(tree);

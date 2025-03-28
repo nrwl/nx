@@ -20,7 +20,7 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   opts: {
     dryRun?: boolean;
     verbose?: boolean;
-    versionActionsOptions?: Record<string, unknown>;
+    rootVersionActionsOptions?: Record<string, unknown>;
   }
 ) => {
   return {

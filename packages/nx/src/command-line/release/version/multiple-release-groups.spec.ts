@@ -1,10 +1,3 @@
-import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
-import type { Tree } from '../../../generators/tree';
-import {
-  createNxReleaseConfigAndPopulateWorkspace,
-  mockResolveVersionActionsForProjectImplementation,
-} from './test-utils';
-
 let mockDeriveSpecifierFromConventionalCommits = jest.fn();
 let mockDeriveSpecifierFromVersionPlan = jest.fn();
 let mockResolveVersionActionsForProject = jest.fn();
@@ -33,6 +26,13 @@ let mockResolveCurrentVersion = jest.fn();
 jest.doMock('./resolve-current-version', () => ({
   resolveCurrentVersion: mockResolveCurrentVersion,
 }));
+
+import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../../../generators/tree';
+import {
+  createNxReleaseConfigAndPopulateWorkspace,
+  mockResolveVersionActionsForProjectImplementation,
+} from './test-utils';
 
 const { ReleaseGroupProcessor } = require('./release-group-processor') as {
   ReleaseGroupProcessor: typeof import('./release-group-processor').ReleaseGroupProcessor;

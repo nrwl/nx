@@ -70,4 +70,88 @@ describe('parseGraphDefinition', () => {
       }
     `);
   });
+
+  it('should support non-semver versioning and projects with no current version', () => {
+    const testGraph = parseGraphDefinition(
+      `
+        __default__ ({ "projectsRelationship": "independent" }):
+          - projectA@1.0 [non-semver]
+          - projectB [non-semver]
+      `
+    );
+    expect(testGraph).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          "projectA": {
+            "alternateNameInManifest": undefined,
+            "data": {
+              "release": {
+                "versionActions": "__EXAMPLE_NON_SEMVER_VERSION_ACTIONS__",
+              },
+            },
+            "dependsOn": [],
+            "group": "__default__",
+            "language": "non-semver",
+            "relationship": "independent",
+            "version": "1.0",
+          },
+          "projectB": {
+            "alternateNameInManifest": undefined,
+            "data": {
+              "release": {
+                "versionActions": "__EXAMPLE_NON_SEMVER_VERSION_ACTIONS__",
+              },
+            },
+            "dependsOn": [],
+            "group": "__default__",
+            "language": "non-semver",
+            "relationship": "independent",
+            "version": null,
+          },
+        },
+      }
+    `);
+  });
+
+  it('should support complex non-semver version values', () => {
+    const testGraph = parseGraphDefinition(
+      `
+        __default__ ({ "projectsRelationship": "independent" }):
+          - projectA@abc123 [non-semver]
+          - projectB@2099-01-01.build1 [non-semver]
+      `
+    );
+    expect(testGraph).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          "projectA": {
+            "alternateNameInManifest": undefined,
+            "data": {
+              "release": {
+                "versionActions": "__EXAMPLE_NON_SEMVER_VERSION_ACTIONS__",
+              },
+            },
+            "dependsOn": [],
+            "group": "__default__",
+            "language": "non-semver",
+            "relationship": "independent",
+            "version": "abc123",
+          },
+          "projectB": {
+            "alternateNameInManifest": undefined,
+            "data": {
+              "release": {
+                "versionActions": "__EXAMPLE_NON_SEMVER_VERSION_ACTIONS__",
+              },
+            },
+            "dependsOn": [],
+            "group": "__default__",
+            "language": "non-semver",
+            "relationship": "independent",
+            "version": "2099-01-01.build1",
+          },
+        },
+      }
+    `);
+  });
 });

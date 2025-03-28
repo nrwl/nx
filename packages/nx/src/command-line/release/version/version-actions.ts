@@ -9,8 +9,16 @@ import type {
 import type { Tree } from '../../../generators/tree';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
-import { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
+import { ReleaseGroupWithName } from '../config/filter-release-groups';
+import {
+  deriveNewSemverVersion,
+  isRelativeVersionKeyword,
+} from '../utils/semver';
+import {
+  BUMP_TYPE_REASON_TEXT,
+  FinalConfigForProject,
+} from './release-group-processor';
 
 export type SemverBumpType = ReleaseType | 'none';
 
@@ -60,7 +68,7 @@ export type AfterAllProjectsVersioned = (
   opts: {
     dryRun?: boolean;
     verbose?: boolean;
-    versionActionsOptions?: Record<string, unknown>;
+    rootVersionActionsOptions?: Record<string, unknown>;
   }
 ) => Promise<{
   changedFiles: string[];
@@ -69,10 +77,9 @@ export type AfterAllProjectsVersioned = (
 
 type VersionActionsConstructor = {
   new (
-    versionActionsOptions: Record<string, unknown>,
     releaseGroup: ReleaseGroupWithName,
     projectGraphNode: ProjectGraphProjectNode,
-    manifestRootsToUpdate: string[]
+    finalConfigForProject: FinalConfigForProject
   ): VersionActions;
 };
 
@@ -88,7 +95,7 @@ export async function resolveVersionActionsForProject(
   tree: Tree,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
-  manifestRootsToUpdate: string[]
+  finalConfigForProject: FinalConfigForProject
 ): Promise<{
   versionActionsPath: string;
   versionActions: VersionActions;
@@ -118,11 +125,6 @@ export async function resolveVersionActionsForProject(
       `No versionActions implementation found for project "${projectGraphNode.name}", please report this on https://github.com/nrwl/nx/issues`
     );
   }
-
-  const versionActionsOptions =
-    projectVersionConfig?.versionActionsOptions ??
-    releaseGroupVersionConfig?.versionActionsOptions ??
-    {};
 
   let cachedData = versionActionsResolutionCache.get(versionActionsPathConfig);
   const versionActionsPath = resolveVersionActionsPath(
@@ -158,10 +160,9 @@ export async function resolveVersionActionsForProject(
     });
   }
   const versionActions: VersionActions = new VersionActionsClass(
-    versionActionsOptions,
     releaseGroup,
     projectGraphNode,
-    manifestRootsToUpdate
+    finalConfigForProject
   );
   // Initialize the version actions with all the required manifest paths etc
   await versionActions.init(tree);
@@ -190,11 +191,9 @@ export abstract class VersionActions {
   manifestsToUpdate: string[] = [];
 
   constructor(
-    // Any implementation specific options provided via the user's configuration
-    public versionActionsOptions: Record<string, unknown>,
     public releaseGroup: ReleaseGroupWithName,
     public projectGraphNode: ProjectGraphProjectNode,
-    private manifestRootsToUpdate: string[]
+    public finalConfigForProject: FinalConfigForProject
   ) {}
 
   /**
@@ -204,27 +203,28 @@ export abstract class VersionActions {
     // Default to the first available source manifest root, if applicable, if no custom manifest roots are provided
     if (
       this.validManifestFilenames?.length &&
-      this.manifestRootsToUpdate.length === 0
+      this.finalConfigForProject.manifestRootsToUpdate.length === 0
     ) {
       for (const manifestFilename of this.validManifestFilenames) {
         if (
           tree.exists(join(this.projectGraphNode.data.root, manifestFilename))
         ) {
-          this.manifestRootsToUpdate.push(this.projectGraphNode.data.root);
+          this.finalConfigForProject.manifestRootsToUpdate.push(
+            this.projectGraphNode.data.root
+          );
           break;
         }
       }
     }
 
-    const interpolatedManifestRoots = this.manifestRootsToUpdate.map(
-      (manifestRoot) => {
+    const interpolatedManifestRoots =
+      this.finalConfigForProject.manifestRootsToUpdate.map((manifestRoot) => {
         return interpolate(manifestRoot, {
           workspaceRoot: '',
           projectRoot: this.projectGraphNode.data.root,
           projectName: this.projectGraphNode.name,
         });
-      }
-    );
+      });
 
     for (const interpolatedManifestRoot of interpolatedManifestRoots) {
       let hasValidManifest = false;
@@ -247,6 +247,59 @@ To fix this you will either need to add a ${validManifestFilenames} file at that
         );
       }
     }
+  }
+
+  /**
+   * The default implementation will calculate the new version based on semver. If semver is not applicable to a
+   * particular versioning use-case, this method should be overridden with custom logic.
+   *
+   * @param {string | null} currentVersion - The current version of the project, or null if the current version resolver is set to 'none'
+   * @param {string} newVersionInput - The new version input provided by the user, such as a semver relative bump type, or an explicit version
+   * @param {string} newVersionInputReason - The reason for the new version input used to inform the log message to show to the user
+   * @param {Record<string, unknown>} newVersionInputReasonData - The data to interpolate into the new version input reason
+   * @param {string} preid - The preid to use for the new version, if applicable
+   */
+  async calculateNewVersion(
+    currentVersion: string | null,
+    newVersionInput: string,
+    newVersionInputReason: string,
+    newVersionInputReasonData: Record<string, unknown>,
+    preid: string
+  ): Promise<{
+    newVersion: string;
+    logText: string;
+  }> {
+    const isSemverRelativeBump = isRelativeVersionKeyword(newVersionInput);
+    const newVersionReasonText = BUMP_TYPE_REASON_TEXT[newVersionInputReason];
+    if (!newVersionReasonText) {
+      throw new Error(
+        `Unhandled bump type reason for ${this.projectGraphNode.name} with newVersionInput ${newVersionInput} and newVersionInputReason ${newVersionInputReason}, please report this as a bug on https://github.com/nrwl/nx/issues`
+      );
+    }
+    const interpolatedNewVersionInputReasonText = interpolate(
+      newVersionReasonText,
+      newVersionInputReasonData
+    );
+    if (isSemverRelativeBump && !currentVersion) {
+      throw new Error(
+        `There was no current version resolved for project "${this.projectGraphNode.name}", but it was configured to be bumped via a semver relative keyword "${newVersionInput}"${interpolatedNewVersionInputReasonText}. This is not a valid combination, please review your release configuration and CLI arguments`
+      );
+    }
+
+    const newVersion = deriveNewSemverVersion(
+      currentVersion,
+      newVersionInput,
+      preid
+    );
+
+    const newVersionInputText = isRelativeVersionKeyword(newVersionInput)
+      ? `semver relative bump "${newVersionInput}"`
+      : `explicit semver value "${newVersionInput}"`;
+
+    return {
+      newVersion,
+      logText: `❓ Applied ${newVersionInputText}${interpolatedNewVersionInputReasonText}to get new version ${newVersion}`,
+    };
   }
 
   /**

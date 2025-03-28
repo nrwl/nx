@@ -1,11 +1,10 @@
-import { prerelease } from 'semver';
+import * as semver from 'semver';
 import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import { Tree } from '../../../generators/tree';
-import { interpolate } from '../../../tasks-runner/utils';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
   type NxReleaseConfig,
@@ -13,10 +12,6 @@ import {
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { getLatestGitTagForPattern } from '../utils/git';
 import { resolveSemverSpecifierFromPrompt } from '../utils/resolve-semver-specifier';
-import {
-  deriveNewSemverVersion,
-  isRelativeVersionKeyword,
-} from '../utils/semver';
 import type { VersionData, VersionDataEntry } from '../utils/shared';
 import { validReleaseVersionPrefixes } from '../version';
 import { deriveSpecifierFromConventionalCommits } from './derive-specifier-from-conventional-commits';
@@ -33,7 +28,8 @@ import {
 
 /**
  * The final configuration for a project after applying release group and project level overrides,
- * as well as default values.
+ * as well as default values. This will be passed to the relevant version actions implementation,
+ * and referenced throughout the versioning process.
  */
 export interface FinalConfigForProject {
   specifierSource: NxReleaseVersionV2Configuration['specifierSource'];
@@ -42,6 +38,8 @@ export interface FinalConfigForProject {
   fallbackCurrentVersionResolver: NxReleaseVersionV2Configuration['fallbackCurrentVersionResolver'];
   versionPrefix: NxReleaseVersionV2Configuration['versionPrefix'];
   preserveLocalDependencyProtocols: NxReleaseVersionV2Configuration['preserveLocalDependencyProtocols'];
+  versionActionsOptions: NxReleaseVersionV2Configuration['versionActionsOptions'];
+  manifestRootsToUpdate: NxReleaseVersionV2Configuration['manifestRootsToUpdate'];
 }
 
 interface GroupNode {
@@ -53,7 +51,7 @@ interface GroupNode {
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;
 
-const BUMP_TYPE_REASON_TEXT = {
+export const BUMP_TYPE_REASON_TEXT = {
   DEPENDENCY_WAS_BUMPED: ', because a dependency was bumped, ',
   USER_SPECIFIER: ', from the given specifier, ',
   PROMPTED_USER_SPECIFIER: ', from the prompted specifier, ',
@@ -70,7 +68,8 @@ interface ReleaseGroupProcessorOptions {
   verbose: boolean;
   firstRelease: boolean;
   preid: string;
-  userGivenSpecifier?: SemverBumpType;
+  // This could be a semver bump type, an exact semver version, or any arbitrary string to use as a new version
+  userGivenSpecifier?: string;
   projectsToProcess?: string[];
   /**
    * The optional results of applying the --project or --group filters.
@@ -159,11 +158,11 @@ export class ReleaseGroupProcessor {
 
   /**
    * Caches the current version of each project to avoid repeated disk/registry/git tag lookups.
-   * Often used during new version calculation.
+   * Often used during new version calculation. Will be null if the current version resolver is set to 'none'.
    */
   private cachedCurrentVersions: Map<
     string, // project name
-    string // current version
+    string | null // current version
   > = new Map();
 
   /**
@@ -263,8 +262,23 @@ export class ReleaseGroupProcessor {
     >,
     private options: ReleaseGroupProcessorOptions
   ) {
-    // Strip any leading "v" from the user given specifier, if it exists
-    this.userGivenSpecifier = options.userGivenSpecifier?.replace(/^v/, '');
+    /**
+     * To match legacy versioning behavior in the case of semver versions with leading "v" characters,
+     * e.g. "v1.0.0", we strip the leading "v" and use the rest of the string as the user given specifier
+     * to ensure that it is valid. If it is a non-semver version, we just use the string as is.
+     *
+     * TODO: re-evaluate if this is definitely what we want... Maybe we can just delegate isValid to the
+     * version actions implementation during prompting?
+     */
+    if (options.userGivenSpecifier?.startsWith('v')) {
+      const userGivenSpecifierWithoutLeadingV =
+        options.userGivenSpecifier?.replace(/^v/, '');
+      if (semver.valid(userGivenSpecifierWithoutLeadingV)) {
+        this.userGivenSpecifier = userGivenSpecifierWithoutLeadingV;
+      }
+    } else {
+      this.userGivenSpecifier = options.userGivenSpecifier;
+    }
   }
 
   /**
@@ -277,6 +291,7 @@ export class ReleaseGroupProcessor {
 
     // Setup projects to process and resolve version actions
     await this.setupProjectsToProcess();
+
     // Precompute dependency relationships
     await this.precomputeDependencyRelationships();
 
@@ -293,7 +308,7 @@ export class ReleaseGroupProcessor {
     }
 
     // Process each project within each release group
-    for (const [releaseGroupName, releaseGroupNode] of this.groupGraph) {
+    for (const [, releaseGroupNode] of this.groupGraph) {
       for (const projectName of releaseGroupNode.group.projects) {
         const projectGraphNode = this.projectGraph.nodes[projectName];
 
@@ -302,14 +317,9 @@ export class ReleaseGroupProcessor {
           continue;
         }
 
-        const versionActions = this.projectsToVersionActions.get(projectName);
-
-        // Resolve the final configuration for the project
-        const finalConfigForProject = this.resolveFinalConfigForProject(
-          releaseGroupNode.group,
-          projectGraphNode
-        );
-        this.finalConfigsByProject.set(projectName, finalConfigForProject);
+        const versionActions = this.getVersionActionsForProject(projectName);
+        const finalConfigForProject =
+          this.getFinalConfigForProject(projectName);
 
         let latestMatchingGitTag:
           | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
@@ -364,37 +374,6 @@ export class ReleaseGroupProcessor {
     await this.populateDependentProjectsData();
   }
 
-  private async resolveVersionActionsForProjects() {
-    for (const projectName of this.allProjectsConfiguredForNxRelease) {
-      const projectGraphNode = this.projectGraph.nodes[projectName];
-      const releaseGroup = this.projectToReleaseGroup.get(projectName);
-      const projectVersionConfig = projectGraphNode.data.release?.version as
-        | NxReleaseVersionV2Configuration
-        | undefined;
-      const releaseGroupVersionConfig =
-        releaseGroup.version as NxReleaseVersionV2Configuration;
-      const manifestRootsToUpdate =
-        projectVersionConfig?.manifestRootsToUpdate ??
-        releaseGroupVersionConfig?.manifestRootsToUpdate ??
-        [];
-
-      const { versionActionsPath, versionActions, afterAllProjectsVersioned } =
-        await resolveVersionActionsForProject(
-          this.tree,
-          releaseGroup,
-          projectGraphNode,
-          manifestRootsToUpdate
-        );
-      if (!this.uniqueAfterAllProjectsVersioned.has(versionActionsPath)) {
-        this.uniqueAfterAllProjectsVersioned.set(
-          versionActionsPath,
-          afterAllProjectsVersioned
-        );
-      }
-      this.projectsToVersionActions.set(projectName, versionActions);
-    }
-  }
-
   /**
    * Setup mapping from project to release group and cache updateDependents settings
    */
@@ -436,17 +415,7 @@ export class ReleaseGroupProcessor {
           projectsToProcess.add(project);
         }
 
-        // Resolve the version actions for the project
         const projectGraphNode = this.projectGraph.nodes[project];
-        const projectVersionConfig = projectGraphNode.data.release?.version as
-          | NxReleaseVersionV2Configuration
-          | undefined;
-        const releaseGroupVersionConfig =
-          group.version as NxReleaseVersionV2Configuration;
-        const manifestRootsToUpdate =
-          projectVersionConfig?.manifestRootsToUpdate ??
-          releaseGroupVersionConfig?.manifestRootsToUpdate ??
-          [];
 
         /**
          * Try and resolve a cached ReleaseGroupWithName for the project. It may not be present
@@ -462,6 +431,13 @@ export class ReleaseGroupProcessor {
           };
         }
 
+        // Resolve the final configuration for the project
+        const finalConfigForProject = this.resolveFinalConfigForProject(
+          releaseGroup,
+          projectGraphNode
+        );
+        this.finalConfigsByProject.set(project, finalConfigForProject);
+
         const {
           versionActionsPath,
           versionActions,
@@ -470,7 +446,7 @@ export class ReleaseGroupProcessor {
           this.tree,
           releaseGroup,
           projectGraphNode,
-          manifestRootsToUpdate
+          finalConfigForProject
         );
         if (!this.uniqueAfterAllProjectsVersioned.has(versionActionsPath)) {
           this.uniqueAfterAllProjectsVersioned.set(
@@ -680,9 +656,13 @@ export class ReleaseGroupProcessor {
    *
    * Because the tree has already been flushed to disk at this point, each afterAllProjectsVersioned
    * function is responsible for returning the list of changed and deleted files that it affected.
+   *
+   * The root level `release.version.versionActionsOptions` is what is passed in here because this
+   * is a one time action for the whole workspace. Release group and project level overrides are
+   * not applicable.
    */
   async afterAllProjectsVersioned(
-    versionActionsOptions: Record<string, unknown>
+    rootVersionActionsOptions: Record<string, unknown>
   ): Promise<{
     changedFiles: string[];
     deletedFiles: string[];
@@ -698,7 +678,7 @@ export class ReleaseGroupProcessor {
       } = await afterAllProjectsVersioned(this.tree.root, {
         dryRun: this.options.dryRun,
         verbose: this.options.verbose,
-        versionActionsOptions,
+        rootVersionActionsOptions,
       });
 
       for (const file of changedFilesForVersionActions) {
@@ -761,10 +741,13 @@ export class ReleaseGroupProcessor {
     let bumped = false;
 
     const firstProject = releaseGroup.projects[0];
-    const { bumpType, bumpTypeReason, bumpTypeReasonData } =
-      await this.determineVersionBumpForProject(releaseGroup, firstProject);
+    const {
+      newVersionInput,
+      newVersionInputReason,
+      newVersionInputReasonData,
+    } = await this.determineVersionBumpForProject(releaseGroup, firstProject);
 
-    if (bumpType === 'none') {
+    if (newVersionInput === 'none') {
       // No direct bump for this group, but we may still need to bump if a dependency group has been bumped
       let bumpedByDependency = false;
 
@@ -781,7 +764,9 @@ export class ReleaseGroupProcessor {
             depGroup !== releaseGroup.name &&
             this.processedGroups.has(depGroup)
           ) {
-            const depGroupBumpType = await this.getGroupBumpType(depGroup);
+            const depGroupBumpType = await this.getFixedReleaseGroupBumpType(
+              depGroup
+            );
 
             // If a dependency group has been bumped, determine if it should trigger a bump in this group
             if (depGroupBumpType !== 'none') {
@@ -848,9 +833,9 @@ export class ReleaseGroupProcessor {
 
     const { newVersion } = await this.calculateNewVersion(
       firstProject,
-      bumpType,
-      bumpTypeReason,
-      bumpTypeReasonData
+      newVersionInput,
+      newVersionInputReason,
+      newVersionInputReasonData
     );
 
     // Use sorted projects for processing projects in the right order
@@ -858,8 +843,7 @@ export class ReleaseGroupProcessor {
       this.sortedProjects.get(releaseGroup.name) || releaseGroup.projects;
 
     // First, update versions for all projects in the fixed group in topological order
-    for (let i = 0; i < sortedProjects.length; i++) {
-      const project = sortedProjects[i];
+    for (const project of sortedProjects) {
       const versionActions = this.getVersionActionsForProject(project);
       const projectLogger = this.getProjectLoggerForProject(project);
       const currentVersion = this.getCurrentCachedVersionForProject(project);
@@ -923,8 +907,11 @@ export class ReleaseGroupProcessor {
 
     // First pass: Determine bump types
     for (const project of this.allProjectsToProcess) {
-      const { bumpType, bumpTypeReason, bumpTypeReasonData } =
-        await this.determineVersionBumpForProject(releaseGroup, project);
+      const {
+        newVersionInput: bumpType,
+        newVersionInputReason: bumpTypeReason,
+        newVersionInputReasonData: bumpTypeReasonData,
+      } = await this.determineVersionBumpForProject(releaseGroup, project);
       projectBumpTypes.set(project, {
         bumpType,
         bumpTypeReason,
@@ -980,16 +967,16 @@ export class ReleaseGroupProcessor {
     releaseGroup: ReleaseGroupWithName,
     projectName: string
   ): Promise<{
-    bumpType: SemverBumpType | SemverVersion;
-    bumpTypeReason: keyof typeof BUMP_TYPE_REASON_TEXT;
-    bumpTypeReasonData: Record<string, unknown>;
+    newVersionInput: SemverBumpType | SemverVersion;
+    newVersionInputReason: keyof typeof BUMP_TYPE_REASON_TEXT;
+    newVersionInputReasonData: Record<string, unknown>;
   }> {
     // User given specifier has the highest precedence
     if (this.userGivenSpecifier) {
       return {
-        bumpType: this.userGivenSpecifier as SemverBumpType,
-        bumpTypeReason: 'USER_SPECIFIER',
-        bumpTypeReasonData: {},
+        newVersionInput: this.userGivenSpecifier as SemverBumpType,
+        newVersionInputReason: 'USER_SPECIFIER',
+        newVersionInputReasonData: {},
       };
     }
 
@@ -1009,15 +996,15 @@ export class ReleaseGroupProcessor {
         projectLogger,
         releaseGroup,
         projectGraphNode,
-        !!prerelease(currentVersion ?? ''),
+        !!semver.prerelease(currentVersion ?? ''),
         this.cachedLatestMatchingGitTag.get(projectName),
         cachedFinalConfigForProject.fallbackCurrentVersionResolver,
         this.options.preid
       );
       return {
-        bumpType,
-        bumpTypeReason: 'CONVENTIONAL_COMMITS',
-        bumpTypeReasonData: {},
+        newVersionInput: bumpType,
+        newVersionInputReason: 'CONVENTIONAL_COMMITS',
+        newVersionInputReasonData: {},
       };
     }
 
@@ -1036,9 +1023,9 @@ export class ReleaseGroupProcessor {
         this.processedVersionPlanFiles.add(versionPlanPath);
       }
       return {
-        bumpType,
-        bumpTypeReason: 'VERSION_PLANS',
-        bumpTypeReasonData: {
+        newVersionInput: bumpType,
+        newVersionInputReason: 'VERSION_PLANS',
+        newVersionInputReasonData: {
           versionPlanPath,
         },
       };
@@ -1073,9 +1060,9 @@ export class ReleaseGroupProcessor {
         );
       }
       return {
-        bumpType: specifier,
-        bumpTypeReason: 'PROMPTED_USER_SPECIFIER',
-        bumpTypeReasonData: {},
+        newVersionInput: specifier,
+        newVersionInputReason: 'PROMPTED_USER_SPECIFIER',
+        newVersionInputReasonData: {},
       };
     }
 
@@ -1094,6 +1081,16 @@ export class ReleaseGroupProcessor {
     return versionActions;
   }
 
+  private getFinalConfigForProject(projectName: string): FinalConfigForProject {
+    const finalConfig = this.finalConfigsByProject.get(projectName);
+    if (!finalConfig) {
+      throw new Error(
+        `No final config found for project ${projectName}, please report this as a bug on https://github.com/nrwl/nx/issues`
+      );
+    }
+    return finalConfig;
+  }
+
   private getProjectLoggerForProject(projectName: string): ProjectLogger {
     const projectLogger = this.projectLoggers.get(projectName);
     if (!projectLogger) {
@@ -1104,14 +1101,10 @@ export class ReleaseGroupProcessor {
     return projectLogger;
   }
 
-  private getCurrentCachedVersionForProject(projectName: string): string {
-    const currentVersion = this.cachedCurrentVersions.get(projectName);
-    if (!currentVersion) {
-      throw new Error(
-        `Unexpected error: No cached current version found for project ${projectName}, please report this as a bug on https://github.com/nrwl/nx/issues`
-      );
-    }
-    return currentVersion;
+  private getCurrentCachedVersionForProject(
+    projectName: string
+  ): string | null {
+    return this.cachedCurrentVersions.get(projectName);
   }
 
   private getCachedFinalConfigForProject(
@@ -1214,6 +1207,19 @@ Valid values are: ${validReleaseVersionPrefixes
       // Always fall back to disk if this is the first release
       (this.options.firstRelease ? 'disk' : undefined);
 
+    /**
+     * versionActionsOptions, defaults to {}
+     */
+    const versionActionsOptions =
+      projectVersionConfig?.versionActionsOptions ??
+      releaseGroupVersionConfig?.versionActionsOptions ??
+      {};
+
+    const manifestRootsToUpdate =
+      projectVersionConfig?.manifestRootsToUpdate ??
+      releaseGroupVersionConfig?.manifestRootsToUpdate ??
+      [];
+
     return {
       specifierSource,
       currentVersionResolver,
@@ -1221,38 +1227,28 @@ Valid values are: ${validReleaseVersionPrefixes
       fallbackCurrentVersionResolver,
       versionPrefix,
       preserveLocalDependencyProtocols,
+      versionActionsOptions,
+      manifestRootsToUpdate,
     };
   }
 
   private async calculateNewVersion(
     project: string,
-    bumpType: SemverBumpType | SemverVersion,
-    bumpTypeReason: keyof typeof BUMP_TYPE_REASON_TEXT,
-    bumpTypeReasonData: Record<string, unknown>
-  ): Promise<{ currentVersion: string; newVersion: string }> {
+    newVersionInput: string, // any arbitrary string, whether or not it is valid is dependent upon the version actions implementation
+    newVersionInputReason: keyof typeof BUMP_TYPE_REASON_TEXT,
+    newVersionInputReasonData: Record<string, unknown>
+  ): Promise<{ currentVersion: string | null; newVersion: string }> {
     const currentVersion = this.getCurrentCachedVersionForProject(project);
-    const projectLogger = this.getProjectLoggerForProject(project);
-    const newVersion = deriveNewSemverVersion(
+    const versionActions = this.getVersionActionsForProject(project);
+    const { newVersion, logText } = await versionActions.calculateNewVersion(
       currentVersion,
-      bumpType,
+      newVersionInput,
+      newVersionInputReason,
+      newVersionInputReasonData,
       this.options.preid
     );
-    const bumpTypeReasonText = BUMP_TYPE_REASON_TEXT[bumpTypeReason];
-    if (!bumpTypeReasonText) {
-      throw new Error(
-        `Unhandled bump type reason for ${project} with bump type ${bumpType} and bump type reason ${bumpTypeReason}, please report this as a bug on https://github.com/nrwl/nx/issues`
-      );
-    }
-    const interpolatedBumpTypeReasonText = interpolate(
-      bumpTypeReasonText,
-      bumpTypeReasonData
-    );
-    const bumpText = isRelativeVersionKeyword(bumpType)
-      ? `semver relative bump "${bumpType}"`
-      : `explicit semver value "${bumpType}"`;
-    projectLogger.buffer(
-      `❓ Applied ${bumpText}${interpolatedBumpTypeReasonText}to get new version ${newVersion}`
-    );
+    const projectLogger = this.getProjectLoggerForProject(project);
+    projectLogger.buffer(logText);
     return { currentVersion, newVersion };
   }
 
@@ -1479,7 +1475,7 @@ Valid values are: ${validReleaseVersionPrefixes
       );
 
       if (hasDependencyInChangedGroup) {
-        const dependencyBumpType = await this.getGroupBumpType(
+        const dependencyBumpType = await this.getFixedReleaseGroupBumpType(
           changedDependencyGroup
         );
 
@@ -1506,7 +1502,7 @@ Valid values are: ${validReleaseVersionPrefixes
     }
   }
 
-  private async getGroupBumpType(
+  private async getFixedReleaseGroupBumpType(
     releaseGroupName: string
   ): Promise<SemverBumpType | SemverVersion> {
     const releaseGroup = this.groupGraph.get(releaseGroupName)!.group;
@@ -1515,11 +1511,12 @@ Valid values are: ${validReleaseVersionPrefixes
     if (releaseGroupFilteredProjects.size === 0) {
       return 'none';
     }
-    const { bumpType } = await this.determineVersionBumpForProject(
+    const { newVersionInput } = await this.determineVersionBumpForProject(
       releaseGroup,
+      // It's a fixed release group, so we can just pick any project in the group
       releaseGroupFilteredProjects.values().next().value
     );
-    return bumpType;
+    return newVersionInput;
   }
 
   // TODO: Support influencing the side effect bump in a future version, always patch for now like in legacy versioning

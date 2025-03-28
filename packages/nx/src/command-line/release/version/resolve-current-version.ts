@@ -27,8 +27,10 @@ export async function resolveCurrentVersion(
   finalConfigForProject: FinalConfigForProject,
   releaseTagPattern: string,
   latestMatchingGitTag?: Awaited<ReturnType<typeof getLatestGitTagForPattern>>
-): Promise<string> {
+): Promise<string | null> {
   switch (finalConfigForProject.currentVersionResolver) {
+    case 'none':
+      return null;
     case 'disk': {
       return resolveCurrentVersionFromDisk(
         tree,

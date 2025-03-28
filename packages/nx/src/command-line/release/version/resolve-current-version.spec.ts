@@ -23,6 +23,8 @@ describe('resolveCurrentVersion', () => {
       fallbackCurrentVersionResolver: 'disk',
       versionPrefix: 'auto',
       preserveLocalDependencyProtocols: true,
+      manifestRootsToUpdate: [],
+      versionActionsOptions: {},
     };
 
     class TestVersionActions extends VersionActions {
@@ -84,7 +86,11 @@ describe('resolveCurrentVersion', () => {
         tree,
         projectGraphNode,
         releaseGroup,
-        new TestVersionActions({}, releaseGroup, projectGraphNode, []),
+        new TestVersionActions(
+          releaseGroup,
+          projectGraphNode,
+          finalConfigForProject
+        ),
         new TestProjectLogger(projectGraphNode.name),
         new Map(),
         finalConfigForProject,
@@ -118,7 +124,11 @@ describe('resolveCurrentVersion', () => {
         tree,
         projectGraphNode,
         releaseGroup,
-        new TestVersionActions({}, releaseGroup, projectGraphNode, []),
+        new TestVersionActions(
+          releaseGroup,
+          projectGraphNode,
+          finalConfigForProject
+        ),
         new TestProjectLogger(projectGraphNode.name),
         new Map(),
         finalConfigForProject,
@@ -179,10 +189,9 @@ describe('resolveCurrentVersion', () => {
           projectGraphNode,
           releaseGroup,
           new TestVersionActionsWithoutManifest(
-            {},
             releaseGroup,
             projectGraphNode,
-            []
+            finalConfigForProject
           ),
           new TestProjectLogger(projectGraphNode.name),
           new Map(),

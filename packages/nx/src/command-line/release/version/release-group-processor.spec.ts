@@ -1,11 +1,3 @@
-import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
-import type { Tree } from '../../../generators/tree';
-import { readJson, updateJson } from '../../../generators/utils/json';
-import {
-  createNxReleaseConfigAndPopulateWorkspace,
-  mockResolveVersionActionsForProjectImplementation,
-} from './test-utils';
-
 let mockDeriveSpecifierFromConventionalCommits = jest.fn();
 let mockDeriveSpecifierFromVersionPlan = jest.fn();
 let mockResolveVersionActionsForProject = jest.fn();
@@ -34,6 +26,14 @@ let mockResolveCurrentVersion = jest.fn();
 jest.doMock('./resolve-current-version', () => ({
   resolveCurrentVersion: mockResolveCurrentVersion,
 }));
+
+import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
+import type { Tree } from '../../../generators/tree';
+import { readJson, updateJson } from '../../../generators/utils/json';
+import {
+  createNxReleaseConfigAndPopulateWorkspace,
+  mockResolveVersionActionsForProjectImplementation,
+} from './test-utils';
 
 // This does not work with the mocking if we use import
 const { ReleaseGroupProcessor } = require('./release-group-processor') as {
@@ -1501,6 +1501,176 @@ describe('ReleaseGroupProcessor', () => {
           "version": "3.1.0",
         }
       `);
+    });
+  });
+
+  describe('non-semver versioning', () => {
+    it('should handle non-semver versioning for a simple fixed release group with no dependencies', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        // projectB also intentionally has no current version
+        `
+          __default__ ({ "projectsRelationship": "fixed" }):
+            - projectA@1.0 [non-semver]
+            - projectB [non-semver]
+        `,
+        {},
+        mockResolveCurrentVersion
+      );
+
+      expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"1.0"`
+      );
+      // projectB has no version currently
+      expect(tree.read('projectB/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `""`
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+          userGivenSpecifier: '2.0',
+        }
+      );
+      await processor.init();
+      await processor.processGroups();
+
+      expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"2.0"`
+      );
+      expect(tree.read('projectB/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"2.0"`
+      );
+    });
+
+    it('should handle non-semver versioning for a simple independent release group with no dependencies', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@abc123 [non-semver]
+            - projectB@2099-01-01.build1 [non-semver]
+        `,
+        {},
+        mockResolveCurrentVersion,
+        {
+          // Update version projectB
+          projects: ['projectB'],
+        }
+      );
+
+      expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"abc123"`
+      );
+      expect(tree.read('projectB/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"2099-01-01.build1"`
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+          userGivenSpecifier: '2099-01-01.build2',
+        }
+      );
+      await processor.init();
+      await processor.processGroups();
+
+      // Unchanged
+      expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"abc123"`
+      );
+      // New version
+      expect(tree.read('projectB/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"2099-01-01.build2"`
+      );
+    });
+
+    it('should handle non-semver versioning for a simple independent release group with dependencies', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - projectA@abc123 [non-semver]
+              -> depends on projectB
+            - projectB@2099-01-01.build1 [non-semver]
+        `,
+        {},
+        mockResolveCurrentVersion,
+        {
+          // Update version projectB
+          projects: ['projectB'],
+        }
+      );
+
+      expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"abc123"`
+      );
+      expect(tree.read('projectB/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"2099-01-01.build1"`
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+          userGivenSpecifier: '2099-01-01.build2',
+        }
+      );
+      await processor.init();
+      await processor.processGroups();
+
+      // projectA changed its version in some arbitrary way as a side effect of the dependency bump (as dictated by its version actions implementation)
+      expect(tree.read('projectA/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"{SOME_NEW_VERSION_DERIVED_AS_A_SIDE_EFFECT_OF_DEPENDENCY_BUMP}"`
+      );
+      // New version
+      expect(tree.read('projectB/version.txt', 'utf-8')).toMatchInlineSnapshot(
+        `"2099-01-01.build2"`
+      );
     });
   });
 });

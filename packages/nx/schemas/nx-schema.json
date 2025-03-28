@@ -761,8 +761,8 @@
           },
           "currentVersionResolver": {
             "type": "string",
-            "enum": ["registry", "disk", "git-tag"],
-            "description": "The resolver to use for determining the current version of a project during versioning. This is needed for versioning approaches which involve relatively modifying a current version to arrive at a new version, such as semver bumps like 'patch', 'minor' etc."
+            "enum": ["registry", "disk", "git-tag", "none"],
+            "description": "The resolver to use for determining the current version of a project during versioning. This is needed for versioning approaches which involve relatively modifying a current version to arrive at a new version, such as semver bumps like 'patch', 'minor' etc. Using 'none' explicitly declares that the current version is not needed to compute the new version, and should only be used with appropriate version actions implementations that support it."
           },
           "currentVersionResolverMetadata": {
             "type": "object",

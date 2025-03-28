@@ -116,8 +116,11 @@ export interface NxReleaseVersionV2Configuration {
    * The resolver to use for determining the current version of a project during versioning.
    * This is needed for versioning approaches which involve relatively modifying a current version
    * to arrive at a new version, such as semver bumps like 'patch', 'minor' etc.
+   *
+   * Using 'none' explicitly declares that the current version is not needed to compute the new version, and
+   * should only be used with appropriate version actions implementations that support it.
    */
-  currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
+  currentVersionResolver?: 'registry' | 'disk' | 'git-tag' | 'none';
   /**
    * Metadata to provide to the configured currentVersionResolver to help it in determining the current version.
    * What to pass here is specific to each resolver.
