@@ -31,8 +31,24 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
     substitutions
   );
 
-  if (!options.publishable && options.bundler === 'none') {
-    host.delete(`${options.projectRoot}/package.json`);
+  if (
+    !options.isUsingTsSolutionConfig &&
+    options.useProjectJson &&
+    (options.publishable || options.bundler !== 'none')
+  ) {
+    writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
+      name: options.importPath ?? options.projectName,
+      version: '0.0.1',
+      main: './index.js',
+      types: './index.d.ts',
+      exports: {
+        '.': {
+          types: './index.d.ts',
+          import: './index.mjs',
+          require: './index.js',
+        },
+      },
+    });
   }
 
   if (options.unitTestRunner !== 'vitest') {

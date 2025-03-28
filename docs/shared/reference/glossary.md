@@ -1,3 +1,8 @@
+---
+title: Nx Glossary
+description: A comprehensive reference of Nx-specific terminology to help you understand the concepts and features of the Nx ecosystem.
+---
+
 # Glossary
 
 This is a short list of Nx-specific terms that will help you understand the rest of the documentation.
@@ -102,12 +107,6 @@ A computer science concept that consists of nodes connected by edges. In the Nx 
 
 > See: [Explore the Graph](/features/explore-graph)
 
-### Integrated Repository
-
-A repository using Nx [plugins](#plugin) to boost efficiency and ease of maintenance.
-
-> See: [Integrated Repos vs. Package-Based Repos](/concepts/integrated-vs-package-based)
-
 ### Launch Template
 
 Launch Templates are used to set up an agent machine. They specify a resource class, an image and a series of set up steps before tasks are executed on that machine.
@@ -153,12 +152,6 @@ Nx Replay is the product offered by [Nx Cloud](#nx-cloud) that enables [remote c
 ### Package
 
 A [project](#project). It is sometimes published as an npm package.
-
-### Package-based Repository
-
-A repository using Nx without [plugins](#plugin) that prioritizes the independence of the separate [packages](#package). Nx is added to the repo without significantly affecting the file structure or build settings.
-
-> See: [Integrated Repos vs. Package-Based Repos](/concepts/integrated-vs-package-based)
 
 ### Plugin
 

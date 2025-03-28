@@ -8,6 +8,7 @@ import {
   ProjectConfiguration,
   readJson,
   readNxJson,
+  removeDependenciesFromPackageJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -15,11 +16,15 @@ import {
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
-import { eslintrcVersion, eslintVersion } from '../../utils/versions';
+import {
+  eslint9__eslintVersion,
+  eslint9__typescriptESLintVersion,
+  eslintConfigPrettierVersion,
+  eslintrcVersion,
+  eslintVersion,
+} from '../../utils/versions';
 import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
-
-let shouldInstallDeps = false;
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -35,12 +40,14 @@ export async function convertToFlatConfigGenerator(
     );
   }
 
+  options.eslintConfigFormat ??= 'mjs';
+
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
 
-  // convert root eslint config to eslint.config.js
-  convertRootToFlatConfig(tree, eslintFile);
+  // convert root eslint config to eslint.config.cjs or eslint.base.config.mjs based on eslintConfigFormat
+  convertRootToFlatConfig(tree, eslintFile, options.eslintConfigFormat);
 
-  // convert project eslint files to eslint.config.js
+  // convert project eslint files to eslint.config.cjs
   const projects = getProjects(tree);
   for (const [project, projectConfig] of projects) {
     convertProjectToFlatConfig(
@@ -48,7 +55,8 @@ export async function convertToFlatConfigGenerator(
       project,
       projectConfig,
       readNxJson(tree),
-      eslintIgnoreFiles
+      eslintIgnoreFiles,
+      options.eslintConfigFormat
     );
   }
 
@@ -58,29 +66,38 @@ export async function convertToFlatConfigGenerator(
   }
 
   // replace references in nx.json
-  updateNxJsonConfig(tree);
+  updateNxJsonConfig(tree, options.eslintConfigFormat);
   // install missing packages
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  if (shouldInstallDeps) {
-    return () => installPackagesTask(tree);
-  }
+  return () => installPackagesTask(tree);
 }
 
 export default convertToFlatConfigGenerator;
 
-function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
+function convertRootToFlatConfig(
+  tree: Tree,
+  eslintFile: string,
+  format: 'cjs' | 'mjs'
+) {
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
-    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.js');
+    convertConfigToFlatConfig(
+      tree,
+      '',
+      eslintFile,
+      `eslint.base.config.${format}`,
+      format
+    );
   }
   convertConfigToFlatConfig(
     tree,
     '',
     eslintFile.replace('.base.', '.'),
-    'eslint.config.js'
+    `eslint.config.${format}`,
+    format
   );
 }
 
@@ -89,7 +106,8 @@ function convertProjectToFlatConfig(
   project: string,
   projectConfig: ProjectConfiguration,
   nxJson: NxJsonConfiguration,
-  eslintIgnoreFiles: Set<string>
+  eslintIgnoreFiles: Set<string>,
+  format: 'cjs' | 'mjs'
 ) {
   const eslintFile = findEslintFile(tree, projectConfig.root);
   if (eslintFile && !eslintFile.endsWith('.js')) {
@@ -129,7 +147,8 @@ function convertProjectToFlatConfig(
           tree,
           projectConfig.root,
           eslintFile,
-          'eslint.config.js',
+          `eslint.config.${format}`,
+          format,
           ignorePath
         );
         eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
@@ -143,22 +162,22 @@ function convertProjectToFlatConfig(
 
 // update names of eslint files in nx.json
 // and remove eslintignore
-function updateNxJsonConfig(tree: Tree) {
+function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
   if (tree.exists('nx.json')) {
     updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
       if (json.targetDefaults?.lint?.inputs) {
         const inputSet = new Set(json.targetDefaults.lint.inputs);
-        inputSet.add('{workspaceRoot}/eslint.config.js');
+        inputSet.add(`{workspaceRoot}/eslint.config.${format}`);
         json.targetDefaults.lint.inputs = Array.from(inputSet);
       }
       if (json.targetDefaults?.['@nx/eslint:lint']?.inputs) {
         const inputSet = new Set(json.targetDefaults['@nx/eslint:lint'].inputs);
-        inputSet.add('{workspaceRoot}/eslint.config.js');
+        inputSet.add(`{workspaceRoot}/eslint.config.${format}`);
         json.targetDefaults['@nx/eslint:lint'].inputs = Array.from(inputSet);
       }
       if (json.namedInputs?.production) {
         const inputSet = new Set(json.namedInputs.production);
-        inputSet.add('!{projectRoot}/eslint.config.js');
+        inputSet.add(`!{projectRoot}/eslint.config.${format}`);
         json.namedInputs.production = Array.from(inputSet);
       }
       return json;
@@ -171,6 +190,7 @@ function convertConfigToFlatConfig(
   root: string,
   source: string,
   target: string,
+  format: 'cjs' | 'mjs',
   ignorePath?: string
 ) {
   const ignorePaths = ignorePath
@@ -183,7 +203,8 @@ function convertConfigToFlatConfig(
       tree,
       root,
       config,
-      ignorePaths
+      ignorePaths,
+      format
     );
     return processConvertedConfig(tree, root, source, target, conversionResult);
   }
@@ -198,7 +219,8 @@ function convertConfigToFlatConfig(
       tree,
       root,
       config,
-      ignorePaths
+      ignorePaths,
+      format
     );
     return processConvertedConfig(tree, root, source, target, conversionResult);
   }
@@ -221,25 +243,27 @@ function processConvertedConfig(
   // save new
   tree.write(join(root, target), content);
 
+  // These dependencies are required for flat configs that are generated by subsequent app/lib generators.
+  const devDependencies: Record<string, string> = {
+    eslint: eslint9__eslintVersion,
+    'eslint-config-prettier': eslintConfigPrettierVersion,
+    'typescript-eslint': eslint9__typescriptESLintVersion,
+  };
+
   // add missing packages
   if (addESLintRC) {
-    shouldInstallDeps = true;
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@eslint/eslintrc': eslintrcVersion,
-      }
-    );
+    devDependencies['@eslint/eslintrc'] = eslintrcVersion;
   }
+
   if (addESLintJS) {
-    shouldInstallDeps = true;
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@eslint/js': eslintVersion,
-      }
-    );
+    devDependencies['@eslint/js'] = eslintVersion;
   }
+
+  addDependenciesToPackageJson(tree, {}, devDependencies);
+
+  removeDependenciesFromPackageJson(
+    tree,
+    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser'],
+    ['@typescript-eslint/eslint-plugin', '@typescript-eslint/parser']
+  );
 }

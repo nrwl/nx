@@ -103,7 +103,7 @@ Once a React Native configuration file has been identified, the targets are crea
 To create additional React Native apps run:
 
 ```shell
-nx g @nx/react-native:app <your-app-name>
+nx g @nx/react-native:app apps/<your-app-name>
 ```
 
 ### Generating Libraries
@@ -111,7 +111,7 @@ nx g @nx/react-native:app <your-app-name>
 To generate a new library run:
 
 ```shell
-nx g @nx/react-native:lib <your-lib-name>
+nx g @nx/react-native:lib libs/<your-lib-name>
 ```
 
 ### Generating Components
@@ -119,7 +119,7 @@ nx g @nx/react-native:lib <your-lib-name>
 To generate a new component inside library run:
 
 ```shell
-nx g @nx/react-native:component <your-component-name> --directory=<component-directory> --export
+nx g @nx/react-native:component <component-path> --export
 ```
 
 Replace `<component-directory>` with the directory where you want to place the component. It must be a path to a directory relative to the workspace root and located inside the library project root.
@@ -133,7 +133,7 @@ The Nx CLI provides the [`migrate` command](/features/automate-updating-dependen
 To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/nx-api/react-native/generators/upgrade-native) generator:
 
 ```shell
-nx generate @nx/react-native:upgrade-native <your-app-name>
+nx generate @nx/react-native:upgrade-native apps/<your-app-name>
 ```
 
 This is a command that will replace the iOS and Android native code folder entirely.

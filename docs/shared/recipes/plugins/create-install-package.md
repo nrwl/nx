@@ -1,3 +1,8 @@
+---
+title: Creating an Install Package
+description: Learn how to create a custom "create-x" package for your Nx plugin to provide a seamless project bootstrapping experience with npm, yarn, or other package managers.
+---
+
 # Creating an Install Package
 
 {% youtube
@@ -67,7 +72,7 @@ async function main() {
   // TODO: update below to customize the workspace
   const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
     name,
-    nxCloud: false,
+    nxCloud: 'skip',
     packageManager: 'npm',
   });
 
@@ -84,7 +89,7 @@ Note the following code snippet:
 ```typescript
 const { directory } = await createWorkspace(`my-plugin@${presetVersion}`, {
   name,
-  nxCloud: false,
+  nxCloud: 'skip',
   packageManager: 'npm',
 });
 ```
@@ -125,10 +130,12 @@ npx nx local-registry
 Note, after terminating the terminal window where the `nx local-registry` command is running (e.g. using `CTRL+c` or `CMD+c`) the registry will be stopped, previously installed packages will be cleaned up and the npm/yarn/pnpm registries will be restored to their original state, pointing to the real NPM servers again.
 {% /callout %}
 
-Next, you can **publish** your packages to your new local registry. All of the generated packages have a `publish` target, so you can simply run:
+Next, you can **publish** your packages to your new local registry. All of the generated packages can use `nx release` to publish whatever is in your `build` output folder, so you can simply run:
 
 ```shell
-npx nx run-many --targets publish --ver 1.0.0 --tag latest
+npx nx run-many --targets build
+npx nx release version 1.0.0
+npx nx release publish --tag latest
 ```
 
 Once the packages are published, you should be able to test the behavior of your "create package" as follows:
@@ -158,4 +165,4 @@ Your plugin and create package will both need to be published to NPM to be useab
 
 ## Further Reading
 
-- [Blog post: Create your own create-react-app CLI](https://blog.nrwl.io/create-your-own-create-react-app-cli-d1bf13904e35?sk=a156dddcf85223e7d3e57312955714ea)
+- [Blog post: Create your own create-react-app CLI](/blog/create-your-own-create-react-app-cli)

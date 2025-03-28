@@ -6,9 +6,10 @@ import {
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { readJsonFile } from '../fileutils';
 import { getNxRequirePaths } from '../installation-directory';
-import { NxPlugin, readPluginPackageJson } from '../../project-graph/plugins';
-import { loadNxPlugin } from '../../project-graph/plugins/loader';
+import { readPluginPackageJson } from '../../project-graph/plugins';
+import { loadNxPlugin } from '../../project-graph/plugins/in-process-loader';
 import { PackageJson } from '../package-json';
+import { LoadedNxPlugin } from '../../project-graph/plugins/loaded-nx-plugin';
 
 export interface PluginCapabilities {
   name: string;
@@ -42,12 +43,11 @@ export async function getPluginCapabilities(
   includeRuntimeCapabilities = false
 ): Promise<PluginCapabilities | null> {
   try {
-    const { json: packageJson, path: packageJsonPath } =
-      await readPluginPackageJson(
-        pluginName,
-        projects,
-        getNxRequirePaths(workspaceRoot)
-      );
+    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
+      pluginName,
+      projects,
+      getNxRequirePaths(workspaceRoot)
+    );
     const pluginModule = includeRuntimeCapabilities
       ? await tryGetModule(packageJson, workspaceRoot)
       : ({} as Record<string, unknown>);
@@ -89,11 +89,14 @@ export async function getPluginCapabilities(
         pluginModule &&
         ('processProjectGraph' in pluginModule ||
           'createNodes' in pluginModule ||
+          'createNodesV2' in pluginModule ||
+          'createMetadata' in pluginModule ||
           'createDependencies' in pluginModule),
       projectInference:
         pluginModule &&
         ('projectFilePatterns' in pluginModule ||
-          'createNodes' in pluginModule),
+          'createNodes' in pluginModule ||
+          'createNodesV2' in pluginModule),
     };
   } catch {
     return null;
@@ -103,7 +106,7 @@ export async function getPluginCapabilities(
 async function tryGetModule(
   packageJson: PackageJson,
   workspaceRoot: string
-): Promise<NxPlugin | null> {
+): Promise<LoadedNxPlugin | null> {
   try {
     if (
       packageJson.generators ??
@@ -113,8 +116,7 @@ async function tryGetModule(
       packageJson['builders']
     ) {
       const [pluginPromise] = loadNxPlugin(packageJson.name, workspaceRoot);
-      const plugin = await pluginPromise;
-      return plugin;
+      return await pluginPromise;
     } else {
       return {
         name: packageJson.name,

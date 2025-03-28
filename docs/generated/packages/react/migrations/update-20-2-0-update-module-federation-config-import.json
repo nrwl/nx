@@ -1,0 +1,14 @@
+{
+  "name": "update-20-2-0-update-module-federation-config-import",
+  "cli": "nx",
+  "version": "20.2.0-beta.2",
+  "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+  "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package",
+  "implementation": "/packages/react/src/migrations/update-20-2-0/migrate-mf-imports-to-new-package.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Migrate Module Federation Imports to New Package\n\nUpdate the ModuleFederationConfig imports to use @nx/module-federation.\n\n#### Sample Code Changes\n\nUpdate import paths for ModuleFederationConfig.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```js {% fileName=\"apps/shell/webpack.config.js\" %}\nimport { ModuleFederationConfig } from '@nx/webpack';\n```\n\n```js {% fileName=\"apps/shell/rspack.config.js\" %}\nimport { ModuleFederationConfig } from '@nx/rspack/module-federation';\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```js {% fileName=\"apps/shell/webpack.config.js\" %}\nimport { ModuleFederationConfig } from '@nx/module-federation';\n```\n\n```js {% fileName=\"apps/shell/rspack.config.js\" %}\nimport { ModuleFederationConfig } from '@nx/module-federation';\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

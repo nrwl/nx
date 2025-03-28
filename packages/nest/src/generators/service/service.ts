@@ -16,16 +16,6 @@ export type ServiceGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function serviceGenerator(
   tree: Tree,
   rawOptions: ServiceGeneratorOptions
-) {
-  await serviceGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function serviceGeneratorInternal(
-  tree: Tree,
-  rawOptions: ServiceGeneratorOptions
 ): Promise<any> {
   const options = await normalizeServiceOptions(tree, rawOptions);
 
@@ -38,12 +28,9 @@ async function normalizeServiceOptions(
   tree: Tree,
   options: ServiceGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'service',
-    '@nx/nest:service',
-    options
-  );
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'service',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

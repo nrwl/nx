@@ -1,11 +1,11 @@
 ---
 title: 'graph - CLI command'
-description: 'Graph dependencies within workspace'
+description: 'Graph dependencies within workspace.'
 ---
 
 # graph
 
-Graph dependencies within workspace
+Graph dependencies within workspace.
 
 ## Usage
 
@@ -47,12 +47,6 @@ Show the graph where every node is either an ancestor or a descendant of todos-f
  nx graph --focus=todos-feature-main
 ```
 
-Include project-one and project-two in the project graph:
-
-```shell
- nx graph --include=project-one,project-two
-```
-
 Exclude project-one and project-two from the project graph:
 
 ```shell
@@ -73,130 +67,25 @@ Watch for changes to project graph and update in-browser:
 
 ## Options
 
-### affected
-
-Type: `boolean`
-
-Highlight affected projects
-
-### base
-
-Type: `string`
-
-Base of the current branch (usually main)
-
-### exclude
-
-Type: `string`
-
-Exclude certain projects from being processed
-
-### file
-
-Type: `string`
-
-Output file (e.g. --file=output.json or --file=dep-graph.html).
-
-### files
-
-Type: `string`
-
-Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces
-
-### focus
-
-Type: `string`
-
-Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.
-
-### groupByFolder
-
-Type: `boolean`
-
-Group projects by folder in the project graph
-
-### head
-
-Type: `string`
-
-Latest commit of the current branch (usually HEAD)
-
-### help
-
-Type: `boolean`
-
-Show help
-
-### host
-
-Type: `string`
-
-Bind the project graph server to a specific ip address.
-
-### open
-
-Type: `boolean`
-
-Default: `true`
-
-Open the project graph in the browser.
-
-### port
-
-Type: `number`
-
-Bind the project graph server to a specific port.
-
-### print
-
-Type: `boolean`
-
-Print the project graph to stdout in the terminal.
-
-### targets
-
-Type: `string`
-
-The target to show tasks for in the task graph
-
-### uncommitted
-
-Type: `boolean`
-
-Uncommitted changes
-
-### untracked
-
-Type: `boolean`
-
-Untracked changes
-
-### verbose
-
-Type: `boolean`
-
-Prints additional information about the commands (e.g., stack traces)
-
-### version
-
-Type: `boolean`
-
-Show version number
-
-### view
-
-Type: `string`
-
-Choices: [projects, tasks]
-
-Default: `projects`
-
-Choose whether to view the projects or task graph
-
-### watch
-
-Type: `boolean`
-
-Default: `true`
-
-Watch for changes to project graph and update in-browser
+| Option            | Type                | Description                                                                                                                             |
+| ----------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `--affected`      | boolean             | Highlight affected projects.                                                                                                            |
+| `--base`          | string              | Base of the current branch (usually main).                                                                                              |
+| `--exclude`       | string              | Exclude certain projects from being processed.                                                                                          |
+| `--file`          | string              | Output file (e.g. --file=output.json or --file=dep-graph.html).                                                                         |
+| `--files`         | string              | Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces. |
+| `--focus`         | string              | Use to show the project graph for a particular project and every node that is either an ancestor or a descendant.                       |
+| `--groupByFolder` | boolean             | Group projects by folder in the project graph.                                                                                          |
+| `--head`          | string              | Latest commit of the current branch (usually HEAD).                                                                                     |
+| `--help`          | boolean             | Show help.                                                                                                                              |
+| `--host`          | string              | Bind the project graph server to a specific ip address.                                                                                 |
+| `--open`          | boolean             | Open the project graph in the browser. (Default: `true`)                                                                                |
+| `--port`          | number              | Bind the project graph server to a specific port.                                                                                       |
+| `--print`         | boolean             | Print the project graph to stdout in the terminal.                                                                                      |
+| `--targets`       | string              | The target to show tasks for in the task graph.                                                                                         |
+| `--uncommitted`   | boolean             | Uncommitted changes.                                                                                                                    |
+| `--untracked`     | boolean             | Untracked changes.                                                                                                                      |
+| `--verbose`       | boolean             | Prints additional information about the commands (e.g., stack traces).                                                                  |
+| `--version`       | boolean             | Show version number.                                                                                                                    |
+| `--view`          | `projects`, `tasks` | Choose whether to view the projects or task graph. (Default: `projects`)                                                                |
+| `--watch`         | boolean             | Watch for changes to project graph and update in-browser. (Default: `true`)                                                             |

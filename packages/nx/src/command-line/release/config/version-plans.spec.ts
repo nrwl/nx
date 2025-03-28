@@ -147,7 +147,7 @@ describe('version-plans', () => {
     describe('error cases', () => {
       describe('for default group', () => {
         describe('when bump "key" is a group name', () => {
-          it('should error if version plans are not enabled', () => {
+          it('should error if version plans are not enabled', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -169,18 +169,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump in 'plan1.md' but version plans are not enabled.`
             );
           });
 
-          it('should error if group is independently versioned', () => {
+          it('should error if group is independently versioned', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -200,18 +201,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump in 'plan1.md' but projects are configured to be independently versioned. Individual projects should be bumped instead.`
             );
           });
 
-          it('should error if bump "value" is not a release type', () => {
+          it('should error if bump "value" is not a release type', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -231,18 +233,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
-          it('should error if fixed default group has two different entries with different bump types', () => {
+          it('should error if fixed default group has two different entries with different bump types', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -263,20 +266,21 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`
             );
           });
         });
 
         describe('when bump "key" is a project name', () => {
-          it('should error if project does not exist in the workspace', () => {
+          it('should error if project does not exist in the workspace', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -296,18 +300,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = [];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.`
             );
           });
 
-          it('should error if version plans are not enabled', () => {
+          it('should error if version plans are not enabled', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -327,18 +332,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg1' in 'plan1.md' but version plans are not enabled.`
             );
           });
 
-          it('should error if project is not included in the default release group', () => {
+          it('should error if project is not included in the default release group', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -358,18 +364,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg2' in 'plan1.md' but the project is not configured for release. Ensure it is included by the 'release.projects' globs in nx.json.`
             );
           });
 
-          it(`should error if project's bump "value" is not a release type`, () => {
+          it(`should error if project's bump "value" is not a release type`, async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -389,18 +396,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
-          it('should error if the fixed default group has two different projects with different bump types', () => {
+          it('should error if the fixed default group has two different projects with different bump types', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -421,13 +429,14 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`
             );
           });
@@ -436,7 +445,7 @@ describe('version-plans', () => {
 
       describe('for explicit groups', () => {
         describe('when bump "key" is a group name', () => {
-          it('should error if version plans are not enabled', () => {
+          it('should error if version plans are not enabled', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -456,18 +465,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for group 'group1' in 'plan1.md' but the group does not have version plans enabled.`
             );
           });
 
-          it('should error if group is independently versioned', () => {
+          it('should error if group is independently versioned', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -487,18 +497,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for group 'group1' in 'plan1.md' but the group's projects are independently versioned. Individual projects of 'group1' should be bumped instead.`
             );
           });
 
-          it('should error if bump "value" is not a release type', () => {
+          it('should error if bump "value" is not a release type', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -518,18 +529,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for group 'group1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
-          it('should error if fixed group has two different entries with different bump types', () => {
+          it('should error if fixed group has two different entries with different bump types', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -550,19 +562,20 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for group 'group1' in 'plan1.md' that conflicts with another version bump for this group. When the group is in fixed versioning mode, all groups' version bumps within the same version plan must match.`
             );
           });
         });
         describe('when bump "key" is a project name', () => {
-          it('should error if version plans are not enabled', () => {
+          it('should error if version plans are not enabled', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -589,18 +602,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg2' in 'plan1.md' but the project's group 'group2' does not have version plans enabled.`
             );
           });
 
-          it('should error if project does not exist in the workspace', () => {
+          it('should error if project does not exist in the workspace', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -620,18 +634,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = [];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'nonExistentPkg' in 'plan1.md' but the project does not exist in the workspace.`
             );
           });
 
-          it('should error if project is not included in any release groups', () => {
+          it('should error if project is not included in any release groups', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -661,18 +676,19 @@ describe('version-plans', () => {
               'pkg3',
             ];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg3' in 'plan1.md' but the project is not in any configured release groups.`
             );
           });
 
-          it(`should error if project's bump "value" is not a release type`, () => {
+          it(`should error if project's bump "value" is not a release type`, async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -692,18 +708,19 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg1' in 'plan1.md' with an invalid release type. Please specify one of major, premajor, minor, preminor, patch, prepatch, prerelease.`
             );
           });
 
-          it('should error if a fixed group has two different projects with different bump types', () => {
+          it('should error if a fixed group has two different projects with different bump types', async () => {
             const rawVersionPlans: RawVersionPlan[] = [
               versionPlan({
                 name: 'plan1.md',
@@ -724,13 +741,14 @@ describe('version-plans', () => {
             ];
             const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2'];
 
-            expect(() =>
+            await expect(() =>
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
-            ).toThrowErrorMatchingInlineSnapshot(
+            ).rejects.toThrowErrorMatchingInlineSnapshot(
               `Found a version bump for project 'pkg2' in 'plan1.md' that conflicts with another project's version bump in the same release group 'group1'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.`
             );
           });
@@ -740,7 +758,7 @@ describe('version-plans', () => {
 
     describe('success cases', () => {
       describe('for default group', () => {
-        it('should correctly handle fixed default group', () => {
+        it('should correctly handle fixed default group', async () => {
           const rawVersionPlans: RawVersionPlan[] = [
             versionPlan({
               name: 'plan2.md',
@@ -773,22 +791,24 @@ describe('version-plans', () => {
           ];
           const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2', 'pkg3'];
 
-          expect(
+          await expect(
             peelResultFromGroups(
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
             )
             // plan 1 should be first in the list because it was created after plan 2
-          ).toMatchInlineSnapshot(`
+          ).resolves.toMatchInlineSnapshot(`
             [
               {
                 name: __default__,
                 resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
+                    commit: null,
                     createdOnMs: 20,
                     fileName: plan1.md,
                     groupVersionBump: patch,
@@ -802,6 +822,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
+                    commit: null,
                     createdOnMs: 19,
                     fileName: plan2.md,
                     groupVersionBump: minor,
@@ -819,7 +840,7 @@ describe('version-plans', () => {
           `);
         });
 
-        it('should correctly handle independent default group', () => {
+        it('should correctly handle independent default group', async () => {
           const rawVersionPlans: RawVersionPlan[] = [
             versionPlan({
               name: 'plan2.md',
@@ -859,21 +880,23 @@ describe('version-plans', () => {
           ];
           const allProjectNamesInWorkspace: string[] = ['pkg1', 'pkg2', 'pkg3'];
 
-          expect(
+          await expect(
             peelResultFromGroups(
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
             )
-          ).toMatchInlineSnapshot(`
+          ).resolves.toMatchInlineSnapshot(`
             [
               {
                 name: __default__,
                 resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
+                    commit: null,
                     createdOnMs: 23,
                     fileName: plan3.md,
                     message: plan3 message,
@@ -886,6 +909,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
+                    commit: null,
                     createdOnMs: 22,
                     fileName: plan1.md,
                     message: plan1 message,
@@ -898,6 +922,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
+                    commit: null,
                     createdOnMs: 21,
                     fileName: plan2.md,
                     message: plan2 message,
@@ -916,7 +941,7 @@ describe('version-plans', () => {
       });
 
       describe('for explicit groups', () => {
-        it('should correctly handle fixed and independent groups', () => {
+        it('should correctly handle fixed and independent groups', async () => {
           const rawVersionPlans: RawVersionPlan[] = [
             versionPlan({
               name: 'plan2.md',
@@ -987,21 +1012,23 @@ describe('version-plans', () => {
             'pkg5',
           ];
 
-          expect(
+          await expect(
             peelResultFromGroups(
               setResolvedVersionPlansOnGroups(
                 rawVersionPlans,
                 releaseGroups,
-                allProjectNamesInWorkspace
+                allProjectNamesInWorkspace,
+                false
               )
             )
-          ).toMatchInlineSnapshot(`
+          ).resolves.toMatchInlineSnapshot(`
             [
               {
                 name: group1,
                 resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
+                    commit: null,
                     createdOnMs: 26,
                     fileName: plan3.md,
                     groupVersionBump: major,
@@ -1010,6 +1037,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
+                    commit: null,
                     createdOnMs: 25,
                     fileName: plan1.md,
                     groupVersionBump: patch,
@@ -1018,6 +1046,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
+                    commit: null,
                     createdOnMs: 24,
                     fileName: plan2.md,
                     groupVersionBump: minor,
@@ -1034,6 +1063,7 @@ describe('version-plans', () => {
                 resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
+                    commit: null,
                     createdOnMs: 26,
                     fileName: plan3.md,
                     groupVersionBump: patch,
@@ -1042,6 +1072,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
+                    commit: null,
                     createdOnMs: 24,
                     fileName: plan2.md,
                     groupVersionBump: minor,
@@ -1058,6 +1089,7 @@ describe('version-plans', () => {
                 resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
+                    commit: null,
                     createdOnMs: 25,
                     fileName: plan1.md,
                     groupVersionBump: major,
@@ -1066,6 +1098,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan2.md,
+                    commit: null,
                     createdOnMs: 24,
                     fileName: plan2.md,
                     groupVersionBump: minor,
@@ -1082,6 +1115,7 @@ describe('version-plans', () => {
                 resolvedVersionPlans: [
                   {
                     absolutePath: <workspace-root>/version-plans/plan3.md,
+                    commit: null,
                     createdOnMs: 26,
                     fileName: plan3.md,
                     message: plan3 message,
@@ -1092,6 +1126,7 @@ describe('version-plans', () => {
                   },
                   {
                     absolutePath: <workspace-root>/version-plans/plan1.md,
+                    commit: null,
                     createdOnMs: 25,
                     fileName: plan1.md,
                     message: plan1 message,
@@ -1143,11 +1178,15 @@ function releaseGroup(
   } as ReleaseGroupWithName;
 }
 
-function peelResultFromGroups(releaseGroups: ReleaseGroupWithName[]): {
-  name: string;
-  resolvedVersionPlans: ReleaseGroupWithName['resolvedVersionPlans'];
-}[] {
-  return releaseGroups.map((g) => ({
+async function peelResultFromGroups(
+  releaseGroupsPromise: Promise<ReleaseGroupWithName[]>
+): Promise<
+  {
+    name: string;
+    resolvedVersionPlans: ReleaseGroupWithName['resolvedVersionPlans'];
+  }[]
+> {
+  return (await releaseGroupsPromise).map((g) => ({
     name: g.name,
     resolvedVersionPlans: g.resolvedVersionPlans,
   }));

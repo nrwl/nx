@@ -18,6 +18,8 @@ import * as tar from 'tar-stream';
 import { cacheDir } from '../utils/cache-directory';
 import { createHash } from 'crypto';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
+import { RemoteCacheV2 } from '../tasks-runner/default-tasks-runner';
+import { workspaceRoot } from '../utils/workspace-root';
 
 interface CloudBundleInstall {
   version: string;
@@ -55,6 +57,7 @@ export interface NxCloudClient {
   configureLightClientRequire: () => (paths: string[]) => void;
   commands: Record<string, () => Promise<void>>;
   nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
+  getRemoteCache: () => RemoteCacheV2;
 }
 export async function verifyOrUpdateNxCloudClient(
   options: CloudTaskRunnerOptions
@@ -148,7 +151,26 @@ export async function verifyOrUpdateNxCloudClient(
     nxCloudClient: require(currentBundle.fullPath),
   };
 }
-const runnerBundleInstallDirectory = join(cacheDir, 'cloud');
+
+function getBundleInstallDefaultLocation() {
+  const legacyPath = join(
+    workspaceRoot,
+    'node_modules',
+    '.cache',
+    'nx',
+    'cloud'
+  );
+
+  // this legacy path is used when the nx-cloud package is installed.
+  // make sure to reuse it so that we don't `require` different the client bundles
+  if (existsSync(legacyPath)) {
+    return legacyPath;
+  } else {
+    return join(cacheDir, 'cloud');
+  }
+}
+
+const runnerBundleInstallDirectory = getBundleInstallDefaultLocation();
 
 function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
   if (!existsSync(runnerBundleInstallDirectory)) {

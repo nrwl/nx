@@ -31,20 +31,8 @@ List the generators and executors available in the `@nx/web` plugin if it is ins
 
 ## Options
 
-### help
-
-Type: `boolean`
-
-Show help
-
-### plugin
-
-Type: `string`
-
-The name of an installed plugin to query
-
-### version
-
-Type: `boolean`
-
-Show version number
+| Option      | Type    | Description                               |
+| ----------- | ------- | ----------------------------------------- |
+| `--help`    | boolean | Show help.                                |
+| `--plugin`  | string  | The name of an installed plugin to query. |
+| `--version` | boolean | Show version number.                      |

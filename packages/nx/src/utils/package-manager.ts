@@ -1,13 +1,28 @@
 import { exec, execSync } from 'child_process';
 import { copyFileSync, existsSync, writeFileSync } from 'fs';
-import { remove } from 'fs-extra';
+import {
+  Pair,
+  ParsedNode,
+  parseDocument,
+  stringify as YAMLStringify,
+  YAMLMap,
+  YAMLSeq,
+  Scalar,
+} from 'yaml';
+import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
+
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { readFileIfExisting, readJsonFile, writeJsonFile } from './fileutils';
+import {
+  readFileIfExisting,
+  readJsonFile,
+  readYamlFile,
+  writeJsonFile,
+} from './fileutils';
 import { PackageJson, readModulePackageJson } from './package-json';
 import { workspaceRoot } from './workspace-root';
 
@@ -38,7 +53,7 @@ export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??
-    (existsSync(join(dir, 'bun.lockb'))
+    (existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
       ? 'bun'
       : existsSync(join(dir, 'yarn.lock'))
       ? 'yarn'
@@ -62,7 +77,7 @@ export function isWorkspacesEnabled(
   }
 
   // yarn and npm both use the same 'workspaces' property in package.json
-  const packageJson: PackageJson = readPackageJson();
+  const packageJson: PackageJson = readPackageJson(root);
   return !!packageJson?.workspaces;
 }
 
@@ -170,7 +185,7 @@ export function getPackageManagerCommand(
       };
     },
     bun: () => {
-      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install',
         ciInstall: 'bun install --no-cache',
@@ -351,7 +366,7 @@ export function createTempNpmDirectory() {
 
   const cleanup = async () => {
     try {
-      await remove(dir);
+      await rm(dir, { recursive: true, force: true });
     } catch {
       // It's okay if this fails, the OS will clean it up eventually
     }
@@ -477,4 +492,113 @@ export async function packageRegistryPack(
 
   const tarballPath = stdout.trim();
   return { tarballPath };
+}
+
+/**
+ * Gets the workspaces defined in the package manager configuration.
+ * @returns workspaces defined in the package manager configuration, empty array if none are defined
+ */
+export function getPackageWorkspaces(
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
+): string[] {
+  let workspaces: string[];
+
+  if (
+    packageManager === 'npm' ||
+    packageManager === 'yarn' ||
+    packageManager === 'bun'
+  ) {
+    const packageJson = readPackageJson(root);
+    workspaces = packageJson.workspaces;
+  } else if (packageManager === 'pnpm') {
+    const pnpmWorkspacePath = join(root, 'pnpm-workspace.yaml');
+    if (existsSync(pnpmWorkspacePath)) {
+      const { packages } =
+        readYamlFile<{ packages: string[] }>(pnpmWorkspacePath) ?? {};
+      workspaces = packages;
+    }
+  }
+
+  return workspaces ?? [];
+}
+
+/**
+ * Adds a package to the workspaces defined in the package manager configuration.
+ * If the package is already included in the workspaces, it will not be added again.
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param workspaces The workspaces to add the package to. Defaults to the workspaces defined in the package manager configuration.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
+ * @param packagePath The path of the package to add to the workspaces
+ */
+export function addPackagePathToWorkspaces(
+  packagePath: string,
+  packageManager: PackageManager = detectPackageManager(),
+  workspaces: string[] = getPackageWorkspaces(packageManager),
+  root: string = workspaceRoot
+): void {
+  if (
+    packageManager === 'npm' ||
+    packageManager === 'yarn' ||
+    packageManager === 'bun'
+  ) {
+    workspaces.push(packagePath);
+    const packageJson = readPackageJson(root);
+    const updatedPackageJson = {
+      ...packageJson,
+      workspaces,
+    };
+    const packageJsonPath = join(root, 'package.json');
+    writeJsonFile(packageJsonPath, updatedPackageJson);
+  } else if (packageManager === 'pnpm') {
+    const pnpmWorkspacePath = join(root, 'pnpm-workspace.yaml');
+    if (existsSync(pnpmWorkspacePath)) {
+      const pnpmWorkspaceDocument = parseDocument(
+        readFileIfExisting(pnpmWorkspacePath)
+      );
+      const pnpmWorkspaceContents: ParsedNode | null =
+        pnpmWorkspaceDocument.contents;
+      if (!pnpmWorkspaceContents) {
+        writeFileSync(
+          pnpmWorkspacePath,
+          YAMLStringify({
+            packages: [packagePath],
+          })
+        );
+      } else if (pnpmWorkspaceContents instanceof YAMLMap) {
+        const packages: Pair | undefined = pnpmWorkspaceContents.items.find(
+          (item: Pair) => {
+            return item.key instanceof Scalar
+              ? item.key?.value === 'packages'
+              : item.key === 'packages';
+          }
+        );
+        if (packages) {
+          if (packages.value instanceof YAMLSeq === false) {
+            packages.value = new YAMLSeq();
+          }
+          (packages.value as YAMLSeq).items ??= [];
+          (packages.value as YAMLSeq).items.push(packagePath);
+        } else {
+          // if the 'packages' key doesn't exist, create it
+          const packagesSeq = new YAMLSeq();
+          packagesSeq.items ??= [];
+          packagesSeq.items.push(packagePath);
+
+          pnpmWorkspaceDocument.add(
+            pnpmWorkspaceDocument.createPair('packages', packagesSeq)
+          );
+        }
+        writeFileSync(pnpmWorkspacePath, YAMLStringify(pnpmWorkspaceContents));
+      }
+    } else {
+      // If the file doesn't exist, create it
+      writeFileSync(
+        pnpmWorkspacePath,
+        YAMLStringify({
+          packages: [packagePath],
+        })
+      );
+    }
+  }
 }

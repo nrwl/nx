@@ -67,11 +67,7 @@ function buildServerAppWithCustomWebpackConfiguration(
             context.target
           );
 
-          if (
-            mergedConfig.plugins
-              .map((p) => p.constructor.name)
-              .includes('UniversalFederationPlugin')
-          ) {
+          if (mergedConfig.target === 'async-node') {
             mergedConfig.entry.main = mergedConfig.entry.main.filter(
               (m) => !m.startsWith('@angular/platform-server/init')
             );

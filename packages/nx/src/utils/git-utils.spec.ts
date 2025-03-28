@@ -1,7 +1,6 @@
 import {
   extractUserAndRepoFromGitHubUrl,
   getGithubSlugOrNull,
-  updateRebaseFile,
 } from './git-utils';
 import { execSync } from 'child_process';
 
@@ -22,7 +21,10 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('origin-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
+      expect(execSync).toHaveBeenCalledWith('git remote -v', {
+        stdio: 'pipe',
+        windowsHide: false,
+      });
     });
 
     it('should return "github" if there are no remotes', () => {
@@ -31,7 +33,10 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('github');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
+      expect(execSync).toHaveBeenCalledWith('git remote -v', {
+        stdio: 'pipe',
+        windowsHide: false,
+      });
     });
 
     it('should return "github" if execSync throws an error', () => {
@@ -42,7 +47,10 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('github');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
+      expect(execSync).toHaveBeenCalledWith('git remote -v', {
+        stdio: 'pipe',
+        windowsHide: false,
+      });
     });
 
     it('should return the first github remote slug if no origin is present', () => {
@@ -54,7 +62,10 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('upstream-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
+      expect(execSync).toHaveBeenCalledWith('git remote -v', {
+        stdio: 'pipe',
+        windowsHide: false,
+      });
     });
 
     it('should return null if remote is set up but not github', () => {
@@ -66,7 +77,10 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBeNull();
-      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
+      expect(execSync).toHaveBeenCalledWith('git remote -v', {
+        stdio: 'pipe',
+        windowsHide: false,
+      });
     });
 
     it('should return the first github remote slug for HTTPS URLs', () => {
@@ -78,7 +92,10 @@ describe('git utils tests', () => {
       const result = getGithubSlugOrNull();
 
       expect(result).toBe('origin-user/repo-name');
-      expect(execSync).toHaveBeenCalledWith('git remote -v', { stdio: 'pipe' });
+      expect(execSync).toHaveBeenCalledWith('git remote -v', {
+        stdio: 'pipe',
+        windowsHide: false,
+      });
     });
   });
 
@@ -219,50 +236,6 @@ describe('git utils tests', () => {
           )
         ).toBe(null);
       });
-    });
-  });
-
-  describe('updateRebaseFile', () => {
-    let rebaseFileContents;
-
-    beforeEach(() => {
-      rebaseFileContents = `pick 6a642190 chore(repo): hi
-pick 022528d9 chore(repo): prepare for import
-pick 84ef7741 feat(repo): complete import of git@github.com:FrozenPandaz/created-vite-app.git
-
-# Rebase 3441f39e..84ef7741 onto 3441f39e (3 commands)
-#
-# Commands:
-# p, pick <commit> = use commit
-# r, reword <commit> = use commit, but edit the commit message
-# e, edit <commit> = use commit, but stop for amending
-# s, squash <commit> = use commit, but meld into previous commit
-# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
-#                    commit's log message, unless -C is used, in which case
-#                    keep only this commit's message; -c is same as -C but
-#                    opens the editor
-# x, exec <command> = run command (the rest of the line) using shell
-# b, break = stop here (continue rebase later with 'git rebase --continue')
-# d, drop <commit> = remove commit
-# l, label <label> = label current HEAD with a name
-# t, reset <label> = reset HEAD to a label
-# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
-#         create a merge commit using the original merge commit's
-#         message (or the oneline, if no original merge commit was
-#         specified); use -c <commit> to reword the commit message
-# u, update-ref <ref> = track a placeholder for the <ref> to be updated
-#                       to this position in the new commits. The <ref> is
-#                       updated at the end of the rebase
-#
-# These lines can be re-ordered; they are executed from top to bottom.
-#
-# If you remove a line here THAT COMMIT WILL BE LOST.
-#
-# However, if you remove everything, the rebase will be aborted.`;
-    });
-
-    it('should squash the last 2 commits', () => {
-      expect(updateRebaseFile(rebaseFileContents)).toMatchSnapshot();
     });
   });
 });

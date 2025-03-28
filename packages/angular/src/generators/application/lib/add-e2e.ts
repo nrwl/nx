@@ -1,18 +1,15 @@
-import type { Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
-  readProjectConfiguration,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   // since e2e are separate projects, default to adding plugins
@@ -21,12 +18,17 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const e2eWebServerInfo = getAngularE2EWebServerInfo(
+    tree,
+    options.name,
+    options.port
+  );
+
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    // TODO: This can call `@nx/web:static-config` generator when ready
-    addFileServerTarget(tree, options, 'serve-static');
+
     addProjectConfiguration(tree, options.e2eProjectName, {
       projectType: 'application',
       root: options.e2eProjectRoot,
@@ -41,8 +43,14 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       linter: options.linter,
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
-      devServerTarget: `${options.name}:${options.e2eWebServerTarget}:development`,
-      baseUrl: options.e2eWebServerAddress,
+      devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+      baseUrl: e2eWebServerInfo.e2eWebServerAddress,
+      webServerCommands: {
+        default: e2eWebServerInfo.e2eWebServerCommand,
+        production: e2eWebServerInfo.e2eCiWebServerCommand,
+      },
+      ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+      ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       rootProject: options.rootProject,
       addPlugin,
     });
@@ -73,10 +81,8 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerCommand: `${getPackageManagerCommand().exec} nx ${
-        options.e2eWebServerTarget
-      } ${options.name}`,
-      webServerAddress: options.e2eWebServerAddress,
+      webServerCommand: e2eWebServerInfo.e2eWebServerCommand,
+      webServerAddress: e2eWebServerInfo.e2eWebServerAddress,
       rootProject: options.rootProject,
       addPlugin,
     });
@@ -89,32 +95,35 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       );
     }
   }
+
+  return e2eWebServerInfo.e2ePort;
 }
 
-function addFileServerTarget(
+function getAngularE2EWebServerInfo(
   tree: Tree,
-  options: NormalizedSchema,
-  targetName: string
-) {
-  if (!options.skipPackageJson) {
-    addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+  projectName: string,
+  portOverride: number
+): E2EWebServerDetails & { e2ePort: number } {
+  const nxJson = readNxJson(tree);
+  let e2ePort = portOverride ?? 4200;
+
+  if (
+    nxJson.targetDefaults?.['serve'] &&
+    (nxJson.targetDefaults?.['serve'].options?.port ||
+      nxJson.targetDefaults?.['serve'].options?.env?.PORT)
+  ) {
+    e2ePort =
+      nxJson.targetDefaults?.['serve'].options?.port ||
+      nxJson.targetDefaults?.['serve'].options?.env?.PORT;
   }
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  const isUsingApplicationBuilder =
-    angularMajorVersion >= 17 && options.bundler === 'esbuild';
-
-  const projectConfig = readProjectConfiguration(tree, options.name);
-  projectConfig.targets[targetName] = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: `${options.name}:build`,
-      port: options.e2ePort,
-      staticFilePath: isUsingApplicationBuilder
-        ? joinPathFragments(options.outputPath, 'browser')
-        : undefined,
-      spa: true,
-    },
+  const pm = getPackageManagerCommand();
+  return {
+    e2eCiBaseUrl: 'http://localhost:4200',
+    e2eCiWebServerCommand: `${pm.exec} nx run ${projectName}:serve-static`,
+    e2eWebServerCommand: `${pm.exec} nx run ${projectName}:serve`,
+    e2eWebServerAddress: `http://localhost:${e2ePort}`,
+    e2eDevServerTarget: `${projectName}:serve`,
+    e2ePort,
   };
-  updateProjectConfiguration(tree, options.name, projectConfig);
 }

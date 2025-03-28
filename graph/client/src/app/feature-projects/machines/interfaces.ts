@@ -1,4 +1,4 @@
-import { GraphPerfReport } from '../../interfaces';
+import { CompositeNode, GraphPerfReport } from '../../interfaces';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import {
@@ -30,6 +30,7 @@ export type ProjectGraphMachineEvents =
       type: 'setSelectedProjectsFromGraph';
       selectedProjectNames: string[];
       perfReport: GraphPerfReport;
+      compositeNodes: Array<CompositeNode>;
     }
   | { type: 'selectProject'; projectName: string }
   | { type: 'deselectProject'; projectName: string }
@@ -70,7 +71,12 @@ export type ProjectGraphMachineEvents =
       projects: ProjectGraphProjectNode[];
       dependencies: Record<string, ProjectGraphDependency[]>;
       fileMap: ProjectFileMap;
-    };
+    }
+  | { type: 'enableCompositeGraph'; context: string | null }
+  | { type: 'setCompositeContext'; context: string | null }
+  | { type: 'expandCompositeNode'; id: string }
+  | { type: 'collapseCompositeNode'; id: string }
+  | { type: 'disableCompositeGraph' };
 
 // The context (extended state) of the machine
 export interface ProjectGraphContext {
@@ -97,6 +103,7 @@ export interface ProjectGraphContext {
     end: string;
     algorithm: TracingAlgorithmType;
   };
+  compositeGraph: CompositeGraph;
 }
 
 export type ProjectGraphStateNodeConfig = StateNodeConfig<
@@ -115,3 +122,9 @@ export type ProjectGraphState = State<
     context: ProjectGraphContext;
   }
 >;
+
+export interface CompositeGraph {
+  enabled: boolean;
+  context?: string;
+  nodes: CompositeNode[];
+}

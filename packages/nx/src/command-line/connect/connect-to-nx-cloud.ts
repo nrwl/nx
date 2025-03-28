@@ -70,6 +70,7 @@ export async function connectWorkspaceToCloud(
 }
 
 export async function connectToNxCloudCommand(
+  options: { generateToken?: boolean },
   command?: string
 ): Promise<boolean> {
   const nxJson = readNxJson();
@@ -80,33 +81,40 @@ export async function connectToNxCloudCommand(
 
   if (isNxCloudUsed(nxJson)) {
     const token =
-      process.env.NX_CLOUD_ACCESS_TOKEN || nxJson.nxCloudAccessToken;
+      process.env.NX_CLOUD_ACCESS_TOKEN ||
+      nxJson.nxCloudAccessToken ||
+      nxJson.nxCloudId;
     if (!token) {
       throw new Error(
-        `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
+        `Unable to authenticate. If you are connecting to Nx Cloud locally, set Nx Cloud ID in nx.json. If you are connecting in a CI context, either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable.`
       );
     }
     const connectCloudUrl = await createNxCloudOnboardingURL(
       installationSource,
-      token
+      token,
+      options?.generateToken !== true
     );
     output.log({
       title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
-        'If you have not done so already, connect your workspace to your Nx Cloud account:',
-        `- Connect with Nx Cloud at: 
-      
-        ${connectCloudUrl}`,
+        'If you have not done so already, connect your workspace to your Nx Cloud account with the following URL:',
+        '',
+        `${connectCloudUrl}`,
       ],
     });
 
     return false;
   }
   const token = await connectWorkspaceToCloud({
+    generateToken: options?.generateToken,
     installationSource: command ?? installationSource,
   });
 
-  const connectCloudUrl = await createNxCloudOnboardingURL('nx-connect', token);
+  const connectCloudUrl = await createNxCloudOnboardingURL(
+    'nx-connect',
+    token,
+    options?.generateToken !== true
+  );
   try {
     const cloudConnectSpinner = ora(
       `Opening Nx Cloud ${connectCloudUrl} in your browser to connect your workspace.`
@@ -152,7 +160,9 @@ export async function connectExistingRepoToNxCloudPrompt(
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
   const useCloud =
-    setNxCloud === 'yes' ? await connectToNxCloudCommand(command) : false;
+    setNxCloud === 'yes'
+      ? await connectToNxCloudCommand({ generateToken: false }, command)
+      : false;
   await recordStat({
     command,
     nxVersion,

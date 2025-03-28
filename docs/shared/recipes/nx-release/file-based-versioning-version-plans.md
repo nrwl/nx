@@ -1,14 +1,24 @@
+---
+title: File Based Versioning (Version Plans)
+description: Learn how to use Nx Release's version plans feature to track version bumps in separate files, similar to Changesets or Beachball, allowing for more flexible versioning workflows.
+---
+
 # File Based Versioning ("Version Plans")
 
 Tools such as Changesets and Beachball helped popularize the concept of tracking the desired semver version bump in a separate file on disk (which is committed to your repository alongside your code changes). This has the advantage of separating the desired bump from your git commits themselves, which can be very useful if you are not able to enforce that all contributors follow a strict commit message format ([e.g. Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)), or if you want multiple commits to be included in the same version bump and therefore not map commits 1:1 with changelog entries.
 
-Nx release supports file based versioning as a first class use-case through a feature called "version plans". The idea behind the name is that you are creating a _plan_ to version; a plan which will be _applied_ sometime in the future when you actually invoke the `nx release` CLI or programmatic API. Therefore you can think about version plans as having two main processes: creating version plans and applying version plans. We will cover both in this recipe, but first we need to enable the feature itself.
+Nx release supports file based versioning as a first class use-case through a feature called "version plans". The idea behind the name is that you are creating a _plan_ to version; a plan which will be _applied_ sometime in the future when you actually invoke the `nx release` CLI or programmatic API. Therefore you can think about version plans as having two main processes:
+
+- creating version plans and
+- applying version plans.
+
+We will cover both in this recipe, but first we need to enable the feature itself.
 
 ## Enable Version Plans
 
 To enable version plans as a feature in your workspace, set `release.versionPlans` to `true` in `nx.json`:
 
-```jsonc
+```jsonc {% fileName="nx.json" %}
 {
   "release": {
     "versionPlans": true
@@ -69,11 +79,27 @@ One change that affects multiple projects and release groups.
 
 The project or release group names specified in the Front Matter YAML section must match the names of the projects and/or release groups in your workspace. If a project or release group is not found, an error will be thrown when applying the version plan as part of running `nx release`.
 
+{% callout type="note" title="Single Version for All Packages" %}
+
+If you use a single version for all your packages (see [Release projects independetly](/recipes/nx-release/release-projects-independently)) your version plan file might look like this:
+
+```md {% fileName=".nx/version-plans/version-plan-1723732065047.md" %}
+---
+__default__: minor
+---
+
+This is an awesome change!
+```
+
+While you could still specify the name of the project it is redundant in this case because all projects will be bumped to the same version.
+
+{% /callout %}
+
 Because these are just files, they can be created manually or by any custom scripts you may wish to write. They simply have to follow the guidance above around structure, location (`./.nx/version-plans/`) and naming (`.md` extension). The exact file name does not matter, it just needs to be unique within the `.nx/version-plans/` directory.
 
 To make things easier, Nx release comes with a built in command to help you generate valid version plan files:
 
-```sh
+```shell
 nx release plan
 ```
 
@@ -93,17 +119,46 @@ When making changes to your codebase and using version plans as your versioning 
 
 Attempting to keep track of this manually as a part of pull request reviews can be error prone and time consuming, therefore Nx release provides a `nx release plan:check` command which can be used to ensure that a version plan file exists for the changes you are making.
 
-```sh
+```shell
 nx release plan:check
 ```
 
-Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updatedDependents` option).
+Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updateDependents` option).
+
+<!-- Prettier will mess up the end tag of the callout causing it to capture all content that follows it -->
+<!-- prettier-ignore-start -->
+
+{% callout type="note" title="Running release plan:check in CI" %}
+As mentioned, `nx release plan:check` supports the same options as `nx affected` for determining the range of commits to consider. Therefore, in CI, you must also ensure that the base and head are set appropriately just like you would for `nx affected`.
+
+For GitHub Actions, we provide a utility action to do this for you:
+
+```yaml
+# ...other steps
+- uses: nrwl/nx-set-shas@v4
+# ...other steps including the use of `nx release plan:check`
+```
+
+For CircleCI, you can reference our custom orb as a step:
+
+```yaml
+# ...other steps
+- nx/set-shas
+# ...other steps including the use of `nx release plan:check`
+```
+
+You can read more about these utilities and why they are needed on their respective READMEs:
+
+- https://github.com/nrwl/nx-set-shas?tab=readme-ov-file#background
+- https://github.com/nrwl/nx-orb#background
+{% /callout %}
+<!-- prettier-ignore-end -->
 
 Nx release will compare the touched projects to the projects and release groups that are specified in the version plan files in the `.nx/version-plans/` directory. If a version plan file does not exist, the command will print an error message and return a non-zero exit code, which can be used to fail CI builds or other automation.
 
-By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `"ignorePatternsForPlanCheck"` property to an array of glob patterns that should be ignored when checking for version plans. For example:
+By default, all files that have changed are considered, but you may not want all files under a project to require a version plan be created for them. For example, you may wish to ignore test only files from consideration from this check. The way you can achieve this is by setting version plans to be a configuration object instead of a boolean, and set the `ignorePatternsForPlanCheck` property to an array of glob patterns that should be ignored when checking for version plans. For example:
 
-````jsonc
+```jsonc
 {
   "release": {
     "versionPlans": {
@@ -115,6 +170,6 @@ By default, all files that have changed are considered, but you may not want all
 
 To see more details about the changed files that were detected and the filtering logic that was used to determine the ultimately changed projects behind the scenes, you can pass `--verbose` to the command:
 
-```sh
+```shell
 nx release plan:check --verbose
-````
+```

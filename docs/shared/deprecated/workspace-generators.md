@@ -1,3 +1,8 @@
+---
+title: 'Workspace Generators'
+description: 'Learn how to migrate from workspace generators to local generators in Nx plugins for better code generation management.'
+---
+
 # Workspace Generators
 
 In Nx 13.10, we introduced the ability to run generators from Nx plugins in the workspace they were created in.
@@ -16,13 +21,13 @@ When migrating to Nx 16, a new workspace plugin is automatically generated in th
 
 ```shell
 npm add -D @nx/plugin
-nx g @nx/plugin:plugin my-plugin --directory=tools/my-plugin
+nx g @nx/plugin:plugin tools/my-plugin
 ```
 
 - Use the Nx CLI to generate the initial files needed for your generator. Replace `my-generator` with the name of your workspace generator.
 
 ```shell
-nx generate @nx/plugin:generator my-generator --directory=tools/my-plugin/src/generators/my-generator
+nx generate @nx/plugin:generator tools/my-plugin/src/generators/my-generator
 ```
 
 - Copy the code for your workspace generator into the newly created generator's folder. e.g. `libs/my-plugin/src/generators/my-generator/`

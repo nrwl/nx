@@ -25,13 +25,13 @@
       "description": "Create a React library."
     },
     "component": {
-      "factory": "./src/generators/component/component#componentGeneratorInternal",
+      "factory": "./src/generators/component/component",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React component.",
       "aliases": ["c"]
     },
     "redux": {
-      "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
+      "factory": "./src/generators/redux/redux",
       "schema": "./src/generators/redux/schema.json",
       "description": "Create a Redux slice for a project.",
       "aliases": ["slice"]
@@ -54,29 +54,25 @@
       "description": "Create stories/specs for all components declared in an app or library.",
       "hidden": false
     },
-    "component-cypress-spec": {
-      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator",
-      "schema": "./src/generators/component-cypress-spec/schema.json",
-      "description": "Create a Cypress spec for a UI component that has a story.",
-      "hidden": false
-    },
     "hook": {
-      "factory": "./src/generators/hook/hook#hookGeneratorInternal",
+      "factory": "./src/generators/hook/hook",
       "schema": "./src/generators/hook/schema.json",
       "description": "Create a hook.",
       "aliases": ["c"]
     },
     "host": {
-      "factory": "./src/generators/host/host#hostGeneratorInternal",
+      "factory": "./src/generators/host/host",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
-      "description": "Generate a host react application"
+      "description": "Generate a host react application",
+      "aliases": ["consumer"]
     },
     "remote": {
-      "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
+      "factory": "./src/generators/remote/remote",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
-      "description": "Generate a remote react application"
+      "description": "Generate a remote react application",
+      "aliases": ["producer"]
     },
     "cypress-component-configuration": {
       "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",

@@ -22,13 +22,14 @@ import {
   readProjectConfigurationsFromRootMap,
 } from './utils/project-configuration-utils';
 import {
+  buildPackageJsonWorkspacesMatcher,
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../plugins/package-json';
 import { globWithWorkspaceContextSync } from '../utils/workspace-context';
 import { buildProjectFromProjectJson } from '../plugins/project-json/build-nodes/project-json';
 import { PackageJson } from '../utils/package-json';
-import { NxJsonConfiguration } from '../devkit-exports';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export interface Change {
   type: string;
@@ -125,6 +126,7 @@ function defaultReadFileAtRevision(
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
           stdio: ['pipe', 'pipe', 'ignore'],
+          windowsHide: false,
         })
           .toString()
           .trim();
@@ -134,8 +136,8 @@ function defaultReadFileAtRevision(
 }
 
 /**
- * TODO(v20): Remove this function
- * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v20.
+ * TODO(v21): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v21.
  */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
@@ -167,9 +169,9 @@ export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(workspaceRoot, filePath), 'utf-8');
 }
 
-export function readPackageJson(): any {
+export function readPackageJson(root: string = workspaceRoot): any {
   try {
-    return readJsonFile(`${workspaceRoot}/package.json`);
+    return readJsonFile(`${root}/package.json`);
   } catch {
     return {}; // if package.json doesn't exist
   }
@@ -179,7 +181,7 @@ export function readPackageJson(): any {
 export { FileData };
 
 /**
- * TODO(v20): Remove this function.
+ * TODO(v21): Remove this function.
  */
 function getProjectsSync(
   root: string,
@@ -199,6 +201,11 @@ function getProjectsSync(
   ];
   const projectFiles = globWithWorkspaceContextSync(root, patterns);
 
+  const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
+    root,
+    (f) => readJsonFile(join(root, f))
+  );
+
   const rootMap: Record<string, ProjectConfiguration> = {};
   for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
@@ -217,7 +224,8 @@ function getProjectsSync(
         packageJson,
         root,
         projectFile,
-        nxJson
+        nxJson,
+        isInPackageJsonWorkspaces(projectFile)
       );
       if (!rootMap[config.root]) {
         mergeProjectConfigurationIntoRootMap(

@@ -79,6 +79,32 @@ export default defineConfig({
 
 You can read more about the configuration options in the [`vite-plugin-dts` plugin documentation](https://www.npmjs.com/package/vite-plugin-dts).
 
+## Copying assets
+
+If you have assets outside of [`publicDir`](https://vitejs.dev/config/shared-options.html#publicdir) that need to be copied the output folder, then you can use `nxCopyAssetsPlugin` from `@nx/vite`.
+
+```ts {% fileName="vite.config.ts" highlightLines=[4, 12]}
+/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+// ...
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/testlib',
+
+  plugins: [
+    nxViteTsPaths(),
+    nxCopyAssetsPlugin(['*.md']),
+    dts({
+      entryRoot: 'src',
+      tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),
+    }),
+  ],
+  // ...
+});
+```
+
 ## For testing
 
 If you're using `vitest`, make sure your `test` object in your `vite.config.ts` file looks like this:
@@ -192,7 +218,7 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es', 'cjs'],
+      formats: ['es'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.

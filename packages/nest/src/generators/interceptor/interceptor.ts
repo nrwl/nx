@@ -16,16 +16,6 @@ export type InterceptorGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function interceptorGenerator(
   tree: Tree,
   rawOptions: InterceptorGeneratorOptions
-) {
-  await interceptorGeneratorInternal(tree, {
-    nameAndDirectoryFormat: 'derived',
-    ...rawOptions,
-  });
-}
-
-export async function interceptorGeneratorInternal(
-  tree: Tree,
-  rawOptions: InterceptorGeneratorOptions
 ): Promise<any> {
   const options = await normalizeInterceptorOptions(tree, rawOptions);
 
@@ -38,12 +28,9 @@ async function normalizeInterceptorOptions(
   tree: Tree,
   options: InterceptorGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const normalizedOptions = await normalizeOptions(
-    tree,
-    'interceptor',
-    '@nx/nest:interceptor',
-    options
-  );
+  const normalizedOptions = await normalizeOptions(tree, options, {
+    suffix: 'interceptor',
+  });
   return {
     ...normalizedOptions,
     language: options.language,

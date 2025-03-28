@@ -1,3 +1,8 @@
+---
+title: Adding Nx to NPM/Yarn/PNPM Workspace
+description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+---
+
 # Adding Nx to NPM/Yarn/PNPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
@@ -6,7 +11,7 @@ powering Nx underneath. As a result, Lerna gets all the modern features such as 
 on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first-class support for [monorepos](/getting-started/tutorials/npm-workspaces-tutorial). If you have
+Nx has first-class support for [monorepos](/getting-started/tutorials/typescript-packages-tutorial). If you have
 an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/features/run-tasks)
@@ -344,7 +349,7 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 ### Create a CI Workflow {% highlightColor="green" %}
 
@@ -419,10 +424,7 @@ documentation" url="/concepts/task-pipeline-configuration" /%}
 {% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation"
 url="/reference/nxignore" /%}
 
-{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="
-/concepts/turbo-and-nx" /%}
-
-{% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="
-/concepts/integrated-vs-package-based" /%}
+{% card title="Migrating from Turborepo to Nx" description="Read about Migrating from Turborepo to Nx" url="
+/recipes/adopting-nx/from-turborepo" /%}
 
 {% /cards %}

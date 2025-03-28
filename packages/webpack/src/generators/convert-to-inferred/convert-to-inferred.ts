@@ -7,7 +7,10 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { migrateProjectExecutorsToPlugin } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
+import {
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
@@ -17,6 +20,7 @@ import {
   servePostTargetTransformerFactory,
   type MigrationContext,
 } from './utils';
+import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
 interface Schema {
   project?: string;
@@ -30,6 +34,8 @@ export async function convertToInferred(tree: Tree, options: Schema) {
     projectGraph,
     workspaceRoot: tree.root,
   };
+
+  const logger = createCollectingLogger();
 
   const migratedProjects =
     await migrateProjectExecutorsToPlugin<WebpackPluginOptions>(
@@ -59,11 +65,24 @@ export async function convertToInferred(tree: Tree, options: Schema) {
           skipProjectFilter: skipProjectFilterFactory(tree),
         },
       ],
-      options.project
+      options.project,
+      logger
     );
 
   if (migratedProjects.size === 0) {
-    throw new Error('Could not find any targets to migrate.');
+    const convertMessage = [...logger.loggedMessages.values()]
+      .flat()
+      .find((v) => v.includes('@nx/webpack:convert-config-to-webpack-plugin'));
+
+    if (convertMessage.length > 0) {
+      logger.flushLogs((message) => !convertMessage.includes(message));
+      throw new Error(convertMessage);
+    } else {
+      logger.flushLogs();
+      throw new NoTargetsToMigrateError();
+    }
+  } else {
+    logger.flushLogs();
   }
 
   const installCallback = addDependenciesToPackageJson(
@@ -124,4 +143,43 @@ function skipProjectFilterFactory(tree: Tree) {
 
     return false;
   };
+}
+
+export function createCollectingLogger(): typeof devkitLogger & {
+  loggedMessages: Map<string, string[]>;
+  flushLogs: (filter?: (message: string) => boolean) => void;
+} {
+  const loggedMessages = new Map<string, string[]>();
+
+  const flushLogs = (filter?: (message: string) => boolean) => {
+    loggedMessages.forEach((messages, method) => {
+      messages.forEach((message) => {
+        if (!filter || filter(message)) {
+          devkitLogger[method](message);
+        }
+      });
+    });
+  };
+
+  return new Proxy(
+    { ...devkitLogger, loggedMessages, flushLogs },
+    {
+      get(target, property) {
+        const originalMethod = target[property];
+
+        if (typeof originalMethod === 'function') {
+          return (...args) => {
+            const message = args.join(' ');
+            const propertyString = String(property);
+            if (!loggedMessages.has(message)) {
+              loggedMessages.set(propertyString, []);
+            }
+            loggedMessages.get(propertyString).push(message);
+          };
+        }
+
+        return originalMethod;
+      },
+    }
+  );
 }

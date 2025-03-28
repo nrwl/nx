@@ -34,7 +34,7 @@ export const yargsResetCommand: CommandModule<
       })
       .option('onlyWorkspaceData', {
         description:
-          'Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc)',
+          'Clears the workspace data directory. Used by Nx to store cached data about the current workspace (e.g. partial results, incremental data, etc).',
         type: 'boolean',
       }),
   handler: async (argv) => (await import('./reset')).resetHandler(argv),

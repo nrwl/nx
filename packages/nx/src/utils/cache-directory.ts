@@ -79,9 +79,14 @@ export function cacheDirectoryForWorkspace(workspaceRoot: string) {
   );
 }
 
-export const workspaceDataDirectory = absolutePath(
-  workspaceRoot,
-  process.env.NX_WORKSPACE_DATA_DIRECTORY ??
-    process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
-    defaultWorkspaceDataDirectory(workspaceRoot)
-);
+export const workspaceDataDirectory =
+  workspaceDataDirectoryForWorkspace(workspaceRoot);
+
+export function workspaceDataDirectoryForWorkspace(workspaceRoot: string) {
+  return absolutePath(
+    workspaceRoot,
+    process.env.NX_WORKSPACE_DATA_DIRECTORY ??
+      process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??
+      defaultWorkspaceDataDirectory(workspaceRoot)
+  );
+}

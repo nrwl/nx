@@ -1,3 +1,8 @@
+---
+title: Publish in CI/CD
+description: Learn how to configure Nx Release to automate your package publishing process in CI/CD pipelines, including authentication, environment setup, and workflow examples.
+---
+
 # Publish in CI/CD
 
 Nx Release makes it easy to move your publishing process into your CI/CD pipeline.

@@ -1,8 +1,13 @@
+---
+title: Integrate a New Tool with a Tooling Plugin
+description: Learn how to create a custom Nx plugin that integrates a tool or framework into an Nx repository, using Astro as an example.
+---
+
 # Integrate a New Tool into an Nx Repository with a Tooling Plugin
 
 Nx Plugins can be used to easily integrate a tool or framework into an Nx repository. If there is no plugin available for your favorite tool or framework, you can write your own.
 
-In this tutorial, we'll create a plugin that helps to integrate the [Astro]() framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
+In this tutorial, we'll create a plugin that helps to integrate the _Astro_ framework. `Astro` is a JavaScript web framework optimized for building fast, content-driven websites. We'll call our plugin `nx-astro`.
 
 To create a plugin in a brand new repository, use the `create-nx-plugin` command:
 
@@ -71,11 +76,11 @@ To create an inferred task, we need to export a `createNodesV2` function from th
 
 ```ts {% fileName="src/index.ts" %}
 import {
+  CreateNodesContextV2,
   CreateNodesV2,
   TargetConfiguration,
   createNodesFromFiles,
   joinPathFragments,
-  readJsonFile,
 } from '@nx/devkit';
 import { readdirSync, readFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
@@ -103,7 +108,11 @@ export const createNodesV2: CreateNodesV2<AstroPluginOptions> = [
   },
 ];
 
-async function createNodesInternal(configFilePath, options, context) {
+async function createNodesInternal(
+  configFilePath: string,
+  options: AstroPluginOptions,
+  context: CreateNodesContextV2
+) {
   const projectRoot = dirname(configFilePath);
 
   // Do not create a project if package.json or project.json isn't there.
@@ -183,7 +192,7 @@ If you create a generator named `init`, Nx will automatically run that generator
 To create the generator run the following command:
 
 ```shell
-npx nx g generator init --directory=src/generators/init
+npx nx g generator src/generators/init
 ```
 
 Then we can edit the `generator.ts` file to define the generator functionality:
@@ -252,7 +261,7 @@ export interface InitGeneratorSchema {}
 Let's make one more generator to automatically create a simple Astro application. First we'll create the generator:
 
 ```shell
-npx nx g generator application --directory=src/generators/application
+npx nx g generator src/generators/application
 ```
 
 Then we'll update the `generator.ts` file to define the generator functionality:

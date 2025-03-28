@@ -75,16 +75,32 @@ export default async function (tree: Tree) {
         continue;
       }
       const ciWebServerCommand = nodes[0].getText();
-      const NX_TARGET_REGEX = "(?<=nx run )[^']+";
-      const matches = ciWebServerCommand.match(NX_TARGET_REGEX);
-      if (!matches) {
+      let project: string;
+      let portFlagValue: string | undefined;
+      if (ciWebServerCommand.includes('nx run')) {
+        const NX_TARGET_REGEX =
+          /(?<=nx run )([^' ]+)(?: [^']*--port[= ](\d+))?/;
+        const matches = ciWebServerCommand.match(NX_TARGET_REGEX);
+        if (!matches) {
+          continue;
+        }
+        const targetString = matches[1];
+        project = parseTargetString(targetString, graph).project;
+        portFlagValue = matches[2];
+      } else {
+        const NX_PROJECT_REGEX =
+          /(?<=nx [^ ]+ )([^' ]+)(?: [^']*--port[= ](\d+))?/;
+        const matches = ciWebServerCommand.match(NX_PROJECT_REGEX);
+        if (!matches) {
+          continue;
+        }
+        project = matches[1];
+        portFlagValue = matches[2];
+      }
+
+      if (!project || !graph.nodes[project]) {
         continue;
       }
-      const targetString = matches[0];
-      const { project, target, configuration } = parseTargetString(
-        targetString,
-        graph
-      );
 
       const pathToViteConfig = [
         joinPathFragments(graph.nodes[project].data.root, 'vite.config.ts'),
@@ -124,7 +140,9 @@ export default async function (tree: Tree) {
 
         const newCommand = ciWebServerCommand.replace(
           /nx.*[^"']/,
-          `nx run ${project}:${serveStaticTargetName}`
+          `nx run ${project}:${serveStaticTargetName}${
+            portFlagValue ? ` --port=${portFlagValue}` : ''
+          }`
         );
         tree.write(
           configFile,
@@ -162,14 +180,16 @@ export default async function (tree: Tree) {
 
         const newCommand = ciWebServerCommand.replace(
           /nx.*[^"']/,
-          `nx run ${project}:${previewTargetName}`
+          `nx run ${project}:${previewTargetName}${
+            portFlagValue ? ` --port=${portFlagValue}` : ''
+          }`
         );
         tree.write(
           configFile,
           `${configFileContents.slice(0, nodes[0].getStart())}${newCommand},
-      ciBaseUrl: "http://localhost:4300"${configFileContents.slice(
-        nodes[0].getEnd()
-      )}`
+      ciBaseUrl: "http://localhost:${
+        portFlagValue ?? '4300'
+      }"${configFileContents.slice(nodes[0].getEnd())}`
         );
       }
     }

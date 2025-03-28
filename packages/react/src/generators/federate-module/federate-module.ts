@@ -6,10 +6,12 @@ import {
   readJson,
   runTasksInSerial,
   stripIndents,
+  offsetFromRoot,
+  joinPathFragments,
 } from '@nx/devkit';
 import { Schema } from './schema';
 
-import { remoteGeneratorInternal } from '../remote/remote';
+import { remoteGenerator } from '../remote/remote';
 import { addPathToExposes, checkRemoteExists } from './lib/utils';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
@@ -22,45 +24,40 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     Path: ${schema.path}`);
   }
   const tasks: GeneratorCallback[] = [];
-  // Check remote exists
-  const remote = checkRemoteExists(tree, schema.remote);
 
-  let projectRoot, remoteName;
+  const { projectName: remoteName, projectRoot: remoteRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: schema.remote,
+      directory: schema.remoteDirectory,
+      projectType: 'application',
+    });
+
+  // Check remote exists
+  const remote = checkRemoteExists(tree, remoteName);
 
   if (!remote) {
     // create remote
-    const remoteGenerator = await remoteGeneratorInternal(tree, {
-      name: schema.remote,
-      directory: schema.remoteDirectory,
+    const remoteGeneratorTask = await remoteGenerator(tree, {
+      name: remoteName,
+      directory: remoteRoot,
       e2eTestRunner: schema.e2eTestRunner,
       skipFormat: schema.skipFormat,
       linter: schema.linter,
       style: schema.style,
       unitTestRunner: schema.unitTestRunner,
       host: schema.host,
-      projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
+      bundler: schema.bundler ?? 'rspack',
     });
 
-    tasks.push(remoteGenerator);
-
-    const { projectName, projectRoot: remoteRoot } =
-      await determineProjectNameAndRootOptions(tree, {
-        name: schema.remote,
-        directory: schema.remoteDirectory,
-        projectType: 'application',
-        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
-        callingGenerator: '@nx/react:federate-module',
-      });
-
-    projectRoot = remoteRoot;
-    remoteName = projectName;
-  } else {
-    projectRoot = remote.root;
-    remoteName = remote.name;
+    tasks.push(remoteGeneratorTask);
   }
 
   // add path to exposes property
-  addPathToExposes(tree, projectRoot, schema.name, schema.path);
+  const normalizedModulePath =
+    schema.bundler === 'rspack'
+      ? joinPathFragments(offsetFromRoot(remoteRoot), schema.path)
+      : schema.path;
+  addPathToExposes(tree, remoteRoot, schema.name, normalizedModulePath);
 
   // Add new path to tsconfig
   const rootJSON = readJson(tree, getRootTsConfigPathInTree(tree));

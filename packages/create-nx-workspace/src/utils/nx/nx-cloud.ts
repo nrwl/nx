@@ -2,7 +2,14 @@ import { CLIOutput } from '../output';
 import { getMessageFactory } from './messages';
 import * as ora from 'ora';
 
-export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
+export type NxCloud =
+  | 'yes'
+  | 'github'
+  | 'gitlab'
+  | 'azure'
+  | 'bitbucket-pipelines'
+  | 'circleci'
+  | 'skip';
 
 export function readNxCloudToken(directory: string) {
   const nxCloudSpinner = ora(`Checking Nx Cloud setup`).start();
@@ -15,16 +22,16 @@ export function readNxCloudToken(directory: string) {
     // nx-ignore-next-line
   )) as typeof import('nx/src/nx-cloud/utilities/get-cloud-options');
 
-  const { accessToken } = getCloudOptions(directory);
+  const { accessToken, nxCloudId } = getCloudOptions(directory);
   nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
-  return accessToken;
+  return accessToken || nxCloudId;
 }
 
 export async function getOnboardingInfo(
   nxCloud: NxCloud,
   token: string,
   directory: string,
-  useGithub?: boolean
+  useGitHub?: boolean
 ) {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
@@ -43,7 +50,7 @@ export async function getOnboardingInfo(
   const connectCloudUrl = await createNxCloudOnboardingURL(
     source,
     token,
-    useGithub ??
+    useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci'),
     code
   );

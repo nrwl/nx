@@ -32,53 +32,49 @@ describe('Next.js Styles', () => {
     const lessApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false`
+      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(lessApp, {
       checkUnitTest: false,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const scApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false`
+      `generate @nx/next:app ${scApp} --no-interactive --style=styled-components --appDir=false --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(scApp, {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const scAppWithAppRouter = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true`
+      `generate @nx/next:app ${scAppWithAppRouter} --no-interactive --style=styled-components --appDir=true --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(scAppWithAppRouter, {
       checkUnitTest: false, // No unit tests for app router
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
 
     const emotionApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false`
+      `generate @nx/next:app ${emotionApp} --no-interactive --style=@emotion/styled --appDir=false --unitTestRunner=jest --linter=eslint`
     );
 
     await checkApp(emotionApp, {
       checkUnitTest: true,
       checkLint: false,
       checkE2E: false,
-      checkExport: false,
     });
   }, 600_000);
 
@@ -87,22 +83,21 @@ describe('Next.js Styles', () => {
       const tailwindApp = uniq('app');
 
       runCLI(
-        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=false --src=false`
+        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=false --src=false --unitTestRunner=jest --linter=eslint`
       );
 
       await checkApp(tailwindApp, {
         checkUnitTest: true,
         checkLint: false,
         checkE2E: false,
-        checkExport: false,
       });
 
-      checkFilesExist(`apps/${tailwindApp}/tailwind.config.js`);
-      checkFilesExist(`apps/${tailwindApp}/postcss.config.js`);
+      checkFilesExist(`${tailwindApp}/tailwind.config.js`);
+      checkFilesExist(`${tailwindApp}/postcss.config.js`);
 
-      checkFilesDoNotExist(`apps/${tailwindApp}/pages/index.module.css`);
-      const appPage = readFile(`apps/${tailwindApp}/pages/index.tsx`);
-      const globalCss = readFile(`apps/${tailwindApp}/pages/styles.css`);
+      checkFilesDoNotExist(`${tailwindApp}/pages/index.module.css`);
+      const appPage = readFile(`${tailwindApp}/pages/index.tsx`);
+      const globalCss = readFile(`${tailwindApp}/pages/styles.css`);
 
       expect(appPage).not.toContain(`import styles from './index.module.css';`);
       expect(globalCss).toContain(`@tailwind base;`);
@@ -112,22 +107,21 @@ describe('Next.js Styles', () => {
       const tailwindApp = uniq('app');
 
       runCLI(
-        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=true --src=false`
+        `generate @nx/next:app ${tailwindApp} --no-interactive --style=tailwind --appDir=true --src=false --unitTestRunner=jest --linter=eslint`
       );
 
       await checkApp(tailwindApp, {
         checkUnitTest: true,
         checkLint: false,
         checkE2E: false,
-        checkExport: false,
       });
 
-      checkFilesExist(`apps/${tailwindApp}/tailwind.config.js`);
-      checkFilesExist(`apps/${tailwindApp}/postcss.config.js`);
+      checkFilesExist(`${tailwindApp}/tailwind.config.js`);
+      checkFilesExist(`${tailwindApp}/postcss.config.js`);
 
-      checkFilesDoNotExist(`apps/${tailwindApp}/app/page.module.css`);
-      const appPage = readFile(`apps/${tailwindApp}/app/page.tsx`);
-      const globalCss = readFile(`apps/${tailwindApp}/app/global.css`);
+      checkFilesDoNotExist(`${tailwindApp}/app/page.module.css`);
+      const appPage = readFile(`${tailwindApp}/app/page.tsx`);
+      const globalCss = readFile(`${tailwindApp}/app/global.css`);
 
       expect(appPage).not.toContain(`import styles from './page.module.css';`);
       expect(globalCss).toContain(`@tailwind base;`);

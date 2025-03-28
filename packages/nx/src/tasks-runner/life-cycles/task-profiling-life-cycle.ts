@@ -1,4 +1,4 @@
-import { LifeCycle, TaskMetadata } from '../life-cycle';
+import { LifeCycle, TaskMetadata, TaskResult } from '../life-cycle';
 import { TaskStatus } from '../tasks-runner';
 
 import { performance } from 'perf_hooks';
@@ -32,10 +32,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
     }
   }
 
-  endTasks(
-    taskResults: Array<{ task: Task; status: TaskStatus; code: number }>,
-    metadata: TaskMetadata
-  ): void {
+  endTasks(taskResults: TaskResult[], metadata: TaskMetadata): void {
     for (let tr of taskResults) {
       if (tr.task.startTime) {
         this.timings[tr.task.id].perfStart = tr.task.startTime;

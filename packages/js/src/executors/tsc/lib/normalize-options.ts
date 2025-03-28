@@ -37,6 +37,7 @@ export function normalizeOptions(
     }
   }
 
+  options.assets ??= [];
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
     contextRoot,
@@ -56,5 +57,6 @@ export function normalizeOptions(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
     ),
+    generatePackageJson: options.generatePackageJson ?? true,
   };
 }

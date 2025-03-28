@@ -1,0 +1,19 @@
+// @ts-check
+
+/**
+ * @type {import('@nx/module-federation').ModuleFederationConfig}
+ **/
+const moduleFederationConfig = {
+  name: '<%= projectName %>',
+  remotes: [
+    <%_ if (static) { 
+      remotes.forEach(function(r) { _%> 
+    "<%= r.fileName %>", 
+      <%_ }); } _%>
+  ],
+};
+
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = moduleFederationConfig;

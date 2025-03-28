@@ -1,3 +1,8 @@
+---
+title: 'Extending the Project Graph (v1 API)'
+description: 'Learn about the deprecated v1 API for extending the Nx project graph through project inference and project graph plugins.'
+---
+
 # Extending the Project Graph of Nx (v1 API)
 
 {% callout type="caution" title="Experimental" %}
@@ -96,7 +101,7 @@ export function registerProjectTargets(
 }
 ```
 
-For guidance on implementing a similar function in the v2 API, see the documentation on [createNodes](/extending-nx/recipes/project-graph-plugins#example-extending-projects-adding-targets).
+For guidance on implementing a similar function in the v2 API, see the documentation on [createNodes](/extending-nx/recipes/project-graph-plugins#example-extending-projects-adding-inferred-targets).
 
 ### Multiple Matches
 

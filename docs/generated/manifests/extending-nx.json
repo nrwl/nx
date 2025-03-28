@@ -152,6 +152,17 @@
         "tags": ["generate-code"]
       },
       {
+        "id": "create-sync-generator",
+        "name": "Create a Sync Generator",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/generators/create-sync-generator",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/recipes/create-sync-generator",
+        "tags": ["generate-code", "sync"]
+      },
+      {
         "id": "migration-generators",
         "name": "Write a Migration",
         "description": "",
@@ -287,6 +298,17 @@
     "isExternal": false,
     "path": "/extending-nx/recipes/modifying-files",
     "tags": ["generate-code"]
+  },
+  "/extending-nx/recipes/create-sync-generator": {
+    "id": "create-sync-generator",
+    "name": "Create a Sync Generator",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/generators/create-sync-generator",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/recipes/create-sync-generator",
+    "tags": ["generate-code", "sync"]
   },
   "/extending-nx/recipes/migration-generators": {
     "id": "migration-generators",

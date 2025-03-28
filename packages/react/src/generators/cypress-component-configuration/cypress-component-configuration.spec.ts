@@ -68,19 +68,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -126,19 +124,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     // --build-target still needs to build the graph in order for readTargetOptions to work
     projectGraph = {
@@ -195,19 +191,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -263,19 +257,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'webpack',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {
@@ -330,23 +322,21 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'jest',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      project: 'some-lib',
+      path: 'some-lib/src/lib/another-cmp/another-cmp',
       style: 'scss',
     });
 
@@ -377,30 +367,27 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'jest',
       js: true,
-      projectNameAndRootFormat: 'as-provided',
     });
     await componentGenerator(tree, {
       name: 'some-cmp',
-      flat: true,
-      project: 'some-lib',
+      path: 'some-lib/src/lib/some-cmp',
       style: 'scss',
       js: true,
     });
     await componentGenerator(tree, {
       name: 'another-cmp',
-      project: 'some-lib',
+      path: 'some-lib/src/lib/another-cmp/another-cmp',
       style: 'scss',
       js: true,
     });
@@ -435,18 +422,16 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
-      name: 'some-lib',
+      directory: 'some-lib',
       style: 'scss',
       unitTestRunner: 'none',
       linter: Linter.None,
       skipFormat: false,
       skipTsConfig: false,
-      projectNameAndRootFormat: 'as-provided',
     });
     const appConfig = readProjectConfiguration(tree, 'my-app');
     appConfig.targets['build'].executor = 'something/else';
@@ -493,19 +478,17 @@ describe('React:CypressComponentTestConfiguration', () => {
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
-      name: 'my-app',
+      directory: 'my-app',
       bundler: 'vite',
-      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       linter: Linter.EsLint,
-      name: 'some-lib',
+      directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
       style: 'scss',
       unitTestRunner: 'none',
       component: true,
-      projectNameAndRootFormat: 'as-provided',
     });
 
     projectGraph = {

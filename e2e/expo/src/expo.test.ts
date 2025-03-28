@@ -24,7 +24,7 @@ describe('@nx/expo', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/expo:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --linter=eslint`
     );
   });
 
@@ -55,12 +55,12 @@ describe('@nx/expo', () => {
 
   it('should start the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8088;
 
     try {
       process = await runCommandUntil(
         `start ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`)
+        (output) => output.includes(`http://localhost:8088`)
       );
     } catch (err) {
       console.error(err);
@@ -74,12 +74,12 @@ describe('@nx/expo', () => {
 
   it('should serve the app', async () => {
     let process: ChildProcess;
-    const port = 8081;
+    const port = 8071;
 
     try {
       process = await runCommandUntil(
         `serve ${appName} -- --port=${port}`,
-        (output) => output.includes(`http://localhost:8081`)
+        (output) => output.includes(`http://localhost:8071`)
       );
     } catch (err) {
       console.error(err);
@@ -117,14 +117,14 @@ describe('@nx/expo', () => {
   it('should install', async () => {
     // run install command
     let installResults = await runCLIAsync(
-      `install ${appName} --no-interactive`
+      `install ${appName} --force --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
     );
 
     installResults = await runCLIAsync(
-      `install ${appName} --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
+      `install ${appName} --force --packages=@react-native-async-storage/async-storage,react-native-image-picker --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
       'Successfully ran target install'
@@ -154,7 +154,7 @@ describe('@nx/expo', () => {
 
   it('should create storybook with application', async () => {
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive --unitTestRunner=jest --linter=eslint`
     );
     checkFilesExist(
       `${appName}/.storybook/main.ts`,

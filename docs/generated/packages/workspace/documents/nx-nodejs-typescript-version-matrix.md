@@ -1,3 +1,8 @@
+---
+title: Nx, NodeJS and TypeScript Compatibility Matrix
+description: A reference table showing which versions of Node.js and TypeScript are compatible with different major versions of Nx.
+---
+
 # Nx, NodeJS and TypeScript Compatibility Matrix
 
 Below is a reference table that matches versions the latest major versions of Nx to the version TypeScript that it uses
@@ -8,8 +13,9 @@ and the version of NodeJS that we tested it against.
 
 | Nx Version      | Node Version     | Typescript Version |
 | --------------- | ---------------- | ------------------ |
-| 19.x (latest)   | 22.x, 20.x, 18.x | ~5.4.2             |
-| 18.x (previous) | 20.x, 18.x       | ~5.4.2             |
+| 20.x (latest)   | 22.x, 20.x       | ~5.4.2             |
+| 19.x (previous) | 22.x, 20.x, 18.x | ~5.4.2             |
+| 18.x            | 20.x, 18.x       | ~5.4.2             |
 | 17.x            | 20.x, 18.x       | ~5.1.0             |
 | 16.x            | 20.x, 18.x, 16.x | ~5.1.0             |
 | 15.x            | 18.x, 16.x, 14.x | ~5.0.0             |

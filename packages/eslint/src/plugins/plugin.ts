@@ -11,7 +11,10 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import {
+  calculateHashesForCreateNodes,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -21,7 +24,7 @@ import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gte } from 'semver';
 import {
   baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
+  BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_CONFIG_FILENAMES,
   isFlatConfig,
 } from '../utils/config-file';
@@ -34,7 +37,18 @@ export interface EslintPluginOptions {
   extensions?: string[];
 }
 
-const DEFAULT_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx', 'html', 'vue'];
+const DEFAULT_EXTENSIONS = [
+  'ts',
+  'cts',
+  'mts',
+  'tsx',
+  'js',
+  'cjs',
+  'mjs',
+  'jsx',
+  'html',
+  'vue',
+];
 const PROJECT_CONFIG_FILENAMES = ['project.json', 'package.json'];
 const ESLINT_CONFIG_GLOB_V1 = combineGlobPatterns(
   ESLINT_CONFIG_FILENAMES.map((f) => `**/${f}`)
@@ -96,7 +110,9 @@ const internalCreateNodes = async (
   ).sort((a, b) => (a !== b && isSubDir(a, b) ? -1 : 1));
   const excludePatterns = dedupedProjectRoots.map((root) => `${root}/**/*`);
 
-  const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+  const ESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: isFlatConfig(configFilePath),
+  });
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};
@@ -169,54 +185,31 @@ const internalCreateNodes = async (
   };
 };
 
-let collectingLintableFilesPromise: Promise<void>;
 const internalCreateNodesV2 = async (
   configFilePath: string,
   options: EslintPluginOptions,
   context: CreateNodesContextV2,
-  eslintConfigFiles: string[],
-  allProjectRoots: string[],
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
-  projectsCache: Record<string, CreateNodesResult['projects']>
+  projectsCache: Record<string, CreateNodesResult['projects']>,
+  hashByRoot: Map<string, string>
 ): Promise<CreateNodesResult> => {
   const configDir = dirname(configFilePath);
 
-  const ESLint = await resolveESLintClass(isFlatConfig(configFilePath));
+  const ESLint = await resolveESLintClass({
+    useFlatConfigOverrideVal: isFlatConfig(configFilePath),
+  });
   const eslintVersion = ESLint.version;
 
   const projects: CreateNodesResult['projects'] = {};
   await Promise.all(
     projectRootsByEslintRoots.get(configDir).map(async (projectRoot) => {
-      const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
-        isSubDir(projectRoot, dirname(eslintConfig))
-      );
-      const hash = await calculateHashForCreateNodes(
-        projectRoot,
-        options,
-        {
-          configFiles: eslintConfigFiles,
-          nxJsonConfiguration: context.nxJsonConfiguration,
-          workspaceRoot: context.workspaceRoot,
-        },
-        [...parentConfigs, join(projectRoot, '.eslintignore')]
-      );
+      const hash = hashByRoot.get(projectRoot);
 
       if (projectsCache[hash]) {
         // We can reuse the projects in the cache.
         Object.assign(projects, projectsCache[hash]);
         return;
-      }
-
-      if (!lintableFilesPerProjectRoot.size) {
-        collectingLintableFilesPromise ??= collectLintableFilesByProjectRoot(
-          lintableFilesPerProjectRoot,
-          allProjectRoots,
-          options,
-          context
-        );
-        await collectingLintableFilesPromise;
-        collectingLintableFilesPromise = null;
       }
 
       const eslint = new ESLint({
@@ -273,8 +266,25 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
 
     const { eslintConfigFiles, projectRoots, projectRootsByEslintRoots } =
       splitConfigFiles(configFiles);
-    const lintableFilesPerProjectRoot = new Map<string, string[]>();
-
+    const lintableFilesPerProjectRoot = await collectLintableFilesByProjectRoot(
+      projectRoots,
+      options,
+      context
+    );
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      options,
+      context,
+      projectRoots.map((root) => {
+        const parentConfigs = eslintConfigFiles.filter((eslintConfig) =>
+          isSubDir(root, dirname(eslintConfig))
+        );
+        return [...parentConfigs, join(root, '.eslintignore')];
+      })
+    );
+    const hashByRoot = new Map<string, string>(
+      projectRoots.map((r, i) => [r, hashes[i]])
+    );
     try {
       return await createNodesFromFiles(
         (configFile, options, context) =>
@@ -282,11 +292,10 @@ export const createNodesV2: CreateNodesV2<EslintPluginOptions> = [
             configFile,
             options,
             context,
-            eslintConfigFiles,
-            projectRoots,
             projectRootsByEslintRoots,
             lintableFilesPerProjectRoot,
-            targetsCache
+            targetsCache,
+            hashByRoot
           ),
         eslintConfigFiles,
         options,
@@ -360,11 +369,12 @@ function groupProjectRootsByEslintRoots(
 }
 
 async function collectLintableFilesByProjectRoot(
-  lintableFilesPerProjectRoot: Map<string, string[]>,
   projectRoots: string[],
   options: EslintPluginOptions,
   context: CreateNodesContext | CreateNodesContextV2
-): Promise<void> {
+): Promise<Map<string, string[]>> {
+  const lintableFilesPerProjectRoot = new Map<string, string[]>();
+
   const lintableFiles = await globWithWorkspaceContext(context.workspaceRoot, [
     `**/*.{${options.extensions.join(',')}}`,
   ]);
@@ -382,6 +392,8 @@ async function collectLintableFilesByProjectRoot(
       lintableFilesPerProjectRoot.get(projectRoot).push(file);
     }
   }
+
+  return lintableFilesPerProjectRoot;
 }
 
 function getRootForDirectory(
@@ -409,7 +421,7 @@ function getProjectUsingESLintConfig(
 ): CreateNodesResult['projects'][string] | null {
   const rootEslintConfig = [
     baseEsLintConfigFile,
-    baseEsLintFlatConfigFile,
+    ...BASE_ESLINT_CONFIG_FILENAMES,
     ...ESLINT_CONFIG_FILENAMES,
   ].find((f) => existsSync(join(context.workspaceRoot, f)));
 

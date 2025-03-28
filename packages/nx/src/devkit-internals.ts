@@ -20,13 +20,18 @@ export { stripIndent } from './utils/logger';
 export { readModulePackageJson } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
 export { hashObject } from './hasher/file-hasher';
-export { hashWithWorkspaceContext } from './utils/workspace-context';
+export {
+  hashWithWorkspaceContext,
+  hashMultiGlobWithWorkspaceContext,
+} from './utils/workspace-context';
 export {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './project-graph/utils/find-project-for-path';
 export { retrieveProjectConfigurations } from './project-graph/utils/retrieve-workspace-files';
-export { LoadedNxPlugin } from './project-graph/plugins/internal-api';
+export { LoadedNxPlugin } from './project-graph/plugins/loaded-nx-plugin';
 export * from './project-graph/error-types';
 export { registerTsProject } from './plugins/js/utils/register';
 export { interpolate } from './tasks-runner/utils';
+export { isCI } from './utils/is-ci';
+export { isUsingPrettierInTree } from './utils/is-using-prettier';

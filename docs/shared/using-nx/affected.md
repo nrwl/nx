@@ -1,8 +1,23 @@
+---
+title: Run Only Tasks Affected by a PR
+description: Learn how to use Nx's affected command to determine and run tasks only on projects affected by your changes, improving CI speed and efficiency.
+---
+
 # Run Only Tasks Affected by a PR
 
-As your workspace grows, re-testing, re-building and re-linting all projects becomes too slow. To address this, Nx is able to determine the minimum set of projects that were affected by the change, and **only run tasks on those projects**. This drastically improves the speed of your CI and the amount of compute that needs to be run, even before other features like [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution) are taken into account.
+{% youtube
+src="https://youtu.be/q-cu5Lw3DoE"
+title="Only Run Tasks for Projects That Changed"
+ /%}
 
-{% graph title="Making a change in lib10 only affects a sub-part of the project graph" height="400px" %}
+As your workspace grows, re-testing, re-building, and re-linting **all projects becomes too slow**. To address this, Nx comes with an "affected" command. Using this command, Nx
+
+- determines the minimum set of **projects that are affected by the change**
+- only runs tasks on those affected projects
+
+This drastically improves the speed of your CI and reduces the amount of compute needed. This advantage is further enhanced when [paired with remote caching and distribution](#best-paired-with-remote-caching-and-distribution).
+
+{% graph title="Making a change in lib10 only affects a sub-part of the project graph (shown in purple)" height="400px" %}
 
 ```json
 {
@@ -195,17 +210,17 @@ As your workspace grows, re-testing, re-building and re-linting all projects bec
 
 ## Using Nx Affected Commands
 
-To leverage this feature, use the following command when running your tasks, in particular on CI:
+To leverage this feature, use the following command when running your tasks, particularly on CI:
 
 ```shell
 nx affected -t <task>
 ```
 
-When you run `nx affected -t test`, Nx will
+When you run `nx affected -t test`, Nx will:
 
-- use Git to determine the files you changed in your PR
-- use the [project graph](/features/explore-graph) to determine which projects the files belong to
-- determine which projects depend on the projects you modified
+- Use Git to determine the files you changed in your PR.
+- Use the [project graph](/features/explore-graph) to determine which projects the files belong to.
+- Determine which projects depend on the projects you modified.
 
 Once the projects are identified, Nx runs the tasks you specified on that subset of projects.
 
@@ -215,11 +230,11 @@ You can also visualize the affected projects using the [Nx graph](/features/expl
 nx graph --affected
 ```
 
-## Just using Affected Might not be Enough
+## Best Paired with Remote Caching and Distribution
 
-Using `nx affected` is a powerful tool to cut down the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:
+Using `nx affected` is a powerful tool to reduce the amount of compute that needs to be run. However, this might not be sufficient to significantly speed up your CI pipeline. For example:
 
-- If you're modifying a **project that is being used by a large portion** of your monorepo projects, you might end up running tasks for almost all the projects in the workspace.
+- If you're modifying a **project that is used by a large portion** of your monorepo projects, you might end up running tasks for almost all the projects in the workspace.
 - If you have a set of 10 projects affected by a PR and you continue making changes, you will **always end up running tasks for those 10 projects**. The set of affected projects doesn't change but is always calculated with respect to your last successful run on the main branch.
 
 This is why Nx Affected is best paired with [remote caching](/ci/features/remote-cache) and [distributed task execution](/ci/features/distribute-task-execution).
@@ -228,23 +243,23 @@ This is why Nx Affected is best paired with [remote caching](/ci/features/remote
 
 To understand which projects are affected, Nx uses the Git history and the [project graph](/features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
-The affected command takes a `base` and `head` commit. The default `base` is your `main` branch and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
+The affected command takes a `base` and `head` commit. The default `base` is your `main` branch, and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
 ```shell
 nx affected -t build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
 nx affected -t build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
 ```
 
-You can also set the base and head SHAs as env variables:
+You can also set the base and head SHAs as environment variables:
 
 ```shell
 NX_BASE=origin/main~1
 NX_HEAD=origin/main
 ```
 
-**The recommmended approach is to set the base SHA to the latest successful commit** on the `main` branch. This ensures that all changes since the last successful CI run are accounted for.
+**The recommended approach is to set the base SHA to the latest successful commit** on the `main` branch. This ensures that all changes since the last successful CI run are accounted for.
 
-Depending on your CI provider this might differ:
+Depending on your CI provider, this might differ:
 
 - [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
 - [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
@@ -254,14 +269,14 @@ Depending on your CI provider this might differ:
 
 ## Ignoring Files from Affected Commands
 
-Nx provides two methods to exclude glob patterns (files and folders) from `affected:*` commands.
+Nx provides two methods to exclude glob patterns (files and folders) from `affected:*` commands:
 
 - Glob patterns defined in your `.gitignore` file are ignored.
 - Glob patterns defined in an optional `.nxignore` file are ignored.
 
 ## Marking Projects Affected by Dependency Updates
 
-By default, Nx will mark all projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. If you'd like to opt in to a smarter behavior you can configure Nx to only mark projects as affected if they actually depend on the updated packages.
+By default, Nx will mark all projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. If you'd like to opt into smarter behavior, you can configure Nx to only mark projects as affected if they actually depend on the updated packages.
 
 ```json {% fileName="nx.json" %}
 {

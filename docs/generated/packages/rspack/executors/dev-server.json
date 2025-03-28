@@ -1,0 +1,55 @@
+{
+  "name": "dev-server",
+  "implementation": "/packages/rspack/src/executors/dev-server/dev-server.impl.ts",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "version": 2,
+    "title": "Rspack dev-server executor",
+    "description": "Run @rspack/dev-server to serve a project.",
+    "type": "object",
+    "properties": {
+      "buildTarget": {
+        "type": "string",
+        "description": "The build target for rspack."
+      },
+      "port": {
+        "type": "number",
+        "description": "The port to for the dev-server to listen on."
+      },
+      "mode": {
+        "type": "string",
+        "description": "Mode to run the server in.",
+        "enum": ["development", "production", "none"]
+      },
+      "host": {
+        "type": "string",
+        "description": "Host to listen on.",
+        "default": "localhost"
+      },
+      "ssl": {
+        "type": "boolean",
+        "description": "Serve using `HTTPS`.",
+        "default": false
+      },
+      "sslKey": {
+        "type": "string",
+        "description": "SSL key to use for serving `HTTPS`."
+      },
+      "sslCert": {
+        "type": "string",
+        "description": "SSL certificate to use for serving `HTTPS`."
+      },
+      "publicHost": {
+        "type": "string",
+        "description": "Public URL where the application will be served."
+      }
+    },
+    "required": ["buildTarget"],
+    "presets": []
+  },
+  "description": "Run @rspack/dev-server to serve a project.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/rspack/src/executors/dev-server/schema.json",
+  "type": "executor"
+}

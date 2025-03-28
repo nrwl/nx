@@ -23,6 +23,20 @@ import { getNxRequirePaths } from '../../utils/installation-directory';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { ProjectGraphError } from '../../project-graph/error-types';
+import {
+  getNxKeyInformation,
+  NxKeyNotInstalledError,
+  createNxKeyLicenseeInformation,
+} from '../../utils/nx-key';
+import { type NxKey } from '@nx/key';
+import {
+  DbCache,
+  dbCacheEnabled,
+  formatCacheSize,
+  parseMaxCacheSize,
+} from '../../tasks-runner/cache';
+import { getDefaultMaxCacheSize } from '../../native';
+import { cacheDir } from '../../utils/cache-directory';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -39,6 +53,7 @@ export const packagesWeCareAbout = [
 
 export const patternsWeIgnoreInCommunityReport: Array<string | RegExp> = [
   ...packagesWeCareAbout,
+  new RegExp('@nx/powerpack*'),
   '@schematics/angular',
   new RegExp('@angular/*'),
   '@nestjs/schematics',
@@ -58,13 +73,17 @@ export async function reportHandler() {
   const {
     pm,
     pmVersion,
+    nxKey,
+    nxKeyError,
     localPlugins,
+    powerpackPlugins,
     communityPlugins,
     registeredPlugins,
     packageVersionsWeCareAbout,
     outOfSyncPackageGroup,
     projectGraphError,
     nativeTarget,
+    cache,
   } = await getReportData();
 
   const fields = [
@@ -87,6 +106,70 @@ export async function reportHandler() {
       `${chalk.green(p.package.padEnd(padding))} : ${chalk.bold(p.version)}`
     );
   });
+
+  if (nxKey) {
+    bodyLines.push('');
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(chalk.green('Nx key licensed packages'));
+
+    bodyLines.push(createNxKeyLicenseeInformation(nxKey));
+
+    if (nxKey.realExpiresAt || nxKey.expiresAt) {
+      const licenseExpiryDate = new Date(
+        (nxKey.realExpiresAt ?? nxKey.expiresAt) * 1000
+      );
+
+      // license is not expired
+      if (licenseExpiryDate.getTime() >= Date.now()) {
+        if ('perpetualNxVersion' in nxKey) {
+          bodyLines.push(
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+              nxKey.perpetualNxVersion
+            } and below.`
+          );
+        } else {
+          bodyLines.push(
+            `License expires on ${licenseExpiryDate.toLocaleDateString()}.`
+          );
+        }
+      } else {
+        if ('perpetualNxVersion' in nxKey) {
+          bodyLines.push(
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}, but will continue to work with Nx ${
+              nxKey.perpetualNxVersion
+            } and below.`
+          );
+        } else {
+          bodyLines.push(
+            `License expired on ${licenseExpiryDate.toLocaleDateString()}.`
+          );
+        }
+      }
+    }
+
+    bodyLines.push('');
+
+    padding =
+      Math.max(
+        ...powerpackPlugins.map(
+          (powerpackPlugin) => powerpackPlugin.name.length
+        )
+      ) + 1;
+    for (const powerpackPlugin of powerpackPlugins) {
+      bodyLines.push(
+        `${chalk.green(powerpackPlugin.name.padEnd(padding))} : ${chalk.bold(
+          powerpackPlugin.version
+        )}`
+      );
+    }
+    bodyLines.push('');
+  } else if (nxKeyError) {
+    bodyLines.push('');
+    bodyLines.push(chalk.red('Nx key'));
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(nxKeyError.message);
+    bodyLines.push('');
+  }
 
   if (registeredPlugins.length) {
     bodyLines.push(LINE_SEPARATOR);
@@ -115,6 +198,15 @@ export async function reportHandler() {
     for (const plugin of localPlugins) {
       bodyLines.push(`\t ${chalk.green(plugin)}`);
     }
+  }
+
+  if (cache) {
+    bodyLines.push(LINE_SEPARATOR);
+    bodyLines.push(
+      `Cache Usage: ${formatCacheSize(cache.used)} / ${
+        cache.max === 0 ? '∞' : formatCacheSize(cache.max)
+      }`
+    );
   }
 
   if (outOfSyncPackageGroup) {
@@ -147,6 +239,9 @@ export async function reportHandler() {
 export interface ReportData {
   pm: PackageManager;
   pmVersion: string;
+  nxKey: NxKey | null;
+  nxKeyError: Error | null;
+  powerpackPlugins: PackageJson[];
   localPlugins: string[];
   communityPlugins: PackageJson[];
   registeredPlugins: string[];
@@ -164,6 +259,10 @@ export interface ReportData {
   };
   projectGraphError?: Error | null;
   nativeTarget: string | null;
+  cache: {
+    max: number;
+    used: number;
+  } | null;
 }
 
 export async function getReportData(): Promise<ReportData> {
@@ -174,6 +273,7 @@ export async function getReportData(): Promise<ReportData> {
 
   const nxJson = readNxJson();
   const localPlugins = await findLocalPlugins(graph, nxJson);
+  const powerpackPlugins = findInstalledPowerpackPlugins();
   const communityPlugins = findInstalledCommunityPlugins();
   const registeredPlugins = findRegisteredPluginsBeingUsed(nxJson);
 
@@ -193,8 +293,31 @@ export async function getReportData(): Promise<ReportData> {
 
   const native = isNativeAvailable();
 
+  let nxKey = null;
+  let nxKeyError = null;
+  try {
+    nxKey = await getNxKeyInformation();
+  } catch (e) {
+    if (!(e instanceof NxKeyNotInstalledError)) {
+      nxKeyError = e;
+    }
+  }
+
+  let cache = dbCacheEnabled(nxJson)
+    ? {
+        max:
+          nxJson.maxCacheSize !== undefined
+            ? parseMaxCacheSize(nxJson.maxCacheSize)
+            : getDefaultMaxCacheSize(cacheDir),
+        used: new DbCache({ nxCloudRemoteCache: null }).getUsedCacheSpace(),
+      }
+    : null;
+
   return {
     pm,
+    nxKey,
+    nxKeyError,
+    powerpackPlugins,
     pmVersion,
     localPlugins,
     communityPlugins,
@@ -203,6 +326,7 @@ export async function getReportData(): Promise<ReportData> {
     outOfSyncPackageGroup,
     projectGraphError,
     nativeTarget: native ? native.getBinaryTarget() : null,
+    cache,
   };
 }
 
@@ -292,6 +416,15 @@ export function findMisalignedPackagesForPackage(
         migrateTarget: `${base.name}@${migrateTarget}`,
       }
     : undefined;
+}
+
+export function findInstalledPowerpackPlugins(): PackageJson[] {
+  const installedPlugins = findInstalledPlugins();
+  return installedPlugins.filter((dep) =>
+    new RegExp(
+      '@nx/powerpack*|@nx/(.+)-cache|@nx/(conformance|owners|enterprise*)'
+    ).test(dep.name)
+  );
 }
 
 export function findInstalledCommunityPlugins(): PackageJson[] {

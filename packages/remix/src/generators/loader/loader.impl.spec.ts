@@ -22,10 +22,9 @@ describe('loader', () => {
       })
     );
 
-    await applicationGenerator(tree, { name: 'demo' });
+    await applicationGenerator(tree, { name: 'demo', directory: 'apps/demo' });
     await routeGenerator(tree, {
-      path: 'example',
-      project: 'demo',
+      path: 'apps/demo/app/routes/example.tsx',
       style: 'none',
       loader: false,
       action: false,
@@ -38,18 +37,11 @@ describe('loader', () => {
     {
       path: 'apps/demo/app/routes/example.tsx',
     },
-    {
-      path: 'example',
-    },
-    {
-      path: 'example.tsx',
-    },
   ].forEach((config) => {
     describe(`add loader using route path "${config.path}"`, () => {
       beforeEach(async () => {
         await loaderGenerator(tree, {
           path: config.path,
-          project: 'demo',
         });
       });
 
@@ -76,26 +68,6 @@ describe('loader', () => {
         const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
         expect(content).toMatch(useLoaderData);
       });
-    });
-  });
-
-  describe('--nameAndDirectoryFormat=as-provided', () => {
-    it('should add imports', async () => {
-      // ACT
-      await loaderGenerator(tree, {
-        path: 'apps/demo/app/routes/example.tsx',
-        nameAndDirectoryFormat: 'as-provided',
-      });
-
-      // ASSERT
-      const content = tree.read('apps/demo/app/routes/example.tsx', 'utf-8');
-      expect(content).toMatch(`import { json } from '@remix-run/node';`);
-      expect(content).toMatch(
-        `import type { LoaderFunctionArgs } from '@remix-run/node';`
-      );
-      expect(content).toMatch(
-        `import { useLoaderData } from '@remix-run/react';`
-      );
     });
   });
 });

@@ -10,6 +10,7 @@ import type { RollupExecutorOptions } from '../../executors/rollup/schema';
 import type { RollupPluginOptions } from '../../plugins/plugin';
 import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options';
 import { addPluginRegistrations } from './lib/add-plugin-registrations';
+import { NoTargetsToMigrateError } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 interface Schema {
   project?: string;
@@ -78,10 +79,10 @@ export async function convertToInferred(tree: Tree, options: Schema) {
         (target.outputs[0] === '{options.outputPath}' ||
           target.outputs[0] === '{workspaceRoot}/{options.outputPath}')
       ) {
-        // If only the default `options.outputPath` is set as output, remove it and use path inferred from `rollup.config.js`.
+        // If only the default `options.outputPath` is set as output, remove it and use path inferred from `rollup.config.cjs`.
         delete target.outputs;
       } else {
-        // Otherwise, replace `options.outputPath` with what is inferred from `rollup.config.js`.
+        // Otherwise, replace `options.outputPath` with what is inferred from `rollup.config.cjs`.
         target.outputs = target.outputs.map((output) =>
           // Again, "{projectRoot}/{options.outputPath}" is an invalid output for Rollup.
           output === '{options.outputPath}' ||
@@ -100,7 +101,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   );
 
   if (migratedProjects.size === 0) {
-    throw new Error('Could not find any targets to migrate.');
+    throw new NoTargetsToMigrateError();
   }
 
   projects = getProjects(tree);

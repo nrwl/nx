@@ -26,32 +26,45 @@ export function formatTargetsAndProjects(
   targets: string[],
   tasks: Task[]
 ) {
-  if (tasks.length === 1)
-    return `target ${targets[0]} for project ${projectNames[0]}`;
+  let targetsText = '';
+  let projectsText = '';
+  let dependentTasksText = '';
 
-  let text;
-  const project =
-    projectNames.length === 1
-      ? `project ${projectNames[0]}`
-      : `${projectNames.length} projects`;
+  const tasksTargets = new Set();
+  const tasksProjects = new Set();
+  const dependentTasks = new Set();
+
+  tasks.forEach((task) => {
+    tasksTargets.add(task.target.target);
+    tasksProjects.add(task.target.project);
+    if (
+      !projectNames.includes(task.target.project) ||
+      !targets.includes(task.target.target)
+    ) {
+      dependentTasks.add(task);
+    }
+  });
+
+  targets = targets.filter((t) => tasksTargets.has(t)); // filter out targets that don't exist
+  projectNames = projectNames.filter((p) => tasksProjects.has(p)); // filter out projects that don't exist
+
   if (targets.length === 1) {
-    text = `target ${output.bold(targets[0])} for ${project}`;
+    targetsText = `target ${output.bold(targets[0])}`;
   } else {
-    text = `targets ${targets
-      .map((t) => output.bold(t))
-      .join(', ')} for ${project}`;
+    targetsText = `targets ${targets.map((t) => output.bold(t)).join(', ')}`;
   }
 
-  const dependentTasks = tasks.filter(
-    (t) =>
-      projectNames.indexOf(t.target.project) === -1 ||
-      targets.indexOf(t.target.target) === -1
-  ).length;
+  if (projectNames.length === 1) {
+    projectsText = `project ${projectNames[0]}`;
+  } else {
+    projectsText = `${projectNames.length} projects`;
+  }
 
-  if (dependentTasks > 0) {
-    text += ` and ${output.bold(dependentTasks)} ${
-      dependentTasks === 1 ? 'task' : 'tasks'
+  if (dependentTasks.size > 0) {
+    dependentTasksText = ` and ${output.bold(dependentTasks.size)} ${
+      dependentTasks.size === 1 ? 'task' : 'tasks'
     } ${projectNames.length === 1 ? 'it depends on' : 'they depend on'}`;
   }
-  return text;
+
+  return `${targetsText} for ${projectsText}${dependentTasksText}`;
 }

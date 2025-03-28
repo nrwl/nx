@@ -63,7 +63,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'browser',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.js',
@@ -104,7 +105,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'browser',
       outdir: 'dist/apps/myapp',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.js',
@@ -144,7 +146,8 @@ describe('buildEsbuildOptions', () => {
       format: 'cjs',
       platform: 'browser',
       outfile: 'dist/apps/myapp/index.cjs',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.cjs',
@@ -181,7 +184,8 @@ describe('buildEsbuildOptions', () => {
       format: 'cjs',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.cjs',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.cjs',
@@ -222,7 +226,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.mjs',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.mjs',
@@ -261,7 +266,8 @@ describe('buildEsbuildOptions', () => {
       format: 'cjs',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.js',
@@ -301,7 +307,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: [],
       outExtension: {
         '.js': '.js',
@@ -340,7 +347,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outfile: 'dist/apps/myapp/index.js',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: ['bar', 'foo'],
       outExtension: {
         '.js': '.js',
@@ -376,7 +384,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: undefined,
       outExtension: {
         '.js': '.js',
@@ -414,7 +423,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: undefined,
       sourcemap: true,
       outExtension: {
@@ -451,7 +461,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: undefined,
       metafile: undefined,
       minify: undefined,
@@ -490,7 +501,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: undefined,
       sourcemap: true,
       metafile: undefined,
@@ -530,7 +542,8 @@ describe('buildEsbuildOptions', () => {
       format: 'esm',
       platform: 'node',
       outdir: 'dist/apps/myapp',
-      tsconfig: 'apps/myapp/tsconfig.app.json',
+      tsconfig:
+        'src/executors/esbuild/lib/fixtures/apps/myapp/tsconfig.app.json',
       external: undefined,
       sourcemap: true,
       metafile: undefined,

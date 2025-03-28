@@ -3,8 +3,9 @@ import { addProjectConfiguration, joinPathFragments } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { addReleaseConfigForNonTsSolution } from '@nx/js/src/generators/library/utils/add-release-config';
 
-export function addProject(
+export async function addProject(
   tree: Tree,
   libraryOptions: NormalizedSchema['libraryOptions']
 ) {
@@ -41,6 +42,14 @@ export function addProject(
       },
       defaultConfiguration: 'production',
     };
+
+    if (libraryOptions.publishable) {
+      await addReleaseConfigForNonTsSolution(
+        tree,
+        libraryOptions.name,
+        project
+      );
+    }
   }
 
   addProjectConfiguration(tree, libraryOptions.name, project);

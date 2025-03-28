@@ -18496,11 +18496,6 @@
             "deps": ["npm:next", "devkit", "npm:@nrwl/next"]
           },
           {
-            "file": "packages/next/plugins/with-stylus.ts",
-            "hash": "f3a6bbd478d02c0e9940e4ebe3ab662456b53ebe",
-            "deps": ["npm:webpack-merge", "npm:next"]
-          },
-          {
             "file": "packages/next/project.json",
             "hash": "171f3c8158b2682525ffb65dac39edf04578460c"
           },
@@ -25930,10 +25925,6 @@
           {
             "file": "docs/shared/guides/storybook/storybook-v6-react.md",
             "hash": "9c3412bebb5b28cd0dc760336b7fe6db83513866"
-          },
-          {
-            "file": "docs/shared/guides/turbo-and-nx.md",
-            "hash": "46a5d13d0423779797199acd8d36bae3812a3976"
           },
           {
             "file": "docs/shared/guides/use-environment-variables-in-angular.md",

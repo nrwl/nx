@@ -5,7 +5,13 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
-import { AppConfig, ExternalApi } from '@nx/graph/shared';
+import type { AppConfig, ExternalApi } from '@nx/graph/shared';
+import {
+  ProjectDetailsEvents,
+  projectDetailsMachine,
+  ProjectDetailsState,
+} from './app/console/project-details/project-details.machine';
+import { Interpreter } from 'xstate';
 
 export declare global {
   interface Window {
@@ -20,6 +26,13 @@ export declare global {
     appConfig: AppConfig;
     useXstateInspect: boolean;
     externalApi?: ExternalApi;
+
+    // using bundled graph components directly from outside the graph app
+    __NX_RENDER_GRAPH__?: boolean;
+    renderPDV?: (
+      data: any
+    ) => Interpreter<ProjectDetailsState, any, ProjectDetailsEvents>;
+    renderError?: (data: any) => void;
   }
 }
 declare module 'cytoscape' {

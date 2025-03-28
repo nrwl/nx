@@ -1,17 +1,17 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter, LinterType } from '@nx/eslint';
 
 export interface Schema {
-  name: string;
+  directory: string;
+  name?: string;
   style: 'none' | 'css' | 'scss' | 'less';
+  bundler?: 'vite' | 'rsbuild';
   skipFormat?: boolean;
-  directory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
   unitTestRunner?: 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   linter: Linter | LinterType;
+  formatter?: 'none' | 'prettier';
   routing?: boolean;
   js?: boolean;
   strict?: boolean;
@@ -20,13 +20,17 @@ export interface Schema {
   rootProject?: boolean;
   addPlugin?: boolean;
   nxCloudToken?: string;
+  useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   projectName: string;
   appProjectRoot: string;
+  importPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];
   devServerPort?: number;
+  isUsingTsSolutionConfig: boolean;
 }

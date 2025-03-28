@@ -1,3 +1,8 @@
+---
+title: Switching to ESLint's Flat Config Format
+description: Learn how to migrate your Nx workspace to ESLint's new flat configuration format, understanding the benefits and implementation details.
+---
+
 # Switching to ESLint's flat config format
 
 Version 8 of ESLint introduced a new configuration format called [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new). The next major version will use this config format by default. The purpose of this format is to:
@@ -10,12 +15,12 @@ See below a direct comparison between `JSON`, `JS` and `Flat` config:
 {% tabs %}
 {% tab label="Flat" %}
 
-```js {% fileName="eslint.config.js" %}
+```js {% fileName="eslint.config.cjs" %}
 // the older versions were magically interpreting all the imports
 // in flat config we do it explicitly
 const nxPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
-const baseConfig = require('./eslint.base.config.js');
+const baseConfig = require('./eslint.base.config.cjs');
 const globals = require('globals');
 const jsoncParser = require('jsonc-eslint-parser');
 const tsParser = require('@typescript-eslint/parser');

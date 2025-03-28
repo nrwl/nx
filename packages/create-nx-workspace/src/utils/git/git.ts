@@ -4,7 +4,7 @@ import { output } from '../output';
 
 export function checkGitVersion(): string | null | undefined {
   try {
-    let gitVersionOutput = execSync('git --version', { windowsHide: true })
+    let gitVersionOutput = execSync('git --version', { windowsHide: false })
       .toString()
       .trim();
     return gitVersionOutput.match(/[0-9]+\.[0-9]+\.+[0-9]+/)?.[0];
@@ -43,6 +43,7 @@ export async function initializeGitRepo(
             }
           : {}),
       },
+      windowsHide: false,
     };
     return new Promise<void>((resolve, reject) => {
       spawn('git', args, spawnOptions).on('close', (code) => {

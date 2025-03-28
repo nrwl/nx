@@ -60,6 +60,7 @@ The `@nx/next` plugin will create tasks for any project that has a Next.js confi
 - `next.config.js`
 - `next.config.cjs`
 - `next.config.mjs`
+- `next.config.ts`
 
 ### View Inferred Tasks
 
@@ -97,7 +98,7 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 You can add a new application with the following:
 
 ```shell
-nx g @nx/next:app my-new-app
+nx g @nx/next:app apps/my-new-app
 ```
 
 ### Generating Libraries
@@ -111,7 +112,7 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 To generate a new library run:
 
 ```shell
-nx g @nx/next:lib my-new-lib
+nx g @nx/next:lib libs/my-new-lib
 ```
 
 ### Generating Pages and Components
@@ -119,9 +120,9 @@ nx g @nx/next:lib my-new-lib
 Nx also provides commands to quickly generate new pages and components for your application.
 
 ```shell
-nx g @nx/next:page my-new-page --directory=dir-where-to-place-the-page
+nx g @nx/next:page apps/my-new-app/pages/my-new-page
 
-nx g @nx/next:component my-new-component --directory=dir-where-to-place-the-component
+nx g @nx/next:component apps/my-new-app/components/my-new-component
 ```
 
 Above commands will add a new page `my-new-page` and a component `my-new-component` to `my-new-app` project respectively in the specified directories.
@@ -189,7 +190,7 @@ There is no need to build the library prior to using it. When you update your li
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```shell
-nx g @nx/next:lib my-new-lib --publishable --importPath=@happynrwl/ui-components
+nx g @nx/next:lib libs/my-new-lib --publishable --importPath=@happynrwl/ui-components
 ```
 
 ### Testing Projects
@@ -230,13 +231,53 @@ Next.js applications can be build with:
 nx build my-new-app
 ```
 
-And if you generated a library with --buildable, then you can build a library as well:
+And if you generated a library with `--bundler`, then you can build a library as well:
 
 ```shell
 nx build my-new-lib
 ```
 
-After running a build, the output will be in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
+After running a build, the output will be in the `{workspaceRoot}/dist/{projectRoot}` folder.
+
+{% tabs %}
+
+{% tab label="Using inferred tasks" %}
+
+You can customize the output folder path by update the bundler's config. For example vite's config can be updated in `vite.config.ts`:
+
+```typescript {% fileName="apps/my-next-app/vite.config.ts" highlightLines=[4]%}
+import { defineConfig } from 'vite';
+export default defineConfig(() => ({
+  build: {
+    outDir: 'dist/my-next-app',
+  },
+}));
+```
+
+{% /tab %}
+
+{% tab label="Using the @nx/next:build executor" %}
+
+You can customize the output folder by setting `outputPath` in the project's `project.json` file
+
+```json {% fileName="apps/my-next-app/project.json" highlightLines=[9]%}
+{
+  "root": "apps/my-next-app",
+  "sourceRoot": "apps/my-next-app/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/my-next-app"
+      }
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 The library in `dist` is publishable to npm or a private registry.
 

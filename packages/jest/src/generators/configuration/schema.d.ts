@@ -6,7 +6,12 @@ export interface JestProjectSchema {
    * @deprecated use setupFile instead
    */
   skipSetupFile?: boolean;
-  setupFile?: 'angular' | 'web-components' | 'react-native' | 'none';
+  setupFile?:
+    | 'angular'
+    | 'web-components'
+    | 'react-native'
+    | 'react-router'
+    | 'none';
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'none';
   /**
@@ -19,6 +24,7 @@ export interface JestProjectSchema {
   compiler?: 'tsc' | 'babel' | 'swc';
   skipPackageJson?: boolean;
   js?: boolean;
+  runtimeTsconfigFileName?: string;
 
   /**
    * @internal
@@ -28,4 +34,5 @@ export interface JestProjectSchema {
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {
   rootProject: boolean;
+  isTsSolutionSetup: boolean;
 };

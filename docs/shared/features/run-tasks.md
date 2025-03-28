@@ -1,4 +1,11 @@
+---
+title: 'Run Tasks'
+description: 'Learn how to use Nx task runner to efficiently manage and execute tasks across multiple projects in your monorepo, including parallel execution and caching.'
+---
+
 # Run Tasks
+
+{% youtube src="https://youtu.be/aEdfYiA5U34" title="Run tasks with Nx" /%}
 
 In a monorepo setup, you don't just run tasks for a single project; you might have hundreds to manage. To help with this, Nx provides a powerful task runner that allows you to:
 

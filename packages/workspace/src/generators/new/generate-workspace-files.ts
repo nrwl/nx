@@ -76,18 +76,6 @@ const presetToPluginMap: { [key in Preset]: PresetInfo } = {
     learnMoreLink:
       'https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
   },
-  [Preset.RemixMonorepo]: {
-    generateAppCmd: '@nx/remix',
-    generateLibCmd: '@nx/react',
-    learnMoreLink:
-      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
-  },
-  [Preset.RemixStandalone]: {
-    generateAppCmd: '@nx/remix',
-    generateLibCmd: '@nx/react',
-    learnMoreLink:
-      'https://nx.dev/nx-api/remix?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
-  },
   [Preset.ReactNative]: {
     generateAppCmd: '@nx/react-native',
     generateLibCmd: '@nx/react',
@@ -213,12 +201,12 @@ export async function generateWorkspaceFiles(
 }
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.preset === Preset.NPM) {
+  if (options.preset === Preset.NPM) {
+    updateJson(tree, join(options.directory, 'nx.json'), (json) => {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
-    }
-    return json;
-  });
+      return json;
+    });
+  }
 }
 
 function createNxJson(
@@ -271,10 +259,12 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
-    options.preset === Preset.RemixStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
-      : options.preset === Preset.NPM
+      : (options.preset === Preset.TS &&
+          options.workspaces &&
+          process.env.NX_ADD_PLUGINS !== 'false') ||
+        options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
@@ -291,7 +281,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
 async function createReadme(
   tree: Tree,
-  { name, appName, directory, preset, nxCloud }: NormalizedSchema,
+  { name, appName, directory, preset, nxCloud, workspaces }: NormalizedSchema,
   nxCloudToken?: string
 ) {
   const formattedNames = names(name);
@@ -309,6 +299,9 @@ async function createReadme(
   generateFiles(tree, join(__dirname, './files-readme'), directory, {
     formattedNames,
     isJsStandalone: preset === Preset.TsStandalone,
+    isTsPreset: preset === Preset.TS,
+    isUsingNewTsSolutionSetup:
+      process.env.NX_ADD_PLUGINS !== 'false' && workspaces,
     isEmptyRepo: !appName,
     appName,
     generateAppCmd: presetInfo.generateAppCmd,
@@ -405,17 +398,32 @@ function normalizeOptions(options: NormalizedSchema) {
 }
 
 function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.NPM) {
+  if (
+    options.preset === Preset.NPM ||
+    (options.preset === Preset.TS &&
+      process.env.NX_ADD_PLUGINS !== 'false' &&
+      options.workspaces) ||
+    ((options.preset === Preset.Expo ||
+      options.preset === Preset.NextJs ||
+      options.preset === Preset.ReactMonorepo ||
+      options.preset === Preset.ReactNative ||
+      options.preset === Preset.VueMonorepo ||
+      options.preset === Preset.Nuxt ||
+      options.preset === Preset.NodeMonorepo ||
+      options.preset === Preset.Express) &&
+      options.workspaces)
+  ) {
+    const workspaces = options.workspaceGlobs ?? ['packages/*'];
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),
-        `packages:
-  - 'packages/*'
+        `packages: 
+  ${workspaces.map((workspace) => `- "${workspace}"`).join('\n  ')}
 `
       );
     } else {
       updateJson(tree, join(options.directory, 'package.json'), (json) => {
-        json.workspaces = ['packages/*'];
+        json.workspaces = workspaces;
         return json;
       });
     }

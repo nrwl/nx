@@ -14,23 +14,18 @@
       }
     ],
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "Library name",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "^[a-zA-Z].*$"
-      },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
         "alias": "dir",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the library in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "description": "Library name",
+        "pattern": "^[a-zA-Z].*$",
+        "x-priority": "important"
       },
       "tags": {
         "type": "string",
@@ -42,17 +37,29 @@
         "enum": ["none", "css"],
         "default": "css"
       },
-      "buildable": {
-        "type": "boolean",
-        "description": "Should the library be buildable?",
-        "default": false
+      "bundler": {
+        "type": "string",
+        "description": "The bundler to use. Choosing 'none' means this library is not buildable.",
+        "enum": ["none", "vite", "rollup"],
+        "default": "none",
+        "x-prompt": "Which bundler would you like to use to build the library? Choose 'none' to skip build setup.",
+        "x-priority": "important"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["jest", "vitest", "none"],
+        "enum": ["vitest", "jest", "none"],
         "description": "Test Runner to use for Unit Tests",
         "x-prompt": "What test runner should be used?",
-        "default": "vitest"
+        "default": "none",
+        "x-priority": "important"
       },
       "importPath": {
         "type": "string",
@@ -68,9 +75,19 @@
         "description": "Skip formatting files after generator runs",
         "default": false,
         "x-priority": "internal"
+      },
+      "buildable": {
+        "type": "boolean",
+        "default": false,
+        "description": "Generate a buildable library that uses rollup to bundle.",
+        "x-deprecated": "Use the `bundler` option for greater control (none, vite, rollup)."
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "description": "Generate a new library",

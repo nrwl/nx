@@ -1,0 +1,12 @@
+{
+  "name": "add-file-extensions-to-overrides",
+  "version": "20.3.0-beta.1",
+  "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
+  "implementation": "/packages/eslint/src/migrations/update-20-3-0/add-file-extensions-to-overrides.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/eslint",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Update ESLint Config File Extensions in Overrides\n\nUpdate ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)\n\n#### Sample Code Changes\n\nAdd `.cjs`, `.mjs`, `.cts`, `.mts` file extensions to overrides converted using `convert-to-flat-config`\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```js {% fileName=\"eslint.config.js\" %}\nconst { FlatCompat } = require('@eslint/eslintrc');\nconst js = require('@eslint/js');\nconst nxEslintPlugin = require('@nx/eslint-plugin');\n\nconst compat = new FlatCompat({\n  baseDirectory: __dirname,\n  recommendedConfig: js.configs.recommended,\n});\n\nmodule.exports = [\n  ...compat\n    .config({\n      extends: ['plugin:@nx/typescript'],\n    })\n    .map((config) => ({\n      ...config,\n      files: ['**/*.ts', '**/*.tsx'],\n      rules: {\n        ...config.rules,\n      },\n    })),\n  ...compat\n    .config({\n      extends: ['plugin:@nx/javascript'],\n    })\n    .map((config) => ({\n      ...config,\n      files: ['**/*.js', '**/*.jsx'],\n      rules: {\n        ...config.rules,\n      },\n    })),\n];\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```js {% highlightLines=[17,28] fileName=\"eslint.config.js\" %}\nconst { FlatCompat } = require('@eslint/eslintrc');\nconst js = require('@eslint/js');\nconst nxEslintPlugin = require('@nx/eslint-plugin');\n\nconst compat = new FlatCompat({\n  baseDirectory: __dirname,\n  recommendedConfig: js.configs.recommended,\n});\n\nmodule.exports = [\n  ...compat\n    .config({\n      extends: ['plugin:@nx/typescript'],\n    })\n    .map((config) => ({\n      ...config,\n      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],\n      rules: {\n        ...config.rules,\n      },\n    })),\n  ...compat\n    .config({\n      extends: ['plugin:@nx/javascript'],\n    })\n    .map((config) => ({\n      ...config,\n      files: ['**/*.js', '**/*.jsx', '**/*.cjs', '**/*.mjs'],\n      rules: {\n        ...config.rules,\n      },\n    })),\n];\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

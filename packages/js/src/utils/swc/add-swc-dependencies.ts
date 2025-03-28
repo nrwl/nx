@@ -6,17 +6,25 @@ import {
   swcNodeVersion,
 } from '../versions';
 
+export function getSwcDependencies(): {
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+} {
+  const dependencies = {
+    '@swc/helpers': swcHelpersVersion,
+  };
+  const devDependencies = {
+    '@swc/core': swcCoreVersion,
+    '@swc/cli': swcCliVersion,
+  };
+
+  return { dependencies, devDependencies };
+}
+
 export function addSwcDependencies(tree: Tree) {
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      '@swc/helpers': swcHelpersVersion,
-    },
-    {
-      '@swc/core': swcCoreVersion,
-      '@swc/cli': swcCliVersion,
-    }
-  );
+  const { dependencies, devDependencies } = getSwcDependencies();
+
+  return addDependenciesToPackageJson(tree, dependencies, devDependencies);
 }
 
 export function addSwcRegisterDependencies(tree: Tree) {

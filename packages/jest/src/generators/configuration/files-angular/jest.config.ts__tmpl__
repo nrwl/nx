@@ -1,10 +1,9 @@
-/* eslint-disable */
 <% if(js){ %>module.exports =<% } else{ %>export default<% } %> {
   displayName: '<%= project %>',
   preset: '<%= offsetFromRoot %>jest.preset.<%= presetExt %>',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% if(testEnvironment) { %>
   testEnvironment: '<%= testEnvironment %>',<% } %>
-  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
+  coverageDirectory: '<%= coverageDirectory %>',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',

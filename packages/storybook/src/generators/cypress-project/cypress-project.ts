@@ -28,20 +28,9 @@ export interface CypressConfigureSchema {
   standaloneConfig?: boolean;
   ciTargetName?: string;
   skipFormat?: boolean;
-  projectNameAndRootFormat?: 'as-provided' | 'derived';
 }
 
 export async function cypressProjectGenerator(
-  tree: Tree,
-  schema: CypressConfigureSchema
-) {
-  return await cypressProjectGeneratorInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...schema,
-  });
-}
-
-export async function cypressProjectGeneratorInternal(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
@@ -59,8 +48,6 @@ export async function cypressProjectGeneratorInternal(
       name: e2eName,
       projectType: 'application',
       directory: schema.directory,
-      projectNameAndRootFormat: schema.projectNameAndRootFormat,
-      callingGenerator: '@nx/storybook:cypress-project',
     }
   );
   const libConfig = readProjectConfiguration(tree, schema.name);
@@ -82,11 +69,7 @@ export async function cypressProjectGeneratorInternal(
     skipFormat: true,
   });
 
-  const generatedCypressProjectName = getE2eProjectName(
-    schema.name,
-    libRoot,
-    schema.directory
-  );
+  const generatedCypressProjectName = projectName;
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
 
   const project = readProjectConfiguration(tree, generatedCypressProjectName);
@@ -224,18 +207,6 @@ function updateAngularJsonBuilder(
     },
   };
   updateProjectConfiguration(tree, opts.e2eProjectName, project);
-}
-
-function projectAlreadyHasCypress(tree: Tree): boolean {
-  const packageJsonContents = readJson(tree, 'package.json');
-  return (
-    (packageJsonContents?.['devDependencies']?.['@nx/cypress'] ||
-      packageJsonContents?.['dependencies']?.['@nx/cypress'] ||
-      packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
-      packageJsonContents?.['dependencies']?.['@nrwl/cypress']) &&
-    (packageJsonContents?.['devDependencies']?.['cypress'] ||
-      packageJsonContents?.['dependencies']?.['cypress'])
-  );
 }
 
 export default cypressProjectGenerator;

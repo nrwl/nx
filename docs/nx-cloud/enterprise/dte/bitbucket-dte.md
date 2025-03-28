@@ -1,8 +1,8 @@
-# Custom Distributed Task Execution on Bitbucket Pipelines
+# Manual Distributed Task Execution on Bitbucket Pipelines
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
-## Run Custom Agents on Bitbucket Pipelines
+## Run Agents on Bitbucket Pipelines
 
 Run agents directly on Bitbucket Pipelines with the workflow below:
 
@@ -30,10 +30,9 @@ pipelines:
               name: CI
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
-                - export NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT=3
 
                 - npm ci
-                - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci" --agent-count=3
+                - npx nx-cloud start-ci-run --distribute-on="manual" --stop-agents-after="e2e-ci"
                 - npx nx-cloud record -- nx format:check
                 - npx nx affected --target=lint,test,build,e2e-ci --parallel=2
           - step: *agent

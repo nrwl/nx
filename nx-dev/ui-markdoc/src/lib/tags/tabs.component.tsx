@@ -23,22 +23,35 @@ export function Tabs({
   const [currentTab, setCurrentTab] = useState<string>(labels[0]);
 
   useEffect(() => {
-    const handleTabSelectedEvent = () => {
+    const handleTabSelectedEvent = (
+      tabSelectedEvent: CustomEvent<{ defaultTab?: string }>
+    ) => {
       const selectedTab = localStorage.getItem(SELECTED_TAB_KEY);
+      const defaultTab = tabSelectedEvent.detail.defaultTab;
       if (selectedTab && labels.includes(selectedTab)) {
         setCurrentTab(selectedTab);
+      } else if (defaultTab) {
+        setCurrentTab(defaultTab);
       }
     };
 
-    handleTabSelectedEvent();
-    window.addEventListener(TAB_SELECTED_EVENT, handleTabSelectedEvent);
+    handleTabSelectedEvent(
+      new CustomEvent(TAB_SELECTED_EVENT, { detail: { defaultTab: labels[0] } })
+    );
+    window.addEventListener(
+      TAB_SELECTED_EVENT,
+      handleTabSelectedEvent as EventListener
+    );
     return () =>
-      window.removeEventListener(TAB_SELECTED_EVENT, handleTabSelectedEvent);
+      window.removeEventListener(
+        TAB_SELECTED_EVENT,
+        handleTabSelectedEvent as EventListener
+      );
   }, [labels]);
 
   const handleTabClick = (label: string) => {
     localStorage.setItem(SELECTED_TAB_KEY, label);
-    window.dispatchEvent(new Event(TAB_SELECTED_EVENT));
+    window.dispatchEvent(new CustomEvent(TAB_SELECTED_EVENT, { detail: {} }));
     setCurrentTab(label);
   };
 

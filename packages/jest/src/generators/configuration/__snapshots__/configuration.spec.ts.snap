@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`jestProject --babelJest should generate proper jest.transform when --compiler=swc and supportTsx is true 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
@@ -23,8 +22,7 @@ export default {
 `;
 
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
@@ -37,8 +35,7 @@ export default {
 `;
 
 exports[`jestProject --babelJest should generate proper jest.transform when babelJest is true 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
@@ -51,8 +48,7 @@ export default {
 `;
 
 exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
@@ -77,8 +73,7 @@ export default {
 `;
 
 exports[`jestProject should create a jest.config.ts 1`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   coverageDirectory: '../../coverage/libs/lib1',
@@ -87,8 +82,7 @@ export default {
 `;
 
 exports[`jestProject should generate files 2`] = `
-"/* eslint-disable */
-export default {
+"export default {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

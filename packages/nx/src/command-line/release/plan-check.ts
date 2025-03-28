@@ -1,16 +1,13 @@
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
-import { getTouchedProjects } from '../../project-graph/affected/locators/workspace-projects';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
-import { calculateFileChanges } from '../../project-graph/file-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { allFileData } from '../../utils/all-file-data';
 import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { getIgnoreObject } from '../../utils/ignore';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { PlanCheckOptions, PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -23,6 +20,7 @@ import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
+import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
 import { printConfigAndExit } from './utils/print-config';
 
 export const releasePlanCheckCLIHandler = (args: PlanCheckOptions) =>
@@ -36,10 +34,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       nxJson.release ?? {},
       overrideReleaseConfig ?? {}
     );
-
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
@@ -59,15 +53,10 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       });
     }
 
-    const {
-      error: filterError,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
+    // No filtering is applied here, as we want to consider all release groups for plan:check
+    const { error: filterError, releaseGroups } = filterReleaseGroups(
       projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
+      nxReleaseConfig
     );
     if (filterError) {
       output.error(filterError);
@@ -87,10 +76,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     const rawVersionPlans = await readRawVersionPlans();
-    setResolvedVersionPlansOnGroups(
+    await setResolvedVersionPlansOnGroups(
       rawVersionPlans,
       releaseGroups,
-      Object.keys(projectGraph.nodes)
+      Object.keys(projectGraph.nodes),
+      args.verbose
     );
 
     // Resolve the final values for base, head etc to use when resolving the changes to consider
@@ -120,14 +110,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
     const resolvedAllFileData = await allFileData();
 
-    /**
-     * Create a minimal subset of touched projects based on the configured ignore patterns, we only need
-     * to recompute when the ignorePatternsForPlanCheck differs between release groups.
-     */
-    const serializedIgnorePatternsToTouchedProjects = new Map<
-      string,
-      Record<string, true> // project names -> true for O(N) lookup later
-    >();
+    const getTouchedProjectsForGroup = createGetTouchedProjectsForGroup(
+      nxArgs,
+      projectGraph,
+      changedFiles,
+      resolvedAllFileData
+    );
 
     const NOTE_ABOUT_VERBOSE_LOGGING =
       'Run with --verbose to see the full list of changed files used for the touched projects logic.';
@@ -162,97 +150,12 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         continue;
       }
 
-      // Exclude patterns from .nxignore, .gitignore and explicit version plan config
-      let serializedIgnorePatterns = '[]';
-      const ignore = getIgnoreObject();
-
-      if (
-        typeof releaseGroup.versionPlans !== 'boolean' &&
-        Array.isArray(releaseGroup.versionPlans.ignorePatternsForPlanCheck) &&
-        releaseGroup.versionPlans.ignorePatternsForPlanCheck.length
-      ) {
-        output.note({
-          title: `Applying configured ignore patterns to changed files${
-            releaseGroup.name !== IMPLICIT_DEFAULT_RELEASE_GROUP
-              ? ` for release group "${releaseGroup.name}"`
-              : ''
-          }`,
-          bodyLines: [
-            ...releaseGroup.versionPlans.ignorePatternsForPlanCheck.map(
-              (pattern) => `  - ${pattern}`
-            ),
-          ],
-        });
-        ignore.add(releaseGroup.versionPlans.ignorePatternsForPlanCheck);
-        serializedIgnorePatterns = JSON.stringify(
-          releaseGroup.versionPlans.ignorePatternsForPlanCheck
-        );
-      }
-
-      let touchedProjects = {};
-      if (
-        serializedIgnorePatternsToTouchedProjects.has(serializedIgnorePatterns)
-      ) {
-        touchedProjects = serializedIgnorePatternsToTouchedProjects.get(
-          serializedIgnorePatterns
-        );
-      } else {
-        // We only care about directly touched projects, not implicitly affected ones etc
-        const touchedProjectsArr = await getTouchedProjects(
-          calculateFileChanges(
-            changedFiles,
-            resolvedAllFileData,
-            nxArgs,
-            undefined,
-            ignore
-          ),
-          projectGraph.nodes
-        );
-        touchedProjects = touchedProjectsArr.reduce(
-          (acc, project) => ({ ...acc, [project]: true }),
-          {}
-        );
-        serializedIgnorePatternsToTouchedProjects.set(
-          serializedIgnorePatterns,
-          touchedProjects
-        );
-      }
-
-      const touchedProjectsUnderReleaseGroup = releaseGroup.projects.filter(
-        (project) => touchedProjects[project]
+      const touchedProjectsUnderReleaseGroup = await getTouchedProjectsForGroup(
+        releaseGroup,
+        // We do not take any --projects or --groups filtering into account for plan:check
+        releaseGroup.projects,
+        false
       );
-      if (touchedProjectsUnderReleaseGroup.length) {
-        output.log({
-          title: `Touched projects based on changed files${
-            releaseGroup.name !== IMPLICIT_DEFAULT_RELEASE_GROUP
-              ? ` under release group "${releaseGroup.name}"`
-              : ''
-          }`,
-          bodyLines: [
-            ...touchedProjectsUnderReleaseGroup.map(
-              (project) => `  - ${project}`
-            ),
-            '',
-            'NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.',
-          ],
-        });
-      } else {
-        output.log({
-          title: `No touched projects found based on changed files${
-            typeof releaseGroup.versionPlans !== 'boolean' &&
-            Array.isArray(
-              releaseGroup.versionPlans.ignorePatternsForPlanCheck
-            ) &&
-            releaseGroup.versionPlans.ignorePatternsForPlanCheck.length
-              ? ' combined with configured ignore patterns'
-              : ''
-          }${
-            releaseGroup.name !== IMPLICIT_DEFAULT_RELEASE_GROUP
-              ? ` under release group "${releaseGroup.name}"`
-              : ''
-          }`,
-        });
-      }
 
       const projectsInResolvedVersionPlans: Record<
         string,

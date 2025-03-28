@@ -1,3 +1,8 @@
+---
+title: Enable TypeScript Batch Mode
+description: Learn how to use TypeScript's batch mode in Nx to significantly improve build performance by batching TypeScript compilation tasks into a single process.
+---
+
 # Enable Typescript Batch Mode
 
 {% callout type="check" title="Available since Nx 16.6.0" %}
@@ -11,7 +16,7 @@ Executing tasks in batch mode is an experimental feature.
 {% /callout %}
 
 {% callout type="info" title="Requirements" %}
-Building a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects to be buildable and built using the `@nx/js:tsc` executor.
+Building a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects (excluding implicit dependencies) to be buildable and built using the `@nx/js:tsc` executor.
 {% /callout %}
 
 To run your builds using the batch implementation, pass in `--batch` flag:

@@ -73,6 +73,11 @@
         "type": "boolean",
         "description": "Use a separate bundle containing the runtime."
       },
+      "skipTypeChecking": {
+        "alias": "typeCheck",
+        "type": "boolean",
+        "description": "Skip the type checking. Default is `false`."
+      },
       "sourceMap": {
         "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
         "oneOf": [{ "type": "boolean" }, { "type": "string" }]
@@ -80,6 +85,10 @@
       "progress": {
         "type": "boolean",
         "description": "Log progress to the console while building."
+      },
+      "poll": {
+        "type": "number",
+        "description": "Enable and define the file watching poll time period."
       },
       "assets": {
         "type": "array",
@@ -213,6 +222,12 @@
         },
         "additionalProperties": false
       },
+      "sassImplementation": {
+        "type": "string",
+        "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
+        "enum": ["sass", "sass-embedded"],
+        "default": "sass"
+      },
       "optimization": {
         "description": "Enables optimization of the build output.",
         "oneOf": [
@@ -238,6 +253,10 @@
       "generatePackageJson": {
         "type": "boolean",
         "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
+      },
+      "skipOverrides": {
+        "type": "boolean",
+        "description": "Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option."
       },
       "skipPackageManager": {
         "type": "boolean",

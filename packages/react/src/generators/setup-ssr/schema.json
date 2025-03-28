@@ -41,6 +41,12 @@
       "hidden": true,
       "description": "Extra include entries in tsconfig.",
       "default": []
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "type": "string",
+      "enum": ["rspack", "webpack"],
+      "default": "webpack"
     }
   },
   "required": ["project"],

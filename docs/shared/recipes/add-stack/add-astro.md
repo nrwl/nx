@@ -1,3 +1,8 @@
+---
+title: Add an Astro Project
+description: Learn how to integrate Astro with Nx, including setting up caching, running tasks, and using other Nx plugins alongside your Astro application.
+---
+
 # Add an Astro Project
 
 The code for this example is available on GitHub:
@@ -88,11 +93,7 @@ nx add @nx/js@<nx-version>
 
 Then generate a project
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
-```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal" path="~/astro-app" %}
+```{% command="nx g @nx/js:lib libs/ui --minimal" path="~/astro-app" %}
 NX  Generating @nx/js:library
 
 ✔ Which unit test runner would you like to use? · none

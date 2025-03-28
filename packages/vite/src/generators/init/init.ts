@@ -13,6 +13,7 @@ import { setupPathsPlugin } from '../setup-paths-plugin/setup-paths-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import { checkDependenciesInstalled, moveToDevDependencies } from './lib/utils';
+import { ignoreViteTempFiles } from '../../utils/ignore-vite-temp-files';
 
 export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -21,7 +22,8 @@ export function updateNxJsonSettings(tree: Tree) {
   if (productionFileSet) {
     productionFileSet.push(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
-      '!{projectRoot}/tsconfig.spec.json'
+      '!{projectRoot}/tsconfig.spec.json',
+      '!{projectRoot}/src/test-setup.[jt]s'
     );
 
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
@@ -70,11 +72,23 @@ export async function initGeneratorInternal(
         buildTargetName: ['build', 'vite:build', 'vite-build'],
         testTargetName: ['test', 'vite:test', 'vite-test'],
         serveTargetName: ['serve', 'vite:serve', 'vite-serve'],
+        devTargetName: ['dev', 'vite:dev', 'vite-dev'],
         previewTargetName: ['preview', 'vite:preview', 'vite-preview'],
         serveStaticTargetName: [
           'serve-static',
           'vite:serve-static',
           'vite-serve-static',
+        ],
+        typecheckTargetName: ['typecheck', 'vite:typecheck', 'vite-typecheck'],
+        buildDepsTargetName: [
+          'build-deps',
+          'vite:build-deps',
+          'vite-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'vite:watch-deps',
+          'vite-watch-deps',
         ],
       },
       schema.updatePackageScripts
@@ -82,6 +96,7 @@ export async function initGeneratorInternal(
   }
 
   updateNxJsonSettings(tree);
+  await ignoreViteTempFiles(tree, schema.projectRoot);
 
   if (schema.setupPathsPlugin) {
     await setupPathsPlugin(tree, { skipFormat: true });
@@ -90,7 +105,7 @@ export async function initGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
-    tasks.push(checkDependenciesInstalled(tree, schema));
+    tasks.push(await checkDependenciesInstalled(tree, schema));
   }
 
   if (!schema.skipFormat) {

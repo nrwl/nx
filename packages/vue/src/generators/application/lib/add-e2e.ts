@@ -2,37 +2,65 @@ import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   ensurePackage,
-  getPackageManagerCommand,
   joinPathFragments,
   readNxJson,
+  writeJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 
 import { nxVersion } from '../../../utils/versions';
+import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
 import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import { E2EWebServerDetails } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.find((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin'
-  );
-  const e2eWebServerTarget = hasPlugin
-    ? typeof hasPlugin === 'string'
-      ? 'serve'
-      : (hasPlugin.options as any)?.serveTargetName ?? 'serve'
-    : 'serve';
-  const e2eCiWebServerTarget = hasPlugin
-    ? typeof hasPlugin === 'string'
-      ? 'preview'
-      : (hasPlugin.options as any)?.previewTargetName ?? 'preview'
-    : 'preview';
+  const hasPlugin =
+    options.bundler === 'rsbuild'
+      ? await hasRsbuildPlugin(tree, options.appProjectRoot)
+      : nxJson.plugins?.find((p) =>
+          typeof p === 'string'
+            ? p === '@nx/vite/plugin'
+            : p.plugin === '@nx/vite/plugin'
+        );
+  let e2eWebServerInfo: E2EWebServerDetails;
+  if (options.bundler === 'vite') {
+    const { getViteE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
+    e2eWebServerInfo = await getViteE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `vite.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
+  } else if (options.bundler === 'rsbuild') {
+    ensurePackage('@nx/rsbuild', nxVersion);
+    const { getRsbuildE2EWebServerInfo } = await import(
+      '@nx/rsbuild/config-utils'
+    );
+    e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `rsbuild.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
+  }
+
   switch (options.e2eTestRunner) {
     case 'cypress': {
       if (!hasPlugin) {
@@ -46,31 +74,53 @@ export async function addE2e(
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);
-      addProjectConfiguration(tree, options.e2eProjectName, {
-        projectType: 'application',
-        root: options.e2eProjectRoot,
-        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-        targets: {},
-        tags: [],
-        implicitDependencies: [options.projectName],
-      });
+
+      const packageJson: PackageJson = {
+        name: options.e2eProjectName,
+        version: '0.0.1',
+        private: true,
+      };
+
+      if (!options.useProjectJson) {
+        packageJson.nx = {
+          implicitDependencies: [options.projectName],
+        };
+      } else {
+        addProjectConfiguration(tree, options.e2eProjectName, {
+          projectType: 'application',
+          root: options.e2eProjectRoot,
+          sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+          targets: {},
+          tags: [],
+          implicitDependencies: [options.projectName],
+        });
+      }
+
+      if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+        writeJson(
+          tree,
+          joinPathFragments(options.e2eProjectRoot, 'package.json'),
+          packageJson
+        );
+      }
+
       const e2eTask = await configurationGenerator(tree, {
         ...options,
         project: options.e2eProjectName,
         directory: 'src',
         bundler: 'vite',
         skipFormat: true,
-        devServerTarget: `${options.projectName}:${e2eWebServerTarget}`,
-        baseUrl: 'http://localhost:4200',
+        devServerTarget: e2eWebServerInfo.e2eDevServerTarget,
+        baseUrl: e2eWebServerInfo.e2eWebServerAddress,
         jsx: true,
         webServerCommands: hasPlugin
           ? {
-              default: `nx run ${options.projectName}:${e2eWebServerTarget}`,
-              production: `nx run ${options.projectName}:preview`,
+              default: e2eWebServerInfo.e2eWebServerCommand,
+              production: e2eWebServerInfo.e2eCiWebServerCommand,
             }
           : undefined,
-        ciWebServerCommand: `nx run ${options.projectName}:${e2eCiWebServerTarget}`,
-        ciBaseUrl: 'http://localhost:4300',
+        ciWebServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        ciBaseUrl: e2eWebServerInfo.e2eCiBaseUrl,
       });
 
       if (
@@ -114,13 +164,35 @@ export async function addE2e(
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/playwright')
       >('@nx/playwright', nxVersion);
-      addProjectConfiguration(tree, options.e2eProjectName, {
-        projectType: 'application',
-        root: options.e2eProjectRoot,
-        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-        targets: {},
-        implicitDependencies: [options.projectName],
-      });
+
+      const packageJson: PackageJson = {
+        name: options.e2eProjectName,
+        version: '0.0.1',
+        private: true,
+      };
+
+      if (!options.useProjectJson) {
+        packageJson.nx = {
+          implicitDependencies: [options.projectName],
+        };
+      } else {
+        addProjectConfiguration(tree, options.e2eProjectName, {
+          projectType: 'application',
+          root: options.e2eProjectRoot,
+          sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+          targets: {},
+          implicitDependencies: [options.projectName],
+        });
+      }
+
+      if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+        writeJson(
+          tree,
+          joinPathFragments(options.e2eProjectRoot, 'package.json'),
+          packageJson
+        );
+      }
+
       const e2eTask = await configurationGenerator(tree, {
         ...options,
         project: options.e2eProjectName,
@@ -130,10 +202,8 @@ export async function addE2e(
         js: false,
         linter: options.linter,
         setParserOptionsProject: options.setParserOptionsProject,
-        webServerCommand: `${getPackageManagerCommand().exec} nx run ${
-          options.projectName
-        }:${e2eCiWebServerTarget}`,
-        webServerAddress: 'http://localhost:4300',
+        webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
+        webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       });
 
       if (

@@ -1,6 +1,4 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
-import { readNxJson } from '../../config/nx-json';
-import { readParallelFromArgsAndEnv } from '../../utils/command-line-utils';
 import { logger } from '../../utils/logger';
 import {
   OutputStyle,
@@ -10,6 +8,8 @@ import {
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
+  withVerbose,
+  readParallelFromArgsAndEnv,
 } from '../yargs-utils/shared-options';
 import { VersionData } from './utils/shared';
 
@@ -25,18 +25,20 @@ export interface NxReleaseArgs extends BaseNxReleaseArgs {
   dryRun?: boolean;
 }
 
-interface GitCommitAndTagOptions {
+interface GitOptions {
   stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
-  gitCommitArgs?: string;
+  gitCommitArgs?: string | string[];
   gitTag?: boolean;
   gitTagMessage?: string;
-  gitTagArgs?: string;
+  gitTagArgs?: string | string[];
+  gitPush?: boolean;
+  gitRemote?: string;
 }
 
 export type VersionOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     specifier?: string;
@@ -46,7 +48,7 @@ export type VersionOptions = NxReleaseArgs &
   };
 
 export type ChangelogOptions = NxReleaseArgs &
-  GitCommitAndTagOptions &
+  GitOptions &
   VersionPlanArgs &
   FirstReleaseArgs & {
     // version and/or versionData must be set
@@ -55,7 +57,6 @@ export type ChangelogOptions = NxReleaseArgs &
     to?: string;
     from?: string;
     interactive?: string;
-    gitRemote?: string;
     createRelease?: false | 'github';
   };
 
@@ -63,12 +64,14 @@ export type PublishOptions = NxReleaseArgs &
   Partial<RunManyOptions> & { outputStyle?: OutputStyle } & FirstReleaseArgs & {
     registry?: string;
     tag?: string;
+    access?: string;
     otp?: number;
   };
 
 export type PlanOptions = NxReleaseArgs & {
   bump?: string;
   message?: string;
+  onlyTouched?: boolean;
 };
 
 export type PlanCheckOptions = BaseNxReleaseArgs & {
@@ -83,6 +86,7 @@ export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
     specifier?: string;
     yes?: boolean;
+    preid?: VersionOptions['preid'];
     skipPublish?: boolean;
   };
 
@@ -100,9 +104,9 @@ export const yargsReleaseCommand: CommandModule<
 > = {
   command: 'release',
   describe:
-    'Orchestrate versioning and publishing of applications and libraries',
+    'Orchestrate versioning and publishing of applications and libraries.',
   builder: (yargs) =>
-    yargs
+    withVerbose(yargs)
       .command(releaseCommand)
       .command(versionCommand)
       .command(changelogCommand)
@@ -124,25 +128,20 @@ export const yargsReleaseCommand: CommandModule<
         alias: 'p',
         coerce: parseCSV,
         describe:
-          'Projects to run. (comma/space delimited project names and/or patterns)',
+          'Projects to run. (comma/space delimited project names and/or patterns).',
       })
       .option('dry-run', {
         describe:
-          'Preview the changes without updating files/creating releases',
+          'Preview the changes without updating files/creating releases.',
         alias: 'd',
         type: 'boolean',
         default: false,
-      })
-      .option('verbose', {
-        type: 'boolean',
-        describe:
-          'Prints additional information about the commands (e.g., stack traces)',
       })
       // NOTE: The camel case format is required for the coerce() function to be called correctly. It still supports --print-config casing.
       .option('printConfig', {
         type: 'string',
         describe:
-          'Print the resolved nx release configuration that would be used for the current command and then exit',
+          'Print the resolved nx release configuration that would be used for the current command and then exit.',
         coerce: (val: string) => {
           if (val === '') {
             return true;
@@ -153,13 +152,13 @@ export const yargsReleaseCommand: CommandModule<
           return val;
         },
       })
-      .check((argv) => {
+      .check(async (argv) => {
         if (argv.groups && argv.projects) {
           throw new Error(
             'The --projects and --groups options are mutually exclusive, please use one or the other.'
           );
         }
-        const nxJson = readNxJson();
+        const nxJson = (await import('../../config/nx-json')).readNxJson();
         if (argv.groups?.length) {
           for (const group of argv.groups) {
             if (!nxJson.release?.groups?.[group]) {
@@ -180,7 +179,7 @@ export const yargsReleaseCommand: CommandModule<
 const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
   command: '$0 [specifier]',
   describe:
-    'Create a version and release for the workspace, generate a changelog, and optionally publish the packages',
+    'Create a version and release for the workspace, generate a changelog, and optionally publish the packages.',
   builder: (yargs) =>
     withFirstReleaseOptions(yargs)
       .positional('specifier', {
@@ -188,16 +187,22 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         describe:
           'Exact version or semver keyword to apply to the selected release group.',
       })
+      .option('preid', {
+        type: 'string',
+        describe:
+          'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+        default: '',
+      })
       .option('yes', {
         type: 'boolean',
         alias: 'y',
         description:
-          'Automatically answer yes to the confirmation prompt for publishing',
+          'Automatically answer yes to the confirmation prompt for publishing.',
       })
       .option('skip-publish', {
         type: 'boolean',
         description:
-          'Skip publishing by automatically answering no to the confirmation prompt for publishing',
+          'Skip publishing by automatically answering no to the confirmation prompt for publishing.',
       })
       .check((argv) => {
         if (argv.yes !== undefined && argv.skipPublish !== undefined) {
@@ -222,10 +227,10 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   command: 'version [specifier]',
   aliases: ['v'],
   describe:
-    'Create a version and release for one or more applications and libraries',
+    'Create a version and release for one or more applications and libraries.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           .positional('specifier', {
             type: 'string',
@@ -235,7 +240,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
           .option('preid', {
             type: 'string',
             describe:
-              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor',
+              'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
             default: '',
           })
           .option('stage-changes', {
@@ -260,40 +265,35 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
   command: 'changelog [version]',
   aliases: ['c'],
   describe:
-    'Generate a changelog for one or more projects, and optionally push to Github',
+    'Generate a changelog for one or more projects, and optionally push to Github.',
   builder: (yargs) =>
     withFirstReleaseOptions(
-      withGitCommitAndGitTagOptions(
+      withGitOptions(
         yargs
           // Disable default meaning of yargs version for this command
           .version(false)
           .positional('version', {
             type: 'string',
             description:
-              'The version to create a Github release and changelog for',
+              'The version to create a Github release and changelog for.',
           })
           .option('from', {
             type: 'string',
             description:
-              'The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that',
+              'The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that.',
           })
           .option('to', {
             type: 'string',
-            description: 'The git reference to use as the end of the changelog',
+            description:
+              'The git reference to use as the end of the changelog.',
             default: 'HEAD',
           })
           .option('interactive', {
             alias: 'i',
             type: 'string',
             description:
-              'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
+              'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level.',
             choices: ['all', 'workspace', 'projects'],
-          })
-          .option('git-remote', {
-            type: 'string',
-            description:
-              'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
-            default: 'origin',
           })
           .check((argv) => {
             if (!argv.version) {
@@ -319,22 +319,29 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
 const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
   command: 'publish',
   aliases: ['p'],
-  describe: 'Publish a versioned project to a registry',
+  describe: 'Publish a versioned project to a registry.',
   builder: (yargs) =>
     withFirstReleaseOptions(
       withRunManyOptions(withOutputStyleOption(yargs))
         .option('registry', {
           type: 'string',
-          description: 'The registry to publish to',
+          description: 'The registry to publish to.',
         })
         .option('tag', {
           type: 'string',
-          description: 'The distribution tag to apply to the published package',
+          description:
+            'The distribution tag to apply to the published package.',
+        })
+        .option('access', {
+          type: 'string',
+          choices: ['public', 'restricted'],
+          description:
+            'Overrides the access level of the published package. Unscoped packages cannot be set to restricted. See the npm publish documentation for more information.',
         })
         .option('otp', {
           type: 'number',
           description:
-            'A one-time password for publishing to a registry that requires 2FA',
+            'A one-time password for publishing to a registry that requires 2FA.',
         })
     ),
   handler: async (args) => {
@@ -352,12 +359,10 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
 const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
   command: 'plan [bump]',
   aliases: ['pl'],
-  // TODO: Remove this when docs are added
-  // Create a plan to pick a new version and generate a changelog entry.
-  // Hidden for now until the feature is more stable
-  describe: false,
+  describe:
+    'Create a version plan file to specify the desired semver bump for one or more projects or groups, as well as the relevant changelog entry.',
   builder: (yargs) =>
-    yargs
+    withAffectedOptions(yargs)
       .positional('bump', {
         type: 'string',
         describe: 'Semver keyword to use for the selected release group.',
@@ -374,7 +379,13 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
       .option('message', {
         type: 'string',
         alias: 'm',
-        describe: 'Custom message to use for the changelog entry',
+        describe: 'Custom message to use for the changelog entry.',
+      })
+      .option('onlyTouched', {
+        type: 'boolean',
+        describe:
+          'Only include projects that have been affected by the current changes.',
+        default: true,
       }),
   handler: async (args) => {
     const release = await import('./plan');
@@ -389,10 +400,8 @@ const planCommand: CommandModule<NxReleaseArgs, PlanOptions> = {
 
 const planCheckCommand: CommandModule<NxReleaseArgs, PlanCheckOptions> = {
   command: 'plan:check',
-  // TODO: Remove this when docs are added
-  // Create a plan to pick a new version and generate a changelog entry.
-  // Hidden for now until the feature is more stable
-  describe: false,
+  describe:
+    'Ensure that all touched projects have an applicable version plan created for them.',
   builder: (yargs) => withAffectedOptions(yargs),
   handler: async (args) => {
     const release = await import('./plan-check');
@@ -408,13 +417,11 @@ function coerceParallelOption(args: any) {
   };
 }
 
-function withGitCommitAndGitTagOptions<T>(
-  yargs: Argv<T>
-): Argv<T & GitCommitAndTagOptions> {
+function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
   return yargs
     .option('git-commit', {
       describe:
-        'Whether or not to automatically commit the changes made by this command',
+        'Whether or not to automatically commit the changes made by this command.',
       type: 'boolean',
     })
     .option('git-commit-message', {
@@ -424,12 +431,12 @@ function withGitCommitAndGitTagOptions<T>(
     })
     .option('git-commit-args', {
       describe:
-        'Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes',
+        'Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes.',
       type: 'string',
     })
     .option('git-tag', {
       describe:
-        'Whether or not to automatically tag the changes made by this command',
+        'Whether or not to automatically tag the changes made by this command.',
       type: 'boolean',
     })
     .option('git-tag-message', {
@@ -439,13 +446,24 @@ function withGitCommitAndGitTagOptions<T>(
     })
     .option('git-tag-args', {
       describe:
-        'Additional arguments to pass to the `git tag` command invoked behind the scenes',
+        'Additional arguments to pass to the `git tag` command invoked behind the scenes.',
       type: 'string',
     })
     .option('stage-changes', {
       describe:
         'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
       type: 'boolean',
+    })
+    .option('git-push', {
+      describe:
+        'Whether or not to automatically push the changes made by this command to the remote git repository.',
+      type: 'boolean',
+    })
+    .option('git-remote', {
+      type: 'string',
+      description:
+        'Alternate git remote to push commits and tags to (can be useful for testing).',
+      default: 'origin',
     });
 }
 

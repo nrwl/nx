@@ -6,14 +6,10 @@ import {
   RawProjectGraphDependency,
   validateDependency,
 } from '@nx/devkit';
-import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { basename, dirname } from 'node:path';
 
-import {
-  GRADLE_BUILD_FILES,
-  getCurrentGradleReport,
-  newLineSeparator,
-} from '../utils/get-gradle-report';
+import { getCurrentGradleReport } from '../utils/get-gradle-report';
+import { GRADLE_BUILD_FILES } from '../utils/split-config-files';
 
 export const createDependencies: CreateDependencies = async (
   _,
@@ -27,7 +23,7 @@ export const createDependencies: CreateDependencies = async (
   const gradleDependenciesStart = performance.mark('gradleDependencies:start');
   const {
     gradleFileToGradleProjectMap,
-    gradleProjectToProjectName,
+    gradleProjectNameToProjectRootMap,
     buildFileToDepsMap,
     gradleProjectToChildProjects,
   } = getCurrentGradleReport();
@@ -35,18 +31,30 @@ export const createDependencies: CreateDependencies = async (
 
   for (const gradleFile of gradleFiles) {
     const gradleProject = gradleFileToGradleProjectMap.get(gradleFile);
-    const projectName = gradleProjectToProjectName.get(gradleProject);
-    const depsFile = buildFileToDepsMap.get(gradleFile);
+    const projectName = Object.values(context.projects).find(
+      (project) => project.root === dirname(gradleFile)
+    )?.name;
+    const dependedProjects: Set<string> = buildFileToDepsMap.get(gradleFile);
 
-    if (projectName && depsFile) {
-      processGradleDependencies(
-        depsFile,
-        gradleProjectToProjectName,
-        projectName,
-        gradleFile,
-        context,
-        dependencies
-      );
+    if (projectName && dependedProjects?.size) {
+      dependedProjects?.forEach((dependedProject) => {
+        const targetProjectRoot = gradleProjectNameToProjectRootMap.get(
+          dependedProject
+        ) as string;
+        const targetProjectName = Object.values(context.projects).find(
+          (project) => project.root === targetProjectRoot
+        )?.name;
+        if (targetProjectName) {
+          const dependency: RawProjectGraphDependency = {
+            source: projectName as string,
+            target: targetProjectName as string,
+            type: DependencyType.static,
+            sourceFile: gradleFile,
+          };
+          validateDependency(dependency, context);
+          dependencies.add(dependency);
+        }
+      });
     }
     gradleProjectToChildProjects.get(gradleProject)?.forEach((childProject) => {
       if (childProject) {
@@ -84,58 +92,4 @@ function findGradleFiles(fileMap: FileMap): string[] {
   }
 
   return gradleFiles;
-}
-
-export function processGradleDependencies(
-  depsFile: string,
-  gradleProjectToProjectName: Map<string, string>,
-  sourceProjectName: string,
-  gradleFile: string,
-  context: CreateDependenciesContext,
-  dependencies: Set<RawProjectGraphDependency>
-): void {
-  const lines = readFileSync(depsFile).toString().split(newLineSeparator);
-  let inDeps = false;
-  for (const line of lines) {
-    if (
-      line.startsWith('implementationDependenciesMetadata') ||
-      line.startsWith('compileClasspath')
-    ) {
-      inDeps = true;
-      continue;
-    }
-
-    if (inDeps) {
-      if (line === '') {
-        inDeps = false;
-        continue;
-      }
-      const [indents, dep] = line.split('--- ');
-      if (indents === '\\' || indents === '+') {
-        let gradleProjectName: string | undefined;
-        if (dep.startsWith('project ')) {
-          gradleProjectName = dep
-            .substring('project '.length)
-            .replace(/ \(n\)$/, '')
-            .trim();
-        } else if (dep.includes('-> project')) {
-          const [_, projectName] = dep.split('-> project');
-          gradleProjectName = projectName.trim();
-        }
-        const target = gradleProjectToProjectName.get(
-          gradleProjectName
-        ) as string;
-        if (target) {
-          const dependency: RawProjectGraphDependency = {
-            source: sourceProjectName,
-            target,
-            type: DependencyType.static,
-            sourceFile: gradleFile,
-          };
-          validateDependency(dependency, context);
-          dependencies.add(dependency);
-        }
-      }
-    }
-  }
 }

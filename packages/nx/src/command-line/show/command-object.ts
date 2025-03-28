@@ -5,7 +5,7 @@ import {
   withAffectedOptions,
   withVerbose,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 
 export interface NxShowArgs {
   json?: boolean;
@@ -38,7 +38,7 @@ export const yargsShowCommand: CommandModule<
   NxShowArgs
 > = {
   command: 'show',
-  describe: 'Show information about the workspace (e.g., list of projects)',
+  describe: 'Show information about the workspace (e.g., list of projects).',
   builder: (yargs) =>
     yargs
       .command(showProjectsCommand)
@@ -46,7 +46,7 @@ export const yargsShowCommand: CommandModule<
       .demandCommand()
       .option('json', {
         type: 'boolean',
-        description: 'Output JSON',
+        description: 'Output JSON.',
       })
       .example(
         '$0 show projects',
@@ -68,12 +68,12 @@ export const yargsShowCommand: CommandModule<
 
 const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
   command: 'projects',
-  describe: 'Show a list of projects in the workspace',
+  describe: 'Show a list of projects in the workspace.',
   builder: (yargs) =>
     withVerbose(withAffectedOptions(yargs))
       .option('affected', {
         type: 'boolean',
-        description: 'Show only affected projects',
+        description: 'Show only affected projects.',
       })
       .option('projects', {
         type: 'string',
@@ -84,17 +84,17 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       .option('withTarget', {
         type: 'string',
         alias: ['t'],
-        description: 'Show only projects that have a specific target',
+        description: 'Show only projects that have a specific target.',
         coerce: parseCSV,
       })
       .option('type', {
         type: 'string',
-        description: 'Select only projects of the given type',
+        description: 'Select only projects of the given type.',
         choices: ['app', 'lib', 'e2e'],
       })
       .option('sep', {
         type: 'string',
-        description: 'Outputs projects with the specified seperator',
+        description: 'Outputs projects with the specified seperator.',
       })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
@@ -124,13 +124,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
   handler: async (args) => {
-    const exitCode = await handleErrors(
-      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        const { showProjectsHandler } = await import('./projects');
-        await showProjectsHandler(args);
-      }
-    );
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showProjectsHandler } = await import('./projects');
+      await showProjectsHandler(args);
+    });
     process.exit(exitCode);
   },
 };
@@ -143,17 +140,17 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       .positional('projectName', {
         type: 'string',
         alias: 'p',
-        description: 'Which project should be viewed?',
+        description: 'Which project should be viewed?.',
       })
       .option('web', {
         type: 'boolean',
         description:
-          'Show project details in the browser. (default when interactive)',
+          'Show project details in the browser. (default when interactive).',
       })
       .option('open', {
         type: 'boolean',
         description:
-          'Set to false to prevent the browser from opening when using --web',
+          'Set to false to prevent the browser from opening when using --web.',
         implies: 'web',
       })
       .check((argv) => {
@@ -178,13 +175,10 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         'View project information for my-app in the browser'
       ),
   handler: async (args) => {
-    const exitCode = await handleErrors(
-      args.verbose ?? process.env.NX_VERBOSE_LOGGING === 'true',
-      async () => {
-        const { showProjectHandler } = await import('./project');
-        await showProjectHandler(args);
-      }
-    );
+    const exitCode = await handleErrors(args.verbose as boolean, async () => {
+      const { showProjectHandler } = await import('./project');
+      await showProjectHandler(args);
+    });
     process.exit(exitCode);
   },
 };

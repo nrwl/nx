@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import { join } from 'path';
 import {
   ACCESS_TOKEN,
@@ -6,8 +6,6 @@ import {
   UNLIMITED_TIMEOUT,
 } from './environment';
 import { CloudTaskRunnerOptions } from '../nx-cloud-tasks-runner-shell';
-
-const axios = require('axios');
 
 export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
   let axiosConfigBuilder = (axiosConfig: AxiosRequestConfig) => axiosConfig;
@@ -18,15 +16,9 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
 
   // TODO(lourw): Update message with NxCloudId once it is supported
   if (!accessToken && !nxCloudId) {
-    if (process.env.NX_ENABLE_LOGIN === 'true' && !nxCloudId) {
-      throw new Error(
-        `Unable to authenticate. Please connect your workspace to Nx Cloud to define a valid Nx Cloud Id. If you are in a CI context, please set the NX_CLOUD_ACCESS_TOKEN environment variable or define an access token in your nx.json.`
-      );
-    } else {
-      throw new Error(
-        `Unable to authenticate. Either define accessToken in nx.json or set the NX_CLOUD_ACCESS_TOKEN env variable. If you do not want to use Nx Cloud for this command, either set NX_NO_CLOUD=true, or pass the --no-cloud flag.`
-      );
-    }
+    throw new Error(
+      `Unable to authenticate. If you are connecting to Nx Cloud locally, set an Nx Cloud ID in your nx.json with "nx connect". If you are in a CI context, please set the NX_CLOUD_ACCESS_TOKEN environment variable or define an access token in your nx.json.`
+    );
   }
 
   if (options.customProxyConfigPath) {
@@ -37,7 +29,7 @@ export function createApiAxiosInstance(options: CloudTaskRunnerOptions) {
     axiosConfigBuilder = nxCloudProxyConfig ?? axiosConfigBuilder;
   }
 
-  return axios.create(
+  return require('axios').create(
     axiosConfigBuilder({
       baseURL: baseUrl,
       timeout: NX_CLOUD_NO_TIMEOUTS ? UNLIMITED_TIMEOUT : 10000,

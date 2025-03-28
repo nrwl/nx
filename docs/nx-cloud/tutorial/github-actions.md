@@ -73,14 +73,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - uses: actions/setup-node@v3
@@ -94,7 +94,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
+      - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
 The [`nx affected` command](/ci/features/affected) will run the specified tasks only for projects that have been affected by a particular PR, which can save a lot of time as repositories grow larger.
@@ -147,7 +147,7 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 ## Understand Remote Caching
 
@@ -189,13 +189,13 @@ The affected command and Nx Replay help speed up the average CI time, but there 
 
 The Nx Agents feature
 
-- takes a command (e.g. `run-many -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
+- takes a command (e.g. `nx affected -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
 - distributes tasks by considering the dependencies between them; e.g. if `e2e-ci` depends on `build`, Nx Cloud will make sure that `build` is executed before `e2e-ci`; it does this across machines
 - distributes tasks to optimize for CPU processing time and reduce idle time by taking into account historical data about how long each task takes to run
 - collects the results and logs of all the tasks and presents them in a single view
 - automatically shuts down agents when they are no longer needed
 
-To enable Nx Agents, make sure the following line is uncommented in the `.github/workflows/ci.yml` file.
+To enable Nx Agents, make sure the `nx-cloud start-ci-run` line is uncommented in the `.github/workflows/ci.yml` file and the `nx affected` line runs the `e2e-ci` task instead of `e2e`.
 
 ```yml {% fileName=".github/workflows/ci.yml" highlightLines=[19] %}
 name: CI
@@ -208,14 +208,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Connect your workspace by running "nx connect" and uncomment this
+      # Uncomment this line to enable task distribution
       - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - uses: actions/setup-node@v3
@@ -229,7 +229,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: pnpm exec nx affected -t lint test build
+      - run: pnpm exec nx affected -t lint test build e2e-ci
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.

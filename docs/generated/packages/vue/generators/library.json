@@ -19,36 +19,34 @@
       }
     ],
     "properties": {
-      "name": {
-        "type": "string",
-        "description": "Library name",
-        "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
-        "x-priority": "important"
-      },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
         "alias": "dir",
-        "x-priority": "important"
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "Which directory do you want to create the library in?"
       },
-      "projectNameAndRootFormat": {
-        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "name": {
         "type": "string",
-        "enum": ["as-provided", "derived"]
+        "description": "Library name",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+        "x-priority": "important"
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
         "enum": ["eslint", "none"],
-        "default": "eslint"
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?",
+        "x-priority": "important"
       },
       "unitTestRunner": {
         "type": "string",
         "enum": ["vitest", "none"],
         "description": "Test runner to use for unit tests.",
-        "x-prompt": "What unit test runner should be used?"
+        "x-prompt": "What unit test runner should be used?",
+        "default": "none",
+        "x-priority": "important"
       },
       "inSourceTests": {
         "type": "boolean",
@@ -71,12 +69,6 @@
         "default": false,
         "description": "Do not update `tsconfig.json` for development experience.",
         "x-priority": "internal"
-      },
-      "pascalCaseFiles": {
-        "type": "boolean",
-        "description": "Use pascal case component file name (e.g. `App.tsx`).",
-        "alias": "P",
-        "default": false
       },
       "routing": {
         "type": "boolean",
@@ -133,9 +125,13 @@
         "description": "Create a Vue library with a minimal setup, no separate test files.",
         "type": "boolean",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
-    "required": ["name"],
+    "required": ["directory"],
     "presets": []
   },
   "aliases": ["lib"],

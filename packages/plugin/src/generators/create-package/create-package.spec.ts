@@ -28,7 +28,6 @@ const getSchema: (
   skipLintChecks: false,
   linter: Linter.EsLint,
   unitTestRunner: 'jest',
-  projectNameAndRootFormat: 'as-provided',
   ...overrides,
 });
 
@@ -47,7 +46,6 @@ describe('NxPlugin Create Package Generator', () => {
       skipLintChecks: false,
       linter: Linter.EsLint,
       unitTestRunner: 'jest',
-      projectNameAndRootFormat: 'as-provided',
     });
   });
 

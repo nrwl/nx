@@ -1,5 +1,5 @@
-import { existsSync, readdirSync } from 'fs';
-import { dirname, join, relative } from 'path';
+import { existsSync, readdirSync } from 'node:fs';
+import { dirname, join, parse, relative, resolve } from 'node:path';
 
 import {
   CreateNodes,
@@ -113,7 +113,7 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    options,
+    normalizedOptions,
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -157,6 +157,8 @@ async function buildPlaywrightTargets(
   const targets: ProjectConfiguration['targets'] = {};
   let metadata: ProjectConfiguration['metadata'];
 
+  const testOutput = getTestOutput(playwrightConfig);
+  const reporterOutputs = getReporterOutputs(playwrightConfig);
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
@@ -186,7 +188,12 @@ async function buildPlaywrightTargets(
         : ['default', '^default']),
       { externalDependencies: ['@playwright/test'] },
     ],
-    outputs: getOutputs(projectRoot, playwrightConfig),
+    outputs: getTargetOutputs(
+      testOutput,
+      reporterOutputs,
+      context.workspaceRoot,
+      projectRoot
+    ),
   };
 
   if (options.ciTargetName) {
@@ -199,7 +206,12 @@ async function buildPlaywrightTargets(
           : ['default', '^default']),
         { externalDependencies: ['@playwright/test'] },
       ],
-      outputs: getOutputs(projectRoot, playwrightConfig),
+      outputs: getTargetOutputs(
+        testOutput,
+        reporterOutputs,
+        context.workspaceRoot,
+        projectRoot
+      ),
     };
 
     const groupName = 'E2E (CI)';
@@ -214,8 +226,12 @@ async function buildPlaywrightTargets(
     playwrightConfig.testMatch ??= '**/*.@(spec|test).?(c|m)[jt]s?(x)';
 
     const dependsOn: TargetConfiguration['dependsOn'] = [];
+
     await forEachTestFile(
       (testFile) => {
+        const outputSubfolder = relative(projectRoot, testFile)
+          .replace(/[\/\\]/g, '-')
+          .replace(/\./g, '-');
         const relativeSpecFilePath = normalizePath(
           relative(projectRoot, testFile)
         );
@@ -223,7 +239,23 @@ async function buildPlaywrightTargets(
         ciTargetGroup.push(targetName);
         targets[targetName] = {
           ...ciBaseTargetConfig,
-          command: `${baseTargetConfig.command} ${relativeSpecFilePath}`,
+          options: {
+            ...ciBaseTargetConfig.options,
+            env: getOutputEnvVars(reporterOutputs, outputSubfolder),
+          },
+          outputs: getTargetOutputs(
+            testOutput,
+            reporterOutputs,
+            context.workspaceRoot,
+            projectRoot,
+            outputSubfolder
+          ),
+          command: `${
+            baseTargetConfig.command
+          } ${relativeSpecFilePath} --output=${join(
+            testOutput,
+            outputSubfolder
+          )}`,
           metadata: {
             technologies: ['playwright'],
             description: `Runs Playwright Tests in ${relativeSpecFilePath} in CI`,
@@ -319,60 +351,131 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
   }
 }
 
-function getOutputs(
-  projectRoot: string,
-  playwrightConfig: PlaywrightTestConfig
-): string[] {
-  function getOutput(path: string): string {
-    if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
-    } else {
-      return join('{projectRoot}', path);
-    }
+function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
+  return {
+    ...options,
+    targetName: options?.targetName ?? 'e2e',
+    ciTargetName: options?.ciTargetName ?? 'e2e-ci',
+  };
+}
+
+function getTestOutput(playwrightConfig: PlaywrightTestConfig): string {
+  const { outputDir } = playwrightConfig;
+  if (outputDir) {
+    return outputDir;
+  } else {
+    return './test-results';
   }
+}
 
-  const outputs = [];
+function getReporterOutputs(
+  playwrightConfig: PlaywrightTestConfig
+): Array<[string, string]> {
+  const outputs: Array<[string, string]> = [];
 
-  const { reporter, outputDir } = playwrightConfig;
+  const { reporter } = playwrightConfig;
 
   if (reporter) {
-    const DEFAULT_REPORTER_OUTPUT = getOutput('playwright-report');
-    if (reporter === 'html' || reporter === 'json') {
-      // Reporter is a string, so it uses the default output directory.
-      outputs.push(DEFAULT_REPORTER_OUTPUT);
+    const DEFAULT_REPORTER_OUTPUT = 'playwright-report';
+    if (reporter === 'html') {
+      outputs.push([reporter, DEFAULT_REPORTER_OUTPUT]);
+    } else if (reporter === 'json') {
+      outputs.push([reporter, DEFAULT_REPORTER_OUTPUT]);
     } else if (Array.isArray(reporter)) {
       for (const r of reporter) {
-        const [, opts] = r;
+        const [reporter, opts] = r;
         // There are a few different ways to specify an output file or directory
         // depending on the reporter. This is a best effort to find the output.
-        if (!opts) {
-          outputs.push(DEFAULT_REPORTER_OUTPUT);
-        } else if (opts.outputFile) {
-          outputs.push(getOutput(opts.outputFile));
-        } else if (opts.outputDir) {
-          outputs.push(getOutput(opts.outputDir));
-        } else if (opts.outputFolder) {
-          outputs.push(getOutput(opts.outputFolder));
+        if (opts?.outputFile) {
+          outputs.push([reporter, opts.outputFile]);
+        } else if (opts?.outputDir) {
+          outputs.push([reporter, opts.outputDir]);
+        } else if (opts?.outputFolder) {
+          outputs.push([reporter, opts.outputFolder]);
         } else {
-          outputs.push(DEFAULT_REPORTER_OUTPUT);
+          outputs.push([reporter, DEFAULT_REPORTER_OUTPUT]);
         }
       }
     }
   }
 
-  if (outputDir) {
-    outputs.push(getOutput(outputDir));
-  } else {
-    outputs.push(getOutput('./test-results'));
-  }
-
   return outputs;
 }
 
-function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
-  return {
-    ...options,
-    targetName: options.targetName ?? 'e2e',
-    ciTargetName: options.ciTargetName ?? 'e2e-ci',
-  };
+function getTargetOutputs(
+  testOutput: string,
+  reporterOutputs: Array<[string, string]>,
+  workspaceRoot: string,
+  projectRoot: string,
+  subFolder?: string
+): string[] {
+  const outputs = new Set<string>();
+  outputs.add(
+    normalizeOutput(
+      addSubfolderToOutput(testOutput, subFolder),
+      workspaceRoot,
+      projectRoot
+    )
+  );
+  for (const [, output] of reporterOutputs) {
+    outputs.add(
+      normalizeOutput(
+        addSubfolderToOutput(output, subFolder),
+        workspaceRoot,
+        projectRoot
+      )
+    );
+  }
+  return Array.from(outputs);
+}
+
+function addSubfolderToOutput(output: string, subfolder?: string): string {
+  if (!subfolder) return output;
+  const parts = parse(output);
+  if (parts.ext !== '') {
+    return join(parts.dir, subfolder, parts.base);
+  }
+  return join(output, subfolder);
+}
+
+function normalizeOutput(
+  path: string,
+  workspaceRoot: string,
+  projectRoot: string
+): string {
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(fullProjectRoot, path);
+  const pathRelativeToProjectRoot = normalizePath(
+    relative(fullProjectRoot, fullPath)
+  );
+  if (pathRelativeToProjectRoot.startsWith('..')) {
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, fullPath)
+    );
+  }
+
+  return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
+}
+
+function getOutputEnvVars(
+  reporterOutputs: Array<[string, string]>,
+  outputSubfolder: string
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (let [reporter, output] of reporterOutputs) {
+    if (outputSubfolder) {
+      const isFile = parse(output).ext !== '';
+      const envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
+        isFile ? 'FILE' : 'DIR'
+      }`;
+      env[envVarName] = addSubfolderToOutput(output, outputSubfolder);
+      // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
+      // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
+      if (reporter === 'html') {
+        env['PLAYWRIGHT_HTML_REPORT'] = env[envVarName];
+      }
+    }
+  }
+  return env;
 }

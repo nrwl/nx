@@ -22,7 +22,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
   NODE_VERSION: 18
-  PNPM_VERSION: 8.15.7 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
+  PNPM_VERSION: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
   # We first need to determine the version we are releasing, and if we need a custom repo or ref to use for the git checkout in subsequent steps.
@@ -115,7 +115,7 @@ jobs:
           fi
 
   build:
-    needs: [resolve-required-data]
+    needs: [ resolve-required-data ]
     if: ${{ github.repository_owner == 'nrwl' }}
     strategy:
       fail-fast: false
@@ -138,7 +138,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
-              npm i -g pnpm@8.15.7 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
@@ -147,7 +147,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
-              npm i -g pnpm@8.15.7 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
@@ -165,7 +165,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
-              npm i -g pnpm@8.15.7 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
@@ -191,7 +191,7 @@ jobs:
             build: |-
               set -e &&
               rustup target add aarch64-unknown-linux-musl &&
-              npm i -g pnpm@8.15.7 --force &&
+              npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
@@ -287,7 +287,7 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
-    needs: [resolve-required-data]
+    needs: [ resolve-required-data ]
     if: ${{ github.repository_owner == 'nrwl' }}
     runs-on: ubuntu-latest
     name: Build FreeBSD
@@ -318,7 +318,7 @@ jobs:
             env
             whoami
             sudo pkg install -y -f node libnghttp2 www/npm git
-            sudo npm install --location=global --ignore-scripts pnpm@8.15.7
+            sudo npm install --location=global --ignore-scripts pnpm@9.8.0
             curl https://sh.rustup.rs -sSf --output rustup.sh
             sh rustup.sh -y --profile minimal --default-toolchain stable
             source "$HOME/.cargo/env"
@@ -397,7 +397,10 @@ jobs:
         run: ls -R artifacts
         shell: bash
       - name: Build Wasm
-        run: pnpm build:wasm
+        run: |
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-23/wasi-sdk-23.0-x86_64-linux.tar.gz
+          tar -xvf wasi-sdk-23.0-x86_64-linux.tar.gz
+          pnpm build:wasm
       - name: Publish
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
@@ -416,7 +419,7 @@ jobs:
       - name: (Stable Release Only) Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
-        run: npx ts-node ./scripts/release-docs.ts
+        run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
 
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
@@ -437,7 +440,7 @@ jobs:
   pr_failure_comment:
     # Run this job if it is a PR release, running on the nrwl origin, and any of the required jobs failed
     if: ${{ github.repository_owner == 'nrwl' && github.event.inputs.pr && always() && contains(needs.*.result, 'failure') }}
-    needs: [resolve-required-data, build, build-freebsd, publish]
+    needs: [ resolve-required-data, build, build-freebsd, publish ]
     name: (PR Release Failure Only) Create comment for failed PR release
     runs-on: ubuntu-latest
     steps:

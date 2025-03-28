@@ -1,3 +1,8 @@
+---
+title: nx.json Reference
+description: A comprehensive reference for the nx.json configuration file, which controls Nx CLI behavior, project defaults, and workspace settings.
+---
+
 # nx.json
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
@@ -54,6 +59,9 @@ The following is an expanded example showing all options. Your `nx.json` will li
       },
       "projectChangelogs": true
     }
+  },
+  "sync": {
+    "globalGenerators": ["my-plugin:my-sync-generator"]
   },
   "generators": {
     "@nx/js:library": {
@@ -316,7 +324,7 @@ Task Atomizer plugins create several targets with a similar pattern. For example
 ```json {% fileName="nx.json" %}
 {
   "targetDefaults": {
-    "e2e-ci--**/*": {
+    "e2e-ci--**/**": {
       "options": {
         "headless": true
       }
@@ -326,7 +334,7 @@ Task Atomizer plugins create several targets with a similar pattern. For example
 ```
 
 {% callout type="info" title="Pattern Matching" %}
-Nx uses glob patterns for matching against the target name. This means that the `**/*` pattern above is required because the target name contains a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
+Nx uses glob patterns to match against the target name. This means that the `**/**` pattern above is required because tests can be nested within a directory which would make the target name contain a `/`. If your target name does not contain a `/`, you can use a simpler pattern like `e2e-ci-*`.
 {% /callout %}
 
 ## Release
@@ -507,6 +515,32 @@ The `git` property configures the automated git operations that take place as pa
 }
 ```
 
+## Sync
+
+These are global configuration options for the [`nx sync`](/reference/nx-commands#sync) command. The `nx sync` command runs all global and task-specific [sync generators](/concepts/sync-generators) to ensure that your files are in the correct state to run tasks or start the CI process.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "sync": {
+    "applyChanges": true,
+    "globalGenerators": ["my-plugin:my-sync-generator"],
+    "generatorOptions": {
+      "my-plugin:my-sync-generator": {
+        "verbose": true
+      }
+    },
+    "disabledTaskSyncGenerators": ["other-plugin:problematic-generator"]
+  }
+}
+```
+
+| Property                       | Description                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **applyChanges**               | Whether to automatically apply task sync generator changes when running tasks. If not set, the user will be prompted. If set to `true`, the user will not be prompted and the changes will be applied. If set to `false`, the user will not be prompted and the changes will not be applied. |
+| **globalGenerators**           | Sync generators that are only run when the `nx sync` command is executed. These are not associated with a particular task.                                                                                                                                                                   |
+| **generatorOptions**           | Options to be passed to sync generators                                                                                                                                                                                                                                                      |
+| **disabledTaskSyncGenerators** | Globally disable specific task sync generators                                                                                                                                                                                                                                               |
+
 ## Generators
 
 Default generator options can be configured in `nx.json`. For instance, the following tells Nx to always
@@ -528,11 +562,11 @@ Some presets use the `extends` property to hide some default options in a separa
 
 ## Nx Cloud
 
-There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you authenticate with the Nx Cloud service using an `nxCloudAccessToken` like this:
+There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.json` file. For instance, you connect to the Nx Cloud service using an `nxCloudId` like this:
 
 ```json {% fileName="nx.json" %}
 {
-  "nxCloudAccessToken": "SOMETOKEN"
+  "nxCloudId": "SOMEID"
 }
 ```
 

@@ -65,7 +65,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Set <base href> for the resulting index.html.
    */
-  baseHref?: string;
+  baseHref?: string | false;
   /**
    * Build the libraries from source. Default is `true`.
    */
@@ -168,6 +168,10 @@ export interface NxAppWebpackPluginOptions {
    */
   scripts?: Array<ExtraEntryPointClass | string>;
   /**
+   * Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+   */
+  skipOverrides?: boolean;
+  /**
    * Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
    */
   skipPackageManager?: boolean;
@@ -178,7 +182,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Generate source maps.
    */
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   /**
    * When `true`, `process.env.NODE_ENV` will be excluded from the bundle. Useful for building a web application to run in a Node environment.
    */
@@ -190,7 +194,11 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
    */
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   /**
    * External stylesheets that will be included with the application.
    */
@@ -207,6 +215,16 @@ export interface NxAppWebpackPluginOptions {
    * List of TypeScript Compiler Transformers Plugins.
    */
   transformers?: TransformerEntry[];
+  /**
+   * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
+   */
+  useTsconfigPaths?: boolean;
+  // TODO(v21): Make Sass Embedded the default in version 21.
+  // TODO(v22): Remove in version 22.
+  /**
+   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
+   */
+  sassImplementation?: 'sass' | 'sass-embedded';
   /**
    * Generate a separate vendor chunk for 3rd party packages.
    */
@@ -227,6 +245,10 @@ export interface NxAppWebpackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Watch buildable dependencies and rebuild when they change.
+   */
+  watchDependencies?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions

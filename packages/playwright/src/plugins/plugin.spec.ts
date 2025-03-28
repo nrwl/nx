@@ -1,8 +1,8 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-
-import { createNodesV2 } from './plugin';
 import { PlaywrightTestConfig } from '@playwright/test';
+import { join } from 'node:path';
+import { createNodesV2 } from './plugin';
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodesV2[1];
@@ -139,7 +139,12 @@ describe('@nx/playwright/plugin', () => {
     await mockPlaywrightConfig(tempFs, {
       reporter: [
         ['list'],
-        ['json', { outputFile: 'test-results/report.json' }],
+        [
+          'json',
+          // test absolute path
+          { outputFile: join(tempFs.tempDir, 'test-results/report.json') },
+        ],
+        // test relative path
         ['html', { outputFolder: 'test-results/html' }],
       ],
     });
@@ -197,10 +202,10 @@ describe('@nx/playwright/plugin', () => {
                       "cwd": "{projectRoot}",
                     },
                     "outputs": [
+                      "{projectRoot}/test-results",
                       "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
-                      "{projectRoot}/test-results",
                     ],
                     "parallelism": false,
                   },
@@ -233,10 +238,10 @@ describe('@nx/playwright/plugin', () => {
                       ],
                     },
                     "outputs": [
+                      "{projectRoot}/test-results",
                       "{projectRoot}/playwright-report",
                       "{projectRoot}/test-results/report.json",
                       "{projectRoot}/test-results/html",
-                      "{projectRoot}/test-results",
                     ],
                     "parallelism": false,
                   },
@@ -255,6 +260,10 @@ describe('@nx/playwright/plugin', () => {
       `module.exports = {
       testDir: 'tests',
       testIgnore: [/.*skip.*/, '**/ignored/**'],
+      reporter: [
+        ['html', { outputFolder: 'test-results/html' }],
+        ['junit', { outputFile: 'test-results/report.xml' }],
+      ],
     }`
     );
     await tempFs.createFiles({
@@ -326,6 +335,8 @@ describe('@nx/playwright/plugin', () => {
         },
         "outputs": [
           "{projectRoot}/test-results",
+          "{projectRoot}/test-results/html",
+          "{projectRoot}/test-results/report.xml",
         ],
         "parallelism": false,
       }
@@ -333,7 +344,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--tests/run-me.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
-        "command": "playwright test tests/run-me.spec.ts",
+        "command": "playwright test tests/run-me.spec.ts --output=test-results/tests-run-me-spec-ts",
         "inputs": [
           "default",
           "^production",
@@ -359,9 +370,16 @@ describe('@nx/playwright/plugin', () => {
         },
         "options": {
           "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-spec-ts/report.xml",
+          },
         },
         "outputs": [
-          "{projectRoot}/test-results",
+          "{projectRoot}/test-results/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-spec-ts/report.xml",
         ],
         "parallelism": false,
       }
@@ -369,7 +387,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--tests/run-me-2.spec.ts']).toMatchInlineSnapshot(`
       {
         "cache": true,
-        "command": "playwright test tests/run-me-2.spec.ts",
+        "command": "playwright test tests/run-me-2.spec.ts --output=test-results/tests-run-me-2-spec-ts",
         "inputs": [
           "default",
           "^production",
@@ -395,9 +413,16 @@ describe('@nx/playwright/plugin', () => {
         },
         "options": {
           "cwd": "{projectRoot}",
+          "env": {
+            "PLAYWRIGHT_HTML_OUTPUT_DIR": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_HTML_REPORT": "test-results/html/tests-run-me-2-spec-ts",
+            "PLAYWRIGHT_JUNIT_OUTPUT_FILE": "test-results/tests-run-me-2-spec-ts/report.xml",
+          },
         },
         "outputs": [
-          "{projectRoot}/test-results",
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/html/tests-run-me-2-spec-ts",
+          "{projectRoot}/test-results/tests-run-me-2-spec-ts/report.xml",
         ],
         "parallelism": false,
       }

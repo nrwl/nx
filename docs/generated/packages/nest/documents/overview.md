@@ -1,3 +1,8 @@
+---
+title: Nest.js Plugin for Nx
+description: Learn how to use the @nx/nest plugin to create and manage Nest.js applications and libraries in your Nx workspace, including setup and generators.
+---
+
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:
 
 - It has excellent TypeScript support.
@@ -57,7 +62,7 @@ npm add -D @nx/nest
 You can add a new Nest application with the following command:
 
 ```shell
-nx g @nx/nest:app my-nest-app
+nx g @nx/nest:app apps/my-nest-app
 ```
 
 #### Application Proxies
@@ -65,7 +70,7 @@ nx g @nx/nest:app my-nest-app
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nx/nest:app my-nest-app --frontendProject my-angular-app
+nx g @nx/nest:app apps/my-nest-app --frontendProject my-angular-app
 ```
 
 ### Create Libraries
@@ -73,19 +78,19 @@ nx g @nx/nest:app my-nest-app --frontendProject my-angular-app
 You can add a new Nest library with the following command:
 
 ```shell
-nx g @nx/nest:lib my-nest-lib
+nx g @nx/nest:lib libs/my-nest-lib
 ```
 
 To make the library `buildable`, use the following command:
 
 ```shell
-nx g @nx/nest:lib my-nest-lib --buildable
+nx g @nx/nest:lib libs/my-nest-lib --buildable
 ```
 
 To make the library `publishable`, use the following command:
 
 ```shell
-nx g @nx/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
+nx g @nx/nest:lib libs/my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
 > Read more about [building and publishing libraries here](/concepts/buildable-and-publishable-libraries).

@@ -11,13 +11,9 @@ import {
 } from '../../config/schema-utils';
 import { readJsonFile } from '../../utils/fileutils';
 import { readPluginPackageJson } from '../../project-graph/plugins';
+import { getNxRequirePaths } from '../../utils/installation-directory';
 
-export function getGeneratorInformation(
-  collectionName: string,
-  generatorName: string,
-  root: string | null,
-  projects: Record<string, ProjectConfiguration>
-): {
+export type GeneratorInformation = {
   resolvedCollectionName: string;
   normalizedGeneratorName: string;
   schema: any;
@@ -25,7 +21,14 @@ export function getGeneratorInformation(
   isNgCompat: boolean;
   isNxGenerator: boolean;
   generatorConfiguration: GeneratorsJsonEntry;
-} {
+};
+
+export function getGeneratorInformation(
+  collectionName: string,
+  generatorName: string,
+  root: string | null,
+  projects: Record<string, ProjectConfiguration>
+): GeneratorInformation {
   try {
     const {
       generatorsFilePath,
@@ -38,7 +41,12 @@ export function getGeneratorInformation(
       generatorsJson.generators?.[normalizedGeneratorName] ||
       generatorsJson.schematics?.[normalizedGeneratorName];
     const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
-    const schemaPath = resolveSchema(generatorConfig.schema, generatorsDir);
+    const schemaPath = resolveSchema(
+      generatorConfig.schema,
+      generatorsDir,
+      collectionName,
+      projects
+    );
     const schema = readJsonFile(schemaPath);
     if (!schema.properties || typeof schema.properties !== 'object') {
       schema.properties = {};
@@ -47,7 +55,9 @@ export function getGeneratorInformation(
       generatorConfig.implementation || generatorConfig.factory;
     const implementationFactory = getImplementationFactory<Generator>(
       generatorConfig.implementation,
-      generatorsDir
+      generatorsDir,
+      collectionName,
+      projects
     );
     const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
       ...generatorConfig,
@@ -65,7 +75,9 @@ export function getGeneratorInformation(
     };
   } catch (e) {
     throw new Error(
-      `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
+      `Unable to resolve ${collectionName}:${generatorName}.\n${
+        process.env.NX_VERBOSE_LOGGING === 'true' ? e.stack : e.message
+      }`
     );
   }
 }
@@ -84,13 +96,17 @@ export function readGeneratorsJson(
   let generatorsFilePath;
   if (collectionName.endsWith('.json')) {
     generatorsFilePath = require.resolve(collectionName, {
-      paths: root ? [root, __dirname] : [__dirname],
+      paths: root
+        ? [...getNxRequirePaths(root), __dirname]
+        : [...getNxRequirePaths(), __dirname],
     });
   } else {
     const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
       collectionName,
       projects,
-      root ? [root, __dirname] : [__dirname]
+      root
+        ? [...getNxRequirePaths(root), __dirname]
+        : [...getNxRequirePaths(), __dirname]
     );
     const generatorsFile = packageJson.generators ?? packageJson.schematics;
 

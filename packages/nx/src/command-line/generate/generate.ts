@@ -12,17 +12,17 @@ import {
 import { logger, NX_PREFIX } from '../../utils/logger';
 import {
   combineOptionsForGenerator,
-  handleErrors,
   Options,
   Schema,
 } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
+import { getCwd } from '../../utils/path';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -301,13 +301,8 @@ export function printGenHelp(
   );
 }
 
-export async function generate(cwd: string, args: { [k: string]: any }) {
-  if (args['verbose']) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-  const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-
-  return handleErrors(verbose, async () => {
+export async function generate(args: { [k: string]: any }) {
+  return handleErrors(args.verbose, async () => {
     const nxJsonConfiguration = readNxJson();
     const projectGraph = await createProjectGraphAsync();
     const projectsConfigurations =
@@ -354,6 +349,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       return 0;
     }
 
+    const cwd = getCwd();
+
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
       opts.collectionName,
@@ -369,7 +366,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         nxJsonConfiguration
       ),
       relative(workspaceRoot, cwd),
-      verbose
+      args.verbose
     );
 
     if (
@@ -382,7 +379,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     ) {
       const host = new FsTree(
         workspaceRoot,
-        verbose,
+        args.verbose,
         `generating (${opts.collectionName}:${normalizedGeneratorName})`
       );
       const implementation = implementationFactory();
@@ -418,7 +415,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
           generatorOptions: combinedOpts,
         },
         projectsConfigurations.projects,
-        verbose
+        args.verbose
       );
     }
   });

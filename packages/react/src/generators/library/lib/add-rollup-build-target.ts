@@ -8,7 +8,6 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  stripIndents,
   updateProjectConfiguration,
 } from '@nx/devkit';
 
@@ -22,7 +21,8 @@ import { NormalizedSchema } from '../schema';
 
 export async function addRollupBuildTarget(
   host: Tree,
-  options: NormalizedSchema
+  options: NormalizedSchema & { format?: Array<'esm' | 'cjs'> },
+  external: Set<String> = new Set(['react', 'react-dom'])
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -52,12 +52,10 @@ export async function addRollupBuildTarget(
     );
   }
 
-  const external: string[] = ['react', 'react-dom'];
-
   if (options.style === '@emotion/styled') {
-    external.push('@emotion/react/jsx-runtime');
+    external.add('@emotion/react/jsx-runtime');
   } else {
-    external.push('react/jsx-runtime');
+    external.add('react/jsx-runtime');
   }
 
   const nxJson = readNxJson(host);
@@ -69,38 +67,43 @@ export async function addRollupBuildTarget(
   if (hasRollupPlugin) {
     // New behavior, using rollup config file and inferred target.
     host.write(
-      joinPathFragments(options.projectRoot, 'rollup.config.js'),
-      stripIndents`
-      const { withNx } = require('@nx/rollup/with-nx');
-      const url = require('@rollup/plugin-url');
-      const svg = require('@svgr/rollup');
-      
-      module.exports = withNx({
-        main: '${maybeJs(options, './src/index.ts')}',
-        outputPath: '${joinPathFragments(
-          offsetFromRoot(options.projectRoot),
-          'dist',
-          options.projectRoot
-        )}',
-        tsConfig: './tsconfig.lib.json',
-        compiler: '${options.compiler ?? 'babel'}',
-        external: ${JSON.stringify(external)},
-        format: ['esm'],
-        assets:[{ input: '.', output: '.', glob: 'README.md'}],
-      }, {
-        // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
-        plugins: [
-          svg({
-            svgo: false,
-            titleProp: true,
-            ref: true,
-          }),
-          url({
-            limit: 10000, // 10kB
-          }),
-        ],
-      });
-    `
+      joinPathFragments(options.projectRoot, 'rollup.config.cjs'),
+      `const { withNx } = require('@nx/rollup/with-nx');
+const url = require('@rollup/plugin-url');
+const svg = require('@svgr/rollup');
+
+module.exports = withNx(
+  {
+    main: '${maybeJs(options, './src/index.ts')}',
+    outputPath: '${
+      options.isUsingTsSolutionConfig
+        ? './dist'
+        : joinPathFragments(
+            offsetFromRoot(options.projectRoot),
+            'dist',
+            options.projectRoot
+          )
+    }',
+    tsConfig: './tsconfig.lib.json',
+    compiler: '${options.compiler ?? 'babel'}',
+    external: ${JSON.stringify(Array.from(external))},
+    format: ${JSON.stringify(options.format ?? ['esm'])},
+    assets:[{ input: '.', output: '.', glob: 'README.md'}],
+  }, {
+    // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
+    plugins: [
+      svg({
+        svgo: false,
+        titleProp: true,
+        ref: true,
+      }),
+      url({
+        limit: 10000, // 10kB
+      }),
+    ],
+  }
+);
+`
     );
   } else {
     // Legacy behavior, there is a target in project.json using rollup executor.
@@ -113,7 +116,7 @@ export async function addRollupBuildTarget(
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
-        external,
+        external: Array.from(external),
         rollupConfig: `@nx/react/plugins/bundle-rollup`,
         compiler: options.compiler ?? 'babel',
         assets: [

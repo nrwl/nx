@@ -95,6 +95,22 @@ describe('Linter Builder', () => {
       projectName,
       root: tempFs.tempDir,
       cwd: tempFs.tempDir,
+      projectGraph: {
+        nodes: {
+          [projectName]: {
+            type: 'app',
+            name: projectName,
+            data: {
+              root: `apps/${projectName}`,
+              sourceRoot: `apps/${projectName}/src`,
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          [projectName]: [],
+        },
+      },
       projectsConfigurations: {
         version: 2,
         projects: {
@@ -420,7 +436,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
     it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found flat config', async () => {
       setupMocks();
-      tempFs.createFileSync('apps/proj/eslint.config.js', '');
+      tempFs.createFileSync('apps/proj/eslint.config.cjs', '');
       tempFs.createFileSync('apps/proj/src/some-file.ts', '');
 
       mockLintFiles.mockImplementation(() => {
@@ -440,7 +456,7 @@ Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
       );
       expect(console.error).toHaveBeenCalledWith(
         `
-Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "apps/proj/eslint.config.js"
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "apps/proj/eslint.config.cjs"
 Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
 
 Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
@@ -450,7 +466,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
     it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message logging the found flat config at the workspace root', async () => {
       setupMocks();
-      tempFs.createFileSync('eslint.config.js', '');
+      tempFs.createFileSync('eslint.config.cjs', '');
       tempFs.createFileSync('apps/proj/src/some-file.ts', '');
 
       mockLintFiles.mockImplementation(() => {
@@ -470,7 +486,7 @@ Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts`
       );
       expect(console.error).toHaveBeenCalledWith(
         `
-Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "eslint.config.js"
+Error: You have attempted to use the lint rule "@typescript-eslint/await-thenable" which requires the full TypeScript type-checker to be available, but you do not have "parserOptions.project" configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your ESLint config "eslint.config.cjs"
 Occurred while linting ${mockContext.root}/apps/proj/src/some-file.ts
 
 Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how to resolve this issue.
@@ -890,15 +906,15 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     expect(result).toEqual({ success: true });
   });
 
-  it('should pass path to eslint.config.js to resolveAndInstantiateESLint if it is unspecified and we are using flag configuration', async () => {
+  it('should pass path to eslint.config.cjs to resolveAndInstantiateESLint if it is unspecified and we are using flag configuration', async () => {
     setupMocks();
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      `${mockContext.root}/apps/proj/eslint.config.js`,
+      `${mockContext.root}/apps/proj/eslint.config.cjs`,
       {
         lintFilePatterns: [],
-        eslintConfig: 'apps/proj/eslint.config.js',
+        eslintConfig: 'apps/proj/eslint.config.cjs',
         fix: true,
         cache: true,
         cacheLocation: 'cacheLocation1/proj',

@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#initGenerator",
+  "factory": "./src/generators/init/init#initGeneratorInternal",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxTypescriptInit",
@@ -8,6 +8,12 @@
     "title": "Init nx/js",
     "description": "Init generator placeholder for nx/js.",
     "properties": {
+      "formatter": {
+        "description": "The tool to use for code formatting.",
+        "type": "string",
+        "enum": ["none", "prettier"],
+        "default": "none"
+      },
       "js": {
         "type": "boolean",
         "default": false,
@@ -40,12 +46,6 @@
         "type": "string",
         "description": "Customize the generated base tsconfig file name.",
         "x-priority": "internal"
-      },
-      "setUpPrettier": {
-        "type": "boolean",
-        "description": "Add Prettier and corresponding configuration files.",
-        "x-priority": "internal",
-        "default": false
       }
     },
     "presets": []
@@ -54,7 +54,7 @@
   "x-type": "init",
   "description": "Initialize a TS/JS workspace.",
   "hidden": true,
-  "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
+  "implementation": "/packages/js/src/generators/init/init#initGeneratorInternal.ts",
   "path": "/packages/js/src/generators/init/schema.json",
   "type": "generator"
 }

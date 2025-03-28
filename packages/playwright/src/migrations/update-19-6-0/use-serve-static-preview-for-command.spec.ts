@@ -175,31 +175,46 @@ describe('useServeStaticPreviewForCommand', () => {
     `);
   });
 
-  it('should not replace the full command', async () => {
-    // ARRANGE
-    const nxJson = readNxJson(tree);
-    nxJson.plugins ??= [];
-    nxJson.plugins.push({
-      plugin: '@nx/vite/plugin',
-      options: {
-        previewTargetName: 'vite:preview',
-      },
-    });
-    updateNxJson(tree, nxJson);
-    addProject(tree, tempFs, { hasAdditionalCommand: true });
+  it.each`
+    webServerCommand                                               | expectedCommand
+    ${'echo "start" && npx nx run app:serve'}                      | ${'echo "start" && npx nx run app:webpack:serve-static'}
+    ${'echo "start" && npx nx run app:serve:prod'}                 | ${'echo "start" && npx nx run app:webpack:serve-static'}
+    ${'echo "start" && npx nx run app:serve --configuration=prod'} | ${'echo "start" && npx nx run app:webpack:serve-static'}
+    ${'echo "start" && npx nx run app:serve --port 4200'}          | ${'echo "start" && npx nx run app:webpack:serve-static --port=4200'}
+    ${'echo "start" && npx nx run app:serve --port=4200'}          | ${'echo "start" && npx nx run app:webpack:serve-static --port=4200'}
+    ${'echo "start" && npx nx serve app'}                          | ${'echo "start" && npx nx run app:webpack:serve-static'}
+    ${'echo "start" && npx nx serve app --configuration=prod'}     | ${'echo "start" && npx nx run app:webpack:serve-static'}
+    ${'echo "start" && npx nx serve app --port 4200'}              | ${'echo "start" && npx nx run app:webpack:serve-static --port=4200'}
+    ${'echo "start" && npx nx serve app --port=4200'}              | ${'echo "start" && npx nx run app:webpack:serve-static --port=4200'}
+  `(
+    'should replace "$webServerCommand" with "$expectedCommand" when using webpack',
+    async ({ webServerCommand, expectedCommand }) => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/webpack/plugin',
+        options: {
+          serveStaticTargetName: 'webpack:serve-static',
+        },
+      });
+      updateNxJson(tree, nxJson);
+      addProject(tree, tempFs, { noVite: true, webServerCommand });
+      mockWebpackConfig({
+        output: {
+          path: 'dist/foo',
+        },
+      });
 
-    // ACT
-    await useServeStaticPreviewForCommand(tree);
+      await useServeStaticPreviewForCommand(tree);
 
-    // ASSERT
-    expect(tree.read('app-e2e/playwright.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+      expect(tree.read('app-e2e/playwright.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
       "import { defineConfig, devices } from '@playwright/test';
       import { nxE2EPreset } from '@nx/playwright/preset';
 
       import { workspaceRoot } from '@nx/devkit';
 
-      const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+      const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 
       export default defineConfig({
         ...nxE2EPreset(__filename, { testDir: './src' }),
@@ -208,8 +223,8 @@ describe('useServeStaticPreviewForCommand', () => {
           trace: 'on-first-retry',
         },
         webServer: {
-          command: 'echo "start" && npx nx run app:vite:preview',
-          url: 'http://localhost:4300',
+          command: '${expectedCommand}',
+          url: 'http://localhost:4200',
           reuseExistingServer: !process.env.CI,
           cwd: workspaceRoot,
         },
@@ -222,12 +237,78 @@ describe('useServeStaticPreviewForCommand', () => {
       });
       "
     `);
-  });
+    }
+  );
+
+  it.each`
+    webServerCommand                                               | expectedCommand                                              | expectedUrl
+    ${'echo "start" && npx nx run app:serve'}                      | ${'echo "start" && npx nx run app:vite:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && npx nx run app:serve:prod'}                 | ${'echo "start" && npx nx run app:vite:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && npx nx run app:serve --configuration=prod'} | ${'echo "start" && npx nx run app:vite:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && npx nx run app:serve --port 4200'}          | ${'echo "start" && npx nx run app:vite:preview --port=4200'} | ${'http://localhost:4200'}
+    ${'echo "start" && npx nx run app:serve --port=4200'}          | ${'echo "start" && npx nx run app:vite:preview --port=4200'} | ${'http://localhost:4200'}
+    ${'echo "start" && npx nx serve app'}                          | ${'echo "start" && npx nx run app:vite:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && npx nx serve app --configuration=prod'}     | ${'echo "start" && npx nx run app:vite:preview'}             | ${'http://localhost:4300'}
+    ${'echo "start" && npx nx serve app --port 4200'}              | ${'echo "start" && npx nx run app:vite:preview --port=4200'} | ${'http://localhost:4200'}
+    ${'echo "start" && npx nx serve app --port=4200'}              | ${'echo "start" && npx nx run app:vite:preview --port=4200'} | ${'http://localhost:4200'}
+  `(
+    'should replace "$webServerCommand" with "$expectedCommand" when using vite',
+    async ({ webServerCommand, expectedCommand, expectedUrl }) => {
+      const nxJson = readNxJson(tree);
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: '@nx/vite/plugin',
+        options: {
+          previewTargetName: 'vite:preview',
+        },
+      });
+      updateNxJson(tree, nxJson);
+      addProject(tree, tempFs, { webServerCommand });
+      mockWebpackConfig({
+        output: {
+          path: 'dist/foo',
+        },
+      });
+
+      await useServeStaticPreviewForCommand(tree);
+
+      expect(tree.read('app-e2e/playwright.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+      "import { defineConfig, devices } from '@playwright/test';
+      import { nxE2EPreset } from '@nx/playwright/preset';
+
+      import { workspaceRoot } from '@nx/devkit';
+
+      const baseURL = process.env['BASE_URL'] || '${expectedUrl}';
+
+      export default defineConfig({
+        ...nxE2EPreset(__filename, { testDir: './src' }),
+        use: {
+          baseURL,
+          trace: 'on-first-retry',
+        },
+        webServer: {
+          command: '${expectedCommand}',
+          url: '${expectedUrl}',
+          reuseExistingServer: !process.env.CI,
+          cwd: workspaceRoot,
+        },
+        projects: [
+          {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+          },
+        ],
+      });
+      "
+    `);
+    }
+  );
 
   it('should update command to be target name for preview executor', async () => {
     // ARRANGE
     addProject(tree, tempFs, {
-      hasAdditionalCommand: true,
+      webServerCommand: 'echo "start" && npx nx run app:serve',
       usesExecutors: true,
     });
 
@@ -276,7 +357,7 @@ describe('useServeStaticPreviewForCommand', () => {
 
 const basePlaywrightConfig = (
   appName: string,
-  hasAdditionalCommand?: boolean
+  webServerCommand = `npx nx run ${appName}:serve`
 ) => `import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
 
@@ -291,9 +372,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: '${
-      hasAdditionalCommand ? 'echo "start" && ' : ''
-    }npx nx run ${appName}:serve',
+    command: '${webServerCommand}',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
@@ -341,7 +420,7 @@ function addProject(
   tempFs: TempFs,
   overrides: {
     noVite?: boolean;
-    hasAdditionalCommand?: boolean;
+    webServerCommand?: string;
     usesExecutors?: boolean;
   } = {}
 ) {
@@ -384,7 +463,7 @@ function addProject(
   tree.write(`app/project.json`, JSON.stringify(appProjectConfig));
   tree.write(
     `app-e2e/playwright.config.ts`,
-    basePlaywrightConfig('app', overrides.hasAdditionalCommand)
+    basePlaywrightConfig('app', overrides.webServerCommand)
   );
   tree.write(`app-e2e/project.json`, JSON.stringify(e2eProjectConfig));
   if (!overrides.noVite) {
@@ -401,7 +480,7 @@ function addProject(
     [`app/project.json`]: JSON.stringify(appProjectConfig),
     [`app-e2e/playwright.config.ts`]: basePlaywrightConfig(
       'app',
-      overrides.hasAdditionalCommand
+      overrides.webServerCommand
     ),
     [`app-e2e/project.json`]: JSON.stringify(e2eProjectConfig),
   });

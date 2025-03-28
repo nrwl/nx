@@ -1,5 +1,11 @@
-import { animate, useInView } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import {
+  animate,
+  motion,
+  useInView,
+  useMotionValue,
+  useTransform,
+} from 'framer-motion';
+import { memo, useEffect, useRef } from 'react';
 import { usePrefersReducedMotion } from './prefers-reduced-motion';
 
 /**
@@ -13,7 +19,7 @@ import { usePrefersReducedMotion } from './prefers-reduced-motion';
  *
  * @return {JSX.Element} - The JSX element representing the animated value with suffix.
  */
-export function AnimateValue({
+function AnimateValueEngine({
   num,
   once = false,
   suffix,
@@ -23,31 +29,32 @@ export function AnimateValue({
   once?: boolean;
   suffix: string;
   decimals?: number;
-}) {
+}): JSX.Element {
   const ref = useRef<HTMLSpanElement | null>(null);
-  const [isComplete, setIsComplete] = useState<boolean>(false);
   const isInView = useInView(ref);
   const shouldReduceMotion = usePrefersReducedMotion();
+  const motionValue = useMotionValue(0);
+  const formattedValue = useTransform(motionValue, (latest) =>
+    latest.toFixed(decimals)
+  );
 
   useEffect(() => {
-    if (!isInView) return;
-    if (isComplete && once) return;
+    if (!isInView || (once && motionValue.get() === num)) return;
 
-    animate(0, num, {
+    animate(motionValue, num, {
       duration: shouldReduceMotion ? 0 : 2.5,
-      onUpdate(value) {
-        if (!ref.current) return;
-
-        ref.current.textContent = value.toFixed(decimals);
-      },
+      type: 'tween',
     });
-    setIsComplete(true);
-  }, [num, decimals, isInView, once]);
+  }, [num, isInView, once, motionValue, shouldReduceMotion]);
 
   return (
-    <span>
-      <span ref={ref}></span>
-      <span>{suffix}</span>
-    </span>
+    <>
+      <span ref={ref}>
+        <motion.span>{formattedValue}</motion.span>
+      </span>
+      {suffix}
+    </>
   );
 }
+
+export const AnimateValue = memo(AnimateValueEngine);

@@ -5,7 +5,7 @@ import { writeFileSync } from 'fs';
 import { TaskHasher } from '../hasher/task-hasher';
 import runCommandsImpl from '../executors/run-commands/run-commands.impl';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { Cache } from './cache';
+import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
 import {
@@ -22,7 +22,7 @@ import { TaskMetadata } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
-import { hashTask } from '../hasher/hash-task';
+import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
@@ -31,9 +31,12 @@ import {
 import { workspaceRoot } from '../utils/workspace-root';
 import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
+import { NxJsonConfiguration } from '../config/nx-json';
+import type { TaskDetails } from '../native';
 
 export class TaskOrchestrator {
-  private cache = new Cache(this.options);
+  private taskDetails: TaskDetails | null = getTaskDetails();
+  private cache: DbCache | Cache = getCache(this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
@@ -68,17 +71,23 @@ export class TaskOrchestrator {
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
+    private readonly nxJson: NxJsonConfiguration,
     private readonly options: DefaultTasksRunnerOptions,
     private readonly bail: boolean,
-    private readonly daemon: DaemonClient
+    private readonly daemon: DaemonClient,
+    private readonly outputStyle: string
   ) {}
 
   async run() {
-    // Init the ForkedProcessTaskRunner
-    await this.forkedProcessTaskRunner.init();
+    // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
+    await Promise.all([
+      this.forkedProcessTaskRunner.init(),
+      this.tasksSchedule.init(),
+      'init' in this.cache ? this.cache.init() : null,
+    ]);
 
     // initial scheduling
-    await this.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
 
     performance.mark('task-execution:start');
 
@@ -114,6 +123,7 @@ export class TaskOrchestrator {
       this.options.skipNxCache === false ||
       this.options.skipNxCache === undefined;
 
+    this.processAllScheduledTasks();
     const batch = this.tasksSchedule.nextBatch();
     if (batch) {
       const groupId = this.closeGroup();
@@ -155,7 +165,8 @@ export class TaskOrchestrator {
         this.projectGraph,
         this.taskGraph,
         task,
-        taskSpecificEnv
+        taskSpecificEnv,
+        this.taskDetails
       );
     }
 
@@ -173,7 +184,8 @@ export class TaskOrchestrator {
             this.projectGraph,
             this.taskGraph,
             task,
-            this.batchEnv
+            this.batchEnv,
+            this.taskDetails
           );
         }
         await this.options.lifeCycle.scheduleTask(task);
@@ -218,18 +230,20 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
-    task.startTime = Date.now();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
     const outputs = task.outputs;
     const shouldCopyOutputsFromCache =
+      // No output files to restore
       !!outputs.length &&
+      // Remote caches are restored to output dirs when applied and using db cache
+      (!cachedResult.remote || !dbCacheEnabled(this.nxJson)) &&
+      // Output files have not been touched since last run
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
-    task.endTime = Date.now();
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
@@ -312,6 +326,7 @@ export class TaskOrchestrator {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
+        this.projectGraph,
         this.taskGraph,
         env
       );
@@ -350,7 +365,10 @@ export class TaskOrchestrator {
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
     const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-    const streamOutput = shouldStreamOutput(task, this.initiatingProject);
+    const streamOutput =
+      this.outputStyle === 'static'
+        ? false
+        : shouldStreamOutput(task, this.initiatingProject);
 
     let env = pipeOutput
       ? getEnvVariablesForTask(
@@ -517,6 +535,9 @@ export class TaskOrchestrator {
         terminalOutput,
       };
     } catch (e) {
+      if (process.env.NX_VERBOSE_LOGGING === 'true') {
+        console.error(e);
+      }
       return {
         code: 1,
       };
@@ -527,6 +548,10 @@ export class TaskOrchestrator {
 
   // region Lifecycle
   private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
+    const now = Date.now();
+    for (const task of tasks) {
+      task.startTime = now;
+    }
     await this.options.lifeCycle.startTasks(tasks, metadata);
   }
 
@@ -540,7 +565,9 @@ export class TaskOrchestrator {
     doNotSkipCache: boolean,
     { groupId }: { groupId: number }
   ) {
+    const now = Date.now();
     for (const task of tasks) {
+      task.endTime = now;
       await this.recordOutputsHash(task);
     }
 
@@ -608,17 +635,11 @@ export class TaskOrchestrator {
       })
     );
 
-    await this.scheduleNextTasks();
+    await this.tasksSchedule.scheduleNextTasks();
 
     // release blocked threads
     this.waitingForTasks.forEach((f) => f(null));
     this.waitingForTasks.length = 0;
-  }
-
-  private async scheduleNextTasks() {
-    await this.tasksSchedule.scheduleNextTasks();
-
-    this.processAllScheduledTasks();
   }
 
   private complete(

@@ -2,19 +2,40 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 
 import { readJson, Tree, updateJson } from 'nx/src/devkit-exports';
-import { sortObjectByKeys } from 'nx/src/devkit-internals';
+import {
+  sortObjectByKeys,
+  isUsingPrettierInTree,
+} from 'nx/src/devkit-internals';
 
 /**
  * Formats all the created or updated files using Prettier
  * @param tree - the file system tree
  */
-export async function formatFiles(tree: Tree): Promise<void> {
+export async function formatFiles(
+  tree: Tree,
+  options = {
+    /**
+     * TODO(v21): Stop sorting tsconfig paths by default, paths are now less common/important
+     * in Nx workspace setups, and the sorting causes comments to be lost.
+     */
+    sortRootTsconfigPaths: true,
+  }
+): Promise<void> {
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
+    /**
+     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
+     * before proceeding to format with it.
+     */
+    if (!isUsingPrettierInTree(tree)) {
+      return;
+    }
   } catch {}
 
-  sortTsConfig(tree);
+  if (options.sortRootTsconfigPaths) {
+    sortTsConfig(tree);
+  }
 
   if (!prettier) return;
 

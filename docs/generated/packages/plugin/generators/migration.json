@@ -1,6 +1,6 @@
 {
   "name": "migration",
-  "factory": "./src/generators/migration/migration#migrationGeneratorInternal",
+  "factory": "./src/generators/migration/migration",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "cli": "nx",
@@ -10,21 +10,29 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g migration my-migration --project=my-plugin --version=1.0.0",
-        "description": "Adds a new migration to the project `my-plugin`, which will be triggered when migrating to version 1.0.0 or above from a previous version."
+        "description": "Generate a migration exported with the name matching the file name, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `foo` at `mylib/src/migrations/foo.ts`",
+        "command": "nx g @nx/plugin:migration mylib/src/migrations/foo.ts -v=1.0.0"
+      },
+      {
+        "description": "Generate a migration without providing the file extension, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `foo` at `mylib/src/migrations/foo.ts`",
+        "command": "nx g @nx/plugin:migration mylib/src/migrations/foo -v=1.0.0"
+      },
+      {
+        "description": "Generate a migration exported with a different name from the file name, which will be triggered when migrating to version 1.0.0 or above from a previous version. It results in the migration `custom` at `mylib/src/migrations/foo.ts`",
+        "command": "nx g @nx/plugin:migration mylib/src/migrations/foo --name=custom -v=1.0.0"
       }
     ],
     "properties": {
-      "name": {
+      "path": {
         "type": "string",
-        "description": "Migration name.",
+        "description": "The file path to the migration without the file extension. Relative to the current working directory.",
         "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the migration file path?",
         "x-priority": "important"
       },
-      "directory": {
+      "name": {
         "type": "string",
-        "description": "The directory at which to create the migration file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "aliases": ["dir"]
+        "description": "The migration name to export in the plugin migrations collection."
       },
       "description": {
         "type": "string",
@@ -37,13 +45,6 @@
         "x-prompt": "What version would you like to use for the migration?",
         "x-priority": "important"
       },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v20."
-      },
       "packageJsonUpdates": {
         "type": "boolean",
         "description": "Whether or not to include `package.json` updates.",
@@ -54,19 +55,14 @@
         "type": "boolean",
         "default": false,
         "description": "Do not eslint configuration for plugin json files."
-      },
-      "nameAndDirectoryFormat": {
-        "description": "Whether to generate the migration in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
-        "type": "string",
-        "enum": ["as-provided", "derived"]
       }
     },
-    "required": ["packageVersion"],
+    "required": ["packageVersion", "path"],
     "additionalProperties": false,
     "presets": []
   },
   "description": "Create a migration for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/migration/migration#migrationGeneratorInternal.ts",
+  "implementation": "/packages/plugin/src/generators/migration/migration.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/migration/schema.json",

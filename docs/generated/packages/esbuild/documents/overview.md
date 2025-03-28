@@ -47,14 +47,10 @@ npm add -D @nx/esbuild
 
 ### Creating a new JS library
 
-{% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
-{% /callout %}
-
 You can add a new library that builds using esbuild with:
 
 ```shell
-nx g @nx/js:lib mylib --directory=libs/mylib --bundler=esbuild
+nx g @nx/js:lib libs/mylib --bundler=esbuild
 ```
 
 This command will install the esbuild plugin if needed, and set `@nx/esbuild:esbuild` executor for the `build` target.

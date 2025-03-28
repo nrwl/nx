@@ -1,39 +1,31 @@
-import { Tree, extractLayoutDirectory, names, readNxJson } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertValidStyle } from '../../../utils/assertion';
+import { Tree, names, readNxJson } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  assertValidReactRouter,
+  assertValidStyle,
+} from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
-import { VitePluginOptions } from '@nx/vite/src/plugins/plugin';
-import { WebpackPluginOptions } from '@nx/webpack/src/plugins/plugin';
-
-export function normalizeDirectory(options: Schema) {
-  options.directory = options.directory?.replace(/\\{1,2}/g, '/');
-  const { projectDirectory } = extractLayoutDirectory(options.directory);
-  return projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-}
-
-export function normalizeProjectName(options: Schema) {
-  return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
-}
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
-  options: Schema,
-  callingGenerator = '@nx/react:application'
+  options: Schema
 ): Promise<NormalizedSchema<T>> {
+  await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
+    names: projectNames,
     projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
+    importPath,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
-    callingGenerator,
   });
 
   const nxJson = readNxJson(host);
@@ -44,91 +36,50 @@ export async function normalizeOptions<T extends Schema = Schema>(
   options.addPlugin ??= addPlugin;
 
   options.rootProject = appProjectRoot === '.';
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  let e2ePort = options.devServerPort ?? 4200;
-
-  let e2eWebServerTarget = 'serve';
-  let e2eCiWebServerTarget =
-    options.bundler === 'vite' ? 'preview' : 'serve-static';
-  if (options.addPlugin) {
-    if (nxJson.plugins) {
-      for (const plugin of nxJson.plugins) {
-        if (
-          options.bundler === 'vite' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/vite/plugin'
-        ) {
-          e2eCiWebServerTarget =
-            (plugin.options as VitePluginOptions)?.previewTargetName ??
-            e2eCiWebServerTarget;
-
-          e2eWebServerTarget =
-            (plugin.options as VitePluginOptions)?.serveTargetName ??
-            e2eWebServerTarget;
-        } else if (
-          options.bundler === 'webpack' &&
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/webpack/plugin'
-        ) {
-          e2eCiWebServerTarget =
-            (plugin.options as WebpackPluginOptions)?.serveStaticTargetName ??
-            e2eCiWebServerTarget;
-
-          e2eWebServerTarget =
-            (plugin.options as WebpackPluginOptions)?.serveTargetName ??
-            e2eWebServerTarget;
-        }
-      }
-    }
-  }
-
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options?.port;
-  }
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
-  const e2eCiBaseUrl =
-    options.bundler === 'vite'
-      ? 'http://localhost:4300'
-      : `http://localhost:${e2ePort}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const fileName = options.pascalCaseFiles ? 'App' : 'app';
+  const fileName = 'app';
 
   const styledModule = /^(css|scss|less|tailwind|none)$/.test(options.style)
     ? null
     : options.style;
 
   assertValidStyle(options.style);
+  assertValidReactRouter(options.useReactRouter, options.bundler);
+
+  if (options.useReactRouter && !options.bundler) {
+    options.bundler = 'vite';
+  }
+  options.useReactRouter = options.routing ? options.useReactRouter : false;
 
   const normalized = {
     ...options,
-    name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,
+    importPath,
     e2eProjectName,
     e2eProjectRoot,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2eCiWebServerTarget,
-    e2eCiBaseUrl,
-    e2ePort,
     parsedTags,
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
+    names: names(projectNames.projectSimpleName),
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;
+  normalized.useReactRouter = normalized.useReactRouter ?? false;
   normalized.strict = normalized.strict ?? true;
   normalized.classComponent = normalized.classComponent ?? false;
   normalized.compiler = normalized.compiler ?? 'babel';

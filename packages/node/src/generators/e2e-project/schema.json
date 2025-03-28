@@ -18,11 +18,6 @@
       "type": "string",
       "x-priority": "important"
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
-      "type": "string",
-      "enum": ["as-provided", "derived"]
-    },
     "name": {
       "description": "The name of the e2e project. Defaults to the project name with '-e2e' suffix.",
       "type": "string"
@@ -64,6 +59,10 @@
       "default": false,
       "hidden": true,
       "x-priority": "internal"
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["project"]

@@ -215,6 +215,18 @@ Type: `string[]`
 
 External scripts that will be included before the main application entry.
 
+##### skipOverrides
+
+Type: `boolean`
+
+Do not add a `overrides` and `resolutions` entries to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
+##### skipPackageManager
+
+Type: `boolean`
+
+Do not add a `packageManager` entry to the generated package.json file. Only works in conjunction with `generatePackageJson` option.
+
 ##### skipTypeChecking
 
 Type: `boolean`
@@ -288,6 +300,12 @@ Log additional information for debugging purposes.
 Type: `boolean`
 
 Watch for file changes.
+
+##### watchDependencies
+
+Type: `boolean`
+
+Watch for buildable dependencies and rebuild when they change. Default is `true`.
 
 #### Example
 

@@ -1,3 +1,8 @@
+---
+title: Web Plugin for Nx
+description: Learn how to use the @nx/web plugin to create and manage Web Component applications and libraries in your Nx workspace, including testing and building.
+---
+
 The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.
@@ -46,7 +51,7 @@ npm add -D @nx/web
 You can add a new application with the following:
 
 ```shell
-nx g @nx/web:app my-new-app
+nx g @nx/web:app apps/my-new-app
 ```
 
 The application uses no framework and generates with web components. You can add any framework you want on top of the default setup.
@@ -62,10 +67,10 @@ If you are looking to add a React application, check out the [React plugin](/nx-
 To create a generic TypeScript library (i.e. non-framework specific), use the [`@nx/js`](/nx-api/js) plugin.
 
 ```shell
-nx g @nx/js:lib my-new-lib
+nx g @nx/js:lib libs/my-new-lib
 
 # If you want the library to be publishable to npm
-nx g @nx/js:lib my-new-lib \
+nx g @nx/js:lib libs/my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```

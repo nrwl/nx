@@ -10,6 +10,11 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
           "metadata": {},
           "root": ".",
           "targets": {
+            "build-deps": {
+              "dependsOn": [
+                "^build",
+              ],
+            },
             "test": {
               "cache": true,
               "command": "vitest",
@@ -49,25 +54,39 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
             },
             "typecheck": {
               "cache": true,
-              "command": "tsc --noEmit",
+              "command": "tsc --noEmit -p tsconfig.lib.json",
               "inputs": [
                 "production",
                 "^production",
+                {
+                  "externalDependencies": [
+                    "typescript",
+                  ],
+                },
               ],
               "metadata": {
-                "description": "Run Typechecking",
+                "description": "Runs type-checking for the project.",
                 "help": {
-                  "command": "npx tsc --help -p tsconfig.lib.json",
+                  "command": "npx tsc -p tsconfig.lib.json --help",
                   "example": {
                     "options": {
                       "noEmit": true,
                     },
                   },
                 },
+                "technologies": [
+                  "typescript",
+                ],
               },
               "options": {
                 "cwd": ".",
               },
+            },
+            "watch-deps": {
+              "command": "npx nx watch --projects vite --includeDependentProjects -- npx nx build-deps vite",
+              "dependsOn": [
+                "build-deps",
+              ],
             },
           },
         },

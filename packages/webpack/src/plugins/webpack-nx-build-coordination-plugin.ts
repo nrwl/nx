@@ -4,21 +4,42 @@ import { daemonClient, isDaemonEnabled } from 'nx/src/daemon/client/client';
 import { BatchFunctionRunner } from 'nx/src/command-line/watch/watch';
 import { output } from 'nx/src/utils/output';
 
+type PluginOptions = {
+  skipInitialBuild?: boolean;
+  skipWatchingDeps?: boolean;
+};
+
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
   private buildCmdProcess: ReturnType<typeof exec> | null = null;
 
-  constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
-    if (!skipInitialBuild) {
+  constructor(buildCmd: string);
+  /**
+   * @deprecated Use the constructor with the `options` parameter instead.
+   */
+  constructor(buildCmd: string, skipInitialBuild?: boolean);
+  constructor(buildCmd: string, options?: PluginOptions);
+  constructor(
+    private readonly buildCmd: string,
+    skipInitialBuildOrOptions?: boolean | PluginOptions
+  ) {
+    const options =
+      typeof skipInitialBuildOrOptions === 'boolean'
+        ? { skipInitialBuild: skipInitialBuildOrOptions }
+        : skipInitialBuildOrOptions;
+
+    if (!options?.skipInitialBuild) {
       this.buildChangedProjects();
     }
-    if (isDaemonEnabled()) {
-      this.startWatchingBuildableLibs();
-    } else {
-      output.warn({
-        title:
-          'Nx Daemon is not enabled. Buildable libs will not be rebuilt on file changes.',
-      });
+    if (!options?.skipWatchingDeps) {
+      if (isDaemonEnabled()) {
+        this.startWatchingBuildableLibs();
+      } else {
+        output.warn({
+          title:
+            'Nx Daemon is not enabled. Buildable libs will not be rebuilt on file changes.',
+        });
+      }
     }
   }
 
@@ -52,7 +73,9 @@ export class WebpackNxBuildCoordinationPlugin {
     this.currentlyRunning = 'nx-build';
     try {
       return await new Promise<void>((res) => {
-        this.buildCmdProcess = exec(this.buildCmd);
+        this.buildCmdProcess = exec(this.buildCmd, {
+          windowsHide: false,
+        });
 
         this.buildCmdProcess.stdout.pipe(process.stdout);
         this.buildCmdProcess.stderr.pipe(process.stderr);

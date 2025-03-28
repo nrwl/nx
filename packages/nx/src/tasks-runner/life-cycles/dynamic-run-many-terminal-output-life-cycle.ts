@@ -325,6 +325,11 @@ export async function createRunManyDynamicOutputRenderer({
     const timeTakenText = prettyTime(process.hrtime(start));
 
     moveCursorToStartOfPinnedFooter();
+    if (totalTasks === 0) {
+      renderPinnedFooter([output.applyNxPrefix('gray', 'No tasks were run')]);
+      resolveRenderIsDonePromise();
+      return;
+    }
     if (totalSuccessfulTasks === totalTasks) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,

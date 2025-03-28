@@ -1,3 +1,8 @@
+---
+title: Inputs and Named Inputs
+description: Learn how Nx uses inputs to compute cache hashes for tasks, including file sets, runtime inputs, and environment variables that affect task outputs.
+---
+
 # Inputs and Named Inputs
 
 When Nx [computes the hash for a given operation](/concepts/how-caching-works), it takes into account the `inputs` of the target.
@@ -206,7 +211,7 @@ The `default` inputs include all files in a project as well as any shared global
 
 #### Shared Global Inputs
 
-The `sharedGlobal` inputs include things that Nx should always look at when determining computation hashes. For instance, this could be the OS where the command is being run or the version of Node.
+The `sharedGlobals` inputs include things that Nx should always look at when determining computation hashes. For instance, this could be the OS where the command is being run or the version of Node.
 
 #### Production Inputs
 

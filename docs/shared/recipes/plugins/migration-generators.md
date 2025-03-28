@@ -1,3 +1,8 @@
+---
+title: Migration Generators
+description: Learn how to create migration generators for your Nx plugin to automatically update configuration files when your plugin makes breaking changes.
+---
+
 # Migration Generators
 
 When your plugin is being used in other repos, it is helpful to provide migration generators to automatically update configuration files when your plugin makes a breaking change.
@@ -11,7 +16,11 @@ For this example, we'll create a new migration generator that updates repos to u
 ### 1. Generate a migration
 
 ```shell
-nx generate @nx/plugin:migration 'Change Executor Name' --packageVersion=2.0.1 --project=pluginName --description='Changes the executor name from oldExecutorName to newExecutorName'
+nx generate @nx/plugin:migration libs/pluginName/src/migrations/change-executor-name \
+ --name='Change Executor Name' \
+ --packageVersion=2.0.1 \
+ --project=pluginName \
+ --description='Changes the executor name from oldExecutorName to newExecutorName'
 ```
 
 This command will update the following files:

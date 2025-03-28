@@ -1,95 +1,77 @@
 import { names, readNxJson, Tree } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { Schema } from '../schema';
-import { ExpoPluginOptions } from '../../../../plugins/plugin';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema
+  extends Omit<Schema, 'name' | 'useTsSolution'> {
   className: string;
+  simpleName: string;
   projectName: string;
   appProjectRoot: string;
+  importPath: string;
   lowerCaseName: string;
   parsedTags: string[];
   rootProject: boolean;
   e2eProjectName: string;
   e2eProjectRoot: string;
-  e2eWebServerAddress: string;
-  e2eWebServerTarget: string;
-  e2ePort: number;
+  isTsSolutionSetup: boolean;
 }
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
     names: projectNames,
     projectRoot: appProjectRoot,
-    projectNameAndRootFormat,
+    importPath,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
-    projectNameAndRootFormat: options.projectNameAndRootFormat,
-    callingGenerator: '@nx/expo:application',
   });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const { className } = names(options.name);
+  const { className } = names(projectName);
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const rootProject = appProjectRoot === '.';
 
-  let e2eWebServerTarget = 'serve';
-  if (options.addPlugin) {
-    if (nxJson.plugins) {
-      for (const plugin of nxJson.plugins) {
-        if (
-          typeof plugin === 'object' &&
-          plugin.plugin === '@nx/expo/plugin' &&
-          (plugin.options as ExpoPluginOptions).serveTargetName
-        ) {
-          e2eWebServerTarget = (plugin.options as ExpoPluginOptions)
-            .serveTargetName;
-        }
-      }
-    }
-  }
-
-  let e2ePort = options.addPlugin ? 8081 : 4200;
-  if (
-    nxJson.targetDefaults?.[e2eWebServerTarget] &&
-    nxJson.targetDefaults?.[e2eWebServerTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[e2eWebServerTarget].options.port;
-  }
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isTsSolutionSetup || options.name ? projectName : importPath;
+  const useProjectJson = options.useProjectJson ?? !isTsSolutionSetup;
 
   const e2eProjectName = rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
-  const e2eWebServerAddress = `http://localhost:${e2ePort}`;
 
   return {
     ...options,
     unitTestRunner: options.unitTestRunner || 'jest',
-    e2eTestRunner: options.e2eTestRunner,
-    name: projectNames.projectSimpleName,
+    e2eTestRunner: options.e2eTestRunner || 'none',
+    simpleName: projectNames.projectSimpleName,
     className,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,
     projectName: appProjectName,
     appProjectRoot,
+    importPath,
     parsedTags,
     rootProject,
     e2eProjectName,
     e2eProjectRoot,
-    e2eWebServerAddress,
-    e2eWebServerTarget,
-    e2ePort,
+    isTsSolutionSetup,
+    useProjectJson,
   };
 }

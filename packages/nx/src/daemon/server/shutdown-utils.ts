@@ -4,11 +4,12 @@ import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
-import { cleanupPlugins } from './plugins';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
 } from '../../project-graph/error-types';
+import { removeDbConnections } from '../../utils/db-connection';
+import { cleanupPlugins } from '../../project-graph/plugins/get-plugins';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -70,6 +71,8 @@ export async function handleServerProcessTermination({
 
     deleteDaemonJsonProcessCache();
     cleanupPlugins();
+
+    removeDbConnections();
 
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {

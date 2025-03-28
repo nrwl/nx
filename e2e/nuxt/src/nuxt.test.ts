@@ -14,13 +14,12 @@ describe('Nuxt Plugin', () => {
   beforeAll(() => {
     newProject({
       packages: ['@nx/nuxt'],
-      unsetProjectNameAndRootFormat: false,
     });
     runCLI(
-      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided --e2eTestRunner=cypress`
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress --linter=eslint`
     );
     runCLI(
-      `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
+      `generate @nx/nuxt:component ${app}/src/components/one/one --name=one --unitTestRunner=vitest`
     );
   });
 
@@ -30,22 +29,17 @@ describe('Nuxt Plugin', () => {
   });
 
   it('should build application', async () => {
-    const result = runCLI(`build ${app}`);
-    expect(result).toContain(
-      `Successfully ran target build for project ${app}`
-    );
+    expect(() => runCLI(`build ${app}`)).not.toThrow();
     checkFilesExist(`${app}/.nuxt/nuxt.d.ts`);
     checkFilesExist(`${app}/.output/nitro.json`);
   });
 
   it('should test application', async () => {
-    const result = runCLI(`test ${app}`);
-    expect(result).toContain(`Successfully ran target test for project ${app}`);
+    expect(() => runCLI(`test ${app}`)).not.toThrow();
   }, 150_000);
 
   it('should lint application', async () => {
-    const result = runCLI(`lint ${app}`);
-    expect(result).toContain(`Successfully ran target lint for project ${app}`);
+    expect(() => runCLI(`lint ${app}`)).not.toThrow();
   });
 
   it('should build storybook for app', () => {

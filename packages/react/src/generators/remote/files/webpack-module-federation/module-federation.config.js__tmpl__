@@ -1,0 +1,12 @@
+/**
+* Nx requires a default export of the config to allow correct resolution of the module federation graph.
+**/
+module.exports = {
+  name: '<%= projectName %>',
+  <%_ if (dynamic) { _%>
+  library: { type: 'var', name: '<%= projectName %>'},
+  <%_ } _%>
+  exposes: {
+    './Module': './src/remote-entry.<%= js ? 'js' : 'ts' %>',
+  },
+};

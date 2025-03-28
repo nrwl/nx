@@ -20,12 +20,12 @@ export default async function (tree: Tree, _options: RemixGeneratorSchema) {
 
   const appGenTask = await applicationGenerator(tree, {
     name: options.appName,
+    directory: '.',
     tags: options.tags,
     skipFormat: true,
     rootProject: true,
     unitTestRunner: options.unitTestRunner ?? 'vitest',
     e2eTestRunner: options.e2eTestRunner ?? 'cypress',
-    js: options.js ?? false,
     addPlugin: addPluginDefault,
   });
   tasks.push(appGenTask);

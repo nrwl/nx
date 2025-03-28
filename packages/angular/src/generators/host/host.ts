@@ -5,24 +5,23 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { isValidVariable } from '@nx/js';
+import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
 import { setupMf } from '../setup-mf/setup-mf';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 import { updateSsrSetup } from './lib';
 import type { Schema } from './schema';
-import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
-import { isValidVariable } from '@nx/js';
 
-export async function host(tree: Tree, options: Schema) {
-  return await hostInternal(tree, {
-    projectNameAndRootFormat: 'derived',
-    ...options,
-  });
-}
+export async function host(tree: Tree, schema: Schema) {
+  assertNotUsingTsSolutionSetup(tree, 'angular', 'host');
 
-export async function hostInternal(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
   options.standalone = options.standalone ?? true;
 
@@ -54,15 +53,13 @@ export async function hostInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  const { projectName: hostProjectName, projectNameAndRootFormat } =
+  await ensureRootProjectName(options, 'application');
+  const { projectName: hostProjectName, projectRoot: appRoot } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,
       projectType: 'application',
       directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/angular:host',
     });
-  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
@@ -104,19 +101,11 @@ export async function hostInternal(tree: Tree, schema: Schema) {
   }
 
   for (const remote of remotesToGenerate) {
-    let remoteDirectory = options.directory;
-    if (
-      options.projectNameAndRootFormat === 'as-provided' &&
-      options.directory
-    ) {
-      /**
-       * With the `as-provided` format, the provided directory would be the root
-       * of the host application. Append the remote name to the host parent
-       * directory to get the remote directory.
-       */
-      remoteDirectory = joinPathFragments(options.directory, '..', remote);
-    }
-
+    const remoteDirectory = options.directory
+      ? joinPathFragments(options.directory, '..', remote)
+      : appRoot === '.'
+      ? remote
+      : joinPathFragments(appRoot, '..', remote);
     await remoteGenerator(tree, {
       ...options,
       name: remote,

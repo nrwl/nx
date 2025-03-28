@@ -47,7 +47,7 @@ export interface WebpackExecutorOptions {
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
   generatePackageJson?: boolean;
-  // TODO(v20): Remove this option
+  // TODO(v21): Remove this option
   /** @deprecated set webpackConfig and provide an explicit webpack.config.js file (See: https://nx.dev/recipes/webpack/webpack-config-setup) */
   isolatedConfig?: boolean;
   standardWebpackConfigFunction?: boolean;
@@ -62,7 +62,7 @@ export interface WebpackExecutorOptions {
   polyfills?: string;
   progress?: boolean;
   runtimeChunk?: boolean;
-  sourceMap?: boolean | 'hidden';
+  sourceMap?: boolean | string;
   statsJson?: boolean;
   target?: string;
   transformers?: TransformerEntry[];
@@ -81,6 +81,7 @@ export interface WebpackExecutorOptions {
   index?: string;
   postcssConfig?: string;
   scripts?: Array<ExtraEntryPointClass | string>;
+  sassImplementation?: 'sass' | 'sass-embedded';
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
@@ -95,4 +96,5 @@ export interface NormalizedWebpackExecutorOptions
   root: string;
   projectRoot: string;
   sourceRoot: string;
+  useTsconfigPaths: boolean;
 }

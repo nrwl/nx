@@ -17,6 +17,11 @@
       "type": "string",
       "description": "The distribution tag to apply to the published package."
     },
+    "access": {
+      "type": "string",
+      "enum": ["public", "restricted"],
+      "description": "Overrides the access level of the published package. Unscoped packages cannot be set to restricted. See the npm publish documentation for more information."
+    },
     "dryRun": {
       "type": "boolean",
       "description": "Whether to run the command without actually publishing the package to the registry."

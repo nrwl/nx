@@ -5,6 +5,12 @@
   "title": "Init nx/js",
   "description": "Init generator placeholder for nx/js.",
   "properties": {
+    "formatter": {
+      "description": "The tool to use for code formatting.",
+      "type": "string",
+      "enum": ["none", "prettier"],
+      "default": "none"
+    },
     "js": {
       "type": "boolean",
       "default": false,
@@ -37,12 +43,6 @@
       "type": "string",
       "description": "Customize the generated base tsconfig file name.",
       "x-priority": "internal"
-    },
-    "setUpPrettier": {
-      "type": "boolean",
-      "description": "Add Prettier and corresponding configuration files.",
-      "x-priority": "internal",
-      "default": false
     }
   }
 }

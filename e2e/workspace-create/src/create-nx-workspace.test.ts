@@ -215,6 +215,21 @@ describe('create-nx-workspace', () => {
     expectCodeIsFormatted();
   });
 
+  it('should be able to create a react workspace without options and --no-interactive', () => {
+    const wsName = uniq('react');
+
+    runCreateWorkspace(wsName, {
+      preset: 'react-monorepo',
+    });
+
+    expectNoAngularDevkit();
+    checkFilesExist('vitest.workspace.ts');
+    checkFilesDoNotExist('jest.config.ts');
+    const packageJson = readJson('package.json');
+    expect(packageJson.devDependencies['@nx/vite']).toBeDefined(); // vite should be default bundler
+    expectCodeIsFormatted();
+  });
+
   it('should be able to create an next workspace', () => {
     const wsName = uniq('next');
     const appName = uniq('app');
@@ -307,6 +322,7 @@ describe('create-nx-workspace', () => {
       preset: 'react-native',
       appName,
       packageManager: 'npm',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -320,6 +336,7 @@ describe('create-nx-workspace', () => {
       preset: 'expo',
       appName,
       packageManager: 'npm',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();

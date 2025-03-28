@@ -21,3 +21,7 @@ export function getCloudUrl() {
 export function removeTrailingSlash(apiUrl: string) {
   return apiUrl[apiUrl.length - 1] === '/' ? apiUrl.slice(0, -1) : apiUrl;
 }
+
+export function isNxCloudId(token: string): boolean {
+  return token.length === 24;
+}

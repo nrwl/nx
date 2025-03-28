@@ -82,8 +82,8 @@ impl TaskHasher {
         hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
-        debug!("hashing plans {:?}", hash_plans.as_ref());
-        trace!("plan length: {}", hash_plans.len());
+        trace!("hashing plans {:?}", hash_plans.as_ref());
+        debug!("plan length: {}", hash_plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());
 
@@ -136,18 +136,22 @@ impl TaskHasher {
             })?;
 
         hashes.iter_mut().for_each(|mut h| {
-            let hash_details = h.value_mut();
+            let (hash_id, hash_details) = h.pair_mut();
             let mut keys = hash_details.details.keys().collect::<Vec<_>>();
             keys.par_sort();
             let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-            for key in keys {
-                hasher.update(hash_details.details[key].as_bytes());
-            }
-            hash_details.value = hasher.digest().to_string();
+            trace_span!("Assembling hash", hash_id).in_scope(|| {
+                for key in keys {
+                    trace!("Adding {} ({}) to hash", hash_details.details[key], key);
+                    hasher.update(hash_details.details[key].as_bytes());
+                }
+                let hash = hasher.digest().to_string();
+                trace!("Hash Value: {}", hash);
+                hash_details.value = hash;
+            });
         });
 
         trace!("hashing took {:?}", hash_time.elapsed());
-        debug!(?hashes);
         Ok(hashes)
     }
 
@@ -186,7 +190,7 @@ impl TaskHasher {
                 hashed_runtime
             }
             HashInstruction::Environment(env) => {
-                let hashed_env = hash_env(env, js_env)?;
+                let hashed_env = hash_env(env, js_env);
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
                 hashed_env
             }

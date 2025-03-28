@@ -1,6 +1,6 @@
 import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
-import { cacheDirectoryForWorkspace } from './cache-directory';
+import { workspaceDataDirectoryForWorkspace } from './cache-directory';
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { daemonClient } from '../daemon/client/client';
 
@@ -12,7 +12,7 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   performance.mark('workspace-context');
   workspaceContext = new WorkspaceContext(
     workspaceRoot,
-    cacheDirectoryForWorkspace(workspaceRoot)
+    workspaceDataDirectoryForWorkspace(workspaceRoot)
   );
   performance.mark('workspace-context:end');
   performance.measure(
@@ -62,6 +62,18 @@ export async function globWithWorkspaceContext(
   }
 }
 
+export async function multiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.multiGlob(globs, exclude);
+  }
+  return daemonClient.multiGlob(globs, exclude);
+}
+
 export async function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
@@ -72,6 +84,17 @@ export async function hashWithWorkspaceContext(
     return workspaceContext.hashFilesMatchingGlob(globs, exclude);
   }
   return daemonClient.hashGlob(globs, exclude);
+}
+
+export async function hashMultiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globGroups: string[][]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.hashFilesMatchingGlobs(globGroups);
+  }
+  return daemonClient.hashMultiGlob(globGroups);
 }
 
 export async function updateContextWithChangedFiles(

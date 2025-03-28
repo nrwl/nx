@@ -1,23 +1,30 @@
 import { prompt } from 'enquirer';
-import { ensureDir, readFileSync, writeFile, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
 import { dirSync } from 'tmp';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { allFileData } from '../../utils/all-file-data';
+import {
+  parseFiles,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/params';
+import { handleErrors } from '../../utils/handle-errors';
 import { PlanOptions } from './command-object';
 import {
-  IMPLICIT_DEFAULT_RELEASE_GROUP,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
+  IMPLICIT_DEFAULT_RELEASE_GROUP,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
+import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
 import { launchEditor } from './utils/launch-editor';
 import { printDiff } from './utils/print-changes';
 import { printConfigAndExit } from './utils/print-config';
@@ -35,10 +42,6 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       nxJson.release ?? {},
       overrideReleaseConfig ?? {}
     );
-
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
 
     // Apply default configuration to any optional user configuration
     const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
@@ -73,6 +76,36 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       process.exit(1);
     }
 
+    // If no release groups have version plans enabled, it doesn't make sense to use the plan command only to set yourself up for an error at release time
+    if (!releaseGroups.some((group) => !!group.versionPlans)) {
+      if (releaseGroups.length === 1) {
+        output.warn({
+          title: `Version plans are not enabled in your release configuration`,
+          bodyLines: [
+            'To enable version plans, set `"versionPlans": true` at the top level of your `"release"` configuration',
+          ],
+        });
+        return 0;
+      }
+      output.warn({
+        title: 'No release groups have version plans enabled',
+        bodyLines: [
+          'To enable version plans, set `"versionPlans": true` at the top level of your `"release"` configuration to apply it to all groups, otherwise set it at the release group level',
+        ],
+      });
+      return 0;
+    }
+
+    // Resolve the final values for base, head etc to use when resolving the changes to consider
+    const { nxArgs } = splitArgsIntoNxArgsAndOverrides(
+      args,
+      'affected',
+      {
+        printWarnings: args.verbose,
+      },
+      nxJson
+    );
+
     const versionPlanBumps: Record<string, string> = {};
     const setBumpIfNotNone = (projectOrGroup: string, version: string) => {
       if (version !== 'none') {
@@ -80,90 +113,199 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       }
     };
 
-    if (releaseGroups[0].name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
-      const group = releaseGroups[0];
-      if (group.projectsRelationship === 'independent') {
-        for (const project of group.projects) {
-          setBumpIfNotNone(
-            project,
-            args.bump ||
-              (await promptForVersion(
-                `How do you want to bump the version of the project "${project}"?`
-              ))
+    // Changed files are only relevant if considering touched projects
+    let changedFiles: string[] = [];
+    let getProjectsToVersionForGroup:
+      | ReturnType<typeof createGetTouchedProjectsForGroup>
+      | undefined;
+    if (args.onlyTouched) {
+      changedFiles = parseFiles(nxArgs).files;
+      if (nxArgs.verbose) {
+        if (changedFiles.length) {
+          output.log({
+            title: `Changed files based on resolved "base" (${
+              nxArgs.base
+            }) and "head" (${nxArgs.head ?? 'HEAD'})`,
+            bodyLines: changedFiles.map((file) => `  - ${file}`),
+          });
+        } else {
+          output.warn({
+            title: 'No changed files found based on resolved "base" and "head"',
+          });
+        }
+      }
+      const resolvedAllFileData = await allFileData();
+      getProjectsToVersionForGroup = createGetTouchedProjectsForGroup(
+        nxArgs,
+        projectGraph,
+        changedFiles,
+        resolvedAllFileData
+      );
+    }
+
+    if (args.projects?.length) {
+      /**
+       * Run plan for all remaining release groups and filtered projects within them
+       */
+      for (const releaseGroup of releaseGroups) {
+        const releaseGroupName = releaseGroup.name;
+        const releaseGroupProjectNames = Array.from(
+          releaseGroupToFilteredProjects.get(releaseGroup)
+        );
+        let applicableProjects = releaseGroupProjectNames;
+
+        if (
+          args.onlyTouched &&
+          typeof getProjectsToVersionForGroup === 'function'
+        ) {
+          applicableProjects = await getProjectsToVersionForGroup(
+            releaseGroup,
+            releaseGroupProjectNames,
+            true
           );
         }
-      } else {
-        // TODO: use project names instead of the implicit default release group name? (though this might be confusing, as users might think they can just delete one of the project bumps to change the behavior to independent versioning)
-        setBumpIfNotNone(
-          group.name,
-          args.bump ||
-            (await promptForVersion(
-              `How do you want to bump the versions of all projects?`
-            ))
-        );
-      }
-    } else {
-      for (const group of releaseGroups) {
-        if (group.projectsRelationship === 'independent') {
-          for (const project of releaseGroupToFilteredProjects.get(group)) {
+
+        if (!applicableProjects.length) {
+          continue;
+        }
+
+        if (releaseGroup.projectsRelationship === 'independent') {
+          for (const project of applicableProjects) {
             setBumpIfNotNone(
               project,
               args.bump ||
                 (await promptForVersion(
-                  `How do you want to bump the version of the project "${project}" within group "${group.name}"?`
+                  `How do you want to bump the version of the project "${project}"${
+                    releaseGroupName === IMPLICIT_DEFAULT_RELEASE_GROUP
+                      ? ''
+                      : ` within group "${releaseGroupName}"`
+                  }?`
                 ))
             );
           }
         } else {
           setBumpIfNotNone(
-            group.name,
+            releaseGroupName,
             args.bump ||
               (await promptForVersion(
-                `How do you want to bump the versions of the projects in the group "${group.name}"?`
+                `How do you want to bump the versions of ${
+                  releaseGroupName === IMPLICIT_DEFAULT_RELEASE_GROUP
+                    ? 'all projects'
+                    : `the projects in the group "${releaseGroupName}"`
+                }?`
               ))
           );
         }
       }
-    }
 
-    if (!Object.keys(versionPlanBumps).length) {
-      output.warn({
-        title:
-          'No version bumps were selected so no version plan file was created.',
-      });
+      // Create a version plan file if applicable
+      await createVersionPlanFileForBumps(args, versionPlanBumps);
       return 0;
     }
 
-    const versionPlanName = `version-plan-${new Date().getTime()}`;
-    const versionPlanMessage =
-      args.message || (await promptForMessage(versionPlanName));
-    const versionPlanFileContent = generateVersionPlanContent(
-      versionPlanBumps,
-      versionPlanMessage
-    );
-    const versionPlanFileName = `${versionPlanName}.md`;
+    /**
+     * Run plan for all remaining release groups
+     */
+    for (const releaseGroup of releaseGroups) {
+      const releaseGroupName = releaseGroup.name;
+      let applicableProjects = releaseGroup.projects;
 
-    if (args.dryRun) {
-      output.logSingleLine(
-        `Would create version plan file "${versionPlanFileName}", but --dry-run was set.`
-      );
-      printDiff('', versionPlanFileContent, 1);
-    } else {
-      output.logSingleLine(
-        `Creating version plan file "${versionPlanFileName}"`
-      );
-      printDiff('', versionPlanFileContent, 1);
+      if (
+        args.onlyTouched &&
+        typeof getProjectsToVersionForGroup === 'function'
+      ) {
+        applicableProjects = await getProjectsToVersionForGroup(
+          releaseGroup,
+          releaseGroup.projects,
+          false
+        );
+      }
 
-      const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
-      await ensureDir(versionPlansAbsolutePath);
-      await writeFile(
-        join(versionPlansAbsolutePath, versionPlanFileName),
-        versionPlanFileContent
-      );
+      if (!applicableProjects.length) {
+        continue;
+      }
+
+      if (releaseGroup.projectsRelationship === 'independent') {
+        for (const project of applicableProjects) {
+          setBumpIfNotNone(
+            project,
+            args.bump ||
+              (await promptForVersion(
+                `How do you want to bump the version of the project "${project}"${
+                  releaseGroupName === IMPLICIT_DEFAULT_RELEASE_GROUP
+                    ? ''
+                    : ` within group "${releaseGroupName}"`
+                }?`
+              ))
+          );
+        }
+      } else {
+        setBumpIfNotNone(
+          releaseGroupName,
+          args.bump ||
+            (await promptForVersion(
+              `How do you want to bump the versions of ${
+                releaseGroupName === IMPLICIT_DEFAULT_RELEASE_GROUP
+                  ? 'all projects'
+                  : `the projects in the group "${releaseGroupName}"`
+              }?`
+            ))
+        );
+      }
     }
 
+    // Create a version plan file if applicable
+    await createVersionPlanFileForBumps(args, versionPlanBumps);
     return 0;
   };
+}
+
+async function createVersionPlanFileForBumps(
+  args: PlanOptions,
+  versionPlanBumps: Record<string, string>
+) {
+  if (!Object.keys(versionPlanBumps).length) {
+    let bodyLines: string[] = [];
+    if (args.onlyTouched) {
+      bodyLines = [
+        'This might be because no projects have been changed, or projects you expected to release have not been touched',
+        'To include all projects, not just those that have been changed, pass --only-touched=false',
+        'Alternatively, you can specify alternate --base and --head refs to include only changes from certain commits',
+      ];
+    }
+    output.warn({
+      title:
+        'No version bumps were selected so no version plan file was created.',
+      bodyLines,
+    });
+    return 0;
+  }
+
+  const versionPlanName = `version-plan-${new Date().getTime()}`;
+  const versionPlanMessage =
+    args.message || (await promptForMessage(versionPlanName));
+  const versionPlanFileContent = generateVersionPlanContent(
+    versionPlanBumps,
+    versionPlanMessage
+  );
+  const versionPlanFileName = `${versionPlanName}.md`;
+
+  if (args.dryRun) {
+    output.logSingleLine(
+      `Would create version plan file "${versionPlanFileName}", but --dry-run was set.`
+    );
+    printDiff('', versionPlanFileContent, 1);
+  } else {
+    output.logSingleLine(`Creating version plan file "${versionPlanFileName}"`);
+    printDiff('', versionPlanFileContent, 1);
+
+    const versionPlansAbsolutePath = getVersionPlansAbsolutePath();
+    await mkdir(versionPlansAbsolutePath, { recursive: true });
+    await writeFile(
+      join(versionPlansAbsolutePath, versionPlanFileName),
+      versionPlanFileContent
+    );
+  }
 }
 
 async function promptForVersion(message: string): Promise<string> {

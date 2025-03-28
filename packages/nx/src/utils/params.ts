@@ -4,9 +4,6 @@ import type {
   ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
-import { output } from './output';
-import type { ProjectGraphError } from '../project-graph/error-types';
-import { daemonClient } from '../daemon/client/client';
 
 type PropertyDescription = {
   type?: string | string[];
@@ -88,56 +85,6 @@ export type Options = {
   '--'?: Unmatched[];
   [k: string]: string | number | boolean | string[] | Unmatched[] | undefined;
 };
-
-export async function handleErrors(
-  isVerbose: boolean,
-  fn: Function
-): Promise<number> {
-  try {
-    const result = await fn();
-    if (typeof result === 'number') {
-      return result;
-    }
-    return 0;
-  } catch (err) {
-    err ||= new Error('Unknown error caught');
-    if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
-      logger.error('The generator workflow failed. See above.');
-    } else if (err.name === 'ProjectGraphError') {
-      const projectGraphError = err as ProjectGraphError;
-      let title = projectGraphError.message;
-      if (isVerbose) {
-        title += ' See errors below.';
-      }
-
-      const bodyLines = isVerbose
-        ? [projectGraphError.stack]
-        : ['Pass --verbose to see the stacktraces.'];
-
-      output.error({
-        title,
-        bodyLines: bodyLines,
-      });
-    } else {
-      const lines = (err.message ? err.message : err.toString()).split('\n');
-      const bodyLines = lines.slice(1);
-      if (err.stack && !isVerbose) {
-        bodyLines.push('Pass --verbose to see the stacktrace.');
-      }
-      output.error({
-        title: lines[0],
-        bodyLines,
-      });
-      if (err.stack && isVerbose) {
-        logger.info(err.stack);
-      }
-    }
-    if (daemonClient.enabled()) {
-      daemonClient.reset();
-    }
-    return 1;
-  }
-}
 
 function camelCase(input: string): string {
   if (input.indexOf('-') > 1) {

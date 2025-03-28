@@ -1,3 +1,8 @@
+---
+keywords: [project.json]
+description: Learn how Nx constructs project configuration from inferred tasks, workspace defaults, and project-level files, with detailed explanations of task definitions and configuration options.
+---
+
 # Project Configuration
 
 A project's configuration is constructed by Nx from three sources:
@@ -615,6 +620,20 @@ Additionally, when using the expanded object syntax, you can specify individual 
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
+
+### Sync Generators
+
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
+
+```json
+{
+  "targets": {
+    "build": {
+      "syncGenerators": ["some-plugin:my-sync-generator"]
+    }
+  }
+}
+```
 
 ### Executor/command options
 

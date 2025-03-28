@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`directive generator --no-standalone should export the directive correctly when flat=false and path is nested deeper 1`] = `
+exports[`directive generator --no-standalone should export the directive correctly when directory is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
 import { TestDirective } from './my-directives/test/test.directive';
 @NgModule({
@@ -17,6 +17,7 @@ exports[`directive generator --no-standalone should generate a directive with te
 
 @Directive({
   selector: '[test]',
+  standalone: false,
 })
 export class TestDirective {
   constructor() {}
@@ -48,33 +49,13 @@ export class TestModule {}
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when flat=false 1`] = `
-"import { Directive } from '@angular/core';
+exports[`directive generator --no-standalone should import the directive correctly 1`] = `null`;
 
-@Directive({
-  selector: '[test]'
-})
-export class TestDirective {
-  constructor() {}
-}
-"
-`;
+exports[`directive generator --no-standalone should import the directive correctly 2`] = `null`;
 
-exports[`directive generator --no-standalone should import the directive correctly when flat=false 2`] = `
-"import { TestDirective } from './test.directive';
-
-describe('TestDirective', () => {
-  it('should create an instance', () => {
-    const directive = new TestDirective();
-    expect(directive).toBeTruthy();
-  });
-});
-"
-`;
-
-exports[`directive generator --no-standalone should import the directive correctly when flat=false 3`] = `
+exports[`directive generator --no-standalone should import the directive correctly 3`] = `
 "import { NgModule } from '@angular/core';
-import { TestDirective } from './test/test.directive';
+import { TestDirective } from './test.directive';
 @NgModule({
   imports: [],
   declarations: [TestDirective],
@@ -84,11 +65,12 @@ export class TestModule {}
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when flat=false and path is nested deeper 1`] = `
+exports[`directive generator --no-standalone should import the directive correctly when directory is nested deeper 1`] = `
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[test]'
+  selector: '[test]',
+  standalone: false
 })
 export class TestDirective {
   constructor() {}
@@ -96,7 +78,7 @@ export class TestDirective {
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when flat=false and path is nested deeper 2`] = `
+exports[`directive generator --no-standalone should import the directive correctly when directory is nested deeper 2`] = `
 "import { TestDirective } from './test.directive';
 
 describe('TestDirective', () => {
@@ -108,7 +90,7 @@ describe('TestDirective', () => {
 "
 `;
 
-exports[`directive generator --no-standalone should import the directive correctly when flat=false and path is nested deeper 3`] = `
+exports[`directive generator --no-standalone should import the directive correctly when directory is nested deeper 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestDirective } from './my-directives/test/test.directive';
 @NgModule({
@@ -125,7 +107,6 @@ exports[`directive generator should generate correctly 1`] = `
 
 @Directive({
   selector: '[test]',
-  standalone: true,
 })
 export class TestDirective {
   constructor() {}
@@ -134,6 +115,30 @@ export class TestDirective {
 `;
 
 exports[`directive generator should generate correctly 2`] = `
+"import { TestDirective } from './test.directive';
+
+describe('TestDirective', () => {
+  it('should create an instance', () => {
+    const directive = new TestDirective();
+    expect(directive).toBeTruthy();
+  });
+});
+"
+`;
+
+exports[`directive generator should handle path with file extension 1`] = `
+"import { Directive } from '@angular/core';
+
+@Directive({
+  selector: '[test]',
+})
+export class TestDirective {
+  constructor() {}
+}
+"
+`;
+
+exports[`directive generator should handle path with file extension 2`] = `
 "import { TestDirective } from './test.directive';
 
 describe('TestDirective', () => {

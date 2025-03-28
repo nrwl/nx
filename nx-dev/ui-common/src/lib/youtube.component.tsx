@@ -1,4 +1,5 @@
 import { Schema } from '@markdoc/markdoc';
+import { cx } from '@nx/nx-dev/ui-primitives';
 
 export const youtube: Schema = {
   render: 'YouTube',
@@ -37,6 +38,11 @@ export function computeEmbedURL(youtubeURL: string) {
     return 'https://www.youtube.com/embed/' + match[1];
   }
 
+  match = youtubeURL.match(/youtube\.com\/live\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return 'https://www.youtube.com/embed/' + match[1];
+  }
+
   // Check for 'https://youtu.be/' format
   match = youtubeURL.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
   if (match && match[1]) {
@@ -48,9 +54,10 @@ export function computeEmbedURL(youtubeURL: string) {
 
 export function YouTube(props: {
   title: string;
-  caption: string;
+  caption?: string;
   src: string;
-  width: string;
+  width?: string;
+  disableRoundedCorners?: boolean;
 }): JSX.Element {
   return (
     <div className="text-center">
@@ -62,7 +69,9 @@ export function YouTube(props: {
         width={props.width || '100%'}
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         loading="lazy"
-        className="mb-1 rounded-lg shadow-lg"
+        className={cx({
+          'rounded-lg shadow-lg': !props.disableRoundedCorners,
+        })}
       />
       {props.caption && (
         <p className="mx-auto pt-0 text-slate-500 md:w-1/2 dark:text-slate-400">

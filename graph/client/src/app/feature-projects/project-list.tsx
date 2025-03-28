@@ -1,4 +1,6 @@
 import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
   DocumentMagnifyingGlassIcon,
   EyeIcon,
   FlagIcon,
@@ -11,6 +13,9 @@ import type { ProjectGraphProjectNode } from '@nx/devkit';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   allProjectsSelector,
+  compositeContextSelector,
+  compositeGraphEnabledSelector,
+  compositeNodesSelector,
   getTracingInfo,
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
@@ -19,8 +24,10 @@ import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
-import { Link, useNavigate } from 'react-router-dom';
-import { useRouteConstructor } from '@nx/graph/shared';
+import { Link, useNavigate, useNavigation } from 'react-router-dom';
+import { useRouteConstructor } from '@nx/graph/legacy/shared';
+import { CompositeNode } from '../interfaces';
+import { useMemo } from 'react';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphProjectNode;
@@ -234,6 +241,117 @@ function SubProjectList({
   );
 }
 
+function CompositeNodeListItem({
+  compositeNode,
+}: {
+  compositeNode: CompositeNode;
+}) {
+  const projectGraphService = getProjectGraphService();
+  const routeConstructor = useRouteConstructor();
+  const navigate = useNavigate();
+
+  const label = compositeNode.parent
+    ? `${compositeNode.parent}/${compositeNode.label}`
+    : compositeNode.label;
+
+  function toggleProject() {
+    if (compositeNode.state !== 'hidden') {
+      projectGraphService.send({
+        type: 'deselectProject',
+        projectName: compositeNode.id,
+      });
+    } else {
+      projectGraphService.send({
+        type: 'selectProject',
+        projectName: compositeNode.id,
+      });
+    }
+    navigate(routeConstructor('/projects', true));
+  }
+
+  function toggleExpansion() {
+    if (compositeNode.state === 'expanded') {
+      projectGraphService.send({
+        type: 'collapseCompositeNode',
+        id: compositeNode.id,
+      });
+    } else {
+      projectGraphService.send({
+        type: 'expandCompositeNode',
+        id: compositeNode.id,
+      });
+    }
+  }
+
+  return (
+    <li className="relative block cursor-default select-none py-1 pl-2 pr-6 text-xs text-slate-600 dark:text-slate-400">
+      <div className="flex items-center">
+        <Link
+          to={routeConstructor(
+            { pathname: `/projects`, search: `?composite=${compositeNode.id}` },
+            true
+          )}
+          className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+          title="Focus on this node"
+          data-cy={`focus-button-${compositeNode.id}`}
+        >
+          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+        </Link>
+
+        <button
+          className="mr-1 flex items-center rounded-md border-slate-300 bg-white p-1 font-medium text-slate-500 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-600 hover:dark:bg-slate-700"
+          onClick={toggleExpansion}
+          title={compositeNode.state === 'expanded' ? 'Collapse' : 'Expand'}
+        >
+          {compositeNode.state === 'expanded' ? (
+            <ArrowsPointingInIcon className="h-5 w-5" />
+          ) : (
+            <ArrowsPointingOutIcon className="h-5 w-5" />
+          )}
+        </button>
+
+        <label
+          className="ml-2 block w-full cursor-pointer truncate rounded-md p-2 font-mono font-normal transition hover:bg-slate-50 hover:dark:bg-slate-700"
+          data-project={compositeNode.id}
+          title={label}
+          data-active={compositeNode.state !== 'hidden'}
+          onClick={toggleProject}
+        >
+          {label}
+        </label>
+      </div>
+
+      {compositeNode.state !== 'hidden' ? (
+        <span
+          title="This node is visible"
+          className="absolute inset-y-0 right-0 flex cursor-pointer items-center text-blue-500 dark:text-sky-500"
+          onClick={toggleProject}
+        >
+          <EyeIcon className="h-5 w-5"></EyeIcon>
+        </span>
+      ) : null}
+    </li>
+  );
+}
+
+function CompositeNodeList({
+  compositeNodes,
+}: {
+  compositeNodes: CompositeNode[];
+}) {
+  if (compositeNodes.length === 0) {
+    return <p>No composite nodes</p>;
+  }
+
+  return (
+    <ul className="-ml-3 mt-2">
+      {compositeNodes.map((node) => {
+        return <CompositeNodeListItem key={node.id} compositeNode={node} />;
+      })}
+    </ul>
+  );
+}
+
 export function ProjectList() {
   const tracingInfo = useProjectGraphSelector(getTracingInfo);
 
@@ -242,6 +360,11 @@ export function ProjectList() {
   const selectedProjects = useProjectGraphSelector(
     selectedProjectNamesSelector
   );
+  const compositeGraphEnabled = useProjectGraphSelector(
+    compositeGraphEnabledSelector
+  );
+  const compositeContext = useProjectGraphSelector(compositeContextSelector);
+  const compositeNodes = useProjectGraphSelector(compositeNodesSelector);
 
   const appProjects = getProjectsByType('app', projects);
   const libProjects = getProjectsByType('lib', projects);
@@ -269,6 +392,15 @@ export function ProjectList() {
 
   return (
     <div id="project-lists" className="mt-8 border-t border-slate-400/10 px-4">
+      {compositeGraphEnabled && !compositeContext ? (
+        <>
+          <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
+            composite nodes
+          </h2>
+          <CompositeNodeList compositeNodes={compositeNodes} />
+        </>
+      ) : null}
+
       <h2 className="mt-8 border-b border-solid border-slate-200/10 text-lg font-light text-slate-400 dark:text-slate-500">
         app projects
       </h2>

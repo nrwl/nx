@@ -5,11 +5,11 @@ edition = '2021'
 
 [profile.release-wasi]
 codegen-units = 16
-debug         = 'full'
-inherits      = "release"
-lto           = "thin"
-opt-level     = "z"
-strip         = "none"
+debug = 'full'
+inherits = "release"
+lto = "thin"
+opt-level = "z"
+strip = "none"
 
 [dependencies]
 anyhow = "1.0.71"
@@ -43,21 +43,26 @@ swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
-
+sysinfo = "0.33.1"
+rand = "0.9.0"
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi"] }
 
 [target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
 mio = "0.8"
 
-[target.'cfg(not(target_family = "wasm"))'.dependencies]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
 crossterm = "0.27.0"
 ignore-files = "2.1.0"
+fs4 = "0.12.0"
+rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 watchexec = "3.0.1"
 watchexec-events = "2.0.1"
 watchexec-filterer-ignore = "3.0.0"
 watchexec-signals = "2.1.0"
+machine-uid = "0.5.2"
 
 [lib]
 crate-type = ['cdylib']
@@ -69,3 +74,6 @@ napi-build = '2.1.3'
 assert_fs = "1.0.10"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"
+tempfile = "3.13.0"
+# We only explicitly use tokio for async tests
+tokio = "1.38.0"

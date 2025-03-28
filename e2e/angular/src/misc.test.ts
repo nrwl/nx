@@ -20,9 +20,7 @@ describe('Move Angular Project', () => {
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
-    runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
   });
 
   afterAll(() => cleanupProject());
@@ -32,7 +30,7 @@ describe('Move Angular Project', () => {
    */
   it('should work for apps', () => {
     const moveOutput = runCLI(
-      `generate @nx/angular:move --project ${app1} ${newPath} --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --project ${app1} ${newPath} `
     );
 
     // just check the output
@@ -41,7 +39,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE ${newPath}/tsconfig.spec.json`);
-    expect(moveOutput).toContain(`CREATE ${newPath}/.eslintrc.json`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/eslint.config.mjs`);
     expect(moveOutput).toContain(`CREATE ${newPath}/public/favicon.ico`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/index.html`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/main.ts`);
@@ -76,7 +74,7 @@ describe('Move Angular Project', () => {
   `
     );
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
     );
 
     // just check that the cypress.config.ts is updated correctly
@@ -97,17 +95,13 @@ describe('Move Angular Project', () => {
   it('should work for libraries', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
-    runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:lib ${lib1} --no-standalone --no-interactive`);
 
     /**
      * Create a library which imports the module from the other lib
      */
 
-    runCLI(
-      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
-    );
+    runCLI(`generate @nx/angular:lib ${lib2} --no-standalone --no-interactive`);
 
     updateFile(
       `${lib2}/src/lib/${lib2}.module.ts`,
@@ -117,7 +111,7 @@ describe('Move Angular Project', () => {
     );
 
     const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1} --project-name-and-root-format=as-provided`
+      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --newProjectName=shared-${lib1}`
     );
 
     const newPath = `shared/${lib1}`;
@@ -149,60 +143,26 @@ describe('Move Angular Project', () => {
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });
+});
 
-  it('should move projects correctly with --project-name-and-root-format=derived', () => {
-    const lib1 = uniq('mylib');
-    const lib2 = uniq('mylib');
+describe('Convert Angular Webpack Project to Rspack', () => {
+  let proj: string;
+  let app1: string;
+
+  beforeAll(() => {
+    proj = newProject({ packages: ['@nx/angular'] });
+    app1 = uniq('app1');
     runCLI(
-      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`
     );
+  });
 
-    /**
-     * Create a library which imports the module from the other lib
-     */
+  afterAll(() => cleanupProject());
 
-    runCLI(
-      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=derived --no-interactive`
-    );
-
-    updateFile(
-      `libs/${lib2}/src/lib/${lib2}.module.ts`,
-      `import { ${classify(lib1)}Module } from '@${proj}/${lib1}';
-  
-          export class ExtendedModule extends ${classify(lib1)}Module { }`
-    );
-
-    const moveOutput = runCLI(
-      `generate @nx/angular:move --projectName=${lib1} --destination=shared/${lib1} --project-name-and-root-format=derived`
-    );
-
-    const newPath = `libs/shared/${lib1}`;
-    const newModule = `Shared${classify(lib1)}Module`;
-
-    const testSetupPath = `${newPath}/src/test-setup.ts`;
-    expect(moveOutput).toContain(`CREATE ${testSetupPath}`);
-    checkFilesExist(testSetupPath);
-
-    const modulePath = `${newPath}/src/lib/shared-${lib1}.module.ts`;
-    expect(moveOutput).toContain(`CREATE ${modulePath}`);
-    checkFilesExist(modulePath);
-    const moduleFile = readFile(modulePath);
-    expect(moduleFile).toContain(`export class ${newModule}`);
-
-    const indexPath = `${newPath}/src/index.ts`;
-    expect(moveOutput).toContain(`CREATE ${indexPath}`);
-    checkFilesExist(indexPath);
-    const index = readFile(indexPath);
-    expect(index).toContain(`export * from './lib/shared-${lib1}.module'`);
-
-    /**
-     * Check that the import in lib2 has been updated
-     */
-    const lib2FilePath = `libs/${lib2}/src/lib/${lib2}.module.ts`;
-    const lib2File = readFile(lib2FilePath);
-    expect(lib2File).toContain(
-      `import { ${newModule} } from '@${proj}/shared/${lib1}';`
-    );
-    expect(lib2File).toContain(`extends ${newModule}`);
+  it('should convert an Angular Webpack project to Rspack', async () => {
+    runCLI(`generate @nx/angular:convert-to-rspack --project=${app1}`);
+    const buildOutput = runCLI(`build ${app1}`);
+    expect(buildOutput).toContain('rspack build');
+    expect(buildOutput).toContain('browser compiled');
   });
 });

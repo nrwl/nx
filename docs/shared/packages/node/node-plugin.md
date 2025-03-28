@@ -1,3 +1,8 @@
+---
+title: Node.js Plugin for Nx
+description: Learn how to use the @nx/node plugin to create and manage Node.js applications and libraries in your Nx workspace, including setup, building, and testing.
+---
+
 The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
 
 ## Setting Up @nx/node
@@ -38,7 +43,7 @@ npm add -D @nx/node
 You can add a new application with the following:
 
 ```shell
-nx g @nx/node:application my-new-app
+nx g @nx/node:application apps/my-new-app
 ```
 
 You can run your application with `nx serve my-new-app`, which starts it in watch mode.
@@ -48,11 +53,11 @@ You can run your application with `nx serve my-new-app`, which starts it in watc
 Node libraries are a good way to separate features within your organization. To create a Node library run the following command:
 
 ```shell
-nx g @nx/node:lib my-new-lib
+nx g @nx/node:lib libs/my-new-lib
 
 # If you want the library to be buildable or publishable to npm
-nx g @nx/node:lib my-new-lib --buildable
-nx g @nx/node:lib my-new-lib \
+nx g @nx/node:lib libs/my-new-lib --buildable
+nx g @nx/node:lib libs/my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```
@@ -91,7 +96,7 @@ The output is in the `dist` folder. You can customize the output folder by setti
 Generating Node applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nx/node:application my-new-app \
+nx g @nx/node:application apps/my-new-app \
 --frontendProject my-react-app
 ```
 

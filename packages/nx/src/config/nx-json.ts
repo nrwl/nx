@@ -2,14 +2,15 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
-import { readJsonFile } from '../utils/fileutils';
-import { PackageManager } from '../utils/package-manager';
-import { workspaceRoot } from '../utils/workspace-root';
-import {
+import type { PackageManager } from '../utils/package-manager';
+import type {
   InputDefinition,
   TargetConfiguration,
   TargetDependencyConfig,
 } from './workspace-json-project-json';
+
+import { readJsonFile } from '../utils/fileutils';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -79,7 +80,17 @@ export interface NxReleaseChangelogConfiguration {
    * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
    * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
-  createRelease?: 'github' | false;
+  createRelease?:
+    | false
+    | 'github'
+    | {
+        provider: 'github-enterprise-server';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      };
   /**
    * This can either be set to a string value that will be written to the changelog file(s)
    * at the workspace root and/or within project directories, or set to `false` to specify
@@ -123,9 +134,9 @@ export interface NxReleaseGitConfiguration {
    */
   commitMessage?: string;
   /**
-   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+   * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes. May be a string or array of strings.
    */
-  commitArgs?: string;
+  commitArgs?: string | string[];
   /**
    * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
    */
@@ -139,9 +150,13 @@ export interface NxReleaseGitConfiguration {
    */
   tagMessage?: string;
   /**
-   * Additional arguments to pass to the `git tag` command invoked behind the scenes
+   * Additional arguments to pass to the `git tag` command invoked behind the scenes. May be a string or array of strings.
    */
-  tagArgs?: string;
+  tagArgs?: string | string[];
+  /**
+   * Whether or not to automatically push the changes made by this command to the remote git repository.
+   */
+  push?: boolean;
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {
@@ -210,7 +225,15 @@ export interface NxReleaseConfiguration {
        *
        * NOTE: git configuration is not supported at the group level, only the root/command level
        */
-      version?: NxReleaseVersionConfiguration;
+      version?: NxReleaseVersionConfiguration & {
+        /**
+         * A command to run after validation of nx release configuration, but before versioning begins.
+         * Used for preparing build artifacts. If --dry-run is passed, the command is still executed, but
+         * with the NX_DRY_RUN environment variable set to 'true'.
+         * It will run in addition to the global `preVersionCommand`
+         */
+        groupPreVersionCommand?: string;
+      };
       /**
        * Project changelogs are disabled by default.
        *
@@ -227,6 +250,15 @@ export interface NxReleaseConfiguration {
        * Optionally override the git/release tag pattern to use for this group.
        */
       releaseTagPattern?: string;
+      /**
+       * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+       * falling back to all branches if no match is found on the current branch.
+       *
+       * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+       * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+       * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+       */
+      releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
       /**
        * Enables using version plans as a specifier source for versioning and
        * to determine changes for changelog generation.
@@ -295,6 +327,15 @@ export interface NxReleaseConfiguration {
    */
   releaseTagPattern?: string;
   /**
+   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+   * falling back to all branches if no match is found on the current branch.
+   *
+   * - Setting this to true will cause us to ALWAYS check all branches for the latest match.
+   * - Setting it to false will cause us to ONLY check the current branch for the latest match.
+   * - Setting it to an array of strings will cause us to check all branches WHEN the current branch matches one of the strings in the array. Glob patterns are supported.
+   */
+  releaseTagPatternCheckAllBranchesWhen?: boolean | string[];
+  /**
    * Enable and configure automatic git operations as part of the release
    */
   git?: NxReleaseGitConfiguration;
@@ -321,11 +362,16 @@ export interface NxSyncConfiguration {
 
   /**
    * Whether to automatically apply sync generator changes when running tasks.
-   * If not set, the user will be prompted.
+   * If not set, the user will be prompted in interactive mode.
    * If set to `true`, the user will not be prompted and the changes will be applied.
    * If set to `false`, the user will not be prompted and the changes will not be applied.
    */
   applyChanges?: boolean;
+
+  /**
+   * List of registered task sync generators to disable.
+   */
+  disabledTaskSyncGenerators?: string[];
 }
 
 /**
@@ -334,6 +380,7 @@ export interface NxSyncConfiguration {
  * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
+  $schema?: string;
   /**
    * Optional (additional) Nx.json configuration file which becomes a base for this one
    */
@@ -370,7 +417,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     appsDir?: string;
   };
   /**
-   * Available Task Runners
+   * @deprecated Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
+   * Available Task Runners for Nx to use
    */
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
@@ -483,7 +531,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useInferencePlugins?: boolean;
 
   /**
-   * Set this to false to disable connection to Nx Cloud
+   * Set this to true to disable connection to Nx Cloud
    */
   neverConnectToCloud?: boolean;
 
@@ -491,6 +539,16 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Use the legacy file system cache instead of the db cache
+   */
+  useLegacyCache?: boolean;
+
+  /**
+   * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
+   */
+  maxCacheSize?: string;
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

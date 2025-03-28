@@ -405,47 +405,28 @@ describe('utils', () => {
   describe('transformLegacyOutputs', () => {
     it('should prefix paths with {workspaceRoot}', () => {
       const outputs = ['dist'];
-      try {
-        validateOutputs(outputs);
-      } catch (e) {
-        const result = transformLegacyOutputs('myapp', e);
-        expect(result).toEqual(['{workspaceRoot}/dist']);
-      }
-      expect.assertions(1);
+      const result = transformLegacyOutputs('myapp', outputs);
+      expect(result).toEqual(['{workspaceRoot}/dist']);
     });
 
     it('should prefix unix-absolute paths with {workspaceRoot}', () => {
       const outputs = ['/dist'];
-      try {
-        validateOutputs(outputs);
-      } catch (e) {
-        const result = transformLegacyOutputs('myapp', e);
-        expect(result).toEqual(['{workspaceRoot}/dist']);
-      }
-      expect.assertions(1);
+      const result = transformLegacyOutputs('myapp', outputs);
+      expect(result).toEqual(['{workspaceRoot}/dist']);
     });
   });
 
   it('should prefix relative paths with {projectRoot}', () => {
-    const outputs = ['/dist'];
-    try {
-      validateOutputs(outputs);
-    } catch (e) {
-      const result = transformLegacyOutputs('myapp', e);
-      expect(result).toEqual(['{workspaceRoot}/dist']);
-    }
-    expect.assertions(1);
+    const outputs = ['./dist'];
+    const result = transformLegacyOutputs('myapp', outputs);
+    expect(result).toEqual(['{projectRoot}/dist']);
   });
 
   it('should prefix paths within the project with {projectRoot}', () => {
     const outputs = ['myapp/dist'];
-    try {
-      validateOutputs(outputs);
-    } catch (e) {
-      const result = transformLegacyOutputs('myapp', e);
-      expect(result).toEqual(['{projectRoot}/dist']);
-    }
-    expect.assertions(1);
+
+    const result = transformLegacyOutputs('myapp', outputs);
+    expect(result).toEqual(['{projectRoot}/dist']);
   });
 
   describe('expandDependencyConfigSyntaxSugar', () => {
@@ -771,6 +752,36 @@ describe('utils', () => {
       ).toThrow(
         "The 'outputs' field must contain only strings, but received types: [string, number, object, boolean, object, object]"
       );
+    });
+
+    it('throws an error if the output is a glob pattern from the workspace root', () => {
+      expect(() => validateOutputs(['{workspaceRoot}/**/dist/*.js']))
+        .toThrowErrorMatchingInlineSnapshot(`
+        "The following outputs are defined by a glob pattern from the workspace root: 
+         - {workspaceRoot}/**/dist/*.js
+
+        These can be slow, replace them with a more specific pattern."
+      `);
+    });
+
+    it("shouldn't throw an error if the output is a glob pattern from the project root", () => {
+      expect(() => validateOutputs(['{projectRoot}/*.js'])).not.toThrow();
+    });
+
+    it("shouldn't throw an error if the pattern is a glob based in a subdirectory of workspace root", () => {
+      expect(() =>
+        validateOutputs(['{workspaceRoot}/dist/**/*.js'])
+      ).not.toThrow();
+    });
+
+    it("throws an error if the output doesn't start with a prefix", () => {
+      expect(() => validateOutputs(['dist']))
+        .toThrowErrorMatchingInlineSnapshot(`
+        "The following outputs are invalid: 
+         - dist
+
+        Run \`nx repair\` to fix this."
+      `);
     });
   });
 });

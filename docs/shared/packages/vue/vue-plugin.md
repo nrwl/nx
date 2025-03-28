@@ -11,10 +11,6 @@ The Nx plugin for [Vue](https://vuejs.org/).
 
 To create a new workspace with Vue, run `npx create-nx-workspace@latest --preset=vue`.
 
-{% callout type="note" title="Vue Standalone Tutorial" %}
-For a full tutorial experience, follow the [Vue Standalone Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
-{% /callout %}
-
 ### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
@@ -51,15 +47,11 @@ npm add -D @nx/vue
 To generate a Vue application, run the following:
 
 ```shell
-nx g @nx/vue:app my-app
+nx g @nx/vue:app apps/my-app
 ```
 
 To generate a Vue library, run the following:
 
 ```shell
-nx g @nx/vue:lib my-lib
+nx g @nx/vue:lib libs/my-lib
 ```
-
-## More Documentation
-
-- [Vue Standalone Tutorial](/getting-started/tutorials/vue-standalone-tutorial)

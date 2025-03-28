@@ -1,11 +1,16 @@
-const path = require('path');
-// Ignore @nx/next dependency since it is the installed version not the one in the workspace
-// nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
+// @ts-check
+
+const path = require('node:path');
 const plugin = require('tailwindcss/plugin');
 const {
   default: flattenColorPalette,
 } = require('tailwindcss/lib/util/flattenColorPalette');
+
+// Ignore these nx related dependencies since they are the installed versions not the ones in the workspace
+// nx-ignore-next-line
+const { workspaceRoot } = require('@nx/devkit');
+// nx-ignore-next-line
+const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
 
 if (!createGlobPatternsForDependencies(__dirname).length)
   throw Error('GRAPH ISSUE: No dependency found when many are expected.');
@@ -48,10 +53,17 @@ module.exports = {
   content: [
     path.join(__dirname, '{pages,app}/**/*.{js,ts,jsx,tsx}'),
     ...createGlobPatternsForDependencies(__dirname),
+    // Resolve the classes used in @nx/graph components
+    // TODO: make a decision on whether this is really the best approach, or if precompiling and deduplicating the classes would be better
+    path.join(
+      workspaceRoot,
+      'node_modules/@nx/graph/**/*.{js,ts,jsx,tsx,html}'
+    ),
   ],
   theme: {
     extend: {
       animation: {
+        progress: `progress linear forwards`,
         marquee: 'marquee var(--duration) linear infinite',
         'marquee-vertical': 'marquee-vertical var(--duration) linear infinite',
       },
@@ -63,6 +75,10 @@ module.exports = {
         'marquee-vertical': {
           from: { transform: 'translateY(0)' },
           to: { transform: 'translateY(calc(-100% - var(--gap)))' },
+        },
+        progress: {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' },
         },
       },
       typography: {
@@ -82,6 +98,9 @@ module.exports = {
             },
           },
         },
+      },
+      screens: {
+        wide: '1800px',
       },
     },
   },

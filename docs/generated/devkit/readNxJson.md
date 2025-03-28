@@ -8,7 +8,7 @@
 
 **`Deprecated`**
 
-You must pass a [Tree](../../devkit/documents/Tree)
+You must pass a [Tree](../../devkit/documents/Tree). This will be removed in Nx 21.
 
 ▸ **readNxJson**(`tree`): [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration) \| `null`
 

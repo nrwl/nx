@@ -32,11 +32,12 @@
   },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
     "@nx/node": "file:../node",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "express": "^4.18.1"
+    "express": "^4.21.2"
   },
   "peerDependenciesMeta": {
     "express": {

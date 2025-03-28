@@ -1,8 +1,6 @@
-import { exec, ExecOptions, execSync, ExecSyncOptions } from 'child_process';
-import { logger } from '../devkit-exports';
-import { dirname, join } from 'path';
-
-const SQUASH_EDITOR = join(__dirname, 'squash.js');
+import { exec, ExecOptions, execSync } from 'child_process';
+import { dirname, join, posix, sep } from 'path';
+import { logger } from './logger';
 
 function execAsync(command: string, execOptions: ExecOptions) {
   return new Promise<string>((res, rej) => {
@@ -18,12 +16,17 @@ function execAsync(command: string, execOptions: ExecOptions) {
 export async function cloneFromUpstream(
   url: string,
   destination: string,
-  { originName } = { originName: 'origin' }
+  { originName, depth }: { originName: string; depth?: number } = {
+    originName: 'origin',
+  }
 ) {
   await execAsync(
-    `git clone ${url} ${destination} --depth 1 --origin ${originName}`,
+    `git clone ${url} ${destination} ${
+      depth ? `--depth ${depth}` : ''
+    } --origin ${originName}`,
     {
       cwd: dirname(destination),
+      maxBuffer: 10 * 1024 * 1024,
     }
   );
 
@@ -37,21 +40,21 @@ export class GitRepository {
   getGitRootPath(cwd: string) {
     return execSync('git rev-parse --show-toplevel', {
       cwd,
+      windowsHide: false,
     })
       .toString()
       .trim();
   }
 
-  addFetchRemote(remoteName: string, branch: string) {
-    return this.execAsync(
-      `git config --add remote.${remoteName}.fetch "+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}"`
-    );
+  async hasUncommittedChanges() {
+    const data = await this.execAsync(`git status --porcelain`);
+    return data.trim() !== '';
   }
 
-  private execAsync(command: string) {
-    return execAsync(command, {
-      cwd: this.root,
-    });
+  async addFetchRemote(remoteName: string, branch: string) {
+    return await this.execAsync(
+      `git config --add remote.${remoteName}.fetch "+refs/heads/${branch}:refs/remotes/${remoteName}/${branch}"`
+    );
   }
 
   async showStat() {
@@ -71,30 +74,26 @@ export class GitRepository {
   }
 
   async getGitFiles(path: string) {
-    return (await this.execAsync(`git ls-files ${path}`))
+    // Use -z to return file names exactly as they are stored in git, separated by NULL (\x00) character.
+    // This avoids problems with special characters in file names.
+    return (await this.execAsync(`git ls-files -z ${path}`))
       .trim()
-      .split('\n')
+      .split('\x00')
       .map((s) => s.trim())
       .filter(Boolean);
   }
 
   async reset(ref: string) {
-    return this.execAsync(`git reset ${ref} --hard`);
-  }
-
-  async squashLastTwoCommits() {
-    return this.execAsync(
-      `git -c core.editor="node ${SQUASH_EDITOR}" rebase --interactive --no-autosquash HEAD~2`
-    );
+    return await this.execAsync(`git reset ${ref} --hard`);
   }
 
   async mergeUnrelatedHistories(ref: string, message: string) {
-    return this.execAsync(
+    return await this.execAsync(
       `git merge ${ref} -X ours --allow-unrelated-histories -m "${message}"`
     );
   }
   async fetch(remote: string, ref?: string) {
-    return this.execAsync(`git fetch ${remote}${ref ? ` ${ref}` : ''}`);
+    return await this.execAsync(`git fetch ${remote}${ref ? ` ${ref}` : ''}`);
   }
 
   async checkout(
@@ -104,7 +103,7 @@ export class GitRepository {
       base: string;
     }
   ) {
-    return this.execAsync(
+    return await this.execAsync(
       `git checkout ${opts.new ? '-b ' : ' '}${branch}${
         opts.base ? ' ' + opts.base : ''
       }`
@@ -112,50 +111,124 @@ export class GitRepository {
   }
 
   async move(path: string, destination: string) {
-    return this.execAsync(`git mv "${path}" "${destination}"`);
+    return await this.execAsync(
+      `git mv ${this.quotePath(path)} ${this.quotePath(destination)}`
+    );
   }
 
   async push(ref: string, remoteName: string) {
-    return this.execAsync(`git push -u -f ${remoteName} ${ref}`);
+    return await this.execAsync(`git push -u -f ${remoteName} ${ref}`);
   }
 
   async commit(message: string) {
-    return this.execAsync(`git commit -am "${message}"`);
+    return await this.execAsync(`git commit -am "${message}"`);
   }
   async amendCommit() {
-    return this.execAsync(`git commit --amend -a --no-edit`);
+    return await this.execAsync(`git commit --amend -a --no-edit`);
   }
 
-  deleteGitRemote(name: string) {
-    return this.execAsync(`git remote rm ${name}`);
+  async deleteGitRemote(name: string) {
+    return await this.execAsync(`git remote rm ${name}`);
   }
 
-  deleteBranch(branch: string) {
-    return this.execAsync(`git branch -D ${branch}`);
+  async addGitRemote(name: string, url: string) {
+    return await this.execAsync(`git remote add ${name} ${url}`);
   }
 
-  addGitRemote(name: string, url: string) {
-    return this.execAsync(`git remote add ${name} ${url}`);
+  async hasFilterRepoInstalled() {
+    try {
+      await this.execAsync(`git filter-repo --help`);
+      return true;
+    } catch {
+      return false;
+    }
   }
-}
 
-/**
- * This is used by the squash editor script to update the rebase file.
- */
-export function updateRebaseFile(contents: string): string {
-  const lines = contents.split('\n');
-  const lastCommitIndex = lines.findIndex((line) => line === '') - 1;
+  // git-filter-repo is much faster than filter-branch, but needs to be installed by user
+  // Use `hasFilterRepoInstalled` to check if it's installed
+  async filterRepo(source: string, destination: string) {
+    // NOTE: filter-repo requires POSIX path to work
+    const sourcePosixPath = source.split(sep).join(posix.sep);
+    const destinationPosixPath = destination.split(sep).join(posix.sep);
+    await this.execAsync(
+      `git filter-repo -f ${
+        source !== '' ? `--path ${this.quotePath(sourcePosixPath)}` : ''
+      } ${
+        source !== destination
+          ? `--path-rename ${this.quotePath(
+              sourcePosixPath,
+              true
+            )}:${this.quotePath(destinationPosixPath, true)}`
+          : ''
+      }`
+    );
+  }
 
-  lines[lastCommitIndex] = lines[lastCommitIndex].replace('pick', 'fixup');
-  return lines.join('\n');
-}
+  async filterBranch(source: string, destination: string, branchName: string) {
+    // We need non-ASCII file names to not be quoted, or else filter-branch will exclude them.
+    await this.execAsync(`git config core.quotepath false`);
+    // NOTE: filter-repo requires POSIX path to work
+    const sourcePosixPath = source.split(sep).join(posix.sep);
+    const destinationPosixPath = destination.split(sep).join(posix.sep);
+    // First, if the source is not a root project, then only include commits relevant to the subdirectory.
+    if (source !== '') {
+      const indexFilterCommand = this.quoteArg(
+        `node ${join(__dirname, 'git-utils.index-filter.js')}`
+      );
+      await this.execAsync(
+        `git filter-branch -f --index-filter ${indexFilterCommand} --prune-empty -- ${branchName}`,
+        {
+          NX_IMPORT_SOURCE: sourcePosixPath,
+          NX_IMPORT_DESTINATION: destinationPosixPath,
+        }
+      );
+    }
+    // Then, move files to their new location if necessary.
+    if (source === '' || source !== destination) {
+      const treeFilterCommand = this.quoteArg(
+        `node ${join(__dirname, 'git-utils.tree-filter.js')}`
+      );
+      await this.execAsync(
+        `git filter-branch -f --tree-filter ${treeFilterCommand} -- ${branchName}`,
+        {
+          NX_IMPORT_SOURCE: sourcePosixPath,
+          NX_IMPORT_DESTINATION: destinationPosixPath,
+        }
+      );
+    }
+  }
 
-export function fetchGitRemote(
-  name: string,
-  branch: string,
-  execOptions: ExecSyncOptions
-) {
-  return execSync(`git fetch ${name} ${branch} --depth 1`, execOptions);
+  private execAsync(command: string, env?: Record<string, string>) {
+    return execAsync(command, {
+      cwd: this.root,
+      maxBuffer: 10 * 1024 * 1024,
+      env: {
+        ...process.env,
+        ...env,
+      },
+    });
+  }
+
+  private quotePath(path: string, ensureTrailingSlash?: true) {
+    return this.quoteArg(
+      ensureTrailingSlash && path !== '' && !path.endsWith('/')
+        ? `${path}/`
+        : path
+    );
+  }
+
+  private quoteArg(arg: string) {
+    return process.platform === 'win32'
+      ? // Windows/CMD only understands double-quotes, single-quotes are treated as part of the file name
+        // Bash and other shells will substitute `$` in file names with a variable value.
+        `"${arg
+          // Need to keep two slashes for Windows or else the path will be invalid.
+          // e.g. 'C:\Users\bob\projects\repo' is invalid, but 'C:\\Users\\bob\\projects\\repo' is valid
+          .replaceAll('\\', '\\\\')}"`
+      : // e.g. `git mv "$$file.txt" "libs/a/$$file.txt"` will not work since `$$` is swapped with the PID of the last process.
+        // Using single-quotes prevents this substitution.
+        `'${arg}'`;
+  }
 }
 
 /**
@@ -165,6 +238,7 @@ export function getGithubSlugOrNull(): string | null {
   try {
     const gitRemote = execSync('git remote -v', {
       stdio: 'pipe',
+      windowsHide: false,
     }).toString();
     // If there are no remotes, we default to github
     if (!gitRemote || gitRemote.length === 0) {
@@ -230,6 +304,7 @@ export function commitChanges(
       stdio: 'pipe',
       input: commitMessage,
       cwd: directory,
+      windowsHide: false,
     });
   } catch (err) {
     if (directory) {
@@ -251,6 +326,7 @@ export function getLatestCommitSha(): string | null {
     return execSync('git rev-parse HEAD', {
       encoding: 'utf8',
       stdio: 'pipe',
+      windowsHide: false,
     }).trim();
   } catch {
     return null;

@@ -21,8 +21,6 @@ export interface StorybookStoriesSchema {
   js?: boolean;
   ignorePaths?: string[];
   skipFormat?: boolean;
-  cypressProject?: string;
-  generateCypressSpecs?: boolean;
 }
 
 export async function createAllStories(

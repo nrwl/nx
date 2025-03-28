@@ -5,11 +5,11 @@ export interface Schema {
   path: string;
   remote: string;
   remoteDirectory?: string;
-  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   host?: string;
   linter?: Linter | LinterType;
   skipFormat?: boolean;
   style?: SupportedStyles;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
+  bundler?: 'rspack' | 'webpack';
 }

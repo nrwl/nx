@@ -1,3 +1,8 @@
+---
+title: Detox Plugin for Nx
+description: Learn how to set up and use Detox for end-to-end testing of mobile applications in your Nx workspace, including environment setup and configuration options.
+---
+
 Detox is gray box end-to-end testing and automation library for mobile apps. It has a lot of great features:
 
 - Cross Platform
@@ -90,8 +95,8 @@ npm add -D @nx/detox
 By default, when creating a mobile application, Nx will use Detox to create the e2e tests project.
 
 ```shell
-nx g @nx/react-native:app frontend --e2eTestRunner=deotx
-nx g @nx/expo:app frontend --e2eTestRunner=detox
+nx g @nx/react-native:app apps/frontend --e2eTestRunner=deotx
+nx g @nx/expo:app apps/frontend --e2eTestRunner=detox
 ```
 
 ## Using Detox

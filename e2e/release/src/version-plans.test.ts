@@ -54,7 +54,6 @@ describe('nx release version plans', () => {
 
   beforeEach(async () => {
     newProject({
-      unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
     });
 
@@ -72,6 +71,10 @@ describe('nx release version plans', () => {
 
     pkg5 = uniq('my-pkg-5');
     runCLI(`generate @nx/workspace:npm-package ${pkg5}`);
+
+    // Normalize git committer information so it is deterministic in snapshots
+    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(`git config user.name "Test"`);
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
@@ -111,10 +114,9 @@ describe('nx release version plans', () => {
     });
 
     const versionPlansDir = tmpProjPath('.nx/version-plans');
-    await ensureDir(versionPlansDir);
 
     runCLI(
-      'release plan minor -g fixed-group -m "Update the fixed packages with a minor release." --verbose',
+      'release plan minor -g fixed-group -m "Update the fixed packages with a minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }
@@ -172,10 +174,13 @@ Here is another line in the message.
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
@@ -183,10 +188,13 @@ Here is another line in the message.
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg3}/CHANGELOG.md for ${pkg3}@0.0.1
@@ -194,12 +202,15 @@ Here is another line in the message.
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update the independent packages with a patch, preminor, and prerelease.
++ - Update the independent packages with a patch, preminor, and prerelease.
 +
-+   Here is another line in the message.`
++   Here is another line in the message.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -208,12 +219,15 @@ Here is another line in the message.
 
 + ## 0.1.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update the independent packages with a patch, preminor, and prerelease.
++ - Update the independent packages with a patch, preminor, and prerelease.
 +
-+   Here is another line in the message.`
++   Here is another line in the message.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -222,12 +236,15 @@ Here is another line in the message.
 
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update the independent packages with a patch, preminor, and prerelease.
++ - Update the independent packages with a patch, preminor, and prerelease.
 +
-+   Here is another line in the message.`
++   Here is another line in the message.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     await writeFile(
@@ -296,15 +313,17 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - **${pkg1}:** Update packages in both groups with a mix #1
-+
++ - Update packages in both groups with a mix #1
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test`
     );
     expect(result2WithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
@@ -313,10 +332,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test
 `
     );
     expect(result2WithoutDate).toContain(
@@ -326,10 +348,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.2 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update packages in both groups with a mix #1`
++ - Update packages in both groups with a mix #1
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -339,10 +364,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -352,10 +380,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
@@ -459,12 +490,16 @@ const yargs = require('yargs');
     verbose: options.verbose,
   });
 
-  // The returned number value from releasePublish will be zero if all projects are published successfully, non-zero if not
-  const publishStatus = await releasePublish({
+  const publishProjectsResult = await releasePublish({
     dryRun: options.dryRun,
     verbose: options.verbose,
   });
-  process.exit(publishStatus);
+  // Derive an overall exit code from the publish projects result
+  process.exit(
+    Object.values(publishProjectsResult).every((result) => result.code === 0)
+      ? 0
+      : 1
+  );
 })();
 `
     );
@@ -510,10 +545,13 @@ const yargs = require('yargs');
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.1.0
@@ -521,10 +559,13 @@ const yargs = require('yargs');
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - Update the fixed packages with a minor release.`
++ - Update the fixed packages with a minor release.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
     expect(resultWithoutDate).toContain(
       `NX   Generating an entry in ${pkg3}/CHANGELOG.md for ${pkg3}@0.0.1
@@ -532,10 +573,13 @@ const yargs = require('yargs');
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update the independent packages with a patch, preminor, and prerelease.`
++ - Update the independent packages with a patch, preminor, and prerelease.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -544,10 +588,13 @@ const yargs = require('yargs');
 
 + ## 0.1.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update the independent packages with a patch, preminor, and prerelease.`
++ - Update the independent packages with a patch, preminor, and prerelease.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(resultWithoutDate).toContain(
@@ -556,10 +603,13 @@ const yargs = require('yargs');
 
 + ## 0.0.1-0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update the independent packages with a patch, preminor, and prerelease.`
++ - Update the independent packages with a patch, preminor, and prerelease.
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(exists(join(versionPlansDir, 'bump-fixed.md'))).toBeFalsy();
@@ -631,15 +681,17 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - **${pkg1}:** Update packages in both groups with a mix #1
-+
++ - Update packages in both groups with a mix #1
 +
 + ### 🩹 Fixes
 +
-+ - Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test`
     );
     expect(result2WithoutDate).toContain(
       `NX   Generating an entry in ${pkg2}/CHANGELOG.md for v0.2.0
@@ -648,10 +700,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
 + - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test
 `
     );
     expect(result2WithoutDate).toContain(
@@ -661,10 +716,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.2 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg3}:** Update packages in both groups with a mix #1`
++ - Update packages in both groups with a mix #1
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -674,10 +732,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.2.0-0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
-+ - **${pkg4}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(result2WithoutDate).toContain(
@@ -687,10 +748,13 @@ Update packages in both groups with a mix #2
 
 + ## 0.0.1 (YYYY-MM-DD)
 +
-+
 + ### 🩹 Fixes
 +
-+ - **${pkg5}:** Update packages in both groups with a mix #2`
++ - Update packages in both groups with a mix #2
++
++ ### ❤️ Thank You
++
++ - Test`
     );
 
     expect(exists(join(versionPlansDir, 'bump-mixed1.md'))).toBeFalsy();
@@ -713,7 +777,7 @@ Update packages in both groups with a mix #2
     await ensureDir(versionPlansDir);
 
     runCLI(
-      'release plan minor -m "Update the fixed packages with a minor release." --verbose',
+      'release plan minor -m "Update the fixed packages with a minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }
@@ -748,7 +812,6 @@ Update packages in both groups with a mix #2
 
 + ## 0.1.0 (YYYY-MM-DD)
 +
-+
 + ### 🚀 Features
 +
 + - Update the fixed packages with a minor release.`
@@ -758,7 +821,6 @@ Update packages in both groups with a mix #2
 
 
 + ## 0.1.0 (YYYY-MM-DD)
-+
 +
 + ### 🚀 Features
 +
@@ -796,14 +858,14 @@ Update packages in both groups with a mix #2
     });
 
     runCLI(
-      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose',
+      'release plan minor -g fixed-group -m "Update the fixed packages with another minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }
     );
 
     runCLI(
-      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose',
+      'release plan minor -g independent-group -m "Update the independent packages with another minor release." --verbose --only-touched=false',
       {
         silenceError: true,
       }

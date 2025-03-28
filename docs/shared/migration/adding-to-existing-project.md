@@ -1,3 +1,8 @@
+---
+title: Adding Nx to your Existing Project
+description: Learn how to integrate Nx into an existing non-monorepo project to leverage caching capabilities, speed up CI, and improve your development workflow.
+---
+
 # Adding Nx to your Existing Project
 
 Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
@@ -325,7 +330,7 @@ And make sure you pull the latest changes locally:
 git pull
 ```
 
-You should now have an `nxCloudAccessToken` property specified in the `nx.json` file.
+You should now have an `nxCloudId` property specified in the `nx.json` file.
 
 ### Create a CI Workflow {% highlightColor="green" %}
 

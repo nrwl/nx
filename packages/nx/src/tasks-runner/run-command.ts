@@ -4,7 +4,6 @@ import { join } from 'path';
 import {
   NxJsonConfiguration,
   readNxJson,
-  TargetDefaults,
   TargetDependencies,
 } from '../config/nx-json';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
@@ -12,30 +11,45 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { createTaskHasher } from '../hasher/create-task-hasher';
-import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
+import {
+  getTaskDetails,
+  hashTasksThatDoNotDependOnOutputsOfOtherTasks,
+} from '../hasher/hash-task';
+import { IS_WASM } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { output } from '../utils/output';
-import { handleErrors } from '../utils/params';
+import { handleErrors } from '../utils/handle-errors';
 import {
+  collectEnabledTaskSyncGeneratorsFromTaskGraph,
   flushSyncGeneratorChanges,
+  getFailedSyncGeneratorsFixMessageLines,
+  getFlushFailureMessageLines,
   getSyncGeneratorChanges,
-  syncGeneratorResultsToMessageLines,
+  getSyncGeneratorSuccessResultsMessageLines,
+  processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
 import { createTaskGraph } from './create-task-graph';
-import { CompositeLifeCycle, LifeCycle } from './life-cycle';
+import {
+  CompositeLifeCycle,
+  LifeCycle,
+  TaskResult,
+  TaskResults,
+} from './life-cycle';
 import { createRunManyDynamicOutputRenderer } from './life-cycles/dynamic-run-many-terminal-output-life-cycle';
 import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one-terminal-output-life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
+import { LegacyTaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle-old';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
+import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import {
   findCycle,
   makeAcyclic,
@@ -44,6 +58,12 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
+import type { Observable } from 'rxjs';
+import { printNxKey } from '../utils/nx-key';
+import {
+  runPostTasksExecution,
+  runPreTasksExecution,
+} from '../project-graph/plugins/tasks-execution-hooks';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -166,47 +186,96 @@ export async function runCommand(
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
-      const projectNames = projectsToRun.map((t) => t.name);
-
-      const { projectGraph, taskGraph } =
-        await ensureWorkspaceIsInSyncAndGetGraphs(
-          currentProjectGraph,
-          nxJson,
-          projectNames,
-          nxArgs,
-          overrides,
-          extraTargetDependencies,
-          extraOptions
-        );
-      const tasks = Object.values(taskGraph.tasks);
-
-      const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
-        initiatingProject,
-        projectNames,
-        tasks,
-        nxArgs,
-        nxJson,
-        overrides
-      );
-
-      const status = await invokeTasksRunner({
-        tasks,
-        projectGraph,
-        taskGraph,
-        lifeCycle,
-        nxJson,
-        nxArgs,
-        loadDotEnvFiles: extraOptions.loadDotEnvFiles,
-        initiatingProject,
+      await runPreTasksExecution({
+        workspaceRoot,
+        nxJsonConfiguration: nxJson,
       });
 
-      await renderIsDone;
+      const taskResults = await runCommandForTasks(
+        projectsToRun,
+        currentProjectGraph,
+        { nxJson },
+        {
+          ...nxArgs,
+          skipNxCache:
+            nxArgs.skipNxCache ||
+            process.env.NX_SKIP_NX_CACHE === 'true' ||
+            process.env.NX_DISABLE_NX_CACHE === 'true',
+        },
+        overrides,
+        initiatingProject,
+        extraTargetDependencies,
+        extraOptions
+      );
 
-      return status;
+      const result = Object.values(taskResults).some(
+        (taskResult) =>
+          taskResult.status === 'failure' || taskResult.status === 'skipped'
+      )
+        ? 1
+        : 0;
+
+      await runPostTasksExecution({
+        taskResults,
+        workspaceRoot,
+        nxJsonConfiguration: nxJson,
+      });
+
+      return result;
     }
   );
 
   return status;
+}
+
+export async function runCommandForTasks(
+  projectsToRun: ProjectGraphProjectNode[],
+  currentProjectGraph: ProjectGraph,
+  { nxJson }: { nxJson: NxJsonConfiguration },
+  nxArgs: NxArgs,
+  overrides: any,
+  initiatingProject: string | null,
+  extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
+  extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
+): Promise<TaskResults> {
+  const projectNames = projectsToRun.map((t) => t.name);
+
+  const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(
+    currentProjectGraph,
+    nxJson,
+    projectNames,
+    nxArgs,
+    overrides,
+    extraTargetDependencies,
+    extraOptions
+  );
+  const tasks = Object.values(taskGraph.tasks);
+
+  const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
+    initiatingProject,
+    projectNames,
+    tasks,
+    nxArgs,
+    nxJson,
+    overrides
+  );
+
+  const taskResults = await invokeTasksRunner({
+    tasks,
+    projectGraph,
+    taskGraph,
+    lifeCycle,
+    nxJson,
+    nxArgs,
+    loadDotEnvFiles: extraOptions.loadDotEnvFiles,
+    initiatingProject,
+  });
+
+  await renderIsDone;
+
+  await printNxKey();
+
+  return taskResults;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -230,19 +299,16 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     extraOptions
   );
 
-  // collect unique syncGenerators from the tasks
-  const uniqueSyncGenerators = new Set<string>();
-  for (const { target } of Object.values(taskGraph.tasks)) {
-    const { syncGenerators } =
-      projectGraph.nodes[target.project].data.targets[target.target];
-    if (!syncGenerators) {
-      continue;
-    }
-
-    for (const generator of syncGenerators) {
-      uniqueSyncGenerators.add(generator);
-    }
+  if (nxArgs.skipSync) {
+    return { projectGraph, taskGraph };
   }
+
+  // collect unique syncGenerators from the tasks
+  const uniqueSyncGenerators = collectEnabledTaskSyncGeneratorsFromTaskGraph(
+    taskGraph,
+    projectGraph,
+    nxJson
+  );
 
   if (!uniqueSyncGenerators.size) {
     // There are no sync generators registered in the tasks to run
@@ -256,18 +322,65 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     return { projectGraph, taskGraph };
   }
 
+  const {
+    failedGeneratorsCount,
+    areAllResultsFailures,
+    anySyncGeneratorsFailed,
+  } = processSyncGeneratorResultErrors(results);
+  const failedSyncGeneratorsFixMessageLines =
+    getFailedSyncGeneratorsFixMessageLines(results, nxArgs.verbose);
   const outOfSyncTitle = 'The workspace is out of sync';
-  const resultBodyLines = [...syncGeneratorResultsToMessageLines(results), ''];
+  const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
-    'You can manually run `nx sync` to update your workspace or you can set `sync.applyChanges` to `true` in your `nx.json` to apply the changes automatically when running tasks.';
-  const willErrorOnCiMessage = 'Please note that this will be an error on CI.';
+    'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
+  const willErrorOnCiMessage = 'This will result in an error in CI.';
 
   if (isCI() || !process.stdout.isTTY) {
     // If the user is running in CI or is running in a non-TTY environment we
     // throw an error to stop the execution of the tasks.
-    throw new Error(
-      `${outOfSyncTitle}\n${resultBodyLines.join('\n')}\n${fixMessage}`
-    );
+    if (areAllResultsFailures) {
+      output.error({
+        title: `The workspace is probably out of sync because ${
+          failedGeneratorsCount === 1
+            ? 'a sync generator'
+            : 'some sync generators'
+        } failed to run`,
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+    } else {
+      output.error({
+        title: outOfSyncTitle,
+        bodyLines: [...resultBodyLines, '', fixMessage],
+      });
+
+      if (anySyncGeneratorsFailed) {
+        output.error({
+          title:
+            failedGeneratorsCount === 1
+              ? 'A sync generator failed to run'
+              : 'Some sync generators failed to run',
+          bodyLines: failedSyncGeneratorsFixMessageLines,
+        });
+      }
+    }
+
+    process.exit(1);
+  }
+
+  if (areAllResultsFailures) {
+    output.warn({
+      title: `The workspace is probably out of sync because ${
+        failedGeneratorsCount === 1
+          ? 'a sync generator'
+          : 'some sync generators'
+      } failed to run`,
+      bodyLines: failedSyncGeneratorsFixMessageLines,
+    });
+
+    await confirmRunningTasksWithSyncFailures();
+
+    // if all sync generators failed to run there's nothing to sync, we just let the tasks run
+    return { projectGraph, taskGraph };
   }
 
   if (nxJson.sync?.applyChanges === false) {
@@ -279,11 +392,25 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       title: outOfSyncTitle,
       bodyLines: [
         ...resultBodyLines,
-        'Your workspace is set to not apply changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
+        '',
+        'Your workspace is set to not apply the identified changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
         willErrorOnCiMessage,
         fixMessage,
       ],
     });
+
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title:
+          failedGeneratorsCount === 1
+            ? 'A sync generator failed to run'
+            : 'Some sync generators failed to run',
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+
+      await confirmRunningTasksWithSyncFailures();
+    }
+
     return { projectGraph, taskGraph };
   }
 
@@ -291,8 +418,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     title: outOfSyncTitle,
     bodyLines: [
       ...resultBodyLines,
+      '',
       nxJson.sync?.applyChanges === true
-        ? 'Proceeding to sync the changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
+        ? 'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
         : willErrorOnCiMessage,
     ],
   });
@@ -306,7 +434,24 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     spinner.start();
 
     // Flush sync generator changes to disk
-    await flushSyncGeneratorChanges(results);
+    const flushResult = await flushSyncGeneratorChanges(results);
+
+    if ('generatorFailures' in flushResult) {
+      spinner.fail();
+      output.error({
+        title: 'Failed to sync the workspace',
+        bodyLines: [
+          ...getFlushFailureMessageLines(flushResult, nxArgs.verbose),
+          ...(flushResult.generalFailure
+            ? [
+                'If needed, you can run the tasks with the `--skip-sync` flag to disable syncing.',
+              ]
+            : []),
+        ],
+      });
+
+      await confirmRunningTasksWithSyncFailures();
+    }
 
     // Re-create project graph and task graph
     projectGraph = await createProjectGraphAsync();
@@ -319,25 +464,52 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
       extraOptions
     );
 
-    if (nxJson.sync?.applyChanges === true) {
-      spinner.succeed(`The workspace was synced successfully!
+    const successTitle = anySyncGeneratorsFailed
+      ? // the identified changes were synced successfully, but the workspace
+        // is still not up to date, which we'll mention next
+        'The identified changes were synced successfully!'
+      : // the workspace is fully up to date
+        'The workspace was synced successfully!';
+    const successSubtitle =
+      nxJson.sync?.applyChanges === true
+        ? 'Please make sure to commit the changes to your repository or this will error in CI.'
+        : // The user was prompted and we already logged a message about erroring in CI
+          // so here we just tell them to commit the changes.
+          'Please make sure to commit the changes to your repository.';
+    spinner.succeed(`${successTitle}\n\n${successSubtitle}`);
 
-Please make sure to commit the changes to your repository or this will error on CI.`);
-    } else {
-      // The user was prompted and we already logged a message about erroring on CI
-      // so here we just tell them to commit the changes.
-      spinner.succeed(`The workspace was synced successfully!
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title: `The workspace is probably still out of sync because ${
+          failedGeneratorsCount === 1
+            ? 'a sync generator'
+            : 'some sync generators'
+        } failed to run`,
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
 
-Please make sure to commit the changes to your repository.`);
+      await confirmRunningTasksWithSyncFailures();
     }
   } else {
-    output.warn({
-      title: 'Syncing the workspace was skipped',
-      bodyLines: [
-        'This could lead to unexpected results or errors when running tasks.',
-        fixMessage,
-      ],
-    });
+    if (anySyncGeneratorsFailed) {
+      output.warn({
+        title:
+          failedGeneratorsCount === 1
+            ? 'A sync generator failed to report the sync status'
+            : 'Some sync generators failed to report the sync status',
+        bodyLines: failedSyncGeneratorsFixMessageLines,
+      });
+
+      await confirmRunningTasksWithSyncFailures();
+    } else {
+      output.warn({
+        title: 'Syncing the workspace was skipped',
+        bodyLines: [
+          'This could lead to unexpected results or errors when running tasks.',
+          fixMessage,
+        ],
+      });
+    }
   }
 
   return { projectGraph, taskGraph };
@@ -347,9 +519,9 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
   try {
     const promptConfig = {
       name: 'applyChanges',
-      type: 'select',
+      type: 'autocomplete',
       message:
-        'Would you like to sync the changes to get your worskpace up to date?',
+        'Would you like to sync the identified changes to get your workspace up to date?',
       choices: [
         {
           name: 'yes',
@@ -362,13 +534,48 @@ async function promptForApplyingSyncGeneratorChanges(): Promise<boolean> {
       ],
       footer: () =>
         chalk.dim(
-          '\nYou can skip this prompt by setting the `sync.applyChanges` option in your `nx.json`.'
+          '\nYou can skip this prompt by setting the `sync.applyChanges` option to `true` in your `nx.json`.\nFor more information, refer to the docs: https://nx.dev/concepts/sync-generators.'
         ),
     };
 
     return await prompt<{ applyChanges: 'yes' | 'no' }>([promptConfig]).then(
       ({ applyChanges }) => applyChanges === 'yes'
     );
+  } catch {
+    process.exit(1);
+  }
+}
+
+async function confirmRunningTasksWithSyncFailures(): Promise<void> {
+  try {
+    const promptConfig = {
+      name: 'runTasks',
+      type: 'autocomplete',
+      message:
+        'Would you like to ignore the sync failures and continue running the tasks?',
+      choices: [
+        {
+          name: 'yes',
+          message: 'Yes, ignore the failures and run the tasks',
+        },
+        {
+          name: 'no',
+          message: `No, don't run the tasks`,
+        },
+      ],
+      footer: () =>
+        chalk.dim(
+          `\nWhen running in CI and there are sync failures, the tasks won't run. Addressing the errors above is highly recommended to prevent failures in CI.`
+        ),
+    };
+
+    const runTasks = await prompt<{ runTasks: 'yes' | 'no' }>([
+      promptConfig,
+    ]).then(({ runTasks }) => runTasks === 'yes');
+
+    if (!runTasks) {
+      process.exit(1);
+    }
   } catch {
     process.exit(1);
   }
@@ -409,8 +616,11 @@ export async function invokeTasksRunner({
   nxArgs: NxArgs;
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
-}) {
+}): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
+
+  // this needs to be done before we start to run the tasks
+  const taskDetails = getTaskDetails();
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
@@ -424,14 +634,22 @@ export async function invokeTasksRunner({
     hasher,
     projectGraph,
     taskGraph,
-    nxJson
+    nxJson,
+    taskDetails
   );
+  const taskResultsLifecycle = new TaskResultsLifeCycle();
+  const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
+    ...constructLifeCycles(lifeCycle),
+    taskResultsLifecycle,
+  ]);
 
-  const promiseOrObservable = tasksRunner(
+  let promiseOrObservable:
+    | Observable<{ task: Task; success: boolean }>
+    | Promise<{ [id: string]: TaskStatus }> = tasksRunner(
     tasks,
     {
       ...runnerOptions,
-      lifeCycle: new CompositeLifeCycle(constructLifeCycles(lifeCycle)),
+      lifeCycle: compositedLifeCycle,
     },
     {
       initiatingProject:
@@ -496,17 +714,19 @@ export async function invokeTasksRunner({
       daemon: daemonClient,
     }
   );
-  let anyFailures;
   if ((promiseOrObservable as any).subscribe) {
-    anyFailures = await anyFailuresInObservable(promiseOrObservable);
-  } else {
-    // simply await the promise
-    anyFailures = await anyFailuresInPromise(promiseOrObservable as any);
+    promiseOrObservable = convertObservableToPromise(
+      promiseOrObservable as Observable<{ task: Task; success: boolean }>
+    );
   }
-  return anyFailures ? 1 : 0;
+
+  await (promiseOrObservable as Promise<{
+    [id: string]: TaskStatus;
+  }>);
+  return taskResultsLifecycle.getTaskResults();
 }
 
-function constructLifeCycles(lifeCycle: LifeCycle) {
+function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
   lifeCycles.push(lifeCycle);
@@ -517,60 +737,35 @@ function constructLifeCycles(lifeCycle: LifeCycle) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   if (!isNxCloudUsed(readNxJson())) {
-    lifeCycles.push(new TaskHistoryLifeCycle());
+    lifeCycles.push(
+      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
+        ? new TaskHistoryLifeCycle()
+        : new LegacyTaskHistoryLifeCycle()
+    );
   }
   return lifeCycles;
 }
 
-function mergeTargetDependencies(
-  defaults: TargetDefaults | undefined | null,
-  deps: TargetDependencies
-): TargetDependencies {
-  const res = {};
-  Object.keys(defaults ?? {}).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
-  });
-  if (deps) {
-    Object.keys(deps).forEach((k) => {
-      if (res[k]) {
-        res[k] = [...res[k], deps[k]];
-      } else {
-        res[k] = deps[k];
-      }
-    });
-
-    return res;
-  }
-}
-
-async function anyFailuresInPromise(
-  promise: Promise<{ [id: string]: TaskStatus }>
-) {
-  return Object.values(await promise).some(
-    (v) => v === 'failure' || v === 'skipped'
-  );
-}
-
-async function anyFailuresInObservable(obs: any) {
+async function convertObservableToPromise(
+  obs: Observable<{ task: Task; success: boolean }>
+): Promise<{ [id: string]: TaskStatus }> {
   return await new Promise((res) => {
-    let anyFailures = false;
-    obs.subscribe(
-      (t) => {
-        if (!t.success) {
-          anyFailures = true;
-        }
+    let tasksResults: { [id: string]: TaskStatus } = {};
+    obs.subscribe({
+      next: (t) => {
+        tasksResults[t.task.id] = t.success ? 'success' : 'failure';
       },
-      (error) => {
+      error: (error) => {
         output.error({
           title: 'Unhandled error in task executor',
         });
         console.error(error);
-        res(true);
+        res(tasksResults);
       },
-      () => {
-        res(anyFailures);
-      }
-    );
+      complete: () => {
+        res(tasksResults);
+      },
+    });
   });
 }
 
@@ -593,7 +788,7 @@ function shouldUseDynamicLifeCycle(
   return !tasks.find((t) => shouldStreamOutput(t, null));
 }
 
-function loadTasksRunner(modulePath: string) {
+function loadTasksRunner(modulePath: string): TasksRunner {
   try {
     const maybeTasksRunner = require(modulePath) as
       | TasksRunner
@@ -622,7 +817,7 @@ export function getRunner(
   runnerOptions: any;
 } {
   let runner = nxArgs.runner;
-  runner = runner || 'default';
+  runner = runner ?? 'default';
 
   if (runner !== 'default' && !nxJson.tasksRunnerOptions?.[runner]) {
     throw new Error(`Could not find runner configuration for ${runner}`);
@@ -631,6 +826,15 @@ export function getRunner(
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
   try {
+    if (isCustomRunnerPath(modulePath)) {
+      output.warn({
+        title: `Custom task runners will be replaced by a new API starting with Nx 21.`,
+        bodyLines: [
+          `For more information, see https://nx.dev/deprecated/custom-tasks-runner`,
+        ],
+      });
+    }
+
     const tasksRunner = loadTasksRunner(modulePath);
 
     return {
@@ -646,6 +850,8 @@ export function getRunner(
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
 }
+
+const defaultTasksRunnerPath = require.resolve('./default-tasks-runner');
 
 function getTasksRunnerPath(
   runner: string,
@@ -667,10 +873,10 @@ function getTasksRunnerPath(
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
     // Cloud access token specified in env var.
     process.env.NX_CLOUD_ACCESS_TOKEN ||
-    // Nx Cloud Id specified in nxJson
+    // Nx Cloud ID specified in nxJson
     nxJson.nxCloudId;
 
-  return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
+  return isCloudRunner ? 'nx-cloud' : defaultTasksRunnerPath;
 }
 
 export function getRunnerOptions(
@@ -732,4 +938,13 @@ export function getRunnerOptions(
   }
 
   return result;
+}
+
+function isCustomRunnerPath(modulePath: string) {
+  return ![
+    'nx-cloud',
+    '@nrwl/nx-cloud',
+    'nx/tasks-runners/default',
+    defaultTasksRunnerPath,
+  ].includes(modulePath);
 }

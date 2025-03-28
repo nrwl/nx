@@ -26,14 +26,26 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToGradleProjectMap: new Map<string, string>([
         ['proj/build.gradle', 'proj'],
       ]),
-      buildFileToDepsMap: new Map<string, string>(),
+      buildFileToDepsMap: new Map<string, Set<string>>(),
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['proj/build.gradle', new Map([['build', 'build']])],
       ]),
+      gradleProjectToTasksMap: new Map<string, Set<string>>([
+        ['proj', new Set(['test'])],
+      ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        ['proj', new Map([['test', 'Verification']])],
+        [
+          'proj',
+          new Map([
+            ['test', 'Verification'],
+            ['build', 'Build'],
+          ]),
+        ],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
       gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     cwd = process.cwd();
@@ -87,6 +99,7 @@ describe('@nx/gradle/plugin', () => {
                   ],
                 },
                 "name": "proj",
+                "projectType": "application",
                 "targets": {
                   "test": {
                     "cache": true,
@@ -113,6 +126,114 @@ describe('@nx/gradle/plugin', () => {
                         "gradle",
                       ],
                     },
+                    "options": {
+                      "cwd": ".",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ]
+    `);
+  });
+
+  it('should create nodes include subprojects tasks', async () => {
+    const results = await createNodesFunction(
+      ['proj/build.gradle'],
+      {
+        buildTargetName: 'build',
+        includeSubprojectsTasks: true,
+      },
+      context
+    );
+
+    expect(results).toMatchInlineSnapshot(`
+      [
+        [
+          "proj/build.gradle",
+          {
+            "projects": {
+              "proj": {
+                "metadata": {
+                  "targetGroups": {
+                    "Build": [
+                      "build",
+                    ],
+                    "Verification": [
+                      "test",
+                    ],
+                  },
+                  "technologies": [
+                    "gradle",
+                  ],
+                },
+                "name": "proj",
+                "projectType": "application",
+                "targets": {
+                  "build": {
+                    "cache": true,
+                    "command": "./gradlew proj:build",
+                    "dependsOn": [
+                      "^build",
+                      "classes",
+                      "test",
+                    ],
+                    "inputs": [
+                      "production",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "help": {
+                        "command": "./gradlew help --task proj:build",
+                        "example": {
+                          "options": {
+                            "args": [
+                              "--rerun",
+                            ],
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                    "options": {
+                      "cwd": ".",
+                    },
+                    "outputs": [
+                      "build",
+                    ],
+                  },
+                  "test": {
+                    "cache": true,
+                    "command": "./gradlew proj:test",
+                    "dependsOn": [
+                      "testClasses",
+                    ],
+                    "inputs": [
+                      "default",
+                      "^production",
+                    ],
+                    "metadata": {
+                      "help": {
+                        "command": "./gradlew help --task proj:test",
+                        "example": {
+                          "options": {
+                            "args": [
+                              "--rerun",
+                            ],
+                          },
+                        },
+                      },
+                      "technologies": [
+                        "gradle",
+                      ],
+                    },
+                    "options": {
+                      "cwd": ".",
+                    },
                   },
                 },
               },
@@ -128,14 +249,20 @@ describe('@nx/gradle/plugin', () => {
       gradleFileToGradleProjectMap: new Map<string, string>([
         ['nested/nested/proj/build.gradle', 'proj'],
       ]),
-      buildFileToDepsMap: new Map<string, string>(),
+      buildFileToDepsMap: new Map<string, Set<string>>(),
       gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
         ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
+      ]),
+      gradleProjectToTasksMap: new Map<string, Set<string>>([
+        ['proj', new Set(['test'])],
       ]),
       gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
         ['proj', new Map([['test', 'Verification']])],
       ]),
       gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+      gradleProjectNameToProjectRootMap: new Map<string, string>([
+        ['proj', 'proj'],
+      ]),
       gradleProjectToChildProjects: new Map<string, string[]>(),
     };
     await tempFs.createFiles({
@@ -168,6 +295,7 @@ describe('@nx/gradle/plugin', () => {
                   ],
                 },
                 "name": "proj",
+                "projectType": "application",
                 "targets": {
                   "test": {
                     "cache": true,
@@ -194,6 +322,9 @@ describe('@nx/gradle/plugin', () => {
                         "gradle",
                       ],
                     },
+                    "options": {
+                      "cwd": ".",
+                    },
                   },
                 },
               },
@@ -210,14 +341,20 @@ describe('@nx/gradle/plugin', () => {
         gradleFileToGradleProjectMap: new Map<string, string>([
           ['nested/nested/proj/build.gradle', 'proj'],
         ]),
-        buildFileToDepsMap: new Map<string, string>(),
+        buildFileToDepsMap: new Map<string, Set<string>>(),
         gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
           ['nested/nested/proj/build.gradle', new Map([['build', 'build']])],
+        ]),
+        gradleProjectToTasksMap: new Map<string, Set<string>>([
+          ['proj', new Set(['test'])],
         ]),
         gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
           ['proj', new Map([['test', 'Test']])],
         ]),
         gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
+        gradleProjectNameToProjectRootMap: new Map<string, string>([
+          ['proj', 'proj'],
+        ]),
         gradleProjectToChildProjects: new Map<string, string[]>(),
       };
       await tempFs.createFiles({
@@ -275,6 +412,7 @@ describe('@nx/gradle/plugin', () => {
                     ],
                   },
                   "name": "proj",
+                  "projectType": "application",
                   "targets": {
                     "test": {
                       "cache": false,
@@ -300,6 +438,9 @@ describe('@nx/gradle/plugin', () => {
                         "technologies": [
                           "gradle",
                         ],
+                      },
+                      "options": {
+                        "cwd": ".",
                       },
                     },
                     "test-ci": {
@@ -370,6 +511,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--bTest": {
                       "cache": true,
@@ -397,6 +541,9 @@ describe('@nx/gradle/plugin', () => {
                           "gradle",
                         ],
                       },
+                      "options": {
+                        "cwd": ".",
+                      },
                     },
                     "test-ci--cTests": {
                       "cache": true,
@@ -423,6 +570,9 @@ describe('@nx/gradle/plugin', () => {
                         "technologies": [
                           "gradle",
                         ],
+                      },
+                      "options": {
+                        "cwd": ".",
                       },
                     },
                   },

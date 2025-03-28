@@ -16,26 +16,21 @@
   ],
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the application.",
-      "type": "string",
-      "$default": {
-        "$source": "argv",
-        "index": 0
-      },
-      "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z][^:]*$"
-    },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
       "alias": "dir",
-      "x-priority": "important"
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Which directory do you want to create the application in?"
     },
-    "projectNameAndRootFormat": {
-      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+    "name": {
+      "description": "The name of the application.",
       "type": "string",
-      "enum": ["as-provided", "derived"]
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-priority": "important"
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -65,11 +60,13 @@
         ]
       }
     },
-    "linter": {
-      "description": "The tool to use for running lint checks.",
+    "bundler": {
+      "description": "The bundler to use.",
       "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "eslint"
+      "enum": ["vite", "rsbuild"],
+      "x-prompt": "Which bundler do you want to use to build the application?",
+      "default": "vite",
+      "x-priority": "important"
     },
     "routing": {
       "type": "boolean",
@@ -83,12 +80,21 @@
       "default": false,
       "x-priority": "internal"
     },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "none",
+      "x-prompt": "Which linter would you like to use?",
+      "x-priority": "important"
+    },
     "unitTestRunner": {
       "type": "string",
       "enum": ["vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "x-prompt": "Which unit test runner would you like to use?",
-      "default": "vitest"
+      "default": "none",
+      "x-priority": "important"
     },
     "inSourceTests": {
       "type": "boolean",
@@ -133,8 +139,12 @@
       "type": "boolean",
       "default": false,
       "hidden": true
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
-  "required": ["name"],
+  "required": ["directory"],
   "examplesFile": "../../../docs/application-examples.md"
 }

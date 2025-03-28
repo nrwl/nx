@@ -1,12 +1,21 @@
-import { Argv } from 'yargs';
+import { Argv, ParserConfigurationOptions } from 'yargs';
 
 interface ExcludeOptions {
   exclude: string[];
 }
 
-export function withExcludeOption(yargs: Argv): Argv<ExcludeOptions> {
+export const defaultYargsParserConfiguration: Partial<ParserConfigurationOptions> =
+  {
+    'strip-dashed': true,
+    'unknown-options-as-args': true,
+    'populate--': true,
+    'parse-numbers': false,
+    'parse-positional-numbers': false,
+  };
+
+export function withExcludeOption<T>(yargs: Argv<T>): Argv<T & ExcludeOptions> {
   return yargs.option('exclude', {
-    describe: 'Exclude certain projects from being processed',
+    describe: 'Exclude certain projects from being processed.',
     type: 'string',
     coerce: parseCSV,
   }) as any;
@@ -23,17 +32,19 @@ export interface RunOptions {
   nxBail: boolean;
   nxIgnoreCycles: boolean;
   skipNxCache: boolean;
+  skipRemoteCache: boolean;
   cloud: boolean;
   dte: boolean;
   batch: boolean;
   useAgents: boolean;
   excludeTaskDependencies: boolean;
+  skipSync: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
   return withVerbose(withExcludeOption(yargs))
     .option('parallel', {
-      describe: 'Max number of parallel processes [default is 3]',
+      describe: 'Max number of parallel processes [default is 3].',
       type: 'string',
     })
     .option('maxParallel', {
@@ -41,11 +52,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       hidden: true,
     })
     .options('runner', {
-      describe: 'This is the name of the tasks runner configured in nx.json',
+      describe: 'This is the name of the tasks runner configured in nx.json.',
       type: 'string',
     })
     .option('prod', {
-      describe: 'Use the production configuration',
+      describe: 'Use the production configuration.',
       type: 'boolean',
       default: false,
       hidden: true,
@@ -65,23 +76,35 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
           : value,
     })
     .option('nxBail', {
-      describe: 'Stop command execution after the first failed task',
+      describe: 'Stop command execution after the first failed task.',
       type: 'boolean',
       default: false,
     })
     .option('nxIgnoreCycles', {
-      describe: 'Ignore cycles in the task graph',
+      describe: 'Ignore cycles in the task graph.',
       type: 'boolean',
       default: false,
     })
     .options('skipNxCache', {
       describe:
-        'Rerun the tasks even when the results are available in the cache',
+        'Rerun the tasks even when the results are available in the cache.',
+      type: 'boolean',
+      default: false,
+      alias: 'disableNxCache',
+    })
+    .options('skipRemoteCache', {
+      type: 'boolean',
+      describe: 'Disables the remote cache.',
+      default: false,
+      alias: 'disableRemoteCache',
+    })
+    .options('excludeTaskDependencies', {
+      describe: 'Skips running dependent tasks first.',
       type: 'boolean',
       default: false,
     })
-    .options('excludeTaskDependencies', {
-      describe: 'Skips running dependent tasks first',
+    .option('skipSync', {
+      describe: 'Skips running the sync generators associated with the tasks.',
       type: 'boolean',
       default: false,
     })
@@ -89,6 +112,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       hidden: true,
     })
+
     .options('dte', {
       type: 'boolean',
       hidden: true,
@@ -97,7 +121,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       hidden: true,
       alias: 'agents',
-    }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
+    }) as Argv<Omit<RunOptions, 'batch'>> as any;
 }
 
 export function withTargetAndConfigurationOption(
@@ -105,7 +129,7 @@ export function withTargetAndConfigurationOption(
   demandOption = true
 ) {
   return withConfiguration(yargs).option('targets', {
-    describe: 'Tasks to run for affected projects',
+    describe: 'Tasks to run for affected projects.',
     type: 'string',
     alias: ['target', 't'],
     requiresArg: true,
@@ -118,7 +142,7 @@ export function withTargetAndConfigurationOption(
 export function withConfiguration(yargs: Argv) {
   return yargs.options('configuration', {
     describe:
-      'This is the configuration to use when performing tasks on projects',
+      'This is the configuration to use when performing tasks on projects.',
     type: 'string',
     alias: 'c',
   });
@@ -128,20 +152,20 @@ export function withVerbose<T>(yargs: Argv<T>) {
   return yargs
     .option('verbose', {
       describe:
-        'Prints additional information about the commands (e.g., stack traces)',
+        'Prints additional information about the commands (e.g., stack traces).',
       type: 'boolean',
     })
     .middleware((args) => {
-      if (args.verbose) {
-        process.env.NX_VERBOSE_LOGGING = 'true';
-      }
+      args.verbose ??= process.env.NX_VERBOSE_LOGGING === 'true';
+      // If NX_VERBOSE_LOGGING=false and --verbose is passed, we want to set it to true favoring the arg
+      process.env.NX_VERBOSE_LOGGING = args.verbose.toString();
     });
 }
 
 export function withBatch(yargs: Argv) {
   return yargs.options('batch', {
     type: 'boolean',
-    describe: 'Run task(s) in batches for executors which support batches',
+    describe: 'Run task(s) in batches for executors which support batches.',
     coerce: (v) => {
       return v || process.env.NX_BATCH_MODE === 'true';
     },
@@ -151,33 +175,29 @@ export function withBatch(yargs: Argv) {
 
 export function withAffectedOptions(yargs: Argv) {
   return withExcludeOption(yargs)
-    .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
-    })
+    .parserConfiguration(defaultYargsParserConfiguration)
     .option('files', {
       describe:
-        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces',
+        'Change the way Nx is calculating the affected command by providing directly changed files, list of files delimited by commas or spaces.',
       type: 'string',
       requiresArg: true,
       coerce: parseCSV,
     })
     .option('uncommitted', {
-      describe: 'Uncommitted changes',
+      describe: 'Uncommitted changes.',
       type: 'boolean',
     })
     .option('untracked', {
-      describe: 'Untracked changes',
+      describe: 'Untracked changes.',
       type: 'boolean',
     })
     .option('base', {
-      describe: 'Base of the current branch (usually main)',
+      describe: 'Base of the current branch (usually main).',
       type: 'string',
       requiresArg: true,
     })
     .option('head', {
-      describe: 'Latest commit of the current branch (usually HEAD)',
+      describe: 'Latest commit of the current branch (usually HEAD).',
       type: 'string',
       requiresArg: true,
     })
@@ -210,17 +230,13 @@ export function withRunManyOptions<T>(
   yargs: Argv<T>
 ): Argv<T & RunManyOptions> {
   return withRunOptions(yargs)
-    .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
-    })
+    .parserConfiguration(defaultYargsParserConfiguration)
     .option('projects', {
       type: 'string',
       alias: 'p',
       coerce: parseCSV,
       describe:
-        'Projects to run. (comma/space delimited project names and/or patterns)',
+        'Projects to run. (comma/space delimited project names and/or patterns).',
     })
     .option('all', {
       describe:
@@ -265,15 +281,7 @@ export function withOutputStyleOption(
   ]
 ) {
   return yargs.option('output-style', {
-    describe: `Defines how Nx emits outputs tasks logs
-
-| option | description |
-| --- | --- |
-| dynamic | use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. |
-| static | uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. |
-| stream | nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr |
-| stream-without-prefixes | nx prefixes the project name the target is running on, use this option remove the project name prefix from output |
-`,
+    describe: `Defines how Nx emits outputs tasks logs. **dynamic**: use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
     type: 'string',
     choices,
   });
@@ -287,17 +295,13 @@ export function withRunOneOptions(yargs: Argv) {
   const res = withRunOptions(
     withOutputStyleOption(withConfiguration(yargs), allOutputStyles)
   )
-    .parserConfiguration({
-      'strip-dashed': true,
-      'unknown-options-as-args': true,
-      'populate--': true,
-    })
+    .parserConfiguration(defaultYargsParserConfiguration)
     .option('project', {
-      describe: 'Target project',
+      describe: 'Target project.',
       type: 'string',
     })
     .option('help', {
-      describe: 'Show Help',
+      describe: 'Show Help.',
       type: 'boolean',
     });
 
@@ -324,4 +328,25 @@ export function parseCSV(args: string[] | string): string[] {
   return items.map((i) =>
     i.startsWith('"') && i.endsWith('"') ? i.slice(1, -1) : i
   );
+}
+
+export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
+  if (args['parallel'] === 'false' || args['parallel'] === false) {
+    return 1;
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === '' ||
+    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    (process.env.NX_PARALLEL && args['parallel'] === undefined)
+  ) {
+    return Number(
+      args['maxParallel'] ||
+        args['max-parallel'] ||
+        process.env.NX_PARALLEL ||
+        3
+    );
+  } else if (args['parallel'] !== undefined) {
+    return Number(args['parallel']);
+  }
 }
