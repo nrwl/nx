@@ -6,6 +6,7 @@ import {
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { TagsApi } from './tags.api';
+// The rewriteMarkdownLinks function is used by routes, not by this API
 
 interface StaticDocumentPaths {
   params: { segments: string[] };
@@ -13,6 +14,11 @@ interface StaticDocumentPaths {
 
 export class DocumentsApi {
   private readonly manifest: Record<string, DocumentMetadata>;
+  private readonly processContent: boolean;
+  private readonly id: string;
+  private readonly prefix: string;
+  private readonly publicDocsRoot: string;
+  private readonly tagsApi: TagsApi;
 
   constructor(
     private readonly options: {
@@ -21,6 +27,7 @@ export class DocumentsApi {
       prefix: string;
       publicDocsRoot: string;
       tagsApi: TagsApi;
+      processContent?: boolean;
     }
   ) {
     if (!options.id) {
@@ -46,6 +53,11 @@ export class DocumentsApi {
         this.getAngularRspackPackage()
       );
     }
+    this.id = options.id;
+    this.prefix = options.prefix;
+    this.publicDocsRoot = options.publicDocsRoot;
+    this.tagsApi = options.tagsApi;
+    this.processContent = options.processContent !== false;
   }
 
   private getManifestKey(path: string): string {
@@ -99,24 +111,22 @@ export class DocumentsApi {
   }
 
   getFilePath(path: string): string {
-    return join(this.options.publicDocsRoot, `${path}.md`);
+    return join(this.publicDocsRoot, `${path}.md`);
   }
 
   getParamsStaticDocumentPaths(): StaticDocumentPaths[] {
     return Object.keys(this.manifest).map((path) => ({
       params: {
-        segments: !!this.options.prefix
-          ? [this.options.prefix].concat(path.split('/').filter(Boolean).flat())
+        segments: !!this.prefix
+          ? [this.prefix].concat(path.split('/').filter(Boolean).flat())
           : path.split('/').filter(Boolean).flat(),
       },
     }));
   }
 
   getSlugsStaticDocumentPaths(): string[] {
-    if (this.options.prefix)
-      return Object.keys(this.manifest).map(
-        (path) => `/${this.options.prefix}` + path
-      );
+    if (this.prefix)
+      return Object.keys(this.manifest).map((path) => `/${this.prefix}` + path);
     return Object.keys(this.manifest);
   }
 
@@ -131,8 +141,12 @@ export class DocumentsApi {
         path[2] === 'documents'
       ) {
         const file = `generated/devkit/${path.slice(3).join('/')}`;
+        let content = readFileSync(this.getFilePath(file), 'utf8');
+
+        // Add code to process markdown links if needed
+
         return {
-          content: readFileSync(this.getFilePath(file), 'utf8'),
+          content,
           description: '',
           filePath: this.getFilePath(file),
           id: path.at(-1) || '',
@@ -146,8 +160,13 @@ export class DocumentsApi {
       );
     }
     if (this.isDocumentIndex(document)) return this.getDocumentIndex(path);
+
+    let content = readFileSync(this.getFilePath(document.file), 'utf8');
+
+    // Add code to process markdown links if needed
+
     return {
-      content: readFileSync(this.getFilePath(document.file), 'utf8'),
+      content,
       description: document.description,
       filePath: this.getFilePath(document.file),
       id: document.id,
@@ -182,8 +201,7 @@ export class DocumentsApi {
   getRelatedDocuments(tags: string[]): Record<string, RelatedDocument[]> {
     const relatedDocuments = {};
     tags.forEach(
-      (tag) =>
-        (relatedDocuments[tag] = this.options.tagsApi.getAssociatedItems(tag))
+      (tag) => (relatedDocuments[tag] = this.tagsApi.getAssociatedItems(tag))
     );
 
     return relatedDocuments;
@@ -204,9 +222,7 @@ export class DocumentsApi {
         (card) =>
           `{% card title="${card.title}" description="${
             card.description
-          }" url="${[this.options.prefix, card.url]
-            .filter(Boolean)
-            .join('/')}" /%}\n`
+          }" url="${[this.prefix, card.url].filter(Boolean).join('/')}" /%}\n`
       )
       .join('');
     return [
@@ -226,9 +242,10 @@ export class DocumentsApi {
         `Document not found in manifest with: "${path.join('/')}"`
       );
 
-    if (!!document.file)
+    if (!!document.file) {
+      const content = readFileSync(this.getFilePath(document.file), 'utf8');
       return {
-        content: readFileSync(this.getFilePath(document.file), 'utf8'),
+        content: content,
         description: document.description,
         filePath: this.getFilePath(document.file),
         id: document.id,
@@ -236,9 +253,11 @@ export class DocumentsApi {
         relatedDocuments: this.getRelatedDocuments(document.tags),
         tags: document.tags,
       };
+    }
 
+    const content = this.generateDocumentIndexTemplate(document);
     return {
-      content: this.generateDocumentIndexTemplate(document),
+      content: content,
       description: document.description,
       filePath: '',
       id: document.id,
