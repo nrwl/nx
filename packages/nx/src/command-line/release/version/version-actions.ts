@@ -144,10 +144,6 @@ export async function resolveVersionActionsForProject(
         `For project "${projectGraphNode.name}" it was not possible to resolve the VersionActions implementation from: "${versionActionsPath}"`
       );
     }
-    versionActionsResolutionCache.set(versionActionsPath, {
-      VersionActionsClass,
-      afterAllProjectsVersioned: loaded.afterAllProjectsVersioned,
-    });
     afterAllProjectsVersioned =
       loaded.afterAllProjectsVersioned ??
       // no-op fallback for ecosystems/use-cases where it is not applicable
@@ -156,6 +152,10 @@ export async function resolveVersionActionsForProject(
           changedFiles: [],
           deletedFiles: [],
         }));
+    versionActionsResolutionCache.set(versionActionsPath, {
+      VersionActionsClass,
+      afterAllProjectsVersioned,
+    });
   }
   const versionActions: VersionActions = new VersionActionsClass(
     versionActionsOptions,
