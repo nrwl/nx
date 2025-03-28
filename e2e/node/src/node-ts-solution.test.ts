@@ -22,10 +22,11 @@ let originalEnvPort;
 
 describe('Node Applications', () => {
   const pm = getSelectedPackageManager();
+  let workspaceName: string;
 
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
-    newProject({
+    workspaceName = newProject({
       packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
       preset: 'ts',
     });
@@ -143,6 +144,65 @@ describe('Node Applications', () => {
 
     expect(() => runCLI(`lint ${nestapp}`)).not.toThrow();
     expect(() => runCLI(`test ${nestapp}`)).not.toThrow();
+
+    runCLI(`build ${nestapp}`);
+    checkFilesExist(`apps/${nestapp}/dist/main.js`);
+
+    const p = await runCommandUntil(
+      `serve ${nestapp}`,
+      (output) =>
+        output.includes(
+          `Application is running on: http://localhost:${port}/api`
+        ),
+
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
+    );
+
+    const result = await getData(port, '/api');
+    expect(result.message).toMatch('Hello');
+
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300_000);
+
+  it('should be able to import a lib into a nest application', async () => {
+    const nestapp = uniq('nodeapp');
+    const nestLib = uniq('nestlib');
+
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+    runCLI(
+      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
+    );
+
+    runCLI(
+      `generate @nx/nest:lib libs/${nestLib} --name=${nestLib} --no-interactive`
+    );
+
+    updateFile(
+      `apps/${nestapp}/src/app/app.module.ts`,
+      (_) => `import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import '@${workspaceName}/${nestLib}';
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+`
+    );
+    runCLI(`sync`);
 
     runCLI(`build ${nestapp}`);
     checkFilesExist(`apps/${nestapp}/dist/main.js`);
