@@ -35,5 +35,5 @@ The `serve` target's `dependsOn` line makes Nx run the `build` task for the curr
 Now `nx serve` will run the `build` task before running the `serve` task.
 
 ```shell
-npx nx serve @tuskdesign/zoo
+npx nx serve zoo
 ```

@@ -6,6 +6,9 @@
   "tags": [],
   "// targets": "to see all targets run: nx show project tutorial --web",
   "targets": {
+    "build": {
+      "inputs": ["{projectRoot}/src/**/**"]
+    },
     "lint": {
       "command": "echo no linting",
       "cache": true
