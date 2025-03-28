@@ -534,7 +534,7 @@ export function parseGitCommit(
         commit.shortHash
       ),
       // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
-      // TODO(v20): Make the current GitCommit interface more clearly tied to conventional commits
+      // TODO(v22): Make the current GitCommit interface more clearly tied to conventional commits
       isBreaking: false,
       authors: getAllAuthorsForCommit(commit),
       // Not applicable to version plans

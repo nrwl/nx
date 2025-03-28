@@ -12,8 +12,8 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
+import { output } from '../../utils/output';
 import { PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -22,6 +22,7 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import { getVersionPlansAbsolutePath } from './config/version-plans';
 import { generateVersionPlanContent } from './utils/generate-version-plan-content';
 import { createGetTouchedProjectsForGroup } from './utils/get-touched-projects-for-group';
@@ -50,7 +51,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -319,10 +326,12 @@ async function promptForVersion(message: string): Promise<string> {
       },
     ]);
     return reply.version;
-  } catch (e) {
+  } catch {
     output.log({
       title: 'Cancelled version plan creation.',
     });
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     process.exit(0);
   }
 }
