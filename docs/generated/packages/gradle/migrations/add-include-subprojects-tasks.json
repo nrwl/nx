@@ -10,5 +10,5 @@
   "path": "/packages/gradle",
   "schema": null,
   "type": "migration",
-  "examplesFile": "#### Add includeSubprojectsTasks to build.gradle File\n\nAdd includeSubprojectsTasks to build.gradle file\n\n#### Sample Code Changes\n\nUpdate import paths for `withModuleFederation` and `withModuleFederationForSSR`.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"plugins\": [\"@nx/gradle\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[5] fileName=\"nx.json\" %}\n{\n  \"plugins\": [\n    {\n      \"options\": {\n        \"includeSubprojectsTasks\": true\n      },\n      \"plugin\": \"@nx/gradle\"\n    }\n  ]\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+  "examplesFile": "#### Add includeSubprojectsTasks to @nx/gradle Plugin Options\n\nAdd includeSubprojectsTasks to @nx/graple plugin options in nx.json file\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"plugins\": [\"@nx/gradle\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[5] fileName=\"nx.json\" %}\n{\n  \"plugins\": [\n    {\n      \"options\": {\n        \"includeSubprojectsTasks\": true\n      },\n      \"plugin\": \"@nx/gradle\"\n    }\n  ]\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }

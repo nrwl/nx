@@ -17,6 +17,12 @@
       "cli": "nx",
       "description": "Add includeSubprojectsTasks to build.gradle file",
       "factory": "./src/migrations/20-2-0/add-include-subprojects-tasks"
+    },
+    "change-plugin-to-v1": {
+      "version": "20.7.0-beta.0",
+      "cli": "nx",
+      "description": "Change @nx/gradle plugin to version 1",
+      "factory": "./src/migrations/20-7-0/change-plugin-to-v1"
     }
   },
   "packageJsonUpdates": {}

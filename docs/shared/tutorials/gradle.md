@@ -357,10 +357,10 @@ jobs:
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
-      - name: Set up JDK 17 for x64
+      - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 
