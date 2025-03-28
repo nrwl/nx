@@ -10,17 +10,33 @@ import type { Tree } from '../../../generators/tree';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
+import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
 
 export type SemverBumpType = ReleaseType | 'none';
 
-function resolveVersionActionsPath(path: string): string {
+function resolveVersionActionsPath(
+  path: string,
+  projectGraphNode: ProjectGraphProjectNode
+): string {
   try {
     return require.resolve(path);
   } catch {
     try {
       return require.resolve(join(workspaceRoot, path));
     } catch {
-      throw new Error(`Unable to resolve versionActions path: "${path}"`);
+      if (path === DEFAULT_VERSION_ACTIONS_PATH) {
+        throw new Error(
+          `Unable to resolve the default "versionActions" implementation for project "${projectGraphNode.name}" at path: "${path}"
+
+- If this is a JavaScript/TypeScript project, it is likely that you simply need to install the "@nx/js" plugin.
+
+- If this not a JavaScript/TypeScript project, you can should provide an alternative "versionActions" implementation path via the "release.version.versionActions" configuration option.
+`
+        );
+      }
+      throw new Error(
+        `Unable to resolve the "versionActions" implementation for project "${projectGraphNode.name}" at the configured path: "${path}"`
+      );
     }
   }
 }
@@ -110,7 +126,8 @@ export async function resolveVersionActionsForProject(
 
   let cachedData = versionActionsResolutionCache.get(versionActionsPathConfig);
   const versionActionsPath = resolveVersionActionsPath(
-    versionActionsPathConfig
+    versionActionsPathConfig,
+    projectGraphNode
   );
 
   let VersionActionsClass: VersionActionsConstructor | undefined;
@@ -127,16 +144,18 @@ export async function resolveVersionActionsForProject(
         `For project "${projectGraphNode.name}" it was not possible to resolve the VersionActions implementation from: "${versionActionsPath}"`
       );
     }
-    if (!loaded.afterAllProjectsVersioned) {
-      throw new Error(
-        `For project "${projectGraphNode.name}" it was not possible to resolve the afterAllProjectsVersioned implementation from: "${versionActionsPath}"`
-      );
-    }
     versionActionsResolutionCache.set(versionActionsPath, {
       VersionActionsClass,
       afterAllProjectsVersioned: loaded.afterAllProjectsVersioned,
     });
-    afterAllProjectsVersioned = loaded.afterAllProjectsVersioned;
+    afterAllProjectsVersioned =
+      loaded.afterAllProjectsVersioned ??
+      // no-op fallback for ecosystems/use-cases where it is not applicable
+      (() =>
+        Promise.resolve({
+          changedFiles: [],
+          deletedFiles: [],
+        }));
   }
   const versionActions: VersionActions = new VersionActionsClass(
     versionActionsOptions,

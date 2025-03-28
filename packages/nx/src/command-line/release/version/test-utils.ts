@@ -11,7 +11,11 @@ import type {
 import type { Tree } from '../../../generators/tree';
 import { writeJson } from '../../../generators/utils/json';
 import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
-import { createNxReleaseConfig, NxReleaseConfig } from '../config/config';
+import {
+  createNxReleaseConfig,
+  DEFAULT_VERSION_ACTIONS_PATH,
+  NxReleaseConfig,
+} from '../config/config';
 import { filterReleaseGroups } from '../config/filter-release-groups';
 import { VersionActions } from './version-actions';
 
@@ -537,7 +541,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
     };
   }
 
-  const versionActionsPath = '@nx/js/src/release/version-actions';
+  const versionActionsPath = DEFAULT_VERSION_ACTIONS_PATH;
   // @ts-ignore
   const loaded = jest.requireActual(versionActionsPath);
   const JsVersionActions = loaded.default;

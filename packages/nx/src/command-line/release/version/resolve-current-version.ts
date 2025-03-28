@@ -85,19 +85,23 @@ export async function resolveCurrentVersionFromDisk(
       `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" but it is using "versionActions" of type "${versionActions.constructor.name}". This is invalid because "${versionActions.constructor.name}" does not support a manifest file. You should use a different "currentVersionResolver" or use a different "versionActions" implementation that supports a manifest file`
     );
   }
+  const nullVersionError = new Error(
+    `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" and it is using "versionActions" of type "${versionActions.constructor.name}" which failed to resolve the current version from the manifest file on disk`
+  );
   try {
     const res = await versionActions.readCurrentVersionFromSourceManifest(tree);
     if (!res) {
-      throw new Error(
-        `For project "${projectGraphNode.name}", the "currentVersionResolver" is set to "disk" and it is using "versionActions" of type "${versionActions.constructor.name}" which failed to resolve the current version from the manifest file on disk`
-      );
+      throw nullVersionError;
     }
     const { currentVersion, manifestPath } = res;
     logger.buffer(
       `📄 Resolved the current version as ${currentVersion} from manifest: ${manifestPath}`
     );
     return currentVersion;
-  } catch {
+  } catch (err) {
+    if (err === nullVersionError) {
+      throw err;
+    }
     throw new Error(
       `The project "${
         projectGraphNode.name

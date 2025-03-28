@@ -60,6 +60,9 @@ type RemoveBooleanFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
 
 export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
 
+export const DEFAULT_VERSION_ACTIONS_PATH =
+  '@nx/js/src/release/version-actions';
+
 /**
  * Our source of truth is a deeply required variant of the user-facing config interface, so that command
  * implementations can be sure that properties will exist and do not need to repeat the same checks over
@@ -276,7 +279,7 @@ export async function createNxReleaseConfig(
             generatorOptions: defaultGeneratorOptions,
           }
         : {
-            versionActions: '@nx/js/src/release/version-actions',
+            versionActions: DEFAULT_VERSION_ACTIONS_PATH,
             versionActionsOptions: {},
             currentVersionResolver:
               defaultGeneratorOptions.currentVersionResolver,
@@ -365,7 +368,7 @@ export async function createNxReleaseConfig(
         >)
       : ({
           conventionalCommits: false,
-          versionActions: '@nx/js/src/release/version-actions',
+          versionActions: DEFAULT_VERSION_ACTIONS_PATH,
           versionActionsOptions: {},
           groupPreVersionCommand: '',
         } as DeepRequired<
