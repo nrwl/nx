@@ -13,6 +13,10 @@
               {
                 "name": "fs-extra",
                 "message": "Please use equivalent utilities from `node:fs` instead."
+              },
+              {
+                "name": "ora",
+                "message": "Please use `nanospinner` instead."
               }
             ],
             "patterns": [

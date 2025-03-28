@@ -1,5 +1,5 @@
-import * as createSpinner from 'ora';
 import { join, relative } from 'path';
+import { createSpinner } from 'nanospinner';
 import { GitRepository } from '../../../utils/git-utils';
 
 export async function prepareSourceRepo(
@@ -10,9 +10,8 @@ export async function prepareSourceRepo(
   tempImportBranch: string,
   sourceRemoteUrl: string
 ) {
-  const spinner = createSpinner().start(
-    `Fetching ${ref} from ${sourceRemoteUrl}`
-  );
+  const spinner = createSpinner(`Fetching ${ref} from ${sourceRemoteUrl}`);
+  spinner.start();
   const relativeSourceDir = relative(
     gitClient.root,
     join(gitClient.root, source)
@@ -23,10 +22,10 @@ export async function prepareSourceRepo(
     : `Filtering git history`;
 
   if (await gitClient.hasFilterRepoInstalled()) {
-    spinner.start(message);
+    spinner.write(message);
     await gitClient.filterRepo(relativeSourceDir, relativeDestination);
   } else {
-    spinner.start(
+    spinner.write(
       `${message} (this might take a few minutes -- install git-filter-repo for faster performance)`
     );
     await gitClient.filterBranch(
@@ -35,13 +34,13 @@ export async function prepareSourceRepo(
       tempImportBranch
     );
   }
-  spinner.succeed(
+  spinner.success(
     relativeSourceDir.trim()
       ? `Filtered git history to only include files in ${relativeSourceDir}`
       : `Filtered git history`
   );
 
-  spinner.succeed(
+  spinner.success(
     `${sourceRemoteUrl} has been prepared to be imported into this workspace on a temporary branch: ${tempImportBranch} in ${gitClient.root}`
   );
 }
