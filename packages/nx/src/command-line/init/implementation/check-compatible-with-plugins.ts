@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { bold } from 'chalk';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
@@ -83,7 +83,13 @@ function findPluginAndFilesWithError(
       },
     ];
   }
-  excludeFiles = excludeFiles.filter(Boolean);
+  excludeFiles = excludeFiles.filter(Boolean).map((excludeFile) => {
+    const file = excludeFile.file;
+    excludeFile.file = file.startsWith(workspaceRoot)
+      ? relative(workspaceRoot, file)
+      : file;
+    return excludeFile;
+  });
   return {
     pluginIndex,
     excludeFiles,

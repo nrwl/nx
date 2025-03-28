@@ -246,6 +246,24 @@ describe('vitest generator', () => {
   });
 
   describe('TS solution setup', () => {
+    const addProject = (name: string) => {
+      addProjectConfiguration(appTree, name, {
+        root: `packages/${name}`,
+        sourceRoot: `packages/${name}/src`,
+        targets: {
+          lint: {
+            executor: '@nx/eslint:lint',
+            options: {},
+          },
+        },
+      });
+      writeJson(appTree, `packages/${name}/tsconfig.json`, {
+        files: [],
+        include: [],
+        references: [],
+      });
+    };
+
     beforeEach(() => {
       appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'package.json', (json) => {
@@ -261,21 +279,7 @@ describe('vitest generator', () => {
         references: [],
       });
 
-      addProjectConfiguration(appTree, 'pkg1', {
-        root: 'packages/pkg1',
-        sourceRoot: 'packages/pkg1/src',
-        targets: {
-          lint: {
-            executor: '@nx/eslint:lint',
-            options: {},
-          },
-        },
-      });
-      writeJson(appTree, 'packages/pkg1/tsconfig.json', {
-        files: [],
-        include: [],
-        references: [],
-      });
+      addProject('pkg1');
     });
 
     it('should add a tsconfig.spec.json file', async () => {
@@ -325,6 +329,21 @@ describe('vitest generator', () => {
     it(`should setup a task pipeline for the test target to depend on the deps' build target`, async () => {
       await generator(appTree, {
         project: 'pkg1',
+        coverageProvider: 'v8',
+      });
+
+      const nxJson = readNxJson(appTree);
+      expect(nxJson.targetDefaults.test.dependsOn).toStrictEqual(['^build']);
+    });
+
+    it(`should not duplicate the test target dependency on the deps' build target`, async () => {
+      await generator(appTree, {
+        project: 'pkg1',
+        coverageProvider: 'v8',
+      });
+      addProject('pkg2');
+      await generator(appTree, {
+        project: 'pkg2',
         coverageProvider: 'v8',
       });
 

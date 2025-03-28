@@ -1,5 +1,4 @@
 import {
-  CreateNodesContextV2,
   createNodesFromFiles,
   detectPackageManager,
   getPackageManagerCommand,
@@ -11,18 +10,17 @@ import {
   type CreateDependencies,
   type CreateNodes,
   type CreateNodesContext,
+  type CreateNodesContextV2,
   type CreateNodesV2,
   type NxJsonConfiguration,
   type ProjectConfiguration,
   type TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import picomatch = require('picomatch');
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import {
   basename,
   dirname,
-  extname,
   join,
   normalize,
   relative,
@@ -31,10 +29,11 @@ import {
 } from 'node:path';
 import * as posix from 'node:path/posix';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
+import picomatch = require('picomatch');
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import type { ParsedCommandLine, System } from 'typescript';
+import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
@@ -83,6 +82,7 @@ type TsconfigCacheData = {
   extendedFilesHash: string;
 };
 
+let ts: typeof import('typescript');
 const pmc = getPackageManagerCommand();
 
 let tsConfigCache: Record<string, TsconfigCacheData>;
@@ -320,6 +320,9 @@ async function getConfigFileHash(
     lockFileHash,
     optionsHash,
     ...(packageJson ? [hashObject(packageJson)] : []),
+    // change this to bust the cache when making changes that would yield
+    // different results for the same hash
+    hashObject({ bust: 1 }),
   ]);
 }
 
@@ -534,12 +537,65 @@ function getInputs(
     ...Object.entries(internalProjectReferences),
   ];
   const absoluteProjectRoot = join(workspaceRoot, projectRoot);
+
+  if (!ts) {
+    ts = require('typescript');
+  }
+  // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9869
+  const supportedTSExtensions: readonly Extension[] = [
+    ts.Extension.Ts,
+    ts.Extension.Tsx,
+    ts.Extension.Dts,
+    ts.Extension.Cts,
+    ts.Extension.Dcts,
+    ts.Extension.Mts,
+    ts.Extension.Dmts,
+  ];
+  // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9878
+  const allSupportedExtensions: readonly Extension[] = [
+    ts.Extension.Ts,
+    ts.Extension.Tsx,
+    ts.Extension.Dts,
+    ts.Extension.Js,
+    ts.Extension.Jsx,
+    ts.Extension.Cts,
+    ts.Extension.Dcts,
+    ts.Extension.Cjs,
+    ts.Extension.Mts,
+    ts.Extension.Dmts,
+    ts.Extension.Mjs,
+  ];
+
+  const normalizeInput = (
+    input: string,
+    config: ParsedTsconfigData
+  ): string[] => {
+    const extensions = config.options.allowJs
+      ? [...allSupportedExtensions]
+      : [...supportedTSExtensions];
+    if (config.options.resolveJsonModule) {
+      extensions.push(ts.Extension.Json);
+    }
+
+    const segments = input.split('/');
+    // An "includes" path "foo" is implicitly a glob "foo/**/*" if its last
+    // segment has no extension, and does not contain any glob characters
+    // itself.
+    // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9577-L9585
+    if (!/[.*?]/.test(segments.at(-1))) {
+      return extensions.map((ext) => `${segments.join('/')}/**/*${ext}`);
+    }
+
+    return [input];
+  };
+
   projectTsConfigFiles.forEach(([configPath, config]) => {
     configFiles.add(configPath);
     const offset = relative(absoluteProjectRoot, dirname(configPath));
-    (config.raw?.include ?? []).forEach((p: string) =>
-      includePaths.add(join(offset, p))
-    );
+    (config.raw?.include ?? []).forEach((p: string) => {
+      const normalized = normalizeInput(join(offset, p), config);
+      normalized.forEach((input) => includePaths.add(input));
+    });
 
     if (config.raw?.exclude) {
       /**
@@ -1071,7 +1127,6 @@ function getExtendedFilesHash(
   return hashes.join('|');
 }
 
-let ts: typeof import('typescript');
 function readTsConfig(
   tsConfigPath: string,
   workspaceRoot: string

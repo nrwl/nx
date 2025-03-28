@@ -204,6 +204,15 @@
         "type": "generator"
       },
       {
+        "description": "Converts Angular Webpack projects to use Rspack.",
+        "file": "generated/packages/angular/generators/convert-to-rspack.json",
+        "hidden": false,
+        "name": "convert-to-rspack",
+        "originalFilePath": "/packages/angular/src/generators/convert-to-rspack/schema.json",
+        "path": "angular/generators/convert-to-rspack",
+        "type": "generator"
+      },
+      {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",
         "hidden": false,
@@ -1706,6 +1715,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.0-package-updates",
+        "version": "20.7.0-beta.4",
+        "originalFilePath": "/packages/eslint",
+        "path": "eslint/migrations/20.7.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/eslint/migrations/20.4.0-typescript-eslint-package-updates.json",

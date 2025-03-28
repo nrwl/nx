@@ -37,6 +37,10 @@
       "alwaysAddToPackageJson": false
     },
     "@angular/cdk": { "version": "~19.0.0", "alwaysAddToPackageJson": false },
+    "@angular/google-maps": {
+      "version": "~19.0.0",
+      "alwaysAddToPackageJson": false
+    },
     "ng-packagr": { "version": "~19.0.0", "alwaysAddToPackageJson": false },
     "zone.js": { "version": "~0.15.0", "alwaysAddToPackageJson": false }
   },

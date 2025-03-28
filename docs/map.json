@@ -660,6 +660,11 @@
                   "file": "shared/guides/remix"
                 },
                 {
+                  "name": "React Router with Nx",
+                  "id": "react-router",
+                  "file": "shared/guides/react-router"
+                },
+                {
                   "name": "Use Environment Variables in React",
                   "id": "use-environment-variables-in-react",
                   "tags": ["environment-variables"],
@@ -698,6 +703,30 @@
               "id": "angular",
               "description": "Advanced guides to adopt Nx in Angular.",
               "itemList": [
+                {
+                  "name": "Angular Rspack",
+                  "id": "rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "tags": ["introduction"],
+                      "file": "shared/guides/angular-rspack/introduction"
+                    },
+                    {
+                      "name": "Migrate from Angular Webpack",
+                      "id": "migrate-from-webpack",
+                      "tags": ["migrate-from-webpack"],
+                      "file": "shared/guides/angular-rspack/migrate-from-webpack"
+                    },
+                    {
+                      "name": "Handling Configurations",
+                      "id": "handling-configurations",
+                      "tags": ["handling-configurations", "configurations"],
+                      "file": "shared/guides/angular-rspack/handling-configurations"
+                    }
+                  ]
+                },
                 {
                   "name": "Migration",
                   "id": "migration",
@@ -2428,6 +2457,44 @@
               "id": "angular-nx-version-matrix",
               "file": "shared/packages/angular/angular-nx-version-matrix",
               "path": "/angular-nx-version-matrix"
+            }
+          ]
+        },
+        {
+          "name": "angular-rspack",
+          "id": "angular-rspack",
+          "description": "angular-rspack package.",
+          "itemList": [
+            {
+              "name": "createConfig",
+              "id": "create-config",
+              "path": "/nx-api/angular-rspack/documents/create-config",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config"
+            },
+            {
+              "name": "createServer",
+              "id": "create-server",
+              "path": "/nx-api/angular-rspack/documents/create-server",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server"
+            }
+          ]
+        },
+        {
+          "name": "angular-rsbuild",
+          "id": "angular-rsbuild",
+          "description": "angular-rsbuild package.",
+          "itemList": [
+            {
+              "name": "createConfig",
+              "id": "create-config",
+              "path": "/nx-api/angular-rsbuild/documents/create-config",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config"
+            },
+            {
+              "name": "createServer",
+              "id": "create-server",
+              "path": "/nx-api/angular-rsbuild/documents/create-server",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server"
             }
           ]
         },

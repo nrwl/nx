@@ -939,6 +939,7 @@ module.exports = withNx(
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -1000,7 +1001,7 @@ module.exports = withNx(
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
@@ -1246,6 +1247,7 @@ module.exports = withNx(
           "exports": {
             ".": {
               "default": "./dist/index.esm.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -1263,6 +1265,27 @@ module.exports = withNx(
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        directory: 'libs/mylib',
+        publishable: true,
+        importPath: '@acme/mylib',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'libs/mylib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should add project to workspaces when using TS solution', async () => {

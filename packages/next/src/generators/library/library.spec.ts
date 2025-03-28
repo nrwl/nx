@@ -72,6 +72,21 @@ describe('next library', () => {
     ).toEqual('@emotion/react');
   });
 
+  it('should generate a buildable library', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      bundler: 'vite',
+    });
+
+    expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+  });
   it('should generate a server-only entry point', async () => {
     const appTree = createTreeWithEmptyWorkspace();
 
@@ -133,6 +148,7 @@ describe('next library', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -262,6 +278,125 @@ describe('next library', () => {
           ],
         }
       `);
+    });
+
+    it('should generate a buildable library', async () => {
+      const appTree = createTreeWithEmptyWorkspace();
+      await libraryGenerator(appTree, {
+        directory: 'my-buildable-lib',
+        linter: Linter.EsLint,
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'jest',
+        style: 'css',
+        component: true,
+        bundler: 'vite',
+      });
+
+      expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: Linter.EsLint,
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'jest',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+        buildable: true,
+      });
+
+      expect(tree.read('mylib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/mylib",
+          "version": "0.0.1",
+          "type": "module",
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "types": "./dist/index.esm.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.esm.d.ts",
+              "import": "./dist/index.esm.js",
+              "default": "./dist/index.esm.js"
+            }
+          },
+          "nx": {
+            "targets": {
+              "lint": {
+                "executor": "@nx/eslint:lint"
+              },
+              "build": {
+                "executor": "@nx/rollup:rollup",
+                "outputs": [
+                  "{options.outputPath}"
+                ],
+                "options": {
+                  "outputPath": "dist/mylib",
+                  "tsConfig": "mylib/tsconfig.lib.json",
+                  "project": "mylib/package.json",
+                  "entryFile": "mylib/src/index.ts",
+                  "external": [
+                    "react",
+                    "react-dom",
+                    "react/jsx-runtime"
+                  ],
+                  "rollupConfig": "@nx/react/plugins/bundle-rollup",
+                  "compiler": "babel",
+                  "assets": [
+                    {
+                      "glob": "mylib/README.md",
+                      "input": ".",
+                      "output": "."
+                    }
+                  ]
+                }
+              },
+              "test": {
+                "executor": "@nx/jest:jest",
+                "outputs": [
+                  "{projectRoot}/test-output/jest/coverage"
+                ],
+                "options": {
+                  "jestConfig": "mylib/jest.config.ts"
+                }
+              }
+            },
+            "sourceRoot": "mylib/src",
+            "projectType": "library",
+            "tags": []
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: Linter.EsLint,
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'jest',
+        style: 'css',
+        component: false,
+        useProjectJson: false,
+        buildable: true,
+      });
+
+      expect(
+        readJson(tree, 'mylib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {

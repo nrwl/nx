@@ -95,8 +95,8 @@ export function isValidPackageJsonBuildConfig(
       return isPathSourceFile(value);
     } else if (typeof value === 'object') {
       return Object.entries(value).some(([currentKey, subValue]) => {
-        // Skip types field
-        if (currentKey === 'types') {
+        // Skip types and development conditions
+        if (currentKey === 'types' || currentKey === 'development') {
           return false;
         }
         if (typeof subValue === 'string') {
