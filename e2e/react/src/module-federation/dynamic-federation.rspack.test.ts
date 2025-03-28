@@ -94,13 +94,13 @@ describe('Dynamic Module Federation', () => {
     if (runE2ETests()) {
       // Serve Remote since it is dynamic and won't be started with the host
       const remoteProcess = await runCommandUntil(
-        `serve-static ${remote} --no-watch --verbose`,
+        `serve ${remote} --verbose`,
         () => {
           return true;
         }
       );
       const hostE2eResultsSwc = await runCommandUntil(
-        `e2e ${shell}-e2e --no-watch --verbose`,
+        `e2e ${shell}-e2e --verbose`,
         (output) => output.includes('All specs passed!')
       );
 

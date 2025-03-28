@@ -58,6 +58,20 @@ export async function addE2e(
       options.addPlugin,
       options.devServerPort ?? 4200
     );
+  } else if (options.bundler === 'rspack') {
+    const { getRspackE2EWebServerInfo } = ensurePackage<
+      typeof import('@nx/rspack')
+    >('@nx/rspack', nxVersion);
+    e2eWebServerInfo = await getRspackE2EWebServerInfo(
+      tree,
+      options.projectName,
+      joinPathFragments(
+        options.appProjectRoot,
+        `rspack.config.${options.js ? 'js' : 'ts'}`
+      ),
+      options.addPlugin,
+      options.devServerPort ?? 4200
+    );
   } else if (options.bundler === 'vite') {
     const { getViteE2EWebServerInfo, getReactRouterE2EWebServerInfo } =
       ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);

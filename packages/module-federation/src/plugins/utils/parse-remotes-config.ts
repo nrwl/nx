@@ -27,7 +27,7 @@ export function parseRemotesConfig(
         workspaceRoot,
       }
     );
-    if (outputPath.startsWith(projectRoot)) {
+    if (!outputPath.startsWith(workspaceRoot)) {
       outputPath = joinPathFragments(workspaceRoot, outputPath);
     }
     const basePath = dirname(outputPath);

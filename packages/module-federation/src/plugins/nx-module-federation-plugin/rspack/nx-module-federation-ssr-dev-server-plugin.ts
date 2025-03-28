@@ -46,6 +46,10 @@ export class NxModuleFederationSSRDevServerPlugin
   }
 
   apply(compiler: Compiler) {
+    const isDevServer = process.env['WEBPACK_SERVE'];
+    if (!isDevServer) {
+      return;
+    }
     compiler.hooks.watchRun.tapAsync(
       PLUGIN_NAME,
       async (compiler, callback) => {
@@ -95,7 +99,7 @@ export class NxModuleFederationSSRDevServerPlugin
   }
 
   private async startServer(compiler: Compiler) {
-    compiler.hooks.afterEmit.tapAsync(PLUGIN_NAME, async (_, callback) => {
+    compiler.hooks.done.tapAsync(PLUGIN_NAME, async (_, callback) => {
       const serverPath = join(
         compiler.options.output.path,
         (compiler.options.output.filename as string) ?? 'server.js'
@@ -105,14 +109,14 @@ export class NxModuleFederationSSRDevServerPlugin
           this.devServerProcess.on('exit', () => {
             res();
           });
-          this.devServerProcess.kill();
+          this.devServerProcess.kill('SIGKILL');
           this.devServerProcess = undefined;
         });
       }
 
       if (!existsSync(serverPath)) {
         for (let retries = 0; retries < 10; retries++) {
-          await new Promise<void>((res) => setTimeout(res, 100));
+          await new Promise<void>((res) => setTimeout(res, 200));
           if (existsSync(serverPath)) {
             break;
           }
@@ -124,10 +128,10 @@ export class NxModuleFederationSSRDevServerPlugin
 
       this.devServerProcess = fork(serverPath);
       process.on('exit', () => {
-        this.devServerProcess?.kill();
+        this.devServerProcess?.kill('SIGKILL');
       });
       process.on('SIGINT', () => {
-        this.devServerProcess?.kill();
+        this.devServerProcess?.kill('SIGKILL');
       });
       callback();
     });
