@@ -460,7 +460,7 @@ describe('CI Workflow generator', () => {
               # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
               # - script: npx nx-cloud record -- echo Hello World
               # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-              - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build typecheck
+              - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build typecheck
         "
       `);
     });
