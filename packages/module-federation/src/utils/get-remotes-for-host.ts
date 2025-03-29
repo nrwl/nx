@@ -78,7 +78,8 @@ export function getRemotes(
   skipRemotes: string[],
   config: ModuleFederationConfig,
   context: ModuleFederationExecutorContext,
-  pathToManifestFile?: string
+  pathToManifestFile?: string,
+  defaultStaticServerPort?: number
 ) {
   const collectedRemotes = new Set<string>();
   const { remotes, dynamicRemotes } = extractRemoteProjectsFromConfig(
@@ -139,17 +140,18 @@ export function getRemotes(
   const remotePorts = [...devServeRemotes, ...staticDynamicRemotes].map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
+  const maxPortForRemotes = Math.max(
+    ...([
+      ...remotePorts,
+      ...staticRemotes.map(
+        (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
+      ),
+    ] as number[])
+  );
   const staticRemotePort =
-    Math.max(
-      ...([
-        ...remotePorts,
-        ...staticRemotes.map(
-          (r) =>
-            context.projectGraph.nodes[r].data.targets['serve'].options.port
-        ),
-      ] as number[])
-    ) +
-    (remotesToSkip.size + 1);
+    staticRemotes.length === 0 && remotePorts.length === 0
+      ? defaultStaticServerPort
+      : maxPortForRemotes + (remotesToSkip.size + 1);
 
   return {
     staticRemotes,

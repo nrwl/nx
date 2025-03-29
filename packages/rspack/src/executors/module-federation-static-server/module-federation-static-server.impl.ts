@@ -266,6 +266,10 @@ export default async function* moduleFederationStaticServer(
     'react'
   );
 
+  const defaultStaticServerPort =
+    context.projectGraph.nodes[context.projectName].data.targets?.['serve']
+      ?.options?.port ?? 8081;
+
   const remotes = getRemotes(
     [],
     options.serveOptions.skipRemotes,
@@ -275,7 +279,8 @@ export default async function* moduleFederationStaticServer(
       projectGraph: context.projectGraph,
       root: context.root,
     },
-    options.pathToManifestFile
+    options.pathToManifestFile,
+    defaultStaticServerPort
   );
 
   const staticRemotesConfig = parseStaticRemotesConfig(

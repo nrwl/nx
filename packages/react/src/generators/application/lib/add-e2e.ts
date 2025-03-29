@@ -40,7 +40,7 @@ export async function addE2e(
     e2eCiWebServerCommand: `${getPackageManagerCommand().exec} nx run ${
       options.projectName
     }:serve-static`,
-    e2eCiBaseUrl: `http://localhost:4200`,
+    e2eCiBaseUrl: `http://localhost:${options.devServerPort ?? 4200}`,
     e2eDevServerTarget: `${options.projectName}:serve`,
   };
 
