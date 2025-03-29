@@ -1091,6 +1091,10 @@ describe('TargetProjectLocator', () => {
       ${{ '.': 'dist/index.js' }}                                  | ${'@org/pkg1'}
       ${{ './subpath': './dist/subpath.js' }}                      | ${'@org/pkg1/subpath'}
       ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath'}
+      ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath/extra-path'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath/extra-path'}
+      ${{ './features/*.js': './dist/features/*.js' }}             | ${'@org/pkg1/features/some-file.js'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1'}
     `(
       'should find "$importPath" as "pkg1" project when exports="$exports"',
@@ -1130,6 +1134,10 @@ describe('TargetProjectLocator', () => {
       ${{ '.': 'dist/index.js' }}                                  | ${'@org/pkg1'}
       ${{ './subpath': './dist/subpath.js' }}                      | ${'@org/pkg1/subpath'}
       ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath'}
+      ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath/extra-path'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath'}
+      ${{ './*': './dist/foo/*/index.js' }}                        | ${'@org/pkg1/foo/subpath/extra-path'}
+      ${{ './features/*.js': './dist/features/*.js' }}             | ${'@org/pkg1/features/some-file.js'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1'}
     `(
       'should not find "$importPath" as "pkg1" project when exports="$exports" and isInPackageManagerWorkspaces is false',
@@ -1168,8 +1176,8 @@ describe('TargetProjectLocator', () => {
       ${undefined}                                                 | ${'@org/pkg1'}
       ${{}}                                                        | ${'@org/pkg1'}
       ${{ '.': 'dist/index.js' }}                                  | ${'@org/pkg1/subpath'}
+      ${{ './subpath/*': 'dist/subpath/*.js' }}                    | ${'@org/pkg1/foo'}
       ${{ './subpath': './dist/subpath.js' }}                      | ${'@org/pkg1/subpath/extra-path'}
-      ${{ './*': './dist/*.js' }}                                  | ${'@org/pkg1/subpath/extra-path'}
       ${{ './feature': null }}                                     | ${'@org/pkg1/feature'}
       ${{ import: './dist/index.js', default: './dist/index.js' }} | ${'@org/pkg1/subpath'}
     `(
