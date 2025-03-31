@@ -1,9 +1,9 @@
 ---
-title: 'Self-Host the Remote Cache'
+title: 'Self-Host your Remote Cache'
 description: 'Learn how to self-host Nx remote caching on AWS S3, Google Cloud, Azure, or shared drives, or build your own cache server for enhanced build performance in your monorepo.'
 ---
 
-# Self-Host the Remote Cache
+# Self-Host your Remote Cache
 
 Nx offers different ways to enable self-hosted remote caching for your workspace that can be used starting with Nx version 19.8 and higher:
 
