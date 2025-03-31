@@ -322,7 +322,7 @@ async function getConfigFileHash(
     ...(packageJson ? [hashObject(packageJson)] : []),
     // change this to bust the cache when making changes that would yield
     // different results for the same hash
-    hashObject({ bust: 1 }),
+    hashObject({ bust: 2 }),
   ]);
 }
 
@@ -415,8 +415,30 @@ function buildTscTargets(
         command = `echo "The 'typecheck' target is disabled because one or more project references set 'noEmit: true' in their tsconfig. Remove this property to resolve this issue."`;
       }
 
+      const dependsOn: string[] = [`^${targetName}`];
+      if (options.build && targets[options.build.targetName]) {
+        // we already processed and have a build target
+        dependsOn.unshift(options.build.targetName);
+      } else if (options.build) {
+        // check if the project will have a build target
+        const buildConfigPath = joinPathFragments(
+          projectRoot,
+          options.build.configName
+        );
+        if (
+          context.configFiles.some((f) => f === buildConfigPath) &&
+          isValidPackageJsonBuildConfig(
+            retrieveTsConfigFromCache(buildConfigPath, context.workspaceRoot),
+            context.workspaceRoot,
+            projectRoot
+          )
+        ) {
+          dependsOn.unshift(options.build.targetName);
+        }
+      }
+
       targets[targetName] = {
-        dependsOn: [`^${targetName}`],
+        dependsOn,
         command,
         options: { cwd: projectRoot },
         cache: true,
@@ -433,7 +455,8 @@ function buildTscTargets(
           tsConfig,
           internalProjectReferences,
           context.workspaceRoot,
-          projectRoot
+          projectRoot,
+          /* emitDeclarationOnly */ true
         ),
         syncGenerators: ['@nx/js:typescript-sync'],
         metadata: {
@@ -483,7 +506,9 @@ function buildTscTargets(
         tsConfig,
         internalProjectReferences,
         context.workspaceRoot,
-        projectRoot
+        projectRoot,
+        // should be false for build target, but providing it just in case is set to true
+        tsConfig.options.emitDeclarationOnly
       ),
       syncGenerators: ['@nx/js:typescript-sync'],
       metadata: {
@@ -685,7 +710,8 @@ function getOutputs(
   tsConfig: ParsedTsconfigData,
   internalProjectReferences: Record<string, ParsedTsconfigData>,
   workspaceRoot: string,
-  projectRoot: string
+  projectRoot: string,
+  emitDeclarationOnly: boolean
 ): string[] {
   const outputs = new Set<string>();
 
@@ -738,12 +764,32 @@ function getOutputs(
             )
       );
     } else if (config.options.outDir) {
-      outputs.add(
-        pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
-      );
+      if (emitDeclarationOnly) {
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(config.options.outDir, '**/*.d.ts'),
+            workspaceRoot,
+            projectRoot
+          )
+        );
+        if (tsConfig.options.declarationMap) {
+          outputs.add(
+            pathToInputOrOutput(
+              joinPathFragments(config.options.outDir, '**/*.d.ts.map'),
+              workspaceRoot,
+              projectRoot
+            )
+          );
+        }
+      } else {
+        outputs.add(
+          pathToInputOrOutput(config.options.outDir, workspaceRoot, projectRoot)
+        );
+      }
 
       if (config.options.tsBuildInfoFile) {
         if (
+          emitDeclarationOnly ||
           !normalize(config.options.tsBuildInfoFile).startsWith(
             `${normalize(config.options.outDir)}${sep}`
           )
@@ -770,6 +816,16 @@ function getOutputs(
               relativeRootDir,
               `*.tsbuildinfo`
             ),
+            workspaceRoot,
+            projectRoot
+          )
+        );
+      } else if (emitDeclarationOnly) {
+        // https://www.typescriptlang.org/tsconfig#tsBuildInfoFile
+        const name = basename(configFilePath, '.json');
+        outputs.add(
+          pathToInputOrOutput(
+            joinPathFragments(config.options.outDir, `${name}.tsbuildinfo`),
             workspaceRoot,
             projectRoot
           )
