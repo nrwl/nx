@@ -1161,6 +1161,56 @@ describe('app', () => {
       expect(packageJson.dependencies['react-router']).toBeDefined();
       expect(packageJson.devDependencies['@react-router/dev']).toBeDefined();
     });
+
+    it('should be configured to work with jest', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+      });
+
+      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      expect(jestConfig).toContain('@nx/react/plugins/jest');
+      expect(appTree.read('my-app/tsconfig.spec.json').toString())
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "module": "commonjs",
+            "moduleResolution": "node10",
+            "jsx": "react-jsx",
+            "types": [
+              "jest",
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts"
+            ]
+          },
+          "files": ["src/test-setup.ts"],
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+            "test/**/*.spec.tsx",
+            "test/**/*.spec.ts",
+            "test/**/*.test.tsx",
+            "test/**/*.test.ts"
+          ]
+        }
+        "
+      `);
+    });
   });
 
   describe('--directory="." (--root-project)', () => {

@@ -235,7 +235,8 @@ export async function applicationGeneratorInternal(
     },
     options.linter === 'eslint'
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-      : undefined
+      : undefined,
+    options.useReactRouter ? 'app' : 'src'
   );
 
   sortPackageJsonFields(tree, options.appProjectRoot);
