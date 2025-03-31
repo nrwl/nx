@@ -6265,250 +6265,214 @@
     },
     "path": "/nx-api/workspace"
   },
-  "powerpack-azure-cache": {
+  "azure-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-azure-cache",
-    "packageName": "@nx/powerpack-azure-cache",
-    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+    "name": "azure-cache",
+    "packageName": "@nx/azure-cache",
+    "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
     "documents": {
-      "/nx-api/powerpack-azure-cache/documents/overview": {
+      "/nx-api/azure-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-        "file": "external-generated/packages/powerpack-azure-cache/documents/overview",
+        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+        "file": "external-generated/packages/azure-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-azure-cache/documents/overview",
+        "path": "/nx-api/azure-cache/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+        "originalFilePath": "shared/packages/azure-cache/azure-cache-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-azure-cache",
-    "source": "/libs/nx-packages/powerpack-azure-cache/src",
+    "root": "/libs/nx-packages/azure-cache",
+    "source": "/libs/nx-packages/azure-cache/src",
     "executors": {},
     "generators": {},
     "migrations": {},
-    "path": "/nx-api/powerpack-azure-cache"
+    "path": "/nx-api/azure-cache"
   },
-  "powerpack-conformance": {
+  "conformance": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-conformance",
-    "packageName": "@nx/powerpack-conformance",
-    "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+    "name": "conformance",
+    "packageName": "@nx/conformance",
+    "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
     "documents": {
-      "/nx-api/powerpack-conformance/documents/overview": {
+      "/nx-api/conformance/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/powerpack-conformance/documents/overview",
+        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/conformance/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-conformance/documents/overview",
+        "path": "/nx-api/conformance/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+        "originalFilePath": "shared/packages/conformance/conformance-plugin"
       },
-      "/nx-api/powerpack-conformance/documents/create-conformance-rule": {
+      "/nx-api/conformance/documents/create-conformance-rule": {
         "id": "create-conformance-rule",
         "name": "Create a Conformance Rule",
-        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/powerpack-conformance/documents/create-conformance-rule",
+        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/conformance/documents/create-conformance-rule",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+        "path": "/nx-api/conformance/documents/create-conformance-rule",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-conformance/create-conformance-rule"
+        "originalFilePath": "shared/packages/conformance/create-conformance-rule"
       }
     },
-    "root": "/libs/nx-packages/powerpack-conformance",
-    "source": "/libs/nx-packages/powerpack-conformance/src",
+    "root": "/libs/nx-packages/conformance",
+    "source": "/libs/nx-packages/conformance/src",
     "executors": {
-      "/nx-api/powerpack-conformance/executors/bundle-rules": {
+      "/nx-api/conformance/executors/bundle-rules": {
         "description": "Compile and bundle one or more Nx Conformance Rules",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
+        "file": "external-generated/packages/conformance/executors/bundle-rules.json",
         "hidden": false,
         "name": "bundle-rules",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
-        "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
+        "originalFilePath": "/libs/nx-packages/conformance/src/executors/bundle-rules/schema.json",
+        "path": "/nx-api/conformance/executors/bundle-rules",
         "type": "executor"
       }
     },
     "generators": {
-      "/nx-api/powerpack-conformance/generators/create-rule": {
+      "/nx-api/conformance/generators/create-rule": {
         "description": "Create a new conformance rule",
-        "file": "external-generated/packages/powerpack-conformance/generators/create-rule.json",
+        "file": "external-generated/packages/conformance/generators/create-rule.json",
         "hidden": false,
         "name": "create-rule",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/generators/create-rule/schema.json",
-        "path": "/nx-api/powerpack-conformance/generators/create-rule",
+        "originalFilePath": "/libs/nx-packages/conformance/src/generators/create-rule/schema.json",
+        "path": "/nx-api/conformance/generators/create-rule",
         "type": "generator"
       }
     },
     "migrations": {},
-    "path": "/nx-api/powerpack-conformance"
+    "path": "/nx-api/conformance"
   },
-  "powerpack-enterprise-cloud": {
+  "owners": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-enterprise-cloud",
-    "packageName": "@nx/powerpack-enterprise-cloud",
-    "description": "A Nx Powerpack plugin which is specific to Nx Enterprise Cloud workspaces.",
-    "documents": {},
-    "root": "/libs/nx-packages/powerpack-enterprise-cloud",
-    "source": "/libs/nx-packages/powerpack-enterprise-cloud/src",
-    "executors": {},
-    "generators": {
-      "/nx-api/powerpack-enterprise-cloud/generators/init": {
-        "description": "Initialize Nx Powerpack Enterprise Cloud config",
-        "file": "external-generated/packages/powerpack-enterprise-cloud/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-enterprise-cloud/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
-        "type": "generator"
-      }
-    },
-    "migrations": {},
-    "path": "/nx-api/powerpack-enterprise-cloud"
-  },
-  "powerpack-gcs-cache": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-gcs-cache",
-    "packageName": "@nx/powerpack-gcs-cache",
-    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+    "name": "owners",
+    "packageName": "@nx/owners",
+    "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
     "documents": {
-      "/nx-api/powerpack-gcs-cache/documents/overview": {
+      "/nx-api/owners/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-        "file": "external-generated/packages/powerpack-gcs-cache/documents/overview",
+        "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
+        "file": "external-generated/packages/owners/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-gcs-cache/documents/overview",
+        "path": "/nx-api/owners/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+        "originalFilePath": "shared/packages/owners/owners-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-gcs-cache",
-    "source": "/libs/nx-packages/powerpack-gcs-cache/src",
-    "executors": {},
-    "generators": {},
-    "migrations": {},
-    "path": "/nx-api/powerpack-gcs-cache"
-  },
-  "powerpack-license": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-license",
-    "packageName": "@nx/powerpack-license",
-    "description": "Package to provide the ability to activate and read licenses for Nx Powerpack.",
-    "documents": {},
-    "root": "/libs/nx-packages/powerpack-license",
-    "source": "/libs/nx-packages/powerpack-license/src",
-    "executors": {},
-    "generators": {},
-    "migrations": {},
-    "path": "/nx-api/powerpack-license"
-  },
-  "powerpack-owners": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-owners",
-    "packageName": "@nx/powerpack-owners",
-    "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-    "documents": {
-      "/nx-api/powerpack-owners/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-        "file": "external-generated/packages/powerpack-owners/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/powerpack-owners/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/powerpack-owners/powerpack-owners-plugin"
-      }
-    },
-    "root": "/libs/nx-packages/powerpack-owners",
-    "source": "/libs/nx-packages/powerpack-owners/src",
+    "root": "/libs/nx-packages/owners",
+    "source": "/libs/nx-packages/owners/src",
     "executors": {},
     "generators": {
-      "/nx-api/powerpack-owners/generators/init": {
+      "/nx-api/owners/generators/init": {
         "description": "Initialize Nx Powerpack Owners config",
-        "file": "external-generated/packages/powerpack-owners/generators/init.json",
+        "file": "external-generated/packages/owners/generators/init.json",
         "hidden": false,
         "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-owners/generators/init",
+        "originalFilePath": "/libs/nx-packages/owners/src/generators/init/schema.json",
+        "path": "/nx-api/owners/generators/init",
         "type": "generator"
       },
-      "/nx-api/powerpack-owners/generators/sync-codeowners-file": {
+      "/nx-api/owners/generators/sync-codeowners-file": {
         "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
-        "file": "external-generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
+        "file": "external-generated/packages/owners/generators/sync-codeowners-file.json",
         "hidden": false,
         "name": "sync-codeowners-file",
-        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/schema.json",
-        "path": "/nx-api/powerpack-owners/generators/sync-codeowners-file",
+        "originalFilePath": "/libs/nx-packages/owners/src/generators/sync-codeowners-file/schema.json",
+        "path": "/nx-api/owners/generators/sync-codeowners-file",
         "type": "generator"
       }
     },
     "migrations": {},
-    "path": "/nx-api/powerpack-owners"
+    "path": "/nx-api/owners"
   },
-  "powerpack-s3-cache": {
+  "gcs-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-s3-cache",
-    "packageName": "@nx/powerpack-s3-cache",
-    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
+    "name": "gcs-cache",
+    "packageName": "@nx/gcs-cache",
+    "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
     "documents": {
-      "/nx-api/powerpack-s3-cache/documents/overview": {
+      "/nx-api/gcs-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-        "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
+        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+        "file": "external-generated/packages/gcs-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-s3-cache/documents/overview",
+        "path": "/nx-api/gcs-cache/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+        "originalFilePath": "shared/packages/gcs-cache/gcs-cache-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-s3-cache",
-    "source": "/libs/nx-packages/powerpack-s3-cache/src",
+    "root": "/libs/nx-packages/gcs-cache",
+    "source": "/libs/nx-packages/gcs-cache/src",
     "executors": {},
     "generators": {},
     "migrations": {},
-    "path": "/nx-api/powerpack-s3-cache"
+    "path": "/nx-api/gcs-cache"
   },
-  "powerpack-shared-fs-cache": {
+  "s3-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-shared-fs-cache",
-    "packageName": "@nx/powerpack-shared-fs-cache",
-    "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
+    "name": "s3-cache",
+    "packageName": "@nx/s3-cache",
+    "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
     "documents": {
-      "/nx-api/powerpack-shared-fs-cache/documents/overview": {
+      "/nx-api/s3-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
-        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
+        "file": "external-generated/packages/s3-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+        "path": "/nx-api/s3-cache/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+        "originalFilePath": "shared/packages/s3-cache/s3-cache-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-shared-fs-cache",
-    "source": "/libs/nx-packages/powerpack-shared-fs-cache/src",
+    "root": "/libs/nx-packages/s3-cache",
+    "source": "/libs/nx-packages/s3-cache/src",
+    "executors": {},
+    "generators": {},
+    "migrations": {},
+    "path": "/nx-api/s3-cache"
+  },
+  "shared-fs-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "shared-fs-cache",
+    "packageName": "@nx/shared-fs-cache",
+    "description": "A Nx plugin to enable you to use a shared file system directory",
+    "documents": {
+      "/nx-api/shared-fs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx plugin to enable you to use a shared file system directory",
+        "file": "external-generated/packages/shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/shared-fs-cache",
+    "source": "/libs/nx-packages/shared-fs-cache/src",
     "executors": {},
     "generators": {
-      "/nx-api/powerpack-shared-fs-cache/generators/init": {
+      "/nx-api/shared-fs-cache/generators/init": {
         "description": "Add the shared fs cache",
-        "file": "external-generated/packages/powerpack-shared-fs-cache/generators/init.json",
+        "file": "external-generated/packages/shared-fs-cache/generators/init.json",
         "hidden": false,
         "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-shared-fs-cache/generators/init",
+        "originalFilePath": "/libs/nx-packages/shared-fs-cache/src/generators/init/schema.json",
+        "path": "/nx-api/shared-fs-cache/generators/init",
         "type": "generator"
       }
     },
     "migrations": {},
-    "path": "/nx-api/powerpack-shared-fs-cache"
+    "path": "/nx-api/shared-fs-cache"
   }
 }

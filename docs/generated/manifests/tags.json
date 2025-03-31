@@ -988,6 +988,15 @@
       "path": "/nx-api/nx/documents/watch"
     }
   ],
+  "self-hosted-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/recipes/running-tasks/self-hosted-caching",
+      "id": "self-hosted-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/recipes/running-tasks/self-hosted-caching"
+    }
+  ],
   "init": [
     {
       "description": "",
@@ -1356,15 +1365,6 @@
       "path": "/nx-enterprise/powerpack/owners"
     }
   ],
-  "custom-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/features/powerpack/custom-caching",
-      "id": "custom-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/nx-enterprise/powerpack/custom-caching"
-    }
-  ],
   "database": [
     {
       "description": "",
@@ -1439,6 +1439,15 @@
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
+    }
+  ],
+  "running-tasks": [
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/task-running-lifecycle",
+      "id": "task-running-lifecycle",
+      "name": "Hook into the Task Running Lifecycle",
+      "path": "/extending-nx/recipes/task-running-lifecycle"
     }
   ],
   "remote-cache": [
