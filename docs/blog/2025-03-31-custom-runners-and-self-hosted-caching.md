@@ -24,7 +24,7 @@ In this instance, we did not spend enough time engaging with the community on a 
 
 ## **1. "We don't want open source capabilities to be taken away."**
 
-While we're still deprecating the older custom task runners API, our mistake was in not providing a one for one replacement. To address this, we are introducing new APIs to replace the old one — **fully supporting everything the previous implementation offered, including free self-hosted caching.**
+While we're still deprecating the older custom task runners API, our mistake was in not providing one-for-one replacement. To address this, we are introducing new APIs to replace the old one — **fully supporting everything the previous implementation offered, including free self-hosted caching.**
 
 ### Self-Hosted Cache API RFC
 
@@ -69,3 +69,5 @@ We recognize that some of these changes felt abrupt. To address that, we've put 
 The community's enthusiasm is what makes Nx successful, and we're very grateful for it. Good developer tools aren't built in isolation; they come from working together, listening, and refining as we go. The conversations we had over the past few months have helped us shape a better solution – one that works for more teams while keeping Nx fast and powerful.
 
 A huge thank you to everyone who shared their thoughts and helped push Nx forward - we wouldn't be where we are without you!
+
+- Victor Savkin and the Nx Team
