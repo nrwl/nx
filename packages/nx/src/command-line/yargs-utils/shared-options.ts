@@ -1,5 +1,5 @@
 import { Argv, ParserConfigurationOptions } from 'yargs';
-import { cpus } from 'node:os';
+import { availableParallelism, cpus } from 'node:os';
 
 interface ExcludeOptions {
   exclude: string[];
@@ -341,23 +341,24 @@ export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
     // don't require passing --parallel if NX_PARALLEL is set, but allow overriding it
     (process.env.NX_PARALLEL && args['parallel'] === undefined)
   ) {
-    return concurrency(Number(
-      args['maxParallel'] ||
+    return concurrency(args['maxParallel'] ||
         args['max-parallel'] ||
         process.env.NX_PARALLEL ||
-        0.5
-    ));
+        '3'
+    );
   } else if (args['parallel'] !== undefined) {
-    return concurrency(Number(args['parallel']));
+    return concurrency(args['parallel']);
   }
 }
 
-function concurrency(parallel: number) {
-  if (parallel > 0) {
-    if ( parallel < 1) {
-      return Math.floor(cpus().length * parallel);
-    }
-    return parallel;
+function concurrency(str: string) {
+  let parallel = parseInt(str);
+  if (isNaN(parallel)) {
+    throw new Error(`Invalid number: ${str}`);
   }
-  return 1;
+  if (str.at(-1) === '%') {
+    const maxCores = availableParallelism?.() ?? cpus().length;
+    parallel = maxCores * parallel / 100;
+  }
+  return parallel < 1 ? 1 : Math.floor(parallel);
 }
