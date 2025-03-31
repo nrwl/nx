@@ -2976,6 +2976,8 @@ __metadata:
       }
       const graph = builder.getUpdatedProjectGraph();
       const prunedGraph = pruneProjectGraph(graph, appPackageJson);
+      // @types/react is only used as peer dependency with `*` or `16 | 17 | 18` as a range
+      // so we should check if parsing version ranges works correctly
       expect(prunedGraph.externalNodes['npm:@types/react'])
         .toMatchInlineSnapshot(`
         {
@@ -2988,6 +2990,7 @@ __metadata:
           "type": "npm",
         }
       `);
+      // react-dom has a patch, so this check helps us to see if patch has been properly parsed
       expect(prunedGraph.externalNodes['npm:react-dom']).toMatchInlineSnapshot(`
         {
           "data": {
@@ -3004,7 +3007,12 @@ __metadata:
         lockFile,
         appPackageJson
       );
+      // resulting lockfile should contain flexible ranges and patches with modified paths applied
       expect(result).toEqual(appLockFile);
+      expect(result).toContain('"@types/react@npm:18.2.60"');
+      expect(result).toContain(
+        '"react-dom@patch:react-dom@18.2.0#.yarn/patches/react-dom.patch::locator=demo-app%40workspace%3A."'
+      );
     });
   });
 });

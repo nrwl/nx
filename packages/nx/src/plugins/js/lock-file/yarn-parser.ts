@@ -609,22 +609,6 @@ function isClassicAlias(
   );
 }
 
-function isPatch(
-  snapshot: YarnDependency,
-  node: ProjectGraphExternalNode,
-  keys: string[],
-  version: string
-): boolean {
-  return (
-    snapshot.version === node.data.version &&
-    keys.some(
-      (k) =>
-        k.split('::locator')[0] ===
-        `${node.data.packageName}@${version.split('::locator')[0]}`
-    )
-  );
-}
-
 function findOriginalKeys(
   dependencies: Record<string, YarnDependency>,
   node: ProjectGraphExternalNode
