@@ -117,10 +117,9 @@ export class AppComponent {
 
 {/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=410"></VideoLink> */}
 
-Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. The `test` and `lint` targets are defined in the application `project.json` file, while the `e2e` target is [inferred from the `apps/angular-store-e2e/cypress.config.ts` file](#inferred-tasks). We can use the same syntax as before to run these tasks:
+Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```shell
 npx nx test angular-store # runs the tests for angular-store
 npx nx lint inventory # runs the linter on inventory
-npx nx e2e angular-store-e2e # runs e2e tests for the angular-store
 ```

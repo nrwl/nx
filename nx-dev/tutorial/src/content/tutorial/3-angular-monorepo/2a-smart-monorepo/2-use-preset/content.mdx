@@ -1,6 +1,8 @@
 ---
 type: lesson
 title: Generate a Starter Repository
+filesystem:
+  watch: ['/angular-monorepo/*', '/angular-monorepo/apps/**']
 prepareCommands: []
 ---
 
@@ -35,6 +37,7 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Which bundler would you like to use? · esbuild
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
+✔ Which unit test runner would you like to use? · jest
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Which CI provider would you like to use? · github
 ```
