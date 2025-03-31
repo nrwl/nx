@@ -20,6 +20,7 @@ import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-op
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isBuildableLibrary } from './utils';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -363,7 +364,13 @@ function applyNxDependentConfig(
 
             const hasBuildTarget = 'build' in (node.data?.targets ?? {});
 
-            return !hasBuildTarget;
+            if (hasBuildTarget) {
+              return false;
+            }
+
+            // If there is no build target we check the package exports to see if they reference
+            // source files
+            return !isBuildableLibrary(node);
           })
           .map(
             (dep) => graph.nodes?.[dep.target]?.data?.metadata?.js?.packageName

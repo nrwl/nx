@@ -1,8 +1,8 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   getSelectedPackageManager,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -85,18 +85,18 @@ describe('Node Applications', () => {
 
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
     updateFile(`apps/${nodeapp}/src/main.ts`, (content) => {
-      return `import { ${nodelib} } from '@proj/${nodelib}';\n${content}\nconsole.log(${nodelib}());`;
+      return `import { ${nodelib} } from '@${workspaceName}/${nodelib}';\n${content}\nconsole.log(${nodelib}());`;
     });
     // pnpm does not link packages unless they are deps
     // npm, yarn, and bun will link them in the root node_modules regardless
     if (pm === 'pnpm') {
       updateJson(`apps/${nodeapp}/package.json`, (json) => {
         json.dependencies = {
-          [`@proj/${nodelib}`]: 'workspace:',
+          [`@${workspaceName}/${nodelib}`]: 'workspace:*',
         };
         return json;
       });
-      runCommand(getPackageManagerCommand().install);
+      runCommand(`cd apps/${nodeapp} && ${getPackageManagerCommand().install}`);
     }
     runCLI(`sync`);
 
@@ -174,41 +174,36 @@ describe('Node Applications', () => {
   }, 300_000);
 
   it('should be able to import a lib into a nest application', async () => {
-    const nestapp = uniq('nodeapp');
+    const nestApp = uniq('nestapp');
     const nestLib = uniq('nestlib');
 
     const port = getRandomPort();
     process.env.PORT = `${port}`;
-    runCLI(
-      `generate @nx/nest:app apps/${nestapp} --linter=eslint --unitTestRunner=jest`
-    );
+    runCLI(`generate @nx/nest:app apps/${nestApp} --no-interactive`);
 
-    runCLI(
-      `generate @nx/nest:lib libs/${nestLib} --name=${nestLib} --no-interactive`
-    );
+    runCLI(`generate @nx/nest:lib packages/${nestLib} --no-interactive`);
 
-    updateFile(
-      `apps/${nestapp}/src/app/app.module.ts`,
-      (_) => `import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import '@${workspaceName}/${nestLib}';
+    updateFile(`apps/${nestApp}/src/app/app.module.ts`, (content) => {
+      return `import '@${workspaceName}/${nestLib}';\n${content}\n`;
+    });
 
-@Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
-`
-    );
+    if (pm === 'pnpm') {
+      updateJson(`apps/${nestApp}/package.json`, (json) => {
+        json.dependencies = {
+          [`@${workspaceName}/${nestLib}`]: 'workspace:*',
+        };
+        return json;
+      });
+      runCommand(`${getPackageManagerCommand().install}`);
+    }
     runCLI(`sync`);
 
-    runCLI(`build ${nestapp}`);
-    checkFilesExist(`apps/${nestapp}/dist/main.js`);
+    console.log(readJson(`apps/${nestApp}/package.json`));
+    runCLI(`build ${nestApp} --verbose`);
+    checkFilesExist(`apps/${nestApp}/dist/main.js`);
 
     const p = await runCommandUntil(
-      `serve ${nestapp}`,
+      `serve ${nestApp}`,
       (output) =>
         output.includes(
           `Application is running on: http://localhost:${port}/api`
