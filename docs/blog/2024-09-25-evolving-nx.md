@@ -7,9 +7,9 @@ cover_image: /blog/images/evolving-nx/thumbnail.png
 description: Nx's journey from a side project to a tool for millions, including Nx Cloud and Nx Powerpack developments.
 ---
 
-{% callout type="info" title="Update - March 15th, 2025" %}
+{% callout type="info" title="Update - March 31st, 2025" %}
 
-Self-hosted caching is now free for everyone. Read more [in our blog post](todojs) and in our documentation about [remote caching options with Nx](/remote-cache).
+Self-hosted caching is now free for everyone. Read more [in our blog post](/blog/custom-runners-and-self-hosted-caching) and in our documentation about [remote caching options with Nx](/remote-cache).
 
 {% /callout %}
 
