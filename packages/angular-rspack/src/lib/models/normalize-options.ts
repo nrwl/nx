@@ -242,6 +242,7 @@ export function normalizeOptions(
     aot,
     browser: options.browser ?? './src/main.ts',
     commonChunk: options.commonChunk ?? true,
+    define: options.define ?? {},
     devServer: normalizeDevServer(options.devServer),
     extractLicenses: options.extractLicenses ?? true,
     fileReplacements: resolveFileReplacements(fileReplacements, root),
