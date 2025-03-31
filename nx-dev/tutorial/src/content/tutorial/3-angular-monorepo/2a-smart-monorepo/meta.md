@@ -5,11 +5,5 @@ editor:
   fileTree:
     allowEdits: true
 filesystem:
-  watch:
-    [
-      '/*.json',
-      '/(apps|libs)/*/*.*',
-      '/(apps|libs)/*/*/*.*',
-      '/(apps|libs)/*/*/*/*.*',
-    ]
+  watch: ['/*.json', '/libs', '/(apps|libs)/**']
 ---
