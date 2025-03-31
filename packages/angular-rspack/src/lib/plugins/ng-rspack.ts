@@ -72,6 +72,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
       ngDevMode: isProduction ? 'false' : {},
       ngJitMode: this.pluginOptions.aot ? undefined : 'true',
       ngServerMode: this.pluginOptions.hasServer,
+      ...(this.pluginOptions.define ?? {}),
     }).apply(compiler);
     if (this.pluginOptions.assets) {
       new CopyRspackPlugin({

@@ -43,7 +43,6 @@ export interface PluginUnsupportedOptions {
   };
   externalDependencies?: string[];
   clearScreen?: boolean;
-  define?: Record<string, string>;
   baseHref?: string;
   verbose?: boolean;
   progress?: boolean;
@@ -76,7 +75,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'security',
   'externalDependencies',
   'clearScreen',
-  'define',
   'baseHref',
   'verbose',
   'progress',
