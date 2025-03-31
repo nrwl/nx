@@ -9,12 +9,8 @@ Nx PowerPack is a suite of paid extensions for the Nx CLI specifically designed 
 
 The following features are available after you [activate a Powerpack license](/nx-enterprise/activate-powerpack):
 
-{% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
-
-    {% link-card title="Conformance" type="Powerpack Feature" url="/nx-enterprise/powerpack/conformance" icon="CheckBadgeIcon" /%}
-    {% link-card title="Owners" type="Powerpack Feature"  url="/nx-enterprise/powerpack/owners" icon="UserGroupIcon" /%}
-
-{% /cards %}
+- [Conformance](/nx-enterprise/powerpack/conformance)
+- [Owners](/nx-enterprise/powerpack/owners)
 
 {% callout title="Looking for self-hosted caching?" type="info" %}
 
