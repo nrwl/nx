@@ -6,7 +6,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { FAQPageJsonLd } from 'next-seo';
 import Link from 'next/link';
@@ -16,44 +16,125 @@ export function Faq(): ReactElement {
   const faqs = [
     {
       question: 'Does Nx Powerpack activation require network access?',
-      answer:
+      answerJson:
         'If you enable Nx Powerpack without Nx Cloud, no network requests will be created and no data will be collected.',
+      answerUi: (
+        <p>
+          If you enable Nx Powerpack without Nx Cloud, no network requests will
+          be created and no data will be collected.
+        </p>
+      ),
     },
     {
       question: 'Can I get an Nx Powerpack license for free?',
-      answer:
+      answerJson:
         'Open source projects can get Powerpack for free, and small teams can get a remote cache only license for free. All licenses are perpetual and licenses can be updated as long as the organization still qualifies.',
+      answerUi: (
+        <p>
+          Open source projects can get Powerpack for free, and small teams can
+          get a remote cache only license for free. All licenses are perpetual
+          and licenses can be updated as long as the organization still
+          qualifies.
+        </p>
+      ),
     },
     {
       question: 'How do we define a small team?',
-      answer:
+      answerJson:
         'We value small teams using Nx. That is why we provide a free, perpetual, remote cache only license to any company with fewer than 30 engineers using Nx. If you have a special case, reach out and we will help. Read more here: https://nx.dev/nx-enterprise/powerpack/free-licenses-and-trials',
+      answerUi: (
+        <p>
+          We value small teams using Nx. That is why we provide a free,
+          perpetual, remote cache only license to any company with fewer than 30
+          engineers using Nx. If you have a special case, reach out and we will
+          help.
+          <Link
+            href="https://nx.dev/nx-enterprise/powerpack/free-licenses-and-trials"
+            title="Free licenses and trials"
+            className="font-semibold"
+          >
+            Read more here.
+          </Link>
+        </p>
+      ),
     },
     {
       question: 'What can a large team do?',
-      answer:
+      answerJson:
         'You can get a trial license immediately. Read more here: https://nx.dev/nx-enterprise/powerpack/free-licenses-and-trials',
+      answerUi: (
+        <p>
+          You can get a trial license immediately.{' '}
+          <Link
+            href="https://nx.dev/nx-enterprise/powerpack/free-licenses-and-trials"
+            title="Free licenses and trials"
+            className="font-semibold"
+          >
+            Read more here.
+          </Link>
+        </p>
+      ),
     },
     {
       question: 'Want to use Powerpack for OSS?',
-      answer:
-        'You can apply for a free OSS license here: https://nx.dev/powerpack/special-offer',
+      answerJson:
+        'You can get Powerpack for free for your open source projects. Learn more in the docs: https://nx.dev/nx-enterprise/powerpack/licenses-and-trials#powerpack-for-oss-projects',
+      answerUi: (
+        <p>
+          You can get Powerpack for free for your open source projects.{' '}
+          <Link
+            href="https://nx.dev/nx-enterprise/powerpack/licenses-and-trials#powerpack-for-oss-projects"
+            title="Powerpack for OSS projects"
+            className="font-semibold"
+          >
+            Learn more about it in our docs.
+          </Link>
+        </p>
+      ),
     },
     {
       question:
         'Only interested in Nx Powerpack because of Custom Tasks Runner deprecation',
-      answer:
+      answerJson:
         'We created a transition path from using Custom Tasks Runners to using the new plugins api hooks (preTasksExecution and postTasksExectution) and Nx Powerpack. Read more here: https://nx.dev/deprecated/custom-tasks-runner',
+      answerUi: (
+        <p>
+          We created a transition path from using Custom Tasks Runners to using
+          the new plugins api hooks (preTasksExecution and postTasksExectution)
+          and Nx Powerpack.{' '}
+          <Link
+            href="https://nx.dev/deprecated/custom-tasks-runner"
+            title="Custom Tasks Runner deprecation"
+            className="font-semibold"
+          >
+            Read more here.
+          </Link>
+        </p>
+      ),
     },
     {
       question: 'Is Nx Powerpack license perpetual?',
-      answer:
+      answerJson:
         'Yes. The most recent version of Nx you can access while your license is still active will remain usable even after the license expires.',
+      answerUi: (
+        <p>
+          <Strong>Yes</Strong>. The most recent version of Nx you can access
+          while your license is still active will remain usable even after the
+          license expires.
+        </p>
+      ),
     },
     {
       question: 'Do Nx Enterprise customers have access to Nx Powerpack?',
-      answer:
+      answerJson:
         'Nx Powerpack is provided at no additional cost for Nx Enterprise customers. Your DPE can help you get maximum value out of Nx Powerpack packages.',
+      answerUi: (
+        <p>
+          Nx Powerpack is provided at <Strong>no additional cost</Strong> for Nx
+          Enterprise customers. Your DPE can help you get maximum value out of
+          Nx Powerpack packages.
+        </p>
+      ),
     },
   ];
 
@@ -75,7 +156,7 @@ export function Faq(): ReactElement {
                 title="Reach out to the team"
                 className="font-semibold"
               >
-                Can’t find the answer you’re looking for?
+                Can't find the answer you're looking for?
               </Link>
             </p>
           </header>
@@ -83,7 +164,7 @@ export function Faq(): ReactElement {
             useAppDir={true}
             mainEntity={faqs.map((faq) => ({
               questionName: faq.question,
-              acceptedAnswerText: faq.answer,
+              acceptedAnswerText: faq.answerJson,
             }))}
           />
           <div className="mt-12 lg:col-span-2 lg:mt-0">
@@ -116,10 +197,11 @@ export function Faq(): ReactElement {
                         leaveFrom="transform translate-y-0 opacity-100"
                         leaveTo="transform -translate-y-6 opacity-0"
                       >
-                        <DisclosurePanel as="dd" className="mt-2 pr-12">
-                          <p className="text-base text-slate-500 dark:text-slate-400">
-                            {faq.answer}
-                          </p>
+                        <DisclosurePanel
+                          as="dd"
+                          className="mt-2 pr-12 text-base text-slate-500 dark:text-slate-400"
+                        >
+                          {faq.answerUi}
                         </DisclosurePanel>
                       </Transition>
                     </>
