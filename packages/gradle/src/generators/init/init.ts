@@ -9,12 +9,14 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { nxVersion } from '../../utils/versions';
+import {
+  gradleProjectGraphPluginName,
+  gradleProjectGraphVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
 import { dirname, join, basename } from 'path';
-
-const nativePluginName = 'dev.nx.gradle';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -94,10 +96,10 @@ function addNxProjectGraphPluginToBuildGradle(
   }
 
   const nxProjectGraphReportPlugin = filename.endsWith('.kts')
-    ? `id("${nativePluginName}") version("+")`
-    : `id "${nativePluginName}" version "+"`;
+    ? `id("${gradleProjectGraphPluginName}") version("${gradleProjectGraphVersion}")`
+    : `id "${gradleProjectGraphPluginName}" version "${gradleProjectGraphVersion}"`;
   if (buildGradleContent.includes('plugins {')) {
-    if (!buildGradleContent.includes(nativePluginName)) {
+    if (!buildGradleContent.includes(gradleProjectGraphPluginName)) {
       buildGradleContent = buildGradleContent.replace(
         'plugins {',
         `plugins {
@@ -110,14 +112,16 @@ function addNxProjectGraphPluginToBuildGradle(
 }\n\r${buildGradleContent}`;
   }
 
-  const applyNxProjectGraphReportPlugin = `plugin("${nativePluginName}")`;
+  const applyNxProjectGraphReportPlugin = `plugin("${gradleProjectGraphPluginName}")`;
   if (buildGradleContent.includes('allprojects {')) {
     if (
-      !buildGradleContent.includes(`plugin("${nativePluginName}")`) &&
-      !buildGradleContent.includes(`plugin('${nativePluginName}')`)
+      !buildGradleContent.includes(
+        `plugin("${gradleProjectGraphPluginName}")`
+      ) &&
+      !buildGradleContent.includes(`plugin('${gradleProjectGraphPluginName}')`)
     ) {
       logger.warn(
-        `Please add the ${nativePluginName} plugin to your ${gradleFilePath}:
+        `Please add the ${gradleProjectGraphPluginName} plugin to your ${gradleFilePath}:
 allprojects {
   apply {
       ${applyNxProjectGraphReportPlugin}
