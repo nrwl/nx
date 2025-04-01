@@ -5839,6 +5839,16 @@
       }
     },
     "migrations": {
+      "/nx-api/vue/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/vue/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/vue",
+        "path": "/nx-api/vue/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
       "/nx-api/vue/migrations/19.4.3-package-updates": {
         "description": "",
         "file": "generated/packages/vue/migrations/19.4.3-package-updates.json",
