@@ -1,13 +1,24 @@
 plugins {
   `java-gradle-plugin`
   `maven-publish`
+  signing
   id("com.ncorti.ktfmt.gradle") version "+"
+  id("dev.nx.gradle.project-graph") version ("+")
   id("org.jetbrains.kotlin.jvm") version "2.1.10"
+  id("com.gradle.plugin-publish") version "1.2.1"
 }
 
-group = "dev.nx"
+group = "dev.nx.gradle"
 
-version = "0.0.1-beta.2"
+version = "0.0.2"
+
+allprojects {
+  apply {
+    plugin("project-report")
+    plugin("dev.nx.gradle.project-graph")
+    plugin("com.ncorti.ktfmt.gradle")
+  }
+}
 
 repositories { mavenCentral() }
 
@@ -22,24 +33,22 @@ java {
 }
 
 gradlePlugin {
+  website = "https://nx.dev/"
+  vcsUrl = "https://github.com/nrwl/nx"
   plugins {
     create("nxProjectGraphPlugin") {
-      id = "dev.nx.gradle"
+      id = "dev.nx.gradle.project-graph"
       implementationClass = "dev.nx.gradle.NxProjectGraphReportPlugin"
       displayName = "The Nx Plugin for Gradle to generate Nx project graph"
       description = "Generates a JSON file with nodes, dependencies, and external nodes for Nx"
+      tags = listOf("nx", "monorepo", "javascript", "typescript")
     }
   }
 }
 
-publishing {
-  publications {
-    create<MavenPublication>("mavenJava") {
-      from(components["java"])
-      groupId = "dev.nx"
-      artifactId = "gradle"
-      version = "0.0.1-beta.2"
-
+afterEvaluate {
+  publishing {
+    publications.named("pluginMaven", MavenPublication::class) {
       pom {
         name.set("Nx Gradle Project Graph Plugin")
         description.set(
@@ -68,13 +77,58 @@ publishing {
         }
       }
     }
-  }
 
-  repositories {
-    maven {
-      name = "localStaging"
-      url = uri(layout.buildDirectory.dir("staging-repo"))
+    repositories {
+      maven {
+        name = "localStaging"
+        url = uri(layout.buildDirectory.dir("staging"))
+      }
     }
+  }
+  publishing {
+    publications.named("nxProjectGraphPluginPluginMarkerMaven", MavenPublication::class) {
+      pom {
+        name.set("Nx Gradle Project Graph Plugin")
+        description.set(
+            "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx")
+        url.set("https://github.com/nrwl/nx")
+
+        licenses {
+          license {
+            name.set("The Apache License, Version 2.0")
+            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+          }
+        }
+
+        developers {
+          developer {
+            id.set("nx")
+            name.set("Nx Java Services")
+            email.set("java-services@nrwl.io")
+          }
+        }
+
+        scm {
+          connection.set("scm:git:git://github.com/nrwl/nx.git")
+          developerConnection.set("scm:git:ssh://github.com/nrwl/nx.git")
+          url.set("https://github.com/nrwl/nx")
+        }
+
+        repositories {
+          maven {
+            name = "localStaging"
+            url = uri(layout.buildDirectory.dir("staging"))
+          }
+        }
+      }
+    }
+  }
+}
+
+signing {
+  afterEvaluate {
+    sign(publishing.publications["pluginMaven"])
+    sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
   }
 }
 
