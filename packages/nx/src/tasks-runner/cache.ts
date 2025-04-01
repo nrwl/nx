@@ -131,6 +131,7 @@ export class DbCache {
     if (res) {
       return {
         ...res,
+        terminalOutput: res.terminalOutput ?? '',
         remote: false,
       };
     }
@@ -147,6 +148,7 @@ export class DbCache {
 
         return {
           ...res,
+          terminalOutput: res.terminalOutput ?? '',
           remote: true,
         };
       } else {
