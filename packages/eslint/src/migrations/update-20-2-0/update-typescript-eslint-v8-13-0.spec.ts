@@ -1,5 +1,5 @@
 import { readJson, writeJson, type Tree } from '@nx/devkit';
-import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { TempFs } from '@nx/devkit/testing';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './update-typescript-eslint-v8-13-0';
 

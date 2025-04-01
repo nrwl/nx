@@ -1,4 +1,4 @@
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/testing';
 import { splitConfigFiles } from './split-config-files';
 
 describe('split config files', () => {
