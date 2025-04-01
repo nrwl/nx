@@ -3085,6 +3085,26 @@
       },
       {
         "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-next14-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-next14-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "next/migrations/20.7.1-beta.0-next14-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-next15-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-next15-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "next/migrations/20.7.1-beta.0-next15-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/next/migrations/19.0.3-package-updates.json",
         "hidden": false,
         "name": "19.0.3-package-updates",
