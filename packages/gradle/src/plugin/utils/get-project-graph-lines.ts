@@ -8,11 +8,17 @@ export async function getNxProjectGraphLines(
   gradleConfigHash: string,
   gradlePluginOptions: GradlePluginOptions
 ): Promise<string[]> {
+  if (process.env.VERCEL) {
+    // skip on Vercel
+    return [];
+  }
+
   let nxProjectGraphBuffer: Buffer;
 
-  const gradlePluginOptionsArgs = Object.entries(gradlePluginOptions).map(
-    ([key, value]) => `-P${key}=${value}`
-  );
+  const gradlePluginOptionsArgs =
+    Object.entries(gradlePluginOptions ?? {})?.map(
+      ([key, value]) => `-P${key}=${value}`
+    ) ?? [];
 
   try {
     nxProjectGraphBuffer = await execGradleAsync(gradlewFile, [
