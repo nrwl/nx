@@ -5,7 +5,6 @@ import * as rollup from 'rollup';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import * as autoprefixer from 'autoprefixer';
 import {
-  joinPathFragments,
   logger,
   type ProjectGraph,
   readCachedProjectGraph,
@@ -83,7 +82,7 @@ export function withNx(
 
   const tsConfigPath =
     options.buildLibsFromSource || global.NX_GRAPH_CREATION
-      ? joinPathFragments(workspaceRoot, options.tsConfig)
+      ? join(workspaceRoot, options.tsConfig)
       : createTmpTsConfig(
           options.tsConfig,
           workspaceRoot,
