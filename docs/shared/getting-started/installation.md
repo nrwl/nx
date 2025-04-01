@@ -77,6 +77,14 @@ You can also manually install the nx NPM package and create a [nx.json](/referen
 You can install Nx globally. Depending on your package manager, use one of the following commands:
 
 {% tabs %}
+{% tab label="Homebrew" %}
+
+```shell
+brew tap nrwl/nx
+brew install nx
+```
+
+{% /tab %}
 {% tab label="npm" %}
 
 ```shell
@@ -102,14 +110,6 @@ pnpm add --global nx@latest
 
 ```shell
 bun install --global nx@latest
-```
-
-{% /tab %}
-{% tab label="Homebrew" %}
-
-```shell
-brew tap nrwl/nx
-brew install nx
 ```
 
 {% /tab %}
