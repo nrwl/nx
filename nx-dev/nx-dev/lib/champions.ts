@@ -432,8 +432,8 @@ export const champions: Champion[] = [
     imageUrl: '/images/champions/kevin-oliveira.webp',
     contact: [
       {
-        label: '@koliveira',
-        link: 'https://twitter.com/koliveira',
+        label: '@koliveira15',
+        link: 'https://twitter.com/koliveira15',
       },
     ],
     location: 'Rhode Island, USA',
