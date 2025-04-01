@@ -1,12 +1,18 @@
 import { Serializable } from 'child_process';
 import * as yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import {
-  getPseudoTerminal,
+  createPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
 import { signalToCode } from '../../utils/exit-codes';
-import { ParallelRunningTasks, SeriallyRunningTasks } from './running-tasks';
+import {
+  ParallelRunningTasks,
+  runSingleCommandWithPseudoTerminal,
+  SeriallyRunningTasks,
+} from './running-tasks';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {
@@ -65,10 +71,7 @@ const propKeys = [
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
-  commands: {
-    command: string;
-    forwardAllArgs?: boolean;
-  }[];
+  commands: Array<RunCommandsCommandOptions>;
   unknownOptions?: {
     [k: string]: any;
   };
@@ -120,15 +123,37 @@ export async function runCommands(
     );
   }
 
+  const isSingleCommand = normalized.commands.length === 1;
+
   const pseudoTerminal =
-    !options.parallel && PseudoTerminal.isSupported()
-      ? getPseudoTerminal()
+    (isSingleCommand || !options.parallel) && PseudoTerminal.isSupported()
+      ? createPseudoTerminal()
       : null;
 
+  const isSingleCommandAndCanUsePseudoTerminal =
+    isSingleCommand &&
+    pseudoTerminal &&
+    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    !normalized.commands[0].prefix &&
+    normalized.usePty;
+
+  const tuiEnabled = isTuiEnabled();
+
   try {
-    const runningTask = options.parallel
-      ? new ParallelRunningTasks(normalized, context)
-      : new SeriallyRunningTasks(normalized, context, pseudoTerminal);
+    const runningTask = isSingleCommandAndCanUsePseudoTerminal
+      ? await runSingleCommandWithPseudoTerminal(
+          normalized,
+          context,
+          pseudoTerminal
+        )
+      : options.parallel
+      ? new ParallelRunningTasks(normalized, context, tuiEnabled)
+      : new SeriallyRunningTasks(
+          normalized,
+          context,
+          tuiEnabled,
+          pseudoTerminal
+        );
 
     registerProcessListener(runningTask, pseudoTerminal);
     return runningTask;
@@ -142,7 +167,7 @@ export async function runCommands(
   }
 }
 
-function normalizeOptions(
+export function normalizeOptions(
   options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {
@@ -325,7 +350,7 @@ function filterPropKeysFromUnParsedOptions(
 let registered = false;
 
 function registerProcessListener(
-  runningTask: ParallelRunningTasks | SeriallyRunningTasks,
+  runningTask: PseudoTtyProcess | ParallelRunningTasks | SeriallyRunningTasks,
   pseudoTerminal?: PseudoTerminal
 ) {
   if (registered) {
@@ -340,7 +365,9 @@ function registerProcessListener(
       pseudoTerminal.sendMessageToChildren(message);
     }
 
-    runningTask.send(message);
+    if ('send' in runningTask) {
+      runningTask.send(message);
+    }
   });
 
   // Terminate any task processes on exit

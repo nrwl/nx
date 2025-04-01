@@ -3,7 +3,7 @@
 mod os;
 
 #[allow(clippy::module_inception)]
-mod pseudo_terminal;
+pub mod pseudo_terminal;
 
 pub mod child_process;
 
