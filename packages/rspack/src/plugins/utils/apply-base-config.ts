@@ -121,7 +121,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    clean: options.deleteOutputPath,
+    clean: config.output?.clean ?? options.deleteOutputPath,
   };
 
   config.watch = options.watch;
