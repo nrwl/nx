@@ -1,4 +1,4 @@
-# dev.nx.gradle
+# dev.nx.gradle.project-graph
 
 This gradle plugin contains
 
@@ -9,7 +9,7 @@ build.gradle.kts
 
 ```
 plugins {
-    id("dev.nx.gradle") version("+")
+    id("dev.nx.gradle.project-graph") version("+")
 }
 ```
 
@@ -18,7 +18,7 @@ build.gradle
 
 ```
 plugins {
-    id "dev.nx.gradle" version "+"
+    id "dev.nx.gradle.project-graph" version "+"
 }
 ```
 

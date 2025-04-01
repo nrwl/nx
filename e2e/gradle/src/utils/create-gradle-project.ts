@@ -32,16 +32,6 @@ export function createGradleProject(
     }).toString()
   );
   e2eConsoleLogger(
-    runCommand(`${gradleCommand} --stop`, {
-      cwd,
-    })
-  );
-  e2eConsoleLogger(
-    runCommand(`${gradleCommand} clean`, {
-      cwd,
-    })
-  );
-  e2eConsoleLogger(
     runCommand(
       `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite`,
       {
@@ -49,6 +39,19 @@ export function createGradleProject(
       }
     )
   );
+
+  try {
+    e2eConsoleLogger(
+      runCommand(`${gradleCommand} --stop`, {
+        cwd,
+      })
+    );
+    e2eConsoleLogger(
+      runCommand(`${gradleCommand} clean`, {
+        cwd,
+      })
+    );
+  } catch (e) {}
 
   if (addProjectJsonNamePrefix) {
     createFileSync(join(cwd, 'app/project.json'));
@@ -76,9 +79,12 @@ export function createGradleProject(
   );
 
   e2eConsoleLogger(
-    execSync(`${gradleCommand} publishToMavenLocal`, {
-      cwd: `${__dirname}/../../../../packages/gradle/project-graph`,
-    }).toString()
+    execSync(
+      `${gradleCommand} :project-graph:publishToMavenLocal -x :project-graph:signNxProjectGraphPluginPluginMarkerMavenPublication -x :project-graph:signPluginMavenPublication -x :project-graph:publishNxProjectGraphPluginPluginMarkerMavenPublicationToMavenLocal -x :project-graph:publishPluginMavenPublicationToMavenLocal`,
+      {
+        cwd: `${__dirname}/../../../..`,
+      }
+    ).toString()
   );
 }
 
