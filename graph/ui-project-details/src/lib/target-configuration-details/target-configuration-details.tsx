@@ -19,6 +19,7 @@ import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { PropertyInfoTooltip } from '../tooltips/property-info-tooltip';
+
 interface TargetConfigurationDetailsProps {
   projectName: string;
   targetName: string;
