@@ -105,6 +105,14 @@ bun install --global nx@latest
 ```
 
 {% /tab %}
+{% tab label="Homebrew" %}
+
+```shell
+brew tap nrwl/nx
+brew install nx
+```
+
+{% /tab %}
 {% /tabs %}
 
 The advantage of a global installation is that you don't have to prefix your commands with npx, yarn or pnpm. The global Nx installation hands off the process execution to the local Nx installation in your repository, which eliminates any issues with outdated globally installed packages.
