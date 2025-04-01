@@ -50,8 +50,9 @@ export function PartnersList(): JSX.Element {
         logo: <CallstackIcon aria-hidden="true" className="mb-4 h-12" />,
         href: 'https://callstack.com/',
         location: 'EU',
-        tagline: "We Don't Just Ship Products, We Shape The Space",
-        capabilities: ['React Native'],
+        tagline:
+          'Cross-platform apps with one codebase. Repack. Reassure. React Native CLI.',
+        capabilities: ['React Native', 'React', 'Next.js', 'SwiftUI'],
       },
       {
         name: 'E-Square',
