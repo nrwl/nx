@@ -4892,6 +4892,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/remix/migrations/20.7.1-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/remix",
+        "path": "remix/migrations/20.7.1-beta.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/remix/migrations/20.1.0-package-updates.json",
         "hidden": false,
         "name": "20.1.0-package-updates",
