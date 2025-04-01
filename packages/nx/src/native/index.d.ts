@@ -7,7 +7,21 @@ export declare class ExternalObject<T> {
     [K: symbol]: T
   }
 }
+export declare class AppLifeCycle {
+  constructor(tasks: Array<Task>, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string)
+  startCommand(threadCount?: number | undefined | null): void
+  scheduleTask(task: Task): void
+  startTasks(tasks: Array<Task>, metadata: object): void
+  printTaskTerminalOutput(task: Task, status: string, output: string): void
+  endTasks(taskResults: Array<TaskResult>, metadata: TaskMetadata): void
+  endCommand(): void
+  __init(doneCallback: () => any): void
+  registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  __setCloudMessage(message: string): Promise<void>
+}
+
 export declare class ChildProcess {
+  getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   kill(): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
@@ -245,9 +259,13 @@ export interface ProjectGraph {
 
 export declare export function remove(src: string): void
 
+export declare export function restoreTerminal(): void
+
 export interface RuntimeInput {
   runtime: string
 }
+
+export declare export function showInfoAboutParser(terminal: ExternalObject<PseudoTerminal>): void
 
 export interface Target {
   executor?: string
@@ -265,10 +283,41 @@ export interface Task {
   projectRoot?: string
 }
 
+export interface Task {
+  id: string
+  target: TaskTarget
+  overrides: any
+  outputs: Array<string>
+  projectRoot?: string
+  hash?: string
+  startTime?: number
+  endTime?: number
+  cache?: boolean
+  parallelism: boolean
+  continuous?: boolean
+}
+
 export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
+}
+
+export interface TaskMetadata {
+  groupId: number
+}
+
+export interface TaskOverrides {
+
+}
+
+export interface TaskResult {
+  task: Task
+  status: string
+  code: number
+  terminalOutput?: string
+  startTime?: number
+  endTime?: number
 }
 
 export interface TaskRun {
@@ -285,6 +334,12 @@ export interface TaskTarget {
   configuration?: string
 }
 
+export interface TaskTarget {
+  project: string
+  target: string
+  configuration?: string
+}
+
 export declare export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
 
 /**
@@ -292,6 +347,15 @@ export declare export function testOnlyTransferFileMap(projectFiles: Record<stri
  * This wont be needed once the project graph is created in Rust
  */
 export declare export function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+
+export interface TuiCliArgs {
+  targets?: string[] | undefined
+  tuiAutoExit?: boolean | number | undefined
+}
+
+export interface TuiConfig {
+  autoExit?: boolean | number | undefined
+}
 
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap

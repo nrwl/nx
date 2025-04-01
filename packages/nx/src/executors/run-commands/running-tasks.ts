@@ -1,24 +1,23 @@
+import * as chalk from 'chalk';
 import { ChildProcess, exec, Serializable } from 'child_process';
-import { RunningTask } from '../../tasks-runner/running-tasks/running-task';
+import { env as appendLocalEnv } from 'npm-run-path';
+import { isAbsolute, join } from 'path';
+import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import {
-  LARGE_BUFFER,
-  NormalizedRunCommandsOptions,
-  RunCommandsCommandOptions,
-  RunCommandsOptions,
-} from './run-commands.impl';
 import {
   PseudoTerminal,
   PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
-import { isAbsolute, join } from 'path';
-import * as chalk from 'chalk';
-import { env as appendLocalEnv } from 'npm-run-path';
+import { RunningTask } from '../../tasks-runner/running-tasks/running-task';
 import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import * as treeKill from 'tree-kill';
+import {
+  LARGE_BUFFER,
+  NormalizedRunCommandsOptions,
+  RunCommandsCommandOptions,
+} from './run-commands.impl';
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
@@ -28,7 +27,11 @@ export class ParallelRunningTasks implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
 
-  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
+  constructor(
+    options: NormalizedRunCommandsOptions,
+    context: ExecutorContext,
+    private readonly tuiEnabled: boolean
+  ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
         new RunningNodeProcess(
@@ -160,6 +163,7 @@ export class SeriallyRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
+    private readonly tuiEnabled: boolean,
     private pseudoTerminal?: PseudoTerminal
   ) {
     this.run(options, context)
@@ -201,15 +205,16 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext
   ) {
+    // TODO(@FrozenPandaz): Revisit this causing a bad file descriptor error in the unit tests for run-commands
+    // We have temporarily set usePty to false when more than one command for now
+    const usePty = options.commands.length === 1 && options.usePty;
     for (const c of options.commands) {
       const childProcess = await this.createProcess(
         c,
-        [],
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
-        false,
-        options.usePty,
+        usePty,
         options.streamOutput,
         options.tty,
         options.envFile
@@ -235,11 +240,9 @@ export class SeriallyRunningTasks implements RunningTask {
 
   private async createProcess(
     commandConfig: RunCommandsCommandOptions,
-    readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    isParallel: boolean,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -251,8 +254,6 @@ export class SeriallyRunningTasks implements RunningTask {
       this.pseudoTerminal &&
       process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
       !commandConfig.prefix &&
-      readyWhenStatus.length === 0 &&
-      !isParallel &&
       usePty
     ) {
       return createProcessWithPseudoTty(
@@ -272,7 +273,7 @@ export class SeriallyRunningTasks implements RunningTask {
       color,
       cwd,
       env,
-      readyWhenStatus,
+      [],
       streamOutput,
       envFile
     );
@@ -393,14 +394,26 @@ class RunningNodeProcess implements RunningTask {
   }
 }
 
+export function runSingleCommandWithPseudoTerminal(
+  normalized: NormalizedRunCommandsOptions,
+  context: ExecutorContext,
+  pseudoTerminal: PseudoTerminal
+) {
+  return createProcessWithPseudoTty(
+    pseudoTerminal,
+    normalized.commands[0],
+    normalized.color,
+    calculateCwd(normalized.cwd, context),
+    normalized.env,
+    normalized.streamOutput,
+    pseudoTerminal ? normalized.isTTY : false,
+    normalized.envFile
+  );
+}
+
 async function createProcessWithPseudoTty(
   pseudoTerminal: PseudoTerminal,
-  commandConfig: {
-    command: string;
-    color?: string;
-    bgColor?: string;
-    prefix?: string;
-  },
+  commandConfig: RunCommandsCommandOptions,
   color: boolean,
   cwd: string,
   env: Record<string, string>,
@@ -408,23 +421,12 @@ async function createProcessWithPseudoTty(
   tty: boolean,
   envFile?: string
 ) {
-  let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
-  if (streamOutput) {
-    process.stdout.write(terminalOutput);
-  }
-  env = processEnv(color, cwd, env, envFile);
-  const childProcess = pseudoTerminal.runCommand(commandConfig.command, {
+  return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
-    jsEnv: env,
+    jsEnv: processEnv(color, cwd, env, envFile),
     quiet: !streamOutput,
     tty,
   });
-
-  childProcess.onOutput((output) => {
-    terminalOutput += output;
-  });
-
-  return childProcess;
 }
 
 function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {

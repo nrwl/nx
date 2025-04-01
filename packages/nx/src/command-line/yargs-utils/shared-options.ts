@@ -39,6 +39,7 @@ export interface RunOptions {
   useAgents: boolean;
   excludeTaskDependencies: boolean;
   skipSync: boolean;
+  tuiAutoExit: boolean | number;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -111,6 +112,25 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .options('cloud', {
       type: 'boolean',
       hidden: true,
+    })
+
+    .options('tuiAutoExit', {
+      describe:
+        'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
+      type: 'string',
+      coerce: (value) => {
+        if (value === 'true') {
+          return true;
+        }
+        if (value === 'false') {
+          return false;
+        }
+        const num = Number(value);
+        if (!Number.isNaN(num)) {
+          return num;
+        }
+        throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
+      },
     })
 
     .options('dte', {

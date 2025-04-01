@@ -393,11 +393,12 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
-      - name: Build Wasm
-        run: |
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-23/wasi-sdk-23.0-x86_64-linux.tar.gz
-          tar -xvf wasi-sdk-23.0-x86_64-linux.tar.gz
-          pnpm build:wasm
+      # TODO(@JamesHenry): Re-enable this once the wasm build is fixed for crossterm
+      # - name: Build Wasm
+      #   run: |
+      #     wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-23/wasi-sdk-23.0-x86_64-linux.tar.gz
+      #     tar -xvf wasi-sdk-23.0-x86_64-linux.tar.gz
+      #     pnpm build:wasm
       - name: Publish
         env:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}

@@ -13,48 +13,67 @@ strip = "none"
 
 [dependencies]
 anyhow = "1.0.71"
+arboard = "3.4.1"
+better-panic = "0.3.0"
 colored = "2"
+color-eyre = "0.6.3"
 crossbeam-channel = '0.5'
+crossterm = { version = "0.27.0", features = ["serde", "event-stream"] }
 dashmap = { version = "5.5.3", features = ["rayon"] }
 dunce = "1"
 fs_extra = "1.3.0"
+futures = "0.3.28"
 globset = "0.4.10"
 hashbrown = { version = "0.14.5", features = ["rayon", "rkyv"] }
+human-panic = "1.2.0"
 ignore = '0.4'
 itertools = "0.10.5"
+libc = "0.2.148"
+log = "0.4.20"
 once_cell = "1.18.0"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
-napi = { version = '2.16.0', default-features = false, features = [
-    'anyhow',
-    'napi4',
-    'tokio_rt',
+napi = { version = "2.16.0", default-features = false, features = [
+    "anyhow",
+    "napi4",
+    "tokio_rt",
+    "serde-json",
+    "async",
+    "chrono_date",
 ] }
-napi-derive = '2.16.0'
+napi-derive = { version = "2.16.0", features = ["type-def"] }
 nom = '7.1.3'
 regex = "1.9.1"
+ratatui = { version = "0.29", features = ["scrolling-regions"] }
 rayon = "1.7.0"
 rkyv = { version = "0.7", features = ["validation"] }
-thiserror = "1.0.40"
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-walkdir = '2.3.3'
-xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.107"
+strip-ansi-escapes = "0.2.0"
 swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
 sysinfo = "0.33.1"
 rand = "0.9.0"
+thiserror = "1.0.40"
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tokio = { version = "1.32.0", features = ["full"] }
+tokio-util = "0.7.9"
+tracing-appender = "0.2"
+tui-term = "0.2.0"
+walkdir = '2.3.3'
+xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
+vt100-ctt = { git = "https://github.com/JamesHenry/vt100-rust", rev = "1de895505fe9f697aadac585e4075b8fb45c880d" }
+
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi"] }
 
 [target.'cfg(all(not(windows), not(target_family = "wasm")))'.dependencies]
 mio = "0.8"
 
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
-crossterm = "0.27.0"
 ignore-files = "2.1.0"
 fs4 = "0.12.0"
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
@@ -75,5 +94,3 @@ assert_fs = "1.0.10"
 # This is only used for unit tests
 swc_ecma_dep_graph = "0.109.1"
 tempfile = "3.13.0"
-# We only explicitly use tokio for async tests
-tokio = "1.38.0"
