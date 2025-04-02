@@ -10,8 +10,8 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nx/react:lib mylib",
-        "description": "Generate `libs/mylib`"
+        "command": "nx g @nx/react:lib libs/mylib",
+        "description": "Generate a library under `libs/mylib`"
       },
       {
         "command": "nx g @nx/react:lib mylib --appProject=myapp",
