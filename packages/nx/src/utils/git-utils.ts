@@ -298,7 +298,11 @@ export function commitChanges(
   directory?: string
 ): string | null {
   try {
-    execSync('git add -A', { encoding: 'utf8', stdio: 'pipe' });
+    execSync('git add -A', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      cwd: directory,
+    });
     execSync('git commit --no-verify -F -', {
       encoding: 'utf8',
       stdio: 'pipe',
@@ -318,15 +322,16 @@ export function commitChanges(
     }
   }
 
-  return getLatestCommitSha();
+  return getLatestCommitSha(directory);
 }
 
-export function getLatestCommitSha(): string | null {
+export function getLatestCommitSha(directory?: string): string | null {
   try {
     return execSync('git rev-parse HEAD', {
       encoding: 'utf8',
       stdio: 'pipe',
       windowsHide: false,
+      cwd: directory,
     }).trim();
   } catch {
     return null;
