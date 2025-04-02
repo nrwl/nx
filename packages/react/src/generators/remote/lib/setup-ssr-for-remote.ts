@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { GeneratorCallback, names, offsetFromRoot, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   generateFiles,
@@ -10,7 +10,17 @@ import {
 
 import { NormalizedSchema } from '../../application/schema';
 import type { Schema } from '../schema';
-import { moduleFederationNodeVersion } from '../../../utils/versions';
+import {
+  corsVersion,
+  expressVersion,
+  isbotVersion,
+  moduleFederationNodeVersion,
+  typesExpressVersion,
+} from '../../../utils/versions';
+import {
+  createNxRspackPluginOptions,
+  getDefaultTemplateVariables,
+} from '../../application/lib/create-application-files';
 
 export async function setupSsrForRemote(
   tree: Tree,
@@ -28,22 +38,49 @@ export async function setupSsrForRemote(
         options.bundler === 'rspack' ? 'rspack-' : 'webpack-'
       }module-federation-ssr`;
 
+  const templateVariables =
+    options.bundler === 'rspack'
+      ? {
+          ...getDefaultTemplateVariables(tree, options),
+          rspackPluginOptions: {
+            ...createNxRspackPluginOptions(
+              options,
+              offsetFromRoot(options.appProjectRoot),
+              false
+            ),
+            mainServer: `./server.ts`,
+          },
+          port: Number(options?.devServerPort) || 4200,
+          appName,
+        }
+      : {
+          ...options,
+          port: Number(options?.devServerPort) || 4200,
+          appName,
+          tmpl: '',
+          browserBuildOutputPath: project.targets.build?.options?.outputPath,
+          serverBuildOutputPath: project.targets.server?.options?.outputPath,
+        };
+
   generateFiles(
     tree,
     joinPathFragments(__dirname, `../files/${pathToModuleFederationSsrFiles}`),
     project.root,
-    {
-      ...options,
-      port: Number(options?.devServerPort) || 4200,
-      appName,
-      tmpl: '',
-      browserBuildOutputPath: project.targets.build.options.outputPath,
-      serverBuildOutputPath: project.targets.server.options.outputPath,
-    }
+    templateVariables
   );
 
   // For hosts to use when running remotes in static mode.
-  const originalOutputPath = project.targets.build?.options?.outputPath;
+  const originalOutputPath =
+    project.targets.build?.options?.outputPath ??
+    options.isUsingTsSolutionConfig
+      ? 'dist'
+      : joinPathFragments(
+          offsetFromRoot(options.appProjectRoot),
+          'dist',
+          options.appProjectRoot != '.'
+            ? options.appProjectRoot
+            : options.projectName
+        );
   const serverOptions = project.targets.server?.options;
   const serverOutputPath =
     serverOptions?.outputPath ??
@@ -66,6 +103,10 @@ export async function setupSsrForRemote(
     tree,
     {
       '@module-federation/node': moduleFederationNodeVersion,
+      cors: corsVersion,
+      isbot: isbotVersion,
+      express: expressVersion,
+      '@types/express': typesExpressVersion,
     },
     {}
   );
