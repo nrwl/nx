@@ -92,11 +92,12 @@ export const getStaticProps: GetStaticProps = async ({
       },
     };
   } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
+    throw e;
+    // return {
+    //   notFound: true,
+    //   props: {
+    //     statusCode: 404,
+    //   },
+    // };
   }
 };
