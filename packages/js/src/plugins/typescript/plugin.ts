@@ -37,7 +37,8 @@ import type { Extension, ParsedCommandLine, System } from 'typescript';
 import {
   addBuildAndWatchDepsTargets,
   isValidPackageJsonBuildConfig,
-  ParsedTsconfigData,
+  type ExtendedConfigFile,
+  type ParsedTsconfigData,
 } from './util';
 
 export interface TscPluginOptions {
@@ -889,25 +890,25 @@ function pathToInputOrOutput(
 
 function getExtendedConfigFiles(
   tsConfig: ParsedTsconfigData,
-  workspaceRoot: string
+  workspaceRoot: string,
+  extendedConfigFiles = new Set<string>(),
+  extendedExternalPackages = new Set<string>()
 ): {
   files: string[];
   packages: string[];
 } {
-  const extendedConfigFiles = new Set<string>();
-  const extendedExternalPackages = new Set<string>();
-
-  let currentExtendedConfigFile = tsConfig.extendedConfigFile;
-  while (currentExtendedConfigFile) {
-    if (currentExtendedConfigFile.externalPackage) {
-      extendedExternalPackages.add(currentExtendedConfigFile.externalPackage);
-      break;
+  for (const extendedConfigFile of tsConfig.extendedConfigFiles) {
+    if (extendedConfigFile.externalPackage) {
+      extendedExternalPackages.add(extendedConfigFile.externalPackage);
+    } else if (extendedConfigFile.filePath) {
+      extendedConfigFiles.add(extendedConfigFile.filePath);
+      getExtendedConfigFiles(
+        retrieveTsConfigFromCache(extendedConfigFile.filePath, workspaceRoot),
+        workspaceRoot,
+        extendedConfigFiles,
+        extendedExternalPackages
+      );
     }
-    extendedConfigFiles.add(currentExtendedConfigFile.filePath);
-    currentExtendedConfigFile = retrieveTsConfigFromCache(
-      currentExtendedConfigFile.filePath,
-      workspaceRoot
-    ).extendedConfigFile;
   }
 
   return {
@@ -1130,7 +1131,7 @@ function readTsConfigAndCache(
     tsConfigCache[relativePath].hash === hash
   ) {
     extendedFilesHash = getExtendedFilesHash(
-      tsConfigCache[relativePath].data.extendedConfigFile,
+      tsConfigCache[relativePath].data.extendedConfigFiles,
       workspaceRoot
     );
     if (tsConfigCache[relativePath].extendedFilesHash === extendedFilesHash) {
@@ -1139,17 +1140,33 @@ function readTsConfigAndCache(
   }
 
   const tsConfig = readTsConfig(tsConfigPath, workspaceRoot);
-  const extendedConfigFile = tsConfig.raw?.extends
-    ? resolveExtendedTsConfigPath(tsConfig.raw.extends, dirname(tsConfigPath))
-    : null;
-  extendedFilesHash ??= getExtendedFilesHash(extendedConfigFile, workspaceRoot);
+  const extendedConfigFiles: ExtendedConfigFile[] = [];
+  if (tsConfig.raw?.extends) {
+    const extendsArray =
+      typeof tsConfig.raw.extends === 'string'
+        ? [tsConfig.raw.extends]
+        : tsConfig.raw.extends;
+    for (const extendsPath of extendsArray) {
+      const extendedConfigFile = resolveExtendedTsConfigPath(
+        extendsPath,
+        dirname(tsConfigPath)
+      );
+      if (extendedConfigFile) {
+        extendedConfigFiles.push(extendedConfigFile);
+      }
+    }
+  }
+  extendedFilesHash ??= getExtendedFilesHash(
+    extendedConfigFiles,
+    workspaceRoot
+  );
 
   tsConfigCache[relativePath] = {
     data: {
       options: tsConfig.options,
       projectReferences: tsConfig.projectReferences,
       raw: tsConfig.raw,
-      extendedConfigFile: extendedConfigFile ?? null,
+      extendedConfigFiles,
     },
     hash,
     extendedFilesHash,
@@ -1159,25 +1176,27 @@ function readTsConfigAndCache(
 }
 
 function getExtendedFilesHash(
-  extendedConfigFile: ParsedTsconfigData['extendedConfigFile'] | null,
+  extendedConfigFiles: ExtendedConfigFile[],
   workspaceRoot: string
 ): string {
   const hashes: string[] = [];
-  if (!extendedConfigFile) {
+  if (!extendedConfigFiles.length) {
     return '';
   }
 
-  if (extendedConfigFile.externalPackage) {
-    hashes.push(extendedConfigFile.externalPackage);
-  } else if (extendedConfigFile.filePath) {
-    hashes.push(getFileHash(extendedConfigFile.filePath, workspaceRoot));
-    hashes.push(
-      getExtendedFilesHash(
-        readTsConfigAndCache(extendedConfigFile.filePath, workspaceRoot)
-          .extendedConfigFile,
-        workspaceRoot
-      )
-    );
+  for (const extendedConfigFile of extendedConfigFiles) {
+    if (extendedConfigFile.externalPackage) {
+      hashes.push(extendedConfigFile.externalPackage);
+    } else if (extendedConfigFile.filePath) {
+      hashes.push(getFileHash(extendedConfigFile.filePath, workspaceRoot));
+      hashes.push(
+        getExtendedFilesHash(
+          readTsConfigAndCache(extendedConfigFile.filePath, workspaceRoot)
+            .extendedConfigFiles,
+          workspaceRoot
+        )
+      );
+    }
   }
 
   return hashes.join('|');
@@ -1256,13 +1275,16 @@ function normalizePluginOptions(
 function resolveExtendedTsConfigPath(
   tsConfigPath: string,
   directory?: string
-): { filePath: string; externalPackage?: string } | null {
+): ExtendedConfigFile | null {
   try {
     const resolvedPath = require.resolve(tsConfigPath, {
       paths: directory ? [directory] : undefined,
     });
 
-    if (tsConfigPath.startsWith('.')) {
+    if (
+      tsConfigPath.startsWith('.') ||
+      !resolvedPath.includes('/node_modules/')
+    ) {
       return { filePath: resolvedPath };
     }
 
@@ -1311,7 +1333,7 @@ function toAbsolutePaths(
         raw: {
           nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
         },
-        extendedConfigFile: data.extendedConfigFile,
+        extendedConfigFiles: data.extendedConfigFiles,
       },
       extendedFilesHash,
       hash,
@@ -1340,11 +1362,10 @@ function toAbsolutePaths(
         data.options.tsBuildInfoFile
       );
     }
-    if (data.extendedConfigFile?.filePath) {
-      updatedCache[key].data.extendedConfigFile.filePath = join(
-        workspaceRoot,
-        data.extendedConfigFile.filePath
-      );
+    if (data.extendedConfigFiles.length) {
+      updatedCache[key].data.extendedConfigFiles.forEach((file) => {
+        file.filePath = join(workspaceRoot, file.filePath);
+      });
     }
     if (data.projectReferences) {
       updatedCache[key].data.projectReferences = data.projectReferences.map(
@@ -1370,7 +1391,7 @@ function toRelativePaths(
         raw: {
           nx: { addTypecheckTarget: data.raw?.['nx']?.addTypecheckTarget },
         },
-        extendedConfigFile: data.extendedConfigFile,
+        extendedConfigFiles: data.extendedConfigFiles,
       },
       extendedFilesHash,
       hash,
@@ -1399,11 +1420,10 @@ function toRelativePaths(
         data.options.tsBuildInfoFile
       );
     }
-    if (data.extendedConfigFile?.filePath) {
-      updatedCache[key].data.extendedConfigFile.filePath = posixRelative(
-        workspaceRoot,
-        data.extendedConfigFile.filePath
-      );
+    if (data.extendedConfigFiles.length) {
+      updatedCache[key].data.extendedConfigFiles.forEach((file) => {
+        file.filePath = posixRelative(workspaceRoot, file.filePath);
+      });
     }
     if (data.projectReferences) {
       updatedCache[key].data.projectReferences = data.projectReferences.map(
