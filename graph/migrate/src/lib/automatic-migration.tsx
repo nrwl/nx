@@ -1,0 +1,97 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import { FileChange } from '@nx/devkit';
+// nx-ignore-next-line
+import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+// nx-ignore-next-line
+import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+/* eslint-enable @nx/enforce-module-boundaries */
+import { useSelector } from '@xstate/react';
+import {
+  AutomaticMigrationEvents,
+  AutomaticMigrationState,
+  currentMigrationHasChanges,
+  currentMigrationHasFailed,
+  currentMigrationHasSucceeded,
+} from './automatic-migration.machine';
+import { MigrationTimeline } from './migration-timeline';
+import { Interpreter } from 'xstate';
+
+export function AutomaticMigration(props: {
+  migrations: MigrationDetailsWithId[];
+  nxConsoleMetadata: MigrationsJsonMetadata;
+  onRunMigration: (migration: MigrationDetailsWithId) => void;
+  onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onFileClick: (
+    migration: MigrationDetailsWithId,
+    file: Omit<FileChange, 'content'>
+  ) => void;
+  onViewImplementation: (migration: MigrationDetailsWithId) => void;
+  onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  actor: Interpreter<
+    AutomaticMigrationState,
+    any,
+    AutomaticMigrationEvents,
+    any,
+    any
+  >; // TODO Update with correct type
+}) {
+  const currentMigration = useSelector(
+    props.actor,
+    (state) => state.context.currentMigration
+  );
+
+  const currentMigrationIndex = props.migrations.findIndex(
+    (migration) => migration.id === currentMigration?.id
+  );
+
+  const currentMigrationRunning = useSelector(
+    props.actor,
+    (state) => state.context.currentMigrationRunning
+  );
+
+  const currentMigrationFailed = useSelector(props.actor, (state) =>
+    currentMigrationHasFailed(state.context)
+  );
+
+  const currentMigrationSuccess = useSelector(props.actor, (state) =>
+    currentMigrationHasSucceeded(state.context)
+  );
+
+  const currentMigrationChanges = useSelector(props.actor, (state) =>
+    currentMigrationHasChanges(state.context)
+  );
+
+  const isDone = useSelector(props.actor, (state) => state.matches('done'));
+
+  const isInit = useSelector(props.actor, (state) => state.matches('init'));
+
+  const handleReviewMigration = (migrationId: string) => {
+    props.actor.send({
+      type: 'reviewMigration',
+      migrationId,
+    });
+  };
+
+  return (
+    <MigrationTimeline
+      migrations={props.migrations}
+      nxConsoleMetadata={props.nxConsoleMetadata}
+      currentMigrationIndex={
+        currentMigrationIndex >= 0 ? currentMigrationIndex : 0
+      }
+      currentMigrationRunning={currentMigrationRunning}
+      currentMigrationFailed={currentMigrationFailed}
+      currentMigrationSuccess={currentMigrationSuccess}
+      currentMigrationHasChanges={currentMigrationChanges}
+      isDone={isDone}
+      isInit={isInit}
+      onRunMigration={props.onRunMigration}
+      onSkipMigration={props.onSkipMigration}
+      onFileClick={props.onFileClick}
+      onViewImplementation={props.onViewImplementation}
+      onViewDocumentation={props.onViewDocumentation}
+      onReviewMigration={handleReviewMigration}
+    />
+  );
+}

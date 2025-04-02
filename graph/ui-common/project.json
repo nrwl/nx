@@ -1,0 +1,9 @@
+{
+  "name": "ui-common",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/ui-common/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project ui-common --web",
+  "targets": {}
+}

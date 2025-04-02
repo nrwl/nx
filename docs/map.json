@@ -632,6 +632,12 @@
                   "file": "shared/recipes/console-generate-command"
                 },
                 {
+                  "name": "Migrate UI",
+                  "id": "console-migrate-ui",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-migrate-ui"
+                },
+                {
                   "name": "Run Command",
                   "id": "console-run-command",
                   "tags": ["editor-setup"],
