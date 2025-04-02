@@ -2755,7 +2755,30 @@
   },
   {
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": [],
+    "documents": [
+      {
+        "id": "nx-module-federation-plugin",
+        "name": "NxModuleFederationPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "module-federation/documents/nx-module-federation-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
+      },
+      {
+        "id": "nx-module-federation-dev-server-plugin",
+        "name": "NxModuleFederationDevServerPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "module-federation/documents/nx-module-federation-dev-server-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
+      }
+    ],
     "executors": [],
     "generators": [],
     "migrations": [
