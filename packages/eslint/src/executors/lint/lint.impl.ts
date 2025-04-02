@@ -74,7 +74,7 @@ export default async function run(
 
   if (printConfig) {
     try {
-      const fileConfig = await eslint.calculateConfigForFile(printConfig);
+      const fileConfig = await eslint.calculateConfigForFile(eslintConfigPath);
       console.log(JSON.stringify(fileConfig, null, ' '));
       return {
         success: true,
