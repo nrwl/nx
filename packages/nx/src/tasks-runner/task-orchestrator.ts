@@ -326,6 +326,7 @@ export class TaskOrchestrator {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
+        this.projectGraph,
         this.taskGraph,
         env
       );

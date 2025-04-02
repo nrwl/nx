@@ -5,11 +5,15 @@ import { type PackageManagerCommands } from 'nx/src/utils/package-manager';
 import { join } from 'path';
 import { type ParsedCommandLine } from 'typescript';
 
+export type ExtendedConfigFile = {
+  filePath: string;
+  externalPackage?: string;
+};
 export type ParsedTsconfigData = Pick<
   ParsedCommandLine,
   'options' | 'projectReferences' | 'raw'
 > & {
-  extendedConfigFile: { filePath: string; externalPackage?: string } | null;
+  extendedConfigFiles: ExtendedConfigFile[];
 };
 
 /**
@@ -95,8 +99,8 @@ export function isValidPackageJsonBuildConfig(
       return isPathSourceFile(value);
     } else if (typeof value === 'object') {
       return Object.entries(value).some(([currentKey, subValue]) => {
-        // Skip types field
-        if (currentKey === 'types') {
+        // Skip types and development conditions
+        if (currentKey === 'types' || currentKey === 'development') {
           return false;
         }
         if (typeof subValue === 'string') {

@@ -88,7 +88,7 @@ describe('@nx/rspack', () => {
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS"}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS","customConditions":null}",
                       },
                     },
                     "outputs": [],
@@ -106,7 +106,7 @@ describe('@nx/rspack', () => {
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS"}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS","customConditions":null}",
                       },
                     },
                   },
@@ -118,7 +118,7 @@ describe('@nx/rspack', () => {
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS"}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS","customConditions":null}",
                       },
                     },
                   },

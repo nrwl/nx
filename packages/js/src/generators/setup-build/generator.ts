@@ -325,6 +325,11 @@ function updatePackageJson(
       version: '0.0.1',
     };
   }
+
+  // the file must exist in the TS solution setup, which is the only case this
+  // function is called
+  const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
   packageJson = getUpdatedPackageJsonContent(packageJson, {
     main,
     outputPath,
@@ -333,6 +338,8 @@ function updatePackageJson(
     packageJsonPath,
     rootDir,
     format,
+    skipDevelopmentExports:
+      !tsconfigBase.compilerOptions?.customConditions?.includes('development'),
   });
   writeJson(tree, packageJsonPath, packageJson);
 }

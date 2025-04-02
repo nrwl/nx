@@ -187,6 +187,7 @@ async function createRspackTargets(
       ...(existingValue ? JSON.parse(existingValue) : {}),
       module: 'CommonJS',
       moduleResolution: 'Node10',
+      customConditions: null,
     });
   }
 

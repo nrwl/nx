@@ -1,4 +1,5 @@
-import { updateJson, type Tree } from '@nx/devkit';
+import { readJson, updateJson, type Tree } from '@nx/devkit';
+import { getRootTsConfigFileName } from '@nx/js';
 
 /**
  * This is a temporary fix for Storybook to support TypeScript configuration files.
@@ -12,21 +13,23 @@ export function editRootTsConfig(tree: Tree) {
   }
 
   updateJson(tree, 'tsconfig.json', (json) => {
-    if (json['ts-node']) {
-      json['ts-node'] = {
-        ...json['ts-node'],
-        compilerOptions: {
-          ...(json['ts-node'].compilerOptions ?? {}),
-          module: 'commonjs',
-        },
-      };
+    json['ts-node'] ??= {};
+    json['ts-node'].compilerOptions ??= {};
+    json['ts-node'].compilerOptions.module = 'commonjs';
+    json['ts-node'].compilerOptions.moduleResolution = 'node10';
+
+    if (json.compilerOptions?.customConditions) {
+      json['ts-node'].compilerOptions.customConditions = null;
     } else {
-      json['ts-node'] = {
-        compilerOptions: {
-          module: 'commonjs',
-        },
-      };
+      const rootTsconfigFile = getRootTsConfigFileName(tree);
+      if (rootTsconfigFile) {
+        const rootTsconfigJson = readJson(tree, rootTsconfigFile);
+        if (rootTsconfigJson.compilerOptions?.customConditions) {
+          json['ts-node'].compilerOptions.customConditions = null;
+        }
+      }
     }
+
     return json;
   });
 }

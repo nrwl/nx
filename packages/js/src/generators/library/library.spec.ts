@@ -1817,6 +1817,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -1954,6 +1955,7 @@ describe('lib', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -1987,6 +1989,7 @@ describe('lib', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -2344,24 +2347,6 @@ describe('lib', () => {
       ]);
     });
 
-    it('should add nx.addTypecheckTarget to tsconfig.json when using tsc to build to avoid duplicated typechecks', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        useProjectJson: false,
-        directory: 'my-ts-lib',
-        bundler: 'tsc',
-        unitTestRunner: 'none',
-        linter: 'none',
-      });
-
-      expect(readJson(tree, 'my-ts-lib/tsconfig.json').nx)
-        .toMatchInlineSnapshot(`
-        {
-          "addTypecheckTarget": false,
-        }
-      `);
-    });
-
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name and "useProjectJson" is "false"', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,
@@ -2427,6 +2412,27 @@ describe('lib', () => {
 
       expect(readJson(tree, 'my-lib/project.json').name).toBe('my-lib');
       expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        name: 'my-lib',
+        useProjectJson: true,
+        bundler: 'tsc',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
   });
 });
