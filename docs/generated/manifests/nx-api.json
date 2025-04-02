@@ -2624,6 +2624,16 @@
       }
     },
     "migrations": {
+      "/nx-api/js/migrations/20.7.1-beta.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/20.7.1-beta.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/js/migrations/20.5.0-package-updates": {
         "description": "",
         "file": "generated/packages/js/migrations/20.5.0-package-updates.json",
