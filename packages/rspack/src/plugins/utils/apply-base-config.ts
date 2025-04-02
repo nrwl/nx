@@ -121,7 +121,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    clean: options.deleteOutputPath,
+    clean: config.output?.clean ?? options.deleteOutputPath,
   };
 
   config.watch = options.watch;
@@ -240,8 +240,13 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
   }
 
-  // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolution) {
+  // New TS Solution already has a typecheck target but allow it to run during serve
+  if (
+    (!options?.skipTypeChecking && !isUsingTsSolution) ||
+    (isUsingTsSolution &&
+      options?.skipTypeChecking === false &&
+      process.env['WEBPACK_SERVE'])
+  ) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
     plugins.push(
       new TsCheckerRspackPlugin({
