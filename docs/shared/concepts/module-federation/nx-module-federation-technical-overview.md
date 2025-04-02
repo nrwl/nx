@@ -5,14 +5,15 @@ description: Understand the technical details of how Nx implements Module Federa
 
 # Nx Module Federation Technical Overview
 
-Nx's Module Federation support is provided through a mixture of `executors` and the `withModuleFederation()` util that is used in you `webpack.config` file. Understanding what is happening under the hood can help when developing applications that use Module Federation as well as debugging any potential issues you run into.
+Nx's Module Federation support is provided through a mixture of `executors` and the `withModuleFederation()` util that is used in your `webpack.config` or `rspack.config` file. Understanding what is happening under the hood can help when developing applications that use Module Federation as well as debugging any potential issues you run into.
+With Rspack, Module Federation support can also be provided through the [`NxModuleFederationPlugin`](nx-api/module-federation/documents/nx-module-federation-plugin) and [`NxModuleFederationDevServerPlugin`](nx-api/module-federation/documents/nx-module-federation-dev-server-plugin) plugins that can be used in the `rspack.config` file when utilizing [Inferred Tasks]().
 
 ## What happens when you serve your host?
 
-When you serve your host application via `nx serve host`, the Nx `module-federation-dev-server` executor is invoked. This executor does a few things that aim to provide a more holistic local development while ensuring a great DX (development experience).
+When you serve your host application via `nx serve host`, the Nx `module-federation-dev-server` executor or `NxModuleFederationDevServerPlugin` is invoked. These do a few things that aim to provide a more holistic local development while ensuring a great DX (development experience).
 
 {% callout type="note" title="Using Module Federation with SSR?" %}
-The same technique outlined below also applies to the `module-federation-ssr-dev-server`.  
+The same technique outlined below also applies to the `module-federation-ssr-dev-server` and the `NxModuleFederationSSRDevServerPlugin`.
 This is important to know when it comes to deploying your SSR Module Federation application as it indicates that you can place the build artifacts from the `remotes` onto something like an Amazon S3 Bucket and your `host` will be able to find these files correctly.
 {% /callout %}
 
