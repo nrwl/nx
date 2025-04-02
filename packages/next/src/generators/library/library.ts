@@ -60,6 +60,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
     const devDependencies: Record<string, string> = {};
     if (options.linter === 'eslint') {
       devDependencies['eslint-config-next'] = eslintConfigNextVersion;
+      devDependencies['@next/eslint-plugin-next'] = eslintConfigNextVersion;
     }
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
