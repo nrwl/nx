@@ -26,9 +26,15 @@ export function isTuiEnabled(nxJson?: NxJsonConfiguration) {
     nxJson = readNxJsonFromDisk();
   }
   if (typeof nxJson.tui?.enabled === 'boolean') {
-    tuiEnabled = Boolean(nxJson.tui?.enabled);
-    // When the nx.json config is set, also set the environment variable for consistency and ease of checking on the rust side, for example
-    process.env.NX_TUI = tuiEnabled.toString();
+    // Windows is not working well right now, disable it on Windows even if nx.json has tui.enabled === true.
+    // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
+    if (process.platform !== 'win32') {
+      tuiEnabled = Boolean(nxJson.tui?.enabled);
+      // When the nx.json config is set, also set the environment variable for consistency and ease of checking on the rust side, for example
+      process.env.NX_TUI = tuiEnabled.toString();
+    } else {
+      tuiEnabled = false;
+    }
   } else {
     // False by default
     // TODO(v21): Change this to true by default
