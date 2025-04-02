@@ -74,7 +74,9 @@ export interface NxAppRspackPluginOptions {
 
   /**
    * Delete the output path before building.
+   * @deprecated Use the `output.clean` option in Rspack. https://rspack.dev/config/output#outputclean
    */
+  // TODO(v22): Add migration to remove this option and remove it.
   deleteOutputPath?: boolean;
   /**
    * The deploy path for the application. e.g. `/my-app/`
