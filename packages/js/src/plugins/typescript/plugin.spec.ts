@@ -1177,27 +1177,114 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
       });
 
-      it('should add extended config files supporting node.js style resolution and set npm packages as external dependencies', async () => {
+      it('should add extended config files when there are multiple extended config files', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
-            extends: '@tsconfig/strictest/tsconfig.json',
             exclude: ['node_modules', 'tmp'],
           }),
-          'tsconfig.foo.json': JSON.stringify({
-            extends: './tsconfig.base', // extensionless relative path
+          'tsconfig.foo.json': '{}',
+          'tsconfig.bar.json': JSON.stringify({
+            extends: './tsconfig.foo.json',
+            exclude: ['node_modules', 'dist'], // extended last, it will override the base config
           }),
           'libs/my-lib/tsconfig.json': JSON.stringify({
-            extends: '../../tsconfig.foo.json',
+            extends: ['../../tsconfig.base.json', '../../tsconfig.bar.json'], // should collect both and any recursive extended configs as inputs
             include: ['src/**/*.ts'],
             // set this to keep outputs smaller
             compilerOptions: { outDir: 'dist' },
           }),
           'libs/my-lib/package.json': `{}`,
         });
-        // simulate @tsconfig/strictest package
-        tempFs.createFilesSync({
+        expect(await invokeCreateNodesOnMatchingFiles(context, {}))
+          .toMatchInlineSnapshot(`
+          {
+            "projects": {
+              "libs/my-lib": {
+                "projectType": "library",
+                "targets": {
+                  "typecheck": {
+                    "cache": true,
+                    "command": "tsc --build --emitDeclarationOnly",
+                    "dependsOn": [
+                      "^typecheck",
+                    ],
+                    "inputs": [
+                      "{projectRoot}/package.json",
+                      "{workspaceRoot}/tsconfig.base.json",
+                      "{workspaceRoot}/tsconfig.bar.json",
+                      "{workspaceRoot}/tsconfig.foo.json",
+                      "{projectRoot}/tsconfig.json",
+                      "{projectRoot}/src/**/*.ts",
+                      "!{workspaceRoot}/node_modules",
+                      "!{workspaceRoot}/dist",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "typescript",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Runs type-checking for the project.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "libs/my-lib",
+                    },
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
+                  },
+                },
+              },
+            },
+          }
+        `);
+      });
+
+      it('should add extended config files supporting node.js style resolution and local workspace packages', async () => {
+        await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.base.json': JSON.stringify({
+            extends: '@tsconfig/strictest/tsconfig.json', // should be resolved and the package name should be included in inputs as an external dependency
+            exclude: ['node_modules', 'tmp'],
+          }),
+          'tsconfig.foo.json': JSON.stringify({
+            extends: './tsconfig.base', // extensionless relative path
+          }),
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            extends: [
+              '../../tsconfig.foo.json',
+              '@my-org/my-package/tsconfig.base.json', // should be resolved and the path should be included in inputs
+            ],
+            include: ['src/**/*.ts'],
+            // set this to keep outputs smaller
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{}`,
+          'libs/my-package/package.json': `{}`,
+          'libs/my-package/tsconfig.base.json': `{}`,
+          // simulate @tsconfig/strictest package
           'node_modules/@tsconfig/strictest/tsconfig.json': '{}',
         });
+        // create a symlink to simulate a local workspace package linked by a package manager
+        tempFs.createSymlinkSync(
+          'libs/my-package',
+          'node_modules/@my-org/my-package',
+          'dir'
+        );
 
         expect(await invokeCreateNodesOnMatchingFiles(context, {}))
           .toMatchInlineSnapshot(`
@@ -1216,6 +1303,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
+                      "{workspaceRoot}/libs/my-package/tsconfig.base.json",
                       "{projectRoot}/tsconfig.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
@@ -3655,10 +3743,92 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
         `);
       });
 
-      it('should add extended config files supporting node.js style resolution and set npm packages as external dependencies', async () => {
+      it('should add extended config files when there are multiple extended config files', async () => {
         await applyFilesToTempFsAndContext(tempFs, context, {
           'tsconfig.base.json': JSON.stringify({
-            extends: '@tsconfig/strictest/tsconfig.json',
+            exclude: ['node_modules', 'tmp'],
+          }),
+          'tsconfig.foo.json': '{}',
+          'tsconfig.bar.json': JSON.stringify({
+            extends: './tsconfig.foo.json',
+            exclude: ['node_modules', 'dist'], // extended last, it will override the base config
+          }),
+          'libs/my-lib/tsconfig.json': '{}',
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            extends: ['../../tsconfig.base.json', '../../tsconfig.bar.json'], // should collect both and any recursive extended configs as inputs
+            include: ['src/**/*.ts'],
+            compilerOptions: { outDir: 'dist' },
+          }),
+          'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
+        });
+        expect(
+          await invokeCreateNodesOnMatchingFiles(context, {
+            typecheck: false,
+            build: true,
+          })
+        ).toMatchInlineSnapshot(`
+          {
+            "projects": {
+              "libs/my-lib": {
+                "projectType": "library",
+                "targets": {
+                  "build": {
+                    "cache": true,
+                    "command": "tsc --build tsconfig.lib.json",
+                    "dependsOn": [
+                      "^build",
+                    ],
+                    "inputs": [
+                      "{projectRoot}/package.json",
+                      "{workspaceRoot}/tsconfig.base.json",
+                      "{workspaceRoot}/tsconfig.bar.json",
+                      "{workspaceRoot}/tsconfig.foo.json",
+                      "{projectRoot}/tsconfig.lib.json",
+                      "{projectRoot}/src/**/*.ts",
+                      "!{workspaceRoot}/node_modules",
+                      "!{workspaceRoot}/dist",
+                      "^production",
+                      {
+                        "externalDependencies": [
+                          "typescript",
+                        ],
+                      },
+                    ],
+                    "metadata": {
+                      "description": "Builds the project with \`tsc\`.",
+                      "help": {
+                        "command": "npx tsc --build --help",
+                        "example": {
+                          "args": [
+                            "--force",
+                          ],
+                        },
+                      },
+                      "technologies": [
+                        "typescript",
+                      ],
+                    },
+                    "options": {
+                      "cwd": "libs/my-lib",
+                    },
+                    "outputs": [
+                      "{projectRoot}/dist",
+                    ],
+                    "syncGenerators": [
+                      "@nx/js:typescript-sync",
+                    ],
+                  },
+                },
+              },
+            },
+          }
+        `);
+      });
+
+      it('should add extended config files supporting node.js style resolution and local workspace packages', async () => {
+        await applyFilesToTempFsAndContext(tempFs, context, {
+          'tsconfig.base.json': JSON.stringify({
+            extends: '@tsconfig/strictest/tsconfig.json', // should be resolved and the package name should be included in inputs as an external dependency
             exclude: ['node_modules', 'tmp'],
           }),
           'tsconfig.foo.json': JSON.stringify({
@@ -3666,18 +3836,27 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
           }),
           'libs/my-lib/tsconfig.json': '{}',
           'libs/my-lib/tsconfig.lib.json': JSON.stringify({
-            extends: '../../tsconfig.foo.json',
+            extends: [
+              '../../tsconfig.foo.json',
+              '@my-org/my-package/tsconfig.base.json', // should be resolved and the path should be included in inputs
+            ],
             compilerOptions: {
               outDir: 'dist',
             },
             include: ['src/**/*.ts'],
           }),
           'libs/my-lib/package.json': `{"main": "dist/index.js"}`,
-        });
-        // simulate @tsconfig/strictest package
-        tempFs.createFilesSync({
+          'libs/my-package/package.json': `{}`,
+          'libs/my-package/tsconfig.base.json': `{}`,
+          // simulate @tsconfig/strictest package
           'node_modules/@tsconfig/strictest/tsconfig.json': '{}',
         });
+        // create a symlink to simulate a local workspace package linked by a package manager
+        tempFs.createSymlinkSync(
+          'libs/my-package',
+          'node_modules/@my-org/my-package',
+          'dir'
+        );
 
         expect(
           await invokeCreateNodesOnMatchingFiles(context, {
@@ -3700,6 +3879,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                       "{projectRoot}/package.json",
                       "{workspaceRoot}/tsconfig.foo.json",
                       "{workspaceRoot}/tsconfig.base.json",
+                      "{workspaceRoot}/libs/my-package/tsconfig.base.json",
                       "{projectRoot}/tsconfig.lib.json",
                       "{projectRoot}/src/**/*.ts",
                       "!{workspaceRoot}/node_modules",
