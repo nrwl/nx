@@ -80,6 +80,9 @@ describe('TargetProjectLocator', () => {
             '@proj/proj1234-child/*': ['libs/proj1234-child/*'],
             '#hash-path': ['libs/hash-project/src/index.ts'],
             'parent-path/*': ['libs/parent-path/*'],
+            '@proj/feature-*': ['libs/features/*'],
+            '@proj/*/utils': ['libs/scope/*/utils'],
+            '@proj/*-util': ['libs/utils/*'],
           },
         },
       };
@@ -225,6 +228,27 @@ describe('TargetProjectLocator', () => {
                 packageMain: 'index.ts',
               },
             },
+          },
+        },
+        users: {
+          name: 'users',
+          type: 'lib',
+          data: {
+            root: 'libs/features/users',
+          },
+        },
+        admin: {
+          name: 'admin',
+          type: 'lib',
+          data: {
+            root: 'libs/scope/admin',
+          },
+        },
+        'file-system': {
+          name: 'file-system',
+          type: 'lib',
+          data: {
+            root: 'libs/utils/file-system',
           },
         },
       };
@@ -413,19 +437,33 @@ describe('TargetProjectLocator', () => {
     });
 
     it('should be able to resolve wildcard paths', () => {
-      const parentProject = targetProjectLocator.findProjectFromImport(
-        'parent-path',
-        'libs/proj1/index.ts'
-      );
-
-      expect(parentProject).toEqual('parent-project');
-
+      // 'parent-path/*': ['libs/parent-path/*'] => 'libs/parent-path/child-path'
       const childProject = targetProjectLocator.findProjectFromImport(
         'parent-path/child-path',
         'libs/proj1/index.ts'
       );
-
       expect(childProject).toEqual('child-project');
+
+      // '@proj/feature-*': ['libs/features/*'] => 'libs/features/users'
+      const usersProject = targetProjectLocator.findProjectFromImport(
+        '@proj/feature-users',
+        'libs/proj1/index.ts'
+      );
+      expect(usersProject).toEqual('users');
+
+      // '@proj/*/utils': ['libs/scope/*/utils'] => 'libs/scope/admin/utils'
+      const adminProject = targetProjectLocator.findProjectFromImport(
+        '@proj/admin/utils',
+        'libs/proj1/index.ts'
+      );
+      expect(adminProject).toEqual('admin');
+
+      // '@proj/*-util': ['libs/utils/*'] => 'libs/utils/file-system'
+      const fileSystemProject = targetProjectLocator.findProjectFromImport(
+        '@proj/file-system-util',
+        'libs/proj1/index.ts'
+      );
+      expect(fileSystemProject).toEqual('file-system');
     });
 
     it('should be able to resolve paths that start with a #', () => {
