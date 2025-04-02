@@ -5409,6 +5409,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/storybook/migrations/20.8.0-package-updates.json",
+        "hidden": false,
+        "name": "20.8.0-package-updates",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/storybook",
+        "path": "storybook/migrations/20.8.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/storybook/migrations/20.2.0-package-updates.json",
         "hidden": false,
         "name": "20.2.0-package-updates",
