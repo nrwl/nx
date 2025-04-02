@@ -243,8 +243,13 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
   }
 
-  // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolution) {
+  // New TS Solution already has a typecheck target but allow it to run during serve
+  if (
+    (!options?.skipTypeChecking && !isUsingTsSolution) ||
+    (isUsingTsSolution &&
+      options?.skipTypeChecking === false &&
+      process.env['WEBPACK_SERVE'])
+  ) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
