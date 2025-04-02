@@ -1,3 +1,8 @@
+---
+title: 'Nx Console Migrate UI'
+description: Overview over the Migrate UI feature for guided migrations in Nx Console
+---
+
 # Nx Console Migrate UI
 
 The Nx Console Migrate UI provides a visual, guided way to execute migrations in your workspace while following Nx best practices. This tool simplifies the process of upgrading your Nx workspace by offering an easy-to-use interface that walks you through each step of the migration process.
