@@ -6107,6 +6107,16 @@
       }
     },
     "migrations": {
+      "/nx-api/webpack/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
       "/nx-api/webpack/migrations/20.5.0-package-updates": {
         "description": "",
         "file": "generated/packages/webpack/migrations/20.5.0-package-updates.json",
