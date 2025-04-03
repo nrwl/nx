@@ -1,6 +1,6 @@
 import * as yargs from 'yargs';
 
-import { withAffectedOptions, withRunManyOptions } from './shared-options';
+import { withAffectedOptions, withRunManyOptions, readParallelFromArgsAndEnv } from './shared-options';
 
 const argv = yargs.default([]);
 
@@ -75,6 +75,45 @@ describe('shared-options', () => {
           maxParallel: 2,
         })
       );
+    });
+  });
+
+  describe('readParallelFromArgsAndEnv', () => {
+    it('default parallel should be 3', () => {
+      const result = readParallelFromArgsAndEnv({parallel: 'true'});
+      expect(result).toEqual(3);
+    });
+
+    it('use maxParallel', () => {
+      const result = readParallelFromArgsAndEnv({parallel:'', maxParallel: '4'});
+      expect(result).toEqual(4);
+    });
+
+    it('use max-parallel', () => {
+      const result = readParallelFromArgsAndEnv({parallel:'', 'max-parallel': '5'});
+      expect(result).toEqual(5);
+    });
+
+    it('should read parallel 6', () => {
+      const result = readParallelFromArgsAndEnv({
+        parallel: '6',
+      });
+      expect(result).toEqual(6);
+    });
+
+    it('0% parallel should be 1', () => {
+      const result = readParallelFromArgsAndEnv({
+        parallel: '0%',
+      });
+      expect(result).toEqual(1);
+    });
+
+
+    it('100% parallel should not be less than 1', () => {
+      const result = readParallelFromArgsAndEnv({
+        parallel: '100%',
+      });
+      expect(result).toBeGreaterThanOrEqual(1);
     });
   });
 });
