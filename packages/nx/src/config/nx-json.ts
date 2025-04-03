@@ -416,6 +416,15 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
     libsDir?: string;
     appsDir?: string;
   };
+
+  /**
+   * Remote Cache configuration
+   */
+  remoteCache?: {
+    provider?: string;
+    options?: any;
+  };
+
   /**
    * @deprecated Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
    * Available Task Runners for Nx to use
