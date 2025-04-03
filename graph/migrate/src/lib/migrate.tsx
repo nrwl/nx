@@ -7,7 +7,7 @@ import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate
 import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useState } from 'react';
-import { MigrationList } from './migration-list';
+
 import { AutomaticMigration } from './automatic-migration';
 import { MigrationSettingsPanel } from './migration-settings-panel';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
@@ -52,7 +52,6 @@ enum PrimaryAction {
 
 export function MigrateUI(props: MigrateUIProps) {
   const [createCommits, setCreateCommits] = useState(true);
-  const [automaticMode, setAutomaticMode] = useState(true);
   const [commitPrefix, setCommitPrefix] = useState('');
   const [primaryAction, setPrimaryAction] = useState<PrimaryAction>(
     PrimaryAction.RunMigrations
@@ -75,7 +74,6 @@ export function MigrateUI(props: MigrateUIProps) {
   const running = useSelector(actor, (state) => state.matches('running'));
 
   useEffect(() => {
-    console.log('loading initial data');
     actor.send({
       type: 'loadInitialData',
       migrations: props.migrations,
@@ -85,7 +83,6 @@ export function MigrateUI(props: MigrateUIProps) {
   }, [JSON.stringify(props.migrations)]);
 
   useEffect(() => {
-    console.log('updating metadata');
     actor.send({
       type: 'updateMetadata',
       metadata: props.nxConsoleMetadata,
@@ -154,8 +151,6 @@ export function MigrateUI(props: MigrateUIProps) {
 
         {
           <MigrationSettingsPanel
-            automaticMode={automaticMode}
-            setAutomaticMode={setAutomaticMode}
             createCommits={createCommits}
             setCreateCommits={setCreateCommits}
             commitPrefix={commitPrefix}
@@ -163,45 +158,24 @@ export function MigrateUI(props: MigrateUIProps) {
           />
         }
       </div>
-      {automaticMode ? (
-        <AutomaticMigration
-          actor={actor}
-          migrations={props.migrations}
-          nxConsoleMetadata={props.nxConsoleMetadata}
-          onRunMigration={(migration) =>
-            props.onRunMigration(migration, { createCommits })
-          }
-          onSkipMigration={(migration) => props.onSkipMigration(migration)}
-          onViewImplementation={(migration) =>
-            props.onViewImplementation(migration)
-          }
-          onViewDocumentation={(migration) =>
-            props.onViewDocumentation(migration)
-          }
-          onFileClick={props.onFileClick}
-        />
-      ) : (
-        <MigrationList
-          migrations={props.migrations}
-          nxConsoleMetadata={props.nxConsoleMetadata}
-          onRunMigration={(migration) =>
-            props.onRunMigration(migration, { createCommits })
-          }
-          onRunMany={(migrations) =>
-            props.onRunMany(migrations, {
-              createCommits,
-              commitPrefix,
-            })
-          }
-          onFileClick={props.onFileClick}
-          onViewImplementation={(migration) =>
-            props.onViewImplementation(migration)
-          }
-          onViewDocumentation={(migration) =>
-            props.onViewDocumentation(migration)
-          }
-        />
-      )}
+
+      <AutomaticMigration
+        actor={actor}
+        migrations={props.migrations}
+        nxConsoleMetadata={props.nxConsoleMetadata}
+        onRunMigration={(migration) =>
+          props.onRunMigration(migration, { createCommits })
+        }
+        onSkipMigration={(migration) => props.onSkipMigration(migration)}
+        onViewImplementation={(migration) =>
+          props.onViewImplementation(migration)
+        }
+        onViewDocumentation={(migration) =>
+          props.onViewDocumentation(migration)
+        }
+        onFileClick={props.onFileClick}
+      />
+
       <div className="sticky bottom-0 flex justify-end gap-2 py-4 dark:bg-slate-900">
         <div className="flex gap-2">
           <button

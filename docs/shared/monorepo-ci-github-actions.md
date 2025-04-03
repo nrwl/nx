@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using GitHub Actions and Nx
+description: Learn how to set up GitHub Actions for your Nx workspace using nx-set-shas to track successful builds, run affected commands, and optimize CI performance.
+---
+
 # Configuring CI Using GitHub Actions and Nx
 
 Below is an example of a GitHub Actions setup, building, and testing only what is affected.

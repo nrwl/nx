@@ -28,6 +28,7 @@ import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...rawOptions,
   });
 }
@@ -51,7 +52,6 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   const libTask = await reactLibraryGenerator(host, {
     ...options,
-    bundler: 'none',
     skipFormat: true,
   });
   tasks.push(libTask);
@@ -168,7 +168,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   sortPackageJsonFields(host, options.projectRoot);

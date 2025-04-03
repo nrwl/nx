@@ -2,7 +2,7 @@
   "name": "20.5.0-package-updates",
   "version": "20.5.0-beta.5",
   "x-prompt": "Do you want to update the Angular version to v19.2?",
-  "requires": { "@angular/core": ">=19.2.0 <20.0.0-next.0" },
+  "requires": { "@angular/core": ">=19.1.0 <19.2.0" },
   "packages": {
     "@angular-devkit/build-angular": {
       "version": "~19.2.0",
@@ -37,6 +37,10 @@
       "alwaysAddToPackageJson": false
     },
     "@angular/cdk": { "version": "~19.2.1", "alwaysAddToPackageJson": false },
+    "@angular/google-maps": {
+      "version": "~19.2.1",
+      "alwaysAddToPackageJson": false
+    },
     "ng-packagr": { "version": "~19.2.0", "alwaysAddToPackageJson": false }
   },
   "aliases": [],

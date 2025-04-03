@@ -262,7 +262,7 @@
         "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": {
-          "mdGlobPattern": "blog/**/*.md"
+          "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
         }
       },
       {

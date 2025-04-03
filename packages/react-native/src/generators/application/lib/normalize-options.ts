@@ -1,13 +1,12 @@
 import { joinPathFragments, names, readNxJson, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   className: string; // app name in class case
   fileName: string; // app name in file class
   projectName: string; // directory + app name, case based on user input
@@ -20,6 +19,7 @@ export interface NormalizedSchema extends Schema {
   rootProject: boolean;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  importPath: string;
   isTsSolutionSetup: boolean;
 }
 
@@ -27,11 +27,12 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const {
-    projectName: appProjectName,
+    projectName,
     names: projectNames,
     projectRoot: appProjectRoot,
+    importPath,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
@@ -43,10 +44,14 @@ export async function normalizeOptions(
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
-  const { className, fileName } = names(options.name);
+  const { className, fileName } = names(projectNames.projectSimpleName);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');
   const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
   const rootProject = appProjectRoot === '.';
+
+  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isTsSolutionSetup || options.name ? projectName : importPath;
 
   const e2eProjectName = rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -57,8 +62,6 @@ export async function normalizeOptions(
 
   const entryFile = options.js ? 'src/main.js' : 'src/main.tsx';
 
-  const isTsSolutionSetup = isUsingTsSolutionSetup(host);
-
   return {
     ...options,
     name: projectNames.projectSimpleName,
@@ -66,10 +69,9 @@ export async function normalizeOptions(
     fileName,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,
-    projectName: isTsSolutionSetup
-      ? getImportPath(host, appProjectName)
-      : appProjectName,
+    projectName: appProjectName,
     appProjectRoot,
+    importPath,
     iosProjectRoot,
     androidProjectRoot,
     parsedTags,
@@ -78,5 +80,6 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     isTsSolutionSetup,
+    useProjectJson: options.useProjectJson ?? !isTsSolutionSetup,
   };
 }

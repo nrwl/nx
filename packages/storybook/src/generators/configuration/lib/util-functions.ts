@@ -235,7 +235,7 @@ export function createStorybookTsconfigFile(
   };
 
   if (useTsSolution) {
-    const runtimeConfig = findRuntimeTsConfigName(tree, projectRoot);
+    const runtimeConfig = findRuntimeTsConfigName(projectRoot, tree);
     if (runtimeConfig) {
       storybookTsConfig.references ??= [];
       storybookTsConfig.references.push({

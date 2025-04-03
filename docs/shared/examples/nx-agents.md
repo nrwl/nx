@@ -1,3 +1,8 @@
+---
+title: 'Nx Agents at Scale'
+description: 'Learn how Nx distributed task execution can dramatically improve CI performance in large monorepos with multiple applications and shared libraries.'
+---
+
 # Nx Agents at Scale
 
 Repo contains:

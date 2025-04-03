@@ -1,3 +1,4 @@
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
 export function MigrationInitScreen({ onStart }: { onStart: () => void }) {
@@ -16,6 +17,7 @@ export function MigrationInitScreen({ onStart }: { onStart: () => void }) {
       >
         <span role="img" aria-label="tools">
           🛠️
+          <WrenchScrewdriverIcon className="h-12 w-12" />
         </span>
       </motion.div>
 
@@ -34,9 +36,8 @@ export function MigrationInitScreen({ onStart }: { onStart: () => void }) {
         transition={{ duration: 0.4, delay: 0.6 }}
         className="max-w-xl text-base text-gray-600 dark:text-gray-400"
       >
-        Welcome to Nx Console's migration UI. This tool will guide you
-        through updating your workspace. Click the button below to begin your
-        migration journey!
+        Welcome to the Migrate UI. This tool will guide you through updating
+        your workspace. Click the button below to start running migrations.
       </motion.p>
 
       <motion.button

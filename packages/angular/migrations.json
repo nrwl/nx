@@ -1341,6 +1341,10 @@
           "version": "~19.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/google-maps": {
+          "version": "~19.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "ng-packagr": {
           "version": "~19.0.0",
           "alwaysAddToPackageJson": false
@@ -1537,6 +1541,10 @@
           "version": "~19.1.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/google-maps": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
         "ng-packagr": {
           "version": "~19.1.0",
           "alwaysAddToPackageJson": false
@@ -1547,7 +1555,7 @@
       "version": "20.5.0-beta.5",
       "x-prompt": "Do you want to update the Angular version to v19.2?",
       "requires": {
-        "@angular/core": ">=19.2.0 <20.0.0-next.0"
+        "@angular/core": ">=19.1.0 <19.2.0"
       },
       "packages": {
         "@angular-devkit/build-angular": {
@@ -1598,8 +1606,57 @@
           "version": "~19.2.1",
           "alwaysAddToPackageJson": false
         },
+        "@angular/google-maps": {
+          "version": "~19.2.1",
+          "alwaysAddToPackageJson": false
+        },
         "ng-packagr": {
           "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.5.0-angular-eslint": {
+      "version": "20.5.0-rc.1",
+      "requires": {
+        "eslint": "^8.57.0 || ^9.0.0",
+        "@angular/core": ">= 19.0.0 < 20.0.0"
+      },
+      "packages": {
+        "angular-eslint": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^19.2.0",
           "alwaysAddToPackageJson": false
         }
       }

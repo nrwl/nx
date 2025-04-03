@@ -121,8 +121,8 @@ export function MigrationTimeline({
           }}
           className="flex h-16 w-16 items-center justify-center text-6xl"
         >
-          <span role="img" aria-label="thumbs up">
-            👍
+          <span role="img" aria-label="checkmark">
+            <CheckCircleIcon className="h-12 w-12" />
           </span>
         </motion.div>
 
@@ -133,7 +133,6 @@ export function MigrationTimeline({
           className="rounded-md border border-green-500 bg-green-50 px-6 py-5 text-green-600 shadow-lg dark:border-green-900/30 dark:bg-green-900/10 dark:text-green-500"
         >
           <h2 className="flex items-center gap-3 text-xl font-bold">
-            <CheckCircleIcon className="h-7 w-7" />
             All migrations completed
           </h2>
         </motion.div>

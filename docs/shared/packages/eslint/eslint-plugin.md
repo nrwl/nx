@@ -1,3 +1,8 @@
+---
+title: Nx ESLint Plugin
+description: An overview of the @nx/eslint-plugin package, which provides recommended ESLint configurations and Nx-specific rules for enforcing module boundaries and dependency checks.
+---
+
 The `@nx/eslint-plugin` package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as the following Nx-specific ESLint rules:
 
 - [enforce-module-boundaries](#enforce-module-boundaries-rule)

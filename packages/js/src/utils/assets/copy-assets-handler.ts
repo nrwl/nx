@@ -12,8 +12,9 @@ import * as path from 'node:path';
 import ignore from 'ignore';
 import { globSync } from 'tinyglobby';
 import { AssetGlob } from './assets';
-import { logger } from '@nx/devkit';
+import { logger, workspaceRoot } from '@nx/devkit';
 import { ChangedFile, daemonClient } from 'nx/src/daemon/client/client';
+import { dim } from 'picocolors';
 
 export type FileEventType = 'create' | 'update' | 'delete';
 
@@ -52,6 +53,9 @@ export const defaultFileEventHandler = (events: FileEvent[]) => {
     } else {
       logger.error(`Unknown file event: ${event.type}`);
     }
+    const eventDir = path.dirname(event.src);
+    const relativeDest = path.relative(eventDir, event.dest);
+    logger.log(`\n${dim(relativeDest)}`);
   });
 };
 
@@ -166,7 +170,9 @@ export class CopyAssetsHandler {
   async processWatchEvents(events: ChangedFile[]): Promise<void> {
     const fileEvents: FileEvent[] = [];
     for (const event of events) {
-      const pathFromRoot = path.relative(this.rootDir, event.path);
+      const pathFromRoot = event.path.startsWith(this.rootDir)
+        ? path.relative(this.rootDir, event.path)
+        : event.path;
       for (const ag of this.assetGlobs) {
         if (
           picomatch(ag.pattern)(pathFromRoot) &&

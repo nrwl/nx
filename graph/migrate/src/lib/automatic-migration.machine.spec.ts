@@ -20,6 +20,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
     description: 'This is a migration that does a thing labeled with one.',
     version: '1.0.0',
     package: 'nx',
+    implementation: '/path/to/migration-1',
   },
   {
     id: 'migration-2',
@@ -28,6 +29,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
       'Funnily, this is another migration that does a thing labeled with two.',
     version: '1.0.1',
     package: '@nx/react',
+    implementation: '/path/to/migration-2',
   },
   {
     id: 'migration-3',
@@ -35,6 +37,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
     description: 'This is a migration that does a thing labeled with three.',
     version: '1.0.1',
     package: '@nx/js',
+    implementation: '/path/to/migration-3',
   },
   {
     id: 'migration-4',
@@ -42,6 +45,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
     description: 'This is a migration that does a thing labeled with four.',
     version: '1.0.2',
     package: 'nx',
+    implementation: '/path/to/migration-4',
   },
   {
     id: 'migration-3-1',
@@ -49,6 +53,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
     description: 'This is a migration that does a thing labeled with three.',
     version: '1.0.1',
     package: '@nx/js',
+    implementation: '/path/to/migration-3',
   },
   {
     id: 'migration-6',
@@ -56,6 +61,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
     description: 'This migration performs updates labeled as number six.',
     version: '1.0.3',
     package: '@nx/workspace',
+    implementation: '/path/to/migration-6',
   },
   {
     id: 'migration-7',
@@ -63,14 +69,15 @@ const dummyMigrations: MigrationDetailsWithId[] = [
     description: 'Lucky number seven migration that updates configurations.',
     version: '1.0.3',
     package: '@nx/devkit',
+    implementation: '/path/to/migration-7',
   },
 ];
 
 describe('Automatic Migration Machine', () => {
-  it('should start in paused state', () => {
+  it('should start in init state', () => {
     const service = interpret(automaticMigrationMachine);
     service.start();
-    expect(service.getSnapshot().value).toBe('paused');
+    expect(service.getSnapshot().value).toBe('init');
     service.stop();
   });
 
@@ -88,7 +95,11 @@ describe('Automatic Migration Machine', () => {
             }
             console.log('running migration', migration.id);
             if (migration.id !== 'migration-3') {
-              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [],
+                'commit-123'
+              )(metadata);
             } else {
               metadata = addFailedMigration(migration.id, 'error')(metadata);
             }
@@ -130,7 +141,11 @@ describe('Automatic Migration Machine', () => {
             }
             console.log('running migration', migration.id);
             if (migration.id !== 'migration-3') {
-              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [],
+                'commit-123'
+              )(metadata);
             } else {
               metadata = addFailedMigration(migration.id, 'error')(metadata);
             }
@@ -184,14 +199,22 @@ describe('Automatic Migration Machine', () => {
             }
             console.log('running migration', migration.id);
             if (migration.id !== 'migration-3') {
-              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [],
+                'commit-123'
+              )(metadata);
             } else {
-              metadata = addSuccessfulMigration(migration.id, [
-                {
-                  type: 'UPDATE',
-                  path: 'apps/app/tsconfig.json',
-                },
-              ])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [
+                  {
+                    type: 'UPDATE',
+                    path: 'apps/app/tsconfig.json',
+                  },
+                ],
+                'commit-123'
+              )(metadata);
             }
             service.send({
               type: 'updateMetadata',
@@ -231,14 +254,22 @@ describe('Automatic Migration Machine', () => {
             }
             console.log('running migration', migration.id);
             if (migration.id !== 'migration-3') {
-              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [],
+                'commit-123'
+              )(metadata);
             } else {
-              metadata = addSuccessfulMigration(migration.id, [
-                {
-                  type: 'UPDATE',
-                  path: 'apps/app/tsconfig.json',
-                },
-              ])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [
+                  {
+                    type: 'UPDATE',
+                    path: 'apps/app/tsconfig.json',
+                  },
+                ],
+                'commit-123'
+              )(metadata);
             }
             service.send({
               type: 'updateMetadata',
@@ -286,7 +317,11 @@ describe('Automatic Migration Machine', () => {
             }
             console.log('running migration', migration.id);
             if (migration.id !== 'migration-3') {
-              metadata = addSuccessfulMigration(migration.id, [])(metadata);
+              metadata = addSuccessfulMigration(
+                migration.id,
+                [],
+                'commit-123'
+              )(metadata);
             } else {
               metadata = addFailedMigration(migration.id, 'error')(metadata);
             }

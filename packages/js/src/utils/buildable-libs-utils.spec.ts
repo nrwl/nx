@@ -14,7 +14,7 @@ describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
     {
       name: '@proj/lib',
-      node: { data: { root: 'libs/lib' } } as any,
+      node: { type: 'lib', data: { root: 'libs/lib' } } as any,
       outputs: ['dist/libs/lib'],
     },
   ];
@@ -43,6 +43,41 @@ describe('updatePaths', () => {
         'dist/libs/lib/sub/src/index',
         'dist/libs/lib/sub/src/index.ts',
       ],
+    });
+  });
+
+  it('should handle outputs with glob patterns', () => {
+    const paths: Record<string, string[]> = {
+      '@proj/lib1': ['libs/lib1/src/index.ts'],
+      '@proj/lib2': ['libs/lib2/src/index.ts'],
+      '@proj/lib3': ['libs/lib3/src/index.ts'],
+    };
+
+    updatePaths(
+      [
+        {
+          name: '@proj/lib1',
+          node: { name: 'lib1', type: 'lib', data: { root: 'libs/lib1' } },
+          outputs: ['dist/libs/lib1/**/*.js'],
+        },
+        {
+          name: '@proj/lib2',
+          node: { name: 'lib2', type: 'lib', data: { root: 'libs/lib2' } },
+          outputs: ['dist/libs/lib2/*.js'],
+        },
+        {
+          name: '@proj/lib3',
+          node: { name: 'lib3', type: 'lib', data: { root: 'libs/lib3' } },
+          outputs: ['dist/libs/lib3/foo-*/*.js'],
+        },
+      ],
+      paths
+    );
+
+    expect(paths).toEqual({
+      '@proj/lib1': ['dist/libs/lib1'],
+      '@proj/lib2': ['dist/libs/lib2'],
+      '@proj/lib3': ['dist/libs/lib3'],
     });
   });
 });

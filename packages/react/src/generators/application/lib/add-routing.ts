@@ -40,7 +40,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
 
   const changes = applyChangesToString(
     appFileContent,
-    addInitialRoutes(appPath, appSource)
+    addInitialRoutes(appPath, appSource, options.inSourceTests)
   );
   host.write(appPath, changes);
 

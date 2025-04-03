@@ -1,5 +1,6 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   getProjects,
   ProjectGraph,
@@ -29,6 +30,7 @@ jest.mock('@nx/devkit', () => {
     createProjectGraphAsync: jest
       .fn()
       .mockImplementation(() => Promise.resolve(projectGraph)),
+    detectPackageManager: jest.fn(),
   };
 });
 
@@ -53,6 +55,9 @@ describe('app', () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
+    (detectPackageManager as jest.Mock).mockImplementation((...args) =>
+      jest.requireActual('@nx/devkit').detectPackageManager(...args)
+    );
   });
 
   describe('not nested', () => {
@@ -1060,6 +1065,154 @@ describe('app', () => {
     });
   });
 
+  describe('--use-react-router', () => {
+    it('should add react-router to vite.config', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      expect(appTree.read('my-app/vite.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/// <reference types='vitest' />
+        import { defineConfig } from 'vite';
+        import { reactRouter } from '@react-router/dev/vite';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+        export default defineConfig(() => ({
+          root: __dirname,
+          cacheDir: '../node_modules/.vite/my-app',
+          server: {
+            port: 4200,
+            host: 'localhost',
+          },
+          preview: {
+            port: 4300,
+            host: 'localhost',
+          },
+          plugins: [
+            !process.env.VITEST && reactRouter(),
+            nxViteTsPaths(),
+            nxCopyAssetsPlugin(['*.md']),
+          ],
+          // Uncomment this if you are using workers.
+          // worker: {
+          //  plugins: [ nxViteTsPaths() ],
+          // },
+          build: {
+            outDir: '../dist/my-app',
+            emptyOutDir: true,
+            reportCompressedSize: true,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+          },
+          test: {
+            watch: false,
+            globals: true,
+            environment: 'jsdom',
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
+            coverage: {
+              reportsDirectory: '../coverage/my-app',
+              provider: 'v8' as const,
+            },
+          },
+        }));
+        "
+      `);
+    });
+
+    it('should add types to tsconfig', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+      const tsconfigSpec = readJson(appTree, 'my-app/tsconfig.json');
+      expect(tsconfigSpec.compilerOptions.types).toEqual([
+        'vite/client',
+        'vitest',
+        '@react-router/node',
+      ]);
+    });
+
+    it('should have a project package.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
+      const packageJson = readJson(appTree, 'my-app/package.json');
+      expect(packageJson.dependencies['@react-router/node']).toBeDefined();
+      expect(packageJson.dependencies['@react-router/serve']).toBeDefined();
+      expect(packageJson.dependencies['react-router']).toBeDefined();
+      expect(packageJson.devDependencies['@react-router/dev']).toBeDefined();
+    });
+
+    it('should be configured to work with jest', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        skipFormat: false,
+        useReactRouter: true,
+        routing: true,
+        bundler: 'vite',
+        unitTestRunner: 'jest',
+      });
+
+      const jestConfig = appTree.read('my-app/jest.config.ts').toString();
+      expect(jestConfig).toContain('@nx/react/plugins/jest');
+      expect(appTree.read('my-app/tsconfig.spec.json').toString())
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../dist/out-tsc",
+            "module": "commonjs",
+            "moduleResolution": "node10",
+            "jsx": "react-jsx",
+            "types": [
+              "jest",
+              "node",
+              "@nx/react/typings/cssmodule.d.ts",
+              "@nx/react/typings/image.d.ts"
+            ]
+          },
+          "files": ["src/test-setup.ts"],
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts",
+            "test/**/*.spec.tsx",
+            "test/**/*.spec.ts",
+            "test/**/*.test.tsx",
+            "test/**/*.test.ts"
+          ]
+        }
+        "
+      `);
+    });
+  });
+
   describe('--directory="." (--root-project)', () => {
     it('should create files at the root', async () => {
       await applicationGenerator(appTree, {
@@ -1312,6 +1465,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         e2eTestRunner: 'playwright',
+        useProjectJson: false,
       });
 
       expect(readJson(appTree, 'tsconfig.json').references)
@@ -1325,9 +1479,11 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(appTree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
@@ -1359,9 +1515,9 @@ describe('app', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1468,6 +1624,33 @@ describe('app', () => {
       `);
     });
 
+    it('should respect the provided name', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        name: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
     it('should add project to workspaces when using TS solution (npm, yarn, bun)', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
@@ -1477,6 +1660,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'libs/nested1',
@@ -1507,6 +1691,12 @@ describe('app', () => {
     });
 
     it('should add project to workspaces when using TS solution (pnpm)', async () => {
+      (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+      updateJson(appTree, 'package.json', (json) => {
+        delete json.workspaces;
+        return json;
+      });
+      appTree.write('pnpm-lock.yaml', '');
       appTree.write('pnpm-workspace.yaml', `packages:`);
 
       await applicationGenerator(appTree, {
@@ -1517,6 +1707,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested1',
@@ -1526,6 +1717,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'apps/nested2',
@@ -1535,6 +1727,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
       await applicationGenerator(appTree, {
         directory: 'packages/shared/util',
@@ -1544,6 +1737,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         e2eTestRunner: 'none',
+        useProjectJson: false,
       });
 
       const pnpmContent = appTree.read('pnpm-workspace.yaml', 'utf-8');
@@ -1564,6 +1758,7 @@ describe('app', () => {
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1616,6 +1811,7 @@ describe('app', () => {
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: false,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1633,6 +1829,7 @@ describe('app', () => {
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: false,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -1640,6 +1837,51 @@ describe('app', () => {
         readProjectConfiguration(appTree, '@proj/my-app').targets.build.options
           .outputPath
       ).toBe('apps/my-app/dist');
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        addPlugin: true,
+        linter: Linter.EsLint,
+        style: 'none',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        e2eTestRunner: 'playwright',
+        useProjectJson: true,
+      });
+
+      expect(appTree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(appTree, 'myapp/package.json').nx).toBeUndefined();
+      expect(appTree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(appTree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 

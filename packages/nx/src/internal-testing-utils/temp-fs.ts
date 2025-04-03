@@ -6,6 +6,7 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  symlinkSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -61,6 +62,24 @@ export class TempFs {
       mkdirSync(dir, { recursive: true });
     }
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
+  }
+
+  createSymlinkSync(
+    fileOrDirPath: string,
+    symlinkPath: string,
+    type: 'dir' | 'file'
+  ) {
+    const absoluteFileOrDirPath = joinPathFragments(
+      this.tempDir,
+      fileOrDirPath
+    );
+    const absoluteSymlinkPath = joinPathFragments(this.tempDir, symlinkPath);
+    const symlinkDir = dirname(absoluteSymlinkPath);
+    if (!existsSync(symlinkDir)) {
+      mkdirSync(symlinkDir, { recursive: true });
+    }
+
+    symlinkSync(absoluteFileOrDirPath, absoluteSymlinkPath, type);
   }
 
   async readFile(filePath: string): Promise<string> {

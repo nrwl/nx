@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Popover } from '@nx/graph/ui-common';
 
 export interface MigrationSettingsPanelProps {
-  automaticMode: boolean;
-  setAutomaticMode: (automaticMode: boolean) => void;
   createCommits: boolean;
   setCreateCommits: (createCommits: boolean) => void;
   commitPrefix: string;
@@ -11,8 +9,6 @@ export interface MigrationSettingsPanelProps {
 }
 
 export function MigrationSettingsPanel({
-  automaticMode,
-  setAutomaticMode,
   createCommits,
   setCreateCommits,
   commitPrefix,

@@ -12,6 +12,7 @@ import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-co
 import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2E(tree: Tree, options: NormalizedSchema) {
   const hasRemixPlugin = readNxJson(tree).plugins?.find((p) =>
@@ -32,21 +33,16 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/cypress')
     >('@nx/cypress', getPackageVersion(tree, 'nx'));
 
-    if (isUsingTsSolutionSetup(tree)) {
-      writeJson(
-        tree,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(tree, options.e2eProjectName, {
         projectType: 'application',
@@ -56,6 +52,14 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
         tags: [],
         implicitDependencies: [options.projectName],
       });
+    }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        tree,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
     }
 
     const e2eTask = await configurationGenerator(tree, {
@@ -112,21 +116,16 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/playwright')
     >('@nx/playwright', getPackageVersion(tree, 'nx'));
 
-    if (isUsingTsSolutionSetup(tree)) {
-      writeJson(
-        tree,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(tree, options.e2eProjectName, {
         projectType: 'application',
@@ -136,6 +135,14 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
         tags: [],
         implicitDependencies: [options.projectName],
       });
+    }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        tree,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
     }
 
     const e2eTask = await configurationGenerator(tree, {

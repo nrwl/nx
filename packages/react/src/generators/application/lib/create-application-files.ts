@@ -1,10 +1,10 @@
 import {
   generateFiles,
   joinPathFragments,
-  names,
   offsetFromRoot,
   toJS,
   Tree,
+  updateJson,
   writeJson,
 } from '@nx/devkit';
 import { WithNxOptions } from '@nx/webpack';
@@ -23,6 +23,15 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  reactDomVersion,
+  reactRouterIsBotVersion,
+  reactRouterVersion,
+  reactVersion,
+  typesReactDomVersion,
+  typesNodeVersion,
+  typesReactVersion,
+} from '../../../utils/versions';
 
 export async function createApplicationFiles(
   host: Tree,
@@ -59,8 +68,15 @@ export async function createApplicationFiles(
   );
   const appTests = getAppTests(options);
   const templateVariables = {
-    ...names(options.name),
+    ...options.names,
     ...options,
+    typesNodeVersion,
+    typesReactDomVersion,
+    reactRouterVersion,
+    typesReactVersion,
+    reactDomVersion,
+    reactVersion,
+    reactRouterIsBotVersion,
     js: !!options.js, // Ensure this is defined in template
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
@@ -71,13 +87,15 @@ export async function createApplicationFiles(
     isUsingTsSolutionSetup: isUsingTsSolutionSetup(host),
   };
 
-  if (options.bundler === 'vite') {
+  if (options.bundler === 'vite' && !options.useReactRouter) {
     generateFiles(
       host,
       join(__dirname, '../files/base-vite'),
       options.appProjectRoot,
       templateVariables
     );
+  } else if (options.bundler === 'vite' && options.useReactRouter) {
+    generateReactRouterFiles(host, options, templateVariables);
   } else if (options.bundler === 'webpack') {
     generateFiles(
       host,
@@ -186,9 +204,12 @@ export async function createApplicationFiles(
       ? 'https://nx.dev/getting-started/tutorials/react-standalone-tutorial'
       : 'https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project';
 
+    const path = options.useReactRouter
+      ? '../files/react-router-ssr/nx-welcome'
+      : '../files/nx-welcome';
     generateFiles(
       host,
-      join(__dirname, '../files/nx-welcome', onBoardingStatus),
+      join(__dirname, path, onBoardingStatus),
       options.appProjectRoot,
       { ...templateVariables, connectCloudUrl, tutorialUrl }
     );
@@ -196,7 +217,11 @@ export async function createApplicationFiles(
 
   generateFiles(
     host,
-    join(__dirname, styleSolutionSpecificAppFiles),
+    join(
+      __dirname,
+      styleSolutionSpecificAppFiles,
+      options.useReactRouter ? 'src' : ''
+    ),
     options.appProjectRoot,
     templateVariables
   );
@@ -289,4 +314,56 @@ function createNxRspackPluginOptions(
             }`,
           ],
   };
+}
+
+function generateReactRouterFiles(
+  tree: Tree,
+  options: NormalizedSchema,
+  templateVariables
+) {
+  generateFiles(
+    tree,
+    join(__dirname, '../files/react-router-ssr/common'),
+    options.appProjectRoot,
+    templateVariables
+  );
+
+  if (options.rootProject) {
+    const gitignore = tree.read('.gitignore', 'utf-8');
+    tree.write(
+      '.gitignore',
+      `${gitignore}\n.cache\nbuild\npublic/build\n.env\n\.react-router\n`
+    );
+  } else {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/react-router-ssr/non-root'),
+      options.appProjectRoot,
+      templateVariables
+    );
+  }
+
+  if (options.isUsingTsSolutionConfig) {
+    generateFiles(
+      tree,
+      joinPathFragments(__dirname, '../files/react-router-ssr/ts-solution'),
+      options.appProjectRoot,
+      templateVariables
+    );
+
+    updateJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      (json) => {
+        if (options.projectName !== options.importPath) {
+          json.nx = { name: options.projectName };
+        }
+        if (options.parsedTags?.length) {
+          json.nx ??= {};
+          json.nx.tags = options.parsedTags;
+        }
+        return json;
+      }
+    );
+  }
 }

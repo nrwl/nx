@@ -2,7 +2,7 @@ import * as path from 'path';
 import { workspaceRoot } from './workspace-root';
 
 function removeWindowsDriveLetter(osSpecificPath: string): string {
-  return osSpecificPath.replace(/^[A-Z]:/, '');
+  return osSpecificPath.replace(/^[a-zA-Z]:/, '');
 }
 
 /**

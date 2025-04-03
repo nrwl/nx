@@ -32,6 +32,7 @@ describe('Add Project', () => {
         e2eDirectory: 'my-app-e2e',
         e2eProjectName: 'my-app-e2e',
         e2eProjectRoot: 'apps/my-app-e2e',
+        importPath: '@proj/my-app-e2e',
         appProject: 'my-app',
         appFileName: 'my-app',
         appClassName: 'MyApp',
@@ -40,6 +41,7 @@ describe('Add Project', () => {
         appRoot: 'apps/my-app',
         linter: Linter.EsLint,
         framework: 'react-native',
+        useProjectJson: true,
       });
     });
 
@@ -81,6 +83,7 @@ describe('Add Project', () => {
         e2eDirectory: 'my-dir-my-app-e2e',
         e2eProjectName: 'my-dir-my-app-e2e',
         e2eProjectRoot: 'apps/my-dir/my-app-e2e',
+        importPath: '@proj/my-dir-my-app-e2e',
         appProject: 'my-dir-my-app',
         appFileName: 'my-app',
         appClassName: 'MyApp',
@@ -89,6 +92,7 @@ describe('Add Project', () => {
         appRoot: 'apps/my-dir/my-app',
         linter: Linter.EsLint,
         framework: 'react-native',
+        useProjectJson: true,
       });
     });
 
