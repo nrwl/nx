@@ -424,6 +424,8 @@ function applyNxDependentConfig(
               tsx: true,
             },
             transform: {
+              legacyDecorator: true,
+              decoratorMetadata: true,
               react: {
                 runtime: 'automatic',
                 pragma: 'React.createElement',
