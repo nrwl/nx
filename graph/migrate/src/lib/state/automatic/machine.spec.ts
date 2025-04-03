@@ -11,7 +11,7 @@ import {
 /* eslint-enable @nx/enforce-module-boundaries */
 
 import { interpret } from 'xstate';
-import { automaticMigrationMachine } from './automatic-migration.machine';
+import { machine } from './machine';
 
 const dummyMigrations: MigrationDetailsWithId[] = [
   {
@@ -75,7 +75,7 @@ const dummyMigrations: MigrationDetailsWithId[] = [
 
 describe('Automatic Migration Machine', () => {
   it('should start in init state', () => {
-    const service = interpret(automaticMigrationMachine);
+    const service = interpret(machine);
     service.start();
     expect(service.getSnapshot().value).toBe('init');
     service.stop();
@@ -86,7 +86,7 @@ describe('Automatic Migration Machine', () => {
       targetVersion: '20.3.2',
     };
     const service = interpret(
-      automaticMigrationMachine.withConfig({
+      machine.withConfig({
         actions: {
           runMigration: (ctx) => {
             const migration = ctx.currentMigration;
@@ -132,7 +132,7 @@ describe('Automatic Migration Machine', () => {
       targetVersion: '20.3.2',
     };
     const service = interpret(
-      automaticMigrationMachine.withConfig({
+      machine.withConfig({
         actions: {
           runMigration: (ctx) => {
             const migration = ctx.currentMigration;
@@ -190,7 +190,7 @@ describe('Automatic Migration Machine', () => {
       targetVersion: '20.3.2',
     };
     const service = interpret(
-      automaticMigrationMachine.withConfig({
+      machine.withConfig({
         actions: {
           runMigration: (ctx) => {
             const migration = ctx.currentMigration;
@@ -245,7 +245,7 @@ describe('Automatic Migration Machine', () => {
       targetVersion: '20.3.2',
     };
     const service = interpret(
-      automaticMigrationMachine.withConfig({
+      machine.withConfig({
         actions: {
           runMigration: (ctx) => {
             const migration = ctx.currentMigration;
@@ -308,7 +308,7 @@ describe('Automatic Migration Machine', () => {
       targetVersion: '20.3.2',
     };
     const service = interpret(
-      automaticMigrationMachine.withConfig({
+      machine.withConfig({
         actions: {
           runMigration: (ctx) => {
             const migration = ctx.currentMigration;

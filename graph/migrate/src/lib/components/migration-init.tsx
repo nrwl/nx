@@ -1,7 +1,7 @@
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
-export function MigrationInitScreen({ onStart }: { onStart: () => void }) {
+export function MigrationInit({ onStart }: { onStart: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -16,7 +16,6 @@ export function MigrationInitScreen({ onStart }: { onStart: () => void }) {
         className="text-6xl"
       >
         <span role="img" aria-label="tools">
-          🛠️
           <WrenchScrewdriverIcon className="h-12 w-12" />
         </span>
       </motion.div>

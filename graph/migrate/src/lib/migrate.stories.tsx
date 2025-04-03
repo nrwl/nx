@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MigrateUI } from './migrate';
-import { userEvent, within } from '@storybook/test';
 
 const meta: Meta<typeof MigrateUI> = {
   component: MigrateUI,

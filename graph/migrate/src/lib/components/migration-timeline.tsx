@@ -1,11 +1,10 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
 import { FileChange } from '@nx/devkit';
-// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
-// nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+
 /* eslint-enable @nx/enforce-module-boundaries */
+
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -18,7 +17,6 @@ import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
 import { Collapsible } from '@nx/graph/ui-common';
 import { twMerge } from 'tailwind-merge';
-import { motion } from 'framer-motion';
 
 export interface MigrationTimelineProps {
   migrations: MigrationDetailsWithId[];
@@ -50,7 +48,6 @@ export function MigrationTimeline({
   currentMigrationFailed,
   currentMigrationSuccess,
   currentMigrationHasChanges,
-  isDone,
   onRunMigration,
   onSkipMigration,
   onFileClick,
@@ -101,44 +98,6 @@ export function MigrationTimeline({
       [migrationId]: state ?? !prev[migrationId],
     }));
   };
-
-  if (isDone) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="flex flex-col items-center justify-center gap-4 py-10"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{
-            type: 'spring',
-            stiffness: 300,
-            damping: 10,
-            delay: 0.3,
-          }}
-          className="flex h-16 w-16 items-center justify-center text-6xl"
-        >
-          <span role="img" aria-label="checkmark">
-            <CheckCircleIcon className="h-12 w-12" />
-          </span>
-        </motion.div>
-
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="rounded-md border border-green-500 bg-green-50 px-6 py-5 text-green-600 shadow-lg dark:border-green-900/30 dark:bg-green-900/10 dark:text-green-500"
-        >
-          <h2 className="flex items-center gap-3 text-xl font-bold">
-            All migrations completed
-          </h2>
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
     <div className="flex flex-col">
@@ -346,16 +305,18 @@ export function MigrationTimeline({
                           Rerun
                         </button>
                       )}
-                      <button
-                        onClick={() => {
-                          toggleMigrationExpanded(currentMigration.id);
-                          onSkipMigration(currentMigration);
-                        }}
-                        type="button"
-                        className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
-                      >
-                        Skip
-                      </button>
+                      {!currentMigrationSuccess && (
+                        <button
+                          onClick={() => {
+                            toggleMigrationExpanded(currentMigration.id);
+                            onSkipMigration(currentMigration);
+                          }}
+                          type="button"
+                          className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
+                        >
+                          Skip
+                        </button>
+                      )}
 
                       {currentMigrationHasChanges && (
                         <button

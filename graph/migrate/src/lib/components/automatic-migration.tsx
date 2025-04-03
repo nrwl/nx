@@ -1,21 +1,20 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-// nx-ignore-next-line
 import { FileChange } from '@nx/devkit';
-// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
-// nx-ignore-next-line
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useSelector } from '@xstate/react';
 import {
-  AutomaticMigrationEvents,
-  AutomaticMigrationState,
   currentMigrationHasChanges,
   currentMigrationHasFailed,
   currentMigrationHasSucceeded,
-} from './automatic-migration.machine';
+} from '../state/automatic/selectors';
 import { MigrationTimeline } from './migration-timeline';
 import { Interpreter } from 'xstate';
+import type {
+  AutomaticMigrationEvents,
+  AutomaticMigrationState,
+} from '../state/automatic/types';
 
 export function AutomaticMigration(props: {
   migrations: MigrationDetailsWithId[];
@@ -34,7 +33,7 @@ export function AutomaticMigration(props: {
     AutomaticMigrationEvents,
     any,
     any
-  >; // TODO Update with correct type
+  >;
 }) {
   const currentMigration = useSelector(
     props.actor,

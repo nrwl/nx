@@ -8,13 +8,16 @@ import { FileChange } from 'nx/src/devkit-exports';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useState } from 'react';
 
-import { AutomaticMigration } from './automatic-migration';
-import { MigrationSettingsPanel } from './migration-settings-panel';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Popover } from '@nx/graph/ui-common';
 import { useInterpret, useSelector } from '@xstate/react';
-import { automaticMigrationMachine } from './automatic-migration.machine';
-import { MigrationInitScreen } from './migration-init';
+import { machine as automaticMigrationMachine } from './state/automatic/machine';
+import {
+  MigrationInit,
+  MigrationDone,
+  MigrationSettingsPanel,
+  AutomaticMigration,
+} from './components';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -43,7 +46,7 @@ export interface MigrateUIProps {
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
 }
 
-enum PrimaryAction {
+export enum PrimaryAction {
   RunMigrations = 'Run Migrations',
   PauseMigrations = 'Pause Migrations',
   FinishWithoutSquashingCommits = 'Finish without squashing commits',
@@ -131,16 +134,24 @@ export function MigrateUI(props: MigrateUIProps) {
 
   if (isInit) {
     return (
-      <MigrationInitScreen
-        onStart={() => actor.send({ type: 'startRunning' })}
+      <MigrationInit onStart={() => actor.send({ type: 'startRunning' })} />
+    );
+  }
+
+  if (isDone) {
+    return (
+      <MigrationDone
+        onCancel={props.onCancel}
+        onFinish={props.onFinish}
+        shouldSquashCommits={createCommits}
       />
     );
   }
 
   return (
-    <div className="p-2">
+    <div className="flex h-screen flex-col overflow-hidden p-2">
       {/* Page Header */}
-      <div className="flex items-center justify-between pb-4">
+      <div className="flex shrink-0 items-center justify-between pb-4">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold">
             Migrating to {props.nxConsoleMetadata.targetVersion}
@@ -158,25 +169,25 @@ export function MigrateUI(props: MigrateUIProps) {
           />
         }
       </div>
-
-      <AutomaticMigration
-        actor={actor}
-        migrations={props.migrations}
-        nxConsoleMetadata={props.nxConsoleMetadata}
-        onRunMigration={(migration) =>
-          props.onRunMigration(migration, { createCommits })
-        }
-        onSkipMigration={(migration) => props.onSkipMigration(migration)}
-        onViewImplementation={(migration) =>
-          props.onViewImplementation(migration)
-        }
-        onViewDocumentation={(migration) =>
-          props.onViewDocumentation(migration)
-        }
-        onFileClick={props.onFileClick}
-      />
-
-      <div className="sticky bottom-0 flex justify-end gap-2 py-4 dark:bg-slate-900">
+      <div className="flex-1 overflow-y-auto">
+        <AutomaticMigration
+          actor={actor}
+          migrations={props.migrations}
+          nxConsoleMetadata={props.nxConsoleMetadata}
+          onRunMigration={(migration) =>
+            props.onRunMigration(migration, { createCommits })
+          }
+          onSkipMigration={(migration) => props.onSkipMigration(migration)}
+          onViewImplementation={(migration) =>
+            props.onViewImplementation(migration)
+          }
+          onViewDocumentation={(migration) =>
+            props.onViewDocumentation(migration)
+          }
+          onFileClick={props.onFileClick}
+        />
+      </div>
+      <div className="bottom-0 flex shrink-0 justify-end gap-2 bg-transparent py-4">
         <div className="flex gap-2">
           <button
             onClick={props.onCancel}
