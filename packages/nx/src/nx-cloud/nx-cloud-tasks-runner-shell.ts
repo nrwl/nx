@@ -1,16 +1,16 @@
-import { findAncestorNodeModules } from './resolution-helpers';
-import {
-  NxCloudClientUnavailableError,
-  NxCloudEnterpriseOutdatedError,
-  verifyOrUpdateNxCloudClient,
-} from './update-manager';
+import { Task } from '../config/task-graph';
 import {
   defaultTasksRunner,
   DefaultTasksRunnerOptions,
 } from '../tasks-runner/default-tasks-runner';
 import { TasksRunner } from '../tasks-runner/tasks-runner';
 import { output } from '../utils/output';
-import { Task } from '../config/task-graph';
+import { findAncestorNodeModules } from './resolution-helpers';
+import {
+  NxCloudClientUnavailableError,
+  NxCloudEnterpriseOutdatedError,
+  verifyOrUpdateNxCloudClient,
+} from './update-manager';
 
 export interface CloudTaskRunnerOptions extends DefaultTasksRunnerOptions {
   accessToken?: string;
@@ -56,7 +56,7 @@ export const nxCloudTasksRunnerShell: TasksRunner<
     if (e instanceof NxCloudEnterpriseOutdatedError) {
       output.warn({
         title: e.message,
-        bodyLines: ['Nx Cloud will not used for this command.', ...body],
+        bodyLines: ['Nx Cloud will not be used for this command.', ...body],
       });
     }
     const results = await defaultTasksRunner(tasks, options, context);

@@ -41,6 +41,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [sync](../../devkit/documents/Workspace#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+- [tui](../../devkit/documents/Workspace#tui): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
 - [useLegacyCache](../../devkit/documents/Workspace#uselegacycache): boolean
@@ -394,6 +395,25 @@ Available Task Runners for Nx to use
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+
+---
+
+### tui
+
+• `Optional` **tui**: `Object`
+
+Settings for the Nx Terminal User Interface (TUI)
+
+#### Type declaration
+
+| Name        | Type                  | Description                                                                                                                                                                                                                                                                                |
+| :---------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoExit?` | `number` \| `boolean` | Whether to exit the TUI automatically after all tasks finish. - If set to `true`, the TUI will exit immediately. - If set to `false` the TUI will not automatically exit. - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits. |
+| `enabled?`  | `boolean`             | Whether to enable the TUI whenever possible (based on the current environment and terminal).                                                                                                                                                                                               |
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tui](../../devkit/documents/NxJsonConfiguration#tui)
 
 ---
 

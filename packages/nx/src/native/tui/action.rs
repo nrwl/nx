@@ -1,0 +1,27 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Action {
+    Tick,
+    Render,
+    Resize(u16, u16),
+    Quit,
+    CancelQuit,
+    Error(String),
+    Help,
+    EnterFilterMode,
+    ClearFilter,
+    AddFilterChar(char),
+    RemoveFilterChar,
+    ScrollUp,
+    ScrollDown,
+    NextTask,
+    PreviousTask,
+    NextPage,
+    PreviousPage,
+    ToggleOutput,
+    FocusNext,
+    FocusPrevious,
+    ScrollPaneUp(usize),
+    ScrollPaneDown(usize),
+}

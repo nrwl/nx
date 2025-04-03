@@ -1,27 +1,27 @@
-import { output } from '../utils/output';
-import { relative } from 'path';
-import { join } from 'path/posix';
-import { Task, TaskGraph } from '../config/task-graph';
+import { minimatch } from 'minimatch';
+import { relative } from 'node:path';
+import { join } from 'node:path/posix';
+import { getExecutorInformation } from '../command-line/run/executor-utils';
+import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import {
   TargetConfiguration,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
-import { workspaceRoot } from '../utils/workspace-root';
-import { joinPathFragments } from '../utils/path';
-import { isRelativePath } from '../utils/fileutils';
-import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitByColons } from '../utils/split-target';
-import { getExecutorInformation } from '../command-line/run/executor-utils';
-import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { findMatchingProjects } from '../utils/find-matching-projects';
-import { minimatch } from 'minimatch';
-import { isGlobPattern } from '../utils/globs';
 import {
   getTransformableOutputs,
   validateOutputs as nativeValidateOutputs,
 } from '../native';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import { isRelativePath } from '../utils/fileutils';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { isGlobPattern } from '../utils/globs';
+import { joinPathFragments } from '../utils/path';
+import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
+import { splitByColons } from '../utils/split-target';
+import { workspaceRoot } from '../utils/workspace-root';
+import { isTuiEnabled } from './is-tui-enabled';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
@@ -555,6 +555,8 @@ export function shouldStreamOutput(
   task: Task,
   initiatingProject: string | null
 ): boolean {
+  // For now, disable streaming output on the JS side when running the TUI
+  if (isTuiEnabled()) return false;
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
   if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
