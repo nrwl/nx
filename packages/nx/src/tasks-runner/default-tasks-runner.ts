@@ -135,9 +135,11 @@ export const defaultTasksRunner: TasksRunner<
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
   }
 
-  const threadCount =
-    (options as any)['parallel'] +
+  const maxParallel =
+    options['parallel'] +
     Object.values(context.taskGraph.tasks).filter((t) => t.continuous).length;
+  const totalTasks = Object.values(context.taskGraph.tasks).length;
+  const threadCount = Math.min(maxParallel, totalTasks);
 
   await options.lifeCycle.startCommand(threadCount);
   try {
