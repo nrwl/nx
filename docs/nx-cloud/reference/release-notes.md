@@ -1,5 +1,22 @@
 # Enterprise Release Notes
 
+### 2025.03.2
+
+- Feat: Nx Agents "bundled executors"
+  - up until now, the "executor" binaries that are running on each Nx Agent (and know how to parse your agents.yaml and run each step) had to be downloaded separately from an external bucket
+  - this made the on-prem upgrade process more difficult, as it required a separate step to download the executor then upload it in the correct folder on an internally available repository
+  - now, the executors have been made available as Docker images that can be imported alongside all your other NxCloud images
+  - to get started:
+    - make sure that when you upgrade to this version, you also pull in the executor image `nxprivatecloud/nx-cloud-workflow-executor:2025.03.2`([link](https://hub.docker.com/repository/docker/nxprivatecloud/nx-cloud-workflow-executor/tags/2025.03.2/sha256-a42835a3126f21178af87f02b68d68fec1ff0654d37a57855a762c01e7795a6b))
+    - as part of your controller [args](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L76) pass this option:
+      ```
+      args:
+        image-registry=<registry-where-nxcloud-images-are-hosted>`
+        # for example: image-registry: us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud-enterprise-public
+      ```
+    - you do not need to upload the executor binary separately to a bucket anymore
+    - now whenever you start your agent pods, they will load the above image and copy the executor from there
+
 ### 2025.03.1
 
 - Fix: use custom "github URL" (if defined) when checking out the repo on Nx Agents
