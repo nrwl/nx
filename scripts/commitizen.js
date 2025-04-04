@@ -8,7 +8,7 @@ const scopes = [
   { value: 'express',           name: 'express:               anything Express specific' },
   { value: 'graph',             name: 'graph:                 anything graph app specific' },
   { value: 'js',                name: 'js:                    anything TS->JS specific' },
-  { value: 'linter',            name: 'linter:                anything Linter specific' },
+  { value: 'eslint',            name: 'eslint:                anything ESLint specific' },
   { value: 'misc',              name: 'misc:                  misc stuff' },
   { value: 'nest',              name: 'nest:                  anything Nest specific' },
   { value: 'nextjs',            name: 'nextjs:                anything Next specific' },
