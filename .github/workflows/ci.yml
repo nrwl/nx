@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - name: Fetch Master
         run: git fetch origin master:master
@@ -105,6 +106,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - name: Fetch Master
         run: git fetch origin master:master
@@ -151,7 +153,7 @@ jobs:
         uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: 'master'
-        
+
       - name: Run E2E Tests for macOS
         run: |
           HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);

@@ -334,6 +334,7 @@ describe('CI Workflow generator', () => {
             steps:
               - uses: actions/checkout@v4
                 with:
+                  filter: tree:0
                   fetch-depth: 0
 
               # This enables task distribution via Nx Cloud
@@ -429,6 +430,7 @@ describe('CI Workflow generator', () => {
             steps:
               - checkout: self
                 fetchDepth: 0
+                fetchFilter: tree:0
               # Set Azure Devops CLI default settings
               - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
                 displayName: 'Set default Azure DevOps organization and project'

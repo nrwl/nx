@@ -33,6 +33,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
         persistCredentials: true
 
       # Set Azure Devops CLI default settings

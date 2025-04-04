@@ -40,6 +40,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          filter: tree:0
 
       - uses: actions/checkout@v4
         name: Checkout [Default Branch]
@@ -47,6 +48,7 @@ jobs:
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          filter: tree:0
 
       # Set node/npm/yarn versions using volta
       - uses: volta-cli/action@v4
