@@ -482,15 +482,15 @@ describe('Remix Application', () => {
       expect(packageJson).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@remix-run/node": "^2.15.0",
-            "@remix-run/react": "^2.15.0",
-            "@remix-run/serve": "^2.15.0",
+            "@remix-run/node": "^2.16.1",
+            "@remix-run/react": "^2.16.1",
+            "@remix-run/serve": "^2.16.1",
             "isbot": "^4.4.0",
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
           },
           "devDependencies": {
-            "@remix-run/dev": "^2.15.0",
+            "@remix-run/dev": "^2.16.1",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
           },
@@ -699,15 +699,15 @@ describe('Remix Application', () => {
       expect(readJson(tree, 'apps/myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@remix-run/node": "^2.15.0",
-            "@remix-run/react": "^2.15.0",
-            "@remix-run/serve": "^2.15.0",
+            "@remix-run/node": "^2.16.1",
+            "@remix-run/react": "^2.16.1",
+            "@remix-run/serve": "^2.16.1",
             "isbot": "^4.4.0",
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
           },
           "devDependencies": {
-            "@remix-run/dev": "^2.15.0",
+            "@remix-run/dev": "^2.16.1",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
           },
