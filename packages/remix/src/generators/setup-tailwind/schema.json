@@ -17,8 +17,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What project would you like to add Tailwind to?",
-      "pattern": "^[a-zA-Z].*$"
+      "x-prompt": "What project would you like to add Tailwind to?"
     },
     "skipFormat": {
       "type": "boolean",
