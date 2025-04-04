@@ -11,8 +11,12 @@
   - as part of your controller [args](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-agents/values.yaml#L76) pass this option:
     ```
     args:
-      image-registry=<registry-where-nxcloud-images-are-hosted>
+      # pass the internal image registry where the pods can pull the executor images from
       # for example: image-registry: us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud-enterprise-public
+      image-registry=<registry-where-nxcloud-images-are-hosted>
+
+      # you can REMOVE the below option, as it's not needed anymore
+      # kube-unix-init-container-name=...
     ```
   - you no longer need to upload the executor binary separately to a bucket
   - now whenever you start your agent pods, they will load the above image and copy the executor from there
