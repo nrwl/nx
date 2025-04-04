@@ -20,7 +20,7 @@ export default async function* execute(
 `;
 
 export const NX_PLUGIN_V2_CONTENTS = `import { basename, dirname } from "path";
-import { CreateNodes, CreateMetadata, ProjectsMetadata } from "@nx/devkit";
+import { CreateNodesV2, CreateMetadata, ProjectsMetadata } from "@nx/devkit";
 
 type PluginOptions = {
     inferredTags: string[]
@@ -38,32 +38,40 @@ export const createMetadata: CreateMetadata = (graph) => {
   return metadata;
 }
 
-export const createNodes: CreateNodes<PluginOptions> = [
-    "**/my-project-file",
-    (f, options, ctx) => {
-        // f = path/to/my/file/my-project-file
-        const root = dirname(f);
-        // root = path/to/my/file
-        const name = basename(root);
-        // name = file
+export const createNodesV2: CreateNodesV2<PluginOptions> = [
+  "**/my-project-file",
+  (files, options, ctx) => {
+    const results = [];
+    for (const f of files) {
+      // f = path/to/my/file/my-project-file
+      const root = dirname(f);
+      // root = path/to/my/file
+      const name = basename(root);
+      // name = file
 
-        return {
-            projects: {
-                [root]: {
-                    root,
-                    name,
-                    targets: {
-                        build: {
-                            executor: "nx:run-commands",
-                            options: {
-                                command: "echo 'custom registered target'",
-                            },
-                        },
-                    },
-                    tags: options.inferredTags
+      results.push([
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: "nx:run-commands",
+                  options: {
+                    command: "echo 'custom registered target'",
+                  },
                 },
+              },
+              tags: options.inferredTags,
             },
-        };
-    },
+          },
+        },
+      ]);
+    }
+    return results;
+  },
 ];
+
 `;

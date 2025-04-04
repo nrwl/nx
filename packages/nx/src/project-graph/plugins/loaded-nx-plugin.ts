@@ -59,19 +59,6 @@ export class LoadedNxPlugin {
       this.exclude = pluginDefinition.exclude;
     }
 
-    if (plugin.createNodes && !plugin.createNodesV2) {
-      this.createNodes = [
-        plugin.createNodes[0],
-        (configFiles, context) =>
-          createNodesFromFiles(
-            plugin.createNodes[1],
-            configFiles,
-            this.options,
-            context
-          ).then((results) => results.map((r) => [this.name, r[0], r[1]])),
-      ];
-    }
-
     if (plugin.createNodesV2) {
       this.createNodes = [
         plugin.createNodesV2[0],
