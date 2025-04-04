@@ -2,11 +2,9 @@ import { DefaultLayout } from '@nx/nx-dev/ui-common';
 import {
   CallToAction,
   Features,
-  FeatureSections,
   GettingStarted,
   Hero,
-  Resources,
-} from '@nx/nx-dev/ui-gradle';
+} from '@nx/nx-dev/ui-react';
 
 import type { Metadata } from 'next';
 
@@ -40,21 +38,11 @@ export default function ReactPage(): JSX.Element {
   return (
     <DefaultLayout>
       <Hero />
-
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mt-16 scroll-mt-16 lg:mt-32" id="features">
           <Features />
         </div>
-
-        {/* <div className="mt-16 scroll-mt-16 lg:mt-32" id="resources"> */}
-        {/*   <Resources /> */}
-        {/* </div> */}
       </div>
-
-      {/* <div className="mt-16 scroll-mt-16 lg:mt-32" id="feature-sections"> */}
-      {/*   <FeatureSections /> */}
-      {/* </div> */}
-
       <div className="mt-16 scroll-mt-16 lg:mt-32">
         <GettingStarted />
       </div>
