@@ -28,6 +28,12 @@ export declare class HashPlanner {
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): JsExternal
 }
 
+export declare class HttpRemoteCache {
+  constructor()
+  retrieve(hash: string, cacheDirectory: string): Promise<CachedResult | null>
+  store(hash: string, cacheDirectory: string, terminalOutput: string, code: number): Promise<boolean>
+}
+
 export declare class ImportResult {
   file: string
   sourceProject: string
