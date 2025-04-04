@@ -1,16 +1,7 @@
 import { AggregateCreateNodesError, logger, output } from '@nx/devkit';
-import { execGradleAsync } from './exec-gradle';
+import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { execSync } from 'child_process';
-
-export const fileSeparator = process.platform.startsWith('win')
-  ? 'file:///'
-  : 'file://';
-
-export const newLineSeparator = process.platform.startsWith('win')
-  ? '\r\n'
-  : '\n';
 
 /**
  * This function executes the gradle projectReportAll task and returns the output as an array of lines.
@@ -21,8 +12,6 @@ export async function getProjectReportLines(
   gradlewFile: string
 ): Promise<string[]> {
   let projectReportBuffer: Buffer;
-
-  // Attempt to run projectReport or projectReportAll task, regardless of build.gradle or build.gradle.kts location
   try {
     projectReportBuffer = await execGradleAsync(gradlewFile, [
       'projectReportAll',
