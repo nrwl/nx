@@ -6,7 +6,6 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
-import { type ExecutorContext } from '@nx/devkit';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
