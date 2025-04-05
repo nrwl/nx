@@ -17,19 +17,18 @@ import {
   getSourceFilePath,
 } from '../utils/runtime-lint-utils';
 
-export type Options = [
-  {
-    buildTargets?: string[];
-    checkMissingDependencies?: boolean;
-    checkObsoleteDependencies?: boolean;
-    checkVersionMismatches?: boolean;
-    ignoredDependencies?: string[];
-    ignoredFiles?: string[];
-    includeTransitiveDependencies?: boolean;
-    useLocalPathsForWorkspaceDependencies?: boolean;
-    runtimeHelpers?: string[];
-  }
-];
+export type Options = Array<{
+  buildTargets?: string[];
+  production?: boolean;
+  checkMissingDependencies?: boolean;
+  checkObsoleteDependencies?: boolean;
+  checkVersionMismatches?: boolean;
+  ignoredDependencies?: string[];
+  ignoredFiles?: string[];
+  includeTransitiveDependencies?: boolean;
+  useLocalPathsForWorkspaceDependencies?: boolean;
+  runtimeHelpers?: string[];
+}>;
 
 export type MessageIds =
   | 'missingDependency'
@@ -87,22 +86,7 @@ export default ESLintUtils.RuleCreator(
       runtimeHelpers: [],
     },
   ],
-  create(
-    context,
-    [
-      {
-        buildTargets,
-        ignoredDependencies,
-        ignoredFiles,
-        checkMissingDependencies,
-        checkObsoleteDependencies,
-        checkVersionMismatches,
-        includeTransitiveDependencies,
-        useLocalPathsForWorkspaceDependencies,
-        runtimeHelpers,
-      },
-    ]
-  ) {
+  create(context, configs) {
     if (!getParserServices(context).isJSON) {
       return {};
     }
@@ -131,245 +115,277 @@ export default ESLintUtils.RuleCreator(
       return {};
     }
 
-    // check if library has a build target
-    const buildTarget = buildTargets.find(
-      (t) => sourceProject.data.targets?.[t]
-    );
-    if (!buildTarget) {
-      return {};
-    }
+    // Create a rule visitor for each config
+    const visitors = configs.map(config => {
+      const {
+        buildTargets = [],
+        ignoredDependencies = [],
+        ignoredFiles = [],
+        production = true,
+        checkMissingDependencies = true,
+        checkObsoleteDependencies = true,
+        checkVersionMismatches = true,
+        includeTransitiveDependencies = false,
+        useLocalPathsForWorkspaceDependencies = false,
+        runtimeHelpers = [],
+      } = config;
 
-    const rootPackageJson = getPackageJson(join(workspaceRoot, 'package.json'));
-
-    const npmDependencies = findNpmDependencies(
-      workspaceRoot,
-      sourceProject,
-      projectGraph,
-      projectFileMap,
-      buildTarget, // TODO: What if child library has a build target different from the parent?
-      {
-        includeTransitiveDependencies,
-        ignoredFiles,
-        useLocalPathsForWorkspaceDependencies,
-        runtimeHelpers,
-      }
-    );
-    const expectedDependencyNames = Object.keys(npmDependencies);
-
-    const packageJson = JSON.parse(context.sourceCode.getText());
-    const projPackageJsonDeps = getProductionDependencies(packageJson);
-
-    const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
-
-    function validateMissingDependencies(node: AST.JSONProperty) {
-      if (!checkMissingDependencies) {
-        return;
-      }
-      const missingDeps = expectedDependencyNames.filter(
-        (d) => !projPackageJsonDeps[d] && !ignoredDependencies.includes(d)
+      // check if library has a build target
+      const buildTarget = buildTargets.find(
+        (t) => sourceProject.data.targets?.[t]
       );
-
-      if (missingDeps.length) {
-        context.report({
-          node: node as any,
-          messageId: 'missingDependency',
-          data: {
-            packageNames: missingDeps.map((d) => `\n    - ${d}`).join(''),
-            section: (node.key as JSONLiteral).value,
-            projectName: sourceProject.name,
-          },
-          fix(fixer) {
-            missingDeps.forEach((d) => {
-              projPackageJsonDeps[d] =
-                rootPackageJsonDeps[d] || npmDependencies[d];
-            });
-
-            const deps = (node.value as AST.JSONObjectExpression).properties;
-            const mappedDeps = missingDeps
-              .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
-              .join(',');
-
-            if (deps.length) {
-              return fixer.insertTextAfter(
-                deps[deps.length - 1] as any,
-                `,${mappedDeps}`
-              );
-            } else {
-              return fixer.insertTextAfterRange(
-                [node.value.range[0] + 1, node.value.range[1] - 1],
-                `${mappedDeps}\n  `
-              );
-            }
-          },
-        });
+      if (!buildTarget) {
+        return {};
       }
-    }
 
-    function validateVersionMatchesInstalled(
-      node: AST.JSONProperty,
-      packageName: string,
-      packageRange: string
-    ) {
-      if (!checkVersionMismatches) {
-        return;
+      const rootPackageJson = getPackageJson(join(workspaceRoot, 'package.json'));
+
+      const npmDependencies = findNpmDependencies(
+        workspaceRoot,
+        sourceProject,
+        projectGraph,
+        projectFileMap,
+        buildTarget,
+        {
+          includeTransitiveDependencies,
+          ignoredFiles,
+          useLocalPathsForWorkspaceDependencies,
+          runtimeHelpers,
+        }
+      );
+      const expectedDependencyNames = Object.keys(npmDependencies);
+
+      const packageJson = JSON.parse(context.sourceCode.getText());
+      const projPackageJsonDeps = production ? getProductionDependencies(packageJson) : getAllDependencies(packageJson);
+
+      const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
+
+      function validateMissingDependencies(node: AST.JSONProperty) {
+        if (!checkMissingDependencies) {
+          return;
+        }
+        const missingDeps = expectedDependencyNames.filter(
+          (d) => !projPackageJsonDeps[d] && !ignoredDependencies.includes(d)
+        );
+
+        if (missingDeps.length) {
+          context.report({
+            node: node as any,
+            messageId: 'missingDependency',
+            data: {
+              packageNames: missingDeps.map((d) => `\n    - ${d}`).join(''),
+              section: (node.key as JSONLiteral).value,
+              projectName: sourceProject.name,
+            },
+            fix(fixer) {
+              missingDeps.forEach((d) => {
+                projPackageJsonDeps[d] =
+                  rootPackageJsonDeps[d] || npmDependencies[d];
+              });
+
+              const deps = (node.value as AST.JSONObjectExpression).properties;
+              const mappedDeps = missingDeps
+                .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
+                .join(',');
+
+              if (deps.length) {
+                return fixer.insertTextAfter(
+                  deps[deps.length - 1] as any,
+                  `,${mappedDeps}`
+                );
+              } else {
+                return fixer.insertTextAfterRange(
+                  [node.value.range[0] + 1, node.value.range[1] - 1],
+                  `${mappedDeps}\n  `
+                );
+              }
+            },
+          });
+        }
       }
-      if (
-        npmDependencies[packageName].startsWith('file:') ||
-        packageRange.startsWith('file:') ||
-        npmDependencies[packageName] === '*' ||
-        packageRange === '*' ||
-        packageRange.startsWith('workspace:') ||
-        /**
-         * Catalogs can be named, or left unnamed
-         * So just checking up until the : will catch both cases
-         * e.g. catalog:some-catalog or catalog:
-         */
-        packageRange.startsWith('catalog:') ||
-        satisfies(npmDependencies[packageName], packageRange, {
-          includePrerelease: true,
-        })
+
+      function validateVersionMatchesInstalled(
+        node: AST.JSONProperty,
+        packageName: string,
+        packageRange: string
       ) {
-        return;
-      }
-
-      context.report({
-        node: node as any,
-        messageId: 'versionMismatch',
-        data: {
-          packageName: packageName,
-          version: npmDependencies[packageName],
-        },
-        fix: (fixer) =>
-          fixer.replaceText(
-            node as any,
-            `"${packageName}": "${
-              rootPackageJsonDeps[packageName] || npmDependencies[packageName]
-            }"`
-          ),
-      });
-    }
-
-    function reportObsoleteDependency(
-      node: AST.JSONProperty,
-      packageName: string
-    ) {
-      if (!checkObsoleteDependencies) {
-        return;
-      }
-
-      context.report({
-        node: node as any,
-        messageId: 'obsoleteDependency',
-        data: { packageName: packageName, projectName: sourceProject.name },
-        fix: (fixer) => {
-          const isLastProperty =
-            node.parent.properties[node.parent.properties.length - 1] === node;
-          const index = node.parent.properties.findIndex((n) => n === node);
-
-          if (index > 0) {
-            const previousNode = node.parent.properties[index - 1];
-            return fixer.removeRange([
-              previousNode.range[1] + (isLastProperty ? 0 : 1),
-              node.range[1] + (isLastProperty ? 0 : 1),
-            ]);
-          } else {
-            const parent = node.parent;
-
-            // it's the only property
-            if (isLastProperty) {
-              return fixer.removeRange([
-                parent.range[0] + 1,
-                parent.range[1] - 1,
-              ]);
-            } else {
-              return fixer.removeRange([
-                parent.range[0] + 1,
-                node.range[1] + 1,
-              ]);
-            }
-          }
-        },
-      });
-    }
-
-    function validateDependenciesSectionExistance(
-      node: AST.JSONObjectExpression
-    ) {
-      if (
-        !expectedDependencyNames.length ||
-        !expectedDependencyNames.some((d) => !ignoredDependencies.includes(d))
-      ) {
-        return;
-      }
-      if (
-        !node.properties ||
-        !node.properties.some((p) =>
-          ['dependencies', 'peerDependencies', 'optionalDependencies'].includes(
-            (p.key as any).value
-          )
-        )
-      ) {
-        context.report({
-          node: node as any,
-          messageId: 'missingDependencySection',
-          data: {
-            dependencies: expectedDependencyNames
-              .map((d) => `\n- "${d}"`)
-              .join(),
-          },
-          fix: (fixer) => {
-            expectedDependencyNames.sort().reduce((acc, d) => {
-              acc[d] = rootPackageJsonDeps[d] || npmDependencies[d];
-              return acc;
-            }, projPackageJsonDeps);
-
-            const dependencies = Object.keys(projPackageJsonDeps)
-              .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
-              .join(',');
-
-            if (!node.properties.length) {
-              return fixer.replaceText(
-                node as any,
-                `{\n  "dependencies": {${dependencies}\n  }\n}`
-              );
-            } else {
-              return fixer.insertTextAfter(
-                node.properties[node.properties.length - 1] as any,
-                `,\n  "dependencies": {${dependencies}\n  }`
-              );
-            }
-          },
-        });
-      }
-    }
-
-    return {
-      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i]'](
-        node: AST.JSONProperty
-      ) {
-        validateMissingDependencies(node);
-      },
-      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
-        node: AST.JSONProperty
-      ) {
-        const packageName = (node.key as any).value;
-        const packageRange = (node.value as any).value;
-
-        if (ignoredDependencies.includes(packageName)) {
+        if (!checkVersionMismatches) {
+          return;
+        }
+        if (
+          npmDependencies[packageName].startsWith('file:') ||
+          packageRange.startsWith('file:') ||
+          npmDependencies[packageName] === '*' ||
+          packageRange === '*' ||
+          packageRange.startsWith('workspace:') ||
+          packageRange.startsWith('catalog:') ||
+          satisfies(npmDependencies[packageName], packageRange, {
+            includePrerelease: true,
+          })
+        ) {
           return;
         }
 
-        if (expectedDependencyNames.includes(packageName)) {
-          validateVersionMatchesInstalled(node, packageName, packageRange);
-        } else {
-          reportObsoleteDependency(node, packageName);
+        context.report({
+          node: node as any,
+          messageId: 'versionMismatch',
+          data: {
+            packageName: packageName,
+            version: npmDependencies[packageName],
+          },
+          fix: (fixer) =>
+            fixer.replaceText(
+              node as any,
+              `"${packageName}": "${
+                rootPackageJsonDeps[packageName] || npmDependencies[packageName]
+              }"`
+            ),
+        });
+      }
+
+      function reportObsoleteDependency(
+        node: AST.JSONProperty,
+        packageName: string
+      ) {
+        if (!checkObsoleteDependencies) {
+          return;
         }
-      },
-      ['JSONExpressionStatement > JSONObjectExpression'](
+
+        context.report({
+          node: node as any,
+          messageId: 'obsoleteDependency',
+          data: { packageName: packageName, projectName: sourceProject.name },
+          fix: (fixer) => {
+            const isLastProperty =
+              node.parent.properties[node.parent.properties.length - 1] === node;
+            const index = node.parent.properties.findIndex((n) => n === node);
+
+            if (index > 0) {
+              const previousNode = node.parent.properties[index - 1];
+              return fixer.removeRange([
+                previousNode.range[1] + (isLastProperty ? 0 : 1),
+                node.range[1] + (isLastProperty ? 0 : 1),
+              ]);
+            } else {
+              const parent = node.parent;
+
+              // it's the only property
+              if (isLastProperty) {
+                return fixer.removeRange([
+                  parent.range[0] + 1,
+                  parent.range[1] - 1,
+                ]);
+              } else {
+                return fixer.removeRange([
+                  parent.range[0] + 1,
+                  node.range[1] + 1,
+                ]);
+              }
+            }
+          },
+        });
+      }
+
+      function validateDependenciesSectionExistance(
         node: AST.JSONObjectExpression
       ) {
-        validateDependenciesSectionExistance(node);
-      },
-    };
+        if (
+          !expectedDependencyNames.length ||
+          !expectedDependencyNames.some((d) => !ignoredDependencies.includes(d))
+        ) {
+          return;
+        }
+        if (
+          !node.properties ||
+          !node.properties.some((p) =>
+            ['dependencies', 'peerDependencies', 'optionalDependencies', ...(production ? [] : ['devDependencies'])].includes(
+              (p.key as any).value
+            )
+          )
+        ) {
+          context.report({
+            node: node as any,
+            messageId: 'missingDependencySection',
+            data: {
+              dependencies: expectedDependencyNames
+                .map((d) => `\n- "${d}"`)
+                .join(),
+            },
+            fix: (fixer) => {
+              expectedDependencyNames.sort().reduce((acc, d) => {
+                acc[d] = rootPackageJsonDeps[d] || npmDependencies[d];
+                return acc;
+              }, projPackageJsonDeps);
+
+              const dependencies = Object.keys(projPackageJsonDeps)
+                .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
+                .join(',');
+
+              if (!node.properties.length) {
+                return fixer.replaceText(
+                  node as any,
+                  `{\n  "dependencies": {${dependencies}\n  }\n}`
+                );
+              } else {
+                return fixer.insertTextAfter(
+                  node.properties[node.properties.length - 1] as any,
+                  `,\n  "dependencies": {${dependencies}\n  }`
+                );
+              }
+            },
+          });
+        }
+      }
+
+      const dependencyQuery = production ? '/^(peer|optional)?dependencies$/i' : '/^(dev|peer|optional)?dependencies$/i'
+
+      return {
+        [`JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=${dependencyQuery}]`]: (
+          node: AST.JSONProperty
+        ) => {
+          validateMissingDependencies(node);
+        },
+        [`JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=${dependencyQuery}] > JSONObjectExpression > JSONProperty`]: (
+          node: AST.JSONProperty
+        ) => {
+          const packageName = (node.key as any).value;
+          const packageRange = (node.value as any).value;
+
+          if (ignoredDependencies.includes(packageName)) {
+            return;
+          }
+
+          if (expectedDependencyNames.includes(packageName)) {
+            validateVersionMatchesInstalled(node, packageName, packageRange);
+          } else {
+            reportObsoleteDependency(node, packageName);
+          }
+        },
+        ['JSONExpressionStatement > JSONObjectExpression'](
+          node: AST.JSONObjectExpression
+        ) {
+          validateDependenciesSectionExistance(node);
+        },
+      };
+    });
+
+    // Merge all visitors into a single visitor
+    return visitors.reduce((acc, visitor) => {
+      return {
+        ...acc,
+        ...Object.entries(visitor).reduce((visitorAcc, [key, value]) => {
+          if (!visitorAcc[key]) {
+            visitorAcc[key] = value;
+          } else {
+            const originalFn = visitorAcc[key];
+            visitorAcc[key] = function (...args: any[]) {
+              originalFn.apply(this, args);
+              value.apply(this, args);
+            };
+          }
+          return visitorAcc;
+        }, {} as any),
+      };
+    }, {});
   },
 });
