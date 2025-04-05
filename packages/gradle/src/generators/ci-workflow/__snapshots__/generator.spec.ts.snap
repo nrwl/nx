@@ -13,7 +13,7 @@ jobs:
       _JAVA_OPTIONS: '-Xmx3g'
       GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
     docker:
-      - image: cimg/openjdk:17.0-node
+      - image: cimg/openjdk:21.0-node
     steps:
       - checkout
 
@@ -65,15 +65,15 @@ jobs:
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
-      - name: Set up JDK 17 for x64
+      - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v4
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -95,7 +95,7 @@ jobs:
       _JAVA_OPTIONS: '-Xmx3g'
       GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
     docker:
-      - image: cimg/openjdk:17.0-node
+      - image: cimg/openjdk:21.0-node
     steps:
       - checkout
 
@@ -147,15 +147,15 @@ jobs:
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
-      - name: Set up JDK 17 for x64
+      - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v4
 
       - uses: nrwl/nx-set-shas@v4
 
