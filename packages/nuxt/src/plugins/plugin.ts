@@ -3,6 +3,8 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  createNodesFromFiles,
+  CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
   readJsonFile,
@@ -40,11 +42,6 @@ function writeTargetsToCache() {
   });
 }
 
-export const createDependencies: CreateDependencies = () => {
-  writeTargetsToCache();
-  return [];
-};
-
 export interface NuxtPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
@@ -53,6 +50,21 @@ export interface NuxtPluginOptions {
   buildDepsTargetName?: string;
   watchDepsTargetName?: string;
 }
+
+export const createNodesV2: CreateNodesV2<NuxtPluginOptions> = [
+  '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
+  async (files, options, context) => {
+    //TODO(@nrwl/nx-vue-reviewers): This should batch hashing like our other plugins.
+    const result = await createNodesFromFiles(
+      createNodes[1],
+      files,
+      options,
+      context
+    );
+    writeTargetsToCache();
+    return result;
+  },
+];
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
