@@ -59,6 +59,12 @@ export class LoadedNxPlugin {
       this.exclude = pluginDefinition.exclude;
     }
 
+    if (plugin.createNodes && !plugin.createNodesV2) {
+      throw new Error(
+        `Plugin ${plugin.name} only provides \`createNodes\` which was removed in Nx 21, it should provide a \`createNodesV2\` implementation.`
+      );
+    }
+
     if (plugin.createNodesV2) {
       this.createNodes = [
         plugin.createNodesV2[0],
