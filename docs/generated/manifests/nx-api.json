@@ -1372,6 +1372,26 @@
       }
     },
     "migrations": {
+      "/nx-api/cypress/migrations/update-cypress-v14": {
+        "description": "Update the Cypress configuration and files with the relevant changes needed to support Cypress v14.",
+        "file": "generated/packages/cypress/migrations/update-cypress-v14.json",
+        "hidden": false,
+        "name": "update-cypress-v14",
+        "version": "21.0.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/update-cypress-v14",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/21.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/cypress/migrations/21.0.0-package-updates.json",
+        "hidden": false,
+        "name": "21.0.0-package-updates",
+        "version": "21.0.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/21.0.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite": {
         "description": "Update ciWebServerCommand to use static serve for the application.",
         "file": "generated/packages/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite.json",
