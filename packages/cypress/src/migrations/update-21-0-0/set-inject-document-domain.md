@@ -1,6 +1,8 @@
 #### Set `injectDocumentDomain` Configuration Option
 
-Set the new `injectDocumentDomain` configuration option to `true` in the Cypress configuration to not require the usage of the `cy.origin()` command when navigating between domains. The option was introduced to ease the transition to v14, but it is deprecated and will be removed in Cypress v15. Read more at the [migration notes](https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin).
+Replaces the removed `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option when needed. Skipping domain injection is now the default behavior in Cypress v14 and therefore, it is required to use the `cy.origin()` command when navigating between domains. The `injectDocumentDomain` option was introduced to ease the transition to v14, but it is deprecated and will be removed in Cypress v15. Read more at the [migration notes](https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin).
+
+##### Examples
 
 {% tabs %}
 {% tab label="Before" %}
@@ -27,9 +29,10 @@ export default defineConfig({
 ```
 
 {% /tab %}
+
 {% tab label="After" %}
 
-```ts {% fileName="apps/app1-e2e/cypress.config.ts" highlightLines=[16,17] %}
+```ts {% fileName="apps/app1-e2e/cypress.config.ts" highlightLines=["17-19"] %}
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 
@@ -46,6 +49,7 @@ export default defineConfig({
       ciBaseUrl: 'http://localhost:4200',
     }),
     baseUrl: 'http://localhost:4200',
+    // Please ensure you use `cy.origin()` when navigating between domains and remove this option.
     // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
     injectDocumentDomain: true,
   },

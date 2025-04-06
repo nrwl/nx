@@ -1,0 +1,13 @@
+{
+  "name": "replace-experimental-just-in-time-compile",
+  "cli": "nx",
+  "version": "21.0.0-beta.0",
+  "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+  "implementation": "/packages/cypress/src/migrations/update-21-0-0/replace-experimental-just-in-time-compile.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/cypress",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Replace the `experimentalJustInTimeCompile` Configuration Option with `justInTimeCompile`\n\nTBD\n"
+}

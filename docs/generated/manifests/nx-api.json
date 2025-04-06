@@ -1372,14 +1372,44 @@
       }
     },
     "migrations": {
-      "/nx-api/cypress/migrations/update-cypress-v14": {
-        "description": "Update the Cypress configuration and files with the relevant changes needed to support Cypress v14.",
-        "file": "generated/packages/cypress/migrations/update-cypress-v14.json",
+      "/nx-api/cypress/migrations/set-inject-document-domain": {
+        "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
+        "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",
         "hidden": false,
-        "name": "update-cypress-v14",
+        "name": "set-inject-document-domain",
         "version": "21.0.0-beta.0",
         "originalFilePath": "/packages/cypress",
-        "path": "/nx-api/cypress/migrations/update-cypress-v14",
+        "path": "/nx-api/cypress/migrations/set-inject-document-domain",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/remove-experimental-fetch-polyfill": {
+        "description": "Removes the `experimentalFetchPolyfill` configuration option.",
+        "file": "generated/packages/cypress/migrations/remove-experimental-fetch-polyfill.json",
+        "hidden": false,
+        "name": "remove-experimental-fetch-polyfill",
+        "version": "21.0.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/remove-experimental-fetch-polyfill",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/replace-experimental-just-in-time-compile": {
+        "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+        "file": "generated/packages/cypress/migrations/replace-experimental-just-in-time-compile.json",
+        "hidden": false,
+        "name": "replace-experimental-just-in-time-compile",
+        "version": "21.0.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/replace-experimental-just-in-time-compile",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/update-component-testing-mount-imports": {
+        "description": "Updates the module specifier for the Component Testing `mount` function.",
+        "file": "generated/packages/cypress/migrations/update-component-testing-mount-imports.json",
+        "hidden": false,
+        "name": "update-component-testing-mount-imports",
+        "version": "21.0.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/update-component-testing-mount-imports",
         "type": "migration"
       },
       "/nx-api/cypress/migrations/21.0.0-package-updates": {

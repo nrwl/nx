@@ -5,9 +5,17 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { posix } from 'path';
+import type {
+  Expression,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+} from 'typescript';
 import type { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { CYPRESS_CONFIG_FILE_NAME_PATTERN } from './config';
+
+let ts: typeof import('typescript');
 
 export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
   projectName: string;
@@ -46,6 +54,55 @@ export async function* cypressProjectConfigs(tree: Tree): AsyncGenerator<{
       }
     }
   }
+}
+
+export function getObjectProperty(
+  config: ObjectLiteralExpression,
+  name: string
+): PropertyAssignment | undefined {
+  ts ??= ensureTypescript();
+
+  return config.properties.find(
+    (p): p is PropertyAssignment =>
+      ts.isPropertyAssignment(p) && p.name.getText() === name
+  );
+}
+
+export function removeObjectProperty(
+  config: ObjectLiteralExpression,
+  property: PropertyAssignment
+): ObjectLiteralExpression {
+  ts ??= ensureTypescript();
+
+  return ts.factory.updateObjectLiteralExpression(
+    config,
+    config.properties.filter((p) => p !== property)
+  );
+}
+
+export function updateObjectProperty(
+  config: ObjectLiteralExpression,
+  property: PropertyAssignment,
+  { newName, newValue }: { newName?: string; newValue?: Expression }
+): ObjectLiteralExpression {
+  ts ??= ensureTypescript();
+
+  if (!newName && !newValue) {
+    throw new Error('newName or newValue must be provided');
+  }
+
+  return ts.factory.updateObjectLiteralExpression(
+    config,
+    config.properties.map((p) =>
+      p === property
+        ? ts.factory.updatePropertyAssignment(
+            p,
+            newName ? ts.factory.createIdentifier(newName) : p.name,
+            newValue ? newValue : p.initializer
+          )
+        : p
+    )
+  );
 }
 
 function* allTargetOptions<T>(
