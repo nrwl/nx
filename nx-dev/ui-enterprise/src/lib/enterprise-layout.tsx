@@ -7,7 +7,7 @@ export function EnterpriseLayout({
   return (
     <div className="w-full dark:bg-slate-950">
       <Header />
-      <main>{children}</main>
+      <main data-document="main">{children}</main>
       <Footer />
     </div>
   );

@@ -2347,24 +2347,6 @@ describe('lib', () => {
       ]);
     });
 
-    it('should add nx.addTypecheckTarget to tsconfig.json when using tsc to build to avoid duplicated typechecks', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        useProjectJson: false,
-        directory: 'my-ts-lib',
-        bundler: 'tsc',
-        unitTestRunner: 'none',
-        linter: 'none',
-      });
-
-      expect(readJson(tree, 'my-ts-lib/tsconfig.json').nx)
-        .toMatchInlineSnapshot(`
-        {
-          "addTypecheckTarget": false,
-        }
-      `);
-    });
-
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name and "useProjectJson" is "false"', async () => {
       await libraryGenerator(tree, {
         ...defaultOptions,

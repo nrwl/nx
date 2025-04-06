@@ -15,10 +15,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
-import {
-  configurePlugins,
-  runPackageManagerInstallPlugins,
-} from './configure-plugins';
+import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -46,33 +43,9 @@ export interface InitArgs {
 export async function initHandler(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
+    process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
-  }
-
-  if (!existsSync('package.json') || options.useDotNxInstallation) {
-    if (process.platform !== 'win32') {
-      console.log(
-        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx --help`'
-      );
-    } else {
-      console.log(
-        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx.bat --help`'
-      );
-    }
-    generateDotNxSetup(version);
-    const nxJson = readNxJson(process.cwd());
-    const { plugins } = await detectPlugins(nxJson, options.interactive);
-    plugins.forEach((plugin) => {
-      runNxSync(`add ${plugin}`, {
-        stdio: 'inherit',
-      });
-    });
-
-    // invokes the wrapper, thus invoking the initial installation process
-    runNxSync('--version', { stdio: 'ignore' });
-    return;
   }
 
   // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
@@ -88,10 +61,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  const packageJson: PackageJson = readJsonFile('package.json');
+  const _isNonJs = !existsSync('package.json') || options.useDotNxInstallation;
+  const packageJson: PackageJson = _isNonJs
+    ? null
+    : readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
-  const _isMonorepo = isMonorepo(packageJson);
-  const _isCRA = isCRA(packageJson);
+  const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
+  const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
   const learnMoreLink = _isTurborepo
     ? 'https://nx.dev/recipes/adopting-nx/from-turborepo'
@@ -131,6 +107,9 @@ export async function initHandler(options: InitArgs): Promise<void> {
       interactive: options.interactive,
       nxCloud: false,
     });
+  } else if (_isNonJs) {
+    generateDotNxSetup(version);
+    console.log('');
   } else {
     await addNxToNpmRepo({
       interactive: options.interactive,
@@ -166,7 +145,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '📦 Installing Nx' });
 
-  runPackageManagerInstallPlugins(repoRoot, pmc, plugins);
+  installPluginPackages(repoRoot, pmc, plugins);
   await configurePlugins(
     plugins,
     updatePackageScripts,

@@ -466,9 +466,6 @@ describe('NxPlugin Plugin Generator', () => {
           "extends": "../tsconfig.base.json",
           "files": [],
           "include": [],
-          "nx": {
-            "addTypecheckTarget": false,
-          },
           "references": [
             {
               "path": "./tsconfig.lib.json",

@@ -1,6 +1,27 @@
 {
   "generators": {},
   "packageJsonUpdates": {
+    "20.7.1": {
+      "version": "20.7.1-beta.0",
+      "packages": {
+        "vue": {
+          "version": "^3.5.13",
+          "alwaysAddToPackageJson": false
+        },
+        "vue-tsc": {
+          "version": "^2.2.8",
+          "alwaysAddToPackageJson": false
+        },
+        "vue-router": {
+          "version": "^4.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitejs/plugin-vue": {
+          "version": "^5.2.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "19.4.3": {
       "version": "19.4.3-beta.0",
       "packages": {

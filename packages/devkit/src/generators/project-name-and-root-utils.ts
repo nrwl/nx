@@ -49,13 +49,20 @@ export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
 ): Promise<ProjectNameAndRootOptions> {
-  validateOptions(options);
+  // root projects must provide name option
+  if (options.directory === '.' && !options.name) {
+    throw new Error(
+      `When generating a root project, you must also specify the name option.`
+    );
+  }
 
   const directory = normalizePath(options.directory);
   const name =
     options.name ??
     directory.match(/(@[^@/]+(\/[^@/]+)+)/)?.[1] ??
     directory.substring(directory.lastIndexOf('/') + 1);
+
+  validateOptions(options.name, name, options.directory);
 
   let projectSimpleName: string;
   let projectFileName: string;
@@ -86,6 +93,12 @@ export async function determineProjectNameAndRootOptions(
     if (!relativeCwd.endsWith(name)) {
       projectRoot = joinPathFragments(relativeCwd, name);
     }
+  }
+
+  if (projectRoot.startsWith('..')) {
+    throw new Error(
+      `The resolved project root "${projectRoot}" is outside of the workspace root "${workspaceRoot}".`
+    );
   }
 
   const importPath =
@@ -136,38 +149,34 @@ export async function ensureRootProjectName(
   }
 }
 
-function validateOptions(options: ProjectGenerationOptions): void {
-  if (options.directory === '.') {
-    /**
-     * Root projects must provide name option
-     */
-    if (!options.name) {
-      throw new Error(`Root projects must also specify name option.`);
-    }
-  } else {
-    /**
-     * Both directory and name (if present) must match one of two cases:
-     *
-     * 1. Valid npm package names (e.g., '@scope/name' or 'name').
-     * 2. Names starting with a letter and can contain any character except whitespace and ':'.
-     *
-     * The second case is to support the legacy behavior (^[a-zA-Z].*$) with the difference
-     * that it doesn't allow the ":" character. It was wrong to allow it because it would
-     * conflict with the notation for tasks.
-     */
-    const pattern =
-      '(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$';
-    const validationRegex = new RegExp(pattern);
-    if (options.name && !validationRegex.test(options.name)) {
+function validateOptions(
+  providedName: string,
+  derivedName: string,
+  directory: string
+): void {
+  /**
+   * The provided name and the derived name from the provided directory must match one of two cases:
+   *
+   * 1. Valid npm package names (e.g., '@scope/name' or 'name').
+   * 2. Names starting with a letter and can contain any character except whitespace and ':'.
+   *
+   * The second case is to support the legacy behavior (^[a-zA-Z].*$) with the difference
+   * that it doesn't allow the ":" character. It was wrong to allow it because it would
+   * conflict with the notation for tasks.
+   */
+  const pattern =
+    '(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$';
+  const validationRegex = new RegExp(pattern);
+  if (providedName) {
+    if (!validationRegex.test(providedName)) {
       throw new Error(
-        `The name should match the pattern "${pattern}". The provided value "${options.name}" does not match.`
+        `The name should match the pattern "${pattern}". The provided value "${providedName}" does not match.`
       );
     }
-    if (!validationRegex.test(options.directory)) {
-      throw new Error(
-        `The directory should match the pattern "${pattern}". The provided value "${options.directory}" does not match.`
-      );
-    }
+  } else if (!validationRegex.test(derivedName)) {
+    throw new Error(
+      `The derived name from the provided directory should match the pattern "${pattern}". The derived name "${derivedName}" from the provided value "${directory}" does not match.`
+    );
   }
 }
 

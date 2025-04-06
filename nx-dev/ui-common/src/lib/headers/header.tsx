@@ -17,13 +17,20 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Fragment, ReactElement, useEffect, useState } from 'react';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useEffect,
+  useState,
+} from 'react';
 import { ButtonLink, ButtonLinkProps } from '../button';
 import { resourceMenuItems } from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { GitHubIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
@@ -31,6 +38,13 @@ interface HeaderProps {
 
 export function Header({ ctaButtons }: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
+
+  const router = useRouter();
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push('/brands');
+  };
 
   // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
   const checkSizeAndClosePopover = () => {
@@ -78,8 +92,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             href="/"
             className="mr-4 flex items-center text-slate-900 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <nav
@@ -145,6 +162,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/remote-cache"
+              title="Nx Remote Cache"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Remote Cache
+            </Link>
+            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -161,14 +186,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
               Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <Link
-              href="/powerpack"
-              title="Nx Powerpack"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Powerpack
-            </Link>
             <Link
               href="/enterprise"
               title="Nx Enterprise"
@@ -383,12 +400,12 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             Pricing
                           </Link>
                           <Link
-                            href="/powerpack"
-                            title="Powerpack"
+                            href="/remote-cache"
+                            title="Nx Remote Cache"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
                           >
-                            Powerpack
+                            Remote Cache
                           </Link>
                           <Link
                             href="/enterprise"

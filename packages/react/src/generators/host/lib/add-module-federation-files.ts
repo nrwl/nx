@@ -4,27 +4,52 @@ import {
   joinPathFragments,
   names,
   readProjectConfiguration,
+  offsetFromRoot,
 } from '@nx/devkit';
 import { maybeJs } from '../../../utils/maybe-js';
 import { NormalizedSchema } from '../schema';
+import {
+  createNxRspackPluginOptions,
+  getDefaultTemplateVariables,
+} from '../../application/lib/create-application-files';
 
 export function addModuleFederationFiles(
   host: Tree,
   options: NormalizedSchema,
   defaultRemoteManifest: { name: string; port: number }[]
 ) {
-  const templateVariables = {
-    ...names(options.projectName),
-    ...options,
-    static: !options?.dynamic,
-    tmpl: '',
-    remotes: defaultRemoteManifest.map(({ name, port }) => {
-      return {
-        ...names(name),
-        port,
-      };
-    }),
-  };
+  const templateVariables =
+    options.bundler === 'rspack'
+      ? {
+          ...getDefaultTemplateVariables(host, options as any),
+          rspackPluginOptions: {
+            ...createNxRspackPluginOptions(
+              options as any,
+              offsetFromRoot(options.appProjectRoot),
+              false
+            ),
+            mainServer: `./server.ts`,
+          },
+          static: !options?.dynamic,
+          remotes: defaultRemoteManifest.map(({ name, port }) => {
+            return {
+              ...names(name),
+              port,
+            };
+          }),
+        }
+      : {
+          ...names(options.projectName),
+          ...options,
+          static: !options?.dynamic,
+          tmpl: '',
+          remotes: defaultRemoteManifest.map(({ name, port }) => {
+            return {
+              ...names(name),
+              port,
+            };
+          }),
+        };
 
   const projectConfig = readProjectConfiguration(host, options.projectName);
   const pathToMFManifest = joinPathFragments(
