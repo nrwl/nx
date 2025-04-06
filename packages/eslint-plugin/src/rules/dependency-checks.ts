@@ -62,6 +62,7 @@ export default ESLintUtils.RuleCreator(
           includeTransitiveDependencies: { type: 'boolean' },
           useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
           runtimeHelpers: { type: 'array', items: { type: 'string' } },
+          production: { type: 'boolean' },
         },
         additionalProperties: false,
       },
@@ -73,20 +74,8 @@ export default ESLintUtils.RuleCreator(
       missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
     },
   },
-  defaultOptions: [
-    {
-      buildTargets: ['build'],
-      checkMissingDependencies: true,
-      checkObsoleteDependencies: true,
-      checkVersionMismatches: true,
-      ignoredDependencies: [],
-      ignoredFiles: [],
-      includeTransitiveDependencies: false,
-      useLocalPathsForWorkspaceDependencies: false,
-      runtimeHelpers: [],
-    },
-  ],
-  create(context, configs) {
+  defaultOptions: [{}],
+  create(context) {
     if (!getParserServices(context).isJSON) {
       return {};
     }
@@ -116,9 +105,9 @@ export default ESLintUtils.RuleCreator(
     }
 
     // Create a rule visitor for each config
-    const visitors = configs.map(config => {
+    const visitors = context.options.map(config => {
       const {
-        buildTargets = [],
+        buildTargets = ['build'],
         ignoredDependencies = [],
         ignoredFiles = [],
         production = true,
@@ -157,6 +146,7 @@ export default ESLintUtils.RuleCreator(
 
       const packageJson = JSON.parse(context.sourceCode.getText());
       const projPackageJsonDeps = production ? getProductionDependencies(packageJson) : getAllDependencies(packageJson);
+      const dependencyQuery = production ? '^(peer|optional)?dependencies$' : '^devDependencies$'
 
       const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
@@ -297,11 +287,7 @@ export default ESLintUtils.RuleCreator(
         }
         if (
           !node.properties ||
-          !node.properties.some((p) =>
-            ['dependencies', 'peerDependencies', 'optionalDependencies', ...(production ? [] : ['devDependencies'])].includes(
-              (p.key as any).value
-            )
-          )
+          !node.properties.some((p) => new RegExp(dependencyQuery, 'i').test((p.key as any).value))
         ) {
           context.report({
             node: node as any,
@@ -337,15 +323,13 @@ export default ESLintUtils.RuleCreator(
         }
       }
 
-      const dependencyQuery = production ? '/^(peer|optional)?dependencies$/i' : '/^(dev|peer|optional)?dependencies$/i'
-
       return {
-        [`JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=${dependencyQuery}]`]: (
+        [`JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/${dependencyQuery}/i]`]: (
           node: AST.JSONProperty
         ) => {
           validateMissingDependencies(node);
         },
-        [`JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=${dependencyQuery}] > JSONObjectExpression > JSONProperty`]: (
+        [`JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/${dependencyQuery}/i] > JSONObjectExpression > JSONProperty`]: (
           node: AST.JSONProperty
         ) => {
           const packageName = (node.key as any).value;
