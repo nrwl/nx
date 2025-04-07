@@ -51,7 +51,6 @@ export interface PluginUnsupportedOptions {
   watch?: boolean;
   poll?: number;
   deleteOutputPath?: boolean;
-  preserveSymlinks?: boolean;
   subresourceIntegrity?: boolean;
   serviceWorker?: string | false;
   statsJson?: boolean;
@@ -83,7 +82,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'watch',
   'poll',
   'deleteOutputPath',
-  'preserveSymlinks',
   'subresourceIntegrity',
   'serviceWorker',
   'statsJson',
