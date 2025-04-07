@@ -4,7 +4,7 @@ slug: test-splitting-techniques
 authors: [Miroslav Jonas]
 description: 'Learn the techniques for optimizing CI by splitting long-running tests, using sharding, Atomizer, and manual E2E project splitting, all enhanced by Nx Cloud's distributed task execution for improved stability and performance.'
 tags: [nx, architecture]
-cover_image: /blog/images/articles/bg-self-hosted-caching-article.jpg
+cover_image: /blog/images/articles/bg-test-splitting-techniques.avif
 ---
 
 One of the most impactful core features of Nx is the affected graph. The affected graph helps us to skip unnecessary work and focus only on the things that have been changed significantly speeding our CI and helping us ship features and hotfixes faster.
