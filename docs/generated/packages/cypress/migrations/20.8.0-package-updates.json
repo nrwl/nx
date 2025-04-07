@@ -12,8 +12,7 @@
     "@cypress/webpack-dev-server": {
       "version": "^4.0.2",
       "alwaysAddToPackageJson": false
-    },
-    "vite": { "version": "^6.0.0", "alwaysAddToPackageJson": false }
+    }
   },
   "aliases": [],
   "description": "",

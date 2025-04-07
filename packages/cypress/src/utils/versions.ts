@@ -59,7 +59,6 @@ export function getInstalledCypressMajorVersion(tree?: Tree): number | null {
 
     if (tree) {
       version = getCypressVersionFromTree(tree);
-      version ??= getCypressVersionFromFileSystem();
     } else {
       version = getCypressVersionFromFileSystem();
     }
