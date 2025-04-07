@@ -110,6 +110,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    */
   deleteOutputPath?: boolean;
   devServer?: DevServerOptions;
+  /**
+   * Exclude the listed external dependencies from being bundled into the bundle. Instead, the created bundle relies on these dependencies to be available during runtime.
+   */
+  externalDependencies?: string[];
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
   index?: IndexElement;
@@ -152,6 +156,7 @@ export interface NormalizedAngularRspackPluginOptions
   commonChunk: boolean;
   deleteOutputPath: boolean;
   devServer: NormalizedDevServerOptions;
+  externalDependencies: string[];
   extractLicenses: boolean;
   fileReplacements: FileReplacement[];
   globalScripts: GlobalEntry[];

@@ -245,6 +245,7 @@ export function normalizeOptions(
     define: options.define ?? {},
     deleteOutputPath: options.deleteOutputPath ?? true,
     devServer: normalizeDevServer(options.devServer),
+    externalDependencies: options.externalDependencies ?? [],
     extractLicenses: options.extractLicenses ?? true,
     fileReplacements: resolveFileReplacements(fileReplacements, root),
     globalStyles,

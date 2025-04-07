@@ -40,7 +40,6 @@ export interface PluginUnsupportedOptions {
           unsafeEval?: boolean;
         };
   };
-  externalDependencies?: string[];
   clearScreen?: boolean;
   baseHref?: string;
   verbose?: boolean;
@@ -70,7 +69,6 @@ export interface PluginUnsupportedOptions {
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'deployUrl',
   'security',
-  'externalDependencies',
   'clearScreen',
   'baseHref',
   'verbose',
