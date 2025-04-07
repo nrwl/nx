@@ -253,6 +253,7 @@ export async function _createConfig(
           normalizedOptions.devServer.proxyConfig
         ),
       },
+      externals: normalizedOptions.externalDependencies,
       optimization: {
         chunkIds: normalizedOptions.namedChunks ? 'named' : 'deterministic',
         moduleIds: 'deterministic',
