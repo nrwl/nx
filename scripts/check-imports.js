@@ -49,8 +49,8 @@ function check() {
     // these migrations looks for projects depending on @angular/core, it doesn't require it
     'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.spec.ts',
     'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.ts',
-    'packages/cypress/src/migrations/update-21-0-0/update-component-testing-mount-imports.spec.ts',
-    'packages/cypress/src/migrations/update-21-0-0/update-component-testing-mount-imports.ts',
+    'packages/cypress/src/migrations/update-20-8-0/update-component-testing-mount-imports.spec.ts',
+    'packages/cypress/src/migrations/update-20-8-0/update-component-testing-mount-imports.ts',
   ];
 
   const files = [
