@@ -1369,7 +1369,7 @@
         "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",
         "hidden": false,
         "name": "set-inject-document-domain",
-        "version": "21.0.0-beta.0",
+        "version": "20.8.0-beta.0",
         "originalFilePath": "/packages/cypress",
         "path": "cypress/migrations/set-inject-document-domain",
         "type": "migration"
@@ -1379,7 +1379,7 @@
         "file": "generated/packages/cypress/migrations/remove-experimental-fetch-polyfill.json",
         "hidden": false,
         "name": "remove-experimental-fetch-polyfill",
-        "version": "21.0.0-beta.0",
+        "version": "20.8.0-beta.0",
         "originalFilePath": "/packages/cypress",
         "path": "cypress/migrations/remove-experimental-fetch-polyfill",
         "type": "migration"
@@ -1389,7 +1389,7 @@
         "file": "generated/packages/cypress/migrations/replace-experimental-just-in-time-compile.json",
         "hidden": false,
         "name": "replace-experimental-just-in-time-compile",
-        "version": "21.0.0-beta.0",
+        "version": "20.8.0-beta.0",
         "originalFilePath": "/packages/cypress",
         "path": "cypress/migrations/replace-experimental-just-in-time-compile",
         "type": "migration"
@@ -1399,19 +1399,19 @@
         "file": "generated/packages/cypress/migrations/update-component-testing-mount-imports.json",
         "hidden": false,
         "name": "update-component-testing-mount-imports",
-        "version": "21.0.0-beta.0",
+        "version": "20.8.0-beta.0",
         "originalFilePath": "/packages/cypress",
         "path": "cypress/migrations/update-component-testing-mount-imports",
         "type": "migration"
       },
       {
         "description": "",
-        "file": "generated/packages/cypress/migrations/21.0.0-package-updates.json",
+        "file": "generated/packages/cypress/migrations/20.8.0-package-updates.json",
         "hidden": false,
-        "name": "21.0.0-package-updates",
-        "version": "21.0.0-beta.0",
+        "name": "20.8.0-package-updates",
+        "version": "20.8.0-beta.0",
         "originalFilePath": "/packages/cypress",
-        "path": "cypress/migrations/21.0.0-package-updates",
+        "path": "cypress/migrations/20.8.0-package-updates",
         "type": "migration"
       },
       {

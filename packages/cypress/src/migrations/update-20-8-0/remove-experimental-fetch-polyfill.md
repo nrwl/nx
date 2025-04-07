@@ -1,8 +1,8 @@
-#### Set `injectDocumentDomain` Configuration Option
+#### Remove `experimentalFetchPolyfill` Configuration Option
 
-Replaces the removed `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option when needed. Skipping domain injection is now the default behavior in Cypress v14 and therefore, it is required to use the `cy.origin()` command when navigating between domains. The `injectDocumentDomain` option was introduced to ease the transition to v14, but it is deprecated and will be removed in Cypress v15. Read more at the [migration notes](https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin).
+Removes the `experimentalFetchPolyfill` configuration option that was removed in Cypress v14. Read more at the [migration notes](<https://docs.cypress.io/app/references/changelog#:~:text=The%20experimentalFetchPolyfill%20configuration%20option%20was,cy.intercept()%20for%20handling%20fetch%20requests>).
 
-##### Examples
+#### Examples
 
 {% tabs %}
 {% tab label="Before" %}
@@ -24,6 +24,7 @@ export default defineConfig({
       ciBaseUrl: 'http://localhost:4200',
     }),
     baseUrl: 'http://localhost:4200',
+    experimentalFetchPolyfill: true,
   },
 });
 ```
@@ -32,7 +33,7 @@ export default defineConfig({
 
 {% tab label="After" %}
 
-```ts {% fileName="apps/app1-e2e/cypress.config.ts" highlightLines=["17-19"] %}
+```ts {% fileName="apps/app1-e2e/cypress.config.ts" %}
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { defineConfig } from 'cypress';
 
@@ -49,9 +50,6 @@ export default defineConfig({
       ciBaseUrl: 'http://localhost:4200',
     }),
     baseUrl: 'http://localhost:4200',
-    // Please ensure you use `cy.origin()` when navigating between domains and remove this option.
-    // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
-    injectDocumentDomain: true,
   },
 });
 ```
