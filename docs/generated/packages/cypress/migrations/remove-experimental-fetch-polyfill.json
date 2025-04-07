@@ -2,6 +2,7 @@
   "name": "remove-experimental-fetch-polyfill",
   "cli": "nx",
   "version": "21.0.0-beta.0",
+  "requires": { "cypress": ">=14.0.0" },
   "description": "Removes the `experimentalFetchPolyfill` configuration option.",
   "implementation": "/packages/cypress/src/migrations/update-21-0-0/remove-experimental-fetch-polyfill.ts",
   "aliases": [],

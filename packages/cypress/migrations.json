@@ -24,18 +24,27 @@
     "remove-experimental-fetch-polyfill": {
       "cli": "nx",
       "version": "21.0.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
       "description": "Removes the `experimentalFetchPolyfill` configuration option.",
       "implementation": "./src/migrations/update-21-0-0/remove-experimental-fetch-polyfill"
     },
     "replace-experimental-just-in-time-compile": {
       "cli": "nx",
       "version": "21.0.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
       "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
       "implementation": "./src/migrations/update-21-0-0/replace-experimental-just-in-time-compile"
     },
     "update-component-testing-mount-imports": {
       "cli": "nx",
       "version": "21.0.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
       "description": "Updates the module specifier for the Component Testing `mount` function.",
       "implementation": "./src/migrations/update-21-0-0/update-component-testing-mount-imports"
     }
