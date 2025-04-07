@@ -7,41 +7,51 @@ use std::{
 
 use super::cache::CachedResult;
 use flate2::Compression;
-use reqwest::{header, Client, ClientBuilder};
+use napi::bindgen_prelude::{Buffer, Promise};
 use tar::{Archive, Builder};
 use tracing::trace;
 
+type JsRetrieveCallbackArgs = (String, String);
+
+type JsRetrieveCallbackResponse = (i16, Option<Buffer>);
+
+pub type JsHttpRetrieveCallbackAsync = napi::threadsafe_function::ThreadsafeFunction<
+    JsRetrieveCallbackArgs,
+    Promise<JsRetrieveCallbackResponse>,
+    JsRetrieveCallbackArgs,
+    false,
+>;
+
+type JsStoreCallbackArgs = (String, String, Buffer);
+
+type JsStoreCallbackResponse = i16;
+
+pub type JsHttpStoreCallbackAsync = napi::threadsafe_function::ThreadsafeFunction<
+    JsStoreCallbackArgs,
+    Promise<JsStoreCallbackResponse>,
+    JsStoreCallbackArgs,
+    false,
+>;
+
 #[napi]
 pub struct HttpRemoteCache {
-    client: Client,
     url: String,
+    store_fetch_callback: JsHttpStoreCallbackAsync,
+    retrieve_fetch_callback: JsHttpRetrieveCallbackAsync,
 }
 
 #[napi]
 impl HttpRemoteCache {
     #[napi(constructor)]
-    pub fn new() -> Self {
-        let mut headers = header::HeaderMap::new();
-        let auth_token = env::var("NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN");
-        if let Ok(token) = auth_token {
-            headers.insert(
-                header::AUTHORIZATION,
-                header::HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
-            );
-        }
-
-        headers.insert(
-            header::CONTENT_TYPE,
-            header::HeaderValue::from_static("application/octet-stream"),
-        );
-
-        HttpRemoteCache {
-            client: ClientBuilder::new()
-                .default_headers(headers)
-                .build()
-                .unwrap(),
-            url: env::var("NX_SELF_HOSTED_REMOTE_CACHE_SERVER")
-                .expect("NX_REMOTE_CACHE_URL must be set"),
+    pub fn new(
+        retrieve_fetch_callback: JsHttpRetrieveCallbackAsync,
+        store_fetch_callback: JsHttpStoreCallbackAsync,
+    ) -> Self {
+        Self {
+            url: env::var("NX_SELF_HOSTED_REMOTE_CACHE_URL")
+                .expect("NX_SELF_HOSTED_REMOTE_CACHE_URL must be set"),
+            store_fetch_callback,
+            retrieve_fetch_callback,
         }
     }
 
@@ -55,38 +65,28 @@ impl HttpRemoteCache {
         let _guard = span.enter();
 
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
-        let response = self.client.get(&url).send().await;
-        if let Ok(resp) = response {
-            trace!("HTTP response status: {}", resp.status());
-            if resp.status().is_success() {
-                // response is an application/octet-stream containing a tarball
-                // we need to extract the tarball and return the path to the extracted files
-                Ok(Some(
-                    Self::download_and_extract_from_result(resp, cache_directory, hash).await?,
-                ))
-            } else {
-                let status = resp.status().as_u16();
-                if status == 404 {
-                    trace!("Cache not found for hash '{}'", hash);
-                    return Ok(None); // Return None if the cache was not found
-                } else if status == 401 {
-                    return Err(anyhow::anyhow!("Unauthorized to retrieve cache. Provide NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN to set a valid authorization token.").into());
-                }
-                // Handle other HTTP errors
-                Err(anyhow::anyhow!("Failed to retrieve cache: {}", resp.status()).into())
-            }
-        } else {
-            trace!(
-                "Failed to retrieve cache for hash '{}': {}",
-                hash,
-                response
-                    .as_ref()
-                    .err()
-                    .map(|e| e.to_string())
-                    .unwrap_or_default()
-            );
+        let (status, bytes) = self
+            .retrieve_fetch_callback
+            .call_async((url, hash.clone()))
+            .await?
+            .await?;
 
-            Err(anyhow::anyhow!("Failed to retrieve cache: {}", response.unwrap_err()).into())
+        trace!("HTTP response status: {}", status);
+        if status == 200 {
+            // response is an application/octet-stream containing a tarball
+            // we need to extract the tarball and return the path to the extracted files
+            Ok(Some(
+                Self::extract_from_bytes(bytes.unwrap().into(), cache_directory, hash).await?,
+            ))
+        } else {
+            if status == 404 {
+                trace!("Cache not found for hash '{}'", hash);
+                return Ok(None); // Return None if the cache was not found
+            } else if status == 401 {
+                return Err(anyhow::anyhow!("Unauthorized to retrieve cache. Provide NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN to set a valid authorization token.").into());
+            }
+            // Handle other HTTP errors
+            Err(anyhow::anyhow!("Failed to retrieve cache: {}", status).into())
         }
     }
 
@@ -152,25 +152,23 @@ impl HttpRemoteCache {
         trace!("read tarball into memory");
 
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
-        let response = self
-            .client
-            .put(&url)
-            .body(buffer) // Convert the bytes to a Vec<u8> for the request body
-            .send()
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to send request: {}", e))?;
 
-        Ok(response.status().is_success())
+        let status = self
+            .store_fetch_callback
+            .call_async((url, hash.clone(), buffer.into()))
+            .await?
+            .await?;
+
+        Ok(status == 200)
     }
 
-    async fn download_and_extract_from_result(
-        response: reqwest::Response,
+    async fn extract_from_bytes(
+        bytes: Vec<u8>,
         cache_directory: String,
         hash: String,
     ) -> anyhow::Result<CachedResult> {
-        let content = response.bytes().await.unwrap();
-        trace!("Downloaded {} bytes from remote cache", content.len());
-        let tar = flate2::read::GzDecoder::new(content.as_ref());
+        trace!("Downloaded {} bytes from remote cache", bytes.len());
+        let tar = flate2::read::GzDecoder::new(std::io::Cursor::new(bytes));
         let mut archive = Archive::new(tar);
         let entries = archive
             .entries() // Get the entries in the archive

@@ -76,9 +76,7 @@ impl Watcher {
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
             .try_init();
 
-        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, WatchEventInternal>> = callback
-            .create_threadsafe_function(
-            0,
+        let mut callback_tsfn = callback.create_threadsafe_function(
             |ctx: ThreadSafeCallContext<HashMap<String, WatchEventInternal>>| {
                 let mut watch_events: Vec<WatchEvent> = vec![];
                 trace!(?ctx.value, "Base collection that will be sent");

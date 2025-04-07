@@ -195,7 +195,7 @@ impl FilesWorker {
 }
 
 #[napi]
-impl WorkspaceContext {
+impl<'a> WorkspaceContext {
     #[napi(constructor)]
     pub fn new(workspace_root: String, cache_dir: String) -> Self {
         enable_logger();
@@ -308,14 +308,14 @@ impl WorkspaceContext {
     pub fn update_project_files(
         &self,
         project_root_mappings: ProjectRootMappings,
-        project_files: External<ProjectFiles>,
-        global_files: External<Vec<FileData>>,
+        project_files: &'a External<ProjectFiles>,
+        global_files: &'a External<Vec<FileData>>,
         updated_files: HashMap<String, String>,
         deleted_files: Vec<&str>,
     ) -> UpdatedWorkspaceFiles {
         trace!("updating project files");
         trace!("{project_root_mappings:?}");
-        let mut project_files_map = project_files.clone();
+        let mut project_files_map = project_files.deref().clone();
         let mut global_files = global_files
             .iter()
             .map(|f| (f.file.clone(), f.hash.clone()))

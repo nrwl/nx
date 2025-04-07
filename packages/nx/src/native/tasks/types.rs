@@ -54,7 +54,12 @@ impl ToNapiValue for HashInstruction {
 
         check_status!(
             unsafe {
-                sys::napi_create_string_utf8(env, val.as_ptr() as *const _, val.len(), &mut ptr)
+                sys::napi_create_string_utf8(
+                    env,
+                    val.as_ptr() as *const _,
+                    val.len() as isize,
+                    &mut ptr,
+                )
             },
             "Failed to convert rust `String` into napi `string`"
         )?;

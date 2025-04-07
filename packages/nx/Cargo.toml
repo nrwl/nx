@@ -25,12 +25,12 @@ ignore = '0.4'
 itertools = "0.10.5"
 once_cell = "1.18.0"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
-napi = { version = '2.16.0', default-features = false, features = [
-    'anyhow',
-    'napi4',
-    'tokio_rt',
+napi = { version = '3.0.0-alpha.20', default-features = false, features = [
+  'anyhow',
+  'napi4',
+  'tokio_rt',
 ] }
-napi-derive = '2.16.0'
+napi-derive = '3.0.0-alpha.19'
 nom = '7.1.3'
 regex = "1.9.1"
 reqwest = "0.12.15"

@@ -24,22 +24,22 @@ pub struct CachedResult {
 }
 
 #[napi]
-pub struct NxCache {
+pub struct NxCache<'a> {
     pub cache_directory: String,
     workspace_root: PathBuf,
     cache_path: PathBuf,
-    db: External<NxDbConnection>,
+    db: &'a External<NxDbConnection>,
     link_task_details: bool,
     max_cache_size: i64,
 }
 
 #[napi]
-impl NxCache {
+impl<'a> NxCache<'a> {
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
         cache_path: String,
-        db_connection: External<NxDbConnection>,
+        db_connection: &'a External<NxDbConnection>,
         link_task_details: Option<bool>,
         max_cache_size: Option<i64>,
     ) -> anyhow::Result<Self> {

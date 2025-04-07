@@ -1,5 +1,5 @@
 use crate::native::types::FileData;
-use napi::bindgen_prelude::External;
+use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -18,11 +18,19 @@ pub struct NxWorkspaceFiles {
     pub external_references: Option<NxWorkspaceFilesExternals>,
 }
 
-#[napi(object)]
-pub struct NxWorkspaceFilesExternals {
-    pub project_files: External<ProjectFiles>,
-    pub global_files: External<Vec<FileData>>,
-    pub all_workspace_files: External<Vec<FileData>>,
+#[napi]
+pub struct NxWorkspaceFilesExternals<'a> {
+    project_files: &'a External<ProjectFiles>,
+    pub global_files: &'static External<Vec<FileData>>,
+    pub all_workspace_files: &'static External<Vec<FileData>>,
+}
+
+#[napi]
+impl<'a> NxWorkspaceFilesExternals<'a> {
+    #[napi]
+    pub fn get_project_files(&self) -> External<ProjectFiles> {
+        self.project_files.as_ref()
+    }
 }
 
 #[napi(object)]

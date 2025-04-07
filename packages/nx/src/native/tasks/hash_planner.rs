@@ -21,15 +21,15 @@ use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
 
 #[napi]
-pub struct HashPlanner {
+pub struct HashPlanner<'a> {
     nx_json: NxJson,
-    project_graph: External<ProjectGraph>,
+    project_graph: &'a mut External<ProjectGraph>,
 }
 
 #[napi]
-impl HashPlanner {
+impl<'a> HashPlanner<'a> {
     #[napi(constructor)]
-    pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
+    pub fn new(nx_json: NxJson, project_graph: &'a mut External<ProjectGraph>) -> Self {
         enable_logger();
         Self {
             nx_json,
@@ -111,12 +111,12 @@ impl HashPlanner {
             .map_err(anyhow::Error::from)
     }
 
-    fn target_input<'a>(
+    fn target_input<'b: 'a>(
         &'a self,
         project_name: &str,
         target_name: &str,
         self_inputs: &[Input],
-        external_deps_map: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        external_deps_map: &hashbrown::HashMap<&String, Vec<&'b String>>,
     ) -> anyhow::Result<Option<Vec<HashInstruction>>> {
         let project = &self.project_graph.nodes[project_name];
         let Some(target) = project.targets.get(target_name) else {
@@ -265,7 +265,7 @@ impl HashPlanner {
     }
 
     // todo(jcammisuli): parallelize this more. This function takes the longest time to run
-    fn gather_dependency_inputs<'a>(
+    fn gather_dependency_inputs<'b: 'a>(
         &'a self,
         task: &Task,
         inputs: &[Input],

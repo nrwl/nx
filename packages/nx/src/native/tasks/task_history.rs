@@ -17,14 +17,14 @@ pub struct TaskRun {
 }
 
 #[napi]
-pub struct NxTaskHistory {
-    db: External<NxDbConnection>,
+pub struct NxTaskHistory<'a> {
+    db: &'a mut External<NxDbConnection>,
 }
 
 #[napi]
-impl NxTaskHistory {
+impl<'a> NxTaskHistory<'a> {
     #[napi(constructor)]
-    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
+    pub fn new(db: &'a mut External<NxDbConnection>) -> anyhow::Result<Self> {
         let s = Self { db };
 
         s.setup()?;

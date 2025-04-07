@@ -13,14 +13,14 @@ pub struct HashedTask {
 }
 
 #[napi]
-pub struct TaskDetails {
-    db: External<NxDbConnection>,
+pub struct TaskDetails<'a> {
+    db: &'a mut External<NxDbConnection>,
 }
 
 #[napi]
-impl TaskDetails {
+impl<'a> TaskDetails<'a> {
     #[napi(constructor)]
-    pub fn new(db: External<NxDbConnection>) -> anyhow::Result<Self> {
+    pub fn new(db: &'a mut External<NxDbConnection>) -> anyhow::Result<Self> {
         let r = Self { db };
 
         r.setup()?;

@@ -81,7 +81,7 @@ impl FileLock {
     }
 
     #[napi(ts_return_type = "Promise<void>")]
-    pub fn wait(&mut self, env: Env) -> napi::Result<napi::JsObject> {
+    pub fn wait<'env>(&mut self, env: &'env Env) -> napi::Result<PromiseRaw<'env, ()>> {
         if self.locked {
             let lock_file_path = self.lock_file_path.clone();
             self.locked = false;

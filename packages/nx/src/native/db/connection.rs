@@ -1,5 +1,4 @@
 use anyhow::Result;
-
 use rusqlite::{Connection, DatabaseName, Error, OptionalExtension, Params, Row, Statement, ToSql};
 use std::thread;
 use std::time::Duration;

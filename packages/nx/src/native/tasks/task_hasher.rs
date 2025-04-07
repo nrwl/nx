@@ -38,11 +38,11 @@ pub struct HasherOptions {
 }
 
 #[napi]
-pub struct TaskHasher {
+pub struct TaskHasher<'a> {
     workspace_root: String,
-    project_graph: External<ProjectGraph>,
-    project_file_map: External<HashMap<String, Vec<FileData>>>,
-    all_workspace_files: External<Vec<FileData>>,
+    project_graph: &'a External<ProjectGraph>,
+    project_file_map: &'a External<HashMap<String, Vec<FileData>>>,
+    all_workspace_files: &'a External<Vec<FileData>>,
     ts_config: Vec<u8>,
     ts_config_paths: HashMap<String, Vec<String>>,
     options: Option<HasherOptions>,
@@ -51,13 +51,13 @@ pub struct TaskHasher {
     runtime_cache: Arc<DashMap<String, String>>,
 }
 #[napi]
-impl TaskHasher {
+impl<'a> TaskHasher<'a> {
     #[napi(constructor)]
     pub fn new(
         workspace_root: String,
-        project_graph: External<ProjectGraph>,
-        project_file_map: External<ProjectFiles>,
-        all_workspace_files: External<Vec<FileData>>,
+        project_graph: &'a External<ProjectGraph>,
+        project_file_map: &'a External<ProjectFiles>,
+        all_workspace_files: &'a External<Vec<FileData>>,
         ts_config: Buffer,
         ts_config_paths: HashMap<String, Vec<String>>,
         options: Option<HasherOptions>,
@@ -79,7 +79,7 @@ impl TaskHasher {
     #[napi]
     pub fn hash_plans(
         &self,
-        hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &'a External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
         trace!("hashing plans {:?}", hash_plans.as_ref());

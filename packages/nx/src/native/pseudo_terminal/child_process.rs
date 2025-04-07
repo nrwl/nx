@@ -1,9 +1,8 @@
 use crossbeam_channel::Receiver;
 use napi::{
-    threadsafe_function::{
-        ErrorStrategy::Fatal, ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking,
-    },
-    Env, JsFunction,
+    bindgen_prelude::{FnArgs, Function},
+    threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode::NonBlocking},
+    Env, JsFunction, JsUndefined,
 };
 use portable_pty::ChildKiller;
 
@@ -39,16 +38,18 @@ impl ChildProcess {
     #[napi]
     pub fn on_exit(
         &mut self,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback_tsfn: ThreadsafeFunction<
+            String,
+        >,
     ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let callback_tsfn: ThreadsafeFunction<String, Fatal> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
+        // let callback_tsfn: ThreadsafeFunction<String> =
+        //     callback.build_threadsafe_function::<String>().build()?;
 
         std::thread::spawn(move || {
             // we will only get one exit_code here, so we dont need to do a while loop
             if let Ok(exit_code) = wait.recv() {
-                callback_tsfn.call(exit_code, NonBlocking);
+                callback_tsfn.call(Ok(exit_code), NonBlocking);
             }
         });
 
@@ -59,12 +60,11 @@ impl ChildProcess {
     pub fn on_output(
         &mut self,
         env: Env,
-        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] mut callback_tsfn: ThreadsafeFunction<
+            String,
+        >,
     ) -> napi::Result<()> {
         let rx = self.message_receiver.clone();
-
-        let mut callback_tsfn: ThreadsafeFunction<String, Fatal> =
-            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         callback_tsfn.unref(&env)?;
 
@@ -76,7 +76,7 @@ impl ChildProcess {
                 #[cfg(windows)]
                 let content = content.replace("\x1B[6n", "");
 
-                callback_tsfn.call(content, NonBlocking);
+                callback_tsfn.call(Ok(content), NonBlocking);
             }
         });
 
