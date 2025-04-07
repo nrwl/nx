@@ -105,6 +105,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    * String values must be put in quotes.
    */
   define?: Record<string, string>;
+  /**
+   * Delete the output path before building.
+   */
+  deleteOutputPath?: boolean;
   devServer?: DevServerOptions;
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
@@ -146,6 +150,7 @@ export interface NormalizedAngularRspackPluginOptions
   assets: NormalizedAssetElement[];
   browser: string;
   commonChunk: boolean;
+  deleteOutputPath: boolean;
   devServer: NormalizedDevServerOptions;
   extractLicenses: boolean;
   fileReplacements: FileReplacement[];

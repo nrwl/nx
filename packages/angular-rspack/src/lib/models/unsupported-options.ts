@@ -50,7 +50,6 @@ export interface PluginUnsupportedOptions {
   localize?: boolean | string[];
   watch?: boolean;
   poll?: number;
-  deleteOutputPath?: boolean;
   subresourceIntegrity?: boolean;
   serviceWorker?: string | false;
   statsJson?: boolean;
@@ -81,7 +80,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'localize',
   'watch',
   'poll',
-  'deleteOutputPath',
   'subresourceIntegrity',
   'serviceWorker',
   'statsJson',

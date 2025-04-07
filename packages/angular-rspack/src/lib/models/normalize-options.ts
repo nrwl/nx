@@ -243,6 +243,7 @@ export function normalizeOptions(
     browser: options.browser ?? './src/main.ts',
     commonChunk: options.commonChunk ?? true,
     define: options.define ?? {},
+    deleteOutputPath: options.deleteOutputPath ?? true,
     devServer: normalizeDevServer(options.devServer),
     extractLicenses: options.extractLicenses ?? true,
     fileReplacements: resolveFileReplacements(fileReplacements, root),

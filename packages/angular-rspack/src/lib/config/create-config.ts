@@ -20,7 +20,7 @@ import {
   TS_ALL_EXT_REGEX,
 } from '@nx/angular-rspack-compiler';
 import { getStyleLoaders, getStylesEntry } from './style-config-utils';
-import { getOutputHashFormat } from './helpers';
+import { deleteOutputDir, getOutputHashFormat } from './helpers';
 import {
   getAllowedHostsConfig,
   getProxyConfig,
@@ -93,6 +93,10 @@ export async function _createConfig(
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
   const { root } = normalizedOptions;
 
+  if (options.deleteOutputPath) {
+    await deleteOutputDir(root, normalizedOptions.outputPath.base);
+  }
+
   const { sourceMapRules, sourceMapPlugins } = configureSourceMap(
     normalizedOptions.sourceMap
   );
@@ -104,7 +108,7 @@ export async function _createConfig(
     output: {
       uniqueName: 'rspack-angular',
       publicPath: 'auto',
-      clean: true,
+      clean: normalizedOptions.deleteOutputPath,
       crossOriginLoading: false,
       trustedTypes: { policyName: 'angular#bundler' },
       sourceMapFilename: normalizedOptions.sourceMap.scripts
@@ -196,7 +200,7 @@ export async function _createConfig(
       output: {
         ...defaultConfig.output,
         publicPath: '/',
-        clean: true,
+        clean: normalizedOptions.deleteOutputPath,
         path: normalizedOptions.outputPath.server,
         filename: '[name].js',
         chunkFilename: '[name].js',
@@ -396,7 +400,7 @@ export async function _createConfig(
       ...defaultConfig.output,
       hashFunction: isProduction ? 'xxhash64' : undefined,
       publicPath: 'auto',
-      clean: true,
+      clean: normalizedOptions.deleteOutputPath,
       path: normalizedOptions.outputPath.browser,
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
