@@ -113,12 +113,19 @@ export async function _createConfig(
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
+      symlinks: !normalizedOptions.preserveSymlinks,
       modules: ['node_modules'],
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],
       conditionNames: ['es2020', 'es2015', '...'],
       tsConfig: {
         configFile: normalizedOptions.tsConfig,
       },
+    },
+    resolveLoader: {
+      symlinks: !normalizedOptions.preserveSymlinks,
+    },
+    watchOptions: {
+      followSymlinks: normalizedOptions.preserveSymlinks,
     },
     module: {
       parser: {
