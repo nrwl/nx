@@ -12,8 +12,10 @@ import {
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
-import { assertMinimumCypressVersion } from '../../utils/cypress-version';
-import { getInstalledCypressMajorVersion } from '../../utils/versions';
+import {
+  assertMinimumCypressVersion,
+  getInstalledCypressMajorVersion,
+} from '../../utils/versions';
 import {
   addConfigToTsConfig,
   createNewCypressConfig,
