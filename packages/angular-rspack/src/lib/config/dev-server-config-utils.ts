@@ -4,6 +4,20 @@ import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+export function getAllowedHostsConfig(
+  allowedHosts: string[] | boolean | undefined,
+  disableHostCheck: boolean | undefined
+) {
+  if (disableHostCheck || allowedHosts === true) {
+    return 'all';
+  }
+  if (Array.isArray(allowedHosts) && allowedHosts.length > 0) {
+    return allowedHosts;
+  }
+
+  return undefined;
+}
+
 export async function getProxyConfig(
   root: string,
   proxyConfig: string | undefined

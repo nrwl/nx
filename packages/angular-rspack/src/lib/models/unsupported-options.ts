@@ -18,7 +18,6 @@ export type BudgetEntry = {
 };
 
 export interface DevServerUnsupportedOptions {
-  allowedHosts?: string[] | boolean;
   headers?: Record<string, string>;
   open?: boolean;
   liveReload?: boolean;
@@ -98,7 +97,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
 ];
 
 export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = [
-  'allowedHosts',
   'headers',
   'open',
   'liveReload',

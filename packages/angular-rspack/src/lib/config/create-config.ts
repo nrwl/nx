@@ -21,7 +21,10 @@ import {
 } from '@nx/angular-rspack-compiler';
 import { getStyleLoaders, getStylesEntry } from './style-config-utils';
 import { getOutputHashFormat } from './helpers';
-import { getProxyConfig } from './dev-server-config-utils';
+import {
+  getAllowedHostsConfig,
+  getProxyConfig,
+} from './dev-server-config-utils';
 import { DevToolsIgnorePlugin } from '../plugins/tools/dev-tools-ignore-plugin';
 
 function configureSourceMap(sourceMap: SourceMap) {
@@ -195,7 +198,10 @@ export async function _createConfig(
         headers: {
           'Access-Control-Allow-Origin': '*',
         },
-        allowedHosts: 'auto',
+        allowedHosts: getAllowedHostsConfig(
+          normalizedOptions.devServer.allowedHosts,
+          normalizedOptions.devServer.disableHostCheck
+        ),
         client: {
           webSocketURL: {
             hostname: normalizedOptions.devServer.host,
@@ -324,7 +330,10 @@ export async function _createConfig(
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
-      allowedHosts: 'auto',
+      allowedHosts: getAllowedHostsConfig(
+        normalizedOptions.devServer.allowedHosts,
+        normalizedOptions.devServer.disableHostCheck
+      ),
       client: {
         webSocketURL: {
           hostname: normalizedOptions.devServer.host,

@@ -111,10 +111,10 @@ describe('createConfig', () => {
                 polyfills: ['zone.js'],
                 globalScripts: scripts,
                 globalStyles: styles,
-                devServer: {
+                devServer: expect.objectContaining({
                   host: 'localhost',
                   port: 4200,
-                },
+                }),
               }),
             },
           ]),
@@ -136,13 +136,14 @@ describe('createConfig', () => {
       ).resolves.not.toContain([
         expect.objectContaining({
           clearScreen: true,
-          devServer: { allowedHosts: ['localhost'] },
+          devServer: expect.objectContaining({
+            allowedHosts: ['localhost'],
+          }),
         }),
       ]);
       expect(warnSpy).toHaveBeenCalledWith(
         `The following options are not yet supported:
   "clearScreen"
-  "devServer.allowedHosts"
 `
       );
     });

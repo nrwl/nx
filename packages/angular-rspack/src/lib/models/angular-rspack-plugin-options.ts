@@ -9,6 +9,14 @@ import type {
 } from './unsupported-options';
 
 export interface DevServerOptions extends DevServerUnsupportedOptions {
+  /**
+   * The hosts that the development server will respond to.
+   */
+  allowedHosts?: string[] | boolean;
+  /**
+   * Don't verify connected clients are part of allowed hosts.
+   */
+  disableHostCheck?: boolean;
   host?: string;
   port?: number;
   proxyConfig?: string;
@@ -17,6 +25,7 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
   sslKey?: string;
 }
 export interface NormalizedDevServerOptions extends DevServerOptions {
+  allowedHosts: string[] | boolean;
   host: string;
   port: number;
 }
