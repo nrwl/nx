@@ -301,11 +301,16 @@ function normalizeDevServer(
   const defaultPort = 4200;
 
   if (!devServer) {
-    return { host: defaultHost, port: defaultPort };
+    return {
+      allowedHosts: [],
+      host: defaultHost,
+      port: defaultPort,
+    };
   }
 
   return {
     ...devServer,
+    allowedHosts: devServer.allowedHosts ?? [],
     host: devServer.host ?? defaultHost,
     port: devServer.port ?? defaultPort,
   };
