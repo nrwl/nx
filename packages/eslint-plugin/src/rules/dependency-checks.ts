@@ -49,8 +49,9 @@ export default ESLintUtils.RuleCreator(
       description: `Checks dependencies in project's package.json for version mismatches`,
     },
     fixable: 'code',
-    schema: [
-      {
+    schema: {
+      type: 'array',
+      items: {
         type: 'object',
         properties: {
           buildTargets: { type: 'array', items: { type: 'string' } },
@@ -66,7 +67,7 @@ export default ESLintUtils.RuleCreator(
         },
         additionalProperties: false,
       },
-    ],
+    },
     messages: {
       missingDependency: `The "{{projectName}}" project uses the following packages, but they are missing from "{{section}}":{{packageNames}}`,
       obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}" project.`,
