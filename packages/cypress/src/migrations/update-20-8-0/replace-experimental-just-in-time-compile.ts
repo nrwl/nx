@@ -1,7 +1,13 @@
-import { formatFiles, type Tree } from '@nx/devkit';
+import { formatFiles, workspaceRoot, type Tree } from '@nx/devkit';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import type { Printer, PropertyAssignment } from 'typescript';
+import { join } from 'node:path';
+import type {
+  ObjectLiteralExpression,
+  Printer,
+  PropertyAssignment,
+} from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';
 import {
   cypressProjectConfigs,
@@ -21,11 +27,10 @@ export default async function (tree: Tree) {
       continue;
     }
 
-    ts ??= ensureTypescript();
-    printer ??= ts.createPrinter();
-
-    const cypressConfig = tree.read(cypressConfigPath, 'utf-8');
-    const updatedConfig = updateCtJustInTimeCompile(cypressConfig);
+    const updatedConfig = await updateCtJustInTimeCompile(
+      tree,
+      cypressConfigPath
+    );
 
     tree.write(cypressConfigPath, updatedConfig);
   }
@@ -33,7 +38,11 @@ export default async function (tree: Tree) {
   await formatFiles(tree);
 }
 
-function updateCtJustInTimeCompile(cypressConfig: string): string {
+async function updateCtJustInTimeCompile(
+  tree: Tree,
+  cypressConfigPath: string
+): Promise<string> {
+  const cypressConfig = tree.read(cypressConfigPath, 'utf-8');
   const config = resolveCypressConfigObject(cypressConfig);
 
   if (!config) {
@@ -41,23 +50,19 @@ function updateCtJustInTimeCompile(cypressConfig: string): string {
     return cypressConfig;
   }
 
-  const componentConfig = getObjectProperty(config, 'component');
-  if (!componentConfig) {
+  if (!getObjectProperty(config, 'component')) {
     // no component config, leave as is
     return cypressConfig;
   }
 
+  ts ??= ensureTypescript();
+  printer ??= ts.createPrinter();
+
   const sourceFile = tsquery.ast(cypressConfig);
   let updatedConfig = config;
 
-  const bundlerProperty = tsquery.query<PropertyAssignment>(
-    updatedConfig,
-    'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=bundler])'
-  )[0];
-  const isViteBundler =
-    bundlerProperty &&
-    ts.isStringLiteral(bundlerProperty.initializer) &&
-    bundlerProperty.initializer.getText().replace(/['"`]/g, '') === 'vite';
+  const bundler = await resolveBundler(updatedConfig, cypressConfigPath);
+  const isViteBundler = bundler === 'vite';
 
   const existingJustInTimeCompileProperty = getObjectProperty(
     updatedConfig,
@@ -124,4 +129,31 @@ function updateCtJustInTimeCompile(cypressConfig: string): string {
     config.getText(),
     printer.printNode(ts.EmitHint.Unspecified, updatedConfig, sourceFile)
   );
+}
+
+async function resolveBundler(
+  config: ObjectLiteralExpression,
+  cypressConfigPath: string
+): Promise<string | null> {
+  const bundlerProperty = tsquery.query<PropertyAssignment>(
+    config,
+    'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=bundler])'
+  )[0];
+
+  if (bundlerProperty) {
+    return ts.isStringLiteral(bundlerProperty.initializer)
+      ? bundlerProperty.initializer.getText().replace(/['"`]/g, '')
+      : null;
+  }
+
+  try {
+    // we can't statically resolve the bundler from the config, so we load the config
+    const cypressConfig = await loadConfigFile(
+      join(workspaceRoot, cypressConfigPath)
+    );
+
+    return cypressConfig.component?.devServer?.bundler;
+  } catch {
+    return null;
+  }
 }
