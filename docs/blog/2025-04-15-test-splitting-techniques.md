@@ -1,8 +1,8 @@
 ---
 title: 'Ship faster with test splitting techniques'
 slug: test-splitting-techniques
-authors: [Miroslav Jonas]
-description: 'Learn the techniques for optimizing CI by splitting long-running tests, using sharding, Atomizer, and manual E2E project splitting, all enhanced by Nx Cloud's distributed task execution for improved stability and performance.'
+authors: [Miroslav Jonaš]
+description: "Learn the techniques for optimizing CI by splitting long-running tests, using sharding, Atomizer, and manual E2E project splitting, all enhanced by Nx Cloud's distributed task execution for improved stability and performance."
 tags: [nx, architecture]
 cover_image: /blog/images/articles/bg-test-splitting-techniques.avif
 ---
