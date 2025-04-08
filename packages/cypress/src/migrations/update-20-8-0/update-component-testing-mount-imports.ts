@@ -12,11 +12,15 @@ import { tsquery } from '@phenomnomnominal/tsquery';
 import { lt, valid } from 'semver';
 import type {
   ImportDeclaration,
+  ObjectLiteralExpression,
   Printer,
   PropertyAssignment,
 } from 'typescript';
 import { resolveCypressConfigObject } from '../../utils/config';
-import { cypressProjectConfigs } from '../../utils/migrations';
+import {
+  cypressProjectConfigs,
+  getObjectProperty,
+} from '../../utils/migrations';
 
 let printer: Printer;
 let ts: typeof import('typescript');
@@ -37,10 +41,9 @@ export default async function (tree: Tree) {
     ts ??= ensureTypescript();
     printer ??= ts.createPrinter();
 
-    const cypressConfig = tree.read(cypressConfigPath, 'utf-8');
-
     const migrationInfo = parseMigrationInfo(
-      cypressConfig,
+      tree,
+      cypressConfigPath,
       projectName,
       projectGraph
     );
@@ -64,13 +67,15 @@ export default async function (tree: Tree) {
 }
 
 function parseMigrationInfo(
-  cypressConfig: string,
+  tree: Tree,
+  cypressConfigPath: string,
   projectName: string,
   projectGraph: ProjectGraph
 ): {
   framework?: 'angular' | 'react';
   isLegacyVersion?: boolean;
 } | null {
+  const cypressConfig = tree.read(cypressConfigPath, 'utf-8');
   const config = resolveCypressConfigObject(cypressConfig);
 
   if (!config) {
@@ -78,20 +83,17 @@ function parseMigrationInfo(
     return null;
   }
 
-  const frameworkProperty = tsquery.query<PropertyAssignment>(
-    config,
-    'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=framework])'
-  )[0];
-
-  if (!frameworkProperty) {
-    // component.devServer.framework is not defined, so it's not using
-    // component testing or the config is not valid
+  if (!getObjectProperty(config, 'component')) {
+    // no component config, leave as is
     return null;
   }
 
-  const framework =
-    ts.isStringLiteral(frameworkProperty.initializer) &&
-    frameworkProperty.initializer.getText().replace(/['"`]/g, '');
+  const framework = resolveFramework(
+    cypressConfig,
+    config,
+    projectName,
+    projectGraph
+  );
 
   if (framework === 'react') {
     return { framework: 'react' };
@@ -117,6 +119,69 @@ function parseMigrationInfo(
       framework: 'angular',
       isLegacyVersion: false,
     };
+  }
+
+  return null;
+}
+
+function resolveFramework(
+  cypressConfig: string,
+  config: ObjectLiteralExpression,
+  projectName: string,
+  projectGraph: ProjectGraph
+): string | null {
+  const frameworkProperty = tsquery.query<PropertyAssignment>(
+    config,
+    'PropertyAssignment:has(Identifier[name=component]) PropertyAssignment:has(Identifier[name=devServer]) PropertyAssignment:has(Identifier[name=framework])'
+  )[0];
+
+  if (frameworkProperty) {
+    return ts.isStringLiteral(frameworkProperty.initializer)
+      ? frameworkProperty.initializer.getText().replace(/['"`]/g, '')
+      : null;
+  }
+
+  // component might be assigned to an Nx preset function call, so we try to
+  // infer the framework from the Nx preset import
+  const sourceFile = tsquery.ast(cypressConfig);
+  const nxPresetModuleSpecifiers = [
+    '@nx/angular/plugins/component-testing',
+    '@nx/react/plugins/component-testing',
+    '@nx/next/plugins/component-testing',
+    '@nx/remix/plugins/component-testing',
+  ];
+  const nxPresetImportModuleSpecifier = sourceFile.statements
+    .find(
+      (s): s is ImportDeclaration =>
+        ts.isImportDeclaration(s) &&
+        nxPresetModuleSpecifiers.includes(
+          s.moduleSpecifier.getText().replace(/['"`]/g, '')
+        )
+    )
+    ?.moduleSpecifier.getText()
+    .replace(/['"`]/g, '');
+  if (nxPresetImportModuleSpecifier) {
+    const plugin = nxPresetImportModuleSpecifier.split('/').at(1);
+
+    return plugin === 'angular' ? 'angular' : 'react';
+  }
+
+  // it might be set to something else, so we fall back to checking the
+  // project dependencies
+  if (
+    projectGraph.dependencies[projectName]?.some((d) =>
+      d.target.startsWith('npm:@angular/core')
+    )
+  ) {
+    return 'angular';
+  }
+
+  if (
+    projectGraph.dependencies[projectName]?.some(
+      (d) => d.target.startsWith('npm:react') || d.target.startsWith('npm:next')
+    )
+  ) {
+    return 'react';
   }
 
   return null;
