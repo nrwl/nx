@@ -1,5 +1,6 @@
 import { Schema } from '@markdoc/markdoc';
 import { cx } from '@nx/nx-dev/ui-primitives';
+import { VideoJsonLd } from 'next-seo';
 
 export const youtube: Schema = {
   render: 'YouTube',
@@ -17,14 +18,21 @@ export const youtube: Schema = {
       default: '100%',
     },
     caption: {
-      // Added caption attribute here
       type: 'String',
-      required: false, // Not required since it's optional
+      required: false,
+    },
+    description: {
+      type: 'String',
+      required: false,
+    },
+    uploadDate: {
+      type: 'String',
+      required: false,
     },
   },
 };
 
-export function computeEmbedURL(youtubeURL: string) {
+function computeEmbedURL(youtubeURL: string) {
   let match;
 
   if (youtubeURL.indexOf('embed') > -1) {
@@ -52,19 +60,56 @@ export function computeEmbedURL(youtubeURL: string) {
   throw new Error(`Could not properly compute the embed URL for ${youtubeURL}`);
 }
 
+// Internal function to compute thumbnail URL
+function computeThumbnailURL(youtubeURL: string): string | null {
+  let match;
+
+  match = youtubeURL.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+  }
+
+  match = youtubeURL.match(/youtube\.com\/live\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+  }
+
+  match = youtubeURL.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+  }
+
+  // If the URL doesn't match any format, return null
+  return null;
+}
+
 export function YouTube(props: {
   title: string;
   caption?: string;
   src: string;
   width?: string;
   disableRoundedCorners?: boolean;
+  description?: string;
+  uploadDate?: string;
 }): JSX.Element {
+  const embedUrl = computeEmbedURL(props.src);
+  const thumbnailUrl = computeThumbnailURL(props.src);
+  const currentDate = new Date().toISOString();
+
   return (
     <div className="text-center">
-      {' '}
-      {/* Center alignment applied to the container */}
+      {thumbnailUrl && (
+        <VideoJsonLd
+          name={props.title}
+          description={props.description || props.title}
+          thumbnailUrls={[thumbnailUrl]}
+          uploadDate={props.uploadDate || currentDate}
+          embedUrl={embedUrl}
+          contentUrl={props.src}
+        />
+      )}
       <iframe
-        src={computeEmbedURL(props.src)}
+        src={embedUrl}
         title={props.title}
         width={props.width || '100%'}
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
