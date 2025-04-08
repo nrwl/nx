@@ -410,8 +410,8 @@ export async function convertToRspack(
           );
         }
       }
+      serveTargetNames.push(targetName);
     }
-    serveTargetNames.push(targetName);
   }
 
   const customWebpackConfigInfo = customWebpackConfigPath

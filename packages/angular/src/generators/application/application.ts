@@ -31,7 +31,6 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { tsNodeVersion } from '../../utils/versions';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -43,7 +42,7 @@ export async function applicationGenerator(
     schema.bundler = 'webpack';
   }
 
-  const options = await normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema, isRspack);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await jsInitGenerator(tree, {
@@ -55,6 +54,7 @@ export async function applicationGenerator(
   await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   if (!options.skipPackageJson) {

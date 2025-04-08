@@ -31,4 +31,5 @@ export interface Schema {
   ssr?: boolean;
   serverRouting?: boolean;
   nxCloudToken?: string;
+  addPlugin?: boolean;
 }
