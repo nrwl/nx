@@ -1,14 +1,13 @@
-import { SectionDescription, SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   BitoviIcon,
-  PushBasedIcon,
-  ZyphyrCloudIcon,
-  HeroDevsIcon,
   CallstackIcon,
   ESquareIcon,
+  HeroDevsIcon,
+  PushBasedIcon,
+  ZyphyrCloudIcon,
 } from '@nx/nx-dev/ui-icons';
+import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
-import { useState, useEffect, useMemo } from 'react';
 
 export function PartnersList(): JSX.Element {
   const initialPartners = useMemo(

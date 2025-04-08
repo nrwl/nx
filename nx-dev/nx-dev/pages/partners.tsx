@@ -1,5 +1,5 @@
 import { DefaultLayout } from '@nx/nx-dev/ui-common';
-import { CallToAction, Hero, PartnersList } from '@nx/nx-dev/ui-partners';
+import { Hero, PartnersList } from '@nx/nx-dev/ui-partners';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { contactButton } from '../lib/components/headerCtaConfigs';
@@ -35,9 +35,6 @@ export function Partners(): JSX.Element {
         </div>
         <div className="mt-16">
           <PartnersList />
-        </div>
-        <div className="mt-16">
-          <CallToAction />
         </div>
       </DefaultLayout>
     </>
