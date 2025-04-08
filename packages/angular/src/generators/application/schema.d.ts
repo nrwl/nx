@@ -27,7 +27,7 @@ export interface Schema {
   standalone?: boolean;
   rootProject?: boolean;
   minimal?: boolean;
-  bundler?: 'webpack' | 'esbuild';
+  bundler?: 'webpack' | 'esbuild' | 'rspack';
   ssr?: boolean;
   serverRouting?: boolean;
   nxCloudToken?: string;
