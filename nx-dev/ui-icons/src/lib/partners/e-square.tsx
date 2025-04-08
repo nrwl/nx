@@ -34,8 +34,8 @@ export const ESquareIcon: FC<SVGProps<SVGSVGElement>> = (props) => {
           y2="12795.9"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#272A7F" />
-          <stop offset="1" stop-color="#35DCD8" />
+          <stop stopColor="#272A7F" />
+          <stop offset="1" stopColor="#35DCD8" />
         </linearGradient>
       </defs>
     </svg>
