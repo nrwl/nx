@@ -44,7 +44,7 @@ pub struct PseudoTerminalOptions {
 
 impl Default for PseudoTerminalOptions {
     fn default() -> Self {
-        let (w, h) = terminal::size().unwrap();
+        let (w, h) = terminal::size().unwrap_or((80, 24));
         Self {
             size: (w, h),
             passthrough_stdin: !env::var("NX_TUI").is_ok_and(|s| s == "true"),
