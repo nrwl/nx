@@ -72,6 +72,21 @@ describe('next library', () => {
     ).toEqual('@emotion/react');
   });
 
+  it('should generate a buildable library', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(appTree, {
+      directory: 'my-buildable-lib',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: true,
+      bundler: 'vite',
+    });
+
+    expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
+  });
   it('should generate a server-only entry point', async () => {
     const appTree = createTreeWithEmptyWorkspace();
 
@@ -263,6 +278,22 @@ describe('next library', () => {
           ],
         }
       `);
+    });
+
+    it('should generate a buildable library', async () => {
+      const appTree = createTreeWithEmptyWorkspace();
+      await libraryGenerator(appTree, {
+        directory: 'my-buildable-lib',
+        linter: Linter.EsLint,
+        skipFormat: true,
+        skipTsConfig: false,
+        unitTestRunner: 'jest',
+        style: 'css',
+        component: true,
+        bundler: 'vite',
+      });
+
+      expect(appTree.exists('my-buildable-lib/vite.config.ts')).toBeTruthy();
     });
 
     it('should create a correct package.json for buildable libraries', async () => {

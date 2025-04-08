@@ -93,6 +93,7 @@ export async function normalizeOptions(
     projectName: appProjectName,
     projectSimpleName: projectNames.projectSimpleName,
     style: options.style || 'css',
+    swc: options.swc ?? true,
     styledModule,
     unitTestRunner: options.unitTestRunner || 'jest',
     importPath,

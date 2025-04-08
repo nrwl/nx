@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, ReactElement } from 'react';
+import { Fragment, type MouseEvent, ReactElement } from 'react';
 import { NxCloudAnimatedIcon, NxIcon } from '@nx/nx-dev/ui-icons';
 import {
   Bars3Icon,
@@ -73,6 +73,11 @@ export function DocumentationHeader({
     !isPlugins &&
     !isChangelog &&
     !isAiChat;
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push('/brands');
+  };
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
@@ -217,8 +222,11 @@ export function DocumentationHeader({
             href="/"
             className="flex flex-grow items-center px-4 text-slate-900 lg:px-0 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <Link
@@ -240,7 +248,7 @@ export function DocumentationHeader({
         <div className="hidden flex-shrink-0 xl:flex">
           <nav
             role="menu"
-            className="items-justified hidden justify-center space-x-2 text-sm lg:flex"
+            className="hidden items-center justify-center space-x-2 text-sm lg:flex"
           >
             <h2 className="sr-only">Main navigation</h2>
             <Link
@@ -293,6 +301,14 @@ export function DocumentationHeader({
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/remote-cache"
+              title="Nx Remote Cache"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Remote Cache
+            </Link>
+            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -309,14 +325,6 @@ export function DocumentationHeader({
               Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <Link
-              href="/powerpack"
-              title="Nx Powerpack"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Powerpack
-            </Link>
             <Link
               href="/enterprise"
               title="Nx Enterprise"

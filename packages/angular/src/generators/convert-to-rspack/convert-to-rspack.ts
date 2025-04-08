@@ -13,7 +13,11 @@ import {
   writeJson,
 } from '@nx/devkit';
 import type { ConvertToRspackSchema } from './schema';
-import { angularRspackVersion, nxVersion } from '../../utils/versions';
+import {
+  angularRspackVersion,
+  nxVersion,
+  tsNodeVersion,
+} from '../../utils/versions';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -451,6 +455,7 @@ export async function convertToRspack(
       {},
       {
         '@nx/angular-rspack': angularRspackVersion,
+        'ts-node': tsNodeVersion,
       }
     );
     tasks.push(installTask);

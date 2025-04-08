@@ -2608,6 +2608,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "js/migrations/20.7.1-beta.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/js/migrations/20.5.0-package-updates.json",
         "hidden": false,
         "name": "20.5.0-package-updates",
@@ -2745,7 +2755,30 @@
   },
   {
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": [],
+    "documents": [
+      {
+        "id": "nx-module-federation-plugin",
+        "name": "NxModuleFederationPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "module-federation/documents/nx-module-federation-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
+      },
+      {
+        "id": "nx-module-federation-dev-server-plugin",
+        "name": "NxModuleFederationDevServerPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "module-federation/documents/nx-module-federation-dev-server-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
+      }
+    ],
     "executors": [],
     "generators": [],
     "migrations": [
@@ -3073,6 +3106,36 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "next/migrations/20.7.1-beta.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-next14-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-next14-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "next/migrations/20.7.1-beta.0-next14-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-next15-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-next15-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "next/migrations/20.7.1-beta.0-next15-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/next/migrations/19.0.3-package-updates.json",
@@ -5379,6 +5442,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/storybook/migrations/20.8.0-package-updates.json",
+        "hidden": false,
+        "name": "20.8.0-package-updates",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/storybook",
+        "path": "storybook/migrations/20.8.0-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/storybook/migrations/20.2.0-package-updates.json",
         "hidden": false,
         "name": "20.2.0-package-updates",
@@ -5565,6 +5638,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/vite/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/vite",
+        "path": "vite/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
       {
         "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
         "file": "generated/packages/vite/migrations/update-20-5-0-update-resolve-conditions.json",
@@ -5796,6 +5879,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/vue/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/vue",
+        "path": "vue/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/vue/migrations/19.4.3-package-updates.json",
         "hidden": false,
         "name": "19.4.3-package-updates",
@@ -5977,6 +6070,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/webpack",
+        "path": "webpack/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/webpack/migrations/20.5.0-package-updates.json",

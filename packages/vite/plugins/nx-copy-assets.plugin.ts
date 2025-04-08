@@ -31,7 +31,9 @@ export function nxCopyAssetsPlugin(_assets: (string | AssetGlob)[]): Plugin {
       handler = new CopyAssetsHandler({
         rootDir: workspaceRoot,
         projectDir: config.root,
-        outputDir: join(config.root, config.build.outDir),
+        outputDir: config.build.outDir.startsWith(config.root)
+          ? config.build.outDir
+          : join(config.root, config.build.outDir),
         assets,
       });
       if (this.meta.watchMode && isDaemonEnabled()) {

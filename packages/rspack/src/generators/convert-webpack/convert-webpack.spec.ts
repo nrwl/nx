@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readProjectConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
