@@ -18,7 +18,6 @@ better-panic = "0.3.0"
 colored = "2"
 color-eyre = "0.6.3"
 crossbeam-channel = '0.5'
-crossterm = { version = "0.27.0", features = ["serde", "event-stream"] }
 dashmap = { version = "5.5.3", features = ["rayon"] }
 dunce = "1"
 fs_extra = "1.3.0"
@@ -73,6 +72,7 @@ winapi = { version = "0.3", features = ["fileapi"] }
 mio = "0.8"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+crossterm = { version = "0.27.0", features = ["serde", "event-stream"] }
 portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1e89eeb4832fb35ae095564dce34c29" }
 ignore-files = "2.1.0"
 fs4 = "0.12.0"
