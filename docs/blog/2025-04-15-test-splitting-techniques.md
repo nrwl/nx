@@ -7,15 +7,15 @@ tags: [nx, architecture]
 cover_image: /blog/images/articles/bg-test-splitting-techniques.avif
 ---
 
-One of the most impactful core features of Nx is the affected graph. The affected graph helps us to skip unnecessary work and focus only on the things that have been changed significantly speeding our CI and helping us ship features and hotfixes faster.
+One of the most impactful core features of Nx is the affected graph. The affected graph helps us to skip unnecessary work and focus only on the things that have been changed, significantly speeding our CI and helping us ship features and hotfixes faster.
 
-However, long-running test tasks, especially End-to-End (E2E) tests, can become a significant bottleneck and prevent getting the code changes out faster. This is particularly true for monolithic projects, but also cases when there is a single large E2E project that covers the entire scope of the application. In this case the full benefits of an affected graph cannot be realized.
+However, long-running test tasks, especially End-to-End (E2E) tests, can become a significant bottleneck and prevent getting the code changes out faster. This is particularly true for monolithic projects, but also in cases when there is a single large E2E project that covers the entire scope of the application. In these scenarios, the full benefits of an affected graph cannot be realized.
 
 In this guide, we'll explore three techniques to speed up your CI by splitting these lengthy test tasks.
 
 ## Built-in Test Sharding
 
-One of the simplest ways to split long-running tests is by using built-in test sharding features available in popular testing frameworks like Jest and Playwright. These tools allow you to divide your test suite into multiple shards that can be executed in parallel, significantly reducing the percieved test execution time.
+One of the simplest ways to split long-running tests is by using built-in test sharding features available in popular testing frameworks like Jest and Playwright. These tools allow you to divide your test suite into multiple shards that can be executed in parallel, significantly reducing the perceived test execution time.
 
 In Jest we can utilize the new `--shard` option to split your test suite. The example below shows splitting into 4 shards.
 
@@ -26,7 +26,7 @@ nx affected -t test -- --shard=3/4
 nx affected -t test -- --shard=4/4
 ```
 
-Playwright also supports `--shard option`:
+Playwright also supports `--shard` option:
 
 ```shell
 nx affected -t e2e -- --shard=1/4
@@ -35,13 +35,13 @@ nx affected -t e2e -- --shard=3/4
 nx affected -t e2e -- --shard=4/4
 ```
 
-Now that we have our tests sharded, we can distribute the test load, and achieve faster feedback.
+Now that we have our tests sharded, we can distribute the test load and achieve faster feedback.
 
 But what about the test runners that don't support sharding?
 
 ## Nx Atomizer
 
-For more granular control over test distribution, Nx offers the [Atomizer](/ci/features/split-e2e-tasks). This feature allows you to split tasks per file. Splitting then further allows us to distribute long running tasks across larger number of agents, providing detailed insights into flaky tests and enabling automatic re-runs. If one of the flaky tests fails, we will still cache the results of all the other task slices and can even have a successful run if the flaky test re-run succeeded.
+For more granular control over test distribution, Nx offers the [Atomizer](/ci/features/split-e2e-tasks). This feature allows you to split tasks per file. Splitting then further allows us to distribute long-running tasks across a larger number of agents, providing detailed insights into flaky tests and enabling automatic re-runs. If one of the flaky tests fails, we will still cache the results of all the other task slices and can even have a successful run if the flaky test re-run succeeded.
 
 With Atomizer, you can achieve a higher level of parallelism and ensure that only the necessary tests are executed, further optimizing your CI pipeline.
 
@@ -85,7 +85,7 @@ To enable atomizer, we need to use supported inferred plugins or create our own.
 }
 ```
 
-The `test-ci` and `e2e-ci` targets will automatically be split into following format:
+The `test-ci` and `e2e-ci` targets will automatically be split into the following format:
 
 - `e2e-ci--path/to/your/test/file`
 - `test-ci--path/to/your/test/file`
@@ -99,7 +99,7 @@ In addition to automated splitting like sharding or atomizer, manually splitting
 Let's look at the simplified graph below:
 ![Nx graph with single application, e2e project and several libraries](/blog/images/articles/single-e2e-project.avif)
 
-Our E2E project contains tests for each of the apllication features - products, orders and checkout. Any change made in the graph will cause all our E2E tests to be re-run. Even if we only modified `products`, we will still re-run the tests for `orders` and `checkout`. Although atomizer will help us split that work per file and distribute it, we will still end up running unnecessary work.
+Our E2E project contains tests for each of the application features - products, orders and checkout. Any change made in the graph will cause all our E2E tests to be re-run. Even if we only modified `products`, we will still re-run the tests for `orders` and `checkout`. Although atomizer will help us split that work per file and distribute it, we will still end up running unnecessary work.
 
 By defining scopes that implicitly depend on feature libraries rather than the entire application, you can ensure that only relevant tests are run when changes are made.
 
@@ -108,7 +108,7 @@ By defining scopes that implicitly depend on feature libraries rather than the e
 
 ![Nx graph with several e2e applications depending on different scopes of the application](/blog/images/articles/manually-split-e2e-projects.avif)
 
-This approach, offers both speed of distribution and caching efficiency. Every time the application is affected, we will only run the small subset of sanity smoke tests to ensure the application still runs, but specific features will only be tested if relevant feature library has been modified or affected and skipped otherwise.
+This approach offers both speed of distribution and caching efficiency. Every time the application is affected, we will only run the small subset of sanity smoke tests to ensure the application still runs, but specific features will only be tested if the relevant feature library has been modified or affected and skipped otherwise.
 
 The tricky part comes from the fact that our split E2E applications still depend on the full application being served. But using the combination of `implicitDependencies` and `dependsOn` we can ensure that the application is running for our E2E tests without explicitly depending on it.
 
@@ -128,6 +128,6 @@ When we look at the graph, we will only see an edge from `checkout-e2e` to `chec
 
 ## Conclusion
 
-By implementing these techniques — the built-in test sharding, Nx Atomizer, and manual E2E project splitting — you can significantly reduce the time spent on CI. Sharding requires the liest amount of work to be enabled but also brings the liest amount of benefits. Respectively, manual splitting requires most work as it's not an automated process, but the final results will be most optimal ones.
+By implementing these techniques — the built-in test sharding, Nx Atomizer, and manual E2E project splitting — you can significantly reduce the time spent on CI. Sharding requires the least amount of work to be enabled but also brings the least amount of benefits. Respectively, manual splitting requires most work as it's not an automated process, but the final results will be the most optimal ones.
 
-Which ever path you take, when combined with Nx Cloud's distributed task execution, these strategies not only bring stability and improved performance but also offer better developer ergonomics and a comprehensive overview of your testing processes. This powerful combination allows your team to ship features faster and with greater confidence, ensuring a more efficient and streamlined development workflow. If you're not already using Nx Cloud, consider trying it out to further elevate your CI capabilities.
+Whichever path you take, when combined with Nx Cloud's distributed task execution, these strategies not only bring stability and improved performance but also offer better developer ergonomics and a comprehensive overview of your testing processes. This powerful combination allows your team to ship features faster and with greater confidence, ensuring a more efficient and streamlined development workflow. If you're not already using Nx Cloud, consider trying it out to further elevate your CI capabilities.
