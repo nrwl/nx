@@ -1,13 +1,17 @@
 use std::{
     env,
+    error::Error,
     fs::{self},
     io::Read,
     path::Path,
 };
 
-use super::cache::CachedResult;
+use super::{
+    cache::CachedResult,
+    errors::{convert_response_to_error, report_request_error, HttpRemoteCacheErrors},
+};
 use flate2::Compression;
-use reqwest::{header, Client, ClientBuilder};
+use reqwest::{header, Client, ClientBuilder, StatusCode};
 use tar::{Archive, Builder};
 use tracing::trace;
 
@@ -26,7 +30,8 @@ impl HttpRemoteCache {
         if let Ok(token) = auth_token {
             headers.insert(
                 header::AUTHORIZATION,
-                header::HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
+                header::HeaderValue::from_str(&format!("Bearer {}", token))
+                    .expect("from_str should not throw here."),
             );
         }
 
@@ -35,11 +40,19 @@ impl HttpRemoteCache {
             header::HeaderValue::from_static("application/octet-stream"),
         );
 
+        let mut client_builder = ClientBuilder::new().default_headers(headers);
+
+        let env_accept_unauthorized = env::var("NODE_TLS_REJECT_UNAUTHORIZED");
+        if let Ok(env_accept_unauthorized) = env_accept_unauthorized {
+            if env_accept_unauthorized == "0" {
+                client_builder = client_builder.danger_accept_invalid_certs(true);
+            }
+        }
+
         HttpRemoteCache {
-            client: ClientBuilder::new()
-                .default_headers(headers)
+            client: client_builder
                 .build()
-                .unwrap(),
+                .expect("Failed to create HTTP client"),
             url: env::var("NX_SELF_HOSTED_REMOTE_CACHE_SERVER")
                 .expect("NX_REMOTE_CACHE_URL must be set"),
         }
@@ -58,35 +71,21 @@ impl HttpRemoteCache {
         let response = self.client.get(&url).send().await;
         if let Ok(resp) = response {
             trace!("HTTP response status: {}", resp.status());
-            if resp.status().is_success() {
-                // response is an application/octet-stream containing a tarball
-                // we need to extract the tarball and return the path to the extracted files
-                Ok(Some(
-                    Self::download_and_extract_from_result(resp, cache_directory, hash).await?,
-                ))
-            } else {
-                let status = resp.status().as_u16();
-                if status == 404 {
-                    trace!("Cache not found for hash '{}'", hash);
-                    return Ok(None); // Return None if the cache was not found
-                } else if status == 401 {
-                    return Err(anyhow::anyhow!("Unauthorized to retrieve cache. Provide NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN to set a valid authorization token.").into());
+            let status = resp.status();
+
+            match status {
+                StatusCode::OK => {
+                    Ok(Some(
+                        // response is an application/octet-stream containing a tarball
+                        // we need to extract the tarball and return the path to the extracted files
+                        Self::download_and_extract_from_result(resp, cache_directory, hash).await?,
+                    ))
                 }
-                // Handle other HTTP errors
-                Err(anyhow::anyhow!("Failed to retrieve cache: {}", resp.status()).into())
+                StatusCode::NOT_FOUND => Ok(None),
+                _ => Err(convert_response_to_error(resp).await.into()),
             }
         } else {
-            trace!(
-                "Failed to retrieve cache for hash '{}': {}",
-                hash,
-                response
-                    .as_ref()
-                    .err()
-                    .map(|e| e.to_string())
-                    .unwrap_or_default()
-            );
-
-            Err(anyhow::anyhow!("Failed to retrieve cache: {}", response.unwrap_err()).into())
+            Err(HttpRemoteCacheErrors::RequestError(response.unwrap_err().to_string()).into())
         }
     }
 
@@ -101,6 +100,12 @@ impl HttpRemoteCache {
         let span = tracing::trace_span!("store", hash = %hash);
         let _guard = span.enter();
 
+        // We can change the creation of the tar in a future version without
+        // worrying about breaking existing user cache's, because when the
+        // user updates their task's hashes will be changed... so users
+        // retrieving old hashes will not be affected, and new entries
+        // will have distinct hashes.
+
         // create a tarball in memory from the cache dir
         let tar_gz: Vec<u8> = Vec::new();
         let enc = flate2::write::GzEncoder::new(tar_gz, Compression::default());
@@ -110,7 +115,7 @@ impl HttpRemoteCache {
         let cache_path = Path::new(&cache_directory);
         let outputs_path = cache_path.join(&hash);
 
-        trace!("Adding cache directory to tarball");
+        trace!("Adding cache artifacts to tarball");
         archive.append_dir_all("", &outputs_path)?;
         trace!("Added cache directory to tarball");
 
@@ -119,22 +124,18 @@ impl HttpRemoteCache {
         let terminal_output_bytes = terminal_output.as_bytes();
         terminal_output_header.set_size(terminal_output_bytes.len() as u64);
         terminal_output_header.set_cksum(); // Ensure the checksum is set correctly
-        archive
-            .append_data(
-                &mut terminal_output_header,
-                "terminalOutput",
-                terminal_output_bytes,
-            )
-            .unwrap();
+        archive.append_data(
+            &mut terminal_output_header,
+            "terminalOutput",
+            terminal_output_bytes,
+        )?;
         trace!("Added terminal output to tarball");
 
         trace!("Adding code to tarball");
         let mut code_header = tar::Header::new_old();
         code_header.set_size(4);
         code_header.set_cksum(); // Ensure the checksum is set correctly
-        archive
-            .append_data(&mut code_header, "code", &code.to_be_bytes()[..])
-            .unwrap();
+        archive.append_data(&mut code_header, "code", &code.to_be_bytes()[..])?;
         trace!("Added code to tarball");
 
         trace!("Finishing tarball");
@@ -144,11 +145,8 @@ impl HttpRemoteCache {
         trace!("Finished tarball");
 
         trace!("Reading tarball into memory");
-        let archive_bytes = archive.into_inner().unwrap();
+        let archive_bytes = archive.into_inner()?;
         let buffer = archive_bytes.finish()?;
-        // let mut buffer = Vec::new();
-        // // read the whole file
-        // archive_bytes.read_to_end(&mut buffer)?;
         trace!("read tarball into memory");
 
         let url: String = format!("{}/v1/cache/{}", self.url, hash);
@@ -158,9 +156,21 @@ impl HttpRemoteCache {
             .body(buffer) // Convert the bytes to a Vec<u8> for the request body
             .send()
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to send request: {}", e))?;
+            .map_err(|e| {
+                napi::Error::from(HttpRemoteCacheErrors::RequestError(report_request_error(
+                    &e,
+                )))
+            })?;
 
-        Ok(response.status().is_success())
+        match response.status() {
+            StatusCode::OK => Ok(true),
+            // Cache entry already exists, silently do not store new data
+            StatusCode::CONFLICT => Ok(false),
+            // User is authorized but server does not allow
+            // cache storage for whatever reason (e.g. read-only token.)
+            StatusCode::FORBIDDEN => Ok(false),
+            _ => Err(convert_response_to_error(response).await.into()),
+        }
     }
 
     async fn download_and_extract_from_result(
@@ -210,7 +220,7 @@ impl HttpRemoteCache {
             } else {
                 let path_on_disk = output_dir.join(entry_path);
                 trace!("Extracting entry to {}", path_on_disk.display());
-                fs::create_dir_all(path_on_disk.parent().unwrap())?;
+                fs::create_dir_all(path_on_disk.parent().expect("This will have a parent, we just joined it above so there is at least one dir."))?;
                 // Ensure the directory exists before extracting
                 match entry.unpack(&path_on_disk) {
                     Err(e) => {

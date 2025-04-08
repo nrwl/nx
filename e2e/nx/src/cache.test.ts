@@ -22,7 +22,7 @@ import { join } from 'path';
 describe('cache', () => {
   beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
 
-  // afterEach(() => cleanupProject());
+  afterEach(() => cleanupProject());
 
   // TODO(@Cammisuli): This test is flaky and needs to be investigated
   xit('should cache command execution', async () => {
@@ -439,7 +439,7 @@ describe('cache', () => {
       cacheServer.kill();
     });
 
-    it('should request cache from remote cache', async () => {
+    it('should PUT and GET cache from remote cache', async () => {
       const projectName = uniq('myapp');
       const outputFilePath = `dist/${projectName}/output.txt`;
       updateFile(
@@ -458,6 +458,7 @@ describe('cache', () => {
       runCLI(`build ${projectName}`, {
         env: {
           NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
       // removing the file should not affect the cache retrieval,
@@ -468,11 +469,66 @@ describe('cache', () => {
       const output = runCLI(`build ${projectName}`, {
         env: {
           NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
-          NX_NATIVE_LOGGING: 'nx::native::cache::http_remote_cache',
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
       expectProjectMatchTaskCacheStatus(output, [projectName], 'remote cache');
       expect(fileExists(tmpProjPath(outputFilePath))).toBe(true);
+    });
+
+    it('should handle 401 without ACCESS_TOKEN appropriately', async () => {
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+      const output = runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+        },
+        silenceError: true,
+      });
+
+      expect(output).toContain(
+        'Unauthorized: Missing or invalid token. Set NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN to proceed.'
+      );
+    });
+
+    it('should error if server is not running', async () => {
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+      const output = runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3001',
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
+        },
+        silenceError: true,
+      });
+
+      expect(output).toContain('http://localhost:3001');
     });
   });
 
@@ -513,7 +569,6 @@ describe('cache', () => {
         }
       }
     });
-    console.log(lines);
 
     matchingProjects.sort((a, b) => a.localeCompare(b));
     expectedProjects.sort((a, b) => a.localeCompare(b));
