@@ -261,6 +261,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       await gitPush({
         dryRun: args.dryRun,
         verbose: args.verbose,
+        additionalArgs: nxReleaseConfig.git.pushArgs,
       });
       hasPushedChanges = true;
     }

@@ -259,6 +259,10 @@ export interface NxReleaseGitConfiguration {
    * Whether or not to automatically push the changes made by this command to the remote git repository.
    */
   push?: boolean;
+  /**
+   * Additional arguments to pass to the `git push` command invoked behind the scenes. May be a string or array of strings.
+   */
+  pushArgs?: string | string[];
 }
 
 export interface NxReleaseConventionalCommitsConfiguration {

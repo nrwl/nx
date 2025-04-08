@@ -173,6 +173,7 @@ export async function createNxReleaseConfig(
     tagArgs: '',
     stageChanges: false,
     push: false,
+    pushArgs: '',
   };
   const versionGitDefaults = {
     ...gitDefaults,

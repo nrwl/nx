@@ -323,6 +323,8 @@ export async function releaseVersionLegacy(
         gitRemote: args.gitRemote,
         dryRun: args.dryRun,
         verbose: args.verbose,
+        additionalArgs:
+          args.gitPushArgs || nxReleaseConfig.version.git.pushArgs,
       });
     }
 
@@ -491,6 +493,7 @@ export async function releaseVersionLegacy(
       gitRemote: args.gitRemote,
       dryRun: args.dryRun,
       verbose: args.verbose,
+      additionalArgs: args.gitPushArgs || nxReleaseConfig.version.git.pushArgs,
     });
   }
 

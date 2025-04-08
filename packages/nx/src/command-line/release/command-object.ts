@@ -34,6 +34,7 @@ interface GitOptions {
   gitTagMessage?: string;
   gitTagArgs?: string | string[];
   gitPush?: boolean;
+  gitPushArgs?: string | string[];
   gitRemote?: string;
 }
 
@@ -458,6 +459,11 @@ function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
       describe:
         'Whether or not to automatically push the changes made by this command to the remote git repository.',
       type: 'boolean',
+    })
+    .option('git-push-args', {
+      describe:
+        'Additional arguments to pass to the `git push` command invoked behind the scenes.',
+      type: 'string',
     })
     .option('git-remote', {
       type: 'string',

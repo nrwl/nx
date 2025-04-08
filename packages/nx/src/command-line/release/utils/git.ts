@@ -416,10 +416,12 @@ export async function gitPush({
   gitRemote,
   dryRun,
   verbose,
+  additionalArgs,
 }: {
   gitRemote?: string;
   dryRun?: boolean;
   verbose?: boolean;
+  additionalArgs?: string | string[];
 }) {
   const commandArgs = [
     'push',
@@ -430,6 +432,13 @@ export async function gitPush({
     // Set custom git remote if provided
     ...(gitRemote ? [gitRemote] : []),
   ];
+  if (additionalArgs) {
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
+  }
 
   if (verbose) {
     console.log(

@@ -353,6 +353,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         gitRemote: args.gitRemote,
         dryRun: args.dryRun,
         verbose: args.verbose,
+        additionalArgs:
+          args.gitPushArgs || nxReleaseConfig.version.git.pushArgs,
       });
     }
 

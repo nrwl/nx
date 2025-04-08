@@ -1004,6 +1004,8 @@ async function applyChangesAndExit(
       gitRemote: args.gitRemote,
       dryRun: args.dryRun,
       verbose: args.verbose,
+      additionalArgs:
+        args.gitPushArgs || nxReleaseConfig.changelog.git.pushArgs,
     });
   }
 
