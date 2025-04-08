@@ -19,19 +19,6 @@ process.on('exit', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
 });
 
-let pseudoTerminal: PseudoTerminal;
-
-export function getPseudoTerminal(skipSupportCheck: boolean = false) {
-  if (pseudoTerminal) {
-    return pseudoTerminal;
-  }
-  pseudoTerminal = createPseudoTerminal(skipSupportCheck);
-  pseudoTerminalShutdownCallbacks.push(
-    pseudoTerminal.shutdown.bind(pseudoTerminal)
-  );
-  return pseudoTerminal;
-}
-
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
   if (!skipSupportCheck && !PseudoTerminal.isSupported()) {
     throw new Error('Pseudo terminal is not supported on this platform.');

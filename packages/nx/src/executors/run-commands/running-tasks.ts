@@ -5,6 +5,7 @@ import { isAbsolute, join } from 'path';
 import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
+  createPseudoTerminal,
   PseudoTerminal,
   PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
@@ -16,6 +17,7 @@ import {
 import {
   LARGE_BUFFER,
   NormalizedRunCommandsOptions,
+  registerProcessListener,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
 
@@ -163,8 +165,7 @@ export class SeriallyRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    private readonly tuiEnabled: boolean,
-    private pseudoTerminal?: PseudoTerminal
+    private readonly tuiEnabled: boolean
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -205,16 +206,13 @@ export class SeriallyRunningTasks implements RunningTask {
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext
   ) {
-    // TODO(@FrozenPandaz): Revisit this causing a bad file descriptor error in the unit tests for run-commands
-    // We have temporarily set usePty to false when more than one command for now
-    const usePty = options.commands.length === 1 && options.usePty;
     for (const c of options.commands) {
       const childProcess = await this.createProcess(
         c,
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
-        usePty,
+        options.usePty,
         options.streamOutput,
         options.tty,
         options.envFile
@@ -251,13 +249,15 @@ export class SeriallyRunningTasks implements RunningTask {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
     if (
-      this.pseudoTerminal &&
       process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
       !commandConfig.prefix &&
       usePty
     ) {
+      const pseudoTerminal = createPseudoTerminal();
+      registerProcessListener(this, pseudoTerminal);
+
       return createProcessWithPseudoTty(
-        this.pseudoTerminal,
+        pseudoTerminal,
         commandConfig,
         color,
         cwd,
@@ -394,12 +394,12 @@ class RunningNodeProcess implements RunningTask {
   }
 }
 
-export function runSingleCommandWithPseudoTerminal(
+export async function runSingleCommandWithPseudoTerminal(
   normalized: NormalizedRunCommandsOptions,
-  context: ExecutorContext,
-  pseudoTerminal: PseudoTerminal
-) {
-  return createProcessWithPseudoTty(
+  context: ExecutorContext
+): Promise<PseudoTtyProcess> {
+  const pseudoTerminal = createPseudoTerminal();
+  const pseudoTtyProcess = await createProcessWithPseudoTty(
     pseudoTerminal,
     normalized.commands[0],
     normalized.color,
@@ -409,6 +409,8 @@ export function runSingleCommandWithPseudoTerminal(
     pseudoTerminal ? normalized.isTTY : false,
     normalized.envFile
   );
+  registerProcessListener(pseudoTtyProcess, pseudoTerminal);
+  return pseudoTtyProcess;
 }
 
 async function createProcessWithPseudoTty(

@@ -39,16 +39,12 @@ pub struct PseudoTerminal {
 
 pub struct PseudoTerminalOptions {
     pub size: (u16, u16),
-    pub passthrough_stdin: bool,
 }
 
 impl Default for PseudoTerminalOptions {
     fn default() -> Self {
         let (w, h) = terminal::size().unwrap_or((80, 24));
-        Self {
-            size: (w, h),
-            passthrough_stdin: !env::var("NX_TUI").is_ok_and(|s| s == "true"),
-        }
+        Self { size: (w, h) }
     }
 }
 
@@ -77,7 +73,7 @@ impl PseudoTerminal {
 
         let is_within_nx_tui =
             std::env::var("NX_TUI").unwrap_or_else(|_| String::from("false")) == "true";
-        if options.passthrough_stdin && stdout().is_tty() {
+        if !is_within_nx_tui && stdout().is_tty() {
             // Stdin -> pty stdin
             trace!("Passing through stdin");
             std::thread::spawn(move || {
@@ -102,7 +98,6 @@ impl PseudoTerminal {
             let mut buf = [0; 8 * 1024];
             let mut first: bool = true;
 
-            // let mut processed_buf = Vec::new();
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
                     if len == 0 {
@@ -120,33 +115,6 @@ impl PseudoTerminal {
                     debug!("Read {} bytes", len);
                     if let Ok(mut parser) = parser_clone.write() {
                         let prev = parser.screen().clone();
-
-                        // // Check if this buffer contains a clear screen sequence
-                        // let contains_clear = buf[..len]
-                        //     .windows(4)
-                        //     .any(|window| window == [0x1B, 0x5B, 0x32, 0x4A]);
-                        //
-                        // if contains_clear {
-                        //     // If we detect a clear screen sequence, start fresh
-                        //     processed_buf.clear();
-                        //     processed_buf.extend_from_slice(&buf[..len]);
-                        //
-                        //     let mut parser = parser_clone.write().unwrap();
-                        //     // Get current dimensions
-                        //     let (rows, cols) = parser.screen().size();
-                        //     // Create a fresh parser
-                        //     let mut new_parser = Parser::new(rows, cols, 10000);
-                        //     // Process just this buffer
-                        //     new_parser.process(&processed_buf);
-                        //     *parser = new_parser;
-                        // } else {
-                        //     // Normal processing
-                        //     processed_buf.extend_from_slice(&buf[..len]);
-                        //     let mut parser = parser_clone.write().unwrap();
-                        //     parser.process(&processed_buf);
-                        // }
-                        //
-                        // processed_buf.clear();
 
                         parser.process(&buf[..len]);
                         debug!("{}", parser.get_raw_output().len());
@@ -310,17 +278,6 @@ impl PseudoTerminal {
             self.message_rx.clone(),
             exit_to_process_rx,
         ))
-    }
-}
-
-#[napi]
-pub fn show_info_about_parser(terminal: External<&PseudoTerminal>) {
-    if let Ok(a) = terminal.get_parser_clone().read() {
-        stdout()
-            .write_all(a.screen().contents().as_bytes())
-            .unwrap();
-    } else {
-        println!("Failed to lock parser");
     }
 }
 

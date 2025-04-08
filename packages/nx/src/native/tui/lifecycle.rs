@@ -100,8 +100,6 @@ impl From<TaskResult> for RustTaskResult {
             status: js.status.parse().unwrap(),
             code: js.code,
             terminal_output: js.terminal_output,
-            start_time: js.start_time,
-            end_time: js.end_time,
         }
     }
 }

@@ -389,7 +389,6 @@ module.exports.hashFile = nativeBinding.hashFile
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.remove = nativeBinding.remove
 module.exports.restoreTerminal = nativeBinding.restoreTerminal
-module.exports.showInfoAboutParser = nativeBinding.showInfoAboutParser
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
 module.exports.validateOutputs = nativeBinding.validateOutputs

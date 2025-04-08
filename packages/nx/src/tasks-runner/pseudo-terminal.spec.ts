@@ -46,21 +46,6 @@ describe('PseudoTerminal', () => {
     });
   });
 
-  // TODO(@FrozenPandaz): Re-enable this test once multiple run_command invocations with the pseudo terminal is fixed
-  it.skip('should get results', async () => {
-    const childProcess = terminal.runCommand('echo "hello world"');
-
-    const results = await childProcess.getResults();
-
-    expect(results.code).toEqual(0);
-    expect(results.terminalOutput).toContain('hello world');
-    const childProcess2 = terminal.runCommand('echo "hello jason"');
-
-    const results2 = await childProcess2.getResults();
-
-    expect(results2.code).toEqual(0);
-    expect(results2.terminalOutput).toContain('hello jason');
-  });
 
   if (process.env.CI !== 'true') {
     it('should be tty', (done) => {
@@ -73,16 +58,4 @@ describe('PseudoTerminal', () => {
       });
     });
   }
-
-  // TODO(@FrozenPandaz): Re-enable this test once multiple run_command invocations with the pseudo terminal is fixed
-  it.skip('should run multiple commands', async () => {
-    let i = 0;
-    while (i < 10) {
-      const childProcess = terminal.runCommand('whoami', {});
-
-      await childProcess.getResults();
-
-      i++;
-    }
-  });
 });

@@ -265,8 +265,6 @@ export interface RuntimeInput {
   runtime: string
 }
 
-export declare export declare function showInfoAboutParser(terminal: ExternalObject<PseudoTerminal>): void
-
 export interface Target {
   executor?: string
   inputs?: Array<JsInputs>

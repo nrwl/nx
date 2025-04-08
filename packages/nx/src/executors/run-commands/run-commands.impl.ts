@@ -125,14 +125,12 @@ export async function runCommands(
 
   const isSingleCommand = normalized.commands.length === 1;
 
-  const pseudoTerminal =
-    (isSingleCommand || !options.parallel) && PseudoTerminal.isSupported()
-      ? createPseudoTerminal()
-      : null;
+  const usePseudoTerminal =
+    (isSingleCommand || !options.parallel) && PseudoTerminal.isSupported();
 
   const isSingleCommandAndCanUsePseudoTerminal =
     isSingleCommand &&
-    pseudoTerminal &&
+    usePseudoTerminal &&
     process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
     !normalized.commands[0].prefix &&
     normalized.usePty;
@@ -141,21 +139,10 @@ export async function runCommands(
 
   try {
     const runningTask = isSingleCommandAndCanUsePseudoTerminal
-      ? await runSingleCommandWithPseudoTerminal(
-          normalized,
-          context,
-          pseudoTerminal
-        )
+      ? await runSingleCommandWithPseudoTerminal(normalized, context)
       : options.parallel
       ? new ParallelRunningTasks(normalized, context, tuiEnabled)
-      : new SeriallyRunningTasks(
-          normalized,
-          context,
-          tuiEnabled,
-          pseudoTerminal
-        );
-
-    registerProcessListener(runningTask, pseudoTerminal);
+      : new SeriallyRunningTasks(normalized, context, tuiEnabled);
     return runningTask;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -167,7 +154,7 @@ export async function runCommands(
   }
 }
 
-export function normalizeOptions(
+function normalizeOptions(
   options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
   if (options.readyWhen && typeof options.readyWhen === 'string') {
@@ -349,7 +336,7 @@ function filterPropKeysFromUnParsedOptions(
 
 let registered = false;
 
-function registerProcessListener(
+export function registerProcessListener(
   runningTask: PseudoTtyProcess | ParallelRunningTasks | SeriallyRunningTasks,
   pseudoTerminal?: PseudoTerminal
 ) {

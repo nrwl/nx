@@ -84,7 +84,7 @@
         "enabled": {
           "type": "boolean",
           "description": "Whether to enable the Terminal UI whenever possible (based on the current environment and terminal).",
-          "default": false
+          "default": true
         },
         "autoExit": {
           "oneOf": [{ "type": "boolean" }, { "type": "number" }],
