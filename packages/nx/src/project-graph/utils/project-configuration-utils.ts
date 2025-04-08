@@ -194,15 +194,30 @@ export function mergeProjectConfigurationIntoRootMap(
         ? target
         : resolveCommandSyntacticSugar(target, project.root);
 
-      const mergedTarget = mergeTargetConfigurations(
-        normalizedTarget,
-        matchingProject.targets?.[targetName],
-        sourceMap,
-        sourceInformation,
-        `targets.${targetName}`
-      );
+      let matchingTargets = [];
+      if (isGlobPattern(targetName)) {
+        // find all targets matching the glob pattern
+        // this will map atomized targets to the glob pattern same as it does for targetDefaults
+        matchingTargets = Object.keys(
+          updatedProjectConfiguration.targets
+        ).filter((key) => minimatch(key, targetName));
+      }
+      // If no matching targets were found, we can assume that the target name is not (meant to be) a glob pattern
+      if (!matchingTargets.length) {
+        matchingTargets = [targetName];
+      }
 
-      updatedProjectConfiguration.targets[targetName] = mergedTarget;
+      for (const matchingTargetName of matchingTargets) {
+        const mergedTarget = mergeTargetConfigurations(
+          normalizedTarget,
+          matchingProject.targets?.[matchingTargetName],
+          sourceMap,
+          sourceInformation,
+          `targets.${matchingTargetName}`
+        );
+
+        updatedProjectConfiguration.targets[matchingTargetName] = mergedTarget;
+      }
     }
   }
 
