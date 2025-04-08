@@ -108,13 +108,23 @@ By defining scopes that implicitly depend on feature libraries rather than the e
 
 ![Nx graph with several e2e applications depending on different scopes of the application](/blog/images/articles/manually-split-e2e-projects.avif)
 
-This approach, combined with the Atomizer, offers both speed of distribution and caching efficiency. Every time the application is affected, we will only run the small subset of sanity smoke tests to ensure the application still runs, but specific features will only be tested if relevant feature library has been modified or affected and skipped otherwise.
+This approach, offers both speed of distribution and caching efficiency. Every time the application is affected, we will only run the small subset of sanity smoke tests to ensure the application still runs, but specific features will only be tested if relevant feature library has been modified or affected and skipped otherwise.
 
 The tricky part comes from the fact that our split E2E applications still depend on the full application being served. But using the combination of `implicitDependencies` and `dependsOn` we can ensure that the application is running for our E2E tests without explicitly depending on it.
 
-```json
-...
+```json {% fileName="libs/checkout-e2e/project.json" %}
+{
+  ...
+  "implicitDependencies": ["checkout"],
+  "targets": {
+    "e2e": {
+      "dependsOn": ["^build", { "target": "build", "projects": "app" }]
+    }
+  }
+}
 ```
+
+When we look at the graph, we will only see an edge from `checkout-e2e` to `checkout`, but having an explicit `dependsOn` `app:build` ensures that the build of the application was successful and the distributed agent running our E2E task has app's build cache replayed.
 
 ## Conclusion
 
