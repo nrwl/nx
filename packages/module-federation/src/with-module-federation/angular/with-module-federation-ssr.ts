@@ -27,7 +27,6 @@ export async function withModuleFederationForSSR(
       },
       optimization: {
         ...(config.optimization ?? {}),
-        runtimeChunk: false,
       },
       resolve: {
         ...(config.resolve ?? {}),
