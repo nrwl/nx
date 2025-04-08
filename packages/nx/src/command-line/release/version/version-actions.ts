@@ -7,6 +7,8 @@ import type {
   ProjectGraphProjectNode,
 } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
+import { registerTsProject } from '../../../plugins/js/utils/register';
+import { getRootTsConfigPath } from '../../../plugins/js/utils/typescript';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { DEFAULT_VERSION_ACTIONS_PATH } from '../config/config';
@@ -139,7 +141,12 @@ export async function resolveVersionActionsForProject(
     VersionActionsClass = cachedData.VersionActionsClass;
     afterAllProjectsVersioned = cachedData.afterAllProjectsVersioned;
   } else {
+    let cleanupTranspiler: () => void;
+    if (versionActionsPath.endsWith('.ts')) {
+      cleanupTranspiler = registerTsProject(getRootTsConfigPath());
+    }
     const loaded = require(versionActionsPath);
+    cleanupTranspiler?.();
     VersionActionsClass = loaded.default ?? loaded;
     if (!VersionActionsClass) {
       throw new Error(
