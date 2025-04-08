@@ -274,6 +274,12 @@ export class DbCache {
 
   private getHttpCache(): RemoteCacheV2 | null {
     if (process.env.NX_SELF_HOSTED_REMOTE_CACHE_SERVER) {
+      if (IS_WASM) {
+        logger.warn(
+          'The HTTP remote cache is not yet supported in the wasm build of Nx.'
+        );
+        return null;
+      }
       return new HttpRemoteCache();
     }
     return null;
