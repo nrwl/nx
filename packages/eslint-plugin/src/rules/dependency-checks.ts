@@ -151,12 +151,16 @@ export default ESLintUtils.RuleCreator(
 
       const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
+      function includesMatch(value: string, arr: string[]): boolean {
+        return arr.some(pattern => new RegExp(pattern).test(value));
+      }
+
       function validateMissingDependencies(node: AST.JSONProperty) {
         if (!checkMissingDependencies) {
           return;
         }
         const missingDeps = expectedDependencyNames.filter(
-          (d) => !projPackageJsonDeps[d] && !ignoredDependencies.includes(d)
+          (d) => !includesMatch(d, Object.keys(projPackageJsonDeps)) && !includesMatch(d, ignoredDependencies)
         );
 
         if (missingDeps.length) {
@@ -282,7 +286,7 @@ export default ESLintUtils.RuleCreator(
       ) {
         if (
           !expectedDependencyNames.length ||
-          !expectedDependencyNames.some((d) => !ignoredDependencies.includes(d))
+          !expectedDependencyNames.some((d) => !includesMatch(d, ignoredDependencies))
         ) {
           return;
         }
@@ -336,7 +340,7 @@ export default ESLintUtils.RuleCreator(
           const packageName = (node.key as any).value;
           const packageRange = (node.value as any).value;
 
-          if (ignoredDependencies.includes(packageName)) {
+          if (includesMatch(packageName, ignoredDependencies)) {
             return;
           }
 

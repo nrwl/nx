@@ -28,6 +28,7 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 
 const rootPackageJson = {
   dependencies: {
+    '@types/external1': '~16.1.2',
     external1: '~16.1.2',
     external2: '^5.2.0',
     external3: '1.0.0',
@@ -356,7 +357,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      [{ ignoredDependencies: ['external1'] }],
+      [{ ignoredDependencies: ['external1', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -374,12 +375,18 @@ describe('Dependency checks (eslint)', () => {
         },
         externalNodes,
         dependencies: {
-          liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'npm:@types/external1', type: 'static' },
+          ],
         },
       },
       {
         liba: [
-          createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+          createFile(`libs/liba/src/main.ts`, [
+            'npm:external1',
+            'npm:@types/external1',
+          ]),
           createFile(`libs/liba/package.json`),
         ],
       }
@@ -791,7 +798,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      [{ ignoredDependencies: ['external2'] }],
+      [{ ignoredDependencies: ['external2', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -801,7 +808,6 @@ describe('Dependency checks (eslint)', () => {
             type: 'lib',
             data: {
               root: 'libs/liba',
-
               targets: {
                 build: {},
               },
@@ -813,6 +819,7 @@ describe('Dependency checks (eslint)', () => {
           liba: [
             { source: 'liba', target: 'npm:external1', type: 'static' },
             { source: 'liba', target: 'npm:external2', type: 'static' },
+            { source: 'liba', target: 'npm:@types/react', type: 'static' },
           ],
         },
       },
@@ -821,10 +828,12 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/react',
           ]),
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/react',
           ]),
         ],
       }
@@ -1202,6 +1211,7 @@ describe('Dependency checks (eslint)', () => {
       },
       peerDependencies: {
         unneeded: '>= 16 < 18',
+        '@types/unneeded': '^18.0.0',
       },
     };
 
@@ -1213,7 +1223,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      [{ ignoredDependencies: ['unneeded'] }],
+      [{ ignoredDependencies: ['unneeded', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1240,6 +1250,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:unneeded',
+            'npm:@types/unneeded',
           ]),
         ],
       }
@@ -1393,6 +1404,7 @@ describe('Dependency checks (eslint)', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
+        '@types/external1': '~16.0.0',
         external1: '~16.0.0',
         external2: '^1.0.0',
       },
@@ -1406,7 +1418,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      [{ ignoredDependencies: ['external1'] }],
+      [{ ignoredDependencies: ['external1', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1427,6 +1439,7 @@ describe('Dependency checks (eslint)', () => {
           liba: [
             { source: 'liba', target: 'npm:external1', type: 'static' },
             { source: 'liba', target: 'npm:external2', type: 'static' },
+            { source: 'liba', target: 'npm:@types/external1', type: 'static' },
           ],
         },
       },
@@ -1435,10 +1448,12 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/external1',
           ]),
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/external1',
           ]),
         ],
       }
@@ -1447,7 +1462,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures[0].message).toMatchInlineSnapshot(
       `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`
     );
-    expect(failures[0].line).toEqual(5);
+    expect(failures[0].line).toEqual(6);
   });
 
   it('should require tslib if @nx/js:tsc executor', () => {
