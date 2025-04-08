@@ -22,10 +22,10 @@ export const Partner: FC<{
       <div className="flex h-[130px] w-full items-center justify-center border-b border-slate-400/20 bg-white p-12 pb-4 pt-8 group-hover:bg-white/20 dark:bg-slate-200 dark:group-hover:bg-slate-50">
         {logo}
       </div>
-      <div className="flex-grow flex flex-col p-8">
-        <div className="mb-4 flex-grow">
+      <div className="flex-grow p-8">
+        <div className="mb-4">
           <strong>{name}</strong>
-          <p className="block text-sm text-slate-500">{tagline}</p>
+          <p className="block min-h-14 text-sm text-slate-500">{tagline}</p>
           <div className="my-2 text-sm text-slate-500">({location})</div>
         </div>
         <div>
