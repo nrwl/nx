@@ -1,11 +1,12 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   getSelectedPackageManager,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   promisifiedTreeKill,
+  readJson,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -21,10 +22,11 @@ let originalEnvPort;
 
 describe('Node Applications', () => {
   const pm = getSelectedPackageManager();
+  let workspaceName: string;
 
   beforeAll(() => {
     originalEnvPort = process.env.PORT;
-    newProject({
+    workspaceName = newProject({
       packages: ['@nx/node', '@nx/express', '@nx/nest', '@nx/webpack'],
       preset: 'ts',
     });
@@ -83,18 +85,18 @@ describe('Node Applications', () => {
 
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, `Test`);
     updateFile(`apps/${nodeapp}/src/main.ts`, (content) => {
-      return `import { ${nodelib} } from '@proj/${nodelib}';\n${content}\nconsole.log(${nodelib}());`;
+      return `import { ${nodelib} } from '@${workspaceName}/${nodelib}';\n${content}\nconsole.log(${nodelib}());`;
     });
     // pnpm does not link packages unless they are deps
     // npm, yarn, and bun will link them in the root node_modules regardless
     if (pm === 'pnpm') {
       updateJson(`apps/${nodeapp}/package.json`, (json) => {
         json.dependencies = {
-          [`@proj/${nodelib}`]: 'workspace:',
+          [`@${workspaceName}/${nodelib}`]: 'workspace:*',
         };
         return json;
       });
-      runCommand(getPackageManagerCommand().install);
+      runCommand(`cd apps/${nodeapp} && ${getPackageManagerCommand().install}`);
     }
     runCLI(`sync`);
 
@@ -169,6 +171,84 @@ describe('Node Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
+  }, 300_000);
+
+  it('should be able to import a lib into a nest application', async () => {
+    const nestApp = uniq('nestapp');
+    const nestLib = uniq('nestlib');
+
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+    runCLI(`generate @nx/nest:app apps/${nestApp} --no-interactive`);
+
+    runCLI(`generate @nx/nest:lib packages/${nestLib} --no-interactive`);
+
+    updateFile(`apps/${nestApp}/src/app/app.module.ts`, (content) => {
+      return `import '@${workspaceName}/${nestLib}';\n${content}\n`;
+    });
+
+    if (pm === 'pnpm') {
+      updateJson(`apps/${nestApp}/package.json`, (json) => {
+        json.dependencies = {
+          [`@${workspaceName}/${nestLib}`]: 'workspace:*',
+        };
+        return json;
+      });
+      runCommand(`${getPackageManagerCommand().install}`);
+    }
+    runCLI(`sync`);
+
+    console.log(readJson(`apps/${nestApp}/package.json`));
+    runCLI(`build ${nestApp} --verbose`);
+    checkFilesExist(`apps/${nestApp}/dist/main.js`);
+
+    const p = await runCommandUntil(
+      `serve ${nestApp}`,
+      (output) =>
+        output.includes(
+          `Application is running on: http://localhost:${port}/api`
+        ),
+
+      {
+        env: {
+          NX_DAEMON: 'true',
+        },
+      }
+    );
+
+    const result = await getData(port, '/api');
+    expect(result.message).toMatch('Hello');
+
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  }, 300_000);
+
+  it('should respect and support generating libraries with a name different than the import path', () => {
+    const nodeLib = uniq('node-lib');
+    const nestLib = uniq('nest-lib');
+
+    runCLI(
+      `generate @nx/node:lib packages/${nodeLib} --name=${nodeLib} --buildable`
+    );
+    runCLI(
+      `generate @nx/nest:lib packages/${nestLib} --name=${nestLib} --buildable`
+    );
+
+    const packageJson = readJson(`packages/${nodeLib}/package.json`);
+    expect(packageJson.nx.name).toBe(nodeLib);
+    const nestPackageJson = readJson(`packages/${nestLib}/package.json`);
+    expect(nestPackageJson.nx.name).toBe(nestLib);
+
+    expect(runCLI(`build ${nodeLib}`)).toContain(
+      `Successfully ran target build for project ${nodeLib}`
+    );
+    expect(runCLI(`build ${nestLib}`)).toContain(
+      `Successfully ran target build for project ${nestLib}`
+    );
   }, 300_000);
 });
 

@@ -119,7 +119,7 @@ export default function Packages({
                           <img
                             className="h-5 w-5 object-cover opacity-75 dark:invert"
                             loading="lazy"
-                            src={iconsMap[pkg.name]}
+                            src={iconsMap[pkg.name] || iconsMap['nx']}
                             alt={pkg.name + ' illustration'}
                             aria-hidden="true"
                           />

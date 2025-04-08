@@ -61,7 +61,6 @@ describe('app', () => {
     // ASSERT
     const { dependencies, devDependencies } = readJson(appTree, 'package.json');
 
-    expect(dependencies['@angular/animations']).toBe(angularVersion);
     expect(dependencies['@angular/common']).toBe(angularVersion);
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
@@ -1242,6 +1241,16 @@ describe('app', () => {
           },
         ]
       `);
+    });
+    it('should generate a correct setup when --bundler=rspack including a correct config file and no build target', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+      });
+
+      const project = readProjectConfiguration(appTree, 'app1');
+      expect(project.targets.build).not.toBeDefined();
+      expect(appTree.exists('app1/rspack.config.ts')).toBeTruthy();
+      expect(appTree.read('app1/rspack.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
     it('should generate target options "browser" and "buildTarget"', async () => {

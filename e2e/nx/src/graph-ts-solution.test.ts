@@ -154,6 +154,30 @@ describe('Graph - TS solution setup', () => {
         },
       },
     });
+    // wildcard exports with trailing values
+    createPackage('pkg15', {
+      sourceFilePaths: ['src/features/some-file.ts'],
+      packageJsonEntryFields: {
+        exports: {
+          './features/*.js': {
+            types: './dist/src/features/*.d.ts',
+            default: './dist/src/features/*.js',
+          },
+        },
+      },
+    });
+    // wildcard exports with no leading or trailing values
+    createPackage('pkg16', {
+      sourceFilePaths: ['src/features/subpath/extra-nested/index.ts'],
+      packageJsonEntryFields: {
+        exports: {
+          './*': {
+            types: './dist/src/features/*/index.d.ts',
+            default: './dist/src/features/*/index.js',
+          },
+        },
+      },
+    });
     // project outside of the package manager workspaces
     createPackage('lib1', { root: 'libs/lib1' });
 
@@ -173,6 +197,8 @@ describe('Graph - TS solution setup', () => {
         json.dependencies['@proj/pkg10'] = 'workspace:*';
         json.dependencies['@proj/pkg11'] = 'workspace:*';
         json.dependencies['@proj/pkg13'] = 'workspace:*';
+        json.dependencies['@proj/pkg15'] = 'workspace:*';
+        json.dependencies['@proj/pkg16'] = 'workspace:*';
         return json;
       });
     }
@@ -207,6 +233,8 @@ describe('Graph - TS solution setup', () => {
         { path: '../pkg12' },
         { path: '../pkg13' },
         { path: '../pkg14' },
+        { path: '../pkg15' },
+        { path: '../pkg16' },
       ];
       return json;
     });
@@ -226,13 +254,15 @@ describe('Graph - TS solution setup', () => {
       import { util1 } from '@proj/pkg11/utils/util1';
       import { pkg12 } from '@proj/pkg12/feature1';
       import { pkg13 } from '@proj/pkg14';
+      import { some_file } from '@proj/pkg15/features/some-file.js';
+      import { pkg16 } from '@proj/pkg16/subpath/extra-nested';
       // this is an invalid import that doesn't match any TS path alias and
       // it's not included in the package manager workspaces, it should not
       // be picked up as a dependency
       import { lib1 } from '@proj/lib1';
 
       // use the correct imports, leave out the invalid ones so it's easier to remove them later
-      export const pkgParent = pkg2 + pkg4 + pkg5 + pkg6 + pkg7 + pkg8 + pkg9 + pkg10 + util1 + pkg13;
+      export const pkgParent = pkg2 + pkg4 + pkg5 + pkg6 + pkg7 + pkg8 + pkg9 + pkg10 + util1 + pkg13 + some_file + pkg16;
     `
     );
 
@@ -253,6 +283,8 @@ describe('Graph - TS solution setup', () => {
       '@proj/pkg10',
       '@proj/pkg11',
       '@proj/pkg13',
+      '@proj/pkg15',
+      '@proj/pkg16',
     ]);
 
     // assert build fails due to the invalid imports
@@ -331,7 +363,7 @@ describe('Graph - TS solution setup', () => {
 
     const sourceFilePaths = options?.sourceFilePaths ?? ['src/index.ts'];
     for (const sourceFilePath of sourceFilePaths) {
-      const fileName = basename(sourceFilePath, '.ts');
+      const fileName = basename(sourceFilePath, '.ts').replace(/-/g, '_');
       createFile(
         `${root}/${sourceFilePath}`,
         `export const ${

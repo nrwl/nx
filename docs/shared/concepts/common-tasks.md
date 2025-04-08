@@ -1,4 +1,6 @@
 ---
+title: Common Tasks
+description: Learn about standard task naming conventions in Nx projects, including build, serve, test, and lint tasks, for consistent project configuration.
 keywords: [build, serve, test, lint]
 ---
 

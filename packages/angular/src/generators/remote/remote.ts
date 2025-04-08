@@ -8,7 +8,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
@@ -32,7 +32,7 @@ export async function remote(tree: Tree, schema: Schema) {
     );
   }
 
-  await ensureProjectName(tree, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const { projectName: remoteProjectName } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,

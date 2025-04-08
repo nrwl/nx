@@ -1,3 +1,8 @@
+---
+title: nx.json Reference
+description: A comprehensive reference for the nx.json configuration file, which controls Nx CLI behavior, project defaults, and workspace settings.
+---
+
 # nx.json
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on GitHub.
@@ -566,3 +571,31 @@ There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.js
 ```
 
 For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).
+
+## Max Cache Size
+
+The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
+
+This behavior can be opted out by setting `maxCacheSize` to `0`.
+
+Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
+
+| Value    | Description                                                      |
+| -------- | ---------------------------------------------------------------- |
+| `819200` | 819200 bytes (800 KB)                                            |
+| `100MB`  | 100 megabytes (100 \* 1024 \* 1024 bytes)                        |
+| `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
+| `0`      | No limit on the local cache size (disables the cache size limit) |
+
+````json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "0" // No limit on the local cache size
+}
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
+}
+````
+
+Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.

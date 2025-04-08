@@ -1,5 +1,6 @@
 {
   "name": "convert-webpack",
+  "alias": "convert-to-rspack",
   "factory": "./src/generators/convert-webpack/convert-webpack",
   "schema": {
     "$schema": "http://json-schema.org/schema",

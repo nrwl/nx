@@ -41,10 +41,12 @@ import {
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/src/generators/library/utils/add-release-config';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -59,10 +61,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
-
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
 
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
@@ -79,18 +77,21 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(host, `${options.projectRoot}/package.json`, {
-      name: options.importPath ?? options.name,
-      version: '0.0.1',
-      ...determineEntryFields(options),
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    ...determineEntryFields(options),
+    files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.name !== options.importPath) {
+      packageJson.nx = { name: options.name };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(host, options.name, {
       root: options.projectRoot,
@@ -101,7 +102,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(host, `${options.projectRoot}/package.json`, packageJson);
+  }
+
   createFiles(host, options);
+
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
@@ -240,7 +249,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(componentTask);
   }
 
-  if (options.publishable || options.buildable) {
+  if (options.publishable) {
     const projectConfiguration = readProjectConfiguration(host, options.name);
     if (options.isUsingTsSolutionConfig) {
       await addReleaseConfigForTsSolution(

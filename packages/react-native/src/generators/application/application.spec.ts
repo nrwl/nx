@@ -253,8 +253,10 @@ describe('app', () => {
   });
 
   describe('TS solution setup', () => {
-    it('should add project references when using TS solution', async () => {
-      const tree = createTreeWithEmptyWorkspace();
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
       tree.write('.gitignore', '');
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
@@ -271,7 +273,9 @@ describe('app', () => {
         files: [],
         references: [],
       });
+    });
 
+    it('should add project references when using TS solution', async () => {
       await reactNativeApplicationGenerator(tree, {
         directory: 'my-app',
         displayName: 'myApp',
@@ -282,6 +286,7 @@ describe('app', () => {
         unitTestRunner: 'jest',
         bundler: 'vite',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -291,9 +296,11 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx.name).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'my-app/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
@@ -326,9 +333,9 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "noUnusedLocals": false,
-            "outDir": "out-tsc/my-app",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-app/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
@@ -402,6 +409,81 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should respect the provided name', async () => {
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        name: 'my-app',
+        displayName: 'myApp',
+        tags: 'one,two',
+        linter: Linter.EsLint,
+        e2eTestRunner: 'none',
+        install: false,
+        unitTestRunner: 'jest',
+        bundler: 'vite',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx.name).toBe('my-app');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await reactNativeApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: Linter.EsLint,
+        e2eTestRunner: 'cypress',
+        install: false,
+        unitTestRunner: 'jest',
+        bundler: 'vite',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-app/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-app'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-app",
+          "projectType": "application",
+          "root": "my-app",
+          "sourceRoot": "my-app/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-app/package.json').nx).toBeUndefined();
+      expect(tree.exists('my-app-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-app-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/my-app",
+          ],
+          "name": "@proj/my-app-e2e",
+          "projectType": "application",
+          "root": "my-app-e2e",
+          "sourceRoot": "my-app-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

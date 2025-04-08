@@ -16,7 +16,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-
 import { existsSync, readdirSync } from 'fs';
 import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';
 import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
@@ -35,7 +35,13 @@ type RspackTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 const pmc = getPackageManagerCommand();
 
 function readTargetsCache(cachePath: string): Record<string, RspackTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -172,9 +178,26 @@ async function createRspackTargets(
 
   const targets = {};
 
+  const env: NodeJS.ProcessEnv = {};
+  const isTsConfig = ['.ts', '.cts', '.mts'].includes(extname(configFilePath));
+  if (isTsConfig) {
+    // https://rspack.dev/config/#using-ts-node
+    const existingValue = process.env['TS_NODE_COMPILER_OPTIONS'];
+    env['TS_NODE_COMPILER_OPTIONS'] = JSON.stringify({
+      ...(existingValue ? JSON.parse(existingValue) : {}),
+      module: 'CommonJS',
+      moduleResolution: 'Node10',
+      customConditions: null,
+    });
+  }
+
   targets[options.buildTargetName] = {
     command: `rspack build`,
-    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    options: {
+      cwd: projectRoot,
+      args: ['--node-env=production'],
+      env,
+    },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -201,6 +224,7 @@ async function createRspackTargets(
     options: {
       cwd: projectRoot,
       args: ['--node-env=development'],
+      env,
     },
   };
 
@@ -209,6 +233,7 @@ async function createRspackTargets(
     options: {
       cwd: projectRoot,
       args: ['--node-env=production'],
+      env,
     },
   };
 

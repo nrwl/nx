@@ -95,6 +95,10 @@
         "x-prompt": "Which bundler do you want to use to build the application?",
         "default": "vite",
         "x-priority": "important"
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["directory"],

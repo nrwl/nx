@@ -1,6 +1,11 @@
+---
+title: Configure Version Prefix for Dependencies
+description: Learn how to set up custom version prefixes in Nx Release to control how dependency versions are specified in your package.json files, with options for exact, patch, or minor-level compatibility.
+---
+
 # Configuring Version Prefix for Dependency Versions
 
-This guide explains how to configure a custom version prefix in Nx Release using the `versionPrefix` option. The version prefix allows you to automatically add a specific prefix format to dependencies, providing control over how dependency versions are specified in your project’s `package.json` files.
+This guide explains how to configure a custom version prefix in Nx Release using the `versionPrefix` option. The version prefix allows you to automatically add a specific prefix format to dependencies, providing control over how dependency versions are specified in your project's `package.json` files.
 
 ## The `versionPrefix` Option
 

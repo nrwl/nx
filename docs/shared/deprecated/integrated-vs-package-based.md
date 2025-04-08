@@ -1,4 +1,7 @@
-# Integrated Repos vs. Package-Based Repos vs. Standalone Apps
+---
+title: 'Integrated Repos vs. Package-Based Repos vs. Standalone Apps'
+description: 'Understand the historical differences between integrated, package-based, and standalone repositories in Nx, and how to choose the right approach for your needs.'
+---
 
 {% callout type="note" title="" %}
 As of Nx 20, it is no longer useful to draw a distinction between integrated and package-based repositories. We've removed references to these terms in the rest of the documentation, but this page is kept here to describe the terms for historical reasons.
@@ -33,7 +36,7 @@ Someone who appreciates the flexibility of a package-based repository will be mo
 - Easily create new projects or tools with [code generators](/features/generate-code)
 
 {% cards %}
-{% card title="TypeScript Packages Tutorial" description="Add Nx to an existing TypeScript repo" type="documentation" url="/getting-started/tutorials/typescript-packages-tutorial" /%}
+{% card title="TypeScript Monorepo Tutorial" description="Add Nx to an existing TypeScript repo" type="documentation" url="/getting-started/tutorials/typescript-packages-tutorial" /%}
 {% /cards %}
 
 ## Integrated Repos
