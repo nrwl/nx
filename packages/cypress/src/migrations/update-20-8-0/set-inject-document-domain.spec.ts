@@ -162,6 +162,65 @@ export default defineConfig({
     `);
   });
 
+  it('should replace the experimentalSkipDomainInjection property in the top-level config with injectDocumentDomain when it is set to an empty array and there is an e2e or component config without experimentalSkipDomainInjection', async () => {
+    addProjectConfiguration(tree, 'app1-e2e', {
+      root: 'apps/app1-e2e',
+      projectType: 'application',
+      targets: {},
+    });
+    tree.write(
+      'apps/app1-e2e/cypress.config.ts',
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'pnpm exec nx run app1:dev',
+        production: 'pnpm exec nx run app1:dev',
+      },
+      ciWebServerCommand: 'pnpm exec nx run app1:dev',
+      ciBaseUrl: 'http://localhost:4200',
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+  experimentalSkipDomainInjection: [],
+});
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            bundler: 'vite',
+            webServerCommands: {
+              default: 'pnpm exec nx run app1:dev',
+              production: 'pnpm exec nx run app1:dev',
+            },
+            ciWebServerCommand: 'pnpm exec nx run app1:dev',
+            ciBaseUrl: 'http://localhost:4200',
+          }),
+          baseUrl: 'http://localhost:4200',
+        },
+        // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+        // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+        injectDocumentDomain: true,
+      });
+      "
+    `);
+  });
+
   it('should remove the experimentalSkipDomainInjection property from the top-level config when it is set to a non-empty array', async () => {
     addProjectConfiguration(tree, 'app1-e2e', {
       root: 'apps/app1-e2e',
@@ -263,6 +322,60 @@ export default defineConfig({
             ciBaseUrl: 'http://localhost:4200',
           }),
           baseUrl: 'http://localhost:4200',
+          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+          injectDocumentDomain: true,
+        },
+      });
+      "
+    `);
+  });
+
+  it('should set the injectDocumentDomain property to true in the e2e config when it is not an object literal', async () => {
+    addProjectConfiguration(tree, 'app1-e2e', {
+      root: 'apps/app1-e2e',
+      projectType: 'application',
+      targets: {},
+    });
+    tree.write(
+      'apps/app1-e2e/cypress.config.ts',
+      `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: nxE2EPreset(__filename, {
+    cypressDir: 'src',
+    bundler: 'vite',
+    webServerCommands: {
+      default: 'pnpm exec nx run app1:dev',
+      production: 'pnpm exec nx run app1:dev',
+    },
+    ciWebServerCommand: 'pnpm exec nx run app1:dev',
+    ciBaseUrl: 'http://localhost:4200',
+  }),
+});
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            bundler: 'vite',
+            webServerCommands: {
+              default: 'pnpm exec nx run app1:dev',
+              production: 'pnpm exec nx run app1:dev',
+            },
+            ciWebServerCommand: 'pnpm exec nx run app1:dev',
+            ciBaseUrl: 'http://localhost:4200',
+          }),
           // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
           // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
           injectDocumentDomain: true,
@@ -402,6 +515,42 @@ export default defineConfig({
   component: {
     ...nxComponentTestingPreset(__filename, { bundler: 'vite' }),
   },
+});
+`
+    );
+
+    await migration(tree);
+
+    expect(tree.read('apps/app1-e2e/cypress.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        component: {
+          ...nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+          // Please ensure you use \`cy.origin()\` when navigating between domains and remove this option.
+          // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+          injectDocumentDomain: true,
+        },
+      });
+      "
+    `);
+  });
+
+  it('should set the injectDocumentDomain property to true in the component config when it is not an object literal', async () => {
+    addProjectConfiguration(tree, 'app1-e2e', {
+      root: 'apps/app1-e2e',
+      projectType: 'application',
+      targets: {},
+    });
+    tree.write(
+      'apps/app1-e2e/cypress.config.ts',
+      `import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
 });
 `
     );

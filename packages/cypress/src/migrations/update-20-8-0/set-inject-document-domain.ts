@@ -2,6 +2,7 @@ import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import type {
+  Expression,
   ObjectLiteralExpression,
   Printer,
   PropertyAssignment,
@@ -51,97 +52,136 @@ function setInjectDocumentDomain(cypressConfig: string): string {
   let componentProperty = getObjectProperty(config, 'component');
   let updatedConfig = config;
 
-  const experimentalSkipDomainInjectionProperty = getObjectProperty(
+  const topLevelExperimentalSkipDomainInjectionProperty = getObjectProperty(
     updatedConfig,
     'experimentalSkipDomainInjection'
   );
-  if (experimentalSkipDomainInjectionProperty) {
+  const topLevelSkipDomainState: 'not-set' | 'skipping' | 'not-skipping' =
+    !topLevelExperimentalSkipDomainInjectionProperty
+      ? 'not-set'
+      : !ts.isArrayLiteralExpression(
+          topLevelExperimentalSkipDomainInjectionProperty.initializer
+        ) ||
+        topLevelExperimentalSkipDomainInjectionProperty.initializer.elements
+          .length > 0
+      ? 'skipping'
+      : 'not-skipping';
+
+  let e2eSkipDomainState: 'not-set' | 'skipping' | 'not-skipping' = 'not-set';
+  if (e2eProperty) {
+    let experimentalSkipDomainInjectionProperty: PropertyAssignment | undefined;
+    let isObjectLiteral = false;
+    if (ts.isObjectLiteralExpression(e2eProperty.initializer)) {
+      experimentalSkipDomainInjectionProperty = getObjectProperty(
+        e2eProperty.initializer,
+        'experimentalSkipDomainInjection'
+      );
+      isObjectLiteral = true;
+    }
+
+    if (experimentalSkipDomainInjectionProperty) {
+      e2eSkipDomainState =
+        !ts.isArrayLiteralExpression(
+          experimentalSkipDomainInjectionProperty.initializer
+        ) ||
+        experimentalSkipDomainInjectionProperty.initializer.elements.length > 0
+          ? 'skipping'
+          : 'not-skipping';
+    }
+
+    if (
+      e2eSkipDomainState === 'not-set' &&
+      topLevelSkipDomainState === 'not-set'
+    ) {
+      updatedConfig = updateObjectProperty(updatedConfig, e2eProperty, {
+        newValue: setInjectDocumentDomainInObject(e2eProperty.initializer),
+      });
+    } else if (e2eSkipDomainState === 'not-skipping') {
+      updatedConfig = updateObjectProperty(updatedConfig, e2eProperty, {
+        newValue: replaceExperimentalSkipDomainInjectionInObject(
+          e2eProperty.initializer
+        ),
+      });
+    } else if (e2eSkipDomainState === 'skipping') {
+      updatedConfig = updateObjectProperty(updatedConfig, e2eProperty, {
+        newValue: removeObjectProperty(
+          // we only determine that it's skipping if it's an object literal
+          e2eProperty.initializer as ObjectLiteralExpression,
+          getObjectProperty(
+            e2eProperty.initializer as ObjectLiteralExpression,
+            'experimentalSkipDomainInjection'
+          )
+        ),
+      });
+    }
+  }
+
+  let componentSkipDomainState: 'not-set' | 'skipping' | 'not-skipping' =
+    'not-set';
+  if (componentProperty) {
+    let experimentalSkipDomainInjectionProperty: PropertyAssignment | undefined;
+    let isObjectLiteral = false;
+    if (ts.isObjectLiteralExpression(componentProperty.initializer)) {
+      experimentalSkipDomainInjectionProperty = getObjectProperty(
+        componentProperty.initializer,
+        'experimentalSkipDomainInjection'
+      );
+      isObjectLiteral = true;
+    }
+
+    if (experimentalSkipDomainInjectionProperty) {
+      componentSkipDomainState =
+        !ts.isArrayLiteralExpression(
+          experimentalSkipDomainInjectionProperty.initializer
+        ) ||
+        experimentalSkipDomainInjectionProperty.initializer.elements.length > 0
+          ? 'skipping'
+          : 'not-skipping';
+    }
+
+    if (
+      componentSkipDomainState === 'not-set' &&
+      topLevelSkipDomainState === 'not-set'
+    ) {
+      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
+        newValue: setInjectDocumentDomainInObject(
+          componentProperty.initializer
+        ),
+      });
+    } else if (componentSkipDomainState === 'not-skipping') {
+      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
+        newValue: replaceExperimentalSkipDomainInjectionInObject(
+          componentProperty.initializer
+        ),
+      });
+    } else if (componentSkipDomainState === 'skipping') {
+      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
+        newValue: removeObjectProperty(
+          // we only determine that it's skipping if it's an object literal
+          componentProperty.initializer as ObjectLiteralExpression,
+          getObjectProperty(
+            componentProperty.initializer as ObjectLiteralExpression,
+            'experimentalSkipDomainInjection'
+          )
+        ),
+      });
+    }
+  }
+
+  if (
+    topLevelSkipDomainState === 'not-set' &&
+    !e2eProperty &&
+    !componentProperty
+  ) {
+    updatedConfig = setInjectDocumentDomainInObject(updatedConfig);
+  } else if (topLevelSkipDomainState === 'not-skipping') {
+    updatedConfig =
+      replaceExperimentalSkipDomainInjectionInObject(updatedConfig);
+  } else if (topLevelSkipDomainState === 'skipping') {
     updatedConfig = removeObjectProperty(
       updatedConfig,
-      experimentalSkipDomainInjectionProperty
+      topLevelExperimentalSkipDomainInjectionProperty
     );
-  }
-  if (
-    (!experimentalSkipDomainInjectionProperty ||
-      !ts.isArrayLiteralExpression(
-        experimentalSkipDomainInjectionProperty.initializer
-      ) ||
-      !experimentalSkipDomainInjectionProperty.initializer.elements.length) &&
-    (!e2eProperty || !ts.isObjectLiteralExpression(e2eProperty.initializer)) &&
-    (!componentProperty ||
-      !ts.isObjectLiteralExpression(componentProperty.initializer))
-  ) {
-    // it's not set or it's set to an empty array and there are no e2e or
-    // component configs set to an object, so we set the injectDocumentDomain
-    // property to true
-    updatedConfig = setInjectDocumentDomainInObjectLiteral(updatedConfig);
-  }
-
-  if (e2eProperty && ts.isObjectLiteralExpression(e2eProperty.initializer)) {
-    const experimentalSkipDomainInjectionProperty = getObjectProperty(
-      e2eProperty.initializer,
-      'experimentalSkipDomainInjection'
-    );
-    if (experimentalSkipDomainInjectionProperty) {
-      const updatedE2eProperty = removeObjectProperty(
-        e2eProperty.initializer,
-        experimentalSkipDomainInjectionProperty
-      );
-      updatedConfig = updateObjectProperty(updatedConfig, e2eProperty, {
-        newValue: updatedE2eProperty,
-      });
-      e2eProperty = getObjectProperty(updatedConfig, 'e2e');
-    }
-
-    if (
-      !experimentalSkipDomainInjectionProperty ||
-      !ts.isArrayLiteralExpression(
-        experimentalSkipDomainInjectionProperty.initializer
-      ) ||
-      !experimentalSkipDomainInjectionProperty.initializer.elements.length
-    ) {
-      // it's not set or it's set to an empty array, so we set the
-      // injectDocumentDomain property to true
-      updatedConfig = setInjectDocumentDomainInObjectLiteral(
-        updatedConfig,
-        e2eProperty
-      );
-    }
-  }
-
-  if (
-    componentProperty &&
-    ts.isObjectLiteralExpression(componentProperty.initializer)
-  ) {
-    const experimentalSkipDomainInjectionProperty = getObjectProperty(
-      componentProperty.initializer,
-      'experimentalSkipDomainInjection'
-    );
-    if (experimentalSkipDomainInjectionProperty) {
-      const updatedComponentProperty = removeObjectProperty(
-        componentProperty.initializer,
-        experimentalSkipDomainInjectionProperty
-      );
-      updatedConfig = updateObjectProperty(updatedConfig, componentProperty, {
-        newValue: updatedComponentProperty,
-      });
-      componentProperty = getObjectProperty(updatedConfig, 'component');
-    }
-
-    if (
-      !experimentalSkipDomainInjectionProperty ||
-      !ts.isArrayLiteralExpression(
-        experimentalSkipDomainInjectionProperty.initializer
-      ) ||
-      !experimentalSkipDomainInjectionProperty.initializer.elements.length
-    ) {
-      // it's not set or it's set to an empty array, so we set the
-      // injectDocumentDomain property to true
-      updatedConfig = setInjectDocumentDomainInObjectLiteral(
-        updatedConfig,
-        componentProperty
-      );
-    }
   }
 
   return cypressConfig.replace(
@@ -150,46 +190,62 @@ function setInjectDocumentDomain(cypressConfig: string): string {
   );
 }
 
-function setInjectDocumentDomainInObjectLiteral(
-  config: ObjectLiteralExpression,
-  property?: PropertyAssignment
+function setInjectDocumentDomainInObject(
+  config: Expression
 ): ObjectLiteralExpression {
   let configToUpdate: ObjectLiteralExpression;
-  let isUpdatingProperty = false;
-  if (property && ts.isObjectLiteralExpression(property.initializer)) {
-    // if a property is provided and it's an object, update it
-    configToUpdate = property.initializer;
-    isUpdatingProperty = true;
-  } else {
-    // if no property is provided or it's not an object, update the top level
-    // config object
+  if (ts.isObjectLiteralExpression(config)) {
     configToUpdate = config;
+  } else {
+    // spread the current expression into a new object literal
+    configToUpdate = ts.factory.createObjectLiteralExpression([
+      ts.factory.createSpreadAssignment(config),
+    ]);
   }
 
-  const updatedObject = ts.factory.updateObjectLiteralExpression(
+  return ts.factory.updateObjectLiteralExpression(
     configToUpdate,
     ts.factory.createNodeArray([
       ...configToUpdate.properties,
-      ts.addSyntheticLeadingComment(
-        ts.addSyntheticLeadingComment(
-          ts.factory.createPropertyAssignment(
-            ts.factory.createIdentifier('injectDocumentDomain'),
-            ts.factory.createTrue()
-          ),
-          ts.SyntaxKind.SingleLineCommentTrivia,
-          ' Please ensure you use `cy.origin()` when navigating between domains and remove this option.'
-        ),
-        ts.SyntaxKind.SingleLineCommentTrivia,
-        ' See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin'
-      ),
+      getInjectDocumentDomainPropertyAssignment(),
     ])
   );
+}
 
-  if (isUpdatingProperty) {
-    return updateObjectProperty(config, property, {
-      newValue: updatedObject,
-    });
+function replaceExperimentalSkipDomainInjectionInObject(
+  config: Expression
+): ObjectLiteralExpression {
+  let configToUpdate: ObjectLiteralExpression;
+  if (ts.isObjectLiteralExpression(config)) {
+    configToUpdate = config;
+  } else {
+    // spread the current expression into a new object literal
+    configToUpdate = ts.factory.createObjectLiteralExpression([
+      ts.factory.createSpreadAssignment(config),
+    ]);
   }
 
-  return updatedObject;
+  return ts.factory.updateObjectLiteralExpression(
+    configToUpdate,
+    configToUpdate.properties.map((property) =>
+      property.name?.getText() === 'experimentalSkipDomainInjection'
+        ? getInjectDocumentDomainPropertyAssignment()
+        : property
+    )
+  );
+}
+
+function getInjectDocumentDomainPropertyAssignment(): PropertyAssignment {
+  return ts.addSyntheticLeadingComment(
+    ts.addSyntheticLeadingComment(
+      ts.factory.createPropertyAssignment(
+        ts.factory.createIdentifier('injectDocumentDomain'),
+        ts.factory.createTrue()
+      ),
+      ts.SyntaxKind.SingleLineCommentTrivia,
+      ' Please ensure you use `cy.origin()` when navigating between domains and remove this option.'
+    ),
+    ts.SyntaxKind.SingleLineCommentTrivia,
+    ' See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin'
+  );
 }
