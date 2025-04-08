@@ -18,7 +18,6 @@ use super::tui::Tui;
 use super::utils::initialize_panic_handler;
 
 #[napi(object)]
-#[derive(Clone, serde::Serialize)]
 pub struct TaskTarget {
     pub project: String,
     pub target: String,
@@ -36,7 +35,6 @@ impl From<TaskTarget> for RustTaskTarget {
 }
 
 #[napi(object)]
-#[derive(Clone, serde::Serialize)]
 pub struct TaskOverrides {}
 
 impl From<TaskOverrides> for RustTaskOverrides {
@@ -46,7 +44,6 @@ impl From<TaskOverrides> for RustTaskOverrides {
 }
 
 #[napi(object)]
-#[derive(Clone, serde::Serialize)]
 pub struct Task {
     pub id: String,
     pub target: TaskTarget,
@@ -83,14 +80,11 @@ impl From<Task> for RustTask {
 }
 
 #[napi(object)]
-#[derive(Clone)]
 pub struct TaskResult {
     pub task: Task,
     pub status: String,
     pub code: i32,
     pub terminal_output: Option<String>,
-    pub start_time: Option<i64>,
-    pub end_time: Option<i64>,
 }
 
 impl From<TaskResult> for RustTaskResult {

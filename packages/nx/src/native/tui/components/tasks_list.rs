@@ -14,6 +14,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::{any::Any, io};
 use vt100_ctt::Parser;
 
+use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crate::native::tui::utils::{is_cache_hit, normalize_newlines, sort_task_items};
 use crate::native::tui::{
     action::Action,
@@ -22,10 +23,6 @@ use crate::native::tui::{
     pty::PtyInstance,
     task::{Task, TaskResult},
     utils,
-};
-use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
-    tui::app::AppState,
 };
 
 use super::pagination::Pagination;
@@ -834,27 +831,6 @@ impl TasksList {
         self.selection_manager.update_entries(entries);
     }
 
-    /// Returns the count of running and remaining tasks.
-    /// Only considers tasks that match the current filter.
-    fn get_task_counts(&self) -> (usize, usize) {
-        let running = self
-            .tasks
-            .iter()
-            .filter(|t| {
-                self.filtered_names.contains(&t.name) && matches!(t.status, TaskStatus::InProgress)
-            })
-            .count();
-        let remaining = self
-            .tasks
-            .iter()
-            .filter(|t| {
-                self.filtered_names.contains(&t.name)
-                    && matches!(t.status, TaskStatus::InProgress | TaskStatus::NotStarted)
-            })
-            .count();
-        (running, remaining)
-    }
-
     /// Creates header cells for the task list table.
     /// Shows either filter input or task status based on current state.
     fn get_header_cells(&self, collapsed_mode: bool, narrow_viewport: bool) -> Vec<Cell> {
@@ -895,9 +871,6 @@ impl TasksList {
         } else {
             Color::Cyan
         };
-
-        // Show running tasks status (no longer showing filter in header)
-        let (running, remaining) = self.get_task_counts();
 
         // Leave first cell empty for the logo
         let status_cell = Cell::from("").style(status_style);
@@ -942,7 +915,7 @@ impl TasksList {
     }
 
     /// Updates their status to InProgress and triggers a sort.
-    pub fn start_tasks(&mut self, tasks: Vec<Task>, _app_state: &mut AppState) {
+    pub fn start_tasks(&mut self, tasks: Vec<Task>) {
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
                 task_item.update_status(TaskStatus::InProgress);
@@ -951,7 +924,7 @@ impl TasksList {
         self.sort_tasks();
     }
 
-    pub fn end_tasks(&mut self, task_results: Vec<TaskResult>, _app_state: &mut AppState) {
+    pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
         for task_result in task_results {
             if let Some(task) = self
                 .tasks
@@ -1051,7 +1024,7 @@ impl TasksList {
 }
 
 impl Component for TasksList {
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect, _app_state: &mut AppState) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
         let collapsed_mode = self.has_visible_panes();
 
         // Calculate the width for the task list
@@ -1117,7 +1090,7 @@ impl Component for TasksList {
 
             let table_area = chunks[0];
             let filter_area = chunks[1];
-            let empty_line = chunks[2]; // Empty line between filter and pagination
+
             let pagination_area = chunks[3]; // Bottom bar area - now contains the cloud message rendering
 
             // Reserve space for pagination and borders
@@ -1814,9 +1787,6 @@ impl Component for TasksList {
             // Create combined bottom bar with pagination on left and help text centered
             let pagination = Pagination::new(current_page, total_pages);
 
-            // Calculate how much space the pagination needs (with arrows)
-            let pagination_width = 20; // Increase width for pagination with arrows
-
             // Create help text component
             let help_text = HelpText::new(
                 collapsed_mode || self.cloud_message.is_some(),
@@ -2207,7 +2177,7 @@ impl Component for TasksList {
 
     /// Updates the component state in response to an action.
     /// Returns an optional follow-up action.
-    fn update(&mut self, action: Action, _app_state: &mut AppState) -> Result<Option<Action>> {
+    fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
             Action::Tick => {
                 self.throbber_counter = self.throbber_counter.wrapping_add(1);

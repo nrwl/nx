@@ -6,7 +6,6 @@ use crossterm::{
 };
 use futures::{FutureExt, StreamExt};
 use ratatui::backend::CrosstermBackend as Backend;
-use serde::{Deserialize, Serialize};
 use std::{
     ops::{Deref, DerefMut},
     time::Duration,
@@ -20,7 +19,7 @@ use tracing::debug;
 
 pub type Frame<'a> = ratatui::Frame<'a>;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug)]
 pub enum Event {
     Init,
     Quit,

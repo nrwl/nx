@@ -12,7 +12,7 @@ use ratatui::{
 use std::any::Any;
 use std::time::{Duration, Instant};
 
-use super::{AppState, Component};
+use super::Component;
 
 pub struct CountdownPopup {
     visible: bool,
@@ -282,7 +282,7 @@ impl Clone for CountdownPopup {
 }
 
 impl Component for CountdownPopup {
-    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect, _: &mut AppState) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
         }

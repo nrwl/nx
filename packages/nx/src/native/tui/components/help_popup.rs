@@ -10,8 +10,6 @@ use ratatui::{
 };
 use std::any::Any;
 
-use crate::native::tui::app::AppState;
-
 use super::{Component, Frame};
 
 pub struct HelpPopup {
@@ -332,7 +330,7 @@ impl Clone for HelpPopup {
 }
 
 impl Component for HelpPopup {
-    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect, _: &mut AppState) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
         }

@@ -7,7 +7,6 @@ use ratatui::style::Modifier;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Paragraph;
-use std::default::Default;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
@@ -29,14 +28,9 @@ use super::{
     tui,
 };
 
-#[derive(Default)]
-pub struct AppState {}
-
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
     pub quit_at: Option<std::time::Instant>,
-    pub last_tick_key_events: Vec<KeyEvent>,
-    state: AppState,
     focus: Focus,
     previous_focus: Focus,
     done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
@@ -72,9 +66,7 @@ impl App {
 
         Ok(Self {
             components,
-            state: Default::default(),
             quit_at: None,
-            last_tick_key_events: Vec::new(),
             focus,
             previous_focus: Focus::TaskList,
             done_callback: None,
@@ -99,7 +91,7 @@ impl App {
             .iter_mut()
             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
         {
-            tasks_list.start_tasks(tasks, &mut self.state);
+            tasks_list.start_tasks(tasks);
         }
     }
 
@@ -135,7 +127,7 @@ impl App {
             .iter_mut()
             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
         {
-            tasks_list.end_tasks(task_results, &mut self.state);
+            tasks_list.end_tasks(task_results);
         }
     }
 
@@ -144,22 +136,6 @@ impl App {
         // If the user has interacted with the app, or auto-exit is disabled, do nothing
         if self.user_has_interacted || !self.tui_config.auto_exit.should_exit_automatically() {
             return;
-        }
-
-        // First, ensure the help popup is hidden
-        if let Some(help_popup) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
-        {
-            help_popup.set_visible(false);
-            // Set the focus back to the previous state before the help popup, in case the user escapes out of the countdown popup
-            self.focus = self.previous_focus;
-        }
-
-        // Make sure all components are updated with the current state
-        for component in self.components.iter_mut() {
-            let _ = component.update(Action::Render, &mut self.state);
         }
 
         let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
@@ -569,12 +545,9 @@ impl App {
         action_tx: &UnboundedSender<Action>,
     ) {
         if action != Action::Tick && action != Action::Render {
-            log::debug!("{action:?}");
+            debug!("{action:?}");
         }
         match action {
-            Action::Tick => {
-                self.last_tick_key_events.drain(..);
-            }
             // Quit immediately
             Action::Quit => self.quit_at = Some(std::time::Instant::now()),
             // Cancel quitting
@@ -604,7 +577,7 @@ impl App {
                 }
                 tui.draw(|f| {
                     for component in self.components.iter_mut() {
-                        let r = component.draw(f, f.area(), &mut self.state);
+                        let r = component.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
                                 .send(Action::Error(format!("Failed to draw: {:?}", e)))
@@ -662,7 +635,7 @@ impl App {
                             tasks_list.set_dimmed(matches!(current_focus, Focus::HelpPopup | Focus::CountdownPopup));
                             tasks_list.set_focus(current_focus);
                         }
-                        let r = component.draw(f, f.area(), &mut self.state);
+                        let r = component.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
                                 .send(Action::Error(format!("Failed to draw: {:?}", e)))
@@ -676,7 +649,7 @@ impl App {
 
         // Update components
         for component in self.components.iter_mut() {
-            if let Ok(Some(new_action)) = component.update(action.clone(), &mut self.state) {
+            if let Ok(Some(new_action)) = component.update(action.clone()) {
                 action_tx.send(new_action).ok();
             }
         }

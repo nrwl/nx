@@ -11,7 +11,6 @@ use std::io::stdout;
 use std::sync::{Mutex, RwLock};
 use std::{
     collections::HashMap,
-    env,
     io::{Read, Write},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -147,7 +146,7 @@ impl PseudoTerminal {
                             let _ = stdout.flush();
                         }
                     } else {
-                        println!("Failed to lock parser");
+                        debug!("Failed to lock parser");
                     }
                 }
                 if !running_clone.load(Ordering::SeqCst) {
@@ -167,10 +166,6 @@ impl PseudoTerminal {
             printing_rx,
             is_within_nx_tui,
         })
-    }
-
-    pub fn get_parser_clone(&self) -> Arc<RwLock<Parser>> {
-        self.parser.clone()
     }
 
     pub fn default() -> Result<PseudoTerminal> {
@@ -293,7 +288,7 @@ fn get_directory(command_dir: Option<String>) -> anyhow::Result<String> {
     }
 }
 
-pub fn command_builder() -> CommandBuilder {
+fn command_builder() -> CommandBuilder {
     if cfg!(windows) {
         let comspec = std::env::var("COMSPEC");
         let shell = comspec
