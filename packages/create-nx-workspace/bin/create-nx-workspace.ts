@@ -69,7 +69,7 @@ interface AngularArguments extends BaseArguments {
   standaloneApi: boolean;
   unitTestRunner: 'none' | 'jest' | 'vitest';
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
-  bundler: 'webpack' | 'rspack' | 'esbuild';
+  bundler: 'webpack' | 'esbuild';
   ssr: boolean;
   serverRouting: boolean;
   prefix: string;
@@ -869,7 +869,7 @@ async function determineAngularOptions(
   let appName: string;
   let unitTestRunner: undefined | 'none' | 'jest' | 'vitest' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let bundler: undefined | 'webpack' | 'rspack' | 'esbuild' = undefined;
+  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
   let ssr: undefined | boolean = undefined;
   let serverRouting: undefined | boolean = undefined;
 
@@ -928,10 +928,6 @@ async function determineAngularOptions(
           {
             name: 'esbuild',
             message: 'esbuild [ https://esbuild.github.io/ ]',
-          },
-          {
-            name: 'rspack',
-            message: 'Rspack [ https://rspack.dev/ ]',
           },
           {
             name: 'webpack',
