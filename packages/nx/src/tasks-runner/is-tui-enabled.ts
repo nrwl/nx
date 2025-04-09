@@ -9,9 +9,13 @@ export function isTuiEnabled(nxJson?: NxJsonConfiguration) {
   }
 
   // If the current terminal/environment is not capable of displaying the TUI, we don't run it
+  const isWindows = process.platform === 'win32';
   const isCapable = process.stderr.isTTY && isUnicodeSupported();
-  if (!isCapable) {
+  // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
+  // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
+  if (!isCapable || isWindows) {
     tuiEnabled = false;
+    process.env.NX_TUI = 'false';
     return tuiEnabled;
   }
 
@@ -21,22 +25,17 @@ export function isTuiEnabled(nxJson?: NxJsonConfiguration) {
     return tuiEnabled;
   }
 
-  // Only read from disk if nx.json config is not already provided (and we have been able to determine tuiEnabled based on the above checks)
+  // Only read from disk if nx.json config is not already provided (and we have not been able to determine tuiEnabled based on the above checks)
   if (!nxJson) {
     nxJson = readNxJsonFromDisk();
   }
-  // Enabled by default
-  const defaultEnabled = true;
+
+  // Respect user config
   if (typeof nxJson.tui?.enabled === 'boolean') {
-    // Windows is not working well right now, disable it on Windows even if nx.json has tui.enabled === true.
-    // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
-    if (process.platform !== 'win32') {
-      tuiEnabled = Boolean(nxJson.tui?.enabled);
-    } else {
-      tuiEnabled = defaultEnabled;
-    }
+    tuiEnabled = Boolean(nxJson.tui?.enabled);
   } else {
-    tuiEnabled = defaultEnabled;
+    // Default to enabling the TUI if the system is capable of displaying it
+    tuiEnabled = true;
   }
 
   // Also set the environment variable for consistency and ease of checking on the rust side, for example

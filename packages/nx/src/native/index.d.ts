@@ -13,7 +13,7 @@ export declare class AppLifeCycle {
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void
-  endTasks(taskResults: Array<TaskResult>, metadata: TaskMetadata): void
+  endTasks(taskResults: Array<TaskResult>, metadata: object): void
   endCommand(): void
   __init(doneCallback: () => any): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
@@ -279,19 +279,8 @@ export interface Task {
   target: TaskTarget
   outputs: Array<string>
   projectRoot?: string
-}
-
-export interface Task {
-  id: string
-  target: TaskTarget
-  overrides: any
-  outputs: Array<string>
-  projectRoot?: string
-  hash?: string
   startTime?: number
   endTime?: number
-  cache?: boolean
-  parallelism: boolean
   continuous?: boolean
 }
 
@@ -299,14 +288,6 @@ export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
-}
-
-export interface TaskMetadata {
-  groupId: number
-}
-
-export interface TaskOverrides {
-
 }
 
 export interface TaskResult {
@@ -322,12 +303,6 @@ export interface TaskRun {
   code: number
   start: number
   end: number
-}
-
-export interface TaskTarget {
-  project: string
-  target: string
-  configuration?: string
 }
 
 export interface TaskTarget {

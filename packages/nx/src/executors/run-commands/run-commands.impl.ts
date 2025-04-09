@@ -334,50 +334,6 @@ function filterPropKeysFromUnParsedOptions(
   return parsedOptions;
 }
 
-let registered = false;
-
-export function registerProcessListener(
-  runningTask: PseudoTtyProcess | ParallelRunningTasks | SeriallyRunningTasks,
-  pseudoTerminal?: PseudoTerminal
-) {
-  if (registered) {
-    return;
-  }
-
-  registered = true;
-  // When the nx process gets a message, it will be sent into the task's process
-  process.on('message', (message: Serializable) => {
-    // this.publisher.publish(message.toString());
-    if (pseudoTerminal) {
-      pseudoTerminal.sendMessageToChildren(message);
-    }
-
-    if ('send' in runningTask) {
-      runningTask.send(message);
-    }
-  });
-
-  // Terminate any task processes on exit
-  process.on('exit', () => {
-    runningTask.kill();
-  });
-  process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
-  });
-  process.on('SIGTERM', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-  process.on('SIGHUP', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-}
-
 function wrapArgIntoQuotesIfNeeded(arg: string): string {
   if (arg.includes('=')) {
     const [key, value] = arg.split('=');

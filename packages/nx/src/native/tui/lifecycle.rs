@@ -6,102 +6,12 @@ use tracing::debug;
 
 use crate::native::logger::enable_logger;
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::tasks::types::{Task, TaskResult};
 
 use super::app::App;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
-use super::task::{
-    Task as RustTask, TaskOverrides as RustTaskOverrides, TaskResult as RustTaskResult,
-    TaskTarget as RustTaskTarget,
-};
 use super::tui::Tui;
-
-#[napi(object)]
-pub struct TaskTarget {
-    pub project: String,
-    pub target: String,
-    pub configuration: Option<String>,
-}
-
-impl From<TaskTarget> for RustTaskTarget {
-    fn from(js: TaskTarget) -> Self {
-        Self {
-            project: js.project,
-            target: js.target,
-            configuration: js.configuration,
-        }
-    }
-}
-
-#[napi(object)]
-pub struct TaskOverrides {}
-
-impl From<TaskOverrides> for RustTaskOverrides {
-    fn from(_js: TaskOverrides) -> Self {
-        Self {}
-    }
-}
-
-#[napi(object)]
-pub struct Task {
-    pub id: String,
-    pub target: TaskTarget,
-    #[napi(ts_type = "any")]
-    pub overrides: TaskOverrides,
-    pub outputs: Vec<String>,
-    pub project_root: Option<String>,
-    pub hash: Option<String>,
-    #[napi(js_name = "startTime")]
-    pub start_time: Option<f64>,
-    #[napi(js_name = "endTime")]
-    pub end_time: Option<f64>,
-    pub cache: Option<bool>,
-    pub parallelism: bool,
-    pub continuous: Option<bool>,
-}
-
-impl From<Task> for RustTask {
-    fn from(js: Task) -> Self {
-        Self {
-            id: js.id,
-            target: js.target.into(),
-            overrides: js.overrides.into(),
-            outputs: js.outputs,
-            project_root: js.project_root,
-            hash: js.hash,
-            start_time: js.start_time,
-            end_time: js.end_time,
-            cache: js.cache,
-            parallelism: js.parallelism,
-            continuous: js.continuous,
-        }
-    }
-}
-
-#[napi(object)]
-pub struct TaskResult {
-    pub task: Task,
-    pub status: String,
-    pub code: i32,
-    pub terminal_output: Option<String>,
-}
-
-impl From<TaskResult> for RustTaskResult {
-    fn from(js: TaskResult) -> Self {
-        Self {
-            task: js.task.into(),
-            status: js.status.parse().unwrap(),
-            code: js.code,
-            terminal_output: js.terminal_output,
-        }
-    }
-}
-
-#[napi(object)]
-#[derive(Clone)]
-pub struct TaskMetadata {
-    pub group_id: i32,
-}
 
 #[napi(object)]
 #[derive(Clone)]
@@ -195,7 +105,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: JsObject) -> napi::Result<()> {
         if let Ok(mut app) = self.app.lock() {
-            app.start_tasks(tasks.into_iter().map(|t| t.into()).collect());
+            app.start_tasks(tasks);
         }
         Ok(())
     }
@@ -217,10 +127,10 @@ impl AppLifeCycle {
     pub fn end_tasks(
         &mut self,
         task_results: Vec<TaskResult>,
-        _metadata: TaskMetadata,
+        _metadata: JsObject,
     ) -> napi::Result<()> {
         if let Ok(mut app) = self.app.lock() {
-            app.end_tasks(task_results.into_iter().map(|r| r.into()).collect());
+            app.end_tasks(task_results);
         }
         Ok(())
     }

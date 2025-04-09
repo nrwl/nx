@@ -14,15 +14,13 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::{any::Any, io};
 use vt100_ctt::Parser;
 
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crate::native::tui::utils::{is_cache_hit, normalize_newlines, sort_task_items};
 use crate::native::tui::{
-    action::Action,
-    app::Focus,
-    components::Component,
-    pty::PtyInstance,
-    task::{Task, TaskResult},
-    utils,
+    action::Action, app::Focus, components::Component, pty::PtyInstance, utils,
+};
+use crate::native::{
+    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    tasks::types::{Task, TaskResult},
 };
 
 use super::pagination::Pagination;

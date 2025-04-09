@@ -12,10 +12,10 @@ use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
 
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::tasks::types::{Task, TaskResult};
 use crate::native::tui::tui::Tui;
 
 use super::config::TuiConfig;
-use super::task::{Task, TaskResult};
 use super::utils::is_cache_hit;
 use super::{
     action::Action,

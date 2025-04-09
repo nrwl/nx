@@ -151,10 +151,10 @@ export class CompositeLifeCycle implements LifeCycle {
   async registerRunningTask(
     taskId: string,
     parserAndWriter: ExternalObject<any>
-  ): Promise<RustRunningTask> {
+  ): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
-        return await l.registerRunningTask(taskId, parserAndWriter);
+        await l.registerRunningTask(taskId, parserAndWriter);
       }
     }
   }
