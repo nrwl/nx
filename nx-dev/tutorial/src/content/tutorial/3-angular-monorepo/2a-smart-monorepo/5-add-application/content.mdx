@@ -1,0 +1,44 @@
+---
+type: lesson
+title: Add an Application
+---
+
+## Add Another Application
+
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=182"></VideoLink> */}
+
+Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
+
+```shell
+npx nx list @nx/angular
+```
+
+:::info
+
+#### Prefer a more visual UI?
+
+If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
+
+More info can be found in [the integrate with editors article](/getting-started/editor-setup).
+:::
+
+Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
+
+```shell
+npx nx g @nx/angular:app apps/inventory --dry-run
+```
+
+```
+NX  Generating @nx/angular:application
+
+✔ Which bundler do you want to use to build the application? · esbuild
+✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? (y/N) · false
+```
+
+As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
+
+```shell
+npx nx g @nx/angular:app apps/inventory
+```
