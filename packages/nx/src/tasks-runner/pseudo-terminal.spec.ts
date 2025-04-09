@@ -46,7 +46,6 @@ describe('PseudoTerminal', () => {
     });
   });
 
-
   if (process.env.CI !== 'true') {
     it('should be tty', (done) => {
       const childProcess = terminal.runCommand(
