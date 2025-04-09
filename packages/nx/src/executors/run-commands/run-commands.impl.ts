@@ -1,12 +1,18 @@
 import { Serializable } from 'child_process';
 import * as yargsParser from 'yargs-parser';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { isTuiEnabled } from '../../tasks-runner/is-tui-enabled';
 import {
-  getPseudoTerminal,
+  createPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
 import { signalToCode } from '../../utils/exit-codes';
-import { ParallelRunningTasks, SeriallyRunningTasks } from './running-tasks';
+import {
+  ParallelRunningTasks,
+  runSingleCommandWithPseudoTerminal,
+  SeriallyRunningTasks,
+} from './running-tasks';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {
@@ -65,10 +71,7 @@ const propKeys = [
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
-  commands: {
-    command: string;
-    forwardAllArgs?: boolean;
-  }[];
+  commands: Array<RunCommandsCommandOptions>;
   unknownOptions?: {
     [k: string]: any;
   };
@@ -120,17 +123,26 @@ export async function runCommands(
     );
   }
 
-  const pseudoTerminal =
-    !options.parallel && PseudoTerminal.isSupported()
-      ? getPseudoTerminal()
-      : null;
+  const isSingleCommand = normalized.commands.length === 1;
+
+  const usePseudoTerminal =
+    (isSingleCommand || !options.parallel) && PseudoTerminal.isSupported();
+
+  const isSingleCommandAndCanUsePseudoTerminal =
+    isSingleCommand &&
+    usePseudoTerminal &&
+    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    !normalized.commands[0].prefix &&
+    normalized.usePty;
+
+  const tuiEnabled = isTuiEnabled();
 
   try {
-    const runningTask = options.parallel
-      ? new ParallelRunningTasks(normalized, context)
-      : new SeriallyRunningTasks(normalized, context, pseudoTerminal);
-
-    registerProcessListener(runningTask, pseudoTerminal);
+    const runningTask = isSingleCommandAndCanUsePseudoTerminal
+      ? await runSingleCommandWithPseudoTerminal(normalized, context)
+      : options.parallel
+      ? new ParallelRunningTasks(normalized, context, tuiEnabled)
+      : new SeriallyRunningTasks(normalized, context, tuiEnabled);
     return runningTask;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -320,48 +332,6 @@ function filterPropKeysFromUnParsedOptions(
     }
   }
   return parsedOptions;
-}
-
-let registered = false;
-
-function registerProcessListener(
-  runningTask: ParallelRunningTasks | SeriallyRunningTasks,
-  pseudoTerminal?: PseudoTerminal
-) {
-  if (registered) {
-    return;
-  }
-
-  registered = true;
-  // When the nx process gets a message, it will be sent into the task's process
-  process.on('message', (message: Serializable) => {
-    // this.publisher.publish(message.toString());
-    if (pseudoTerminal) {
-      pseudoTerminal.sendMessageToChildren(message);
-    }
-
-    runningTask.send(message);
-  });
-
-  // Terminate any task processes on exit
-  process.on('exit', () => {
-    runningTask.kill();
-  });
-  process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
-  });
-  process.on('SIGTERM', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-  process.on('SIGHUP', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
 }
 
 function wrapArgIntoQuotesIfNeeded(arg: string): string {

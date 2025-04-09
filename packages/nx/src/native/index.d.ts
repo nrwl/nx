@@ -7,7 +7,21 @@ export declare class ExternalObject<T> {
     [K: symbol]: T
   }
 }
+export declare class AppLifeCycle {
+  constructor(tasks: Array<Task>, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string)
+  startCommand(threadCount?: number | undefined | null): void
+  scheduleTask(task: Task): void
+  startTasks(tasks: Array<Task>, metadata: object): void
+  printTaskTerminalOutput(task: Task, status: string, output: string): void
+  endTasks(taskResults: Array<TaskResult>, metadata: object): void
+  endCommand(): void
+  __init(doneCallback: () => any): void
+  registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  __setCloudMessage(message: string): Promise<void>
+}
+
 export declare class ChildProcess {
+  getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   kill(): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
@@ -251,6 +265,8 @@ export interface ProjectGraph {
 
 export declare export declare function remove(src: string): void
 
+export declare export declare function restoreTerminal(): void
+
 export interface RuntimeInput {
   runtime: string
 }
@@ -269,12 +285,22 @@ export interface Task {
   target: TaskTarget
   outputs: Array<string>
   projectRoot?: string
+  startTime?: number
+  endTime?: number
+  continuous?: boolean
 }
 
 export interface TaskGraph {
   roots: Array<string>
   tasks: Record<string, Task>
   dependencies: Record<string, Array<string>>
+}
+
+export interface TaskResult {
+  task: Task
+  status: string
+  code: number
+  terminalOutput?: string
 }
 
 export interface TaskRun {
@@ -298,6 +324,15 @@ export declare export declare function testOnlyTransferFileMap(projectFiles: Rec
  * This wont be needed once the project graph is created in Rust
  */
 export declare export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+
+export interface TuiCliArgs {
+  targets?: string[] | undefined
+  tuiAutoExit?: boolean | number | undefined
+}
+
+export interface TuiConfig {
+  autoExit?: boolean | number | undefined
+}
 
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap

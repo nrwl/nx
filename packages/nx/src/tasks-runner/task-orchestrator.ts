@@ -1,13 +1,35 @@
 import { defaultMaxListeners } from 'events';
-import { performance } from 'perf_hooks';
-import { relative } from 'path';
 import { writeFileSync } from 'fs';
-import { TaskHasher } from '../hasher/task-hasher';
+import { relative } from 'path';
+import { performance } from 'perf_hooks';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { ProjectGraph } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
+import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
-import { ForkedProcessTaskRunner } from './forked-process-task-runner';
+import { getTaskDetails, hashTask } from '../hasher/hash-task';
+import { TaskHasher } from '../hasher/task-hasher';
+import { RunningTasksService, TaskDetails } from '../native';
+import { NxArgs } from '../utils/command-line-utils';
+import { getDbConnection } from '../utils/db-connection';
+import { output } from '../utils/output';
+import { combineOptionsForExecutor } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
 import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { ForkedProcessTaskRunner } from './forked-process-task-runner';
+import { isTuiEnabled } from './is-tui-enabled';
+import { TaskMetadata } from './life-cycle';
+import { PseudoTtyProcess } from './pseudo-terminal';
+import { NoopChildProcess } from './running-tasks/noop-child-process';
+import { RunningTask } from './running-tasks/running-task';
+import {
+  getEnvVariablesForBatchProcess,
+  getEnvVariablesForTask,
+  getTaskSpecificEnv,
+} from './task-env';
 import { TaskStatus } from './tasks-runner';
+import { Batch, TasksSchedule } from './tasks-schedule';
 import {
   calculateReverseDeps,
   getExecutorForTask,
@@ -17,31 +39,15 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
-import { Batch, TasksSchedule } from './tasks-schedule';
-import { TaskMetadata } from './life-cycle';
-import { ProjectGraph } from '../config/project-graph';
-import { Task, TaskGraph } from '../config/task-graph';
-import { DaemonClient } from '../daemon/client/client';
-import { getTaskDetails, hashTask } from '../hasher/hash-task';
-import {
-  getEnvVariablesForBatchProcess,
-  getEnvVariablesForTask,
-  getTaskSpecificEnv,
-} from './task-env';
-import { workspaceRoot } from '../utils/workspace-root';
-import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { RunningTasksService, type TaskDetails } from '../native';
-import { NoopChildProcess } from './running-tasks/noop-child-process';
-import { RunningTask } from './running-tasks/running-task';
-import { NxArgs } from '../utils/command-line-utils';
-import { getDbConnection } from '../utils/db-connection';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
-  private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
+  private readonly tuiEnabled = isTuiEnabled(this.nxJson);
+  private forkedProcessTaskRunner = new ForkedProcessTaskRunner(
+    this.options,
+    this.tuiEnabled
+  );
 
   private runningTasksService = new RunningTasksService(getDbConnection());
   private tasksSchedule = new TasksSchedule(
@@ -72,6 +78,7 @@ export class TaskOrchestrator {
   private runningContinuousTasks = new Map<string, RunningTask>();
 
   private cleaningUp = false;
+
   // endregion internal state
 
   constructor(
@@ -81,6 +88,7 @@ export class TaskOrchestrator {
     private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: NxArgs & DefaultTasksRunnerOptions,
+    private readonly threadCount: number,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
     private readonly outputStyle: string
@@ -99,17 +107,13 @@ export class TaskOrchestrator {
 
     performance.mark('task-execution:start');
 
-    const threadCount =
-      this.options.parallel +
-      Object.values(this.taskGraph.tasks).filter((t) => t.continuous).length;
-
     const threads = [];
 
-    process.stdout.setMaxListeners(threadCount + defaultMaxListeners);
-    process.stderr.setMaxListeners(threadCount + defaultMaxListeners);
+    process.stdout.setMaxListeners(this.threadCount + defaultMaxListeners);
+    process.stderr.setMaxListeners(this.threadCount + defaultMaxListeners);
 
     // initial seeding of the queue
-    for (let i = 0; i < threadCount; ++i) {
+    for (let i = 0; i < this.threadCount; ++i) {
       threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
     }
     await Promise.all(threads);
@@ -459,7 +463,6 @@ export class TaskOrchestrator {
     ) {
       try {
         const { schema } = getExecutorForTask(task, this.projectGraph);
-        const isRunOne = this.initiatingProject != null;
         const combinedOptions = combineOptionsForExecutor(
           task.overrides,
           task.target.configuration ?? targetConfiguration.defaultConfiguration,
@@ -479,31 +482,54 @@ export class TaskOrchestrator {
           const args = getPrintableCommandArgsForTask(task);
           output.logCommand(args.join(' '));
         }
-        const runningTask = await runCommands(
-          {
-            ...combinedOptions,
-            env,
-            usePty:
-              isRunOne &&
-              !this.tasksSchedule.hasTasks() &&
-              this.runningContinuousTasks.size === 0,
-            streamOutput,
-          },
-          {
-            root: workspaceRoot, // only root is needed in runCommands
-          } as any
-        );
+        const runCommandsOptions = {
+          ...combinedOptions,
+          env,
+          usePty:
+            this.tuiEnabled ||
+            (!this.tasksSchedule.hasTasks() &&
+              this.runningContinuousTasks.size === 0),
+          streamOutput,
+        };
 
-        runningTask.onExit((code, terminalOutput) => {
-          if (!streamOutput) {
-            this.options.lifeCycle.printTaskTerminalOutput(
-              task,
-              code === 0 ? 'success' : 'failure',
-              terminalOutput
-            );
-            writeFileSync(temporaryOutputPath, terminalOutput);
+        const runningTask = await runCommands(runCommandsOptions, {
+          root: workspaceRoot, // only root is needed in runCommands
+        } as any);
+
+        if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
+          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+          this.options.lifeCycle.registerRunningTask(
+            task.id,
+            runningTask.getParserAndWriter()
+          );
+        }
+
+        if (!streamOutput) {
+          if (runningTask instanceof PseudoTtyProcess) {
+            // TODO: shouldn't this be checking if the task is continuous before writing anything to disk or calling printTaskTerminalOutput?
+            let terminalOutput = '';
+            runningTask.onOutput((data) => {
+              terminalOutput += data;
+            });
+            runningTask.onExit((code) => {
+              this.options.lifeCycle.printTaskTerminalOutput(
+                task,
+                code === 0 ? 'success' : 'failure',
+                terminalOutput
+              );
+              writeFileSync(temporaryOutputPath, terminalOutput);
+            });
+          } else {
+            runningTask.onExit((code, terminalOutput) => {
+              this.options.lifeCycle.printTaskTerminalOutput(
+                task,
+                code === 0 ? 'success' : 'failure',
+                terminalOutput
+              );
+              writeFileSync(temporaryOutputPath, terminalOutput);
+            });
           }
-        });
+        }
 
         return runningTask;
       } catch (e) {
@@ -514,6 +540,10 @@ export class TaskOrchestrator {
         }
         const terminalOutput = e.stack ?? e.message ?? '';
         writeFileSync(temporaryOutputPath, terminalOutput);
+        return new NoopChildProcess({
+          code: 1,
+          terminalOutput,
+        });
       }
     } else if (targetConfiguration.executor === 'nx:noop') {
       writeFileSync(temporaryOutputPath, '');
@@ -523,13 +553,23 @@ export class TaskOrchestrator {
       });
     } else {
       // cache prep
-      return await this.runTaskInForkedProcess(
+      const runningTask = await this.runTaskInForkedProcess(
         task,
         env,
         pipeOutput,
         temporaryOutputPath,
         streamOutput
       );
+
+      if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
+        // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+        this.options.lifeCycle.registerRunningTask(
+          task.id,
+          runningTask.getParserAndWriter()
+        );
+      }
+
+      return runningTask;
     }
   }
 
@@ -544,7 +584,8 @@ export class TaskOrchestrator {
       const usePtyFork = process.env.NX_NATIVE_COMMAND_RUNNER !== 'false';
 
       // Disable the pseudo terminal if this is a run-many or when running a continuous task as part of a run-one
-      const disablePseudoTerminal = !this.initiatingProject || task.continuous;
+      const disablePseudoTerminal =
+        !this.tuiEnabled && (!this.initiatingProject || task.continuous);
       // execution
       const childProcess = usePtyFork
         ? await this.forkedProcessTaskRunner.forkProcess(task, {
