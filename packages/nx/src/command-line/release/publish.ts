@@ -261,7 +261,9 @@ async function runPublishOnProjects(
 
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
+   * NOTE: Force TUI to be disabled for now.
    */
+  process.env.NX_TUI = 'false';
   const commandResults = await runCommandForTasks(
     projectsWithTarget,
     projectGraph,
