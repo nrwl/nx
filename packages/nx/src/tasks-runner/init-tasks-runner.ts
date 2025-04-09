@@ -1,4 +1,4 @@
-import { readNxJson } from '../config/configuration';
+import { readNxJson } from '../config/nx-json';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -13,14 +13,17 @@ import { getOutputs } from './utils';
 import { loadRootEnvFiles } from '../utils/dotenv';
 import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
-import { getTaskDetails } from '../hasher/hash-task';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import type { ProjectGraph } from '../config/project-graph';
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
-import { TaskResultsLifeCycle } from 'nx/src/tasks-runner/life-cycles/task-results-life-cycle';
+import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
+/**
+ * This function is deprecated. Do not use this
+ * @deprecated This function is deprecated. Do not use this
+ */
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
   loadRootEnvFiles();
@@ -142,6 +145,8 @@ async function createOrchestrator(
     taskGraphForHashing
   );
 
+  await orchestrator.init();
+
   await Promise.all(tasks.map((task) => orchestrator.processTask(task.id)));
 
   return orchestrator;
@@ -161,8 +166,8 @@ export async function runDiscreteTasks(
     nxJson,
     lifeCycle
   );
-  return tasks.map((task) =>
-    orchestrator.applyFromCacheOrRunTask(true, task, 0)
+  return tasks.map((task, index) =>
+    orchestrator.applyFromCacheOrRunTask(true, task, index)
   );
 }
 
@@ -180,8 +185,8 @@ export async function runContinuousTasks(
     nxJson,
     lifeCycle
   );
-  return tasks.reduce((current, task) => {
-    current[task.id] = orchestrator.startContinuousTask(task, 0);
+  return tasks.reduce((current, task, index) => {
+    current[task.id] = orchestrator.startContinuousTask(task, index);
     return current;
   }, {} as Record<string, Promise<RunningTask>>);
 }

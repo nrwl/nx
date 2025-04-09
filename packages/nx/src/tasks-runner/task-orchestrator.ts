@@ -94,13 +94,17 @@ export class TaskOrchestrator {
     private readonly taskGraphForHashing: TaskGraph = taskGraph
   ) {}
 
-  async run() {
+  async init() {
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
       this.tasksSchedule.init(),
       'init' in this.cache ? this.cache.init() : null,
     ]);
+  }
+
+  async run() {
+    await this.init();
 
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
