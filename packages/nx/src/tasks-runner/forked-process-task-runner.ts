@@ -8,11 +8,7 @@ import { join } from 'path';
 import { BatchMessageType } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
-import {
-  getPseudoTerminal,
-  PseudoTerminal,
-  PseudoTtyProcess,
-} from './pseudo-terminal';
+import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
 import { signalToCode } from '../utils/exit-codes';
 import { ProjectGraph } from '../config/project-graph';
 import {
@@ -21,6 +17,7 @@ import {
 } from './running-tasks/node-child-process';
 import { BatchProcess } from './running-tasks/batch-process';
 import { RunningTask } from './running-tasks/running-task';
+import { RustPseudoTerminal } from '../native';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -32,17 +29,14 @@ export class ForkedProcessTaskRunner {
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<RunningTask | BatchProcess>();
   private finishedProcesses = new Set<BatchProcess>();
+  private pseudoTerminals = new Set<PseudoTerminal>();
 
-  private pseudoTerminal: PseudoTerminal | null = PseudoTerminal.isSupported()
-    ? getPseudoTerminal()
-    : null;
-
-  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+  constructor(
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly tuiEnabled: boolean
+  ) {}
 
   async init() {
-    if (this.pseudoTerminal) {
-      await this.pseudoTerminal.init();
-    }
     this.setupProcessEventListeners();
   }
 
@@ -148,30 +142,43 @@ export class ForkedProcessTaskRunner {
     }
   ): Promise<RunningTask | PseudoTtyProcess> {
     const shouldPrefix =
-      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+      streamOutput &&
+      process.env.NX_PREFIX_OUTPUT === 'true' &&
+      !this.tuiEnabled;
 
     // streamOutput would be false if we are running multiple targets
     // there's no point in running the commands in a pty if we are not streaming the output
     if (
-      !this.pseudoTerminal ||
-      disablePseudoTerminal ||
-      !streamOutput ||
-      shouldPrefix
+      PseudoTerminal.isSupported() &&
+      !disablePseudoTerminal &&
+      (this.tuiEnabled || (streamOutput && !shouldPrefix))
     ) {
-      return this.forkProcessWithPrefixAndNotTTY(task, {
-        temporaryOutputPath,
-        streamOutput,
-        taskGraph,
-        env,
-      });
-    } else {
       return this.forkProcessWithPseudoTerminal(task, {
         temporaryOutputPath,
         streamOutput,
         taskGraph,
         env,
       });
+    } else {
+      return this.forkProcessWithPrefixAndNotTTY(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
     }
+  }
+
+  private async createPseudoTerminal() {
+    const terminal = new PseudoTerminal(new RustPseudoTerminal());
+
+    await terminal.init();
+
+    terminal.onMessageFromChildren((message: Serializable) => {
+      process.send(message);
+    });
+
+    return terminal;
   }
 
   private async forkProcessWithPseudoTerminal(
@@ -188,13 +195,10 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
     }
   ): Promise<PseudoTtyProcess> {
-    const args = getPrintableCommandArgsForTask(task);
-    if (streamOutput) {
-      output.logCommand(args.join(' '));
-    }
-
     const childId = task.id;
-    const p = await this.pseudoTerminal.fork(childId, forkScript, {
+    const pseudoTerminal = await this.createPseudoTerminal();
+    this.pseudoTerminals.add(pseudoTerminal);
+    const p = await pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
       execArgv: process.execArgv,
       jsEnv: env,
@@ -218,6 +222,7 @@ export class ForkedProcessTaskRunner {
       if (code > 128) {
         process.exit(code);
       }
+      this.pseudoTerminals.delete(pseudoTerminal);
       this.processes.delete(p);
       this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
     });
@@ -355,16 +360,10 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
-    if (this.pseudoTerminal) {
-      this.pseudoTerminal.onMessageFromChildren((message: Serializable) => {
-        process.send(message);
-      });
-    }
-
     const messageHandler = (message: Serializable) => {
-      if (this.pseudoTerminal) {
-        this.pseudoTerminal.sendMessageToChildren(message);
-      }
+      this.pseudoTerminals.forEach((p) => {
+        p.sendMessageToChildren(message);
+      });
 
       this.processes.forEach((p) => {
         if ('connected' in p && p.connected && 'send' in p) {

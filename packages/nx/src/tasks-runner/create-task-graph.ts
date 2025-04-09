@@ -49,7 +49,7 @@ export class ProcessTasks {
             target,
             configuration
           );
-          const id = this.getId(projectName, target, resolvedConfiguration);
+          const id = createTaskId(projectName, target, resolvedConfiguration);
           const task = this.createTask(
             id,
             project,
@@ -221,7 +221,7 @@ export class ProcessTasks {
         dependencyConfig.target,
         configuration
       );
-      const selfTaskId = this.getId(
+      const selfTaskId = createTaskId(
         selfProject.name,
         dependencyConfig.target,
         resolvedConfiguration
@@ -286,7 +286,7 @@ export class ProcessTasks {
           dependencyConfig.target,
           configuration
         );
-        const depTargetId = this.getId(
+        const depTargetId = createTaskId(
           depProject.name,
           dependencyConfig.target,
           resolvedConfiguration
@@ -325,7 +325,7 @@ export class ProcessTasks {
         }
       } else {
         // Create a dummy task for task.target.project... which simulates if depProject had dependencyConfig.target
-        const dummyId = this.getId(
+        const dummyId = createTaskId(
           depProject.name,
           task.target.project +
             '__' +
@@ -407,18 +407,6 @@ export class ProcessTasks {
     return projectHasTargetAndConfiguration(project, target, configuration)
       ? configuration
       : defaultConfiguration;
-  }
-
-  getId(
-    project: string,
-    target: string,
-    configuration: string | undefined
-  ): string {
-    let id = `${project}:${target}`;
-    if (configuration) {
-      id += `:${configuration}`;
-    }
-    return id;
   }
 }
 
@@ -531,4 +519,16 @@ export function getNonDummyDeps(
   } else {
     return [currentTask];
   }
+}
+
+export function createTaskId(
+  project: string,
+  target: string,
+  configuration: string | undefined
+): string {
+  let id = `${project}:${target}`;
+  if (configuration) {
+    id += `:${configuration}`;
+  }
+  return id;
 }

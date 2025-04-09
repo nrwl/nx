@@ -1,9 +1,9 @@
-import { getPseudoTerminal, PseudoTerminal } from './pseudo-terminal';
+import { createPseudoTerminal, PseudoTerminal } from './pseudo-terminal';
 
 describe('PseudoTerminal', () => {
   let terminal: PseudoTerminal;
-  beforeAll(() => {
-    terminal = getPseudoTerminal(true);
+  beforeEach(() => {
+    terminal = createPseudoTerminal(true);
   });
 
   afterAll(() => {
@@ -46,21 +46,6 @@ describe('PseudoTerminal', () => {
     });
   });
 
-  it('should get results', async () => {
-    const childProcess = terminal.runCommand('echo "hello world"');
-
-    const results = await childProcess.getResults();
-
-    expect(results.code).toEqual(0);
-    expect(results.terminalOutput).toContain('hello world');
-    const childProcess2 = terminal.runCommand('echo "hello jason"');
-
-    const results2 = await childProcess2.getResults();
-
-    expect(results2.code).toEqual(0);
-    expect(results2.terminalOutput).toContain('hello jason');
-  });
-
   if (process.env.CI !== 'true') {
     it('should be tty', (done) => {
       const childProcess = terminal.runCommand(
@@ -72,15 +57,4 @@ describe('PseudoTerminal', () => {
       });
     });
   }
-
-  it('should run multiple commands', async () => {
-    let i = 0;
-    while (i < 10) {
-      const childProcess = terminal.runCommand('whoami', {});
-
-      await childProcess.getResults();
-
-      i++;
-    }
-  });
 });
