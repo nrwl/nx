@@ -1,6 +1,7 @@
 ---
 title: Project Size
 description: Understand the trade-offs of project granularity in Nx, including benefits like faster commands, clearer boundaries, and improved developer experience.
+keywords: [library]
 ---
 
 # Project Size
