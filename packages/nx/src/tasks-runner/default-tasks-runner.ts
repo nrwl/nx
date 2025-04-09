@@ -135,16 +135,24 @@ export const defaultTasksRunner: TasksRunner<
     (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
   }
 
-  await options.lifeCycle.startCommand();
+  const maxParallel =
+    options['parallel'] +
+    Object.values(context.taskGraph.tasks).filter((t) => t.continuous).length;
+  const totalTasks = Object.values(context.taskGraph.tasks).length;
+  const threadCount = Math.min(maxParallel, totalTasks);
+
+  await options.lifeCycle.startCommand(threadCount);
   try {
-    return await runAllTasks(tasks, options, context);
+    return await runAllTasks(options, {
+      ...context,
+      threadCount,
+    });
   } finally {
     await options.lifeCycle.endCommand();
   }
 };
 
 async function runAllTasks(
-  tasks: Task[],
   options: DefaultTasksRunnerOptions,
   context: {
     initiatingProject?: string;
@@ -154,6 +162,7 @@ async function runAllTasks(
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
+    threadCount: number;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
@@ -163,6 +172,7 @@ async function runAllTasks(
     context.taskGraph,
     context.nxJson,
     options,
+    context.threadCount,
     context.nxArgs?.nxBail,
     context.daemon,
     context.nxArgs?.outputStyle

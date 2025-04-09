@@ -1,9 +1,11 @@
 use colored::Colorize;
 use std::io::IsTerminal;
 use tracing::{Event, Level, Subscriber};
+use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::fmt::{format, FmtContext, FormatEvent, FormatFields, FormattedFields};
+use tracing_subscriber::prelude::*;
 use tracing_subscriber::registry::LookupSpan;
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::{EnvFilter, Layer};
 
 struct NxLogFormatter;
 impl<S, N> FormatEvent<S, N> for NxLogFormatter
@@ -88,13 +90,30 @@ where
 /// - `NX_NATIVE_LOGGING=nx=trace` - enable all logs for the `nx` (this) crate
 /// - `NX_NATIVE_LOGGING=nx::native::tasks::hashers::hash_project_files=trace` - enable all logs for the `hash_project_files` module
 /// - `NX_NATIVE_LOGGING=[{project_name=project}]` - enable logs that contain the project in its span
+/// NX_NATIVE_FILE_LOGGING acts the same but logs to .nx/workspace-data/nx.log instead of stdout
 pub(crate) fn enable_logger() {
-    let env_filter =
-        EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("ERROR"));
-    _ = tracing_subscriber::fmt()
-        .with_env_filter(env_filter)
+    let stdout_layer = tracing_subscriber::fmt::layer()
         .with_ansi(std::io::stdout().is_terminal())
+        .with_writer(std::io::stdout)
         .event_format(NxLogFormatter)
+        .with_filter(
+            EnvFilter::try_from_env("NX_NATIVE_LOGGING")
+                .unwrap_or_else(|_| EnvFilter::new("ERROR")),
+        );
+
+    let file_appender: RollingFileAppender =
+        RollingFileAppender::new(Rotation::NEVER, ".nx/workspace-data", "nx.log");
+    let file_layer = tracing_subscriber::fmt::layer()
+        .with_writer(file_appender)
+        .event_format(NxLogFormatter)
+        .with_ansi(false)
+        .with_filter(
+            EnvFilter::try_from_env("NX_NATIVE_FILE_LOGGING")
+                .unwrap_or_else(|_| EnvFilter::new("ERROR")),
+        );
+    tracing_subscriber::registry()
+        .with(stdout_layer)
+        .with(file_layer)
         .try_init()
         .ok();
 }
