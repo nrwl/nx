@@ -41,7 +41,6 @@ regex = "1.9.1"
 ratatui = { version = "0.29", features = ["scrolling-regions"] }
 rayon = "1.7.0"
 rkyv = { version = "0.7", features = ["validation"] }
-strip-ansi-escapes = "0.2.0"
 swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
