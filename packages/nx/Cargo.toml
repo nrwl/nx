@@ -24,7 +24,6 @@ fs_extra = "1.3.0"
 futures = "0.3.28"
 globset = "0.4.10"
 hashbrown = { version = "0.14.5", features = ["rayon", "rkyv"] }
-human-panic = "1.2.0"
 ignore = '0.4'
 itertools = "0.10.5"
 once_cell = "1.18.0"

@@ -15,7 +15,6 @@ use super::task::{
     TaskTarget as RustTaskTarget,
 };
 use super::tui::Tui;
-use super::utils::initialize_panic_handler;
 
 #[napi(object)]
 pub struct TaskTarget {
@@ -240,27 +239,8 @@ impl AppLifeCycle {
         &self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
-        // Initialize logging and panic handlers first
         debug!("Initializing Terminal UI");
         enable_logger();
-        initialize_panic_handler().map_err(|e| napi::Error::from_reason(e.to_string()))?;
-
-        // Set up better-panic to capture backtraces
-        better_panic::install();
-
-        // TODO: refactor this
-        // Set up a panic hook that writes to stderr
-        std::panic::set_hook(Box::new(move |panic_info| {
-            let backtrace = std::backtrace::Backtrace::capture();
-            let thread = std::thread::current();
-            let thread_name = thread.name().unwrap_or("<unnamed>");
-            let msg = format!(
-                "\n\nThread '{}' panicked at '{}'\n{:?}\n\n",
-                thread_name, panic_info, backtrace
-            );
-            // Write to stderr
-            eprintln!("{}", msg);
-        }));
 
         let app_mutex = self.app.clone();
 
@@ -268,6 +248,22 @@ impl AppLifeCycle {
         let mut tui = Tui::new().map_err(|e| napi::Error::from_reason(e.to_string()))?;
         tui.enter()
             .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+
+        std::panic::set_hook(Box::new(move |panic_info| {
+            // Restore the terminal to a clean state
+            if let Ok(mut t) = Tui::new() {
+                if let Err(r) = t.exit() {
+                    debug!("Unable to exit Terminal: {:?}", r);
+                }
+            }
+            // Capture detailed backtraces in development, more concise in production
+            better_panic::Settings::auto()
+                .most_recent_first(false)
+                .lineno_suffix(true)
+                .verbosity(better_panic::Verbosity::Full)
+                .create_panic_handler()(panic_info);
+        }));
+
         debug!("Initialized Terminal UI");
 
         // Set tick and frame rates
