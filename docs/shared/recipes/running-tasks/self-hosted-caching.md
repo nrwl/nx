@@ -44,7 +44,160 @@ To learn more about migrating from custom task runners, [please refer to this de
 
 ## Build Your Own Caching Server
 
-We have [published a new RFC](https://github.com/nrwl/nx/discussions/30548) detailing a custom self-hosted cache based on an OpenAPI specification. This will be available before Nx 21, ensuring a smooth migration path for those who are looking for full control.
+Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification provided below. This allows you to create a custom remote cache server that fits your specific needs. The server is responsible for managing all aspects of the remote cache, including storage, retrieval, and authentication.
+
+Implementation is left up to you, but the server must adhere to the OpenAPI specification provided below to ensure compatibility with Nx's caching mechanism. The endpoints described below involve the transfer of tar archives which are sent as binary data. It is important to note that the underlying format of that data is subject to change in future versions of Nx, but the OpenAPI specification should remain stable.
+
+As long as your server adheres to the OpenAPI spec, you can implement it in any programming language or framework of your choice.
+
+### Open API Specification
+
+```json {% fileName="Nx 20.8+" %}
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Nx custom remote cache specification.",
+    "description": "Nx is a build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/cache/{hash}": {
+      "put": {
+        "description": "Upload a task output",
+        "operationId": "put",
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successfully uploaded the output"
+          },
+          "401": {
+            "description": "Missing or invalid authentication token.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message provided to the Nx CLI user"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden. (e.g. read-only token used to write)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message provided to the Nx CLI user"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cannot override an existing record"
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "description": "The file size in bytes",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "name": "Content-Length"
+          },
+          {
+            "name": "hash",
+            "description": "The task hash corresponding to the uploaded task output",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Download a task output",
+        "operationId": "get",
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved cache artifact",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "An octet stream with the content."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message provided to the Nx CLI user"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record was not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerToken": {
+        "type": "http",
+        "description": "Auth mechanism",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
+```
+
+### Usage Notes
+
+To use your custom caching server, you must set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. Additionally, the following environment variables also affect the behavior:
+
+- `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
+- `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
 
 ## Why Switch to Nx Cloud
 
