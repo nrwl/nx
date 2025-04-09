@@ -22,14 +22,22 @@
       "cache": true,
       "outputs": ["{projectRoot}/build/staging"]
     },
-    "maven": {
+    "zip-staging": {
       "command": "zip -r ../deployment.zip .",
       "options": {
         "cwd": "{projectRoot}/build/staging"
       },
       "inputs": ["{projectRoot}/build/staging"],
-      "outputs": ["{projectRoot}/build/staging/deployment.zip"],
+      "outputs": ["{projectRoot}/build/deployment.zip"],
       "dependsOn": ["publish-staging"]
+    },
+    "maven": {
+      "command": "npx ts-node publish-maven.ts --deploymentZipPath=build/deployment.zip",
+      "options": {
+        "cwd": "{projectRoot}"
+      },
+      "inputs": ["{projectRoot}/build/deployment.zip"],
+      "dependsOn": ["zip-staging"]
     }
   }
 }
