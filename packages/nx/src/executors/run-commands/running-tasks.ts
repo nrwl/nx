@@ -251,7 +251,8 @@ export class SeriallyRunningTasks implements RunningTask {
     if (
       process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
       !commandConfig.prefix &&
-      usePty
+      usePty &&
+      PseudoTerminal.isSupported()
     ) {
       const pseudoTerminal = createPseudoTerminal();
       registerProcessListener(this, pseudoTerminal);
