@@ -89,10 +89,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Using the provided version specifier "0.0.2".
-      @proj/{project-name} ✍️  New version 0.0.2 written to packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.2", from the given specifier, to get new version 0.0.2
+      @proj/{project-name} ✍️  New version 0.0.2 written to manifest: packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.2",
@@ -144,10 +143,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Using the provided version specifier "0.0.3".
-      @proj/{project-name} ✍️  New version 0.0.3 written to packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.3", from the given specifier, to get new version 0.0.3
+      @proj/{project-name} ✍️  New version 0.0.3 written to manifest: packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.3",
@@ -204,10 +202,9 @@ describe('release publishable libraries in workspace with ts solution setup', ()
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: @proj/{project-name}
-      @proj/{project-name} 🔍 Reading data for package "@proj/{project-name}" from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from packages/{project-name}/package.json
-      @proj/{project-name} 📄 Using the provided version specifier "0.0.4".
-      @proj/{project-name} ✍️  New version 0.0.4 written to packages/{project-name}/package.json
+      @proj/{project-name} 📄 Resolved the current version as 0.0.1 from manifest: packages/{project-name}/package.json
+      @proj/{project-name} ❓ Applied explicit semver value "0.0.4", from the given specifier, to get new version 0.0.4
+      @proj/{project-name} ✍️  New version 0.0.4 written to manifest: packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",

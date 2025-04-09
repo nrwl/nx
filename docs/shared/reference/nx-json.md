@@ -587,15 +587,16 @@ Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megab
 | `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
 | `0`      | No limit on the local cache size (disables the cache size limit) |
 
-````json {% fileName="nx.json" %}
+```json {% fileName="nx.json" %}
 {
   "maxCacheSize": "0" // No limit on the local cache size
 }
+```
 
 ```json {% fileName="nx.json" %}
 {
   "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
 }
-````
+```
 
 Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.
