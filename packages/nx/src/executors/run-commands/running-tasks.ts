@@ -1,24 +1,25 @@
+import * as chalk from 'chalk';
 import { ChildProcess, exec, Serializable } from 'child_process';
-import { RunningTask } from '../../tasks-runner/running-tasks/running-task';
+import { env as appendLocalEnv } from 'npm-run-path';
+import { isAbsolute, join } from 'path';
+import * as treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
-  LARGE_BUFFER,
-  NormalizedRunCommandsOptions,
-  RunCommandsCommandOptions,
-  RunCommandsOptions,
-} from './run-commands.impl';
-import {
+  createPseudoTerminal,
   PseudoTerminal,
   PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
-import { isAbsolute, join } from 'path';
-import * as chalk from 'chalk';
-import { env as appendLocalEnv } from 'npm-run-path';
+import { RunningTask } from '../../tasks-runner/running-tasks/running-task';
 import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import * as treeKill from 'tree-kill';
+import { signalToCode } from '../../utils/exit-codes';
+import {
+  LARGE_BUFFER,
+  NormalizedRunCommandsOptions,
+  RunCommandsCommandOptions,
+} from './run-commands.impl';
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
@@ -28,7 +29,11 @@ export class ParallelRunningTasks implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
 
-  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
+  constructor(
+    options: NormalizedRunCommandsOptions,
+    context: ExecutorContext,
+    private readonly tuiEnabled: boolean
+  ) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
         new RunningNodeProcess(
@@ -160,7 +165,7 @@ export class SeriallyRunningTasks implements RunningTask {
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
-    private pseudoTerminal?: PseudoTerminal
+    private readonly tuiEnabled: boolean
   ) {
     this.run(options, context)
       .catch((e) => {
@@ -204,11 +209,9 @@ export class SeriallyRunningTasks implements RunningTask {
     for (const c of options.commands) {
       const childProcess = await this.createProcess(
         c,
-        [],
         options.color,
         calculateCwd(options.cwd, context),
         options.processEnv ?? options.env ?? {},
-        false,
         options.usePty,
         options.streamOutput,
         options.tty,
@@ -235,11 +238,9 @@ export class SeriallyRunningTasks implements RunningTask {
 
   private async createProcess(
     commandConfig: RunCommandsCommandOptions,
-    readyWhenStatus: { stringToMatch: string; found: boolean }[] = [],
     color: boolean,
     cwd: string,
     env: Record<string, string>,
-    isParallel: boolean,
     usePty: boolean = true,
     streamOutput: boolean = true,
     tty: boolean,
@@ -248,15 +249,16 @@ export class SeriallyRunningTasks implements RunningTask {
     // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
     // currently does not work properly in windows
     if (
-      this.pseudoTerminal &&
       process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
       !commandConfig.prefix &&
-      readyWhenStatus.length === 0 &&
-      !isParallel &&
-      usePty
+      usePty &&
+      PseudoTerminal.isSupported()
     ) {
+      const pseudoTerminal = createPseudoTerminal();
+      registerProcessListener(this, pseudoTerminal);
+
       return createProcessWithPseudoTty(
-        this.pseudoTerminal,
+        pseudoTerminal,
         commandConfig,
         color,
         cwd,
@@ -272,7 +274,7 @@ export class SeriallyRunningTasks implements RunningTask {
       color,
       cwd,
       env,
-      readyWhenStatus,
+      [],
       streamOutput,
       envFile
     );
@@ -393,14 +395,28 @@ class RunningNodeProcess implements RunningTask {
   }
 }
 
+export async function runSingleCommandWithPseudoTerminal(
+  normalized: NormalizedRunCommandsOptions,
+  context: ExecutorContext
+): Promise<PseudoTtyProcess> {
+  const pseudoTerminal = createPseudoTerminal();
+  const pseudoTtyProcess = await createProcessWithPseudoTty(
+    pseudoTerminal,
+    normalized.commands[0],
+    normalized.color,
+    calculateCwd(normalized.cwd, context),
+    normalized.env,
+    normalized.streamOutput,
+    pseudoTerminal ? normalized.isTTY : false,
+    normalized.envFile
+  );
+  registerProcessListener(pseudoTtyProcess, pseudoTerminal);
+  return pseudoTtyProcess;
+}
+
 async function createProcessWithPseudoTty(
   pseudoTerminal: PseudoTerminal,
-  commandConfig: {
-    command: string;
-    color?: string;
-    bgColor?: string;
-    prefix?: string;
-  },
+  commandConfig: RunCommandsCommandOptions,
   color: boolean,
   cwd: string,
   env: Record<string, string>,
@@ -408,23 +424,12 @@ async function createProcessWithPseudoTty(
   tty: boolean,
   envFile?: string
 ) {
-  let terminalOutput = chalk.dim('> ') + commandConfig.command + '\r\n\r\n';
-  if (streamOutput) {
-    process.stdout.write(terminalOutput);
-  }
-  env = processEnv(color, cwd, env, envFile);
-  const childProcess = pseudoTerminal.runCommand(commandConfig.command, {
+  return pseudoTerminal.runCommand(commandConfig.command, {
     cwd,
-    jsEnv: env,
+    jsEnv: processEnv(color, cwd, env, envFile),
     quiet: !streamOutput,
     tty,
   });
-
-  childProcess.onOutput((output) => {
-    terminalOutput += output;
-  });
-
-  return childProcess;
 }
 
 function addColorAndPrefix(out: string, config: RunCommandsCommandOptions) {
@@ -516,4 +521,48 @@ function loadEnvVarsFile(path: string, env: Record<string, string> = {}) {
   if (result.error) {
     throw result.error;
   }
+}
+
+let registered = false;
+
+function registerProcessListener(
+  runningTask: PseudoTtyProcess | ParallelRunningTasks | SeriallyRunningTasks,
+  pseudoTerminal?: PseudoTerminal
+) {
+  if (registered) {
+    return;
+  }
+
+  registered = true;
+  // When the nx process gets a message, it will be sent into the task's process
+  process.on('message', (message: Serializable) => {
+    // this.publisher.publish(message.toString());
+    if (pseudoTerminal) {
+      pseudoTerminal.sendMessageToChildren(message);
+    }
+
+    if ('send' in runningTask) {
+      runningTask.send(message);
+    }
+  });
+
+  // Terminate any task processes on exit
+  process.on('exit', () => {
+    runningTask.kill();
+  });
+  process.on('SIGINT', () => {
+    runningTask.kill('SIGTERM');
+    // we exit here because we don't need to write anything to cache.
+    process.exit(signalToCode('SIGINT'));
+  });
+  process.on('SIGTERM', () => {
+    runningTask.kill('SIGTERM');
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
+  process.on('SIGHUP', () => {
+    runningTask.kill('SIGTERM');
+    // no exit here because we expect child processes to terminate which
+    // will store results to the cache and will terminate this process
+  });
 }

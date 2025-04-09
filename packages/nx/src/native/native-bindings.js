@@ -361,6 +361,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
+module.exports.AppLifeCycle = nativeBinding.AppLifeCycle
 module.exports.ChildProcess = nativeBinding.ChildProcess
 module.exports.FileLock = nativeBinding.FileLock
 module.exports.HashPlanner = nativeBinding.HashPlanner
@@ -388,6 +389,7 @@ module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
 module.exports.IS_WASM = nativeBinding.IS_WASM
 module.exports.remove = nativeBinding.remove
+module.exports.restoreTerminal = nativeBinding.restoreTerminal
 module.exports.testOnlyTransferFileMap = nativeBinding.testOnlyTransferFileMap
 module.exports.transferProjectGraph = nativeBinding.transferProjectGraph
 module.exports.validateOutputs = nativeBinding.validateOutputs
