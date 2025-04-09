@@ -1,6 +1,5 @@
 use std::{
     env,
-    error::Error,
     fs::{self},
     io::Read,
     path::Path,
