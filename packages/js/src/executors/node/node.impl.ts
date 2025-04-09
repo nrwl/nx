@@ -37,8 +37,6 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
   let pendingPromise: Promise<T> | null = null;
 
   return () => {
-    clearTimeout(timeoutId);
-
     if (!pendingPromise) {
       pendingPromise = new Promise<T>((resolve, reject) => {
         timeoutId = setTimeout(() => {
@@ -50,6 +48,9 @@ function debounce<T>(fn: () => Promise<T>, wait: number): () => Promise<T> {
             .catch((error) => {
               pendingPromise = null;
               reject(error);
+            })
+            .finally(() => {
+              clearTimeout(timeoutId);
             });
         }, wait);
       });
@@ -197,7 +198,7 @@ export async function* nodeExecutor(
                 if (code !== 0) {
                   error(new Error(`Process exited with code ${code}`));
                 } else {
-                  done();
+                  resolve(done());
                 }
               }
               resolve();
@@ -226,8 +227,12 @@ export async function* nodeExecutor(
     };
 
     const stopAllTasks = async (signal: NodeJS.Signals = 'SIGTERM') => {
-      additionalExitHandler?.();
-      await currentTask?.stop(signal);
+      if (typeof additionalExitHandler === 'function') {
+        additionalExitHandler();
+      }
+      if (typeof currentTask?.stop === 'function') {
+        await currentTask.stop(signal);
+      }
       for (const task of tasks) {
         await task.stop(signal);
       }
