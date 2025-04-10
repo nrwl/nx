@@ -628,7 +628,11 @@ export class TaskOrchestrator {
 
   async startContinuousTask(task: Task, groupId: number) {
     if (this.runningTasksService.getRunningTasks([task.id]).length) {
-      // task is already running, we need to poll and wait for the running task to finish
+      // task is already running by another process, we schedule the next tasks
+      // and release the threads
+      await this.scheduleNextTasksAndReleaseThreads();
+
+      // wait for the running task to finish
       do {
         console.log(`Waiting for ${task.id} in another nx process`);
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -696,10 +700,7 @@ export class TaskOrchestrator {
     ) {
       await childProcess.getResults();
     } else {
-      await this.tasksSchedule.scheduleNextTasks();
-      // release blocked threads
-      this.waitingForTasks.forEach((f) => f(null));
-      this.waitingForTasks.length = 0;
+      await this.scheduleNextTasksAndReleaseThreads();
     }
 
     return childProcess;
@@ -796,6 +797,10 @@ export class TaskOrchestrator {
       })
     );
 
+    await this.scheduleNextTasksAndReleaseThreads();
+  }
+
+  private async scheduleNextTasksAndReleaseThreads() {
     await this.tasksSchedule.scheduleNextTasks();
 
     // release blocked threads
