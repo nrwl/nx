@@ -197,15 +197,14 @@ export function getTuiTerminalSummaryLifeCycle({
       ];
     } else {
       lines = [
-        output.colors.red(
-          output.applyNxPrefix(
-            'red',
-            output.colors.red(
-              `Cancelled running target ${output.bold(
-                targets[0]
-              )} for project ${output.bold(initiatingProject)}`
-            ) + output.dim(` (${timeTakenText})`)
-          )
+        ...output.getVerticalSeparatorLines('red'),
+        output.applyNxPrefix(
+          'red',
+          output.colors.red(
+            `Cancelled running target ${output.bold(
+              targets[0]
+            )} for project ${output.bold(initiatingProject)}`
+          ) + output.dim(` (${timeTakenText})`)
         ),
       ];
     }

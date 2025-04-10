@@ -674,9 +674,7 @@ export class TaskOrchestrator {
         console.error(
           `Task "${task.id}" is continuous but exited with code ${code}`
         );
-        this.cleanup().then(() => {
-          process.exit(1);
-        });
+        this.cleanup();
       }
     });
     if (
