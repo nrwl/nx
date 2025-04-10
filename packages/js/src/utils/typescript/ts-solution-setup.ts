@@ -230,7 +230,8 @@ export async function addProjectToTsSolutionWorkspace(
   let pattern = projectDir;
   if (baseDir !== '.') {
     const patterns = getPackageManagerWorkspacesPatterns(tree);
-    const projectsBefore = await globAsync(tree, patterns);
+    const projectsBefore =
+      patterns.length > 0 ? await globAsync(tree, patterns) : [];
     patterns.push(`${baseDir}/*/package.json`);
     const projectsAfter = await globAsync(tree, patterns);
 
