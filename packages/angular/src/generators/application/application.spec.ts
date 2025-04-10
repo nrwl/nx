@@ -1246,6 +1246,7 @@ describe('app', () => {
         ]
       `);
     });
+
     it('should generate a correct setup when --bundler=rspack including a correct config file and no build target', async () => {
       await generateApp(appTree, 'app1', {
         bundler: 'rspack',
@@ -1255,6 +1256,42 @@ describe('app', () => {
       expect(project.targets.build).not.toBeDefined();
       expect(appTree.exists('app1/rspack.config.ts')).toBeTruthy();
       expect(appTree.read('app1/rspack.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should generate use crystal jest when --bundler=rspack', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+        unitTestRunner: UnitTestRunner.Jest,
+      });
+
+      const project = readProjectConfiguration(appTree, 'app1');
+      expect(project.targets.test).not.toBeDefined();
+
+      const nxJson = readNxJson(appTree);
+      const jestPlugin = nxJson.plugins.find(
+        (p) =>
+          (typeof p === 'string' && p === '@nx/jest/plugin') ||
+          (typeof p !== 'string' && p.plugin === '@nx/jest/plugin')
+      );
+      expect(jestPlugin).toBeDefined();
+    });
+
+    it('should generate use crystal vitest when --bundler=rspack', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+        unitTestRunner: UnitTestRunner.Vitest,
+      });
+
+      const project = readProjectConfiguration(appTree, 'app1');
+      expect(project.targets.test).not.toBeDefined();
+
+      const nxJson = readNxJson(appTree);
+      const vitePlugin = nxJson.plugins.find(
+        (p) =>
+          (typeof p === 'string' && p === '@nx/vite/plugin') ||
+          (typeof p !== 'string' && p.plugin === '@nx/vite/plugin')
+      );
+      expect(vitePlugin).toBeDefined();
     });
 
     it('should generate target options "browser" and "buildTarget"', async () => {
