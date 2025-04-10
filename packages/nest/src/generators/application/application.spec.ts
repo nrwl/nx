@@ -444,6 +444,7 @@ describe('application generator', () => {
             "e2e": {
               "dependsOn": [
                 "@proj/myapp:build",
+                "@proj/myapp:serve",
               ],
               "executor": "@nx/jest:jest",
               "options": {
