@@ -933,7 +933,7 @@ export async function invokeTasksRunner({
   return taskResultsLifecycle.getTaskResults();
 }
 
-function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
+export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
   lifeCycles.push(lifeCycle);
