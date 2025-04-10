@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use tracing::debug;
 
 use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::pseudo_terminal::pseudo_terminal::{KillerArc, ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskResult};
 
 use super::app::App;
@@ -239,10 +239,16 @@ impl AppLifeCycle {
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
+        task_killer: External<KillerArc>,
     ) {
         let mut app = self.app.lock().unwrap();
 
-        app.register_running_task(task_id, parser_and_writer, TaskStatus::InProgress)
+        app.register_running_task(
+            task_id,
+            parser_and_writer,
+            task_killer,
+            TaskStatus::InProgress,
+        )
     }
 
     // Rust-only lifecycle method

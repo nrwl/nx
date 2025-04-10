@@ -510,7 +510,8 @@ export class TaskOrchestrator {
           // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
           this.options.lifeCycle.registerRunningTask(
             task.id,
-            runningTask.getParserAndWriter()
+            runningTask.getParserAndWriter(),
+            runningTask.getKiller()
           );
         }
 
@@ -575,7 +576,8 @@ export class TaskOrchestrator {
         // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
         this.options.lifeCycle.registerRunningTask(
           task.id,
-          runningTask.getParserAndWriter()
+          runningTask.getParserAndWriter(),
+          runningTask.getKiller()
         );
       }
 
@@ -681,12 +683,7 @@ export class TaskOrchestrator {
     childProcess.onExit((code) => {
       this.runningTasksService.removeRunningTask(task.id);
       if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        this.cleanup().then(() => {
-          process.exit(1);
-        });
+        this.cleanup();
       }
     });
     if (

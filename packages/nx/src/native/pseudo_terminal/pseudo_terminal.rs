@@ -6,7 +6,7 @@ use crossterm::{
     tty::IsTty,
 };
 use napi::bindgen_prelude::*;
-use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
+use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;
 use std::sync::{Mutex, RwLock};
 use std::{
@@ -49,6 +49,7 @@ impl Default for PseudoTerminalOptions {
 
 pub type ParserArc = Arc<RwLock<Parser>>;
 pub type WriterArc = Arc<Mutex<Box<dyn Write + Send>>>;
+pub type KillerArc = Arc<Mutex<Box<dyn ChildKiller + Send + Sync>>>;
 
 impl PseudoTerminal {
     pub fn new(options: PseudoTerminalOptions) -> Result<Self> {

@@ -1,4 +1,4 @@
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::pseudo_terminal::pseudo_terminal::{KillerArc, ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{bounded, Receiver};
 use napi::bindgen_prelude::External;
@@ -20,12 +20,12 @@ pub enum ChildProcessMessage {
 
 #[napi]
 pub struct ChildProcess {
-    parser: Arc<RwLock<Parser>>,
-    process_killer: Box<dyn ChildKiller + Sync + Send>,
+    parser: ParserArc,
+    process_killer: KillerArc,
     message_receiver: Receiver<String>,
     pub(crate) wait_receiver: Receiver<String>,
     thread_handles: Vec<Sender<()>>,
-    writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
+    writer_arc: WriterArc,
 }
 #[napi]
 impl ChildProcess {
@@ -39,7 +39,7 @@ impl ChildProcess {
         Self {
             parser,
             writer_arc,
-            process_killer,
+            process_killer: Arc::new(Mutex::new(process_killer)),
             message_receiver,
             wait_receiver: exit_receiver,
             thread_handles: vec![],
@@ -52,8 +52,17 @@ impl ChildProcess {
     }
 
     #[napi]
+    pub fn get_killer(&mut self) -> External<KillerArc> {
+        External::new(self.process_killer.clone())
+    }
+
+    #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
-        self.process_killer.kill().map_err(anyhow::Error::from)
+        self.process_killer
+            .lock()
+            .unwrap()
+            .kill()
+            .map_err(anyhow::Error::from)
     }
 
     #[napi]

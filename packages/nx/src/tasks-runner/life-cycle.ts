@@ -66,8 +66,9 @@ export interface LifeCycle {
 
   registerRunningTask?(
     taskId: string,
-    parserAndWriter: ExternalObject<[any, any]>
-  );
+    parserAndWriter: ExternalObject<[any, any]>,
+    taskKiller: ExternalObject<any>
+  ): Promise<void>;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -150,11 +151,12 @@ export class CompositeLifeCycle implements LifeCycle {
 
   async registerRunningTask(
     taskId: string,
-    parserAndWriter: ExternalObject<any>
+    parserAndWriter: ExternalObject<[any, any]>,
+    taskKiller: ExternalObject<any>
   ): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
-        await l.registerRunningTask(taskId, parserAndWriter);
+        await l.registerRunningTask(taskId, parserAndWriter, taskKiller);
       }
     }
   }

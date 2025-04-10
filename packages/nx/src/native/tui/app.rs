@@ -11,7 +11,7 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
 
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::pseudo_terminal::pseudo_terminal::{KillerArc, ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskResult};
 use crate::native::tui::tui::Tui;
 
@@ -37,6 +37,7 @@ pub struct App {
     tui_config: TuiConfig,
     // We track whether the user has interacted with the app to determine if we should show perform any auto-exit at all
     user_has_interacted: bool,
+    task_killers: Vec<KillerArc>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,6 +73,7 @@ impl App {
             done_callback: None,
             tui_config,
             user_has_interacted: false,
+            task_killers: vec![],
         })
     }
 
@@ -101,22 +103,31 @@ impl App {
         status: TaskStatus,
         output: String,
     ) {
-        // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
-        if is_cache_hit(status) {
-            let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
+            if is_cache_hit(status) {
+                let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
 
-            // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
+                // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
+                let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
+                TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
 
-            if let Some(tasks_list) = self
-                .components
-                .iter_mut()
-                .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-            {
                 tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
                 tasks_list.update_task_status(task_id.clone(), status);
                 let _ = tasks_list.handle_resize(None);
+                return;
+            }
+
+            // If the task is continuous, we are only updating the status, not the output
+            if let Some(task) = tasks_list.tasks.iter_mut().find(|t| t.name == task_id) {
+                if task.continuous {
+                    tasks_list.update_task_status(task_id.clone(), status);
+                    let _ = tasks_list.handle_resize(None);
+                }
             }
         }
     }
@@ -166,8 +177,10 @@ impl App {
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
+        task_killer: External<KillerArc>,
         task_status: TaskStatus,
     ) {
+        self.task_killers.push(task_killer.as_ref().clone());
         if let Some(tasks_list) = self
             .components
             .iter_mut()
@@ -199,6 +212,14 @@ impl App {
 
                 // Handle Ctrl+C to quit
                 if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL {
+                    // Kill any running tasks
+                    for killer in self.task_killers.iter() {
+                        // Attempt to kill the process, but don't panic if it fails
+                        if let Ok(mut guard) = killer.lock() {
+                            // Ignore errors from kill - the process might already be terminated
+                            let _ = guard.kill();
+                        }
+                    }
                     // Quit immediately
                     self.quit_at = Some(std::time::Instant::now());
                     return Ok(true);
