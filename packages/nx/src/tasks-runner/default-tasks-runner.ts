@@ -1,5 +1,5 @@
 import { TasksRunner, TaskStatus } from './tasks-runner';
-import { TaskOrchestrator } from './task-orchestrator';
+import { getThreadCount, TaskOrchestrator } from './task-orchestrator';
 import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
@@ -121,32 +121,10 @@ export const defaultTasksRunner: TasksRunner<
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
-  if (
-    (options as any)['parallel'] === 'false' ||
-    (options as any)['parallel'] === false
-  ) {
-    (options as any)['parallel'] = 1;
-  } else if (
-    (options as any)['parallel'] === 'true' ||
-    (options as any)['parallel'] === true ||
-    (options as any)['parallel'] === undefined ||
-    (options as any)['parallel'] === ''
-  ) {
-    (options as any)['parallel'] = Number((options as any)['maxParallel'] || 3);
-  }
-
-  const maxParallel =
-    options['parallel'] +
-    Object.values(context.taskGraph.tasks).filter((t) => t.continuous).length;
-  const totalTasks = Object.values(context.taskGraph.tasks).length;
-  const threadCount = Math.min(maxParallel, totalTasks);
-
+  const threadCount = getThreadCount(options, context.taskGraph);
   await options.lifeCycle.startCommand(threadCount);
   try {
-    return await runAllTasks(options, {
-      ...context,
-      threadCount,
-    });
+    return await runAllTasks(options, context);
   } finally {
     await options.lifeCycle.endCommand();
   }
@@ -162,7 +140,6 @@ async function runAllTasks(
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
-    threadCount: number;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
@@ -172,7 +149,6 @@ async function runAllTasks(
     context.taskGraph,
     context.nxJson,
     options,
-    context.threadCount,
     context.nxArgs?.nxBail,
     context.daemon,
     context.nxArgs?.outputStyle
