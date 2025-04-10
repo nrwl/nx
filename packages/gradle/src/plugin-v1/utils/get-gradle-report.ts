@@ -11,18 +11,15 @@ import {
 
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { dirname } from 'path';
-import { gradleConfigAndTestGlob } from './split-config-files';
-import {
-  getProjectReportLines,
-  fileSeparator,
-  newLineSeparator,
-} from './get-project-report-lines';
+import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
+import { getProjectReportLines } from './get-project-report-lines';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { fileSeparator, newLineSeparator } from '../../utils/exec-gradle';
 
 export interface GradleReport {
   gradleFileToGradleProjectMap: Map<string, string>;
-  buildFileToDepsMap: Map<string, Set<string>>;
   gradleFileToOutputDirsMap: Map<string, Map<string, string>>;
+  gradleProjectToDepsMap: Map<string, Set<string>>;
   gradleProjectToTasksTypeMap: Map<string, Map<string, string>>;
   gradleProjectToTasksMap: Map<string, Set<string>>;
   gradleProjectToProjectName: Map<string, string>;
@@ -33,7 +30,7 @@ export interface GradleReport {
 export interface GradleReportJSON {
   hash: string;
   gradleFileToGradleProjectMap: Record<string, string>;
-  buildFileToDepsMap: Record<string, Set<string>>;
+  gradleProjectToDepsMap: Record<string, Array<string>>;
   gradleFileToOutputDirsMap: Record<string, Record<string, string>>;
   gradleProjectToTasksTypeMap: Record<string, Record<string, string>>;
   gradleProjectToTasksMap: Record<string, Array<string>>;
@@ -56,8 +53,10 @@ function readGradleReportCache(
     gradleFileToGradleProjectMap: new Map(
       Object.entries(gradleReportJson['gradleFileToGradleProjectMap'])
     ),
-    buildFileToDepsMap: new Map(
-      Object.entries(gradleReportJson['buildFileToDepsMap'])
+    gradleProjectToDepsMap: new Map(
+      Object.entries(gradleReportJson['gradleProjectToDepsMap']).map(
+        ([key, value]) => [key, new Set(value)]
+      )
     ),
     gradleFileToOutputDirsMap: new Map(
       Object.entries(gradleReportJson['gradleFileToOutputDirsMap']).map(
@@ -96,7 +95,12 @@ export function writeGradleReportToCache(
     gradleFileToGradleProjectMap: Object.fromEntries(
       results.gradleFileToGradleProjectMap
     ),
-    buildFileToDepsMap: Object.fromEntries(results.buildFileToDepsMap),
+    gradleProjectToDepsMap: Object.fromEntries(
+      Array.from(results.gradleProjectToDepsMap).map(([key, value]) => [
+        key,
+        Array.from(value),
+      ])
+    ),
     gradleFileToOutputDirsMap: Object.fromEntries(
       Array.from(results.gradleFileToOutputDirsMap).map(([key, value]) => [
         key,
@@ -215,7 +219,7 @@ export function processProjectReports(
    * Map of Gradle File path to Gradle Project Name
    */
   const gradleFileToGradleProjectMap = new Map<string, string>();
-  const dependenciesMap = new Map<string, string>();
+  const gradleProjectToDepsMap = new Map<string, Set<string>>();
   /**
    * Map of Gradle Build File to tasks type map
    */
@@ -223,10 +227,6 @@ export function processProjectReports(
   const gradleProjectToTasksMap = new Map<string, Set<string>>();
   const gradleProjectToProjectName = new Map<string, string>();
   const gradleProjectNameToProjectRootMap = new Map<string, string>();
-  /**
-   * Map of buildFile to dependencies report path
-   */
-  const buildFileToDepsMap = new Map<string, Set<string>>();
   /**
    * Map fo possible output files of each gradle file
    * e.g. {build.gradle.kts: { projectReportDir: '' testReportDir: '' }}
@@ -253,7 +253,10 @@ export function processProjectReports(
           index++;
         }
         const [_, file] = projectReportLines[index].split(fileSeparator);
-        dependenciesMap.set(gradleProject, file);
+        gradleProjectToDepsMap.set(
+          gradleProject,
+          processGradleDependencies(file)
+        );
       }
       if (line.endsWith('propertyReport')) {
         const gradleProject = line.substring(
@@ -320,13 +323,6 @@ export function processProjectReports(
           relative(workspaceRoot, absBuildFilePath)
         );
         const buildDir = relative(workspaceRoot, absBuildDirPath);
-        const depsFile = dependenciesMap.get(gradleProject);
-        if (depsFile) {
-          buildFileToDepsMap.set(
-            buildFile,
-            processGradleDependencies(depsFile)
-          );
-        }
 
         outputDirMap.set('build', `{workspaceRoot}/${buildDir}`);
         outputDirMap.set(
@@ -389,9 +385,9 @@ export function processProjectReports(
 
   return {
     gradleFileToGradleProjectMap,
-    buildFileToDepsMap,
     gradleFileToOutputDirsMap,
     gradleProjectToTasksTypeMap,
+    gradleProjectToDepsMap,
     gradleProjectToTasksMap,
     gradleProjectToProjectName,
     gradleProjectNameToProjectRootMap,
