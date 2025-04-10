@@ -476,6 +476,7 @@ export async function runCommandForTasks(
     nxArgs,
     loadDotEnvFiles: extraOptions.loadDotEnvFiles,
     initiatingProject,
+    renderIsDone,
   });
 
   await renderIsDone;
@@ -814,6 +815,7 @@ export async function invokeTasksRunner({
   nxArgs,
   loadDotEnvFiles,
   initiatingProject,
+  renderIsDone,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -823,6 +825,7 @@ export async function invokeTasksRunner({
   nxArgs: NxArgs;
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
+  renderIsDone?: Promise<void>;
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -919,6 +922,7 @@ export async function invokeTasksRunner({
         },
       },
       daemon: daemonClient,
+      renderIsDone,
     }
   );
   if ((promiseOrObservable as any).subscribe) {

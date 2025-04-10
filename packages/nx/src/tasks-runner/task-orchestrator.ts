@@ -91,7 +91,8 @@ export class TaskOrchestrator {
     private readonly threadCount: number,
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
-    private readonly outputStyle: string
+    private readonly outputStyle: string,
+    private readonly renderIsDone?: Promise<void>
   ) {}
 
   async run() {
@@ -626,6 +627,10 @@ export class TaskOrchestrator {
       return;
     }
 
+    if (this.renderIsDone) {
+      this.renderIsDone.finally(() => this.cleanup());
+    }
+
     const taskSpecificEnv = await this.processedTasks.get(task.id);
     await this.preRunSteps([task], { groupId });
 
@@ -671,12 +676,10 @@ export class TaskOrchestrator {
     childProcess.onExit((code) => {
       this.runningTasksService.removeRunningTask(task.id);
       if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
         this.cleanup();
       }
     });
+
     if (
       this.initiatingProject === task.target.project &&
       this.options.targets.length === 1 &&

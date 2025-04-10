@@ -119,6 +119,7 @@ export const defaultTasksRunner: TasksRunner<
     taskGraph: TaskGraph;
     hasher: TaskHasher;
     daemon: DaemonClient;
+    renderIsDone?: Promise<void>;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
   if (
@@ -163,6 +164,7 @@ async function runAllTasks(
     hasher: TaskHasher;
     daemon: DaemonClient;
     threadCount: number;
+    renderIsDone?: Promise<void>;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   const orchestrator = new TaskOrchestrator(
@@ -175,7 +177,8 @@ async function runAllTasks(
     context.threadCount,
     context.nxArgs?.nxBail,
     context.daemon,
-    context.nxArgs?.outputStyle
+    context.nxArgs?.outputStyle,
+    context.renderIsDone
   );
 
   return orchestrator.run();

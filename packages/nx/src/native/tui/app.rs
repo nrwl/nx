@@ -101,22 +101,31 @@ impl App {
         status: TaskStatus,
         output: String,
     ) {
-        // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
-        if is_cache_hit(status) {
-            let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
+            if is_cache_hit(status) {
+                let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
 
-            // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
+                // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
+                let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
+                TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
 
-            if let Some(tasks_list) = self
-                .components
-                .iter_mut()
-                .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-            {
                 tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
                 tasks_list.update_task_status(task_id.clone(), status);
                 let _ = tasks_list.handle_resize(None);
+                return;
+            }
+
+            // If the task is continuous, we are only updating the status, not the output
+            if let Some(task) = tasks_list.tasks.iter_mut().find(|t| t.name == task_id) {
+                if task.continuous {
+                    tasks_list.update_task_status(task_id.clone(), status);
+                    let _ = tasks_list.handle_resize(None);
+                }
             }
         }
     }
