@@ -17,6 +17,7 @@ colored = "2"
 crossbeam-channel = '0.5'
 dashmap = { version = "5.5.3", features = ["rayon"] }
 dunce = "1"
+flate2 = "1.1.1"
 fs_extra = "1.3.0"
 globset = "0.4.10"
 hashbrown = { version = "0.14.5", features = ["rayon", "rkyv"] }
@@ -34,6 +35,7 @@ nom = '7.1.3'
 regex = "1.9.1"
 rayon = "1.7.0"
 rkyv = { version = "0.7", features = ["validation"] }
+tar = "0.4.44"
 thiserror = "1.0.40"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
@@ -57,6 +59,7 @@ portable-pty = { git = "https://github.com/cammisuli/wezterm", rev = "b538ee29e1
 crossterm = "0.27.0"
 ignore-files = "2.1.0"
 fs4 = "0.12.0"
+reqwest = "0.12.15"
 rusqlite = { version = "0.32.1", features = ["bundled", "array", "vtab"] }
 watchexec = "3.0.1"
 watchexec-events = "2.0.1"

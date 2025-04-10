@@ -2,7 +2,9 @@ import {
   addDefaultCTConfig,
   addDefaultE2EConfig,
   addMountDefinition,
+  resolveCypressConfigObject,
 } from './config';
+
 describe('Cypress Config parser', () => {
   it('should add CT config to existing e2e config', async () => {
     const actual = await addDefaultCTConfig(
@@ -258,6 +260,136 @@ Cypress.Commands.add('mount', customMount);
       }
       Cypress.Commands.add('mount', customMount);
       "
+    `);
+  });
+});
+
+describe('resolveCypressConfigObject', () => {
+  it('should handle "export default defineConfig()"', async () => {
+    const config = resolveCypressConfigObject(
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "export default {}"', async () => {
+    const config = resolveCypressConfigObject(
+      `export default {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+  `
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "export default <variable>" when <variable> is defined in the file and is an object literal', async () => {
+    const config = resolveCypressConfigObject(
+      `const config = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+
+export default config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = defineConfig()"', async () => {
+    const config = resolveCypressConfigObject(
+      `const { defineConfig } = require('cypress');
+
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+});
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = {}"', async () => {
+    const config = resolveCypressConfigObject(
+      `module.exports = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
+    `);
+  });
+
+  it('should handle "module.exports = <variable>" when <variable> is defined in the file and is an object literal', async () => {
+    const config = resolveCypressConfigObject(
+      `const config = {
+  e2e: {
+    baseUrl: 'https://example.com',
+  },
+};
+
+module.exports = config;
+`
+    );
+
+    expect(config).toBeDefined();
+    expect(config.getText()).toMatchInlineSnapshot(`
+      "{
+        e2e: {
+          baseUrl: 'https://example.com',
+        },
+      }"
     `);
   });
 });

@@ -364,6 +364,7 @@ if (!nativeBinding) {
 module.exports.ChildProcess = nativeBinding.ChildProcess
 module.exports.FileLock = nativeBinding.FileLock
 module.exports.HashPlanner = nativeBinding.HashPlanner
+module.exports.HttpRemoteCache = nativeBinding.HttpRemoteCache
 module.exports.ImportResult = nativeBinding.ImportResult
 module.exports.NxCache = nativeBinding.NxCache
 module.exports.NxTaskHistory = nativeBinding.NxTaskHistory

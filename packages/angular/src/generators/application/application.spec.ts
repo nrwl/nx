@@ -1,5 +1,4 @@
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { Tree, updateProjectConfiguration, writeJson } from '@nx/devkit';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -7,7 +6,9 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  Tree,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -25,7 +26,10 @@ import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 jest.mock('enquirer');
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
@@ -42,8 +46,8 @@ jest.mock('@nx/devkit', () => {
 describe('app', () => {
   let appTree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(null);
