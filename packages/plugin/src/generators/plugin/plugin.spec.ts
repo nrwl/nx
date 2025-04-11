@@ -325,6 +325,19 @@ describe('NxPlugin Plugin Generator', () => {
       const projects = getProjects(tree);
       expect(projects.has('my-plugin-e2e')).toBe(false);
     });
+
+    it('should place the e2e project in a root directory', async () => {
+      await pluginGenerator(
+        tree,
+        getSchema({
+          name: 'my-plugin',
+          e2eRootDirectory: 'e2e',
+        })
+      );
+
+      const projectE2e = readProjectConfiguration(tree, 'my-plugin-e2e');
+      expect(projectE2e.root).toEqual('e2e/my-plugin-e2e');
+    });
   });
 
   describe('TS solution setup', () => {
