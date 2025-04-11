@@ -301,6 +301,7 @@ export class TaskOrchestrator {
     }
 
     await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
+    this.forkedProcessTaskRunner.cleanUpBatchProcesses();
 
     const tasksCompleted = taskEntries.filter(
       ([taskId]) => this.completedTasks[taskId]
