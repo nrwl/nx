@@ -160,7 +160,7 @@ describe('@nx/cypress/plugin', () => {
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
           devServer: {
-            framework: 'create-react-app',
+            framework: 'react',
             bundler: 'webpack',
           },
         },
