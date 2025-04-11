@@ -1,4 +1,4 @@
-import { Checkbox, Input } from '@headlessui/react';
+import { Input } from '@headlessui/react';
 import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
 import { Layout } from '@nx/nx-dev/ui-company';
 import { NextSeo } from 'next-seo';
@@ -57,7 +57,9 @@ function MonthlyCIPEs({
 }): JSX.Element {
   return (
     <div className="flex flex-col">
-      <label htmlFor="number-of-engineers">Monthly CIPE's</label>
+      <label htmlFor="number-of-engineers">
+        Monthly CI Pipeline Executions
+      </label>
       <Input
         id="monthly-cipe"
         className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
@@ -82,7 +84,7 @@ function DteSavings({
       <label htmlFor="dte-savings">DTE Savings</label>
       <Input
         id="dte-savings"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 dark:border-slate-900 dark:bg-slate-700"
         type="range"
         min={10}
         max={30}
@@ -104,11 +106,11 @@ function ContextSwitching({
   return (
     <div className="flex flex-col">
       <label htmlFor="context-switching-savings">
-        % of CIPEs {'>'} 15 Minutes
+        % of Pipeline's {'>'} 15 Minutes
       </label>
       <Input
         id="context-switching-savings"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 dark:border-slate-900 dark:bg-slate-700"
         type="range"
         min={0}
         max={100}
@@ -134,7 +136,7 @@ function FlakyPercentage({
       <label htmlFor="flaky-percentage">Flaky Percentage</label>
       <Input
         id="flaky-percentage"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 dark:border-slate-900 dark:bg-slate-700"
         type="range"
         min={0}
         max={100}
@@ -194,13 +196,6 @@ function ValueLevers({
 
   return (
     <div>
-      <SectionHeading
-        as="h2"
-        variant="subtitle"
-        className="mx-auto mt-6 max-w-3xl"
-      >
-        Value Levers
-      </SectionHeading>
       <form ref={formRef} onSubmit={handleSubmit}>
         <div className="my-8 flex justify-between">
           <DeveloperSalary
@@ -287,12 +282,14 @@ export function ValueCalculator(): JSX.Element {
           </p>
           <ValueLevers setValueCreated={setValueCreated} />
           <SectionHeading
-            as="h2"
+            as="h4"
             variant="subtitle"
             className="mx-auto mt-6 max-w-3xl"
           >
-            {valueCreated > 0 &&
-              `Monthly Value Created = ${formattedValueCreated}`}
+            {valueCreated > 0 && `Monthly Value Created:`}
+          </SectionHeading>
+          <SectionHeading as="h3" variant="title" className="mx-auto max-w-3xl">
+            {formattedValueCreated}
           </SectionHeading>
         </div>
       </Layout>
