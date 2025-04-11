@@ -259,6 +259,7 @@ async function buildJestTargets(
       ? JSON.parse(existingTsNodeCompilerOptions)
       : {}),
     moduleResolution: 'node10',
+    module: 'commonjs',
     customConditions: null,
   });
   const target: TargetConfiguration = (targets[options.targetName] = {
