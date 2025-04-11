@@ -6,11 +6,18 @@ Graph of Tasks to be executed
 
 ### Properties
 
+- [continuousDependencies](../../devkit/documents/TaskGraph#continuousdependencies): Record<string, string[]>
 - [dependencies](../../devkit/documents/TaskGraph#dependencies): Record<string, string[]>
 - [roots](../../devkit/documents/TaskGraph#roots): string[]
 - [tasks](../../devkit/documents/TaskGraph#tasks): Record<string, Task>
 
 ## Properties
+
+### continuousDependencies
+
+• **continuousDependencies**: `Record`\<`string`, `string`[]\>
+
+---
 
 ### dependencies
 

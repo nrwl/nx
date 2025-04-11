@@ -217,6 +217,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveTargetName] = {
+    continuous: true,
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -237,6 +238,7 @@ async function createWebpackTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
@@ -257,6 +259,7 @@ async function createWebpackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    continuous: true,
     dependsOn: [options.buildTargetName],
     executor: '@nx/web:file-server',
     options: {

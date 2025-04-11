@@ -42,6 +42,7 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "detect-port": "^1.5.1",
     "semver": "^7.6.3",
+    "tree-kill": "1.2.2",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {

@@ -41,6 +41,31 @@ export interface RunOptions {
   skipSync: boolean;
 }
 
+export interface TuiOptions {
+  tuiAutoExit: boolean | number;
+}
+
+export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
+  return yargs.options('tuiAutoExit', {
+    describe:
+      'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
+    type: 'string',
+    coerce: (value) => {
+      if (value === 'true') {
+        return true;
+      }
+      if (value === 'false') {
+        return false;
+      }
+      const num = Number(value);
+      if (!Number.isNaN(num)) {
+        return num;
+      }
+      throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
+    },
+  }) as Argv<T & TuiOptions>;
+}
+
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
   return withVerbose(withExcludeOption(yargs))
     .option('parallel', {
@@ -112,7 +137,6 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       hidden: true,
     })
-
     .options('dte', {
       type: 'boolean',
       hidden: true,
