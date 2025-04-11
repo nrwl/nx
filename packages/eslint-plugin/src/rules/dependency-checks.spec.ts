@@ -28,6 +28,7 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 
 const rootPackageJson = {
   dependencies: {
+    '@types/external1': '~16.1.2',
     external1: '~16.1.2',
     external2: '^5.2.0',
     external3: '1.0.0',
@@ -122,7 +123,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -189,7 +190,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -247,9 +248,9 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {
+      [{
         ignoredFiles: ['{projectRoot}/vite.config.ts'],
-      },
+      }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -293,7 +294,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -356,7 +357,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { ignoredDependencies: ['external1'] },
+      [{ ignoredDependencies: ['external1', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -374,12 +375,18 @@ describe('Dependency checks (eslint)', () => {
         },
         externalNodes,
         dependencies: {
-          liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'npm:@types/external1', type: 'static' },
+          ],
         },
       },
       {
         liba: [
-          createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+          createFile(`libs/liba/src/main.ts`, [
+            'npm:external1',
+            'npm:@types/external1',
+          ]),
           createFile(`libs/liba/package.json`),
         ],
       }
@@ -400,7 +407,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { ignoredDependencies: ['external1'] },
+      [{ ignoredDependencies: ['external1'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -444,7 +451,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { ignoredDependencies: ['external1'] },
+      [{ ignoredDependencies: ['external1'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -489,7 +496,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -561,7 +568,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -618,7 +625,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -679,7 +686,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { buildTargets: ['notbuild'] },
+      [{ buildTargets: ['notbuild'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -735,7 +742,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { checkMissingDependencies: false },
+      [{ checkMissingDependencies: false }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -791,7 +798,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { ignoredDependencies: ['external2'] },
+      [{ ignoredDependencies: ['external2', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -801,7 +808,6 @@ describe('Dependency checks (eslint)', () => {
             type: 'lib',
             data: {
               root: 'libs/liba',
-
               targets: {
                 build: {},
               },
@@ -813,6 +819,7 @@ describe('Dependency checks (eslint)', () => {
           liba: [
             { source: 'liba', target: 'npm:external1', type: 'static' },
             { source: 'liba', target: 'npm:external2', type: 'static' },
+            { source: 'liba', target: 'npm:@types/react', type: 'static' },
           ],
         },
       },
@@ -821,10 +828,12 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/react',
           ]),
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/react',
           ]),
         ],
       }
@@ -851,7 +860,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -923,7 +932,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1002,7 +1011,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1081,7 +1090,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1160,7 +1169,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { checkObsoleteDependencies: false },
+      [{ checkObsoleteDependencies: false }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1202,6 +1211,7 @@ describe('Dependency checks (eslint)', () => {
       },
       peerDependencies: {
         unneeded: '>= 16 < 18',
+        '@types/unneeded': '^18.0.0',
       },
     };
 
@@ -1213,7 +1223,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { ignoredDependencies: ['unneeded'] },
+      [{ ignoredDependencies: ['unneeded', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1240,6 +1250,7 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:unneeded',
+            'npm:@types/unneeded',
           ]),
         ],
       }
@@ -1264,7 +1275,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1349,7 +1360,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { checkVersionMismatches: false },
+      [{ checkVersionMismatches: false }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1393,6 +1404,7 @@ describe('Dependency checks (eslint)', () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {
+        '@types/external1': '~16.0.0',
         external1: '~16.0.0',
         external2: '^1.0.0',
       },
@@ -1406,7 +1418,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { ignoredDependencies: ['external1'] },
+      [{ ignoredDependencies: ['external1', '@types/*'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1427,6 +1439,7 @@ describe('Dependency checks (eslint)', () => {
           liba: [
             { source: 'liba', target: 'npm:external1', type: 'static' },
             { source: 'liba', target: 'npm:external2', type: 'static' },
+            { source: 'liba', target: 'npm:@types/external1', type: 'static' },
           ],
         },
       },
@@ -1435,10 +1448,12 @@ describe('Dependency checks (eslint)', () => {
           createFile(`libs/liba/src/main.ts`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/external1',
           ]),
           createFile(`libs/liba/package.json`, [
             'npm:external1',
             'npm:external2',
+            'npm:@types/external1',
           ]),
         ],
       }
@@ -1447,7 +1462,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures[0].message).toMatchInlineSnapshot(
       `"The version specifier does not contain the installed version of "external2" package: 5.5.6."`
     );
-    expect(failures[0].line).toEqual(5);
+    expect(failures[0].line).toEqual(6);
   });
 
   it('should require tslib if @nx/js:tsc executor', () => {
@@ -1506,7 +1521,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1564,7 +1579,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1615,7 +1630,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1662,7 +1677,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1725,7 +1740,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1788,7 +1803,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      {},
+      [{}],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1844,7 +1859,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { runtimeHelpers: ['@swc/helpers'] },
+      [{ runtimeHelpers: ['@swc/helpers'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1900,7 +1915,7 @@ describe('Dependency checks (eslint)', () => {
     vol.fromJSON(fileSys, '/root');
 
     const failures = runRule(
-      { runtimeHelpers: ['@swc/helpers'] },
+      [{ runtimeHelpers: ['@swc/helpers'] }],
       `/root/libs/liba/package.json`,
       JSON.stringify(packageJson, null, 2),
       {
@@ -1933,6 +1948,73 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(0);
   });
+
+  it('should enforce dev-only dependencies when using multiple config objects', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {
+        external1: '^16.0.0',
+      },
+      devDependencies: {
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './libs/liba/src/index.spec.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      [
+        {
+          ignoredFiles: ['**/*.spec.ts'],
+        },
+        {
+          ignoredFiles: ['**/!(*.spec.ts)'],
+          production: false,
+        }
+      ] as Options,
+      `/root/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [
+            { source: 'liba', target: 'npm:external1', type: 'static' },
+            { source: 'liba', target: 'npm:external2', type: 'static' },
+          ],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+          createFile(`libs/liba/src/main.spec.ts`, ['npm:external2']),
+          createFile(`libs/liba/package.json`, ['npm:external1']),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(1);
+    expect(failures[0].message).toMatchInlineSnapshot(`
+      "The "liba" project uses the following packages, but they are missing from "devDependencies":
+          - external2"
+    `);
+    expect(failures[0].line).toEqual(6);
+  });
 });
 
 function createFile(f: string, deps?: FileDataDependency[]): FileData {
@@ -1950,7 +2032,7 @@ linter.defineParser('jsonc-eslint-parser', jsoncParser as any);
 linter.defineRule(dependencyChecksRuleName, dependencyChecks as any);
 
 function runRule(
-  ruleArguments: Options[0],
+  ruleArguments: Options,
   filePath: string,
   content: string,
   projectGraph: ProjectGraph,
@@ -1965,7 +2047,7 @@ function runRule(
   const config = {
     ...baseConfig,
     rules: {
-      [dependencyChecksRuleName]: ['error', ruleArguments],
+      [dependencyChecksRuleName]: ['error', ...ruleArguments],
     },
   };
 
