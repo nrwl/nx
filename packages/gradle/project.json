@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/gradle/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "nx-release-publish": {
       "dependsOn": ["^nx-release-publish"],
@@ -43,6 +44,16 @@
             "output": "/"
           },
           {
+            "input": "packages/gradle",
+            "glob": "**/gradle.properties",
+            "output": "/"
+          },
+          {
+            "input": "packages/gradle/batch-runner",
+            "glob": "**/*.jar",
+            "output": "/batch-runner"
+          },
+          {
             "input": "",
             "glob": "LICENSE",
             "output": "/"
@@ -58,5 +69,5 @@
       }
     }
   },
-  "tags": []
+  "implicitDependencies": ["gradle-batch-runner", "gradle-project-graph"]
 }
