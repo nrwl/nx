@@ -200,6 +200,75 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.7.1-beta.0": {
+      "version": "20.7.1-beta.0",
+      "packages": {
+        "@remix-run/node": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/react": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/serve": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/dev": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/css-bundle": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/eslint-config": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/server-runtime": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/testing": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/express": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/cloudflare": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/cloudflare-pages": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/cloudflare-workers": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/architect": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/deno": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/route-config": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@remix-run/fs-routes": {
+          "version": "^2.16.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
