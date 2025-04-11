@@ -126,7 +126,16 @@ export class TaskOrchestrator {
     for (let i = 0; i < threadCount; ++i) {
       threads.push(this.executeNextBatchOfTasksUsingTaskSchedule());
     }
-    await Promise.all(threads);
+
+    await Promise.race([
+      Promise.all(threads),
+      new Promise((resolve) => {
+        this.options.lifeCycle.registerForcedShutdownCallback(() => {
+          // The user force quit the TUI with ctrl+c, so proceed onto cleanup
+          resolve(undefined);
+        });
+      }),
+    ]);
 
     performance.mark('task-execution:end');
     performance.measure(
@@ -692,16 +701,8 @@ export class TaskOrchestrator {
     this.runningTasksService.addRunningTask(task.id);
     this.runningContinuousTasks.set(task.id, childProcess);
 
-    childProcess.onExit((code) => {
+    childProcess.onExit(() => {
       this.runningTasksService.removeRunningTask(task.id);
-      if (!this.cleaningUp) {
-        console.error(
-          `Task "${task.id}" is continuous but exited with code ${code}`
-        );
-        this.cleanup().then(() => {
-          process.exit(1);
-        });
-      }
     });
     if (
       this.initiatingProject === task.target.project &&

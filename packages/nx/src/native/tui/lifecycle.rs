@@ -206,6 +206,15 @@ impl AppLifeCycle {
                             app.call_done_callback();
                             break;
                         }
+
+                        // Check if we should quit based on the timer
+                        if let Some(quit_time) = app.quit_at {
+                            if std::time::Instant::now() >= quit_time {
+                                tui.exit().ok();
+                                app.call_done_callback();
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -213,19 +222,6 @@ impl AppLifeCycle {
                 while let Ok(action) = action_rx.try_recv() {
                     if let Ok(mut app) = app_mutex.lock() {
                         app.handle_action(&mut tui, action, &action_tx);
-
-                        // Check if we should quit based on the timer
-                        if let Some(quit_time) = app.quit_at {
-                            if std::time::Instant::now() >= quit_time {
-                                debug!("Quitting TUI");
-                                tui.stop().ok();
-                                debug!("Exiting TUI");
-                                tui.exit().ok();
-                                debug!("Calling exit callback");
-                                app.call_done_callback();
-                                break;
-                            }
-                        }
                     }
                 }
             }
@@ -241,19 +237,24 @@ impl AppLifeCycle {
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
         let mut app = self.app.lock().unwrap();
-
         app.register_running_task(task_id, parser_and_writer, TaskStatus::InProgress)
     }
 
     #[napi]
-    pub fn set_task_status(
-        &mut self,
-        task_id: String,
-        status: TaskStatus,
-    ) {
+    pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         let mut app = self.app.lock().unwrap();
-
         app.set_task_status(task_id, status)
+    }
+
+    #[napi]
+    pub fn register_forced_shutdown_callback(
+        &self,
+        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+    ) -> napi::Result<()> {
+        if let Ok(mut app) = self.app.lock() {
+            app.set_forced_shutdown_callback(forced_shutdown_callback);
+        }
+        Ok(())
     }
 
     // Rust-only lifecycle method
