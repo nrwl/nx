@@ -1,5 +1,5 @@
 ---
-title: 'Three Test Splitting Techniques that Cut E2E Times up to 90%'
+title: '3 Test Splitting Techniques that Cut E2E Times up to 90%'
 slug: test-splitting-techniques
 authors: [Miroslav Jonaš]
 description: "Learn the techniques for optimizing CI by splitting long-running tests, using sharding, Atomizer, and manual E2E project splitting, all enhanced by Nx Cloud's distributed task execution for improved stability and performance."
@@ -7,7 +7,7 @@ tags: [nx, architecture]
 cover_image: /blog/images/articles/bg-test-splitting-techniques.avif
 ---
 
-> "There's nothing worse than waiting for a build to complete, or those e2e tests to run. With Nx Cloud, our development team has saved over 104 hours, almost cutting our build times in half. The installation is seamless and the results are immediate. It's nice to have a tool that passively saves so much development time." - Director of software development at a large digital marketing company
+> "There's nothing worse than waiting for a build to complete, or those e2e tests to run. With Nx Cloud, our development team has saved over 104 hours, almost cutting our build times in half. The installation is seamless and the results are immediate. It's nice to have a tool that passively saves so much development time." - Director of Software Development, enterprise digital marketing firm
 
 One of the most impactful core features of Nx is the affected graph. The affected graph helps us to skip unnecessary work and focus only on the things that have been changed, speeding our CI and helping us ship features and hotfixes faster.
 
@@ -140,4 +140,4 @@ Faster CI is just the beginning. When combined with Nx Cloud's distributed task 
 
 Give these techniques a try and see the difference for yourself.
 
-{% call-to-action title="Ready to go further?" url="/contact/engineering" icon="nxcloud" description="Let's talk about how Nx Cloud can help you scale with speed." /%}
+{% call-to-action title="Ready to go further?" url="/contact/sales?utm_source=nx-blog&utm_medium=blog&utm_campaign=technical-blog&utm_id=040925" icon="nxcloud" description="Let's talk about how Nx Cloud can help you scale with speed." /%}
