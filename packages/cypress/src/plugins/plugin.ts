@@ -72,7 +72,7 @@ export const createNodesV2: CreateNodesV2<CypressPluginOptions> = [
 
 /**
  * @deprecated This is replaced with {@link createNodesV2}. Update your plugin to export its own `createNodesV2` function that wraps this one instead.
- * This function will change to the v2 function in Nx 20.
+ * This function will change to the v2 function in Nx 20. Qwerty Uiop
  */
 export const createNodes: CreateNodes<CypressPluginOptions> = [
   cypressConfigGlob,
