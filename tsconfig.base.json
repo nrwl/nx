@@ -43,6 +43,8 @@
         "graph/ui-project-details/src/index.ts"
       ],
       "@nx/graph-internal/ui-theme": ["graph/ui-theme/src/index.ts"],
+      "@nx/graph-migrate": ["graph/migrate/src/index.ts"],
+      "@nx/graph/ui-common": ["graph/ui-common/src/index.ts"],
       "@nx/jest": ["packages/jest"],
       "@nx/jest/*": ["packages/jest/*"],
       "@nx/js": ["packages/js/src/index.ts"],
