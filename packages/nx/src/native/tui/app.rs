@@ -34,9 +34,11 @@ pub struct App {
     focus: Focus,
     previous_focus: Focus,
     done_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
+    forced_shutdown_callback: Option<ThreadsafeFunction<(), ErrorStrategy::Fatal>>,
     tui_config: TuiConfig,
     // We track whether the user has interacted with the app to determine if we should show perform any auto-exit at all
     user_has_interacted: bool,
+    is_forced_shutdown: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -70,8 +72,10 @@ impl App {
             focus,
             previous_focus: Focus::TaskList,
             done_callback: None,
+            forced_shutdown_callback: None,
             tui_config,
             user_has_interacted: false,
+            is_forced_shutdown: false,
         })
     }
 
@@ -111,22 +115,31 @@ impl App {
         status: TaskStatus,
         output: String,
     ) {
-        // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
-        if is_cache_hit(status) {
-            let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
+            if is_cache_hit(status) {
+                let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
 
-            // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
-            let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-            TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
+                // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
+                let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
+                TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
 
-            if let Some(tasks_list) = self
-                .components
-                .iter_mut()
-                .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-            {
                 tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
                 tasks_list.update_task_status(task_id.clone(), status);
                 let _ = tasks_list.handle_resize(None);
+                return;
+            }
+
+            // If the task is continuous, we are only updating the status, not the output
+            if let Some(task) = tasks_list.tasks.iter_mut().find(|t| t.name == task_id) {
+                if task.continuous {
+                    tasks_list.update_task_status(task_id.clone(), status);
+                    let _ = tasks_list.handle_resize(None);
+                }
             }
         }
     }
@@ -209,6 +222,7 @@ impl App {
 
                 // Handle Ctrl+C to quit
                 if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL {
+                    self.is_forced_shutdown = true;
                     // Quit immediately
                     self.quit_at = Some(std::time::Instant::now());
                     return Ok(true);
@@ -672,7 +686,22 @@ impl App {
         self.done_callback = Some(done_callback);
     }
 
+    pub fn set_forced_shutdown_callback(
+        &mut self,
+        forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
+    ) {
+        self.forced_shutdown_callback = Some(forced_shutdown_callback);
+    }
+
     pub fn call_done_callback(&self) {
+        if self.is_forced_shutdown {
+            if let Some(cb) = &self.forced_shutdown_callback {
+                cb.call(
+                    (),
+                    napi::threadsafe_function::ThreadsafeFunctionCallMode::Blocking,
+                );
+            }
+        }
         if let Some(cb) = &self.done_callback {
             cb.call(
                 (),
