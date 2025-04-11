@@ -4,158 +4,85 @@ import { Layout } from '@nx/nx-dev/ui-company';
 import { NextSeo } from 'next-seo';
 import { useMemo, useRef, useState } from 'react';
 
-function DeveloperSalary({
-  developerSalary,
-  setDeveloperSalary,
+function ValueInput({
+  id,
+  value,
+  setValue,
+  label,
+  placeholder,
+  subtitle,
 }: {
-  developerSalary: number;
-  setDeveloperSalary: (developerSalary: number) => void;
-}): JSX.Element {
+  id: string;
+  value: number;
+  setValue: (value: number) => void;
+  label: string;
+  placeholder: string;
+  subtitle: string;
+}) {
   return (
-    <div className="flex flex-col">
-      <label htmlFor="developer-salary">Average Engineer Salary</label>
-      <Input
-        id="developer-salary"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
-        type="number"
-        value={developerSalary}
-        onChange={(e) => setDeveloperSalary(parseInt(e.target.value))}
-        placeholder="$125,000"
-      />
+    <div className="basis-1/3">
+      <div className="flex flex-col">
+        <label htmlFor={id}>{label}</label>
+        <p className="text-xs text-slate-500">{subtitle}</p>
+        <Input
+          id={id}
+          className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
+          type="number"
+          value={value}
+          onChange={(e) => setValue(parseInt(e.target.value))}
+          placeholder={placeholder}
+        />
+      </div>
     </div>
   );
 }
 
-function MedianBuildTime({
-  medianBuildTime,
-  setMedianBuildTime,
+function ValueRange({
+  id,
+  value,
+  setValue,
+  label,
+  min,
+  max,
+  subtitle,
 }: {
-  medianBuildTime: number;
-  setMedianBuildTime: (medianBuildTime: number) => void;
-}): JSX.Element {
+  id: string;
+  value: number;
+  setValue: (value: number) => void;
+  label: string;
+  min: number;
+  max: number;
+  subtitle: string;
+}) {
   return (
-    <div className="flex flex-col">
-      <label htmlFor="median-build-time">Median Build Time</label>
-      <Input
-        id="median-build-time"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
-        type="text"
-        placeholder="30 minutes"
-        value={medianBuildTime}
-        onChange={(e) => setMedianBuildTime(parseInt(e.target.value))}
-      />
+    <div className="basis-1/3">
+      <div className="flex flex-col">
+        <label htmlFor={id}>{label}</label>
+        <p className="text-xs text-slate-500">{subtitle}</p>
+        <Input
+          id={id}
+          className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white dark:border-slate-900 dark:bg-slate-700"
+          type="range"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => setValue(parseInt(e.target.value))}
+        />
+        <p className="text-sm text-slate-500">{value}%</p>
+      </div>
     </div>
   );
 }
 
-function MonthlyCIPEs({
-  monthlyCIPEs,
-  setMonthlyCIPEs,
-}: {
-  monthlyCIPEs: number;
-  setMonthlyCIPEs: (monthlyCIPEs: number) => void;
-}): JSX.Element {
-  return (
-    <div className="flex flex-col">
-      <label htmlFor="number-of-engineers">
-        Monthly CI Pipeline Executions
-      </label>
-      <Input
-        id="monthly-cipe"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 shadow-lg dark:border-slate-900 dark:bg-slate-700"
-        type="number"
-        placeholder="10,000"
-        value={monthlyCIPEs}
-        onChange={(e) => setMonthlyCIPEs(parseInt(e.target.value))}
-      />
-    </div>
-  );
-}
-
-function DteSavings({
-  dteSavings,
-  setDteSavings,
-}: {
-  dteSavings: number;
-  setDteSavings: (dteSavings: number) => void;
-}): JSX.Element {
-  return (
-    <div className="flex flex-col">
-      <label htmlFor="dte-savings">DTE Savings</label>
-      <Input
-        id="dte-savings"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 dark:border-slate-900 dark:bg-slate-700"
-        type="range"
-        min={10}
-        max={30}
-        value={dteSavings}
-        onChange={(e) => setDteSavings(parseInt(e.target.value))}
-      />
-      <p className="text-sm text-slate-500">{dteSavings}%</p>
-    </div>
-  );
-}
-
-function ContextSwitching({
-  percentageOfCIPEs15Minutes,
-  setPercentageOfCIPEs15Minutes,
-}: {
-  percentageOfCIPEs15Minutes: number;
-  setPercentageOfCIPEs15Minutes: (percentageOfCIPEs15Minutes: number) => void;
-}): JSX.Element {
-  return (
-    <div className="flex flex-col">
-      <label htmlFor="context-switching-savings">
-        % of Pipeline's {'>'} 15 Minutes
-      </label>
-      <Input
-        id="context-switching-savings"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 dark:border-slate-900 dark:bg-slate-700"
-        type="range"
-        min={0}
-        max={100}
-        value={percentageOfCIPEs15Minutes}
-        onChange={(e) =>
-          setPercentageOfCIPEs15Minutes(parseInt(e.target.value))
-        }
-      />
-      <p className="text-sm text-slate-500">{percentageOfCIPEs15Minutes}%</p>
-    </div>
-  );
-}
-
-function FlakyPercentage({
-  flakyPercentage,
-  setFlakyPercentage,
-}: {
-  flakyPercentage: number;
-  setFlakyPercentage: (flakyPercentage: number) => void;
-}): JSX.Element {
-  return (
-    <div className="flex flex-col">
-      <label htmlFor="flaky-percentage">Flaky Percentage</label>
-      <Input
-        id="flaky-percentage"
-        className="relative mx-auto my-2 flex max-w-3xl gap-2 rounded-md border border-slate-300 bg-white px-2 dark:border-slate-900 dark:bg-slate-700"
-        type="range"
-        min={0}
-        max={100}
-        value={flakyPercentage}
-        onChange={(e) => setFlakyPercentage(parseInt(e.target.value))}
-      />
-      <p className="text-sm text-slate-500">{flakyPercentage}%</p>
-    </div>
-  );
-}
 function ValueLevers({
   setValueCreated,
 }: {
-  setValueCreated: (valueCreated: number) => void;
+  setValueCreated: (valueCreated: { hours: number; dollars: number }) => void;
 }): JSX.Element {
   const [developerSalary, setDeveloperSalary] = useState<number>(125000);
   const [medianBuildTime, setMedianBuildTime] = useState<number>(30);
   const [monthlyCIPEs, setMonthlyCIPEs] = useState<number>(10000);
-  const [dteSavings, setDteSavings] = useState<number>(20);
+  const [longestBuildTime, setLongestBuildTime] = useState<number>(60);
   const [percentageOfCIPEs15Minutes, setPercentageOfCIPEs15Minutes] =
     useState<number>(0);
   const [flakyPercentage, setFlakyPercentage] = useState<number>(0);
@@ -167,7 +94,7 @@ function ValueLevers({
     // dte savings
     const medianBuildHours = medianBuildTime / 60;
     const totalCIPEsPerMonth = monthlyCIPEs;
-    const dteSavingsPercentage = dteSavings / 100;
+    const dteSavingsPercentage = 0.2; // hard coded to 20%
     const hoursSaved =
       medianBuildHours * totalCIPEsPerMonth * dteSavingsPercentage;
     const fteHoursLost = hoursSaved / 160;
@@ -176,7 +103,7 @@ function ValueLevers({
     // context switching savings https://erichorvitz.com/taskdiary.pdf
     const totalContextSwitches =
       (percentageOfCIPEs15Minutes / 100) * monthlyCIPEs;
-    const hoursLostPerCS = 0.3; // defaults to 15 minutes
+    const hoursLostPerCS = 0.3;
     const csHoursLost = hoursLostPerCS * totalContextSwitches;
     const csFTELost = csHoursLost / 160;
     const csFTESavings = csFTELost * (developerSalary / 12);
@@ -187,39 +114,74 @@ function ValueLevers({
     const flakyLostHours = flakyLostCIPEHours * totalFlakyCIPEs;
     const flakyFTELost = flakyLostHours / 160;
     const flakyFTESavings = flakyFTELost * (developerSalary / 12);
-    setValueCreated(
-      Math.trunc(fteSavings) +
+
+    setValueCreated({
+      hours:
+        Math.trunc(hoursSaved) +
+        Math.trunc(csHoursLost) +
+        Math.trunc(flakyLostHours),
+      dollars:
+        Math.trunc(fteSavings) +
         Math.trunc(csFTESavings) +
-        Math.trunc(flakyFTESavings)
-    );
+        Math.trunc(flakyFTESavings),
+    });
   };
 
   return (
     <div>
       <form ref={formRef} onSubmit={handleSubmit}>
-        <div className="my-8 flex justify-between">
-          <DeveloperSalary
-            developerSalary={developerSalary}
-            setDeveloperSalary={setDeveloperSalary}
+        <div className="my-8 flex flex-wrap gap-y-4">
+          <ValueInput
+            id="developer-salary"
+            value={developerSalary}
+            setValue={setDeveloperSalary}
+            label="Average Engineer Salary"
+            placeholder="$125,000"
+            subtitle="in USD"
           />
-          <MedianBuildTime
-            medianBuildTime={medianBuildTime}
-            setMedianBuildTime={setMedianBuildTime}
+          <ValueInput
+            id="median-build-time"
+            value={medianBuildTime}
+            setValue={setMedianBuildTime}
+            label="Median Build Time"
+            placeholder="30 minutes"
+            subtitle="in minutes"
           />
-          <MonthlyCIPEs
-            monthlyCIPEs={monthlyCIPEs}
-            setMonthlyCIPEs={setMonthlyCIPEs}
+          <ValueInput
+            id="monthly-cipe"
+            value={monthlyCIPEs}
+            setValue={setMonthlyCIPEs}
+            label="Monthly Workflows"
+            placeholder="10,000"
+            subtitle="CI Pipeline Executions"
           />
-        </div>
-        <div className="my-8 flex justify-between">
-          <DteSavings dteSavings={dteSavings} setDteSavings={setDteSavings} />
-          <ContextSwitching
-            percentageOfCIPEs15Minutes={percentageOfCIPEs15Minutes}
-            setPercentageOfCIPEs15Minutes={setPercentageOfCIPEs15Minutes}
+          <ValueInput
+            id="longest-build-time"
+            value={longestBuildTime}
+            setValue={setLongestBuildTime}
+            label="Longest Build Time"
+            placeholder="45"
+            subtitle="in minutes"
           />
-          <FlakyPercentage
-            flakyPercentage={flakyPercentage}
-            setFlakyPercentage={setFlakyPercentage}
+
+          <ValueRange
+            id="percentage-of-cipe-15-minutes"
+            value={percentageOfCIPEs15Minutes}
+            setValue={setPercentageOfCIPEs15Minutes}
+            label="Pipeline's > 15 Minutes"
+            min={0}
+            max={100}
+            subtitle="in percentage"
+          />
+
+          <ValueRange
+            id="flaky-percentage"
+            value={flakyPercentage}
+            setValue={setFlakyPercentage}
+            label="Flaky Workflows"
+            min={0}
+            max={100}
+            subtitle="in percentage"
           />
         </div>
         <Button type="submit" variant="primary">
@@ -231,14 +193,25 @@ function ValueLevers({
 }
 
 export function ValueCalculator(): JSX.Element {
-  const [valueCreated, setValueCreated] = useState<number>(0);
-  const formattedValueCreated = useMemo(
+  const [valueCreated, setValueCreated] = useState<{
+    hours: number;
+    dollars: number;
+  }>({ hours: 0, dollars: 0 });
+  const formattedDollarsCreated = useMemo(
     () =>
       new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-      }).format(valueCreated),
-    [valueCreated]
+        maximumFractionDigits: 0,
+      }).format(valueCreated.dollars),
+    [valueCreated.dollars]
+  );
+  const formattedHoursSaved = useMemo(
+    () =>
+      new Intl.NumberFormat('en-US', {
+        maximumFractionDigits: 0,
+      }).format(valueCreated.hours),
+    [valueCreated.hours]
   );
   return (
     <>
@@ -281,16 +254,39 @@ export function ValueCalculator(): JSX.Element {
             practices, and usage.
           </p>
           <ValueLevers setValueCreated={setValueCreated} />
-          <SectionHeading
-            as="h4"
-            variant="subtitle"
-            className="mx-auto mt-6 max-w-3xl"
-          >
-            {valueCreated > 0 && `Monthly Value Created:`}
-          </SectionHeading>
-          <SectionHeading as="h3" variant="title" className="mx-auto max-w-3xl">
-            {formattedValueCreated}
-          </SectionHeading>
+          {valueCreated.dollars > 0 && (
+            <>
+              <SectionHeading
+                as="h4"
+                variant="subtitle"
+                className="mx-auto mt-6 max-w-3xl"
+              >
+                Monthly Value Created
+              </SectionHeading>
+              <SectionHeading
+                as="h3"
+                variant="title"
+                className="mx-auto max-w-3xl"
+              >
+                {formattedDollarsCreated}
+              </SectionHeading>
+
+              <SectionHeading
+                as="h4"
+                variant="subtitle"
+                className="mx-auto mt-6 max-w-3xl"
+              >
+                Time Saved
+              </SectionHeading>
+              <SectionHeading
+                as="h3"
+                variant="title"
+                className="mx-auto max-w-3xl"
+              >
+                {formattedHoursSaved} hours
+              </SectionHeading>
+            </>
+          )}
         </div>
       </Layout>
     </>
