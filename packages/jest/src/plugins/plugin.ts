@@ -253,11 +253,7 @@ async function buildJestTargets(
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const existingTsNodeCompilerOptions = process.env['TS_NODE_COMPILER_OPTIONS'];
   const tsNodeCompilerOptions = JSON.stringify({
-    ...(existingTsNodeCompilerOptions
-      ? JSON.parse(existingTsNodeCompilerOptions)
-      : {}),
     moduleResolution: 'node10',
     module: 'commonjs',
     customConditions: null,
