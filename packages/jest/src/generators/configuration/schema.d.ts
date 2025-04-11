@@ -30,6 +30,7 @@ export interface JestProjectSchema {
    * @internal
    */
   addExplicitTargets?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {
