@@ -55,7 +55,7 @@ pub fn sort_task_items(tasks: &mut [TaskItem]) {
         // Map status to a numeric category for sorting
         let status_to_category = |status: &TaskStatus| -> u8 {
             match status {
-                TaskStatus::InProgress => 0,
+                TaskStatus::InProgress | TaskStatus::Shared => 0,
                 TaskStatus::Failure => 1,
                 TaskStatus::Success
                 | TaskStatus::LocalCacheKeptExisting
@@ -320,7 +320,7 @@ mod tests {
             // Map status to category for comparison
             let status_to_category = |status: &TaskStatus| -> u8 {
                 match status {
-                    TaskStatus::InProgress => 0,
+                    TaskStatus::InProgress | TaskStatus::Shared => 0,
                     TaskStatus::Failure => 1,
                     TaskStatus::Success
                     | TaskStatus::LocalCacheKeptExisting

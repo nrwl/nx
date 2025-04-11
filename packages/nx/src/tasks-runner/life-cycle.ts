@@ -1,5 +1,5 @@
 import { Task } from '../config/task-graph';
-import { ExternalObject } from '../native';
+import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native';
 import { RunningTask } from './running-tasks/running-task';
 import { TaskStatus } from './tasks-runner';
 
@@ -67,7 +67,9 @@ export interface LifeCycle {
   registerRunningTask?(
     taskId: string,
     parserAndWriter: ExternalObject<[any, any]>
-  );
+  ): Promise<void>;
+
+  setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -155,6 +157,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
         await l.registerRunningTask(taskId, parserAndWriter);
+      }
+    }
+  }
+
+  setTaskStatus(taskId: string, status: NativeTaskStatus): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskStatus) {
+        l.setTaskStatus(taskId, status);
       }
     }
   }
