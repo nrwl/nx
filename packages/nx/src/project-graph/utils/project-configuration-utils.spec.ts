@@ -1510,7 +1510,7 @@ describe('project-configuration-utils', () => {
         readProjectConfigurationsFromRootMap(rootMap);
       }).toThrowErrorMatchingInlineSnapshot(`
         "The following projects are defined in multiple locations:
-        - lib:
+        - lib: 
           - apps/lib-a
           - apps/lib-b
 
@@ -1879,7 +1879,7 @@ describe('project-configuration-utils', () => {
         expect(error.errors).toMatchInlineSnapshot(`
           [
             [MultipleProjectsWithSameNameError: The following projects are defined in multiple locations:
-          - same-name:
+          - same-name: 
             - libs/a
             - libs/b
             - libs/c
