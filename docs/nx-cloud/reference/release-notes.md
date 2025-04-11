@@ -2,7 +2,7 @@
 
 ### 2025.03.3
 
-- Feat: provide prebuilt Java cert store to NxAPI 
+- Feat: provide prebuilt Java cert store to NxAPI
   - Full details [here](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#pre-built-java-cacerts)
 
 ### 2025.03.2
