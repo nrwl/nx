@@ -1,6 +1,7 @@
 ---
 title: Overview of the Nx Angular Plugin
 description: The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace.
+keywords: [angular]
 ---
 
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries

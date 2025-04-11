@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   logger,
   readJson,
@@ -14,14 +14,17 @@ import { componentGenerator } from './component';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 
 describe('component', () => {
   let appTree: Tree;
   let projectName: string;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);

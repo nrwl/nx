@@ -8606,6 +8606,31 @@
         "name": "module-federation",
         "children": [
           {
+            "id": "documents",
+            "path": "/nx-api/module-federation/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "NxModuleFederationPlugin",
+                "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+                "id": "nx-module-federation-plugin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "NxModuleFederationDevServerPlugin",
+                "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+                "id": "nx-module-federation-dev-server-plugin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "migrations",
             "path": "/nx-api/module-federation/migrations",
             "name": "migrations",

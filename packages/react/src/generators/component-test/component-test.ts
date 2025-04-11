@@ -23,7 +23,7 @@ export async function componentTestGenerator(
 ) {
   ensurePackage('@nx/cypress', nxVersion);
   const { assertMinimumCypressVersion } = await import(
-    '@nx/cypress/src/utils/cypress-version'
+    '@nx/cypress/src/utils/versions'
   );
   assertMinimumCypressVersion(10);
   // normalize any windows paths

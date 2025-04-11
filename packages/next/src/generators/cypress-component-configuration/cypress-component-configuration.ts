@@ -91,6 +91,10 @@ async function addFiles(
   const { addMountDefinition, addDefaultCTConfig } = await import(
     '@nx/cypress/src/utils/config'
   );
+  const { getInstalledCypressMajorVersion } = await import(
+    '@nx/cypress/src/utils/versions'
+  );
+  const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
   const ctFile = joinPathFragments(
     projectConfig.root,
@@ -102,9 +106,11 @@ async function addFiles(
   const updatedCommandFile = await addMountDefinition(
     tree.read(ctFile, 'utf-8')
   );
+  const moduleSpecifier =
+    installedCypressMajorVersion >= 14 ? 'cypress/react' : 'cypress/react18';
   tree.write(
     ctFile,
-    `import { mount } from 'cypress/react18';\nimport './styles.ct.css';\n${updatedCommandFile}`
+    `import { mount } from '${moduleSpecifier}';\nimport './styles.ct.css';\n${updatedCommandFile}`
   );
 
   const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');

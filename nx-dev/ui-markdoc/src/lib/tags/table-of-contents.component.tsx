@@ -23,7 +23,7 @@ export function TableOfContents({
     if (!content) return;
 
     // Get all headings h1-h6 within the content
-    const headingElements = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headingElements = content.querySelectorAll('h2, h3, h4, h5, h6');
 
     const items: TocItem[] = Array.from(headingElements)
       .map((heading) => {
@@ -54,7 +54,7 @@ export function TableOfContents({
         {headings.map((heading) => (
           <li
             key={heading.id}
-            style={{ paddingLeft: `${(heading.level - 1) * 1}rem` }}
+            style={{ paddingLeft: `${(heading.level - 2) * 1}rem` }}
           >
             <a
               href={`#${heading.id}`}

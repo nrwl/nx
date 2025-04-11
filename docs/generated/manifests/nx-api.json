@@ -1372,6 +1372,56 @@
       }
     },
     "migrations": {
+      "/nx-api/cypress/migrations/set-inject-document-domain": {
+        "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
+        "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",
+        "hidden": false,
+        "name": "set-inject-document-domain",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/set-inject-document-domain",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/remove-experimental-fetch-polyfill": {
+        "description": "Removes the `experimentalFetchPolyfill` configuration option.",
+        "file": "generated/packages/cypress/migrations/remove-experimental-fetch-polyfill.json",
+        "hidden": false,
+        "name": "remove-experimental-fetch-polyfill",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/remove-experimental-fetch-polyfill",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/replace-experimental-just-in-time-compile": {
+        "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+        "file": "generated/packages/cypress/migrations/replace-experimental-just-in-time-compile.json",
+        "hidden": false,
+        "name": "replace-experimental-just-in-time-compile",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/replace-experimental-just-in-time-compile",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/update-component-testing-mount-imports": {
+        "description": "Updates the module specifier for the Component Testing `mount` function.",
+        "file": "generated/packages/cypress/migrations/update-component-testing-mount-imports.json",
+        "hidden": false,
+        "name": "update-component-testing-mount-imports",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/update-component-testing-mount-imports",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/20.8.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/cypress/migrations/20.8.0-package-updates.json",
+        "hidden": false,
+        "name": "20.8.0-package-updates",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/20.8.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite": {
         "description": "Update ciWebServerCommand to use static serve for the application.",
         "file": "generated/packages/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite.json",
@@ -2772,7 +2822,30 @@
     "name": "module-federation",
     "packageName": "@nx/module-federation",
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": {},
+    "documents": {
+      "/nx-api/module-federation/documents/nx-module-federation-plugin": {
+        "id": "nx-module-federation-plugin",
+        "name": "NxModuleFederationPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
+      },
+      "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin": {
+        "id": "nx-module-federation-dev-server-plugin",
+        "name": "NxModuleFederationDevServerPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
+      }
+    },
     "root": "/packages/module-federation",
     "source": "/packages/module-federation/src",
     "executors": {},
@@ -5889,6 +5962,16 @@
       }
     },
     "migrations": {
+      "/nx-api/vue/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/vue/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/vue",
+        "path": "/nx-api/vue/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
       "/nx-api/vue/migrations/19.4.3-package-updates": {
         "description": "",
         "file": "generated/packages/vue/migrations/19.4.3-package-updates.json",
@@ -6074,6 +6157,16 @@
       }
     },
     "migrations": {
+      "/nx-api/webpack/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
       "/nx-api/webpack/migrations/20.5.0-package-updates": {
         "description": "",
         "file": "generated/packages/webpack/migrations/20.5.0-package-updates.json",

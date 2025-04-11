@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::mem;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -51,6 +52,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
     files
 }
 
+#[derive(Default)]
 struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
@@ -413,5 +415,12 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
+    }
+}
+
+impl Drop for WorkspaceContext {
+    fn drop(&mut self) {
+        let fw = mem::take(&mut self.files_worker);
+        drop(fw);
     }
 }

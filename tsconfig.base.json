@@ -143,6 +143,8 @@
       "@nx/rspack/*": ["packages/rspack/src/*"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
+      "@nx/tutorialkit": ["nx-dev/tutorialkit/src/index.ts"],
+      "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/ui-scrollable-content": [
         "nx-dev/ui-scrollable-content/src/index.ts"
       ],

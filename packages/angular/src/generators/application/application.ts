@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
@@ -11,6 +12,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { angularInitGenerator } from '../init/init';
+import { convertToRspack } from '../convert-to-rspack/convert-to-rspack';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
@@ -35,8 +37,12 @@ export async function applicationGenerator(
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
   assertNotUsingTsSolutionSetup(tree, 'angular', 'application');
+  const isRspack = schema.bundler === 'rspack';
+  if (isRspack) {
+    schema.bundler = 'webpack';
+  }
 
-  const options = await normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema, isRspack);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await jsInitGenerator(tree, {
@@ -48,6 +54,7 @@ export async function applicationGenerator(
   await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   if (!options.skipPackageJson) {
@@ -99,6 +106,14 @@ export async function applicationGenerator(
       standalone: options.standalone,
       skipPackageJson: options.skipPackageJson,
       serverRouting: options.serverRouting,
+    });
+  }
+
+  if (isRspack) {
+    await convertToRspack(tree, {
+      project: options.name,
+      skipInstall: options.skipPackageJson,
+      skipFormat: true,
     });
   }
 
