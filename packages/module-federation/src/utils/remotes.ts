@@ -45,33 +45,27 @@ function handleArrayRemote(
   remoteEntryExt: 'js' | 'mjs',
   isRemoteGlobal: boolean
 ): string {
-  let [nxRemoteProjectName, remoteLocation] = remote;
+  const [nxRemoteProjectName, remoteLocation] = remote;
   const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
-  const remoteLocationExt = extname(remoteLocation);
 
-  // If remote location already has .js or .mjs extension
-  if (['.js', '.mjs', '.json'].includes(remoteLocationExt)) {
-    if (isRemoteGlobal && !remoteLocation.startsWith(`${mfRemoteName}@`)) {
-      return `${mfRemoteName}@${remoteLocation}`;
-    }
+  // Remote string starts like "promise new Promise(...)" – return as-is
+  if (remoteLocation.startsWith('promise new Promise')) {
     return remoteLocation;
   }
 
-  const baseRemote = remoteLocation.endsWith('/')
-    ? remoteLocation.slice(0, -1)
-    : remoteLocation;
+  const resolvedUrl = new URL(remoteLocation);
+  const ext = extname(resolvedUrl.pathname);
+  const needsRemoteEntry = !['.js', '.mjs', '.json'].includes(ext);
 
-  const globalPrefix = isRemoteGlobal
-    ? `${normalizeRemoteName(nxRemoteProjectName)}@`
-    : '';
-
-  // if the remote is defined with anything other than http then we assume it's a promise based remote
-  // In that case we should use what the user provides as the remote location
-  if (!remoteLocation.startsWith('promise new Promise')) {
-    return `${globalPrefix}${baseRemote}/remoteEntry.${remoteEntryExt}`;
-  } else {
-    return remoteLocation;
+  if (needsRemoteEntry) {
+    resolvedUrl.pathname = resolvedUrl.pathname.endsWith('/')
+      ? `${resolvedUrl.pathname}remoteEntry.${remoteEntryExt}`
+      : `${resolvedUrl.pathname}/remoteEntry.${remoteEntryExt}`;
   }
+
+  const finalRemoteUrl = resolvedUrl.href;
+
+  return isRemoteGlobal ? `${mfRemoteName}@${finalRemoteUrl}` : finalRemoteUrl;
 }
 
 // Helper function to deal with remotes that are strings
@@ -106,16 +100,20 @@ export function mapRemotesForSSR(
     if (Array.isArray(remote)) {
       let [nxRemoteProjectName, remoteLocation] = remote;
       const mfRemoteName = normalizeRemoteName(nxRemoteProjectName);
-      const remoteLocationExt = extname(remoteLocation);
-      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${
-        ['.js', '.mjs', '.json'].includes(remoteLocationExt)
-          ? remoteLocation
-          : `${
-              remoteLocation.endsWith('/')
-                ? remoteLocation.slice(0, -1)
-                : remoteLocation
-            }/remoteEntry.${remoteEntryExt}`
-      }`;
+
+      const resolvedUrl = new URL(remoteLocation);
+      const remoteLocationExt = extname(resolvedUrl.pathname);
+      const needsRemoteEntry = !['.js', '.mjs', '.json'].includes(
+        remoteLocationExt
+      );
+
+      if (needsRemoteEntry) {
+        resolvedUrl.pathname = resolvedUrl.pathname.endsWith('/')
+          ? `${resolvedUrl.pathname}remoteEntry.${remoteEntryExt}`
+          : `${resolvedUrl.pathname}/remoteEntry.${remoteEntryExt}`;
+      }
+      const finalRemoteUrl = resolvedUrl.href;
+      mappedRemotes[mfRemoteName] = `${mfRemoteName}@${finalRemoteUrl}`;
     } else if (typeof remote === 'string') {
       const mfRemoteName = normalizeRemoteName(remote);
       mappedRemotes[mfRemoteName] = `${mfRemoteName}@${determineRemoteUrl(
