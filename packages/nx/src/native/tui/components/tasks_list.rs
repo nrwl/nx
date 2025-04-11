@@ -108,7 +108,8 @@ impl TaskItem {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[napi]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TaskStatus {
     // Explicit statuses that can come from the task runner
     Success,
@@ -121,6 +122,8 @@ pub enum TaskStatus {
     // These will never come from the task runner - they are managed by our Rust code
     NotStarted,
     InProgress,
+    // This task is being run in a different process
+    Shared,
 }
 
 impl std::str::FromStr for TaskStatus {
@@ -922,6 +925,14 @@ impl TasksList {
         self.sort_tasks();
     }
 
+    /// Updates their status to InProgress and triggers a sort.
+    pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
+        if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
+            task_item.update_status(status);
+        }
+        self.sort_tasks();
+    }
+
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
         for task_result in task_results {
             if let Some(task) = self
@@ -1362,7 +1373,7 @@ impl Component for TasksList {
                                 Span::styled("▼", Style::default().fg(Color::Green)),
                                 Span::raw(" "),
                             ])),
-                            TaskStatus::InProgress => {
+                            TaskStatus::InProgress | TaskStatus::Shared => {
                                 let throbber_chars =
                                     ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
                                 let throbber_char =

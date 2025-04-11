@@ -225,7 +225,7 @@ impl<'a> TerminalPane<'a> {
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
             ),
-            TaskStatus::InProgress => Span::styled(
+            TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
                 "  ●  ",
                 Style::default()
                     .fg(Color::LightCyan)
@@ -248,7 +248,7 @@ impl<'a> TerminalPane<'a> {
             | TaskStatus::RemoteCache => Color::Green,
             TaskStatus::Failure => Color::Red,
             TaskStatus::Skipped => Color::Yellow,
-            TaskStatus::InProgress => Color::LightCyan,
+            TaskStatus::InProgress | TaskStatus::Shared=> Color::LightCyan,
             TaskStatus::NotStarted => Color::DarkGray,
         })
     }
@@ -332,6 +332,29 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     self.get_base_style(TaskStatus::InProgress)
                 } else {
                     self.get_base_style(TaskStatus::InProgress)
+                        .add_modifier(Modifier::DIM)
+                },
+            )])];
+
+            let paragraph = Paragraph::new(message)
+                .block(block)
+                .alignment(Alignment::Center)
+                .style(Style::default());
+
+            Widget::render(paragraph, area, buf);
+            return;
+        }
+
+        // If the task is in progress, we need to check if a pty instance is available, and if not
+        // it implies that the task is being run outside the pseudo-terminal and all we can do is
+        // wait for the task results to arrive
+        if matches!(state.task_status, TaskStatus::Shared) && !state.has_pty {
+            let message = vec![Line::from(vec![Span::styled(
+                "Running in another Nx process...",
+                if state.is_focused {
+                    self.get_base_style(TaskStatus::Shared)
+                } else {
+                    self.get_base_style(TaskStatus::Shared)
                         .add_modifier(Modifier::DIM)
                 },
             )])];

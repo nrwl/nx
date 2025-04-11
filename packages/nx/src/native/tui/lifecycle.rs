@@ -245,6 +245,17 @@ impl AppLifeCycle {
         app.register_running_task(task_id, parser_and_writer, TaskStatus::InProgress)
     }
 
+    #[napi]
+    pub fn set_task_status(
+        &mut self,
+        task_id: String,
+        status: TaskStatus,
+    ) {
+        let mut app = self.app.lock().unwrap();
+
+        app.set_task_status(task_id, status)
+    }
+
     // Rust-only lifecycle method
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {

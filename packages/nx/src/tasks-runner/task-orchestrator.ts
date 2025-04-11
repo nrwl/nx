@@ -9,7 +9,11 @@ import { DaemonClient } from '../daemon/client/client';
 import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
-import { RunningTasksService, TaskDetails } from '../native';
+import {
+  RunningTasksService,
+  TaskDetails,
+  TaskStatus as NativeTaskStatus,
+} from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getDbConnection } from '../utils/db-connection';
 import { output } from '../utils/output';
@@ -628,6 +632,12 @@ export class TaskOrchestrator {
 
   async startContinuousTask(task: Task, groupId: number) {
     if (this.runningTasksService.getRunningTasks([task.id]).length) {
+      await this.preRunSteps([task], { groupId });
+
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Shared);
+      }
+
       // task is already running by another process, we schedule the next tasks
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
