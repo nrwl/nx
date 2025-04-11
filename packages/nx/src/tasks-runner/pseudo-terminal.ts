@@ -1,8 +1,9 @@
-import { ChildProcess, RustPseudoTerminal, IS_WASM } from '../native';
-import { PseudoIPCServer } from './pseudo-ipc';
-import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { Serializable } from 'child_process';
 import * as os from 'os';
+import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
+import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
+import { PseudoIPCServer } from './pseudo-ipc';
+import { RunningTask } from './running-tasks/running-task';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<() => void> = [];
@@ -135,7 +136,7 @@ export class PseudoTerminal {
   }
 }
 
-export class PseudoTtyProcess {
+export class PseudoTtyProcess implements RunningTask {
   isAlive = true;
 
   private exitCallbacks: Array<(code: number) => void> = [];

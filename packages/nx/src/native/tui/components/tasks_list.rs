@@ -47,7 +47,7 @@ pub struct TaskItem {
     // Public to aid with sorting utility and testing
     pub status: TaskStatus,
     terminal_output: String,
-    continuous: bool,
+    pub continuous: bool,
     start_time: Option<u128>,
     // Public to aid with sorting utility and testing
     pub end_time: Option<u128>,
@@ -156,7 +156,7 @@ pub struct TasksList {
     // task id -> pty instance
     pub pty_instances: HashMap<String, Arc<PtyInstance>>,
     selection_manager: TaskSelectionManager,
-    tasks: Vec<TaskItem>,        // Source of truth - all tasks
+    pub tasks: Vec<TaskItem>,    // Source of truth - all tasks
     filtered_names: Vec<String>, // Names of tasks that match the filter
     throbber_counter: usize,
     pub filter_mode: bool,
