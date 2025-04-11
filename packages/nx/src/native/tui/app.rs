@@ -94,6 +94,16 @@ impl App {
             tasks_list.start_tasks(tasks);
         }
     }
+    
+    pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            tasks_list.set_task_status(task_id, status);
+        }
+    }
 
     pub fn print_task_terminal_output(
         &mut self,
