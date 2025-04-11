@@ -1,0 +1,62 @@
+{
+  "name": "maven",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/maven/src",
+  "projectType": "library",
+  "targets": {
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish"],
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "build/packages/maven"
+      }
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/maven",
+            "glob": "**/@(files|files-angular)/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/maven",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/maven"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js maven"
+      }
+    }
+  },
+  "tags": []
+}

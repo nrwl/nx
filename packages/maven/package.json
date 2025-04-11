@@ -1,0 +1,14 @@
+{
+  "name": "@nx/maven",
+  "version": "0.0.1",
+  "description": "Nx plugin for Maven projects",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "@nx/devkit": "latest",
+    "xml2js": "^0.6.2"
+  },
+  "peerDependencies": {
+    "@nx/workspace": "latest"
+  }
+}
