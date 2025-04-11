@@ -70,6 +70,8 @@ export interface LifeCycle {
   ): Promise<void>;
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
+
+  registerForcedShutdownCallback?(callback: () => void): void;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -152,7 +154,7 @@ export class CompositeLifeCycle implements LifeCycle {
 
   async registerRunningTask(
     taskId: string,
-    parserAndWriter: ExternalObject<any>
+    parserAndWriter: ExternalObject<[any, any]>
   ): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
@@ -165,6 +167,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setTaskStatus) {
         l.setTaskStatus(taskId, status);
+      }
+    }
+  }
+
+  registerForcedShutdownCallback(callback: () => void): void {
+    for (let l of this.lifeCycles) {
+      if (l.registerForcedShutdownCallback) {
+        l.registerForcedShutdownCallback(callback);
       }
     }
   }
