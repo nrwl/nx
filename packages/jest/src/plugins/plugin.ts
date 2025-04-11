@@ -107,6 +107,7 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
         }
       );
 
+    // why no pnpm-lock?
     const hashes = await calculateHashesForCreateNodes(
       projectRoots,
       options,
