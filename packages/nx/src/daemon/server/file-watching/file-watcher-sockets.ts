@@ -89,14 +89,18 @@ export function notifyFileWatcherSockets(
         }
 
         if (changedProjects.length > 0 || changedFiles.length > 0) {
-          return handleResult(socket, 'FILE-WATCH-CHANGED', () =>
-            Promise.resolve({
-              description: 'File watch changed',
-              response: JSON.stringify({
-                changedProjects,
-                changedFiles,
+          return handleResult(
+            socket,
+            'FILE-WATCH-CHANGED',
+            () =>
+              Promise.resolve({
+                description: 'File watch changed',
+                response: JSON.stringify({
+                  changedProjects,
+                  changedFiles,
+                }),
               }),
-            })
+            'json'
           );
         }
       })
