@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
-import { validReleaseVersionPrefixes } from '../command-line/release/version';
+import type { validReleaseVersionPrefixes } from '../command-line/release/version';
 import { readJsonFile } from '../utils/fileutils';
 import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
