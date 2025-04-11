@@ -699,6 +699,99 @@ describe('project-configuration-utils', () => {
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
     });
 
+    it('should merge target configurations with glob pattern matching', () => {
+      const existingTargetConfiguration = {
+        command: 'already present',
+      };
+      const partialA = {
+        executor: 'build',
+        dependsOn: ['^build'],
+      };
+      const partialB = {
+        executor: 'build',
+        dependsOn: ['^build'],
+      };
+      const partialC = {
+        executor: 'build',
+        dependsOn: ['^build'],
+      };
+      const globMatch = {
+        dependsOn: ['^build', { project: 'app', target: 'build' }],
+      };
+      const nonMatchingGlob = {
+        dependsOn: ['^production', 'build'],
+      };
+
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          targets: {
+            existingTarget: existingTargetConfiguration,
+            'partial-path/a': partialA,
+            'partial-path/b': partialB,
+            'partial-path/c': partialC,
+          },
+        })
+        .getRootMap();
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          'partial-**/*': globMatch,
+          'ci-*': nonMatchingGlob,
+        },
+      });
+      const merged = rootMap['libs/lib-a'];
+      expect(merged.targets['partial-path/a']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+            {
+              "project": "app",
+              "target": "build",
+            },
+          ],
+          "executor": "build",
+        }
+      `);
+      expect(merged.targets['partial-path/b']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+            {
+              "project": "app",
+              "target": "build",
+            },
+          ],
+          "executor": "build",
+        }
+      `);
+      expect(merged.targets['partial-path/c']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^build",
+            {
+              "project": "app",
+              "target": "build",
+            },
+          ],
+          "executor": "build",
+        }
+      `);
+      // if the glob pattern doesn't match, the target is not merged
+      expect(merged.targets['ci-*']).toMatchInlineSnapshot(`
+        {
+          "dependsOn": [
+            "^production",
+            "build",
+          ],
+        }
+      `);
+      // if the glob pattern matches, the target is merged
+      expect(merged.targets['partial-**/*']).toBeUndefined();
+    });
+
     it('should concatenate tags and implicitDependencies', () => {
       const rootMap = new RootMapBuilder()
         .addProject({
