@@ -75,8 +75,7 @@
               }
             ]
           }
-        ],
-        "@nx/workspace/valid-command-object": "error"
+        ]
       }
     },
     {
