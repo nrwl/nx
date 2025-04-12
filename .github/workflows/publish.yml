@@ -418,6 +418,33 @@ jobs:
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
         run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
 
+      - name: Update Nx for Non-PR Releases
+        # TODO(jack): Allowing it for PR release for now to test
+        if: ${{ github.event_name == 'release' }}
+        # if: ${{ !github.event.inputs.pr && github.event_name == 'release' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Configure git to use the GitHub token for authentication
+          git config --global url."https://${{ github.actor }}:${{ github.token }}@github.com/".insteadOf "https://github.com/"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+
+          git checkout -b update/$VERSION
+          
+          pnpm nx migrate
+          pnpm install
+          pnpm nx migrate --run-migrations
+          rm migrations.json
+          
+          git add .
+          git commit -m "chore(repo): update to nx $VERSION"
+          git push origin update/$VERSION
+          gh pr create \
+            --title "chore(repo): update to nx $VERSION" \
+            --body "This PR contains the results of running migrations after the $VERSION" \
+            --base master
+
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr
         uses: actions/github-script@v7
