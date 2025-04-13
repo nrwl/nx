@@ -117,7 +117,13 @@ fun runTasksInParallel(
 ): Map<String, TaskResult> {
   logger.info("▶️ Running all tasks in a single Gradle run: ${tasks.keys.joinToString(", ")}")
 
-  val (testTasks, buildTasks) = tasks.entries.partition { it.value.testClassName != null }
+  val (testTasks, buildTasks) =
+      tasks.entries.partition {
+        it.value.testClassName != null || it.value.taskName.endsWith(":test")
+      }
+
+  logger.info("🧪 Test tasks: ${testTasks.map { it.key }.joinToString(", ")}")
+  logger.info("🏗️ Build tasks: ${buildTasks.map { it.key }.joinToString(", ")}")
 
   val allResults = mutableMapOf<String, TaskResult>()
 
@@ -200,7 +206,7 @@ fun runLauncher(
   logger.info("🛠️ Gradle args: ${args.joinToString(" ")}")
 
   val globalStart = System.currentTimeMillis()
-  var output: String
+  var globalOutput: String
 
   try {
     if (useTestLauncher) {
@@ -211,7 +217,7 @@ fun runLauncher(
             withArguments(*args.toTypedArray())
             setStandardOutput(outputStream)
             setStandardError(errorStream)
-            addProgressListener(listener, OperationType.TASK)
+            addProgressListener(listener, OperationType.TEST)
           }
       testLauncher.run()
     } else {
@@ -226,11 +232,12 @@ fun runLauncher(
       buildLauncher.run()
     }
 
-    output = buildTerminalOutput(outputStream, errorStream)
+    globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: Exception) {
-    output = buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
+    globalOutput =
+        buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
     logger.warning("💥 Gradle run failed: ${e.message}")
-    logger.warning("📄 Output before failure:\n${output.take(2000)}")
+    logger.warning("📄 Output before failure:\n${globalOutput.take(2000)}")
   } finally {
     outputStream.close()
     errorStream.close()
@@ -240,14 +247,19 @@ fun runLauncher(
   val totalDuration = globalEnd - globalStart
   logger.info("🧪 Total batch duration: ${totalDuration}ms")
 
-  val perTaskOutput = splitOutputPerTask(output)
+  val perTaskOutput = splitOutputPerTask(globalOutput)
 
   if (perTaskOutput.isEmpty()) {
     logger.warning("⚠️ Could not split terminal output by task — defaulting to full output.")
   }
 
   tasks.forEach { (taskId, taskConfig) ->
-    val taskOutput = perTaskOutput[taskConfig.taskName] ?: output
+    val taskOutput =
+        if (taskConfig.testClassName != null) {
+          globalOutput
+        } else {
+          perTaskOutput[taskConfig.taskName] ?: globalOutput
+        }
     if (!taskResults.containsKey(taskId)) {
       taskResults[taskId] =
           TaskResult(

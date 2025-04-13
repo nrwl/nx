@@ -63,7 +63,7 @@ export default async function gradlewBatch(
     const batchResults = execSync(
       `java -jar ${batchRunnerPath} --tasks='${JSON.stringify(
         gradlewTasksToRun
-      )}' --workspaceRoot=${root} args='${args}' ${
+      )}' --workspaceRoot=${root} --args='${args}' ${
         process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
       }`,
       {
