@@ -1,0 +1,14 @@
+{
+  "name": "set-continuous-option",
+  "cli": "nx",
+  "version": "21.0.0-beta.3",
+  "description": "Set the `continuous` option to `true` for continuous tasks.",
+  "factory": "./src/migrations/update-21-0-0/set-continuous-option",
+  "implementation": "/packages/angular/src/migrations/update-21-0-0/set-continuous-option.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Set `continuous` Option for Continuous Tasks\n\nThis migration sets the `continuous` option to `true` for tasks that are known to run continuously, and only if the option is not already explicitly set.\n\nSpecifically, it updates Angular targets using the following executors:\n\n- `@angular-devkit/build-angular:dev-server`\n- `@angular-devkit/build-angular:ssr-dev-server`\n- `@nx/angular:dev-server`\n- `@nx/angular:module-federation-dev-server`\n- `@nx/angular:module-federation-dev-ssr`\n\n#### Examples\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"apps/app1/project.json\" %}\n{\n  // ...\n  \"targets\": {\n    // ...\n    \"serve\": {\n      \"executor\": \"@angular-devkit/build-angular:dev-server\",\n      \"options\": {\n        \"buildTarget\": \"my-app:build\",\n        \"port\": 4200\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```json {% fileName=\"apps/app1/project.json\" highlightLines=[6] %}\n{\n  // ...\n  \"targets\": {\n    // ...\n    \"serve\": {\n      \"continuous\": true,\n      \"executor\": \"@angular-devkit/build-angular:dev-server\",\n      \"options\": {\n        \"buildTarget\": \"my-app:build\",\n        \"port\": 4200\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n\nWhen a target is already explicitly configured with a `continuous` option, the migration will not modify it:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"apps/app1/project.json\" highlightLines=[6] %}\n{\n  // ...\n  \"targets\": {\n    // ...\n    \"serve\": {\n      \"continuous\": false,\n      \"executor\": \"@nx/angular:dev-server\",\n      \"options\": {\n        \"buildTarget\": \"my-app:build\",\n        \"port\": 4200\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```json {% fileName=\"apps/app1/project.json\" highlightLines=[6] %}\n{\n  // ...\n  \"targets\": {\n    // ...\n    \"serve\": {\n      \"continuous\": false,\n      \"executor\": \"@nx/angular:dev-server\",\n      \"options\": {\n        \"buildTarget\": \"my-app:build\",\n        \"port\": 4200\n      }\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

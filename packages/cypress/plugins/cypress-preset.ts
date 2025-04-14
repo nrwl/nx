@@ -139,6 +139,7 @@ export function nxE2EPreset(
       webServerCommands: options?.webServerCommands,
       ciWebServerCommand: options?.ciWebServerCommand,
       ciBaseUrl: options?.ciBaseUrl,
+      reuseExistingServer: options?.webServerConfig?.reuseExistingServer,
     },
 
     async setupNodeEvents(on, config) {

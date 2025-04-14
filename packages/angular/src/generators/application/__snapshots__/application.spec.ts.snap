@@ -737,10 +737,12 @@ exports[`app nested should create project configs 1`] = `
           "buildTarget": "my-app:build:production",
         },
       },
+      "continuous": true,
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
     "serve-static": {
+      "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
@@ -853,10 +855,12 @@ exports[`app not nested should create project configs 1`] = `
           "buildTarget": "my-app:build:production",
         },
       },
+      "continuous": true,
       "defaultConfiguration": "development",
       "executor": "@angular-devkit/build-angular:dev-server",
     },
     "serve-static": {
+      "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",

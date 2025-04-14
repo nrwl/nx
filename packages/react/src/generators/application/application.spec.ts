@@ -180,7 +180,7 @@ describe('app', () => {
           webServer: {
             command: '${packageCmd} nx run my-app:preview',
             url: 'http://localhost:4300',
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: true,
             cwd: workspaceRoot
           },
           projects: [
