@@ -250,6 +250,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       options.fileName
     );
     const componentTask = await componentGenerator(host, {
+      name: options.name,
       path: relativeCwd ? relative(relativeCwd, path) : path,
       style: options.style,
       skipTests:
