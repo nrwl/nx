@@ -513,5 +513,10 @@
     "name": "nx-foundry",
     "description": "Foundry generators and inferred tasks for Nx",
     "url": "https://github.com/juliangsibecas/nx-foundry"
+  },
+  {
+    "name": "@aws/nx-plugin",
+    "description": "Nx Plugin for AWS: Accelerate building cloud-native applications with AWS",
+    "url": "https://github.com/awslabs/nx-plugin-for-aws"
   }
 ]
