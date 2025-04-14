@@ -29,7 +29,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx run my-app:preview',
     url: 'http://localhost:4300',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
@@ -101,7 +101,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx run cool-app:serve-static',
     url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
@@ -173,7 +173,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx run my-app:preview',
     url: 'http://localhost:4300',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [

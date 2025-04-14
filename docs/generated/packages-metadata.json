@@ -440,6 +440,16 @@
     ],
     "migrations": [
       {
+        "description": "Set the `continuous` option to `true` for continuous tasks.",
+        "file": "generated/packages/angular/migrations/set-continuous-option.json",
+        "hidden": false,
+        "name": "set-continuous-option",
+        "version": "21.0.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/set-continuous-option",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/angular/migrations/20.5.0-angular-eslint-package-updates.json",
         "hidden": false,

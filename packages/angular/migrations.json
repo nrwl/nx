@@ -356,6 +356,12 @@
       },
       "description": "Update the @angular/cli package version to ~19.2.0.",
       "factory": "./src/migrations/update-20-5-0/update-angular-cli"
+    },
+    "set-continuous-option": {
+      "cli": "nx",
+      "version": "21.0.0-beta.3",
+      "description": "Set the `continuous` option to `true` for continuous tasks.",
+      "factory": "./src/migrations/update-21-0-0/set-continuous-option"
     }
   },
   "packageJsonUpdates": {
