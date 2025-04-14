@@ -36,7 +36,13 @@ export interface CypressPluginOptions {
 }
 
 function readTargetsCache(cachePath: string): Record<string, CypressTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(cachePath: string, results: CypressTargets) {
@@ -257,6 +263,8 @@ async function buildCypressTargets(
 
   const webServerCommands: Record<string, string> =
     pluginPresetOptions?.webServerCommands;
+  const shouldReuseExistingServer =
+    pluginPresetOptions?.reuseExistingServer ?? true;
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -274,7 +282,6 @@ async function buildCypressTargets(
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
-      parallelism: false,
       metadata: {
         technologies: ['cypress'],
         description: 'Runs Cypress Tests',
@@ -288,7 +295,23 @@ async function buildCypressTargets(
     };
 
     if (webServerCommands?.default) {
+      const webServerCommandTask = shouldReuseExistingServer
+        ? parseTaskFromCommand(webServerCommands.default)
+        : null;
+      if (webServerCommandTask) {
+        targets[options.targetName].dependsOn = [
+          {
+            projects: [webServerCommandTask.project],
+            target: webServerCommandTask.target,
+          },
+        ];
+      } else {
+        targets[options.targetName].parallelism = false;
+      }
+
       delete webServerCommands.default;
+    } else {
+      targets[options.targetName].parallelism = false;
     }
 
     if (Object.keys(webServerCommands ?? {}).length > 0) {
@@ -329,6 +352,9 @@ async function buildCypressTargets(
       const groupName = 'E2E (CI)';
       metadata = { targetGroups: { [groupName]: [] } };
       const ciTargetGroup = metadata.targetGroups[groupName];
+      const ciWebServerCommandTask = shouldReuseExistingServer
+        ? parseTaskFromCommand(ciWebServerCommand)
+        : null;
 
       for (const file of specFiles) {
         const relativeSpecFilePath = normalizePath(relative(projectRoot, file));
@@ -351,7 +377,6 @@ async function buildCypressTargets(
             cwd: projectRoot,
             env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
           },
-          parallelism: false,
           metadata: {
             technologies: ['cypress'],
             description: `Runs Cypress Tests in ${relativeSpecFilePath} in CI`,
@@ -368,6 +393,17 @@ async function buildCypressTargets(
           projects: 'self',
           params: 'forward',
         });
+
+        if (ciWebServerCommandTask) {
+          targets[targetName].dependsOn = [
+            {
+              target: ciWebServerCommandTask.target,
+              projects: [ciWebServerCommandTask.project],
+            },
+          ];
+        } else {
+          targets[targetName].parallelism = false;
+        }
       }
 
       targets[options.ciTargetName] = {
@@ -456,4 +492,27 @@ function getInputs(
       externalDependencies: ['cypress'],
     },
   ];
+}
+
+function parseTaskFromCommand(command: string): {
+  project: string;
+  target: string;
+} | null {
+  const nxRunRegex =
+    /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
+  const infixRegex = /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
+
+  const nxRunMatch = command.match(nxRunRegex);
+  if (nxRunMatch) {
+    const [project, target] = nxRunMatch[1].split(':');
+    return { project, target };
+  }
+
+  const infixMatch = command.match(infixRegex);
+  if (infixMatch) {
+    const [target, project] = infixMatch[1].split(' ');
+    return { project, target };
+  }
+
+  return null;
 }
