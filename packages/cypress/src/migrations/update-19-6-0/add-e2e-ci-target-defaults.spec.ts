@@ -77,7 +77,7 @@ describe('add-e2e-ci-target-defaults', () => {
         "build": {
           "cache": true,
         },
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -114,7 +114,7 @@ describe('add-e2e-ci-target-defaults', () => {
         "build": {
           "cache": true,
         },
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "build",
           ],
@@ -165,12 +165,12 @@ describe('add-e2e-ci-target-defaults', () => {
         "build": {
           "cache": true,
         },
-        "cypress:e2e-ci--**/*": {
+        "cypress:e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
         },
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -220,7 +220,7 @@ describe('add-e2e-ci-target-defaults', () => {
         "build": {
           "cache": true,
         },
-        "cypress:e2e-ci--**/*": {
+        "cypress:e2e-ci--**/**": {
           "dependsOn": [
             "^build",
             "^bundle",
