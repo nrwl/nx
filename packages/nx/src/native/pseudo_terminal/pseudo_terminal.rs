@@ -1,10 +1,11 @@
 use anyhow::anyhow;
-use crossbeam_channel::{bounded, unbounded, Receiver};
+use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
 use crossterm::{
     terminal,
     terminal::{disable_raw_mode, enable_raw_mode},
     tty::IsTty,
 };
+use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;
@@ -27,7 +28,8 @@ use crate::native::pseudo_terminal::child_process::ChildProcess;
 
 pub struct PseudoTerminal {
     pub pty_pair: PtyPair,
-    pub message_rx: Receiver<String>,
+    pub stdout_tx: Sender<String>,
+    pub stdout_rx: Receiver<String>,
     pub printing_rx: Receiver<()>,
     pub quiet: Arc<AtomicBool>,
     pub running: Arc<AtomicBool>,
@@ -84,7 +86,7 @@ impl PseudoTerminal {
         }
 
         let mut reader = pty_pair.master.try_clone_reader()?;
-        let (message_tx, message_rx) = unbounded();
+        let (stdout_tx, stdout_rx) = unbounded();
         let (printing_tx, printing_rx) = unbounded();
         // Output -> stdout handling
         let quiet_clone = quiet.clone();
@@ -92,25 +94,21 @@ impl PseudoTerminal {
 
         let parser = Arc::new(RwLock::new(Parser::new(h, w, 10000)));
         let parser_clone = parser.clone();
+        let stdout_tx_clone = stdout_tx.clone();
         std::thread::spawn(move || {
             let mut stdout = std::io::stdout();
             let mut buf = [0; 8 * 1024];
-            let mut first: bool = true;
 
             'read_loop: loop {
                 if let Ok(len) = reader.read(&mut buf) {
                     if len == 0 {
                         break;
                     }
-                    message_tx
+                    stdout_tx_clone
                         .send(String::from_utf8_lossy(&buf[0..len]).to_string())
                         .ok();
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
-                    let contains_clear = buf[..len]
-                        .windows(4)
-                        .any(|window| window == [0x1B, 0x5B, 0x32, 0x4A]);
-                    debug!("Contains clear: {}", contains_clear);
                     debug!("Read {} bytes", len);
                     if let Ok(mut parser) = parser_clone.write() {
                         let prev = parser.screen().clone();
@@ -118,12 +116,7 @@ impl PseudoTerminal {
                         parser.process(&buf[..len]);
                         debug!("{}", parser.get_raw_output().len());
 
-                        let write_buf = if first {
-                            parser.screen().contents_formatted()
-                        } else {
-                            parser.screen().contents_diff(&prev)
-                        };
-                        first = false;
+                        let write_buf = parser.screen().contents_diff(&prev);
                         if !quiet {
                             let mut logged_interrupted_error = false;
                             while let Err(e) = stdout.write_all(&write_buf) {
@@ -162,7 +155,8 @@ impl PseudoTerminal {
             running,
             parser,
             pty_pair,
-            message_rx,
+            stdout_rx,
+            stdout_tx,
             printing_rx,
             is_within_nx_tui,
         })
@@ -204,17 +198,16 @@ impl PseudoTerminal {
         }
 
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
+
+        let command_info = format!("> {}\n\n\r", command);
+        self.stdout_tx.send(command_info.clone()).ok();
+
+        self.parser
+            .write()
+            .expect("Failed to acquire parser write lock")
+            .process(command_info.as_bytes());
+
         trace!("Running {}", command);
-
-        // TODO(@FrozenPandaz): This access is too naive, we need to handle the writer lock properly (e.g. multiple invocations of run_command sequentially)
-        // Prepend the command to the output
-        self.writer
-            .lock()
-            .unwrap()
-            // Sadly ANSI escape codes don't seem to work properly when writing directly to the writer...
-            .write_all(format!("> {}\n\n", command).as_bytes())
-            .unwrap();
-
         let mut child = pair.slave.spawn_command(cmd)?;
         self.running.store(true, Ordering::SeqCst);
 
@@ -270,7 +263,7 @@ impl PseudoTerminal {
             self.parser.clone(),
             self.writer.clone(),
             process_killer,
-            self.message_rx.clone(),
+            self.stdout_rx.clone(),
             exit_to_process_rx,
         ))
     }
