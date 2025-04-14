@@ -124,7 +124,7 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
           HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
           xcrun simctl shutdown all && xcrun simctl erase all
-        timeout-minutes: 20
+        # timeout-minutes: 20 - removed for testing
 
       - name: Save Homebrew Cache
         uses: actions/cache@v4

@@ -387,5 +387,6 @@
         "unitTestRunner": "jest"
       }
     }
-  }
+  },
+  "cacheBust": 1
 }
