@@ -2,6 +2,7 @@ import type { PackageJson } from '../utils/package-json';
 import type {
   NxJsonConfiguration,
   NxReleaseVersionConfiguration,
+  NxReleaseVersionV2Configuration,
 } from './nx-json';
 
 /**
@@ -107,10 +108,20 @@ export interface ProjectConfiguration {
    * Project specific configuration for `nx release`
    */
   release?: {
-    version?: Pick<
-      NxReleaseVersionConfiguration,
-      'generator' | 'generatorOptions'
-    >;
+    version?:
+      | Pick<NxReleaseVersionConfiguration, 'generator' | 'generatorOptions'>
+      | Pick<
+          // Expose a subset of version config options at the project level
+          NxReleaseVersionV2Configuration,
+          | 'versionActions'
+          | 'versionActionsOptions'
+          | 'manifestRootsToUpdate'
+          | 'currentVersionResolver'
+          | 'currentVersionResolverMetadata'
+          | 'fallbackCurrentVersionResolver'
+          | 'versionPrefix'
+          | 'preserveLocalDependencyProtocols'
+        >;
   };
 
   /**

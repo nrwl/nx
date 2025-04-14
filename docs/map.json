@@ -2833,6 +2833,25 @@
               "file": "shared/packages/gradle/gradle-plugin"
             }
           ]
+        },
+        {
+          "name": "Module Federation",
+          "id": "module-federation",
+          "description": "Module Federation package.",
+          "itemList": [
+            {
+              "name": "NxModuleFederationPlugin",
+              "id": "nx-module-federation-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-plugin"
+            },
+            {
+              "name": "NxModuleFederationDevServerPlugin",
+              "id": "nx-module-federation-dev-server-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
+            }
+          ]
         }
       ]
     }

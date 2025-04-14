@@ -454,7 +454,6 @@ function normalizeOutput(
       relative(workspaceRoot, fullPath)
     );
   }
-
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 

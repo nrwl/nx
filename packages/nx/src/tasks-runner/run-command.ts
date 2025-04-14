@@ -299,7 +299,7 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     extraOptions
   );
 
-  if (nxArgs.skipSync) {
+  if (nxArgs.skipSync || isCI()) {
     return { projectGraph, taskGraph };
   }
 
@@ -333,10 +333,9 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
   const resultBodyLines = getSyncGeneratorSuccessResultsMessageLines(results);
   const fixMessage =
     'Make sure to run `nx sync` to apply the identified changes or set `sync.applyChanges` to `true` in your `nx.json` to apply them automatically when running tasks in interactive environments.';
-  const willErrorOnCiMessage = 'This will result in an error in CI.';
 
-  if (isCI() || !process.stdout.isTTY) {
-    // If the user is running in CI or is running in a non-TTY environment we
+  if (!process.stdout.isTTY) {
+    // If the user is running a non-TTY environment we
     // throw an error to stop the execution of the tasks.
     if (areAllResultsFailures) {
       output.error({
@@ -394,7 +393,6 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
         ...resultBodyLines,
         '',
         'Your workspace is set to not apply the identified changes automatically (`sync.applyChanges` is set to `false` in your `nx.json`).',
-        willErrorOnCiMessage,
         fixMessage,
       ],
     });
@@ -418,10 +416,12 @@ async function ensureWorkspaceIsInSyncAndGetGraphs(
     title: outOfSyncTitle,
     bodyLines: [
       ...resultBodyLines,
-      '',
-      nxJson.sync?.applyChanges === true
-        ? 'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).'
-        : willErrorOnCiMessage,
+      ...(nxJson.sync?.applyChanges === true
+        ? [
+            '',
+            'Proceeding to sync the identified changes automatically (`sync.applyChanges` is set to `true` in your `nx.json`).',
+          ]
+        : []),
     ],
   });
 

@@ -1,6 +1,7 @@
 ---
 title: Nest.js Plugin for Nx
 description: Learn how to use the @nx/nest plugin to create and manage Nest.js applications and libraries in your Nx workspace, including setup and generators.
+keywords: [nest, nestjs]
 ---
 
 Nest.js is a framework designed for building scalable server-side applications. In many ways, Nest is familiar to Angular developers:

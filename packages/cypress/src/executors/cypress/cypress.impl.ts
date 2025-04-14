@@ -2,7 +2,7 @@ import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
 import { existsSync, readdirSync, unlinkSync } from 'fs';
 import { basename, dirname } from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';
-import { installedCypressVersion } from '../../utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { startDevServer } from '../../utils/start-dev-server';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
@@ -53,7 +53,8 @@ export default async function cypressExecutor(
   options: CypressExecutorOptions,
   context: ExecutorContext
 ) {
-  options = normalizeOptions(options, context);
+  const installedCypressMajorVersion = getInstalledCypressMajorVersion();
+  options = normalizeOptions(options, context, installedCypressMajorVersion);
   // this is used by cypress component testing presets to build the executor contexts with the correct configuration options.
   process.env.NX_CYPRESS_TARGET_CONFIGURATION = context.configurationName;
   let success;
@@ -61,10 +62,14 @@ export default async function cypressExecutor(
   const generatorInstance = startDevServer(options, context);
   for await (const devServerValues of generatorInstance) {
     try {
-      success = await runCypress(devServerValues.baseUrl, {
-        ...options,
-        portLockFilePath: devServerValues.portLockFilePath,
-      });
+      success = await runCypress(
+        devServerValues.baseUrl,
+        {
+          ...options,
+          portLockFilePath: devServerValues.portLockFilePath,
+        },
+        installedCypressMajorVersion
+      );
       if (!options.watch) {
         generatorInstance.return();
         break;
@@ -81,7 +86,8 @@ export default async function cypressExecutor(
 
 function normalizeOptions(
   options: CypressExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  installedCypressMajorVersion: number | null
 ): NormalizedCypressExecutorOptions {
   options.env = options.env || {};
   if (options.testingType === 'component') {
@@ -90,19 +96,22 @@ function normalizeOptions(
       options.ctTailwindPath = getTempTailwindPath(context);
     }
   }
-  checkSupportedBrowser(options);
-  warnDeprecatedHeadless(options);
-  warnDeprecatedCypressVersion();
+  checkSupportedBrowser(options, installedCypressMajorVersion);
+  warnDeprecatedHeadless(options, installedCypressMajorVersion);
+  warnDeprecatedCypressVersion(installedCypressMajorVersion);
   return options;
 }
 
-function checkSupportedBrowser({ browser }: CypressExecutorOptions) {
+function checkSupportedBrowser(
+  { browser }: CypressExecutorOptions,
+  installedCypressMajorVersion: number | null
+) {
   // Browser was not passed in as an option, cypress will use whatever default it has set and we dont need to check it
   if (!browser) {
     return;
   }
 
-  if (installedCypressVersion() >= 4 && browser == 'canary') {
+  if (installedCypressMajorVersion >= 4 && browser == 'canary') {
     logger.warn(stripIndents`
   Warning:
   You are using a browser that is not supported by cypress v4+.
@@ -115,7 +124,7 @@ function checkSupportedBrowser({ browser }: CypressExecutorOptions) {
 
   const supportedV3Browsers = ['electron', 'chrome', 'canary', 'chromium'];
   if (
-    installedCypressVersion() <= 3 &&
+    installedCypressMajorVersion <= 3 &&
     !supportedV3Browsers.includes(browser)
   ) {
     logger.warn(stripIndents`
@@ -126,8 +135,11 @@ function checkSupportedBrowser({ browser }: CypressExecutorOptions) {
   }
 }
 
-function warnDeprecatedHeadless({ headless }: CypressExecutorOptions) {
-  if (installedCypressVersion() < 8 || headless === undefined) {
+function warnDeprecatedHeadless(
+  { headless }: CypressExecutorOptions,
+  installedCypressMajorVersion: number | null
+) {
+  if (installedCypressMajorVersion < 8 || headless === undefined) {
     return;
   }
 
@@ -140,8 +152,10 @@ function warnDeprecatedHeadless({ headless }: CypressExecutorOptions) {
   }
 }
 
-function warnDeprecatedCypressVersion() {
-  if (installedCypressVersion() < 10) {
+function warnDeprecatedCypressVersion(
+  installedCypressMajorVersion: number | null
+) {
+  if (installedCypressMajorVersion < 10) {
     logger.warn(stripIndents`
 NOTE:
 Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10.
@@ -157,9 +171,9 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
  */
 async function runCypress(
   baseUrl: string,
-  opts: NormalizedCypressExecutorOptions
+  opts: NormalizedCypressExecutorOptions,
+  installedCypressMajorVersion: number | null
 ) {
-  const cypressVersion = installedCypressVersion();
   // Cypress expects the folder where a cypress config is present
   const projectFolderPath = dirname(opts.cypressConfig);
   const options: any = {
@@ -200,7 +214,7 @@ async function runCypress(
   options.ciBuildId = opts.ciBuildId?.toString();
   options.group = opts.group;
   // renamed in cy 10
-  if (cypressVersion >= 10) {
+  if (installedCypressMajorVersion >= 10) {
     options.config ??= {};
     options.config[opts.testingType] = {
       excludeSpecPattern: opts.ignoreTestFiles,

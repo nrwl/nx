@@ -67,11 +67,15 @@ describe('JS - TS solution setup', () => {
     );
 
     // add deps, each parent lib imports all child libs
-    const addImports = (parentLib: string) => {
+    const addImports = (parentLib: string, includeRollupChildLib = false) => {
       updateFile(
         `packages/${parentLib}/src/index.ts`,
-        (content) => `export * from '@proj/${esbuildChildLib}';
-export * from '@proj/${rollupChildLib}';
+        (content) => `export * from '@proj/${esbuildChildLib}';${
+          includeRollupChildLib
+            ? `
+export * from '@proj/${rollupChildLib}';`
+            : ''
+        }
 export * from '@proj/${swcChildLib}';
 export * from '@proj/${tscChildLib}';
 export * from '@proj/${viteChildLib}';
@@ -80,7 +84,7 @@ ${content}`
     };
 
     addImports(esbuildParentLib);
-    addImports(rollupParentLib);
+    addImports(rollupParentLib, true);
     addImports(swcParentLib);
     addImports(tscParentLib);
     addImports(viteParentLib);
@@ -88,11 +92,13 @@ ${content}`
     const pm = getSelectedPackageManager();
     if (pm === 'pnpm') {
       // for pnpm we need to add the local packages as dependencies to each consumer package.json
-      const addDeps = (parentLib: string) => {
+      const addDeps = (parentLib: string, includeRollupChildLib = false) => {
         updateJson(`packages/${parentLib}/package.json`, (json) => {
           json.dependencies ??= {};
           json.dependencies[`@proj/${esbuildChildLib}`] = 'workspace:*';
-          json.dependencies[`@proj/${rollupChildLib}`] = 'workspace:*';
+          if (includeRollupChildLib) {
+            json.dependencies[`@proj/${rollupChildLib}`] = 'workspace:*';
+          }
           json.dependencies[`@proj/${swcChildLib}`] = 'workspace:*';
           json.dependencies[`@proj/${tscChildLib}`] = 'workspace:*';
           json.dependencies[`@proj/${viteChildLib}`] = 'workspace:*';
@@ -101,7 +107,7 @@ ${content}`
       };
 
       addDeps(esbuildParentLib);
-      addDeps(rollupParentLib);
+      addDeps(rollupParentLib, true);
       addDeps(swcParentLib);
       addDeps(tscParentLib);
       addDeps(viteParentLib);
