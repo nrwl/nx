@@ -64,6 +64,7 @@ async function ptyProcess(
   env: Record<string, string>
 ) {
   const terminal = createPseudoTerminal();
+  await terminal.init();
 
   return new Promise<void>((res, rej) => {
     const cp = terminal.runCommand(command, { cwd, jsEnv: env });
