@@ -3,9 +3,9 @@
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
+import { MigrateUI } from '../../../../migrate/src/lib/migrate';
 /* eslint-enable @nx/enforce-module-boundaries */
 
-import { MigrateUI } from '@nx/graph-migrate';
 import { getExternalApiService } from '@nx/graph/legacy/shared';
 import { useSelector } from '@xstate/react';
 import { Interpreter } from 'xstate';
