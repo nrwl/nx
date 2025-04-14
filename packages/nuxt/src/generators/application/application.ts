@@ -80,9 +80,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   };
 
   if (!options.useProjectJson) {
-    if (options.projectName !== options.importPath) {
-      packageJson.nx = { name: options.projectName };
-    }
     if (options.parsedTags?.length) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
