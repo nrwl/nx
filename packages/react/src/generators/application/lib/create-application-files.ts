@@ -363,9 +363,6 @@ function generateReactRouterFiles(
       tree,
       joinPathFragments(options.appProjectRoot, 'package.json'),
       (json) => {
-        if (options.projectName !== options.importPath) {
-          json.nx = { name: options.projectName };
-        }
         if (options.parsedTags?.length) {
           json.nx ??= {};
           json.nx.tags = options.parsedTags;

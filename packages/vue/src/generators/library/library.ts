@@ -76,9 +76,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     };
-    if (options.projectName !== options.importPath) {
-      packageJson.nx = { name: options.projectName };
-    }
     if (options.parsedTags?.length) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
