@@ -4,7 +4,6 @@ import {
   ESquareIcon,
   HeroDevsIcon,
   PushBasedIcon,
-  ZyphyrCloudIcon,
 } from '@nx/nx-dev/ui-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
@@ -12,14 +11,6 @@ import { Partner } from './partner';
 export function PartnersList(): JSX.Element {
   const initialPartners = useMemo(
     () => [
-      {
-        name: 'Zyphyr Cloud',
-        logo: <ZyphyrCloudIcon aria-hidden="true" className="mb-4 h-14" />,
-        href: 'https://zephyr-cloud.io/',
-        location: 'US',
-        tagline: 'The only sane way to do micro-frontends and mini-apps.',
-        capabilities: ['SaaS', 'Mobile', 'Web', 'DevOps'],
-      },
       {
         name: 'HeroDevs',
         logo: <HeroDevsIcon aria-hidden="true" className="mb-4 h-12" />,

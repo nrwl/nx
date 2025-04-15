@@ -94,7 +94,6 @@ export * from './lib/partners/bitovi';
 export * from './lib/partners/callstack';
 export * from './lib/partners/hero-devs';
 export * from './lib/partners/push-based';
-export * from './lib/partners/zyphyr-cloud';
 export * from './lib/partners/e-square';
 
 // PODCASTS
