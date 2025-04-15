@@ -6,7 +6,8 @@ import { StaticRemoteConfig } from '../../utils';
 export function parseRemotesConfig(
   remotes: string[] | undefined,
   workspaceRoot: string,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph,
+  isServer?: boolean
 ) {
   if (!remotes?.length) {
     return { remotes: [], config: undefined };
@@ -26,13 +27,18 @@ export function parseRemotesConfig(
         workspaceRoot,
       }
     );
-    if (outputPath.startsWith(projectRoot)) {
+    if (!outputPath.startsWith(workspaceRoot)) {
       outputPath = joinPathFragments(workspaceRoot, outputPath);
     }
     const basePath = dirname(outputPath);
     const urlSegment = app;
     const port = projectGraph.nodes[app].data.targets?.['serve']?.options.port;
-    config[app] = { basePath, outputPath, urlSegment, port };
+    config[app] = {
+      basePath,
+      outputPath: isServer ? dirname(outputPath) : outputPath,
+      urlSegment,
+      port,
+    };
   }
 
   return { remotes, config };

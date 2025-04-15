@@ -173,10 +173,11 @@ describe('e2eProjectGenerator', () => {
         framework: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'server',
-        project: 'api',
+        project: '@proj/api',
         addPlugin: true,
       });
 
@@ -214,10 +215,11 @@ describe('e2eProjectGenerator', () => {
         framework: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'server',
-        project: 'api',
+        project: '@proj/api',
         addPlugin: true,
       });
 
@@ -282,11 +284,13 @@ describe('e2eProjectGenerator', () => {
         framework: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'cli',
-        project: 'cli',
+        project: '@proj/cli',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(tree.read('cli-e2e/jest.config.ts', 'utf-8'))

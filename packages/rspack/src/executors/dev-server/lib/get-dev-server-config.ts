@@ -37,7 +37,6 @@ export function getDevServerOptions(
     },
     onListening(server) {
       const isHttps =
-        server.options.https ||
         (server.options.server as { type: string })?.type === 'https';
       logger.info(
         `NX Web Development Server is listening at ${

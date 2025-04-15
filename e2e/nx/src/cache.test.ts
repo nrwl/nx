@@ -1,9 +1,11 @@
 import {
   cleanupProject,
   directoryExists,
+  fileExists,
   listFiles,
   newProject,
   readFile,
+  removeFile,
   rmDist,
   runCLI,
   tmpProjPath,
@@ -11,6 +13,10 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
+import { fork } from 'child_process';
+
+import { readdir, stat } from 'fs/promises';
+
 import { join } from 'path';
 
 describe('cache', () => {
@@ -361,6 +367,171 @@ describe('cache', () => {
     expect(fourthRun).toContain('read the output from the cache');
   }, 120000);
 
+  it('should evict cache if larger than max cache size', async () => {
+    runCLI('reset');
+    updateJson(`nx.json`, (c) => {
+      c.maxCacheSize = '500KB';
+      return c;
+    });
+
+    const lib = uniq('cache-size');
+
+    updateFile(
+      `tools/copy.js`,
+      'require("fs").cpSync(process.argv[2], process.argv[3], { recursive: true, force: true });'
+    );
+    updateFile(
+      `libs/${lib}/project.json`,
+      JSON.stringify({
+        name: lib,
+        targets: {
+          write: {
+            cache: true,
+            command: 'node tools/copy.js {projectRoot}/src dist/{projectRoot}',
+            inputs: ['{projectRoot}/hash.txt'],
+            outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+          },
+        },
+      })
+    );
+    // 100KB file
+    updateFile(`libs/${lib}/src/data.txt`, 'a'.repeat(100 * 1024));
+    for (let i = 0; i < 10; ++i) {
+      updateFile(`libs/${lib}/hash.txt`, i.toString());
+      runCLI(`write ${lib}`);
+    }
+
+    // Expect that size of cache artifacts in cacheDir is less than 1MB
+    const cacheDir = tmpProjPath('.nx/cache');
+    const cacheFiles = listFiles('.nx/cache');
+    let cacheEntries = 0;
+    let cacheEntriesSize = 0;
+    for (const file of cacheFiles) {
+      if (file.match(/^[0-9]+$/)) {
+        cacheEntries += 1;
+        cacheEntriesSize += await dirSize(join(cacheDir, file));
+        console.log(
+          'Checked cache entry',
+          file,
+          'size',
+          cacheEntriesSize,
+          'total entries',
+          cacheEntries
+        );
+      }
+    }
+    console.log('Cache entries:', cacheEntries);
+    console.log('Cache size:', cacheEntriesSize);
+    expect(cacheEntries).toBeGreaterThan(1);
+    expect(cacheEntries).toBeLessThan(10);
+    expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
+  });
+
+  describe('http remote cache', () => {
+    let cacheServer: any;
+    beforeAll(() => {
+      cacheServer = fork(join(__dirname, '__fixtures__', 'remote-cache.js'), {
+        stdio: 'inherit',
+      });
+    });
+
+    afterAll(() => {
+      cacheServer.kill();
+    });
+
+    it('should PUT and GET cache from remote cache', async () => {
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+      runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
+        },
+      });
+      // removing the file should not affect the cache retrieval,
+      // but we can check that the file exists to ensure the cache is
+      // being used.
+      removeFile(outputFilePath);
+      runCLI(`reset`);
+      const output = runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
+        },
+      });
+      expectProjectMatchTaskCacheStatus(output, [projectName], 'remote cache');
+      expect(fileExists(tmpProjPath(outputFilePath))).toBe(true);
+    });
+
+    it('should handle 401 without ACCESS_TOKEN appropriately', async () => {
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+      const output = runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+        },
+        silenceError: true,
+      });
+
+      expect(output).toContain(
+        'Unauthorized: Missing or invalid token. Set NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN to proceed.'
+      );
+    });
+
+    it('should error if server is not running', async () => {
+      const projectName = uniq('myapp');
+      const outputFilePath = `dist/${projectName}/output.txt`;
+      updateFile(
+        `projects/${projectName}/project.json`,
+        JSON.stringify({
+          name: projectName,
+          targets: {
+            build: {
+              command: `node -e 'const {mkdirSync, writeFileSync} = require("fs"); mkdirSync("dist/${projectName}", {recursive: true}); writeFileSync("${outputFilePath}", "Hello World")'`,
+              outputs: ['{workspaceRoot}/dist/{projectName}'],
+              cache: true,
+            },
+          },
+        })
+      );
+      const output = runCLI(`build ${projectName}`, {
+        env: {
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3001',
+          NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
+        },
+        silenceError: true,
+      });
+
+      expect(output).toContain('http://localhost:3001');
+    });
+  });
+
   function expectCached(
     actualOutput: string,
     expectedCachedProjects: string[]
@@ -404,3 +575,27 @@ describe('cache', () => {
     expect(matchingProjects).toEqual(expectedProjects);
   }
 });
+
+const dirSize = async (dir) => {
+  const files = await readdir(dir, { withFileTypes: true });
+
+  const paths = files.map(async (file) => {
+    const path = join(dir, file.name);
+
+    if (file.isDirectory()) return await dirSize(path);
+
+    if (file.isFile()) {
+      const { size } = await stat(path);
+
+      return size;
+    }
+
+    console.log('Unknown file type', path);
+
+    return 0;
+  });
+
+  return (await Promise.all(paths))
+    .flat(Infinity)
+    .reduce((i, size) => i + size, 0);
+};

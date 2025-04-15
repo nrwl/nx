@@ -59,6 +59,7 @@
               "@nx/jest",
               "@nx/rollup",
               "@nx/rsbuild",
+              "@nx/rspack",
               "@nx/storybook",
               "@nx/vite",
               "@nx/webpack",

@@ -8,5 +8,5 @@
   "path": "/packages/vite",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Add Vite Temp Files to Git Ignore\n\nAdd gitignore entry for temporary vite config files.\n\n#### Sample Code Changes\n\nAdds the following entries to the `.gitignore` file.\n\n```text {% fileName=\".gitignore\" %}\nvite.config.*.timestamp*\nvitest.config.*.timestamp*\n```\n"
 }

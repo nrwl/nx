@@ -1,7 +1,10 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 // mock so we can test multiple versions
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 // mock bc the nxE2EPreset uses fs for path normalization
 jest.mock('fs', () => {
   return {
@@ -12,7 +15,7 @@ jest.mock('fs', () => {
   };
 });
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import { formatFiles, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   joinPathFragments,
@@ -30,9 +33,10 @@ const mockedLogger = { warn: jest.fn() };
 describe('e2e migrator', () => {
   let tree: Tree;
   let migrator: E2eMigrator;
-  let mockedInstalledCypressVersion = installedCypressVersion as jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  >;
+  let mockedInstalledCypressVersion =
+    getInstalledCypressMajorVersion as jest.Mock<
+      ReturnType<typeof getInstalledCypressMajorVersion>
+    >;
 
   function addProject(
     name: string,

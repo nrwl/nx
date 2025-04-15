@@ -29,9 +29,7 @@ describe('js:swc executor', () => {
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
 
-    expect(runCLI(`build ${lib}`)).toContain(
-      'Successfully compiled: 2 files with swc'
-    );
+    expect(() => runCLI(`build ${lib}`)).not.toThrow();
     checkFilesExist(
       `dist/libs/${lib}/package.json`,
       `dist/libs/${lib}/src/index.js`,

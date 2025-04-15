@@ -1,3 +1,8 @@
+---
+title: Wait for Tasks
+description: Learn how to ensure dependent tasks are completed before running a primary task in Nx, using dependsOn property or the waitUntilTargets option for Node executors.
+---
+
 # Wait for Tasks
 
 There are a couple ways to ensure that a set up task has been run before you run a particular task.

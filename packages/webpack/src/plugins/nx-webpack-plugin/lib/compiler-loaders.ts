@@ -20,6 +20,8 @@ export function createLoaderFromCompiler(
               tsx: true,
             },
             transform: {
+              legacyDecorator: true,
+              decoratorMetadata: true,
               react: {
                 runtime: 'automatic',
               },

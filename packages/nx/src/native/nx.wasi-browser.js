@@ -88,13 +88,13 @@ function __napi_rs_initialize_modules(__napiInstance) {
   __napiInstance.exports['__napi_register__FileLock_struct_39']?.()
   __napiInstance.exports['__napi_register__FileLock_impl_41']?.()
   __napiInstance.exports['__napi_register__WorkspaceContext_struct_42']?.()
-  __napiInstance.exports['__napi_register__WorkspaceContext_impl_51']?.()
-  __napiInstance.exports['__napi_register__WorkspaceErrors_52']?.()
-  __napiInstance.exports['__napi_register__NxWorkspaceFiles_struct_53']?.()
-  __napiInstance.exports['__napi_register__NxWorkspaceFilesExternals_struct_54']?.()
-  __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_55']?.()
-  __napiInstance.exports['__napi_register__FileMap_struct_56']?.()
-  __napiInstance.exports['__napi_register____test_only_transfer_file_map_57']?.()
+  __napiInstance.exports['__napi_register__WorkspaceContext_impl_53']?.()
+  __napiInstance.exports['__napi_register__WorkspaceErrors_54']?.()
+  __napiInstance.exports['__napi_register__NxWorkspaceFiles_struct_55']?.()
+  __napiInstance.exports['__napi_register__NxWorkspaceFilesExternals_struct_56']?.()
+  __napiInstance.exports['__napi_register__UpdatedWorkspaceFiles_struct_57']?.()
+  __napiInstance.exports['__napi_register__FileMap_struct_58']?.()
+  __napiInstance.exports['__napi_register____test_only_transfer_file_map_59']?.()
 }
 export const FileLock = __napiModule.exports.FileLock
 export const HashPlanner = __napiModule.exports.HashPlanner

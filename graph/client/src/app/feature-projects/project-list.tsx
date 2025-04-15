@@ -5,6 +5,7 @@ import {
   EyeIcon,
   FlagIcon,
   MapPinIcon,
+  ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
@@ -113,7 +114,7 @@ function ProjectListItem({
             true
           )}
         >
-          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+          <ViewfinderCircleIcon className="h-5 w-5" />
         </Link>
 
         <ExperimentalFeature>

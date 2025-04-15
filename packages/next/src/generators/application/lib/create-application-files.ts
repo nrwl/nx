@@ -41,7 +41,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       : '';
 
   const templateVariables = {
-    ...names(options.name),
+    ...names(options.projectSimpleName),
     ...options,
     dot: '.',
     tmpl: '',

@@ -1,5 +1,74 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`app --minimal should generate a correct setup when --bundler=rspack including a correct config file and no build target 1`] = `
+"
+  import { createConfig }from '@nx/angular-rspack';
+  
+  
+  export default createConfig({ 
+    options: {
+      root: __dirname,
+      
+  "outputPath": {
+    "base": "../dist/app1"
+  },
+  "index": "./src/index.html",
+  "browser": "./src/main.ts",
+  "polyfills": [
+    "./zone.js"
+  ],
+  "tsConfig": "./tsconfig.app.json",
+  "assets": [
+    {
+      "glob": "**/*",
+      "input": "./public"
+    }
+  ],
+  "styles": [
+    "./src/styles.css"
+  ],
+  "scripts": [],
+  "devServer": {}
+
+    }
+  }, {
+      production: {
+        options: {
+          
+  "budgets": [
+    {
+      "type": "initial",
+      "maximumWarning": "500kb",
+      "maximumError": "1mb"
+    },
+    {
+      "type": "anyComponentStyle",
+      "maximumWarning": "4kb",
+      "maximumError": "8kb"
+    }
+  ],
+  "outputHashing": "all",
+  "devServer": {}
+
+        }
+      },
+
+      development: {
+        options: {
+          
+  "optimization": false,
+  "vendorChunk": true,
+  "extractLicenses": false,
+  "sourceMap": true,
+  "namedChunks": true,
+  "devServer": {}
+
+        }
+      }});
+  
+  "
+`;
+
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -495,7 +564,7 @@ export default defineConfig(() => ({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],
     coverage: {

@@ -184,6 +184,12 @@ describe('Nx Import Gradle', () => {
       `${directory}/gradlew`,
       `${directory}/gradlew.bat`
     );
+    const nxJson = readJson('nx.json');
+    const gradlePlugin = nxJson.plugins.find(
+      (plugin) => plugin.plugin === '@nx/gradle'
+    );
+    gradlePlugin.exclude = [];
+    updateJson('nx.json', () => nxJson);
     expect(() => {
       runCLI(`show projects`);
       runCLI('build groovy-app');

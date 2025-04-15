@@ -15,6 +15,7 @@ export interface NormalizedSchema extends Omit<Schema, 'js'> {
   className: string;
   filePath: string;
   projectName: string;
+  projectRoot: string;
 }
 
 export async function normalizeOptions(
@@ -63,5 +64,6 @@ export async function normalizeOptions(
     filePath,
     projectSourceRoot,
     projectName,
+    projectRoot: root,
   };
 }

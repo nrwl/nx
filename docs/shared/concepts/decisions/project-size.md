@@ -1,3 +1,9 @@
+---
+title: Project Size
+description: Understand the trade-offs of project granularity in Nx, including benefits like faster commands, clearer boundaries, and improved developer experience.
+keywords: [library]
+---
+
 # Project Size
 
 Like a lot of decisions in programming, deciding to make a new Nx project or not is all about trade-offs. Each organization will decide on their own conventions, but here are some trade-offs to bear in mind as you have the conversation.

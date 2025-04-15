@@ -1,3 +1,8 @@
+---
+title: Compose Executors
+description: Learn how to compose and chain Nx executors together, including how to invoke other targets and executors from within your custom executors.
+---
+
 # Compose executors
 
 An executor is just a function, so you can import and invoke it directly, as follows:

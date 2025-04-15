@@ -98,13 +98,9 @@
     "20.5.0": {
       "version": "20.5.0-beta.4",
       "packages": {
-        "sass-embedded": {
-          "version": "^1.83.4",
-          "alwaysAddToPackageJson": true
-        },
         "sass-loader": {
           "version": "^16.0.4",
-          "alwaysAddToPackageJson": true
+          "alwaysAddToPackageJson": false
         },
         "@rspack/core": {
           "version": "^1.2.2",

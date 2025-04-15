@@ -531,6 +531,7 @@ describe('detox application generator', () => {
         linter: Linter.None,
         framework: 'react-native',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(tree.read('tsconfig.json', 'utf-8')).toMatchInlineSnapshot(`
@@ -548,12 +549,10 @@ describe('detox application generator', () => {
       expect(tree.read('apps/my-app-e2e/package.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
-          "name": "my-app-e2e",
+          "name": "@proj/my-app-e2e",
           "version": "0.0.1",
           "private": true,
           "nx": {
-            "sourceRoot": "apps/my-app-e2e/src",
-            "projectType": "application",
             "implicitDependencies": [
               "my-app"
             ]
@@ -594,6 +593,7 @@ describe('detox application generator', () => {
         framework: 'react-native',
         addPlugin: true,
         skipFormat: true,
+        useProjectJson: false,
       });
 
       expect(tree.exists('apps/my-app-e2e/test-setup.ts')).toBeTruthy();
@@ -659,6 +659,69 @@ describe('detox application generator', () => {
           }
           "
         `);
+    });
+
+    it('should respect the provided e2e name', async () => {
+      writeJson(tree, 'apps/my-app/package.json', {
+        name: 'my-app',
+      });
+
+      await detoxApplicationGenerator(tree, {
+        e2eDirectory: 'apps/my-app-e2e',
+        appProject: 'my-app',
+        e2eName: 'my-app-e2e',
+        linter: Linter.None,
+        framework: 'react-native',
+        addPlugin: true,
+        skipFormat: true,
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'apps/my-app-e2e/package.json');
+      expect(packageJson.name).toBe('@proj/my-app-e2e');
+      expect(packageJson.nx.name).toBe('my-app-e2e');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      writeJson(tree, 'apps/my-app/package.json', { name: 'my-app' });
+
+      await detoxApplicationGenerator(tree, {
+        e2eDirectory: 'apps/my-app-e2e',
+        appProject: 'my-app',
+        e2eName: 'my-app-e2e',
+        linter: Linter.None,
+        framework: 'react-native',
+        addPlugin: true,
+        skipFormat: true,
+        useProjectJson: true,
+      });
+
+      expect(tree.exists('apps/my-app-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, 'my-app-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "my-app",
+          ],
+          "name": "my-app-e2e",
+          "projectType": "application",
+          "root": "apps/my-app-e2e",
+          "sourceRoot": "apps/my-app-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'apps/my-app-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

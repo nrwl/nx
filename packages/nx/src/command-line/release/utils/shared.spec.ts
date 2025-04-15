@@ -199,6 +199,7 @@ describe('shared', () => {
                   target: 'core',
                   type: 'static',
                   dependencyCollection: 'devDependencies',
+                  rawVersionSpec: '1.0.0-canary.1',
                 },
               ],
               newVersion: '1.0.0-canary.2',

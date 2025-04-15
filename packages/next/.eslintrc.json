@@ -100,6 +100,7 @@
               "webpack",
               // require.resovle is used for these
               "@babel/plugin-proposal-decorators",
+              "tailwindcss",
               "file-loader",
               "@svgr/webpack"
             ]

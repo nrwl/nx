@@ -1,3 +1,8 @@
+---
+title: Add an Astro Project
+description: Learn how to integrate Astro with Nx, including setting up caching, running tasks, and using other Nx plugins alongside your Astro application.
+---
+
 # Add an Astro Project
 
 The code for this example is available on GitHub:

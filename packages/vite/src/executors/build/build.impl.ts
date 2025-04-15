@@ -20,7 +20,10 @@ import {
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
 import { relative, resolve } from 'path';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import {
+  combineAsyncIterables,
+  createAsyncIterable,
+} from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
   loadViteDynamicImport,
@@ -35,7 +38,8 @@ export async function* viteBuildExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, build, resolveConfig } = await loadViteDynamicImport();
+  const { mergeConfig, build, resolveConfig, createBuilder } =
+    await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const tsConfigForBuild = createBuildableTsConfig(
@@ -50,7 +54,7 @@ export async function* viteBuildExecutor(
     options.configFile
   );
   const root =
-    projectRoot === '.'
+    projectRoot === '.' || projectRoot === ''
       ? process.cwd()
       : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
@@ -100,108 +104,133 @@ export async function* viteBuildExecutor(
     });
   }
 
-  const watcherOrOutput = await build(buildConfig);
+  const builder =
+    createBuilder !== undefined && options.useEnvironmentsApi
+      ? await createBuilder(buildConfig)
+      : // This is needed to ensure support for Vite 5
+        {
+          build: (inlineConfig) => build(inlineConfig),
+          environments: { build: buildConfig },
+        };
 
-  const libraryPackageJson = resolve(projectRoot, 'package.json');
-  const rootPackageJson = resolve(context.root, 'package.json');
+  let iterables: AsyncIterable<{ success: boolean; outfile?: string }>[] = [];
+  for (const env of Object.values(builder.environments)) {
+    // This is needed to overwrite the resolve build config with executor options in Vite 6
+    if (env.config?.build) {
+      env.config.build = {
+        ...env.config.build,
+        ...buildConfig.build,
+      };
+    }
+    const watcherOrOutput = await builder.build(env as any);
 
-  // Here, we want the outdir relative to the workspace root.
-  // So, we calculate the relative path from the workspace root to the outdir.
-  const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
-  const distPackageJson = resolve(
-    outDirRelativeToWorkspaceRoot,
-    'package.json'
-  );
+    const libraryPackageJson = resolve(projectRoot, 'package.json');
+    const rootPackageJson = resolve(context.root, 'package.json');
 
-  // Generate a package.json if option has been set.
-  if (options.generatePackageJson) {
-    if (context.projectGraph.nodes[context.projectName].type !== 'app') {
-      logger.warn(
-        stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+    // Here, we want the outdir relative to the workspace root.
+    // So, we calculate the relative path from the workspace root to the outdir.
+    const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
+    const distPackageJson = resolve(
+      outDirRelativeToWorkspaceRoot,
+      'package.json'
+    );
+
+    // Generate a package.json if option has been set.
+    if (options.generatePackageJson) {
+      if (context.projectGraph.nodes[context.projectName].type !== 'app') {
+        logger.warn(
+          stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
         For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/nx-api/eslint-plugin/documents/dependency-checks).`
+        );
+      }
+
+      const builtPackageJson = createPackageJson(
+        context.projectName,
+        context.projectGraph,
+        {
+          target: context.targetName,
+          root: context.root,
+          isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
+          skipOverrides: options.skipOverrides,
+          skipPackageManager: options.skipPackageManager,
+        }
+      );
+
+      builtPackageJson.type ??= 'module';
+
+      writeJsonFile(
+        `${outDirRelativeToWorkspaceRoot}/package.json`,
+        builtPackageJson
+      );
+      const packageManager = detectPackageManager(context.root);
+
+      const lockFile = createLockFile(
+        builtPackageJson,
+        context.projectGraph,
+        packageManager
+      );
+      writeFileSync(
+        `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
+        lockFile,
+        {
+          encoding: 'utf-8',
+        }
+      );
+    }
+    // For buildable libs, copy package.json if it exists.
+    else if (
+      options.generatePackageJson !== false &&
+      !existsSync(distPackageJson) &&
+      existsSync(libraryPackageJson) &&
+      rootPackageJson !== libraryPackageJson
+    ) {
+      await copyAssets(
+        {
+          outputPath: outDirRelativeToWorkspaceRoot,
+          assets: [
+            {
+              input: projectRoot,
+              output: '.',
+              glob: 'package.json',
+            },
+          ],
+        },
+        context
       );
     }
 
-    const builtPackageJson = createPackageJson(
-      context.projectName,
-      context.projectGraph,
-      {
-        target: context.targetName,
-        root: context.root,
-        isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
-        skipOverrides: options.skipOverrides,
-        skipPackageManager: options.skipPackageManager,
+    const iterable = createAsyncIterable<{
+      success: boolean;
+      outfile?: string;
+    }>(({ next, done }) => {
+      if ('on' in watcherOrOutput) {
+        let success = true;
+        watcherOrOutput.on('event', (event) => {
+          if (event.code === 'START') {
+            success = true;
+          } else if (event.code === 'ERROR') {
+            success = false;
+          } else if (event.code === 'END') {
+            next({ success });
+          }
+          // result must be closed when present.
+          // see https://rollupjs.org/guide/en/#rollupwatch
+          if ('result' in event && event.result) {
+            event.result.close();
+          }
+        });
+      } else {
+        const output =
+          watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
+        const fileName = output?.[0]?.fileName || 'main.cjs';
+        const outfile = resolve(outDirRelativeToWorkspaceRoot, fileName);
+        next({ success: true, outfile });
+        done();
       }
-    );
-
-    builtPackageJson.type ??= 'module';
-
-    writeJsonFile(
-      `${outDirRelativeToWorkspaceRoot}/package.json`,
-      builtPackageJson
-    );
-    const packageManager = detectPackageManager(context.root);
-
-    const lockFile = createLockFile(
-      builtPackageJson,
-      context.projectGraph,
-      packageManager
-    );
-    writeFileSync(
-      `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
-      lockFile,
-      {
-        encoding: 'utf-8',
-      }
-    );
-  }
-  // For buildable libs, copy package.json if it exists.
-  else if (
-    options.generatePackageJson !== false &&
-    !existsSync(distPackageJson) &&
-    existsSync(libraryPackageJson) &&
-    rootPackageJson !== libraryPackageJson
-  ) {
-    await copyAssets(
-      {
-        outputPath: outDirRelativeToWorkspaceRoot,
-        assets: [
-          {
-            input: projectRoot,
-            output: '.',
-            glob: 'package.json',
-          },
-        ],
-      },
-      context
-    );
-  }
-
-  if ('on' in watcherOrOutput) {
-    const iterable = createAsyncIterable<{ success: boolean }>(({ next }) => {
-      let success = true;
-      watcherOrOutput.on('event', (event) => {
-        if (event.code === 'START') {
-          success = true;
-        } else if (event.code === 'ERROR') {
-          success = false;
-        } else if (event.code === 'END') {
-          next({ success });
-        }
-        // result must be closed when present.
-        // see https://rollupjs.org/guide/en/#rollupwatch
-        if ('result' in event && event.result) {
-          event.result.close();
-        }
-      });
     });
-    yield* iterable;
-  } else {
-    const output = watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
-    const fileName = output?.[0]?.fileName || 'main.cjs';
-    const outfile = resolve(outDirRelativeToWorkspaceRoot, fileName);
-    yield { success: true, outfile };
+    iterables.push(iterable);
   }
+  return yield* combineAsyncIterables(iterables.shift(), ...(iterables ?? []));
 }
 
 export async function getBuildExtraArgs(

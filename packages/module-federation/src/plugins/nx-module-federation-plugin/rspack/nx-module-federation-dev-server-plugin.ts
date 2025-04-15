@@ -33,40 +33,55 @@ export class NxModuleFederationDevServerPlugin implements RspackPluginInstance {
   constructor(
     private _options: {
       config: ModuleFederationConfig;
-      devServerConfig: NxModuleFederationDevServerConfig;
+      devServerConfig?: NxModuleFederationDevServerConfig;
     }
-  ) {}
+  ) {
+    this._options.devServerConfig ??= {
+      host: 'localhost',
+    };
+  }
 
   apply(compiler: Compiler) {
-    compiler.hooks.beforeCompile.tapAsync(
+    const isDevServer = process.env['WEBPACK_SERVE'];
+    if (!isDevServer) {
+      return;
+    }
+    compiler.hooks.watchRun.tapAsync(
       PLUGIN_NAME,
-      async (params, callback) => {
-        const staticRemotesConfig = await this.setup();
+      async (compiler, callback) => {
+        compiler.hooks.beforeCompile.tapAsync(
+          PLUGIN_NAME,
+          async (params, callback) => {
+            const staticRemotesConfig = await this.setup();
 
-        logger.info(
-          `NX Starting module federation dev-server for ${pc.bold(
-            this._options.config.name
-          )} with ${Object.keys(staticRemotesConfig).length} remotes`
-        );
+            logger.info(
+              `NX Starting module federation dev-server for ${pc.bold(
+                this._options.config.name
+              )} with ${Object.keys(staticRemotesConfig).length} remotes`
+            );
 
-        const mappedLocationOfRemotes = await buildStaticRemotes(
-          staticRemotesConfig,
-          this._options.devServerConfig,
-          this.nxBin
-        );
-        startStaticRemotesFileServer(
-          staticRemotesConfig,
-          workspaceRoot,
-          this._options.devServerConfig.staticRemotesPort
-        );
-        startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
-          pathToCert: this._options.devServerConfig.sslCert,
-          pathToKey: this._options.devServerConfig.sslCert,
-        });
+            const mappedLocationOfRemotes = await buildStaticRemotes(
+              staticRemotesConfig,
+              this._options.devServerConfig,
+              this.nxBin
+            );
+            startStaticRemotesFileServer(
+              staticRemotesConfig,
+              workspaceRoot,
+              this._options.devServerConfig.staticRemotesPort
+            );
+            startRemoteProxies(staticRemotesConfig, mappedLocationOfRemotes, {
+              pathToCert: this._options.devServerConfig.sslCert,
+              pathToKey: this._options.devServerConfig.sslCert,
+            });
 
-        new DefinePlugin({
-          'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
-        }).apply(compiler);
+            new DefinePlugin({
+              'process.env.NX_MF_DEV_REMOTES': process.env.NX_MF_DEV_REMOTES,
+            }).apply(compiler);
+
+            callback();
+          }
+        );
         callback();
       }
     );

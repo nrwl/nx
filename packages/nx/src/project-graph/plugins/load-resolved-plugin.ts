@@ -1,6 +1,6 @@
 import type { PluginConfiguration } from '../../config/nx-json';
 import { LoadedNxPlugin } from './loaded-nx-plugin';
-import { NxPlugin } from './public-api';
+import type { NxPlugin } from './public-api';
 
 export async function loadResolvedNxPluginAsync(
   pluginConfiguration: PluginConfiguration,

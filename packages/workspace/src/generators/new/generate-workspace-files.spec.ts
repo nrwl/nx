@@ -85,6 +85,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               appName,
               isCustomPreset: false,
               nxCloud: nxCloud,
+              workspaces: true,
             });
             await formatFiles(tree);
             const dir = join(__dirname, 'tmp', `${preset}-${nxCloud}`);

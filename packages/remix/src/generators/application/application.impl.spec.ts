@@ -4,6 +4,7 @@ import {
   joinPathFragments,
   readJson,
   readNxJson,
+  readProjectConfiguration,
   type Tree,
   updateJson,
   writeJson,
@@ -460,11 +461,12 @@ describe('Remix Application', () => {
         unitTestRunner: 'jest',
         addPlugin: true,
         tags: 'foo',
+        useProjectJson: false,
       });
 
+      const packageJson = readJson(tree, 'myapp/package.json');
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "private",
@@ -477,7 +479,7 @@ describe('Remix Application', () => {
           "devDependencies",
         ]
       `);
-      expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
+      expect(packageJson).toMatchInlineSnapshot(`
         {
           "dependencies": {
             "@remix-run/node": "^2.15.0",
@@ -548,7 +550,7 @@ describe('Remix Application', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": ".",
             "skipLibCheck": true,
@@ -655,12 +657,43 @@ describe('Remix Application', () => {
       `);
     });
 
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        tags: 'foo',
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "private",
+          "type",
+          "scripts",
+          "engines",
+          "sideEffects",
+          "nx",
+          "dependencies",
+          "devDependencies",
+        ]
+      `);
+    });
+
     it('should skip nx property in package.json when no tags are provided', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/myapp',
         e2eTestRunner: 'playwright',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'apps/myapp/package.json')).toMatchInlineSnapshot(`
@@ -696,6 +729,7 @@ describe('Remix Application', () => {
         e2eTestRunner: 'playwright',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -709,6 +743,7 @@ describe('Remix Application', () => {
         directory: 'myapp',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -767,6 +802,48 @@ describe('Remix Application', () => {
           }
           "
         `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'playwright',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

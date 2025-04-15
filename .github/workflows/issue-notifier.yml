@@ -50,7 +50,7 @@ jobs:
 
       - name: Collect Issue Data
         id: collect
-        run: npx ts-node ./scripts/issues-scraper/index.ts
+        run: npx tsx ./scripts/issues-scraper/index.ts
         env:
           GITHUB_TOKEN: ${{ github.token }}
 

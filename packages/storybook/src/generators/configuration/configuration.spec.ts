@@ -822,6 +822,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         bundler: 'none',
         skipFormat: true,
         addPlugin: true,
+        useProjectJson: false,
       });
 
       await configurationGenerator(tree, {
@@ -843,6 +844,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
+              "moduleResolution": "node10",
             },
           },
         }

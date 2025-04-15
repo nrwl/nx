@@ -1,3 +1,8 @@
+---
+title: Get Started with Nx Release
+description: Learn how to use Nx Release to version packages, generate changelogs, and publish packages in your JavaScript monorepo with a step-by-step guide.
+---
+
 # Get Started with Nx Release
 
 This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.

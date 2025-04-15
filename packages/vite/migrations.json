@@ -52,6 +52,19 @@
     }
   },
   "packageJsonUpdates": {
+    "20.7.1": {
+      "version": "20.7.1-beta.0",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~1.14.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~1.14.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "20.5.0": {
       "version": "20.5.0-beta.3",
       "packages": {

@@ -96,7 +96,7 @@ export function CustomerLogos(): ReactElement {
       </Marquee>
       <div className="absolute bottom-0 left-0 top-0 w-1/3 max-w-60 bg-gradient-to-r from-white to-white/0 dark:from-slate-950 dark:to-slate-950/0"></div>
       <div className="absolute bottom-0 right-0 top-0 w-1/3 max-w-60 bg-gradient-to-r from-white/0 to-white dark:from-slate-950/0 dark:to-slate-950"></div>
-      <div className="absolute inset-0 grid grid-cols-1 place-items-center bg-white/60 opacity-0 backdrop-blur-sm transition-all duration-500 group-hover/canvas:opacity-100 dark:bg-slate-950/60">
+      <div className="absolute inset-0 grid grid-cols-1 place-items-center bg-white/60 opacity-0 backdrop-blur-sm transition-all duration-200 group-hover/canvas:opacity-100 dark:bg-slate-950/60">
         <Link
           href="/customers"
           title="See our customers"

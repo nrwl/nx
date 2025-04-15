@@ -171,7 +171,7 @@
     "bundler": {
       "description": "Bundler to use to build the application.",
       "type": "string",
-      "enum": ["esbuild", "webpack"],
+      "enum": ["esbuild", "rspack", "webpack"],
       "default": "esbuild",
       "x-prompt": "Which bundler do you want to use to build the application?",
       "x-priority": "important"

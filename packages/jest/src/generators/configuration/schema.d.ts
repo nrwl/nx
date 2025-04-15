@@ -6,7 +6,12 @@ export interface JestProjectSchema {
    * @deprecated use setupFile instead
    */
   skipSetupFile?: boolean;
-  setupFile?: 'angular' | 'web-components' | 'react-native' | 'none';
+  setupFile?:
+    | 'angular'
+    | 'web-components'
+    | 'react-native'
+    | 'react-router'
+    | 'none';
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'none';
   /**

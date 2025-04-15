@@ -1,6 +1,7 @@
-import type { Tree } from '../tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
+import { isUsingPrettier } from '../../utils/is-using-prettier';
+import type { Tree } from '../tree';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -39,6 +40,13 @@ export async function formatFilesWithPrettierIfAvailable(
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
+    /**
+     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
+     * before proceeding to format with it.
+     */
+    if (!isUsingPrettier(root)) {
+      return results;
+    }
   } catch {}
 
   if (!prettier) {

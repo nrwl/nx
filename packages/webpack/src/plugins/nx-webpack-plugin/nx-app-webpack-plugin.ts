@@ -36,6 +36,11 @@ export class NxAppWebpackPlugin {
       this.options.target = target;
     }
 
+    // Prefer `clean` option from Webpack config over our own.
+    if (typeof compiler.options.output?.clean !== 'undefined') {
+      this.options.deleteOutputPath = false;
+    }
+
     applyBaseConfig(this.options, compiler.options, {
       useNormalizedEntry: true,
     });

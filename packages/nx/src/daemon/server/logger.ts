@@ -8,6 +8,8 @@
  * logical hierarchy/grouping.
  */
 
+import { nxVersion } from '../../utils/versions';
+
 class ServerLogger {
   log(...s: unknown[]) {
     console.log(
@@ -33,7 +35,7 @@ class ServerLogger {
   }
 
   private formatLogMessage(message: string) {
-    return `[NX Daemon Server] - ${this.getNow()} - ${message}`;
+    return `[NX v${nxVersion} Daemon Server] - ${this.getNow()} - ${message}`;
   }
 
   private getNow() {

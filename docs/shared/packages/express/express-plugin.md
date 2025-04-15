@@ -1,3 +1,8 @@
+---
+title: Express Plugin for Nx
+description: Learn how to use the @nx/express plugin to create and manage Express applications in your Nx workspace, including setup and common recipes.
+---
+
 [Express](https://expressjs.com/) is a mature, minimal, and an open source web framework for making web applications and
 apis.
 

@@ -1,3 +1,8 @@
+---
+title: Deploying Next.js Applications to Vercel
+description: Learn how to configure and deploy Next.js applications from an Nx workspace to Vercel, including setting up build commands and implementing affected-based deployment.
+---
+
 # Deploying Next.js applications to Vercel
 
 Starting from Nx 11, your Next.js application should already be ready for deployment to Vercel.

@@ -1,3 +1,8 @@
+---
+title: 'Generate Code'
+description: 'Learn how to use Nx code generators to automate repetitive tasks, scaffold new projects, and maintain consistency in your codebase.'
+---
+
 # Generate Code
 
 {% youtube src="https://youtu.be/hSM6MgWOYr8" title="Generate Code" /%}

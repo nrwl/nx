@@ -1,4 +1,3 @@
-import { relative } from 'path';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -6,6 +5,7 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -15,36 +15,40 @@ import {
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { relative } from 'path';
 
-import { nxVersion } from '../../utils/versions';
-import { maybeJs } from '../../utils/maybe-js';
-import componentGenerator from '../component/component';
-import initGenerator from '../init/init';
-import { Schema } from './schema';
-import { updateJestConfigContent } from '../../utils/jest-utils';
-import { normalizeOptions } from './lib/normalize-options';
-import { addRollupBuildTarget } from './lib/add-rollup-build-target';
-import { addLinting } from './lib/add-linting';
-import { updateAppRoutes } from './lib/update-app-routes';
-import { createFiles } from './lib/create-files';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import { installCommonDependencies } from './lib/install-common-dependencies';
-import { setDefaults } from './lib/set-defaults';
-import {
-  addProjectToTsSolutionWorkspace,
-  updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { determineEntryFields } from './lib/determine-entry-fields';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/src/generators/library/utils/add-release-config';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { updateJestConfigContent } from '../../utils/jest-utils';
+import { maybeJs } from '../../utils/maybe-js';
+import { nxVersion } from '../../utils/versions';
+import componentGenerator from '../component/component';
+import initGenerator from '../init/init';
+import { addLinting } from './lib/add-linting';
+import { addRollupBuildTarget } from './lib/add-rollup-build-target';
+import { createFiles } from './lib/create-files';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { installCommonDependencies } from './lib/install-common-dependencies';
+import { normalizeOptions } from './lib/normalize-options';
+import { setDefaults } from './lib/set-defaults';
+import { updateAppRoutes } from './lib/update-app-routes';
+import { Schema } from './schema';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -59,10 +63,6 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(jsInitTask);
 
   const options = await normalizeOptions(host, schema);
-
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
-  }
 
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
@@ -79,18 +79,21 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(initTask);
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(host, `${options.projectRoot}/package.json`, {
-      name: options.importPath ?? options.name,
-      version: '0.0.1',
-      ...determineEntryFields(options),
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    ...determineEntryFields(options),
+    files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.name !== options.importPath) {
+      packageJson.nx = { name: options.name };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(host, options.name, {
       root: options.projectRoot,
@@ -101,7 +104,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(host, `${options.projectRoot}/package.json`, packageJson);
+  }
+
   createFiles(host, options);
+
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
+  }
 
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
@@ -240,7 +251,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(componentTask);
   }
 
-  if (options.publishable || options.buildable) {
+  if (options.publishable) {
     const projectConfiguration = readProjectConfiguration(host, options.name);
     if (options.isUsingTsSolutionConfig) {
       await addReleaseConfigForTsSolution(
@@ -249,7 +260,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         projectConfiguration
       );
     } else {
+      const nxJson = readNxJson(host);
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         host,
         options.name,
         projectConfiguration

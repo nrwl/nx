@@ -1,13 +1,13 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/versions';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions');
 describe(componentTestGenerator.name, () => {
   let tree: Tree;
   let mockedAssertMinimumCypressVersion: jest.Mock<

@@ -1,3 +1,8 @@
+---
+title: Write a Simple Executor
+description: Learn how to create, run, and customize local executors in your Nx workspace to standardize development, building, and deployment tasks.
+---
+
 # Write a Simple Executor
 
 Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to provide guidance in the terminal with `--help` and when invoking with [Nx Console](/getting-started/editor-setup)
@@ -92,7 +97,7 @@ export default async function echoExecutor(
 
 ## Running your Executor
 
-Our last step is to add this executor to a given project’s `targets` object in your project's `project.json` file:
+Our last step is to add this executor to a given project's `targets` object in your project's `project.json` file:
 
 ```jsonc {% fileName="project.json" highlightLines=["5-10"] %}
 {
@@ -133,9 +138,9 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ## Using Node Child Process
 
-[Node’s `childProcess`](https://nodejs.org/api/child_process.html) is often useful in executors.
+[Node's `childProcess`](https://nodejs.org/api/child_process.html) is often useful in executors.
 
-Part of the power of the executor API is the ability to compose executors via existing targets. This way you can combine other executors from your workspace into one which could be helpful when the process you’re scripting is a combination of other existing executors provided by the CLI or other custom executors in your workspace.
+Part of the power of the executor API is the ability to compose executors via existing targets. This way you can combine other executors from your workspace into one which could be helpful when the process you're scripting is a combination of other existing executors provided by the CLI or other custom executors in your workspace.
 
 Here's an example of this (from a hypothetical project), that serves an api (project name: "api") in watch mode, then serves a frontend app (project name: "web-client") in watch mode:
 

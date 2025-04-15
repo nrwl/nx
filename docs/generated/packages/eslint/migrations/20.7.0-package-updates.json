@@ -1,0 +1,12 @@
+{
+  "name": "20.7.0-package-updates",
+  "version": "20.7.0-beta.4",
+  "packages": { "eslint-config-prettier": { "version": "^10.0.0" } },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/eslint",
+  "schema": null,
+  "type": "migration"
+}

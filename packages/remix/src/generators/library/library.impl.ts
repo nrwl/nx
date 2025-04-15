@@ -19,7 +19,11 @@ export async function remixLibraryGenerator(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
-  return remixLibraryGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return remixLibraryGeneratorInternal(tree, {
+    addPlugin: false,
+    useProjectJson: true,
+    ...schema,
+  });
 }
 
 export async function remixLibraryGeneratorInternal(
@@ -30,7 +34,7 @@ export async function remixLibraryGeneratorInternal(
   const options = await normalizeOptions(tree, schema);
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   const jsInitTask = await jsInitGenerator(tree, {
@@ -53,6 +57,7 @@ export async function remixLibraryGeneratorInternal(
     buildable: options.buildable,
     bundler: options.bundler,
     addPlugin: options.addPlugin,
+    useProjectJson: options.useProjectJson,
   });
   tasks.push(libGenTask);
 

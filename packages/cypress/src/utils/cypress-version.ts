@@ -1,6 +1,10 @@
 let cypressPackageJson;
 let loadedCypress = false;
 
+/**
+ * @deprecated use the `getInstalledCypressMajorVersion` exported from
+ * `@nx/cypress/src/utils/versions` instead. It will be removed in v22.
+ */
 export function installedCypressVersion() {
   if (!loadedCypress) {
     try {
@@ -21,6 +25,8 @@ export function installedCypressVersion() {
 
 /**
  * will not throw if cypress is not installed
+ * @deprecated use the `assertMinimumCypressVersion` exported from
+ * `@nx/cypress/src/utils/versions` instead. It will be removed in v22.
  */
 export function assertMinimumCypressVersion(minVersion: number) {
   const version = installedCypressVersion();

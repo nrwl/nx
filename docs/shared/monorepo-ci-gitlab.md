@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using GitLab and Nx
+description: Learn how to set up GitLab CI for your Nx workspace with examples of YAML configuration for building and testing affected projects efficiently.
+---
+
 # Configuring CI Using GitLab and Nx
 
 Below is an example of a GitLab setup, building and testing only what is affected.

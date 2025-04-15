@@ -325,7 +325,7 @@ export function ProjectsSidebar(): JSX.Element {
         type: 'enableCompositeGraph',
         context: compositeParam === 'true' ? null : compositeParam,
       });
-    } else if (!searchParams.has('composite')) {
+    } else if (!searchParams.has('composite') && compositeEnabled) {
       projectGraphService.send({ type: 'disableCompositeGraph' });
       navigate(routeConstructor('/projects', true));
     }

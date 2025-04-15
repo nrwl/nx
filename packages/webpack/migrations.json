@@ -42,10 +42,19 @@
         "sass-loader": {
           "version": "^16.0.4",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.7.1": {
+      "version": "20.7.1-beta.0",
+      "packages": {
+        "webpack": {
+          "version": "5.98.0",
+          "alwaysAddToPackageJson": false
         },
-        "sass-embedded": {
-          "version": "^1.83.4",
-          "alwaysAddToPackageJson": true
+        "webpack-dev-server": {
+          "version": "^5.2.1",
+          "alwaysAddToPackageJson": false
         }
       }
     }

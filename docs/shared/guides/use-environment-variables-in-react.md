@@ -1,3 +1,8 @@
+---
+title: Using Environment Variables in React Applications
+description: Learn how to configure and use environment variables in React applications with Nx, including setup for Vite and Webpack, and handling conflicts between Nx and Vite.
+---
+
 # Using environment variables in React applications
 
 ## For React applications using Vite

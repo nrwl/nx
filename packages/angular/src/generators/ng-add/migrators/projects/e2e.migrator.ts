@@ -262,9 +262,9 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     } else if (this.isCypressE2eProject()) {
       ensurePackage('@nx/cypress', nxVersion);
       const {
-        installedCypressVersion,
-      } = require('@nx/cypress/src/utils/cypress-version');
-      this.cypressInstalledVersion = installedCypressVersion();
+        getInstalledCypressMajorVersion,
+      } = require('@nx/cypress/src/utils/versions');
+      this.cypressInstalledVersion = getInstalledCypressMajorVersion(this.tree);
       this.project = {
         ...this.project,
         name,

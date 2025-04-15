@@ -3,10 +3,10 @@ import {
   formatFiles,
   type Tree,
 } from '@nx/devkit';
-import { installedCypressVersion } from '../../utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '../../utils/versions';
 
 export default async function (tree: Tree) {
-  if (installedCypressVersion() < 13) {
+  if (getInstalledCypressMajorVersion(tree) < 13) {
     return;
   }
 

@@ -202,8 +202,40 @@ export class ProjectConfigurationsError extends Error {
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
-    super('Failed to create project configurations');
+    const messageFragments = ['Failed to create project configurations.'];
+    const mergeNodesErrors = [];
+    const unknownErrors = [];
+    for (const e of errors) {
+      if (
+        // Known error type, but unlikely to be caused by the user
+        isMergeNodesError(e)
+      ) {
+        mergeNodesErrors.push(e);
+      } else if (
+        // Known errors that are self-explanatory
+        !isAggregateCreateNodesError(e) &&
+        !isProjectsWithNoNameError(e) &&
+        !isMultipleProjectsWithSameNameError(e)
+      ) {
+        unknownErrors.push(e);
+      }
+    }
+    if (mergeNodesErrors.length > 0) {
+      messageFragments.push(
+        `This type of error most likely points to an issue within Nx. Please report it.`
+      );
+    }
+    if (unknownErrors.length > 0) {
+      messageFragments.push(
+        `If the error cause is not obvious from the below error messages, running "nx reset" may fix it. Please report the issue if you keep seeing it.`
+      );
+    }
+    super(messageFragments.join(' '));
     this.name = this.constructor.name;
+    this.errors = errors;
+    this.stack = errors
+      .map((error) => indentString(formatErrorStackAndCause(error), 2))
+      .join('\n');
   }
 }
 

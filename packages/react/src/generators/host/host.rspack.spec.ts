@@ -226,7 +226,6 @@ describe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
       expect(tree.exists('test/rspack.config.prod.js')).toBeTruthy();
-      expect(tree.exists('test/rspack.server.config.js')).toBeTruthy();
       expect(tree.exists('test/rspack.config.js')).toBeTruthy();
       expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
       expect(
@@ -251,9 +250,6 @@ describe('hostGenerator', () => {
       });
 
       expect(
-        tree.read('test/rspack.server.config.js', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
         tree.read('test/module-federation.server.config.js', 'utf-8')
       ).toMatchSnapshot();
     });
@@ -272,7 +268,6 @@ describe('hostGenerator', () => {
 
       expect(tree.exists('test/tsconfig.json')).toBeTruthy();
       expect(tree.exists('test/rspack.config.prod.ts')).toBeTruthy();
-      expect(tree.exists('test/rspack.server.config.ts')).toBeTruthy();
       expect(tree.exists('test/rspack.config.ts')).toBeTruthy();
       expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
       expect(
@@ -296,9 +291,6 @@ describe('hostGenerator', () => {
         include: ['src/remotes.d.ts', 'src/main.server.tsx', 'server.ts'],
       });
 
-      expect(
-        tree.read('test/rspack.server.config.ts', 'utf-8')
-      ).toMatchSnapshot();
       expect(
         tree.read('test/module-federation.server.config.ts', 'utf-8')
       ).toMatchSnapshot();
@@ -509,9 +501,9 @@ describe('hostGenerator', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",

@@ -45,9 +45,9 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
       <p className="my-2">{webinar.description}</p>
       <Link href={link} prefetch={false}>
         <span className="my-4 text-balance text-slate-500 sm:w-8/12 dark:text-white">
-          {webinar.status === 'Past - Gated'
-            ? 'Sign up to view the recording'
-            : 'Watch the recording'}
+          {webinar.status === 'Past - Ungated'
+            ? 'Watch the recording'
+            : 'Sign up to view the recording'}
         </span>
       </Link>
     </div>

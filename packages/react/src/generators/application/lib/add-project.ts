@@ -5,12 +5,13 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateProjectConfiguration,
+  updateJson,
   writeJson,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -38,28 +39,50 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: options.projectName,
-      version: '0.0.1',
-      private: true,
-    });
-  }
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
 
-  if (!options.isUsingTsSolutionConfig || options.alwaysGenerateProjectJson) {
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (Object.keys(project.targets).length) {
+      packageJson.nx ??= {};
+      packageJson.nx.targets = project.targets;
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+  } else {
     addProjectConfiguration(host, options.projectName, {
       ...project,
     });
-  } else if (
-    options.parsedTags?.length ||
-    Object.keys(project.targets).length
-  ) {
-    const updatedProject: ProjectConfiguration = {
-      root: options.appProjectRoot,
-      targets: project.targets,
-      tags: options.parsedTags?.length ? options.parsedTags : undefined,
-    };
-    updateProjectConfiguration(host, options.projectName, updatedProject);
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    // React Router already adds a package.json to the project root
+    if (options.useReactRouter) {
+      updateJson(
+        host,
+        joinPathFragments(options.appProjectRoot, 'package.json'),
+        (json) => {
+          return {
+            name: packageJson.name,
+            ...json,
+          };
+        }
+      );
+    } else {
+      writeJson(
+        host,
+        joinPathFragments(options.appProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
   }
 }
 

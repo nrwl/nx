@@ -1,3 +1,8 @@
+---
+title: 'Extending the Project Graph (v1 API)'
+description: 'Learn about the deprecated v1 API for extending the Nx project graph through project inference and project graph plugins.'
+---
+
 # Extending the Project Graph of Nx (v1 API)
 
 {% callout type="caution" title="Experimental" %}

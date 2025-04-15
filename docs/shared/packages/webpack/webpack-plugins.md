@@ -95,6 +95,10 @@ Type: `boolean`
 
 Delete the output path before building.
 
+**`Deprecated`**
+
+Use [`output.clean`](https://webpack.js.org/guides/output-management/#cleaning-up-the-dist-folder) instead.
+
 ##### deployUrl
 
 Type: `string`

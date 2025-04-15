@@ -1,5 +1,5 @@
 const { join, basename } = require('path');
-const { copyFileSync, existsSync, mkdirSync } = require('fs');
+const { copyFileSync, existsSync, mkdirSync, renameSync } = require('fs');
 const Module = require('module');
 const { nxVersion } = require('../utils/versions');
 const { getNativeFileCacheLocation } = require('./native-file-cache-location');
@@ -71,14 +71,28 @@ Module._load = function (request, parent, isMain) {
 
     // we copy the file to a workspace-scoped tmp directory and prefix with nxVersion to avoid stale files being loaded
     const nativeFileCacheLocation = getNativeFileCacheLocation();
+    // This is a path to copy to, not the one that gets loaded
+    const tmpTmpFile = join(
+      nativeFileCacheLocation,
+      nxVersion + '-' + Math.random() + fileName
+    );
+    // This is the path that will get loaded
     const tmpFile = join(nativeFileCacheLocation, nxVersion + '-' + fileName);
+
+    // If the file to be loaded already exists, just load it
     if (existsSync(tmpFile)) {
       return originalLoad.apply(this, [tmpFile, parent, isMain]);
     }
     if (!existsSync(nativeFileCacheLocation)) {
       mkdirSync(nativeFileCacheLocation, { recursive: true });
     }
-    copyFileSync(nativeLocation, tmpFile);
+    // First copy to a unique location for each process
+    copyFileSync(nativeLocation, tmpTmpFile);
+
+    // Then rename to the final location
+    renameSync(tmpTmpFile, tmpFile);
+
+    // Load from the final location
     return originalLoad.apply(this, [tmpFile, parent, isMain]);
   } else {
     // call the original _load function for everything else

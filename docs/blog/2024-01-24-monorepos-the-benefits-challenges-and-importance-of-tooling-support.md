@@ -1,6 +1,7 @@
 ---
 title: 'Monorepos: the Benefits, Challenges, and Importance of Tooling Support '
 description: 'Learn how monorepos and better tooling can help you overcome challenges in software development like scalability, maintenance, communication, and cost.'
+date: 2024-01-24
 slug: 'monorepos-the-benefits-challenges-and-importance-of-tooling-support'
 authors: ['Juri Strumpflohner']
 tags: [webinar]

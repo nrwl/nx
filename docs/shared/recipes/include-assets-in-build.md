@@ -1,3 +1,8 @@
+---
+title: Including Assets in Your Build
+description: Learn how to configure Nx executors to include and copy assets into your output bundle using regex patterns or object format for precise control.
+---
+
 # Including Assets in Your Build
 
 All the official Nx executors with an `assets` option have the same syntax.

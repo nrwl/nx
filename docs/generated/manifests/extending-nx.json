@@ -238,6 +238,17 @@
         "isExternal": false,
         "path": "/extending-nx/recipes/publish-plugin",
         "tags": ["create-your-own-plugin"]
+      },
+      {
+        "id": "task-running-lifecycle",
+        "name": "Hook into the Task Running Lifecycle",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/plugins/task-running-lifecycle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/recipes/task-running-lifecycle",
+        "tags": ["running-tasks"]
       }
     ],
     "isExternal": false,
@@ -386,5 +397,16 @@
     "isExternal": false,
     "path": "/extending-nx/recipes/publish-plugin",
     "tags": ["create-your-own-plugin"]
+  },
+  "/extending-nx/recipes/task-running-lifecycle": {
+    "id": "task-running-lifecycle",
+    "name": "Hook into the Task Running Lifecycle",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/plugins/task-running-lifecycle",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/recipes/task-running-lifecycle",
+    "tags": ["running-tasks"]
   }
 }

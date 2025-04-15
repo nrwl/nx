@@ -3,6 +3,7 @@ import { joinPathFragments, normalizePath } from './path';
 describe('normalizePath', () => {
   it('should remove drive letters', () => {
     expect(normalizePath('C:\\some\\path')).toEqual('/some/path');
+    expect(normalizePath('c:\\some\\path')).toEqual('/some/path');
   });
 
   it('should use unix style path separators', () => {

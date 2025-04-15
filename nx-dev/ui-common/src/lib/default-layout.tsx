@@ -31,7 +31,10 @@ export function DefaultLayout({
             }}
           />
         </div>
-        <main className={isHome || hideHeader ? '' : 'py-24 sm:py-32'}>
+        <main
+          data-document="main"
+          className={isHome || hideHeader ? '' : 'py-24 sm:py-32'}
+        >
           {children}
         </main>
       </div>

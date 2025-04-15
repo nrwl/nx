@@ -17,7 +17,6 @@ describe('ensureAngularDependencies', () => {
     // ASSERT
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
-    expect(dependencies['@angular/animations']).toBe(angularVersion);
     expect(dependencies['@angular/common']).toBe(angularVersion);
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
@@ -108,7 +107,6 @@ describe('ensureAngularDependencies', () => {
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
     expect(dependencies['@angular/core']).toBe('~15.0.0');
-    expect(dependencies['@angular/animations']).toBeUndefined();
     expect(dependencies['@angular/common']).toBeUndefined();
     expect(dependencies['@angular/compiler']).toBeUndefined();
     expect(dependencies['@angular/platform-browser']).toBeUndefined();

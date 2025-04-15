@@ -1,0 +1,85 @@
+---
+type: lesson
+title: Run Affected Tasks
+previews:
+  - {
+      port: 4211,
+      title: 'Affected Project Graph',
+      pathname: '/projects/affected',
+    }
+---
+
+### Testing Affected Projects
+
+{/* {import { VideoLink } from '@nx/nx-dev/ui-markdoc';} */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=551"></VideoLink> */}
+
+One of the key features of Nx in a monorepo setting is that you're able to run tasks only for projects that are actually affected by the code changes that you've made. This feature relies on `git` to determine which files have been changed.
+
+If we were developing locally, you could commit your changes so far and then make a small change to the `products` library.
+
+```html {% fileName="libs/products/src/lib/product-list/product-list.component.html" %}
+<p>product-list works!</p>
+<p>This is a change. 👋</p>
+```
+
+Then the following command would run the tests for only the projects affected by this change:
+
+```shell
+# This does not work in the browser webcontainer
+npx nx affected -t test
+```
+
+:::info
+This webcontainer does not have `git` enabled, so we have to manually tell Nx which files were touched.
+:::
+
+Use this command in the webcontainer terminal to manually specify which files have been touched.
+
+```shell
+npx nx affected -t test --files=libs/products/src/lib/products.tsx
+```
+
+Note that the unit tests were run for `products`, `angular-store` and `inventory`, but not for `orders` because a change to `products` can not possibly break the tests for `orders`. In a small repo like this, there isn't a lot of time saved, but as there are more tests and more projects, this quickly becomes an essential command.
+
+You can also see what projects are affected in the graph visualizer with:
+
+```shell
+npx nx graph --affected --files=libs/products/src/lib/products.tsx
+```
+
+## Build the Apps for Deployment
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=608"></VideoLink> */}
+
+If you're ready and want to ship your applications, you can build them using
+
+```shell
+npx nx run-many -t build
+```
+
+All the required files will be placed in `dist/apps/angular-store` and `dist/apps/inventory` and can be deployed to your favorite hosting provider.
+
+You can even create your own `deploy` task that sends the build output to your hosting provider.
+
+```json {% fileName="apps/angular-store/project.json" %}
+{
+  "targets": {
+    "deploy": {
+      "dependsOn": "build",
+      "command": "netlify deploy --dir=dist/angular-store"
+    }
+  }
+}
+```
+
+Replace the `command` with whatever terminal command you use to deploy your site.
+
+The `"dependsOn": "build"` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
+
+With the `deploy` tasks defined, you can deploy a single application with `npx nx deploy angular-store` or deploy any applications affected by the current changes with:
+
+```shell
+npx nx affected -t deploy
+```

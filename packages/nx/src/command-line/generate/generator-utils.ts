@@ -11,6 +11,7 @@ import {
 } from '../../config/schema-utils';
 import { readJsonFile } from '../../utils/fileutils';
 import { readPluginPackageJson } from '../../project-graph/plugins';
+import { getNxRequirePaths } from '../../utils/installation-directory';
 
 export type GeneratorInformation = {
   resolvedCollectionName: string;
@@ -74,7 +75,9 @@ export function getGeneratorInformation(
     };
   } catch (e) {
     throw new Error(
-      `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
+      `Unable to resolve ${collectionName}:${generatorName}.\n${
+        process.env.NX_VERBOSE_LOGGING === 'true' ? e.stack : e.message
+      }`
     );
   }
 }
@@ -93,13 +96,17 @@ export function readGeneratorsJson(
   let generatorsFilePath;
   if (collectionName.endsWith('.json')) {
     generatorsFilePath = require.resolve(collectionName, {
-      paths: root ? [root, __dirname] : [__dirname],
+      paths: root
+        ? [...getNxRequirePaths(root), __dirname]
+        : [...getNxRequirePaths(), __dirname],
     });
   } else {
     const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
       collectionName,
       projects,
-      root ? [root, __dirname] : [__dirname]
+      root
+        ? [...getNxRequirePaths(root), __dirname]
+        : [...getNxRequirePaths(), __dirname]
     );
     const generatorsFile = packageJson.generators ?? packageJson.schematics;
 

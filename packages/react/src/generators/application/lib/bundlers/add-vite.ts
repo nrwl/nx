@@ -18,6 +18,20 @@ export async function setupViteConfiguration(
     tree.delete(joinPathFragments(options.appProjectRoot, 'src/environments'));
   }
 
+  const reactRouterFrameworkConfig = {
+    imports: [`import { reactRouter } from '@react-router/dev/vite'`],
+    plugins: ['!process.env.VITEST && reactRouter()'],
+  };
+
+  const baseReactConfig = {
+    imports: [
+      options.compiler === 'swc'
+        ? `import react from '@vitejs/plugin-react-swc'`
+        : `import react from '@vitejs/plugin-react'`,
+    ],
+    plugins: ['react()'],
+  };
+
   const viteTask = await viteConfigurationGenerator(tree, {
     uiFramework: 'react',
     project: options.projectName,
@@ -38,12 +52,9 @@ export async function setupViteConfiguration(
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       rollupOptionsExternal: ["'react'", "'react-dom'", "'react/jsx-runtime'"],
-      imports: [
-        options.compiler === 'swc'
-          ? `import react from '@vitejs/plugin-react-swc'`
-          : `import react from '@vitejs/plugin-react'`,
-      ],
-      plugins: ['react()'],
+      ...(options.useReactRouter
+        ? reactRouterFrameworkConfig
+        : baseReactConfig),
     },
     false
   );

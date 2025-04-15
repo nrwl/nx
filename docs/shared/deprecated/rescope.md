@@ -1,3 +1,8 @@
+---
+title: 'Rescoping Packages from @nrwl to @nx'
+description: 'Learn about the transition of official Nx plugins from @nrwl to @nx npm scope, and how to update your dependencies accordingly.'
+---
+
 # Rescope Packages from @nrwl to @nx
 
 As of version 16, all the official Nx plugins moved from the `@nrwl` npm scope to `@nx`. The goal is for anyone looking through a list of dependencies to easily make the connection between the `nx` package and the `@nx` plugins that are associated with it.

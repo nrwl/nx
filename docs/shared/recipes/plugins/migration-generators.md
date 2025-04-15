@@ -1,3 +1,8 @@
+---
+title: Migration Generators
+description: Learn how to create migration generators for your Nx plugin to automatically update configuration files when your plugin makes breaking changes.
+---
+
 # Migration Generators
 
 When your plugin is being used in other repos, it is helpful to provide migration generators to automatically update configuration files when your plugin makes a breaking change.

@@ -21,7 +21,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import {
   getRelativePathToRootTsConfig,
@@ -53,13 +53,15 @@ import {
   isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
+  importPath: string;
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
+  names: ReturnType<typeof names>;
   parsedTags: string[];
   isUsingTsSolutionConfig: boolean;
 }
@@ -76,7 +78,6 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       options.appProjectRoot,
       {
         ...options,
-        ...names(options.name),
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         rootTsConfigPath,
@@ -90,7 +91,6 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
       options.appProjectRoot,
       {
         ...options,
-        ...names(options.name),
         tmpl: '',
         offsetFromRoot: rootOffset,
         rootTsConfigPath,
@@ -246,17 +246,20 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
 }
 
 async function addProject(tree: Tree, options: NormalizedSchema) {
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
-      version: '0.0.1',
-      private: true,
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(tree, options.projectName, {
       projectType: 'application',
@@ -265,6 +268,14 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
       tags: options.parsedTags,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 }
 
@@ -292,7 +303,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
   }
 
   const tasks: GeneratorCallback[] = [];
@@ -466,21 +477,17 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    if (options.isUsingTsSolutionConfig) {
-      writeJson(
-        host,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(host, options.e2eProjectName, {
         root: options.e2eProjectRoot,
@@ -491,6 +498,15 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         implicitDependencies: [options.projectName],
       });
     }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        host,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
+
     const cypressTask = await configurationGenerator(host, {
       ...options,
       project: options.e2eProjectName,
@@ -544,21 +560,17 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
       typeof import('@nx/playwright')
     >('@nx/playwright', nxVersion);
-    if (options.isUsingTsSolutionConfig) {
-      writeJson(
-        host,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(host, options.e2eProjectName, {
         root: options.e2eProjectRoot,
@@ -569,6 +581,15 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         implicitDependencies: [options.projectName],
       });
     }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        host,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
+
     const playwrightTask = await playwrightConfigGenerator(host, {
       project: options.e2eProjectName,
       skipFormat: true,
@@ -688,22 +709,28 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+  });
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
+
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
-  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   const npmScope = getNpmScope(host);
 
@@ -719,18 +746,18 @@ async function normalizeOptions(
   return {
     ...options,
     prefix: options.prefix ?? npmScope ?? 'app',
-    name: names(options.name).fileName,
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',
-    projectName: isUsingTsSolutionConfig
-      ? getImportPath(host, appProjectName)
-      : appProjectName,
+    projectName: appProjectName,
+    importPath,
     strict: options.strict ?? true,
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
+    names: names(projectName),
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 

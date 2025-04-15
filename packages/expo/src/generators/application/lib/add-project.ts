@@ -2,20 +2,16 @@ import {
   addProjectConfiguration,
   joinPathFragments,
   ProjectConfiguration,
-  readNxJson,
   TargetConfiguration,
   Tree,
   writeJson,
 } from '@nx/devkit';
-
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
-  const nxJson = readNxJson(host);
   const hasPlugin = hasExpoPlugin(host);
 
   if (!hasPlugin) {
@@ -30,26 +26,38 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  if (isUsingTsSolutionSetup(host)) {
-    const packageName = getImportPath(host, options.name);
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: packageName,
-      version: '0.0.1',
-      private: true,
-      nx: {
-        name: packageName === options.name ? undefined : options.name,
-        projectType: 'application',
-        sourceRoot: `${options.appProjectRoot}/src`,
-        targets: hasPlugin ? undefined : getTargets(options),
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.importPath !== options.projectName) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (!hasPlugin) {
+      packageJson.nx ??= {};
+      packageJson.nx.targets = getTargets(options);
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(
       host,
       options.projectName,
       projectConfiguration,
       options.standaloneConfig
+    );
+  }
+
+  if (!options.useProjectJson || options.isTsSolutionSetup) {
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
     );
   }
 }

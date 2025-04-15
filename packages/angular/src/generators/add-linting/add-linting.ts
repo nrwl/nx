@@ -40,7 +40,7 @@ export async function addLintingGenerator(
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
-    addPlugin: false,
+    addPlugin: options.addPlugin ?? false,
     addExplicitTargets: true,
     skipPackageJson: options.skipPackageJson,
   });

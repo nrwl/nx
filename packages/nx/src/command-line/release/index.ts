@@ -49,3 +49,11 @@ export const releaseVersion = defaultClient.releaseVersion.bind(
 export const release = defaultClient.release.bind(
   defaultClient
 ) as typeof defaultClient.release;
+
+/**
+ * @public
+ */
+export {
+  AfterAllProjectsVersioned,
+  VersionActions,
+} from './version/version-actions';

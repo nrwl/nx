@@ -151,7 +151,7 @@ Inspired by our new [Vite setup](/nx-api/vite), which allows for a more modular 
 
 ![](/blog/images/2023-02-16/emRP2gF7umWc4UE-.avif)
 
-If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details on our docs: [/recipes/webpack/webpack-config-setup](/recipes/webpack/webpack-config-setup)
+If you want to upgrade but still retain the previous behavior, we introduced an `isolatedConfig` mode that can be set to `false`. More details in our docs: [/recipes/webpack/webpack-config-setup](/recipes/webpack/webpack-config-setup)
 
 ## How to Update Nx
 

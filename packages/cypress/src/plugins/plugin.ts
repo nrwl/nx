@@ -262,11 +262,15 @@ async function buildCypressTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
   let metadata: ProjectConfiguration['metadata'];
+  const tsNodeCompilerOptions = JSON.stringify({ customConditions: null });
 
   if ('e2e' in cypressConfig) {
     targets[options.targetName] = {
       command: `cypress run`,
-      options: { cwd: projectRoot },
+      options: {
+        cwd: projectRoot,
+        env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+      },
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
@@ -345,6 +349,7 @@ async function buildCypressTargets(
           )}`,
           options: {
             cwd: projectRoot,
+            env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
           },
           parallelism: false,
           metadata: {
@@ -392,7 +397,10 @@ async function buildCypressTargets(
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
       command: `cypress run --component`,
-      options: { cwd: projectRoot },
+      options: {
+        cwd: projectRoot,
+        env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
+      },
       cache: true,
       inputs: getInputs(namedInputs),
       outputs: getOutputs(projectRoot, cypressConfig, 'component'),

@@ -1,10 +1,10 @@
 import { useRouter } from 'next/router';
 import { NextSeo } from 'next-seo';
-import { DefaultLayout } from '@nx/nx-dev/ui-common';
 import {
   CallToAction,
   CustomerLogos,
   CustomerMetrics,
+  EnterpriseLayout,
   Hero,
   HetznerCloudTestimonial,
   MakeYourCiFast,
@@ -14,7 +14,6 @@ import {
   TestimonialCarousel,
   VmwareTestimonial,
 } from '@nx/nx-dev/ui-enterprise';
-import { requestFreeTrial } from '../../lib/components/headerCtaConfigs';
 import { ReactElement } from 'react';
 
 export function Enterprise(): ReactElement {
@@ -43,7 +42,7 @@ export function Enterprise(): ReactElement {
           type: 'website',
         }}
       />
-      <DefaultLayout headerCTAConfig={[requestFreeTrial]} isHome={true}>
+      <EnterpriseLayout>
         <div>
           <Hero />
           <CustomerLogos />
@@ -71,7 +70,7 @@ export function Enterprise(): ReactElement {
         <div className="mt-32 lg:mt-40">
           <CallToAction />
         </div>
-      </DefaultLayout>
+      </EnterpriseLayout>
     </>
   );
 }

@@ -6,8 +6,8 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
+import { output } from '../../utils/output';
 import { PlanCheckOptions, PlanOptions } from './command-object';
 import {
   createNxReleaseConfig,
@@ -16,6 +16,7 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
@@ -42,7 +43,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -69,7 +76,8 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         title: 'Version plans are not enabled',
         bodyLines: [
           'Please ensure at least one release group has version plans enabled in your Nx release configuration if you want to use this command.',
-          // TODO: Add docs link here once it is available
+          '',
+          'Learn more about version plans here: https://nx.dev/recipes/nx-release/file-based-versioning-version-plans',
         ],
       });
       return 1;

@@ -36,7 +36,6 @@
               "typescript",
               // Installed to workspace by plugins
               "@typescript-eslint/parser",
-              "eslint-config-prettier",
               "@angular-eslint/eslint-plugin",
               "angular-eslint",
               "typescript-eslint",

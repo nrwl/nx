@@ -19,7 +19,7 @@ import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 import { gte } from 'semver';
 import {
-  installPlugin,
+  runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 
@@ -126,7 +126,7 @@ async function initializePlugin(
   spinner.start();
 
   try {
-    await installPlugin(
+    await runPluginInitGenerator(
       pkgName,
       workspaceRoot,
       updatePackageScripts,

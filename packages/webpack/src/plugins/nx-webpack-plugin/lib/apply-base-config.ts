@@ -20,12 +20,17 @@ import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-op
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isBuildableLibrary } from './utils';
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
   /could not find any license/i,
 ];
 
+const extensionAlias = {
+  '.js': ['.ts', '.js'],
+  '.mjs': ['.mts', '.mjs'],
+};
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
 const mainFields = ['module', 'main'];
 
@@ -239,8 +244,13 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsWebpackPlugin({ ...options, tsConfig }));
   }
 
-  // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolution) {
+  // New TS Solution already has a typecheck target but allow it to run during serve
+  if (
+    (!options?.skipTypeChecking && !isUsingTsSolution) ||
+    (isUsingTsSolution &&
+      options?.skipTypeChecking === false &&
+      process.env['WEBPACK_SERVE'])
+  ) {
     const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
@@ -341,7 +351,41 @@ function applyNxDependentConfig(
   const externals = [];
   if (options.target === 'node' && options.externalDependencies === 'all') {
     const modulesDir = `${options.root}/node_modules`;
-    externals.push(nodeExternals({ modulesDir }));
+
+    const graph = options.projectGraph;
+    const projectName = options.projectName;
+
+    const deps = graph?.dependencies?.[projectName] ?? [];
+
+    // Collect non-buildable TS project references so that they are bundled
+    // in the final output. This is needed for projects that are not buildable
+    // but are referenced by buildable projects. This is needed for the new TS
+    // solution setup.
+    const nonBuildableWorkspaceLibs = isUsingTsSolution
+      ? deps
+          .filter((dep) => {
+            const node = graph.nodes?.[dep.target];
+            if (!node || node.type !== 'lib') return false;
+
+            const hasBuildTarget = 'build' in (node.data?.targets ?? {});
+
+            if (hasBuildTarget) {
+              return false;
+            }
+
+            // If there is no build target we check the package exports to see if they reference
+            // source files
+            return !isBuildableLibrary(node);
+          })
+          .map(
+            (dep) => graph.nodes?.[dep.target]?.data?.metadata?.js?.packageName
+          )
+          .filter((name): name is string => !!name)
+      : [];
+
+    externals.push(
+      nodeExternals({ modulesDir, allowlist: nonBuildableWorkspaceLibs })
+    );
   } else if (Array.isArray(options.externalDependencies)) {
     externals.push(function (ctx, callback: Function) {
       if (options.externalDependencies.includes(ctx.request)) {
@@ -356,6 +400,10 @@ function applyNxDependentConfig(
   config.resolve = {
     ...config.resolve,
     extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    extensionAlias: {
+      ...(config.resolve?.extensionAlias ?? {}),
+      ...extensionAlias,
+    },
     alias: {
       ...(config.resolve?.alias ?? {}),
       ...(options.fileReplacements?.reduce(

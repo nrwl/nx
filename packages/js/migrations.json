@@ -146,6 +146,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.7.1-beta.0": {
+      "version": "20.7.1-beta.0",
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.6.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

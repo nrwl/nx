@@ -348,7 +348,8 @@ export function isTag(tagName: string, node: ts.Node) {
 
 export function addInitialRoutes(
   sourcePath: string,
-  source: ts.SourceFile
+  source: ts.SourceFile,
+  addBrowserRouter?: boolean
 ): StringChange[] {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -404,7 +405,9 @@ export function addInitialRoutes(
   return [
     ...addImport(
       source,
-      `import { Route, Routes, Link } from 'react-router-dom';`
+      `import { Route, Routes, Link ${
+        addBrowserRouter ? ', BrowserRouter ' : ''
+      }} from 'react-router-dom';`
     ),
     insertRoutes,
   ];

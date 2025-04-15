@@ -1,3 +1,8 @@
+---
+title: Adding Nx to NPM/Yarn/PNPM Workspace
+description: Learn how to integrate Nx into an existing NPM, Yarn, or PNPM workspace monorepo to gain task scheduling, caching, and improved CI performance.
+---
+
 # Adding Nx to NPM/Yarn/PNPM Workspace
 
 {% callout type="note" title="Migrating from Lerna?" %}
@@ -368,6 +373,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
