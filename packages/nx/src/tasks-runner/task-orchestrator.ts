@@ -129,12 +129,16 @@ export class TaskOrchestrator {
 
     await Promise.race([
       Promise.all(threads),
-      new Promise((resolve) => {
-        this.options.lifeCycle.registerForcedShutdownCallback(() => {
-          // The user force quit the TUI with ctrl+c, so proceed onto cleanup
-          resolve(undefined);
-        });
-      }),
+      ...(this.tuiEnabled
+        ? [
+            new Promise((resolve) => {
+              this.options.lifeCycle.registerForcedShutdownCallback(() => {
+                // The user force quit the TUI with ctrl+c, so proceed onto cleanup
+                resolve(undefined);
+              });
+            }),
+          ]
+        : []),
     ]);
 
     performance.mark('task-execution:end');
