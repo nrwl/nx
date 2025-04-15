@@ -124,19 +124,11 @@ If you want to use our MCP integration with other tools that support the protoco
 
 ## Let's see it in action
 
-Here are some example queries, showing how Cursor leverages the different exposed Nx MCP tools to get more information to correctly take action. Jump to the [Youtube video for the full run-through]().
+The [Youtube video]() above showcases the below example queries, showing how Cursor leverages the different exposed Nx MCP tools to get more information to correctly take action.
 
-**Query:** "If I change the public API of feat-product-detail, which other projects might be affected by that change?"
-
-{% video-player src="/documentation/blog/media/nx-mcp-cursor-dependencies.mp4" alt="Asking Cursor about the impact of changing a project's public API" showDescription=true showControls=true autoPlay=false loop=false /%}
-
-**Query:** "Use Nx to generate a new React library for handling past orders."
-
-{% video-player src="/documentation/blog/media/nx-mcp-cursor-generate-project.mp4" alt="Asking Cursor to generate a new React project for listing past orders" showDescription=true showControls=true autoPlay=false loop=false /%}
-
-**Query:** "Can you configure Nx release for the packages of this workspace? Just update nx.json with the necessary configuration. Use conventional commits as the versioning strategy. Also feel free to use the Nx docs to pull more info on how to configure it."
-
-{% video-player src="/documentation/blog/media/nx-mcp-cursor-nx-release.mp4" alt="Asking Cursor to use the docs to configure Nx release for the workspace" showDescription=true showControls=true autoPlay=false loop=false /%}
+- If I change the public API of feat-product-detail, which other projects might be affected by that change?
+- Use Nx to generate a new React library for handling past orders.
+- Can you configure Nx release for the packages of this workspace? Just update nx.json with the necessary configuration. Use conventional commits as the versioning strategy. Also feel free to use the Nx docs to pull more info on how to configure it.
 
 ## Wrapping up
 
