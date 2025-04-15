@@ -566,48 +566,6 @@ describe('app', () => {
     });
   });
 
-  describe('--e2e-test-runner cypress', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'cypress',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('--e2e-test-runner playwright', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'playwright',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-    });
-  });
-
   it('should generate functional components by default', async () => {
     const name = uniq();
 

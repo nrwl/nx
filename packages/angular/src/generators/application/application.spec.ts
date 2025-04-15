@@ -605,13 +605,6 @@ describe('app', () => {
             },
           ]
         `);
-        expect(nxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
         expect(
           readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
         ).toBeUndefined();

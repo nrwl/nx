@@ -9,8 +9,6 @@ import {
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
-import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
-import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
@@ -73,31 +71,6 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       addPlugin: true,
     });
 
-    let buildTarget = '^build-static';
-    const matchingPlugin = await findPluginForConfigFile(
-      host,
-      '@nx/nuxt/plugin',
-      joinPathFragments(
-        options.appProjectRoot,
-        `nuxt.config.${options.js ? 'js' : 'ts'}`
-      )
-    );
-    if (matchingPlugin && typeof matchingPlugin !== 'string') {
-      buildTarget = `^${
-        (matchingPlugin.options as any)?.buildStaticTargetName ?? 'build-static'
-      }`;
-    }
-
-    await addE2eCiTargetDefaults(
-      host,
-      '@nx/cypress/plugin',
-      buildTarget,
-      joinPathFragments(
-        options.e2eProjectRoot,
-        `cypress.config.${options.js ? 'js' : 'ts'}`
-      )
-    );
-
     return e2eTask;
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
@@ -144,28 +117,6 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       addPlugin: true,
     });
-
-    let buildTarget = '^build-static';
-    const matchingPlugin = await findPluginForConfigFile(
-      host,
-      '@nx/nuxt/plugin',
-      joinPathFragments(
-        options.appProjectRoot,
-        `nuxt.config.${options.js ? 'js' : 'ts'}`
-      )
-    );
-    if (matchingPlugin && typeof matchingPlugin !== 'string') {
-      buildTarget = `^${
-        (matchingPlugin.options as any)?.buildStaticTargetName ?? 'build-static'
-      }`;
-    }
-
-    await addE2eCiTargetDefaults(
-      host,
-      '@nx/playwright/plugin',
-      buildTarget,
-      joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
-    );
 
     return e2eTask;
   }
