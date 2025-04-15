@@ -82,7 +82,7 @@ function ValueLevers({
   const [developerSalary, setDeveloperSalary] = useState<number>(125000);
   const [medianBuildTime, setMedianBuildTime] = useState<number>(30);
   const [monthlyCIPEs, setMonthlyCIPEs] = useState<number>(10000);
-  const [longestBuildTime, setLongestBuildTime] = useState<number>(60);
+  const [longestBuildTime, setLongestBuildTime] = useState<number>(60); // currently unused
   const [percentageOfCIPEs15Minutes, setPercentageOfCIPEs15Minutes] =
     useState<number>(0);
   const [flakyPercentage, setFlakyPercentage] = useState<number>(0);
@@ -206,13 +206,23 @@ export function ValueCalculator(): JSX.Element {
       }).format(valueCreated.dollars),
     [valueCreated.dollars]
   );
-  const formattedHoursSaved = useMemo(
-    () =>
-      new Intl.NumberFormat('en-US', {
-        maximumFractionDigits: 0,
-      }).format(valueCreated.hours),
-    [valueCreated.hours]
-  );
+  const formattedHoursSaved = useMemo(() => {
+    const days = Math.floor(valueCreated.hours / 24);
+    const formattedDays =
+      days > 0
+        ? `${days} ${days === 1 ? 'day' : 'days'}${days > 1 ? ', ' : ''}`
+        : '';
+    const hours = valueCreated.hours % 24;
+    const formattedHours =
+      hours > 0 ? `${hours} ${hours === 1 ? 'hour' : 'hours'}` : '';
+    return `${formattedDays} ${formattedHours}`;
+  }, [valueCreated.hours]);
+  const fteGained = useMemo(() => {
+    return new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 2,
+    }).format(valueCreated.hours / 160);
+  }, [valueCreated.hours]);
+
   return (
     <>
       <NextSeo
@@ -283,7 +293,21 @@ export function ValueCalculator(): JSX.Element {
                 variant="title"
                 className="mx-auto max-w-3xl"
               >
-                {formattedHoursSaved} hours
+                {formattedHoursSaved}
+              </SectionHeading>
+              <SectionHeading
+                as="h4"
+                variant="subtitle"
+                className="mx-auto mt-6 max-w-3xl"
+              >
+                Full Time Engineers Gained
+              </SectionHeading>
+              <SectionHeading
+                as="h3"
+                variant="title"
+                className="mx-auto max-w-3xl"
+              >
+                {fteGained}
               </SectionHeading>
             </>
           )}
