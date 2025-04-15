@@ -3,7 +3,7 @@ plugins {
   `maven-publish`
   signing
   id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version ("+")
+  id("dev.nx.gradle.project-graph") version "0.0.2"
   id("org.jetbrains.kotlin.jvm") version "2.1.10"
   id("com.gradle.plugin-publish") version "1.2.1"
 }
@@ -12,19 +12,12 @@ group = "dev.nx.gradle"
 
 version = "0.0.2"
 
-allprojects {
-  apply {
-    plugin("project-report")
-    plugin("dev.nx.gradle.project-graph")
-    plugin("com.ncorti.ktfmt.gradle")
-  }
-}
-
 repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
   testImplementation(kotlin("test"))
+  testImplementation("io.mockk:mockk:1.13.8")
 }
 
 java {
@@ -55,17 +48,12 @@ afterEvaluate {
             "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx")
         url.set("https://github.com/nrwl/nx")
 
-        licenses {
-          license {
-            name.set("The Apache License, Version 2.0")
-            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-          }
-        }
+        licenses { license { name.set("MIT") } }
 
         developers {
           developer {
             id.set("nx")
-            name.set("Nx Java Services")
+            name.set("Nx")
             email.set("java-services@nrwl.io")
           }
         }
@@ -93,17 +81,12 @@ afterEvaluate {
             "A plugin to generate a JSON file with nodes, dependencies, and external nodes for Nx")
         url.set("https://github.com/nrwl/nx")
 
-        licenses {
-          license {
-            name.set("The Apache License, Version 2.0")
-            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-          }
-        }
+        licenses { license { name.set("MIT") } }
 
         developers {
           developer {
             id.set("nx")
-            name.set("Nx Java Services")
+            name.set("Nx")
             email.set("java-services@nrwl.io")
           }
         }

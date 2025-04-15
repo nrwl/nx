@@ -10,7 +10,7 @@
       "cache": true
     },
     "lint": {
-      "command": "./gradlew :project-graph:check",
+      "command": "./gradlew :project-graph:ktfmtCheck",
       "cache": true
     },
     "format": {
