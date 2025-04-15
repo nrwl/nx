@@ -55,8 +55,7 @@ fun processTask(
   val metadata = getMetadata(task.description ?: "Run ${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] =
-      mapOf("taskName" to "${projectBuildPath}:${task.name}", "cwd" to cwd)
+  target["options"] = mapOf("taskName" to "${projectBuildPath}:${task.name}", "cwd" to cwd)
 
   return target
 }

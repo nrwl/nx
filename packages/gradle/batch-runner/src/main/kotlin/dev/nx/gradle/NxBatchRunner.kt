@@ -7,15 +7,15 @@ import dev.nx.gradle.data.NxBatchOptions
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.logging.Logger
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.system.exitProcess
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.events.OperationType
 import org.gradle.tooling.events.ProgressEvent
-import org.gradle.tooling.events.task.TaskFailureResult
-import org.gradle.tooling.events.task.TaskFinishEvent
-import org.gradle.tooling.events.task.TaskStartEvent
-import org.gradle.tooling.events.task.TaskSuccessResult
+import org.gradle.tooling.events.task.*
+import org.gradle.tooling.events.test.*
 
 val logger: Logger = Logger.getLogger("NxBatchRunner")
 
@@ -44,6 +44,7 @@ fun main(args: Array<String>) {
         GradleConnector.newConnector().forProjectDirectory(File(options.workspaceRoot)).connect()
 
     val results = runTasksInParallel(connection, options.tasks, options.args)
+
     val reportJson = Gson().toJson(results)
     println(reportJson)
 
@@ -153,38 +154,103 @@ fun runLauncher(
   val taskStartTimes = mutableMapOf<String, Long>()
   val taskResults = mutableMapOf<String, TaskResult>()
 
-  val listener = { event: ProgressEvent ->
+  val testTaskStatus = mutableMapOf<String, Boolean>()
+  val testStartTimes = mutableMapOf<String, Long>()
+  val testEndTimes = mutableMapOf<String, Long>()
+  tasks.forEach { (nxTaskId, taskConfig) ->
+    if (taskConfig.testClassName != null) {
+      testTaskStatus[nxTaskId] = true
+    }
+  }
+
+  val buildListener: (ProgressEvent) -> Unit = { event ->
     when (event) {
       is TaskStartEvent -> {
-        taskStartTimes[event.descriptor.taskPath] = System.currentTimeMillis()
+        tasks.entries
+            .find { it.value.taskName == event.descriptor.taskPath }
+            ?.key
+            ?.let { nxTaskId ->
+              taskStartTimes[nxTaskId] = min(System.currentTimeMillis(), event.eventTime)
+            }
       }
       is TaskFinishEvent -> {
         val taskPath = event.descriptor.taskPath
-        if (allTaskNames.contains(taskPath)) {
-          val success =
-              when (val result = event.result) {
-                is TaskSuccessResult -> {
-                  logger.info("✅ Task finished successfully: $taskPath")
-                  true
-                }
-                is TaskFailureResult -> {
-                  logger.warning("❌ Task failed: $taskPath")
-                  logger.warning(
-                      "   Failures: ${result.failures.joinToString("\n") { it.message ?: "Unknown error" }}")
-                  false
-                }
-                else -> {
-                  logger.warning("⚠️ Task finished with unknown result: $taskPath $result")
-                  true
+        val success =
+            when (event.result) {
+              is TaskSuccessResult -> {
+                logger.info("✅ Task finished successfully: $taskPath")
+                true
+              }
+              is TaskFailureResult -> {
+                logger.warning("❌ Task failed: $taskPath")
+                false
+              }
+              else -> true
+            }
+
+        tasks.entries
+            .find { it.value.taskName == taskPath }
+            ?.key
+            ?.let { nxTaskId ->
+              val endTime = max(System.currentTimeMillis(), event.eventTime)
+              val startTime = taskStartTimes[nxTaskId] ?: event.result.startTime
+              taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
+            }
+      }
+    }
+  }
+
+  val testListener: (ProgressEvent) -> Unit = { event ->
+    when (event) {
+      is TaskStartEvent,
+      is TaskFinishEvent -> buildListener(event)
+      is TestStartEvent -> {
+
+        (event.descriptor as? JvmTestOperationDescriptor)?.className?.let { className ->
+          tasks.entries
+              .find { entry ->
+                val testClass = entry.value.testClassName
+                testClass != null && className.endsWith(testClass)
+              }
+              ?.key
+              ?.let { nxTaskId ->
+                testStartTimes.compute(nxTaskId) { _, old ->
+                  min(old ?: event.eventTime, event.eventTime)
                 }
               }
+        }
+      }
+      is TestFinishEvent -> {
+        (event.descriptor as? JvmTestOperationDescriptor)?.className?.let { className ->
+          tasks.entries
+              .find { entry ->
+                val testClass = entry.value.testClassName
+                testClass != null && className.endsWith(testClass)
+              }
+              ?.key
+              ?.let { nxTaskId ->
+                testEndTimes.compute(nxTaskId) { _, old ->
+                  max(old ?: event.eventTime, event.eventTime)
+                }
 
-          val endTime = System.currentTimeMillis()
-          val startTime = taskStartTimes[taskPath] ?: endTime
-          val nxTaskId = tasks.entries.find { it.value.taskName == taskPath }?.key
-          if (nxTaskId != null) {
-            taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
-          }
+                when (event.result) {
+                  is TestSuccessResult -> {
+                    // do nothing, it already defaulted to true
+                    logger.info("✅ Test passed: $nxTaskId $className ${event.descriptor.name}")
+                  }
+                  is TestFailureResult -> {
+                    testTaskStatus[nxTaskId] = false
+                    logger.warning("❌ Test failed: $nxTaskId $className ${event.descriptor.name}")
+                  }
+                  is TestSkippedResult -> {
+                    logger.warning("⚠️ Test skipped: $nxTaskId $className ${event.descriptor.name}")
+                  }
+                  else -> {
+                    logger.warning(
+                        "⚠️ Test finished with unknown result: $nxTaskId $className ${event.descriptor.name}")
+                  }
+                }
+              }
         }
       }
     }
@@ -195,11 +261,7 @@ fun runLauncher(
 
   val args = buildList {
     addAll(listOf("--info", "--continue", "--parallel", "-Dorg.gradle.daemon.idletimeout=10000"))
-
-    if (!useTestLauncher) {
-      addAll(listOf("--exclude-task", "test"))
-    }
-
+    if (!useTestLauncher) addAll(listOf("--exclude-task", "test"))
     addAll(additionalArgs.split(" ").filter { it.isNotBlank() })
   }
 
@@ -210,69 +272,58 @@ fun runLauncher(
 
   try {
     if (useTestLauncher) {
-      val testLauncher =
-          connection.newTestLauncher().apply {
+      connection
+          .newTestLauncher()
+          .apply {
             forTasks(*allTaskNames.toTypedArray())
-            tasks.values.forEach { task -> task.testClassName?.let { withJvmTestClasses(it) } }
+            tasks.values.mapNotNull { it.testClassName }.forEach { withJvmTestClasses(it) }
             withArguments(*args.toTypedArray())
             setStandardOutput(outputStream)
             setStandardError(errorStream)
-            addProgressListener(listener, OperationType.TEST)
+            addProgressListener(testListener, OperationType.TEST)
           }
-      testLauncher.run()
+          .run()
     } else {
-      val buildLauncher =
-          connection.newBuild().apply {
+      connection
+          .newBuild()
+          .apply {
             forTasks(*allTaskNames.toTypedArray())
             withArguments(*args.toTypedArray())
             setStandardOutput(outputStream)
             setStandardError(errorStream)
-            addProgressListener(listener, OperationType.TASK)
+            addProgressListener(buildListener, OperationType.TASK)
           }
-      buildLauncher.run()
+          .run()
     }
-
     globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: Exception) {
     globalOutput =
         buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
     logger.warning("💥 Gradle run failed: ${e.message}")
-    logger.warning("📄 Output before failure:\n${globalOutput.take(2000)}")
   } finally {
     outputStream.close()
     errorStream.close()
   }
 
   val globalEnd = System.currentTimeMillis()
-  val totalDuration = globalEnd - globalStart
-  logger.info("🧪 Total batch duration: ${totalDuration}ms")
 
-  val perTaskOutput = splitOutputPerTask(globalOutput)
+  tasks.forEach { (nxTaskId, taskConfig) ->
+    val isTestTask = taskConfig.testClassName != null
+    if (isTestTask) {
+      val success = testTaskStatus[nxTaskId] ?: false
+      val startTime = testStartTimes[nxTaskId] ?: globalStart
+      val endTime = testEndTimes[nxTaskId] ?: globalEnd
 
-  if (perTaskOutput.isEmpty()) {
-    logger.warning("⚠️ Could not split terminal output by task — defaulting to full output.")
-  }
-
-  tasks.forEach { (taskId, taskConfig) ->
-    val taskOutput =
-        if (taskConfig.testClassName != null) {
-          globalOutput
-        } else {
-          perTaskOutput[taskConfig.taskName] ?: globalOutput
-        }
-    if (!taskResults.containsKey(taskId)) {
-      taskResults[taskId] =
-          TaskResult(
-              success = !taskOutput.contains("BUILD FAILED"),
-              startTime = globalStart,
-              endTime = globalEnd,
-              terminalOutput = taskOutput)
-    } else {
-      val existing = taskResults[taskId]
-      if (existing != null) {
-        taskResults[taskId] = existing.copy(terminalOutput = taskOutput)
+      if (!taskResults.containsKey(nxTaskId)) {
+        taskResults[nxTaskId] = TaskResult(success, startTime, endTime, "")
       }
     }
+  }
+  val perTaskOutput = splitOutputPerTask(globalOutput)
+
+  tasks.forEach { (taskId, taskConfig) ->
+    val taskOutput = perTaskOutput[taskConfig.taskName] ?: globalOutput
+    taskResults[taskId]?.let { taskResults[taskId] = it.copy(terminalOutput = taskOutput) }
   }
 
   logger.info("✅ Finished ${if (useTestLauncher) "test" else "build"} tasks")
@@ -282,10 +333,10 @@ fun runLauncher(
 fun buildTerminalOutput(stdOut: ByteArrayOutputStream, stdErr: ByteArrayOutputStream): String {
   val output = stdOut.toString("UTF-8")
   val errorOutput = stdErr.toString("UTF-8")
-  val builder = StringBuilder()
-  if (output.isNotBlank()) builder.append(output).append("\n")
-  if (errorOutput.isNotBlank()) builder.append(errorOutput)
-  return builder.toString()
+  return buildString {
+    if (output.isNotBlank()) append(output).append("\n")
+    if (errorOutput.isNotBlank()) append(errorOutput)
+  }
 }
 
 fun splitOutputPerTask(globalOutput: String): Map<String, String> {
@@ -304,6 +355,5 @@ fun splitOutputPerTask(globalOutput: String): Map<String, String> {
       taskOutputMap[taskName] = section.trim()
     }
   }
-
   return taskOutputMap
 }
