@@ -96,6 +96,7 @@
       - [Telemetry](/recipes/nx-console/console-telemetry)
       - [Project Details View](/recipes/nx-console/console-project-details)
       - [Generate Command](/recipes/nx-console/console-generate-command)
+      - [Migrate UI](/recipes/nx-console/console-migrate-ui)
       - [Run Command](/recipes/nx-console/console-run-command)
       - [Nx Cloud Integration](/recipes/nx-console/console-nx-cloud)
       - [Troubleshooting](/recipes/nx-console/console-troubleshooting)
