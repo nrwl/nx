@@ -15,7 +15,7 @@ export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
   async sendMessage(messageToDaemon: Message) {
-    if (process.env.NX_USE_V8_SERIALIZER === 'true') {
+    if (process.env.NX_USE_V8_SERIALIZER !== 'false') {
       const serialized = serialize(messageToDaemon);
       this.socket.write(serialized.toString('binary'));
     } else {

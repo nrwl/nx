@@ -256,7 +256,7 @@ export class DaemonClient {
       type: 'HASH_TASKS',
       runnerOptions,
       env:
-        process.env.NX_USE_V8_SERIALIZER === 'true'
+        process.env.NX_USE_V8_SERIALIZER !== 'false'
           ? structuredClone(process.env)
           : env,
       tasks,
