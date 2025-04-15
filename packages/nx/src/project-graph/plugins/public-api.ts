@@ -12,6 +12,7 @@ import type { ProjectConfiguration } from '../../config/workspace-json-project-j
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { RawProjectGraphDependency } from '../project-graph-builder';
 import type { TaskResults } from '../../tasks-runner/life-cycle';
+import type { NxArgs } from '../../utils/command-line-utils';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -190,10 +191,14 @@ export type NxPluginV2<TOptions = unknown> = {
 };
 
 export type PreTasksExecutionContext = {
+  readonly nxArgs: NxArgs;
+  readonly overrides: Record<string, unknown>;
   readonly workspaceRoot: string;
   readonly nxJsonConfiguration: NxJsonConfiguration;
 };
 export type PostTasksExecutionContext = {
+  readonly nxArgs: NxArgs;
+  readonly overrides: Record<string, unknown>;
   readonly workspaceRoot: string;
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly taskResults: TaskResults;
