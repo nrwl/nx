@@ -10,14 +10,24 @@ import {
 import { posix, relative, resolve } from 'node:path';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
-import { NormalizedAngularRspackPluginOptions, OutputPath } from '../models';
+import { I18nInlinePlugin } from './i18n-inline-plugin';
+import {
+  I18nOptions,
+  NormalizedAngularRspackPluginOptions,
+  OutputPath,
+} from '../models';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
 
 export class NgRspackPlugin implements RspackPluginInstance {
   pluginOptions: NormalizedAngularRspackPluginOptions;
+  i18n: I18nOptions | undefined;
 
-  constructor(options: NormalizedAngularRspackPluginOptions) {
+  constructor(
+    options: NormalizedAngularRspackPluginOptions,
+    i18nOptions?: I18nOptions
+  ) {
     this.pluginOptions = options;
+    this.i18n = i18nOptions;
   }
 
   apply(compiler: Compiler) {
@@ -125,7 +135,10 @@ export class NgRspackPlugin implements RspackPluginInstance {
         skipChildCompilers: true,
       }).apply(compiler as any);
     }
+    if (this.i18n?.shouldInline) {
+      new I18nInlinePlugin(this.pluginOptions, this.i18n).apply(compiler);
+    }
     new RxjsEsmResolutionPlugin().apply(compiler);
-    new AngularRspackPlugin(this.pluginOptions).apply(compiler);
+    new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
   }
 }

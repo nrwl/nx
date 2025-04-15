@@ -7,6 +7,7 @@ import type {
   DevServerUnsupportedOptions,
   PluginUnsupportedOptions,
 } from './unsupported-options';
+import { I18nProjectMetadata } from './i18n';
 
 export interface DevServerOptions extends DevServerUnsupportedOptions {
   /**
@@ -118,6 +119,22 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   fileReplacements?: FileReplacement[];
   index?: IndexElement;
   inlineStyleLanguage?: InlineStyleLanguage;
+  /**
+   * Project metadata for i18n.
+   */
+  i18nMetadata?: I18nProjectMetadata;
+  /**
+   * How to handle missing translations for i18n.
+   */
+  i18nMissingTranslation?: 'warning' | 'error' | 'ignore';
+  /**
+   * How to handle duplicate translations for i18n.
+   */
+  i18nDuplicateTranslation?: 'warning' | 'error' | 'ignore';
+  /**
+   * Translate the bundles in one or more locales.
+   */
+  localize?: boolean | string[];
   namedChunks?: boolean;
   optimization?: boolean | OptimizationOptions;
   outputHashing?: OutputHashing;

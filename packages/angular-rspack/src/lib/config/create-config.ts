@@ -7,6 +7,7 @@ import {
   RspackPluginInstance,
   RuleSetRule,
   CssExtractRspackPlugin,
+  javascript,
 } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
 import { resolve } from 'path';
@@ -26,6 +27,7 @@ import {
   getProxyConfig,
 } from './dev-server-config-utils';
 import { DevToolsIgnorePlugin } from '../plugins/tools/dev-tools-ignore-plugin';
+import { configureI18n } from './i18n/create-i18n-options';
 
 function configureSourceMap(sourceMap: SourceMap) {
   const { scripts, styles, hidden, vendor } = sourceMap;
@@ -87,7 +89,22 @@ export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Promise<Configuration[]> {
-  const normalizedOptions = normalizeOptions(options);
+  const { options: _options, i18n } = await configureI18n(
+    options.root ?? process.cwd(),
+    options
+  );
+  // Update file hashes to include translation file content
+  const i18nHash = i18n.shouldInline
+    ? Object.values(i18n.locales).reduce(
+        (data, locale) =>
+          data + locale.files.map((file) => file.integrity || '').join('|'),
+        ''
+      )
+    : () => {
+        // no-op as i18n is not inlined
+      };
+
+  const normalizedOptions = normalizeOptions(_options);
   const isProduction = process.env['NODE_ENV'] === 'production';
   const isDevServer = process.env['WEBPACK_SERVE'];
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
@@ -124,6 +141,9 @@ export async function _createConfig(
       tsConfig: {
         configFile: normalizedOptions.tsConfig,
       },
+      ...(i18n.shouldInline && normalizedOptions.aot
+        ? { alias: { '@angular/localize/init': false } }
+        : {}),
     },
     resolveLoader: {
       symlinks: !normalizedOptions.preserveSymlinks,
@@ -180,6 +200,24 @@ export async function _createConfig(
     },
     plugins: [
       ...sourceMapPlugins,
+      ...(i18n.shouldInline
+        ? [
+            {
+              apply(compiler) {
+                compiler.hooks.compilation.tap(
+                  'AngularRspackPlugin',
+                  (compilation) => {
+                    javascript.JavascriptModulesPlugin.getCompilationHooks(
+                      compilation
+                    ).chunkHash.tap('AngularRspackPlugin', (_, hash) => {
+                      hash.update('$localize' + i18nHash);
+                    });
+                  }
+                );
+              },
+            },
+          ]
+        : []),
       new CssExtractRspackPlugin({
         filename: `[name]${hashFormat.extract}.css`,
       }),
@@ -194,7 +232,10 @@ export async function _createConfig(
       target: 'node',
       entry: {
         server: {
-          import: [(normalizedOptions.ssr as { entry: string }).entry],
+          import: [
+            (normalizedOptions.ssr as { entry: string }).entry,
+            ...(i18n.shouldInline ? ['@angular/localize/init'] : []),
+          ],
         },
       },
       output: {
@@ -310,10 +351,13 @@ export async function _createConfig(
       },
       plugins: [
         ...(defaultConfig.plugins ?? []),
-        new NgRspackPlugin({
-          ...normalizedOptions,
-          polyfills: ['zone.js/node'],
-        }),
+        new NgRspackPlugin(
+          {
+            ...normalizedOptions,
+            polyfills: ['zone.js/node'],
+          },
+          i18n
+        ),
       ],
     };
     const mergedConfig = rspackMerge(
@@ -332,7 +376,10 @@ export async function _createConfig(
     target: 'web',
     entry: {
       main: {
-        import: [normalizedOptions.browser],
+        import: [
+          normalizedOptions.browser,
+          ...(i18n.shouldInline ? ['@angular/localize/init'] : []),
+        ],
       },
       styles: {
         import: getStylesEntry(normalizedOptions),
@@ -466,11 +513,14 @@ export async function _createConfig(
     },
     plugins: [
       ...(defaultConfig.plugins ?? []),
-      new NgRspackPlugin({
-        ...normalizedOptions,
-        polyfills: ['zone.js'],
-        hasServer: false,
-      }),
+      new NgRspackPlugin(
+        {
+          ...normalizedOptions,
+          polyfills: ['zone.js'],
+          hasServer: false,
+        },
+        i18n
+      ),
     ],
   };
   const mergedConfig = rspackMerge(

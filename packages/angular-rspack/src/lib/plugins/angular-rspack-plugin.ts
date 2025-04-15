@@ -3,8 +3,10 @@ import {
   HtmlRspackPlugin,
   RspackOptionsNormalized,
   RspackPluginInstance,
+  sources,
 } from '@rspack/core';
 import {
+  I18nOptions,
   NG_RSPACK_SYMBOL_NAME,
   NgRspackCompilation,
   type NormalizedAngularRspackPluginOptions,
@@ -27,6 +29,7 @@ type ResolvedJavascriptTransformer = Parameters<
 
 export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
+  #i18n: I18nOptions | undefined;
   #typescriptFileCache: Map<string, string>;
   #javascriptTransformer: ResolvedJavascriptTransformer;
   // This will be defined in the apply method correctly
@@ -36,8 +39,12 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     ReturnType<typeof setupCompilationWithParallelCompilation>
   >;
 
-  constructor(options: NormalizedAngularRspackPluginOptions) {
+  constructor(
+    options: NormalizedAngularRspackPluginOptions,
+    i18nOptions?: I18nOptions
+  ) {
     this.#_options = options;
+    this.#i18n = i18nOptions;
     this.#typescriptFileCache = new Map<string, string>();
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
@@ -131,6 +138,54 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     );
 
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: PLUGIN_NAME,
+          stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+        },
+        (assets) => {
+          for (const assetName in assets) {
+            const asset = compilation.getAsset(assetName);
+            if (!asset) {
+              continue;
+            }
+            const assetHash = asset.info?.contenthash?.[0] ?? '';
+            const assetNameWithoutHash = assetName.replace(`.${assetHash}`, '');
+            if (assetNameWithoutHash !== 'main.js') {
+              continue;
+            }
+            const originalSource = asset.source.source();
+            let updatedSourceContent =
+              typeof originalSource === 'string'
+                ? originalSource
+                : originalSource.toString();
+            if (this.#i18n?.shouldInline) {
+              // When inlining, a placeholder is used to allow the post-processing step to inject the $localize locale identifier.
+              updatedSourceContent +=
+                '(globalThis.$localize ??= {}).locale = "___NG_LOCALE_INSERT___";\n';
+            } else if (this.#i18n?.hasDefinedSourceLocale) {
+              // If not inlining translations and source locale is defined, inject the locale specifier.
+              updatedSourceContent += `(globalThis.$localize ??= {}).locale = "${
+                this.#i18n.sourceLocale
+              }";\n`;
+            }
+
+            // Replace the asset with the modified content
+            const map = asset.source.map();
+            const updatedSource = map
+              ? new sources.SourceMapSource(
+                  updatedSourceContent,
+                  asset.name,
+                  map
+                )
+              : new sources.RawSource(updatedSourceContent);
+            compilation.updateAsset(assetName, updatedSource);
+          }
+        }
+      );
+    });
+
     compiler.hooks.emit.tapAsync(PLUGIN_NAME, async (compilation, callback) => {
       if (!this.#_options.skipTypeChecking) {
         const { errors, warnings } =
@@ -180,6 +235,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         javascriptTransformer: this
           .#javascriptTransformer as unknown as JavaScriptTransformer,
         typescriptFileCache: this.#typescriptFileCache,
+        i18n: this.#i18n,
       });
     });
 
