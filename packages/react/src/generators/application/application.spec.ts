@@ -1364,7 +1364,7 @@ describe('app', () => {
     nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -1393,7 +1393,7 @@ describe('app', () => {
     nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -1430,7 +1430,7 @@ describe('app', () => {
     nxJson = readNxJson(tree);
     expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
       {
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build-base",
           ],

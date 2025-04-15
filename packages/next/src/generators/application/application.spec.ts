@@ -576,7 +576,7 @@ describe('app', () => {
         e2eTestRunner: 'cypress',
         addPlugin: true,
       });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
         {
           "dependsOn": [
@@ -597,7 +597,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
         addPlugin: true,
       });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
         {
           "dependsOn": [
