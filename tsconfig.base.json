@@ -112,6 +112,7 @@
       "@nx/nx-dev/ui-icons": ["nx-dev/ui-icons/src/index.ts"],
       "@nx/nx-dev/ui-markdoc": ["nx-dev/ui-markdoc/src/index.ts"],
       "@nx/nx-dev/ui-member-card": ["nx-dev/ui-member-card/src/index.ts"],
+      "@nx/nx-dev/ui-partners": ["nx-dev/ui-partners/src/index.ts"],
       "@nx/nx-dev/ui-podcast": ["nx-dev/ui-podcast/src/index.ts"],
       "@nx/nx-dev/ui-powerpack": ["nx-dev/ui-powerpack/src/index.ts"],
       "@nx/nx-dev/ui-pricing": ["nx-dev/ui-pricing/src/index.ts"],
