@@ -44,9 +44,6 @@ export interface PluginUnsupportedOptions {
   baseHref?: string;
   verbose?: boolean;
   progress?: boolean;
-  i18nMissingTranslation?: 'warning' | 'error' | 'ignore';
-  i18nDuplicateTranslation?: 'warning' | 'error' | 'ignore';
-  localize?: boolean | string[];
   watch?: boolean;
   poll?: number;
   subresourceIntegrity?: boolean;
@@ -73,9 +70,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'baseHref',
   'verbose',
   'progress',
-  'i18nMissingTranslation',
-  'i18nDuplicateTranslation',
-  'localize',
   'watch',
   'poll',
   'subresourceIntegrity',

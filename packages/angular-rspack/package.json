@@ -45,6 +45,8 @@
     }
   },
   "dependencies": {
+    "@ampproject/remapping": "2.3.0",
+    "@babel/core": "7.26.10",
     "@nx/angular-rspack-compiler": "workspace:*",
     "@nx/devkit": "^20.0.0",
     "express": "4.21.1",
@@ -66,7 +68,9 @@
   "peerDependencies": {
     "@rspack/core": ">=1.0.5 <2.0.0",
     "@angular/common": ">=19.0.0 <20.0.0",
-    "@angular/ssr": ">=19.0.0 <20.0.0"
+    "@angular/ssr": ">=19.0.0 <20.0.0",
+    "@angular/build": ">=19.0.0 <20.0.0",
+    "@angular/localize": ">=19.0.0 <20.0.0"
   },
   "nx": {
     "name": "angular-rspack",

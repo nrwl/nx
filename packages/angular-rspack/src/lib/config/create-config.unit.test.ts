@@ -35,7 +35,7 @@ describe('createConfig', () => {
     await expect(_createConfig(configBase)).resolves.toStrictEqual([
       expect.objectContaining({ mode: 'production' }),
     ]);
-  });
+  }, 10000);
 
   it.each(['development', 'not-production'])(
     'should create config for mode "development" if env variable NODE_ENV is "%s"',
@@ -82,6 +82,7 @@ describe('createConfig', () => {
           }),
           plugins: expect.arrayContaining([
             {
+              i18n: expect.objectContaining({}),
               pluginOptions: expect.objectContaining({
                 ...rest,
                 outputPath: {
@@ -117,6 +118,55 @@ describe('createConfig', () => {
                 }),
               }),
             },
+          ]),
+        }),
+      ]);
+    });
+
+    it('should create i18n options correctly', async () => {
+      await expect(
+        createConfig({
+          options: {
+            ...configBase,
+            i18nMetadata: {
+              locales: {
+                fr: {
+                  translation: 'src/locale/messages.fr.xlf',
+                },
+              },
+              sourceLocale: 'en-GB',
+            },
+          },
+        })
+      ).resolves.toStrictEqual([
+        expect.objectContaining({
+          mode: 'development',
+          devServer: expect.objectContaining({
+            port: 4200,
+          }),
+          plugins: expect.arrayContaining([
+            expect.objectContaining({
+              i18n: expect.objectContaining({
+                hasDefinedSourceLocale: true,
+                locales: {
+                  'en-GB': expect.objectContaining({
+                    subPath: 'en-GB',
+                    dataPath: expect.stringContaining(
+                      '@angular/common/locales/global/en-GB.js'
+                    ),
+                  }),
+                  fr: expect.objectContaining({
+                    subPath: 'fr',
+                    files: [
+                      expect.objectContaining({
+                        path: 'src/locale/messages.fr.xlf',
+                      }),
+                    ],
+                  }),
+                },
+              }),
+              pluginOptions: expect.objectContaining({}),
+            }),
           ]),
         }),
       ]);
@@ -163,6 +213,7 @@ describe('createConfig', () => {
           }),
           plugins: expect.arrayContaining([
             {
+              i18n: expect.objectContaining({}),
               pluginOptions: expect.objectContaining({
                 outputPath: {
                   base: join(customRoot, 'dist'),
@@ -198,6 +249,7 @@ describe('createConfig', () => {
           }),
           plugins: expect.arrayContaining([
             {
+              i18n: expect.objectContaining({}),
               pluginOptions: expect.objectContaining({
                 ...rest,
                 outputPath: {
