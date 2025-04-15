@@ -175,9 +175,6 @@
     },
     "sitemap": {
       "cache": true
-    },
-    "copy-docs": {
-      "cache": true
     }
   },
   "plugins": [
