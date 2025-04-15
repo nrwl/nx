@@ -548,6 +548,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{projectRoot}/dist/videos",
@@ -632,6 +635,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{projectRoot}/dist/videos/src-test-cy-ts",
@@ -745,6 +751,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{projectRoot}/dist/videos",
@@ -822,6 +831,9 @@ describe('@nx/cypress/plugin', () => {
                     },
                     "options": {
                       "cwd": ".",
+                      "env": {
+                        "TS_NODE_COMPILER_OPTIONS": "{"customConditions":null}",
+                      },
                     },
                     "outputs": [
                       "{projectRoot}/dist/videos/src-test-cy-ts",
