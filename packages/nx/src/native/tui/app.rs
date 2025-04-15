@@ -98,7 +98,7 @@ impl App {
             tasks_list.start_tasks(tasks);
         }
     }
-    
+
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(tasks_list) = self
             .components
@@ -112,7 +112,6 @@ impl App {
     pub fn print_task_terminal_output(
         &mut self,
         task_id: String,
-        status: TaskStatus,
         output: String,
     ) {
         if let Some(tasks_list) = self
@@ -120,8 +119,9 @@ impl App {
             .iter_mut()
             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
         {
-            // If the status is a cache hit, we need to create a new parser and writer for the task in order to print the output
-            if is_cache_hit(status) {
+            // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
+            // Tasks not run within a pseudo-terminal need a new pty instance to print output
+            if !tasks_list.pty_instances.contains_key(&task_id) {
                 let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
 
                 // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
@@ -129,7 +129,6 @@ impl App {
                 TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
 
                 tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-                tasks_list.update_task_status(task_id.clone(), status);
                 let _ = tasks_list.handle_resize(None);
                 return;
             }
@@ -137,7 +136,6 @@ impl App {
             // If the task is continuous, we are only updating the status, not the output
             if let Some(task) = tasks_list.tasks.iter_mut().find(|t| t.name == task_id) {
                 if task.continuous {
-                    tasks_list.update_task_status(task_id.clone(), status);
                     let _ = tasks_list.handle_resize(None);
                 }
             }
