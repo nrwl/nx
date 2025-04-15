@@ -1,6 +1,6 @@
 #### Add includeSubprojectsTasks to @nx/gradle Plugin Options
 
-Add includeSubprojectsTasks to @nx/graple plugin options in nx.json file
+Add includeSubprojectsTasks to @nx/gradle plugin options in nx.json file
 
 #### Sample Code Changes
 
