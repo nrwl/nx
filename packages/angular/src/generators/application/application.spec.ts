@@ -605,7 +605,7 @@ describe('app', () => {
             },
           ]
         `);
-        expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+        expect(nxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
           {
             "dependsOn": [
               "^build",

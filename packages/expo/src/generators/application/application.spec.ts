@@ -295,7 +295,7 @@ describe('app', () => {
 
       // ASSERT
       const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+      expect(nxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^export",
@@ -320,7 +320,7 @@ describe('app', () => {
 
       // ASSERT
       const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
+      expect(nxJson.targetDefaults['e2e-ci--**/**']).toMatchInlineSnapshot(`
         {
           "dependsOn": [
             "^export",

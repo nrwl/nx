@@ -178,7 +178,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.read('e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
-        expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+        expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
           .toMatchInlineSnapshot(`
           {
             "dependsOn": [
@@ -206,14 +206,14 @@ describe('Remix Application', () => {
       expectTargetsToBeCorrect(tree, '.');
 
       expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
+        {
+          "dependsOn": [
+            "^build",
+          ],
+        }
+      `);
     });
   });
 

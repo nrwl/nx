@@ -53,7 +53,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
+      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
         .toMatchInlineSnapshot(`
         {
           "dependsOn": [

@@ -81,7 +81,7 @@ export async function addE2eCiTargetDefaults(
       ? 'e2e-ci'
       : (foundPluginForApplication.options as any)?.ciTargetName ?? 'e2e-ci';
 
-  const ciTargetNameGlob = `${ciTargetName}--**/*`;
+  const ciTargetNameGlob = `${ciTargetName}--**/**`;
   nxJson.targetDefaults ??= {};
   const e2eCiTargetDefaults = nxJson.targetDefaults[ciTargetNameGlob];
   if (!e2eCiTargetDefaults) {
