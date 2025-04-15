@@ -255,7 +255,10 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env,
+      env:
+        process.env.NX_USE_V8_SERIALIZER === 'true'
+          ? structuredClone(process.env)
+          : env,
       tasks,
       taskGraph,
     });
