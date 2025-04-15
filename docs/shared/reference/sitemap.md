@@ -114,6 +114,7 @@
         - [Introduction](/recipes/angular/rspack/introduction)
         - [Migrate from Angular Webpack](/recipes/angular/rspack/migrate-from-webpack)
         - [Handling Configurations](/recipes/angular/rspack/handling-configurations)
+        - [Internationalization (i18n)](/recipes/angular/rspack/internationalization)
       - [Migration](/recipes/angular/migration)
         - [Migrating from Angular CLI](/recipes/angular/migration/angular)
         - [Migrating From Multiple Angular CLI Repos](/recipes/angular/migration/angular-multiple)

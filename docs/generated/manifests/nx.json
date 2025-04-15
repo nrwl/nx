@@ -2132,6 +2132,17 @@
                 "isExternal": false,
                 "path": "/recipes/angular/rspack/handling-configurations",
                 "tags": ["handling-configurations", "configurations"]
+              },
+              {
+                "id": "internationalization",
+                "name": "Internationalization (i18n)",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/internationalization",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/internationalization",
+                "tags": ["internationalization", "i18n"]
               }
             ],
             "isExternal": false,
@@ -4158,6 +4169,17 @@
             "isExternal": false,
             "path": "/recipes/angular/rspack/handling-configurations",
             "tags": ["handling-configurations", "configurations"]
+          },
+          {
+            "id": "internationalization",
+            "name": "Internationalization (i18n)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/internationalization",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/internationalization",
+            "tags": ["internationalization", "i18n"]
           }
         ],
         "isExternal": false,
@@ -4297,6 +4319,17 @@
         "isExternal": false,
         "path": "/recipes/angular/rspack/handling-configurations",
         "tags": ["handling-configurations", "configurations"]
+      },
+      {
+        "id": "internationalization",
+        "name": "Internationalization (i18n)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/internationalization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/internationalization",
+        "tags": ["internationalization", "i18n"]
       }
     ],
     "isExternal": false,
@@ -4335,6 +4368,17 @@
     "isExternal": false,
     "path": "/recipes/angular/rspack/handling-configurations",
     "tags": ["handling-configurations", "configurations"]
+  },
+  "/recipes/angular/rspack/internationalization": {
+    "id": "internationalization",
+    "name": "Internationalization (i18n)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/internationalization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/internationalization",
+    "tags": ["internationalization", "i18n"]
   },
   "/recipes/angular/migration": {
     "id": "migration",
