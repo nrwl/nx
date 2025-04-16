@@ -9,6 +9,15 @@ description: Learn to set up a monorepo with PNPM workspaces for Remix and React
 
 In this article we're going to have a deep dive into setting up a new monorepo using [PNPM workspaces](https://pnpm.io/workspaces) that hosts a Remix application as well as a React-based library. We will learn how to run commands with PNPM, how to run them in parallel and finally we're going to add Nx for a more sophisticated task scheduling, including command caching and more.
 
+{% callout type="warning" title="Updated video!" %}
+
+We made a lot of improvements since we last wrote this article. Here's our **updated content**:
+
+- [the full all-in-one video on Youtube](https://youtu.be/zX-1tpqUG5c)
+- [our free course: From PNPM Workspaces to Distributed CI](/courses/pnpm-nx-next)
+
+{% /callout %}
+
 **Important:** If you are already familiar with the setup and configuration of a new PNPM workspace, feel free to skip to the part where we add Nx later in the article.
 
 **Prefer a video walkthrough?**
