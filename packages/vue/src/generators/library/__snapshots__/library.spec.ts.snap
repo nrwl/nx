@@ -186,7 +186,7 @@ exports[`library should add vue, vite and vitest to package.json 1`] = `
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "prettier": "^2.6.2",
-    "typescript": "~5.7.2",
+    "typescript": "~5.8.2",
     "vite": "^6.0.0",
     "vitest": "^3.0.0",
     "vue-tsc": "^2.2.8",
