@@ -18,6 +18,7 @@ import {
   AutomaticMigration,
 } from './components';
 
+// bump
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
   nxConsoleMetadata: MigrationsJsonMetadata;
