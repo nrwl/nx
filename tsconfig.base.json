@@ -117,6 +117,7 @@
       "@nx/nx-dev/ui-powerpack": ["nx-dev/ui-powerpack/src/index.ts"],
       "@nx/nx-dev/ui-pricing": ["nx-dev/ui-pricing/src/index.ts"],
       "@nx/nx-dev/ui-primitives": ["nx-dev/ui-primitives/src/index.ts"],
+      "@nx/nx-dev/ui-react": ["nx-dev/ui-react/src/index.ts"],
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-remote-cache": ["nx-dev/ui-remote-cache/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
