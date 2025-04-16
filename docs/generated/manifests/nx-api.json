@@ -444,6 +444,26 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/update-angular-cli-version-20-0-0-next-5": {
+        "description": "Update the @angular/cli package version to ~20.0.0-next.5.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-next-5.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-0-0-next-5",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-20-0-0-next-5",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence": {
         "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
         "file": "generated/packages/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence.json",
@@ -1677,6 +1697,26 @@
       }
     },
     "migrations": {
+      "/nx-api/eslint/migrations/21.2.0-typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/21.2.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/21.2.0-@typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-@typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/21.2.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
       "/nx-api/eslint/migrations/20.7.0-package-updates": {
         "description": "",
         "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
@@ -2444,6 +2484,16 @@
       }
     },
     "migrations": {
+      "/nx-api/js/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/js/migrations/20.7.1-beta.0-package-updates": {
         "description": "",
         "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
@@ -5634,6 +5684,16 @@
       }
     },
     "migrations": {
+      "/nx-api/workspace/migrations/21.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/workspace",
+        "path": "/nx-api/workspace/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       "/nx-api/workspace/migrations/20.4.0-package-updates": {
         "description": "",
         "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",

@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { gt, major, minor, parse } from 'semver';
+import { compare, gt, major, minor, parse } from 'semver';
 import {
+  getAngularCliMigrationDocs,
   getAngularCliMigrationGenerator,
   getAngularCliMigrationGeneratorSpec,
 } from './files/angular-cli-upgrade-migration';
@@ -89,6 +90,30 @@ async function getPromptAndRequiredVersions(
   return { angularCoreRequirement, promptVersion };
 }
 
+function findPreviousVersion(
+  packageUpdates: Record<
+    string,
+    {
+      version: string;
+      packages: Record<string, { version: string }>;
+    }
+  >,
+  angularCoreNewVersion: string
+): string {
+  const sortedUpdates = Object.values(packageUpdates).sort((a, b) =>
+    compare(b.version, a.version)
+  );
+
+  const previousUpdate = sortedUpdates.find(
+    (update: any) =>
+      update.packages['@angular/core'] &&
+      update.packages['@angular/core'].version.replace(/^[~^]/, '') !==
+        angularCoreNewVersion
+  )!;
+
+  return previousUpdate.packages['@angular/core'].version.replace(/^[~^]/, '');
+}
+
 export async function buildMigrations(
   packageVersionMap: Map<string, string>,
   targetNxVersion: string,
@@ -98,6 +123,10 @@ export async function buildMigrations(
   const pathToMigrationsJsonFile = 'packages/angular/migrations.json';
   const angularPackageMigrations = JSON.parse(
     readFileSync(pathToMigrationsJsonFile, { encoding: 'utf-8' })
+  );
+  const previousVersion = findPreviousVersion(
+    angularPackageMigrations.packageJsonUpdates,
+    packageVersionMap.get('@angular/core')!
   );
 
   await addMigrationPackageGroup(
@@ -112,6 +141,13 @@ export async function buildMigrations(
     getAngularCliMigrationGenerator(angularCLIVersion);
   const angularCliMigrationGeneratorSpecContents =
     getAngularCliMigrationGeneratorSpec();
+
+  const { major, minor } = parse(angularCLIVersion)!;
+  const newVersion = `${major}.${minor}.0`;
+  const angularCliMigrationDocsContents = getAngularCliMigrationDocs(
+    previousVersion,
+    newVersion
+  );
 
   // Create the directory update-targetNxVersion.dasherize()
   // Write the generator
@@ -157,6 +193,10 @@ export async function buildMigrations(
     pathToMigrationFolder,
     `${migrationFileName}.spec.ts`
   );
+  const pathToMigrationDocsFile = join(
+    pathToMigrationFolder,
+    `${migrationFileName}.md`
+  );
   writeFileSync(
     pathToMigrationGeneratorFile,
     angularCliMigrationGeneratorContents
@@ -165,6 +205,7 @@ export async function buildMigrations(
     pathToMigrationGeneratorSpecFile,
     angularCliMigrationGeneratorSpecContents
   );
+  writeFileSync(pathToMigrationDocsFile, angularCliMigrationDocsContents);
 
   console.log('✅ - Wrote migrations');
 }
