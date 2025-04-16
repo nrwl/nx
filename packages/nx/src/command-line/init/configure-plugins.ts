@@ -85,9 +85,11 @@ export async function runPluginInitGenerator(
     });
   } catch {
     // init generator does not exist, so this function should noop
-    output.log({
-      title: `No "init" generator found in ${plugin}. Skipping initialization.`,
-    });
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      output.log({
+        title: `No "init" generator found in ${plugin}. Skipping initialization.`,
+      });
+    }
     return;
   }
 }

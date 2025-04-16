@@ -69,12 +69,6 @@ export async function initHandler(options: InitArgs): Promise<void> {
   const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
   const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
-  const learnMoreLink = _isTurborepo
-    ? 'https://nx.dev/recipes/adopting-nx/from-turborepo'
-    : _isMonorepo
-    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
-    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
-
   /**
    * Turborepo users must have set up individual scripts already, and we keep the transition as minimal as possible.
    * We log a message during the conversion process in addNxToTurborepo about how they can learn more about the power
@@ -86,7 +80,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
       interactive: options.interactive,
     });
     printFinalMessage({
-      learnMoreLink,
+      learnMoreLink: 'https://nx.dev/recipes/adopting-nx/from-turborepo',
     });
     return;
   }
@@ -160,7 +154,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
   }
 
   printFinalMessage({
-    learnMoreLink,
+    appendLines: _isMonorepo
+      ? [
+          `- Learn how Nx helps manage your TypeScript monorepo at https://nx.dev/features/maintain-ts-monorepos.`,
+        ]
+      : [
+          `- Learn how Nx works with any type of project at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.`,
+        ],
   });
 }
 

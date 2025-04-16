@@ -61,21 +61,6 @@ type TsconfigInfoCaches = {
 export async function syncGenerator(tree: Tree): Promise<SyncGeneratorResult> {
   // Ensure that the plugin has been wired up in nx.json
   const nxJson = readNxJson(tree);
-  const tscPluginConfig:
-    | string
-    | ExpandedPluginConfiguration<TscPluginOptions> = nxJson.plugins.find(
-    (p) => {
-      if (typeof p === 'string') {
-        return p === PLUGIN_NAME;
-      }
-      return p.plugin === PLUGIN_NAME;
-    }
-  );
-  if (!tscPluginConfig) {
-    throw new SyncError(`The "${PLUGIN_NAME}" plugin is not registered`, [
-      `The "${PLUGIN_NAME}" plugin must be added to the "plugins" array in "nx.json" in order to sync the project graph information to the TypeScript configuration files.`,
-    ]);
-  }
 
   const tsconfigInfoCaches: TsconfigInfoCaches = {
     composite: new Map(),
