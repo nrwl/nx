@@ -1116,6 +1116,24 @@
       "path": "/recipes/angular/rspack/handling-configurations"
     }
   ],
+  "internationalization": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
+    }
+  ],
+  "i18n": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
+    }
+  ],
   "deployment": [
     {
       "description": "",

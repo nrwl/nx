@@ -731,6 +731,12 @@
                       "id": "handling-configurations",
                       "tags": ["handling-configurations", "configurations"],
                       "file": "shared/guides/angular-rspack/handling-configurations"
+                    },
+                    {
+                      "name": "Internationalization (i18n)",
+                      "id": "internationalization",
+                      "tags": ["internationalization", "i18n"],
+                      "file": "shared/guides/angular-rspack/internationalization"
                     }
                   ]
                 },
