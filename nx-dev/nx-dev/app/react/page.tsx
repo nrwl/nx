@@ -5,6 +5,7 @@ import {
   GettingStarted,
   Hero,
 } from '@nx/nx-dev/ui-react';
+import { NxBenefitsVideo } from '@nx/nx-dev/ui-react';
 
 import type { Metadata } from 'next';
 
@@ -38,6 +39,9 @@ export default function ReactPage(): JSX.Element {
   return (
     <DefaultLayout>
       <Hero />
+      <div className="mt-8 scroll-mt-8 lg:mt-16">
+        <NxBenefitsVideo />
+      </div>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mt-16 scroll-mt-16 lg:mt-32" id="features">
           <Features />

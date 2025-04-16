@@ -10,7 +10,7 @@ export function Features(): ReactElement {
       </SectionHeading>
 
       <p className="mt-4 text-lg text-slate-500 dark:text-slate-400">
-        Nx for React allows you to take exisintg React Projects and add powerful
+        Nx allows you to take existing React projects and add powerful
         capabilities to your workflow.
       </p>
 

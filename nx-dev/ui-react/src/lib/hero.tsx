@@ -21,7 +21,15 @@ export function Hero(): ReactElement {
         </div>
 
         <SectionHeading as="h1" variant="title" className="mt-6">
-          Supercharge Your React Projects
+          Experience the{' '}
+          <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+            power of Nx
+          </span>{' '}
+          <br className="hidden md:block" />
+          in your{' '}
+          <span className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+            React monorepo
+          </span>
         </SectionHeading>
         <SectionDescription as="p" className="mt-6">
           Get distributed tasks, intelligent caching, and target affected
