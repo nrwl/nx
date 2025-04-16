@@ -39,7 +39,7 @@
     "@nx/js": "file:../js",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
-    "typescript": "~5.7.2"
+    "typescript": "~5.8.2"
   },
   "peerDependenciesMeta": {
     "@zkochan/js-yaml": {
