@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { uriTransformer } from './uri-transformer';
 
 export function transformImagePath(
@@ -13,7 +12,9 @@ export function transformImagePath(
 
     if (isRelative) {
       return uriTransformer(
-        join('/', documentFilePath.split('/').splice(3).join('/'), '..', src)
+        ['/', documentFilePath.split('/').splice(3).join('/'), '..', src].join(
+          '/'
+        )
       );
     }
 
