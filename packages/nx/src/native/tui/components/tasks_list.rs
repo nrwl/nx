@@ -385,9 +385,7 @@ impl TasksList {
     /// If there is existing filter text that isn't persisted, persists it instead.
     pub fn enter_filter_mode(&mut self) {
         if !self.filter_text.is_empty() && !self.filter_persisted {
-            // If we have filter text and it's not persisted, pressing / should persist it
-            self.filter_persisted = true;
-            self.filter_mode = false;
+            self.persist_filter();
         } else {
             // Otherwise enter normal filter mode
             self.filter_persisted = false;
@@ -399,6 +397,11 @@ impl TasksList {
     pub fn exit_filter_mode(&mut self) {
         self.filter_mode = false;
         self.filter_persisted = false;
+    }
+
+    pub fn persist_filter(&mut self) {
+        self.filter_persisted = true;
+        self.filter_mode = false;
     }
 
     /// Clears the current filter and resets filter-related state.
@@ -674,6 +677,23 @@ impl TasksList {
             Focus::HelpPopup => Focus::TaskList,
             Focus::CountdownPopup => Focus::TaskList,
         };
+    }
+
+    pub fn focus_current_task_terminal_pane(&mut self) {
+        if let Some(task_name) = self.selection_manager.get_selected_task_name() {
+            // Find which pane contains this task
+            let pane_idx = self
+                .pane_tasks
+                .iter()
+                .position(|t| t.as_deref() == Some(task_name.as_str()))
+                .unwrap_or_else(|| {
+                    self.assign_current_task_to_pane(0);
+                    0
+                });
+            // Set focus to this pane
+            self.focus = Focus::MultipleOutput(pane_idx);
+            self.focused_pane = Some(pane_idx);
+        }
     }
 
     /// Gets the table style based on the current focus state.
@@ -1732,7 +1752,7 @@ impl Component for TasksList {
                         )
                     } else {
                         format!(
-                            "  -> {} tasks filtered out. Press / to persist, <esc> to clear",
+                            "  -> {} tasks filtered out. Press <enter> to persist, <esc> to clear",
                             hidden_tasks
                         )
                     }
