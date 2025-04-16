@@ -5,7 +5,7 @@ authors: ['Philip Fulcher']
 tags: ['nx-cloud']
 cover_image: /blog/images/2025-04-16/header.avif
 description: 'Nx Cloud updates for April 2025 include assignment rules coming out of beta, CIPE filters, flaky retry configuration, and more!'
-youtubeUrl: https://youtu.be/kOtJilAMkmU
+youtubeUrl: https://youtu.be/mug02alT7rQ
 ---
 
 We're rolling out updates to Nx Cloud constantly, so we wanted to bring you up to date with what we've been working on lately.
