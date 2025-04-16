@@ -72,6 +72,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         with:
@@ -207,6 +208,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - uses: pnpm/action-setup@v4
         with:

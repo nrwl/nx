@@ -134,6 +134,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       - name: Install Node
         uses: actions/setup-node@v4

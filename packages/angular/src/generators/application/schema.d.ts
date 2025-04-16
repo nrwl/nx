@@ -20,7 +20,6 @@ export interface Schema {
   e2eTestRunner?: E2eTestRunner;
   backendProject?: string;
   strict?: boolean;
-  standaloneConfig?: boolean;
   port?: number;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
@@ -31,4 +30,5 @@ export interface Schema {
   ssr?: boolean;
   serverRouting?: boolean;
   nxCloudToken?: string;
+  addPlugin?: boolean;
 }

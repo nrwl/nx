@@ -48,7 +48,7 @@ The configuration for package manager workspaces varies based on which package m
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -69,7 +69,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -90,7 +90,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -111,8 +111,8 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```yaml {% fileName="pnpm-workspace.yaml" %}
 packages:
-  - 'apps/**'
-  - 'packages/**'
+  - 'apps/*'
+  - 'packages/*'
 ```
 
 Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
@@ -142,7 +142,7 @@ The root `tsconfig.base.json` should contain a `compilerOptions` property and no
     // Required compiler options
     "composite": true,
     "declaration": true,
-    "declarationMaps": true
+    "declarationMap": true
     // Other options...
   }
 }

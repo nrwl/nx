@@ -11,6 +11,42 @@
       "version": "19.6.0-beta.4",
       "description": "Update ciWebServerCommand to use static serve for the application.",
       "implementation": "./src/migrations/update-19-6-0/update-ci-webserver-for-static-serve"
+    },
+    "set-inject-document-domain": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/set-inject-document-domain"
+    },
+    "remove-experimental-fetch-polyfill": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Removes the `experimentalFetchPolyfill` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/remove-experimental-fetch-polyfill"
+    },
+    "replace-experimental-just-in-time-compile": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+      "implementation": "./src/migrations/update-20-8-0/replace-experimental-just-in-time-compile"
+    },
+    "update-component-testing-mount-imports": {
+      "cli": "nx",
+      "version": "20.8.0-beta.0",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Updates the module specifier for the Component Testing `mount` function.",
+      "implementation": "./src/migrations/update-20-8-0/update-component-testing-mount-imports"
     }
   },
   "packageJsonUpdates": {
@@ -56,6 +92,27 @@
       "packages": {
         "cypress": {
           "version": "^13.13.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.8.0": {
+      "version": "20.8.0-beta.0",
+      "x-prompt": "Do you want to update the Cypress version to v14?",
+      "requires": {
+        "cypress": ">=13.0.0 <14.0.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^14.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/vite-dev-server": {
+          "version": "^6.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@cypress/webpack-dev-server": {
+          "version": "^4.0.2",
           "alwaysAddToPackageJson": false
         }
       }

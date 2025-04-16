@@ -1,5 +1,7 @@
-import { TaskStatus } from './tasks-runner';
 import { Task } from '../config/task-graph';
+import { ExternalObject, TaskStatus as NativeTaskStatus } from '../native';
+import { RunningTask } from './running-tasks/running-task';
+import { TaskStatus } from './tasks-runner';
 
 /**
  * The result of a completed {@link Task}
@@ -20,8 +22,16 @@ export interface TaskMetadata {
   groupId: number;
 }
 
+interface RustRunningTask extends RunningTask {
+  getResults(): Promise<{ code: number; terminalOutput: string }>;
+
+  onExit(cb: (code: number, terminalOutput: string) => void): void;
+
+  kill(signal?: NodeJS.Signals | number): Promise<void> | void;
+}
+
 export interface LifeCycle {
-  startCommand?(): void | Promise<void>;
+  startCommand?(parallel?: number): void | Promise<void>;
 
   endCommand?(): void | Promise<void>;
 
@@ -53,15 +63,24 @@ export interface LifeCycle {
     status: TaskStatus,
     output: string
   ): void;
+
+  registerRunningTask?(
+    taskId: string,
+    parserAndWriter: ExternalObject<[any, any]>
+  ): Promise<void>;
+
+  setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
+
+  registerForcedShutdownCallback?(callback: () => void): void;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
   constructor(private readonly lifeCycles: LifeCycle[]) {}
 
-  async startCommand(): Promise<void> {
+  async startCommand(parallel?: number): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.startCommand) {
-        await l.startCommand();
+        await l.startCommand(parallel);
       }
     }
   }
@@ -129,6 +148,33 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.printTaskTerminalOutput) {
         l.printTaskTerminalOutput(task, status, output);
+      }
+    }
+  }
+
+  async registerRunningTask(
+    taskId: string,
+    parserAndWriter: ExternalObject<[any, any]>
+  ): Promise<void> {
+    for (let l of this.lifeCycles) {
+      if (l.registerRunningTask) {
+        await l.registerRunningTask(taskId, parserAndWriter);
+      }
+    }
+  }
+
+  setTaskStatus(taskId: string, status: NativeTaskStatus): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskStatus) {
+        l.setTaskStatus(taskId, status);
+      }
+    }
+  }
+
+  registerForcedShutdownCallback(callback: () => void): void {
+    for (let l of this.lifeCycles) {
+      if (l.registerForcedShutdownCallback) {
+        l.registerForcedShutdownCallback(callback);
       }
     }
   }

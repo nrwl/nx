@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
-import { validReleaseVersionPrefixes } from '../command-line/release/version';
+import type { validReleaseVersionPrefixes } from '../command-line/release/version';
 import { readJsonFile } from '../utils/fileutils';
 import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -654,6 +654,24 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
    */
   maxCacheSize?: string;
+
+  /**
+   * Settings for the Nx Terminal User Interface (TUI)
+   */
+  tui?: {
+    /**
+     * Whether to enable the TUI whenever possible (based on the current environment and terminal).
+     */
+    enabled?: boolean;
+    /**
+     * Whether to exit the TUI automatically after all tasks finish.
+     *
+     * - If set to `true`, the TUI will exit immediately.
+     * - If set to `false` the TUI will not automatically exit.
+     * - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.
+     */
+    autoExit?: boolean | number;
+  };
 }
 
 export type PluginConfiguration = string | ExpandedPluginConfiguration;

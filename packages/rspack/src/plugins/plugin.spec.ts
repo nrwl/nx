@@ -88,7 +88,7 @@ describe('@nx/rspack', () => {
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
                     "outputs": [],
@@ -100,29 +100,32 @@ describe('@nx/rspack', () => {
                   },
                   "preview": {
                     "command": "rspack serve",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--node-env=production",
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
                   },
                   "serve": {
                     "command": "rspack serve",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--node-env=development",
                       ],
                       "cwd": "my-app",
                       "env": {
-                        "TS_NODE_COMPILER_OPTIONS": "{"moduleResolution":"Node10","module":"CommonJS","customConditions":null}",
+                        "TS_NODE_COMPILER_OPTIONS": "{"module":"CommonJS","moduleResolution":"Node10","customConditions":null}",
                       },
                     },
                   },
                   "serve-static": {
+                    "continuous": true,
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build",
@@ -131,6 +134,7 @@ describe('@nx/rspack', () => {
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
                     "dependsOn": [
                       "build-deps",
                     ],
