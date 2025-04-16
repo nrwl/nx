@@ -444,6 +444,16 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/20.8.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.8.1-package-updates.json",
+        "hidden": false,
+        "name": "20.8.1-package-updates",
+        "version": "20.8.1-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.8.1-package-updates",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/20.5.0-angular-eslint-package-updates": {
         "description": "",
         "file": "generated/packages/angular/migrations/20.5.0-angular-eslint-package-updates.json",

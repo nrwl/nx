@@ -1660,6 +1660,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.8.1": {
+      "version": "20.8.1-beta.0",
+      "packages": {
+        "@nx/angular-rspack": {
+          "version": "^20.7.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

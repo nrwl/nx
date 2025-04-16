@@ -53,4 +53,5 @@ Below is a reference table that matches versions of [Angular Rspack](/recipes/an
 
 | Angular Rspack | Angular     | Nx                  |
 | -------------- | ----------- | ------------------- |
+| ~20.7.0        | **~19.2.0** | >= 20.8.1 <= latest |
 | ~20.6.0        | **~19.2.0** | >= 20.6.0 <= latest |
