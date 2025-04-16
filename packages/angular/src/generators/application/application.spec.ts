@@ -1258,6 +1258,18 @@ describe('app', () => {
       expect(appTree.read('app1/rspack.config.ts', 'utf-8')).toMatchSnapshot();
     });
 
+    it('should generate a correct setup when --bundler=rspack and ssr', async () => {
+      await generateApp(appTree, 'app2', {
+        bundler: 'rspack',
+        ssr: true,
+      });
+
+      const project = readProjectConfiguration(appTree, 'app2');
+      expect(appTree.exists('app2/rspack.config.ts')).toBeTruthy();
+      expect(appTree.read('app2/rspack.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('app2/src/server.ts', 'utf-8')).toMatchSnapshot();
+    });
+
     it('should generate use crystal jest when --bundler=rspack', async () => {
       await generateApp(appTree, 'app1', {
         bundler: 'rspack',

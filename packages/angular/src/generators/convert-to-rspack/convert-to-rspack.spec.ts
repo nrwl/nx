@@ -102,6 +102,99 @@ describe('convert-to-rspack', () => {
     expect(updatedProject.targets.serve).not.toBeDefined();
   });
 
+  it('should convert a ssr angular webpack application to rspack', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'app', {
+      root: 'apps/app',
+      sourceRoot: 'apps/app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          options: {
+            outputPath: 'dist/apps/app',
+            index: 'apps/app/src/index.html',
+            main: 'apps/app/src/main.ts',
+            polyfills: ['tslib'], // zone.js is not in nx repo's node_modules so simulating it with a package that is
+            tsConfig: 'apps/app/tsconfig.app.json',
+            assets: [
+              'apps/app/src/favicon.ico',
+              'apps/app/src/assets',
+              { input: 'apps/app/public', glob: '**/*' },
+            ],
+            styles: ['apps/app/src/styles.scss'],
+            scripts: [],
+          },
+        },
+        server: {
+          executor: '@angular-devkit/build-angular:server',
+          options: {
+            main: 'apps/app/src/server.ts',
+          },
+        },
+      },
+    });
+
+    writeJson(tree, 'apps/app/tsconfig.json', {});
+    updateJson(tree, 'package.json', (json) => {
+      json.scripts ??= {};
+      json.scripts.build = 'nx build';
+      return json;
+    });
+
+    // ACT
+    await convertToRspack(tree, { project: 'app' });
+
+    // ASSERT
+    const updatedProject = readProjectConfiguration(tree, 'app');
+    const pkgJson = readJson(tree, 'package.json');
+    const nxJson = readNxJson(tree);
+    expect(tree.read('apps/app/rspack.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { createConfig } from '@nx/angular-rspack';
+
+      export default createConfig({
+        options: {
+          root: __dirname,
+
+          outputPath: {
+            base: '../../dist/apps/app',
+          },
+          index: './src/index.html',
+          browser: './src/main.ts',
+          polyfills: ['tslib'],
+          tsConfig: './tsconfig.app.json',
+          assets: [
+            './src/favicon.ico',
+            './src/assets',
+            {
+              input: './public',
+              glob: '**/*',
+            },
+          ],
+          styles: ['./src/styles.scss'],
+          scripts: [],
+          ssr: {
+            entry: './src/server.ts',
+          },
+          server: './src/main.server.ts',
+        },
+      });
+      "
+    `);
+    expect(pkgJson.devDependencies['@nx/angular-rspack']).toBeDefined();
+    expect(
+      nxJson.plugins.find((p) =>
+        typeof p === 'string' ? false : p.plugin === '@nx/rspack/plugin'
+      )
+    ).toBeDefined();
+    expect(pkgJson.scripts?.build).toBeUndefined();
+    expect(updatedProject.targets.build).not.toBeDefined();
+    expect(updatedProject.targets.serve).not.toBeDefined();
+  });
+
   it('should normalize paths to libs in workspace correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
