@@ -183,7 +183,7 @@ for (let file in documentLinks) {
       errors.push({ file, link });
     } else if (
       !link.includes('#') &&
-      !sitemapUrls.includes(['https://nx.dev', link].join(''))
+      !sitemapUrls.includes(['https://nx.dev', link.split('?')[0]].join(''))
     ) {
       errors.push({ file, link });
     } else if (
