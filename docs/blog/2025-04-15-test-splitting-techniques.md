@@ -132,6 +132,25 @@ The tricky part comes from the fact that our split E2E applications still depend
 
 When we look at the graph, we will only see an edge from `checkout-e2e` to `checkout`, but having an explicit `dependsOn` `app:build` ensures that the build of the application was successful and the distributed agent running our E2E task has app's build cache replayed.
 
+As of Nx version `20.8.0` you can now combine manual splitting with the Atomizer. In order to split atomized projects, we will have to override their `dependsOn` property to target also `app:build`:
+
+```json {% fileName="libs/checkout-e2e/project.json" %}
+{
+  ...
+  "implicitDependencies": ["checkout"],
+  "targets": {
+    "e2e": {
+      "dependsOn": ["^build", { "target": "build", "projects": "app" }]
+    },
+    "e2e-ci--**/**": {
+      "dependsOn": ["^build", { "target": "build", "projects": "app" }]
+    }
+  }
+}
+```
+
+This small improvement gives us best of both worlds - using the Atomizer to automatically split long running tasks into smaller chunks and using manual splitting to skip entire work if dependencies haven't change.
+
 ## Conclusion
 
 By implementing these techniques — the built-in test sharding, Nx Atomizer, and manual E2E project splitting — you can significantly cut down CI time. That means fewer bottlenecks, less time waiting on pipelines, and more time spent delivering features, fixing bugs, and improving the product. When CI runs faster, teams can iterate quickly, merge with confidence, and ship value to users without the drag of slow test cycles.
