@@ -201,8 +201,9 @@ export function Features(): ReactElement {
         />
         <FeatureCard
           title="Zero Configuration"
-          description="Add Nx to your project in minutes with no changes to your existing setup required."
-          href="/nx-api/gradle/documents/overview"
+          j
+          description="Add Nx to your existing monorepo in minutes."
+          href="/recipes/adopting-nx/adding-to-monorepo"
           icon={
             <svg
               className="h-6 w-6"

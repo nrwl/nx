@@ -656,7 +656,6 @@ const packagesIndexes = {
   '/nest': '/packages/nest',
   '/next': '/packages/next',
   '/node': '/packages/node',
-  // '/react': '/packages/react',
   '/react-native': '/packages/react',
   '/rollup': '/packages/rollup',
   '/storybook': '/packages/storybook',
