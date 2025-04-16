@@ -1,19 +1,23 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJsonFromDisk } from '../devkit-internals';
+import { isCI } from '../utils/is-ci';
 
 let tuiEnabled = undefined;
 
-export function isTuiEnabled(nxJson?: NxJsonConfiguration) {
+export function isTuiEnabled(
+  nxJson?: NxJsonConfiguration,
+  skipCapableCheck = false
+) {
   if (tuiEnabled !== undefined) {
     return tuiEnabled;
   }
 
   // If the current terminal/environment is not capable of displaying the TUI, we don't run it
   const isWindows = process.platform === 'win32';
-  const isCapable = process.stderr.isTTY && isUnicodeSupported();
-  // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
-  // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
-  if (!isCapable || isWindows) {
+  const isCapable =
+    skipCapableCheck || (process.stderr.isTTY && isUnicodeSupported());
+
+  if (!isCapable) {
     tuiEnabled = false;
     process.env.NX_TUI = 'false';
     return tuiEnabled;
@@ -21,7 +25,15 @@ export function isTuiEnabled(nxJson?: NxJsonConfiguration) {
 
   // The environment variable takes precedence over the nx.json config
   if (typeof process.env.NX_TUI === 'string') {
-    tuiEnabled = process.env.NX_TUI === 'true' ? true : false;
+    tuiEnabled = process.env.NX_TUI === 'true';
+    return tuiEnabled;
+  }
+
+  // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
+  // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
+  if (isCI() || isWindows) {
+    tuiEnabled = false;
+    process.env.NX_TUI = 'false';
     return tuiEnabled;
   }
 
