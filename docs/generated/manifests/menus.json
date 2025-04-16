@@ -1565,6 +1565,14 @@
                     "isExternal": false,
                     "children": [],
                     "disableCollapsible": false
+                  },
+                  {
+                    "name": "Internationalization (i18n)",
+                    "path": "/recipes/angular/rspack/internationalization",
+                    "id": "internationalization",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
                   }
                 ],
                 "disableCollapsible": false
@@ -3059,6 +3067,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Internationalization (i18n)",
+                "path": "/recipes/angular/rspack/internationalization",
+                "id": "internationalization",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3160,6 +3176,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Internationalization (i18n)",
+            "path": "/recipes/angular/rspack/internationalization",
+            "id": "internationalization",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3184,6 +3208,14 @@
         "name": "Handling Configurations",
         "path": "/recipes/angular/rspack/handling-configurations",
         "id": "handling-configurations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Internationalization (i18n)",
+        "path": "/recipes/angular/rspack/internationalization",
+        "id": "internationalization",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
