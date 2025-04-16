@@ -302,6 +302,15 @@
       },
       "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
       "factory": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence"
+    },
+    "update-angular-cli-version-20-0-0-next-5": {
+      "cli": "nx",
+      "version": "21.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.0.0-next.6"
+      },
+      "description": "Update the @angular/cli package version to ~20.0.0-next.5.",
+      "factory": "./src/migrations/update-21-2-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1621,6 +1630,71 @@
       "packages": {
         "@nx/angular-rspack": {
           "version": "^21.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "21.2.0": {
+      "version": "21.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v20?",
+      "requires": {
+        "@angular/core": ">=19.2.0 <20.0.0-next.6"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~20.0.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.2000.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.2000.0-next.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~20.0.0-next.6",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~20.0.0-next.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~20.0.0-next.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~20.0.0-next.6",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~20.0.0-next.6",
           "alwaysAddToPackageJson": false
         }
       }

@@ -440,6 +440,26 @@
     ],
     "migrations": [
       {
+        "description": "Update the @angular/cli package version to ~20.0.0-next.5.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-20-0-0-next-5.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-20-0-0-next-5",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/update-angular-cli-version-20-0-0-next-5",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/angular/migrations/21.1.0-package-updates.json",
         "hidden": false,
@@ -1677,6 +1697,26 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "eslint/migrations/21.2.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/21.2.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-@typescript-eslint-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/eslint",
+        "path": "eslint/migrations/21.2.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
         "hidden": false,
         "name": "20.7.0-package-updates",
@@ -2436,6 +2476,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/js/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "js/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
@@ -5686,6 +5736,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/21.2.0-package-updates.json",
+        "hidden": false,
+        "name": "21.2.0-package-updates",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/workspace",
+        "path": "workspace/migrations/21.2.0-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",
