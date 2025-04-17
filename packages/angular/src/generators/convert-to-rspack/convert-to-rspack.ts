@@ -43,7 +43,14 @@ const RENAMED_OPTIONS = {
   ngswConfigPath: 'serviceWorker',
 };
 
-const REMOVED_OPTIONS = ['buildOptimizer', 'buildTarget', 'browserTarget'];
+const DEFAULT_PORT = 4200;
+
+const REMOVED_OPTIONS = [
+  'buildOptimizer',
+  'buildTarget',
+  'browserTarget',
+  'publicHost',
+];
 
 function normalizeFromProjectRoot(
   tree: Tree,
@@ -345,6 +352,8 @@ export async function convertToRspack(
 
   validateSupportedBuildExecutor(Object.values(project.targets));
 
+  let projectServePort = DEFAULT_PORT;
+
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
       target.executor === '@angular-devkit/build-angular:browser' ||
@@ -395,6 +404,10 @@ export async function convertToRspack(
           createConfigOptions.devServer,
           project.root
         );
+
+        if (target.options.port !== DEFAULT_PORT) {
+          projectServePort = target.options.port;
+        }
       }
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
@@ -429,6 +442,12 @@ export async function convertToRspack(
 
   for (const targetName of [...buildTargetNames, ...serveTargetNames]) {
     delete project.targets[targetName];
+  }
+
+  if (projectServePort !== DEFAULT_PORT) {
+    project.targets.serve ??= {};
+    project.targets.serve.options ??= {};
+    project.targets.serve.options.port = projectServePort;
   }
 
   updateProjectConfiguration(tree, projectName, project);
