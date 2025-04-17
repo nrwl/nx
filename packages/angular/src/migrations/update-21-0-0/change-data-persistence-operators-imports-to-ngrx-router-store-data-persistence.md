@@ -14,7 +14,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { fetch } from '@nx/angular';
 
 @Injectable()
-class UsersEffects {
+export class UsersEffects {
   // ...
 }
 ```
