@@ -49,6 +49,7 @@
     "@babel/core": "7.26.10",
     "@nx/angular-rspack-compiler": "workspace:*",
     "@nx/devkit": "^20.0.0",
+    "deepmerge": "^4.3.1",
     "express": "4.21.1",
     "css-loader": "^7.1.2",
     "jsonc-parser": "^3.3.1",
