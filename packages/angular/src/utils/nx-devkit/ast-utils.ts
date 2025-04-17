@@ -74,17 +74,6 @@ function _angularImportsFromNode(
 
 /**
  * Check if the Component, Directive or Pipe is standalone
- * @param sourceFile TS Source File containing the token to check
- * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
- *
- * @deprecated Use the function signature with a Tree. This signature will be removed in v21.
- */
-export function isStandalone(
-  sourceFile: ts.SourceFile,
-  decoratorName: DecoratorName
-): boolean;
-/**
- * Check if the Component, Directive or Pipe is standalone
  * @param tree The file system tree
  * @param sourceFile TS Source File containing the token to check
  * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
@@ -93,23 +82,7 @@ export function isStandalone(
   tree: Tree,
   sourceFile: ts.SourceFile,
   decoratorName: DecoratorName
-): boolean;
-export function isStandalone(
-  treeOrSourceFile: Tree | ts.SourceFile,
-  sourceFileOrDecoratorName: ts.SourceFile | DecoratorName,
-  decoratorName?: DecoratorName
 ): boolean {
-  let tree: Tree;
-  let sourceFile: ts.SourceFile;
-  if (decoratorName === undefined) {
-    sourceFile = treeOrSourceFile as ts.SourceFile;
-    decoratorName = sourceFileOrDecoratorName as DecoratorName;
-  } else {
-    tree = treeOrSourceFile as Tree;
-    sourceFile = sourceFileOrDecoratorName as ts.SourceFile;
-    decoratorName = decoratorName as DecoratorName;
-  }
-
   const decoratorMetadata = getDecoratorMetadata(
     sourceFile,
     decoratorName,

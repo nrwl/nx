@@ -444,6 +444,16 @@
       }
     },
     "migrations": {
+      "/nx-api/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence": {
+        "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+        "file": "generated/packages/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence.json",
+        "hidden": false,
+        "name": "change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence",
+        "version": "21.0.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence",
+        "type": "migration"
+      },
       "/nx-api/angular/migrations/set-continuous-option": {
         "description": "Set the `continuous` option to `true` for continuous tasks.",
         "file": "generated/packages/angular/migrations/set-continuous-option.json",
@@ -1174,56 +1184,6 @@
         "path": "/nx-api/angular/migrations/16.1.3-jest-package-updates",
         "type": "migration"
       },
-      "/nx-api/angular/migrations/remove-render-module-platform-server-exports": {
-        "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
-        "file": "generated/packages/angular/migrations/remove-render-module-platform-server-exports.json",
-        "hidden": false,
-        "name": "remove-render-module-platform-server-exports",
-        "version": "16.1.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/remove-render-module-platform-server-exports",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/remove-ngcc-invocation": {
-        "description": "Remove 'ngcc' invocation if exists from the 'postinstall' script in package.json.",
-        "file": "generated/packages/angular/migrations/remove-ngcc-invocation.json",
-        "hidden": false,
-        "name": "remove-ngcc-invocation",
-        "version": "16.1.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/remove-ngcc-invocation",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/extract-app-config-for-standalone": {
-        "description": "Extract the app config for standalone apps",
-        "file": "generated/packages/angular/migrations/extract-app-config-for-standalone.json",
-        "hidden": false,
-        "name": "extract-app-config-for-standalone",
-        "version": "16.1.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/extract-app-config-for-standalone",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/update-server-executor-config": {
-        "description": "Update server executors' configuration to disable 'buildOptimizer' for non optimized builds.",
-        "file": "generated/packages/angular/migrations/update-server-executor-config.json",
-        "hidden": false,
-        "name": "update-server-executor-config",
-        "version": "16.1.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/update-server-executor-config",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/update-angular-cli-version-16-0-0": {
-        "description": "Update the @angular/cli package version to ~16.0.0.",
-        "file": "generated/packages/angular/migrations/update-angular-cli-version-16-0-0.json",
-        "hidden": false,
-        "name": "update-angular-cli-version-16-0-0",
-        "version": "16.1.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/update-angular-cli-version-16-0-0",
-        "type": "migration"
-      },
       "/nx-api/angular/migrations/16.1.0-package-updates": {
         "description": "",
         "file": "generated/packages/angular/migrations/16.1.0-package-updates.json",
@@ -1242,46 +1202,6 @@
         "version": "16.1.0-beta.1",
         "originalFilePath": "/packages/angular",
         "path": "/nx-api/angular/migrations/16.1.0-angular-eslint-package-updates",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/remove-protractor-defaults-from-generators": {
-        "description": "Remove protractor as default e2eTestRunner from nxJson and project configurations",
-        "file": "generated/packages/angular/migrations/remove-protractor-defaults-from-generators.json",
-        "hidden": false,
-        "name": "remove-protractor-defaults-from-generators",
-        "version": "16.0.0-beta.6",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/remove-protractor-defaults-from-generators",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/remove-karma-defaults-from-generators": {
-        "description": "Remove karma as default unitTestRunner from nxJson and project configurations",
-        "file": "generated/packages/angular/migrations/remove-karma-defaults-from-generators.json",
-        "hidden": false,
-        "name": "remove-karma-defaults-from-generators",
-        "version": "16.0.0-beta.6",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/remove-karma-defaults-from-generators",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/remove-library-generator-simple-module-name-option": {
-        "description": "Replace the deprecated library generator 'simpleModuleName' option from generator defaults with 'simpleName'",
-        "file": "generated/packages/angular/migrations/remove-library-generator-simple-module-name-option.json",
-        "hidden": false,
-        "name": "remove-library-generator-simple-module-name-option",
-        "version": "16.0.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/remove-library-generator-simple-module-name-option",
-        "type": "migration"
-      },
-      "/nx-api/angular/migrations/update-16-0-0-add-nx-packages": {
-        "description": "Replace @nrwl/angular with @nx/angular",
-        "file": "generated/packages/angular/migrations/update-16-0-0-add-nx-packages.json",
-        "hidden": false,
-        "name": "update-16-0-0-add-nx-packages",
-        "version": "16.0.0-beta.1",
-        "originalFilePath": "/packages/angular",
-        "path": "/nx-api/angular/migrations/update-16-0-0-add-nx-packages",
         "type": "migration"
       }
     },
