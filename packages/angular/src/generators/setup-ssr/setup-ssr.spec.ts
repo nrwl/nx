@@ -572,7 +572,7 @@ describe('setupSSR', () => {
       import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
       };
       "
     `);
@@ -652,7 +652,7 @@ describe('setupSSR', () => {
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
+        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation())]
       };
       "
     `);
@@ -665,7 +665,7 @@ describe('setupSSR', () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '17.2.0',
+          '@angular/core': '18.2.0',
         },
       }));
       await generateTestApplication(tree, {
@@ -680,22 +680,22 @@ describe('setupSSR', () => {
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/ssr']).toBe(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV17.angularVersion
+        backwardCompatibleVersions.angularV18.angularVersion
       );
       expect(pkgJson.dependencies['@angular/ssr']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(pkgJson.dependencies['express']).toEqual(
-        backwardCompatibleVersions.angularV17.expressVersion
+        backwardCompatibleVersions.angularV18.expressVersion
       );
       expect(
         pkgJson.dependencies['@nguniversal/express-engine']
       ).toBeUndefined();
       expect(pkgJson.devDependencies['@types/express']).toBe(
-        backwardCompatibleVersions.angularV17.typesExpressVersion
+        backwardCompatibleVersions.angularV18.typesExpressVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
     });
@@ -704,7 +704,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { '@angular/core': '17.2.0' },
+        dependencies: { '@angular/core': '18.2.0' },
       }));
       await generateTestApplication(tree, {
         directory: 'app1',
@@ -745,7 +745,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { '@angular/core': '17.2.0' },
+        dependencies: { '@angular/core': '18.2.0' },
       }));
       await generateTestApplication(tree, {
         directory: 'app1',
@@ -760,13 +760,13 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/core';
+        "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
         import { provideRouter } from '@angular/router';
         import { appRoutes } from './app.routes';
         import { provideClientHydration } from '@angular/platform-browser';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideClientHydration(),provideRouter(appRoutes) ]
+          providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
         };
         "
       `);
