@@ -249,9 +249,6 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
   };
 
   if (!options.useProjectJson) {
-    if (options.projectName !== options.importPath) {
-      packageJson.nx = { name: options.projectName };
-    }
     if (options.parsedTags?.length) {
       packageJson.nx ??= {};
       packageJson.nx.tags = options.parsedTags;
