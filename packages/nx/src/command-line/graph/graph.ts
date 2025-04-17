@@ -251,6 +251,7 @@ export async function generateGraph(
     focus?: string;
     exclude?: string[];
     affected?: boolean;
+    print?: boolean;
   },
   affectedProjects: string[]
 ): Promise<void> {
@@ -352,7 +353,7 @@ export async function generateGraph(
         splitArgsIntoNxArgsAndOverrides(
           args,
           'affected',
-          { printWarnings: args.file !== 'stdout' },
+          { printWarnings: args.file !== 'stdout' && !args.print },
           readNxJson()
         ).nxArgs,
         rawGraph
@@ -391,7 +392,7 @@ export async function generateGraph(
 
   if (args.file) {
     // stdout is a magical constant that doesn't actually write a file
-    if (args.file === 'stdout') {
+    if (args.file === 'stdout' || args.print) {
       console.log(
         JSON.stringify(
           await createJsonOutput(
