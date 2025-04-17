@@ -1,5 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { FileChange } from '@nx/devkit';
+import { FileChange } from 'nx/src/devkit-exports';
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 /* eslint-enable @nx/enforce-module-boundaries */

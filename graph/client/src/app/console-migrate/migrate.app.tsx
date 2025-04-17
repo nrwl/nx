@@ -3,7 +3,6 @@
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { type FileChange } from 'nx/src/devkit-exports';
-// nx-ignore-next-line
 import { MigrateUI } from '@nx/graph-migrate';
 /* eslint-enable @nx/enforce-module-boundaries */
 
