@@ -23,6 +23,8 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_NO_TIMEOUTS: 'true'
+      ALLOW_NON_CACHEABLE_DTE: true
+      NX_CLOUD_USE_NEW_TASK_APIS: true
 
     steps:
       - name: Checkout
@@ -41,7 +43,7 @@ jobs:
           main-branch-name: 'master'
 
       - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e" --with-env-vars="NX_CLOUD_USE_NEW_TASK_APIS"
 
       - name: Install dependencies
         run: |
