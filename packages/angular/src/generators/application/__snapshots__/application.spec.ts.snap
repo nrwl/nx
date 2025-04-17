@@ -36,7 +36,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
 
     }
   }, {
-      production: {
+      "production": {
         options: {
           
   "budgets": [
@@ -57,7 +57,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
         }
       },
 
-      development: {
+      "development": {
         options: {
           
   "optimization": false,
@@ -68,9 +68,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   "devServer": {}
 
         }
-      }});
-  
-  "
+      }});"
 `;
 
 exports[`app --minimal should generate a correct setup when --bundler=rspack and ssr 2`] = `
@@ -181,7 +179,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
 
     }
   }, {
-      production: {
+      "production": {
         options: {
           
   "budgets": [
@@ -202,7 +200,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
         }
       },
 
-      development: {
+      "development": {
         options: {
           
   "optimization": false,
@@ -213,9 +211,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   "devServer": {}
 
         }
-      }});
-  
-  "
+      }});"
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 1`] = `
