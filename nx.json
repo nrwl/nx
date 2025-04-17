@@ -251,8 +251,8 @@
       }
     }
   ],
-  "nxCloudId": "62d013ea0852fe0a2df74438",
-  "nxCloudUrl": "https://staging.nx.app",
+  "nxCloudId": "6801622c7266354f4edb3770",
+  "nxCloudUrl": "https://snapshot.nx.app",
   "parallel": 1,
   "bust": 7,
   "defaultBase": "master",
