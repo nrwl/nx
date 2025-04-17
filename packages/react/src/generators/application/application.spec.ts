@@ -1,4 +1,4 @@
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -20,7 +20,10 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 
 let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => {
@@ -49,8 +52,8 @@ describe('app', () => {
     addPlugin: true,
   };
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
@@ -177,7 +180,7 @@ describe('app', () => {
           webServer: {
             command: '${packageCmd} nx run my-app:preview',
             url: 'http://localhost:4300',
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: true,
             cwd: workspaceRoot
           },
           projects: [
@@ -1337,101 +1340,6 @@ describe('app', () => {
         "dependsOn": [
           "^build",
         ],
-      }
-    `);
-  });
-
-  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with playwright', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    let nxJson = readNxJson(tree);
-    delete nxJson.targetDefaults;
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    await applicationGenerator(tree, {
-      directory: 'myapp',
-      addPlugin: true,
-      linter: Linter.None,
-      style: 'none',
-      e2eTestRunner: 'playwright',
-    });
-
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "e2e-ci--**/*": {
-          "dependsOn": [
-            "^build",
-          ],
-        },
-      }
-    `);
-  });
-
-  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with cypress', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    let nxJson = readNxJson(tree);
-    delete nxJson.targetDefaults;
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    await applicationGenerator(tree, {
-      directory: 'myapp',
-      addPlugin: true,
-      linter: Linter.None,
-      style: 'none',
-      e2eTestRunner: 'cypress',
-    });
-
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "e2e-ci--**/*": {
-          "dependsOn": [
-            "^build",
-          ],
-        },
-      }
-    `);
-  });
-
-  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with cypress and use the defined webpack buildTargetName', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    let nxJson = readNxJson(tree);
-    delete nxJson.targetDefaults;
-    nxJson.plugins ??= [];
-    nxJson.plugins.push({
-      plugin: '@nx/webpack/plugin',
-      options: {
-        buildTargetName: 'build-base',
-      },
-    });
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    await applicationGenerator(tree, {
-      directory: 'myapp',
-      addPlugin: true,
-      linter: Linter.None,
-      style: 'none',
-      bundler: 'webpack',
-      e2eTestRunner: 'cypress',
-    });
-
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "e2e-ci--**/*": {
-          "dependsOn": [
-            "^build-base",
-          ],
-        },
       }
     `);
   });

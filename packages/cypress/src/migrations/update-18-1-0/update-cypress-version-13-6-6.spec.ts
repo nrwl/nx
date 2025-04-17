@@ -1,6 +1,6 @@
 import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as cypressVersionUtils from '../../utils/cypress-version';
+import * as cypressVersions from '../../utils/versions';
 import migration from './update-cypress-version-13-6-6';
 
 describe('update-cypress-version migration', () => {
@@ -14,7 +14,7 @@ describe('update-cypress-version migration', () => {
     });
     const major = parseInt(version.split('.')[0].replace('^', ''), 10);
     jest
-      .spyOn(cypressVersionUtils, 'installedCypressVersion')
+      .spyOn(cypressVersions, 'getInstalledCypressMajorVersion')
       .mockReturnValue(major);
   }
 

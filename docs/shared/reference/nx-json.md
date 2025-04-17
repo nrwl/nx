@@ -140,7 +140,7 @@ Target defaults provide ways to set common options for a particular target in yo
 - `` `${executor}` ``
 - `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
-Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/*` would match all of the targets created by a task atomizer plugin.
+Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/**` would match all of the targets created by a task atomizer plugin.
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
@@ -587,15 +587,16 @@ Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megab
 | `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
 | `0`      | No limit on the local cache size (disables the cache size limit) |
 
-````json {% fileName="nx.json" %}
+```json {% fileName="nx.json" %}
 {
   "maxCacheSize": "0" // No limit on the local cache size
 }
+```
 
 ```json {% fileName="nx.json" %}
 {
   "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
 }
-````
+```
 
 Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.

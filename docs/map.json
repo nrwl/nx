@@ -632,6 +632,12 @@
                   "file": "shared/recipes/console-generate-command"
                 },
                 {
+                  "name": "Migrate UI",
+                  "id": "console-migrate-ui",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-migrate-ui"
+                },
+                {
                   "name": "Run Command",
                   "id": "console-run-command",
                   "tags": ["editor-setup"],
@@ -721,6 +727,12 @@
                       "file": "shared/guides/angular-rspack/introduction"
                     },
                     {
+                      "name": "Getting Started",
+                      "id": "getting-started",
+                      "tags": ["getting-started", "angular", "rspack", "setup"],
+                      "file": "shared/guides/angular-rspack/getting-started"
+                    },
+                    {
                       "name": "Migrate from Angular Webpack",
                       "id": "migrate-from-webpack",
                       "tags": ["migrate-from-webpack"],
@@ -731,6 +743,12 @@
                       "id": "handling-configurations",
                       "tags": ["handling-configurations", "configurations"],
                       "file": "shared/guides/angular-rspack/handling-configurations"
+                    },
+                    {
+                      "name": "Internationalization (i18n)",
+                      "id": "internationalization",
+                      "tags": ["internationalization", "i18n"],
+                      "file": "shared/guides/angular-rspack/internationalization"
                     }
                   ]
                 },

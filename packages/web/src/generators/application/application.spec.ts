@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   readNxJson,
   readProjectConfiguration,
@@ -18,7 +18,10 @@ import { Schema } from './schema';
 import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 jest.mock('@nx/devkit', () => {
   return {
     ...jest.requireActual('@nx/devkit'),
@@ -29,8 +32,8 @@ jest.mock('@nx/devkit', () => {
 describe('app', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     jest
@@ -50,14 +53,6 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
     }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {

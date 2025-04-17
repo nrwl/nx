@@ -1,4 +1,6 @@
-import { RenderableTreeNode, Schema, Tag } from '@markdoc/markdoc';
+import { RenderableTreeNode, Schema } from '@markdoc/markdoc';
+import markdoc from '@markdoc/markdoc';
+const { Tag } = markdoc;
 
 export function generateID(
   children: RenderableTreeNode[],

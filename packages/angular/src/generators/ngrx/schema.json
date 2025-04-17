@@ -3,7 +3,7 @@
   "$id": "NxNgrxGenerator",
   "title": "Add NgRx support to an application or library.",
   "description": "Adds NgRx support to an application or library.",
-  "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead.",
+  "x-deprecated": "Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead. It will be removed in Nx v22.",
   "cli": "nx",
   "type": "object",
   "examples": [

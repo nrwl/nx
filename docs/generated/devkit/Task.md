@@ -7,6 +7,7 @@ A representation of the invocation of an Executor
 ### Properties
 
 - [cache](../../devkit/documents/Task#cache): boolean
+- [continuous](../../devkit/documents/Task#continuous): boolean
 - [endTime](../../devkit/documents/Task#endtime): number
 - [hash](../../devkit/documents/Task#hash): string
 - [hashDetails](../../devkit/documents/Task#hashdetails): Object
@@ -25,6 +26,14 @@ A representation of the invocation of an Executor
 • `Optional` **cache**: `boolean`
 
 Determines if a given task should be cacheable.
+
+---
+
+### continuous
+
+• `Optional` **continuous**: `boolean`
+
+This denotes if the task runs continuously
 
 ---
 

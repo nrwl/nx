@@ -76,7 +76,7 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`],
+          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
     };
@@ -93,7 +93,7 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`],
+          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
     });
