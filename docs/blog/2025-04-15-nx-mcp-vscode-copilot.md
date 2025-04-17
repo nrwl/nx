@@ -8,6 +8,15 @@ description: 'Learn how to enhance VS Code Copilot with Nx MCP integration, prov
 youtubeUrl: https://youtu.be/dRQq_B1HSLA
 ---
 
+{% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
+
+- [Nx Just Made Your LLM Way Smarter](/blog/nx-just-made-your-llm-smarter)
+- [Making Cursor Smarter with an MCP Server For Nx Monorepos](/blog/nx-made-cursor-smarter)
+- **Nx MCP Now Available for VS Code Copilot**
+- [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
+
+{% /callout %}
+
 Back in [February we shipped the first version of Nx Console with AI features](/blog/nx-just-made-your-llm-smarter), directly integrating with GitHub Copilot's APIs to provide rich monorepo context. Now, VS Code has finally adopted the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction), and we've adapted our Cursor-based MCP implementation to work with all MCP clients, including Copilot. This integration makes your AI assistant even more powerful by providing rich context about your Nx workspace. Let's see how to set it up and what it can do for you.
 
 {% toc /%}

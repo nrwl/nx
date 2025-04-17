@@ -12,7 +12,9 @@ pinned: true
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
 
 - [Nx Just Made Your LLM Way Smarter](/blog/nx-just-made-your-llm-smarter)
-- **Making Cursor Smarter**
+- **Making Cursor Smarter with an MCP Server For Nx Monorepos**
+- [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
+- [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
 
 {% /callout %}
 
