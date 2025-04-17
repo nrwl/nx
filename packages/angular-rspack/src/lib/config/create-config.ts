@@ -1,4 +1,3 @@
-import { NgRspackPlugin } from '../plugins/ng-rspack';
 import {
   Configuration,
   DevServer,
@@ -10,23 +9,25 @@ import {
   javascript,
 } from '@rspack/core';
 import { merge as rspackMerge } from 'webpack-merge';
+import deepMerge from 'deepmerge';
 import { resolve } from 'path';
+import {
+  JS_ALL_EXT_REGEX,
+  TS_ALL_EXT_REGEX,
+} from '@nx/angular-rspack-compiler';
 import {
   AngularRspackPluginOptions,
   normalizeOptions,
   SourceMap,
 } from '../models';
-import {
-  JS_ALL_EXT_REGEX,
-  TS_ALL_EXT_REGEX,
-} from '@nx/angular-rspack-compiler';
+import { NgRspackPlugin } from '../plugins/ng-rspack';
+import { DevToolsIgnorePlugin } from '../plugins/tools/dev-tools-ignore-plugin';
 import { getStyleLoaders, getStylesEntry } from './style-config-utils';
 import { deleteOutputDir, getOutputHashFormat } from './helpers';
 import {
   getAllowedHostsConfig,
   getProxyConfig,
 } from './dev-server-config-utils';
-import { DevToolsIgnorePlugin } from '../plugins/tools/dev-tools-ignore-plugin';
 import { configureI18n } from './i18n/create-i18n-options';
 
 function configureSourceMap(sourceMap: SourceMap) {
@@ -531,6 +532,39 @@ export async function _createConfig(
   return configs;
 }
 
+export function handleConfigurations(
+  defaultOptions: {
+    options: AngularRspackPluginOptions;
+    rspackConfigOverrides?: Partial<Configuration>;
+  },
+  configurations: Record<
+    string,
+    {
+      options: Partial<AngularRspackPluginOptions>;
+      rspackConfigOverrides?: Partial<Configuration>;
+    }
+  >,
+  configurationModes: string[]
+) {
+  let mergedConfigurationBuildOptions = { ...defaultOptions.options };
+  let mergedRspackConfigOverrides = defaultOptions.rspackConfigOverrides ?? {};
+  for (const configurationName of configurationModes) {
+    if (configurationName in configurations) {
+      mergedConfigurationBuildOptions = deepMerge(
+        mergedConfigurationBuildOptions,
+        configurations[configurationName].options ?? {}
+      );
+      if (configurations[configurationName].rspackConfigOverrides) {
+        mergedRspackConfigOverrides = rspackMerge(
+          mergedRspackConfigOverrides,
+          configurations[configurationName].rspackConfigOverrides
+        );
+      }
+    }
+  }
+  return { mergedConfigurationBuildOptions, mergedRspackConfigOverrides };
+}
+
 export async function createConfig(
   defaultOptions: {
     options: AngularRspackPluginOptions;
@@ -546,27 +580,17 @@ export async function createConfig(
   configEnvVar = 'NGRS_CONFIG'
 ): Promise<Configuration[]> {
   const configurationMode = process.env[configEnvVar] ?? 'production';
-  const isDefault = configurationMode === 'default';
-  const isModeConfigured = configurationMode in configurations;
+  const configurationModes = parseConfigurationMode(configurationMode);
 
-  const mergedBuildOptionsOptions = {
-    ...defaultOptions.options,
-    ...((!isDefault && isModeConfigured
-      ? configurations[configurationMode]?.options
-      : {}) ?? {}),
-  };
+  const { mergedConfigurationBuildOptions, mergedRspackConfigOverrides } =
+    handleConfigurations(defaultOptions, configurations, configurationModes);
 
-  let mergedRspackConfigOverrides = defaultOptions.rspackConfigOverrides ?? {};
-  if (
-    !isDefault &&
-    isModeConfigured &&
-    configurations[configurationMode]?.rspackConfigOverrides
-  ) {
-    mergedRspackConfigOverrides = rspackMerge(
-      mergedRspackConfigOverrides,
-      configurations[configurationMode]?.rspackConfigOverrides ?? {}
-    );
-  }
+  return _createConfig(
+    mergedConfigurationBuildOptions,
+    mergedRspackConfigOverrides
+  );
+}
 
-  return _createConfig(mergedBuildOptionsOptions, mergedRspackConfigOverrides);
+function parseConfigurationMode(configurationMode: string) {
+  return configurationMode.split(',').map((m) => m.trim());
 }

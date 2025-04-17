@@ -1,4 +1,8 @@
-import { _createConfig, createConfig } from './create-config';
+import {
+  _createConfig,
+  createConfig,
+  handleConfigurations,
+} from './create-config';
 import { beforeEach, expect } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import { join } from 'node:path';
@@ -353,5 +357,46 @@ describe('createConfig', () => {
         );
       }
     );
+
+    it('should successfully merge multiple configurations', () => {
+      const config = handleConfigurations(
+        {
+          options: {
+            ...configBase,
+            i18nMetadata: {
+              locales: {
+                fr: {
+                  translation: 'src/locale/messages.fr.xlf',
+                },
+                de: {
+                  translation: 'src/locale/messages.de.xlf',
+                },
+              },
+              sourceLocale: 'en-GB',
+            },
+          },
+        },
+        {
+          fr: {
+            options: {
+              localize: ['fr'],
+            },
+          },
+          de: {
+            options: {
+              localize: ['de'],
+            },
+          },
+        },
+        ['fr', 'de']
+      );
+      expect(config).toStrictEqual(
+        expect.objectContaining({
+          mergedConfigurationBuildOptions: expect.objectContaining({
+            localize: ['fr', 'de'],
+          }),
+        })
+      );
+    });
   });
 });
