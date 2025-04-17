@@ -1,8 +1,9 @@
-import type { FileData, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   readJson,
+  type FileData,
+  type Tree,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
