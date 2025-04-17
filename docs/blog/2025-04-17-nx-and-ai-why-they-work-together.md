@@ -26,6 +26,8 @@ description: 'Explore how Nx monorepos amplify AI benefits by providing complete
 
 {% toc /%}
 
+{% call-to-action title="Are Monorepos the Answer to Better AI-Assisted Development?" url="https://go.nx.dev/april2025-webinar" description="Upcoming webinar: save your spot" /%}
+
 ## It's All About Context
 
 > _"Context is worth 80 IQ points." — Alan Kay_
