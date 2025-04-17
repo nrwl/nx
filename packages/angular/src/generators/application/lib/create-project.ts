@@ -1,12 +1,9 @@
 import { addProjectConfiguration, joinPathFragments, Tree } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
   const buildExecutor =
     options.bundler === 'webpack'
       ? '@angular-devkit/build-angular:browser'
@@ -61,18 +58,12 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
             'tsconfig.app.json'
           ),
           inlineStyleLanguage,
-          assets:
-            angularMajorVersion >= 18
-              ? [
-                  {
-                    glob: '**/*',
-                    input: joinPathFragments(options.appProjectRoot, 'public'),
-                  },
-                ]
-              : [
-                  `${options.appProjectSourceRoot}/favicon.ico`,
-                  `${options.appProjectSourceRoot}/assets`,
-                ],
+          assets: [
+            {
+              glob: '**/*',
+              input: joinPathFragments(options.appProjectRoot, 'public'),
+            },
+          ],
           styles: [`${options.appProjectSourceRoot}/styles.${options.style}`],
           scripts: [],
         },

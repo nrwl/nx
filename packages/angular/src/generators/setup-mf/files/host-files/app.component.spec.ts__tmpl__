@@ -1,19 +1,15 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';<% if(useRouterTestingModule) { %>
-import { RouterTestingModule } from '@angular/router/testing';<% } %>
-import { Router<% if(!useRouterTestingModule) { %>, RouterModule<% } %> } from '@angular/router';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { Router, RouterModule } from '@angular/router';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [<% if(useRouterTestingModule) { %>
-        RouterTestingModule.withRoutes([
-          { path: '', component: NxWelcomeComponent },
-        ]),<% } %><% if(!useRouterTestingModule) { %>
+      imports: [
         RouterModule.forRoot([
           { path: '', component: NxWelcomeComponent },
-        ]),<% } %><% if (standalone) { %>
+        ]),<% if (standalone) { %>
         AppComponent,
         NxWelcomeComponent,<% } %>
       ],<% if (!standalone) { %>

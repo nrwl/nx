@@ -5,7 +5,7 @@ import { getInstalledPackageVersionInfo } from '../angular-version-utils';
 export const STYLESHEET_PROCESSOR: FactoryProvider = {
   provide: STYLESHEET_PROCESSOR_TOKEN,
   useFactory: () => {
-    const { major: ngPackagrMajorVersion, version: ngPackagrVersion } =
+    const { major: ngPackagrMajorVersion } =
       getInstalledPackageVersionInfo('ng-packagr');
 
     if (ngPackagrMajorVersion >= 19) {
@@ -13,15 +13,8 @@ export const STYLESHEET_PROCESSOR: FactoryProvider = {
       return StylesheetProcessor;
     }
 
-    if (ngPackagrVersion !== '17.2.0') {
-      const { StylesheetProcessor } = require('./pre-v19/stylesheet-processor');
-      return StylesheetProcessor;
-    }
-
-    const {
-      AsyncStylesheetProcessor,
-    } = require('./pre-v19/stylesheet-processor');
-    return AsyncStylesheetProcessor;
+    const { StylesheetProcessor } = require('./pre-v19/stylesheet-processor');
+    return StylesheetProcessor;
   },
   deps: [],
 };

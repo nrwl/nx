@@ -5,7 +5,6 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
 export function updateHostAppRoutes(tree: Tree, options: Schema) {
@@ -50,7 +49,6 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
 ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   );
 
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   generateFiles(
     tree,
     joinPathFragments(__dirname, '../files/host-files'),
@@ -58,7 +56,6 @@ ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
     {
       appName: options.appName,
       standalone: options.standalone,
-      useRouterTestingModule: angularMajorVersion < 18,
       tmpl: '',
     }
   );

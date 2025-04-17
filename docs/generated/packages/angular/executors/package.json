@@ -36,7 +36,7 @@
       },
       "poll": {
         "type": "number",
-        "description": "Enable and define the file watching poll time period in milliseconds. _Note: this is only supported in Angular versions >= 18.0.0_."
+        "description": "Enable and define the file watching poll time period in milliseconds."
       }
     },
     "additionalProperties": false,
