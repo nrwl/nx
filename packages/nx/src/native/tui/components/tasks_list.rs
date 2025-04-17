@@ -669,6 +669,23 @@ impl TasksList {
         };
     }
 
+    pub fn focus_current_task_terminal_pane(&mut self) {
+        if let Some(task_name) = self.selection_manager.get_selected_task_name() {
+            // Find which pane contains this task
+            let pane_idx = self
+                .pane_tasks
+                .iter()
+                .position(|t| t.as_deref() == Some(task_name.as_str()))
+                .unwrap_or_else(|| {
+                    self.assign_current_task_to_pane(0);
+                    0
+                });
+            // Set focus to this pane
+            self.focus = Focus::MultipleOutput(pane_idx);
+            self.focused_pane = Some(pane_idx);
+        }
+    }
+
     /// Gets the table style based on the current focus state.
     /// Returns a dimmed style when focus is not on the task list.
     fn get_table_style(&self) -> Style {

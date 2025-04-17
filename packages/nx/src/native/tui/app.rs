@@ -1,3 +1,4 @@
+use tracing::trace;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use napi::bindgen_prelude::External;
@@ -98,7 +99,7 @@ impl App {
             tasks_list.start_tasks(tasks);
         }
     }
-    
+
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(tasks_list) = self
             .components
@@ -161,6 +162,10 @@ impl App {
             return;
         }
 
+        self.begin_exit_countdown()
+    }
+
+    fn begin_exit_countdown(&mut self) {
         let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
@@ -220,14 +225,6 @@ impl App {
                 // Record that the user has interacted with the app
                 self.user_has_interacted = true;
 
-                // Handle Ctrl+C to quit
-                if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL {
-                    self.is_forced_shutdown = true;
-                    // Quit immediately
-                    self.quit_at = Some(std::time::Instant::now());
-                    return Ok(true);
-                }
-
                 // Get tasks list component to check interactive mode before handling '?' key
                 if let Some(tasks_list) = self
                     .components
@@ -265,18 +262,24 @@ impl App {
                         .iter_mut()
                         .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
                     {
-                        if !countdown_popup.is_scrollable() {
-                            countdown_popup.cancel_countdown();
-                            self.quit_at = None;
-                            self.focus = self.previous_focus;
-                            return Ok(false);
-                        }
                         match key.code {
-                            KeyCode::Up | KeyCode::Char('k') => {
+                            KeyCode::Char('q') => {
+                                // Quit immediately
+                                trace!("Confirming shutdown");
+                                self.quit_at = Some(std::time::Instant::now());
+                                return Ok(true);
+                            }
+                            KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
+                                // Quit immediately
+                                trace!("Confirming shutdown");
+                                self.quit_at = Some(std::time::Instant::now());
+                                return Ok(true);
+                            }
+                            KeyCode::Up | KeyCode::Char('k') if countdown_popup.is_scrollable() => {
                                 countdown_popup.scroll_up();
                                 return Ok(false);
                             }
-                            KeyCode::Down | KeyCode::Char('j') => {
+                            KeyCode::Down | KeyCode::Char('j') if countdown_popup.is_scrollable() => {
                                 countdown_popup.scroll_down();
                                 return Ok(false);
                             }
@@ -288,6 +291,13 @@ impl App {
                         }
                     }
 
+                    return Ok(false);
+                }
+
+                // Handle Ctrl+C to trigger countdown
+                if (key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL) || key.code == KeyCode::Char('q') {
+                    self.is_forced_shutdown = true;
+                    self.begin_exit_countdown();
                     return Ok(false);
                 }
 
@@ -367,6 +377,10 @@ impl App {
                                     KeyCode::BackTab => {
                                         tasks_list.focus_previous();
                                         self.focus = tasks_list.get_focus();
+                                    }
+                                    KeyCode::Esc => {
+                                        tasks_list.set_focus(Focus::TaskList);
+                                        self.focus = Focus::TaskList;
                                     }
                                     // Add our new shortcuts here
                                     KeyCode::Char('c') => {
@@ -487,6 +501,10 @@ impl App {
                                             tasks_list.focus_previous();
                                             self.focus = tasks_list.get_focus();
                                         }
+                                    }
+                                    KeyCode::Enter => {
+                                        tasks_list.focus_current_task_terminal_pane();
+                                        self.focus = tasks_list.get_focus();
                                     }
                                     _ => {}
                                 },
