@@ -721,6 +721,12 @@
                       "file": "shared/guides/angular-rspack/introduction"
                     },
                     {
+                      "name": "Getting Started",
+                      "id": "getting-started",
+                      "tags": ["getting-started", "angular", "rspack", "setup"],
+                      "file": "shared/guides/angular-rspack/getting-started"
+                    },
+                    {
                       "name": "Migrate from Angular Webpack",
                       "id": "migrate-from-webpack",
                       "tags": ["migrate-from-webpack"],

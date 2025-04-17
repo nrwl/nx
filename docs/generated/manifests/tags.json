@@ -883,6 +883,13 @@
     },
     {
       "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
@@ -1087,6 +1094,33 @@
       "id": "introduction",
       "name": "Introduction",
       "path": "/recipes/angular/rspack/introduction"
+    }
+  ],
+  "getting-started": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "rspack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "setup": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
     }
   ],
   "migrate-from-webpack": [

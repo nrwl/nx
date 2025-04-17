@@ -1543,6 +1543,14 @@
                     "disableCollapsible": false
                   },
                   {
+                    "name": "Getting Started",
+                    "path": "/recipes/angular/rspack/getting-started",
+                    "id": "getting-started",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
                     "name": "Migrate from Angular Webpack",
                     "path": "/recipes/angular/rspack/migrate-from-webpack",
                     "id": "migrate-from-webpack",
@@ -3029,6 +3037,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Getting Started",
+                "path": "/recipes/angular/rspack/getting-started",
+                "id": "getting-started",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Migrate from Angular Webpack",
                 "path": "/recipes/angular/rspack/migrate-from-webpack",
                 "id": "migrate-from-webpack",
@@ -3138,6 +3154,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Getting Started",
+            "path": "/recipes/angular/rspack/getting-started",
+            "id": "getting-started",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Migrate from Angular Webpack",
             "path": "/recipes/angular/rspack/migrate-from-webpack",
             "id": "migrate-from-webpack",
@@ -3168,6 +3192,14 @@
         "name": "Introduction",
         "path": "/recipes/angular/rspack/introduction",
         "id": "introduction",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Getting Started",
+        "path": "/recipes/angular/rspack/getting-started",
+        "id": "getting-started",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

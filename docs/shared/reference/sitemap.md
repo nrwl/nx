@@ -112,6 +112,7 @@
     - [Angular](/recipes/angular)
       - [Angular Rspack](/recipes/angular/rspack)
         - [Introduction](/recipes/angular/rspack/introduction)
+        - [Getting Started](/recipes/angular/rspack/getting-started)
         - [Migrate from Angular Webpack](/recipes/angular/rspack/migrate-from-webpack)
         - [Handling Configurations](/recipes/angular/rspack/handling-configurations)
         - [Internationalization (i18n)](/recipes/angular/rspack/internationalization)
