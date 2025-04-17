@@ -32,7 +32,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
       viewEncapsulation: options.viewEncapsulation,
       displayBlock: options.displayBlock,
       selector: options.selector,
-      // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+      // Angular v19 or higher defaults to true, while lower versions default to false
       setStandalone:
         (angularMajorVersion >= 19 && !options.standalone) ||
         (angularMajorVersion < 19 && options.standalone),
