@@ -290,7 +290,7 @@ export class TaskOrchestrator {
       // No output files to restore
       !!outputs.length &&
       // Remote caches are restored to output dirs when applied and using db cache
-      (!cachedResult.remote || !dbCacheEnabled(this.nxJson)) &&
+      (!cachedResult.remote || !dbCacheEnabled()) &&
       // Output files have not been touched since last run
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
     if (shouldCopyOutputsFromCache) {

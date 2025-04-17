@@ -1095,15 +1095,6 @@ function getTasksRunnerPath(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>
 ) {
-  let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
-
-  if (modulePath) {
-    if (isRelativePath(modulePath)) {
-      return join(workspaceRoot, modulePath);
-    }
-    return modulePath;
-  }
-
   const isCloudRunner =
     // No tasksRunnerOptions for given --runner
     nxJson.nxCloudAccessToken ||

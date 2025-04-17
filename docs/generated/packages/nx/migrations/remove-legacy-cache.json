@@ -1,0 +1,12 @@
+{
+  "name": "remove-legacy-cache",
+  "version": "21.0.0-beta.5",
+  "description": "Removes the legacy cache configuration from nx.json",
+  "implementation": "/packages/nx/src/migrations/update-21-0-0/remove-legacy-cache.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Use Legacy Cache\n\nRemoves `useLegacyCache` from `nx.json` as it is no longer functional in Nx 21\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {},\n  \"useLegacyCache\": true\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {}\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}
