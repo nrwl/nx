@@ -19,6 +19,7 @@
         }
       ],
       "dependsOn": [
+        "local-registry",
         {
           "target": "build",
           "projects": ["tag:npm:public"]

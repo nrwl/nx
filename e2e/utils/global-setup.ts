@@ -1,5 +1,4 @@
 import { Config } from '@jest/types';
-import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { existsSync, removeSync } from 'fs-extra';
 import * as isCI from 'is-ci';
 import { exec } from 'node:child_process';
@@ -19,11 +18,26 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     const requiresLocalRelease =
       !process.env.NX_TASK_TARGET_TARGET?.startsWith('e2e-ci');
 
-    global.e2eTeardown = await startLocalRegistry({
-      localRegistryTarget: '@nx/nx-source:local-registry',
-      verbose: isVerbose,
-      clearStorage: requiresLocalRelease,
-    });
+    const localRegistryPort = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+    const localRegistry = `http://localhost:${localRegistryPort}`;
+
+    while (true) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      try {
+        await assertLocalRegistryIsRunning(localRegistry);
+        break;
+      } catch {
+        console.log(
+          `Waiting for Local registry to start on ${localRegistry}...`
+        );
+      }
+    }
+
+    // global.e2eTeardown = await startLocalRegistry({
+    //   localRegistryTarget: '@nx/nx-source:local-registry',
+    //   verbose: isVerbose,
+    //   clearStorage: requiresLocalRelease,
+    // });
 
     /**
      * Set the published version based on what has previously been loaded into the
@@ -75,4 +89,11 @@ function getPublishedVersion(): Promise<string | undefined> {
       }
     );
   });
+}
+
+async function assertLocalRegistryIsRunning(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 }

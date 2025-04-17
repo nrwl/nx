@@ -1,33 +1,23 @@
 // @ts-check
-
-const { startLocalRegistry } = require('@nx/js/plugins/jest/local-registry');
 const { exec } = require('node:child_process');
 const {
   LARGE_BUFFER,
 } = require('nx/src/executors/run-commands/run-commands.impl');
 
 async function populateLocalRegistryStorage() {
-  let registryTeardown;
+  await new Promise((res) => {
+    setTimeout(() => {
+      res(undefined);
+    }, 5000);
+  });
+
   try {
     const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-    registryTeardown = await startLocalRegistry({
-      localRegistryTarget: '@nx/nx-source:local-registry',
-      verbose: isVerbose,
-      clearStorage: true,
-    });
 
     console.log('Publishing packages to local registry to populate storage');
     await runLocalRelease(publishVersion, isVerbose);
-
-    registryTeardown();
-    console.log('Killed local registry process');
   } catch (err) {
-    // Clean up registry if possible after setup related errors
-    if (typeof registryTeardown === 'function') {
-      registryTeardown();
-      console.log('Killed local registry process due to an error during setup');
-    }
     console.error('Error:', err);
     process.exit(1);
   }
