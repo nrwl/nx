@@ -194,12 +194,14 @@ export type PreTasksExecutionContext = {
   readonly nxArgs: NxArgs;
   readonly overrides: Record<string, unknown>;
   readonly workspaceRoot: string;
+  readonly initiatingProject: string | null;
   readonly nxJsonConfiguration: NxJsonConfiguration;
 };
 export type PostTasksExecutionContext = {
   readonly nxArgs: NxArgs;
   readonly overrides: Record<string, unknown>;
   readonly workspaceRoot: string;
+  readonly initiatingProject: string | null;
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly taskResults: TaskResults;
 };

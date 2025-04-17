@@ -190,6 +190,7 @@ export async function runCommand(
         nxArgs,
         overrides,
         workspaceRoot,
+        initiatingProject,
         nxJsonConfiguration: nxJson,
       });
 
@@ -222,6 +223,7 @@ export async function runCommand(
         overrides,
         taskResults,
         workspaceRoot,
+        initiatingProject,
         nxJsonConfiguration: nxJson,
       });
 
