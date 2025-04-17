@@ -2123,6 +2123,17 @@
                 "tags": ["introduction"]
               },
               {
+                "id": "getting-started",
+                "name": "Getting Started",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/getting-started",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/getting-started",
+                "tags": ["getting-started", "angular", "rspack", "setup"]
+              },
+              {
                 "id": "migrate-from-webpack",
                 "name": "Migrate from Angular Webpack",
                 "description": "",
@@ -4182,6 +4193,17 @@
             "tags": ["introduction"]
           },
           {
+            "id": "getting-started",
+            "name": "Getting Started",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/getting-started",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/getting-started",
+            "tags": ["getting-started", "angular", "rspack", "setup"]
+          },
+          {
             "id": "migrate-from-webpack",
             "name": "Migrate from Angular Webpack",
             "description": "",
@@ -4332,6 +4354,17 @@
         "tags": ["introduction"]
       },
       {
+        "id": "getting-started",
+        "name": "Getting Started",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/getting-started",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/getting-started",
+        "tags": ["getting-started", "angular", "rspack", "setup"]
+      },
+      {
         "id": "migrate-from-webpack",
         "name": "Migrate from Angular Webpack",
         "description": "",
@@ -4379,6 +4412,17 @@
     "isExternal": false,
     "path": "/recipes/angular/rspack/introduction",
     "tags": ["introduction"]
+  },
+  "/recipes/angular/rspack/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/getting-started",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/getting-started",
+    "tags": ["getting-started", "angular", "rspack", "setup"]
   },
   "/recipes/angular/rspack/migrate-from-webpack": {
     "id": "migrate-from-webpack",
