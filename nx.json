@@ -1,5 +1,6 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "bust": 1,
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
