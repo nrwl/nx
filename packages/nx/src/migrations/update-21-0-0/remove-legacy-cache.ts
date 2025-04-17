@@ -11,12 +11,8 @@ export default async function update(tree: Tree) {
   }
 
   // If workspaces  had `enableDbCache` we can just delete the property as the db cache is enabled by default in nx v20
-  if ((nxJson as any).enableDbCache) {
+  if ((nxJson as any).useLegacyCache) {
     delete (nxJson as any).enableDbCache;
-  } else {
-    (
-      nxJson as NxJsonConfiguration & { useLegacyCache: boolean }
-    ).useLegacyCache = true;
   }
 
   updateNxJson(tree, nxJson);

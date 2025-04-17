@@ -63,6 +63,11 @@
       "description": "Set `useLegacyCache` to true for migrating workspaces",
       "implementation": "./src/migrations/update-20-0-1/use-legacy-cache",
       "x-repair-skip": true
+    },
+    "remove-legacy-cache": {
+      "version": "21.0.0-beta.5",
+      "description": "Removes the legacy cache configuration from nx.json",
+      "implementation": "./src/migrations/update-21-0-0/remove-legacy-cache"
     }
   }
 }
