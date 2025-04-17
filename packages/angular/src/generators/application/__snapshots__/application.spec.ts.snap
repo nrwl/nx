@@ -453,7 +453,7 @@ import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
 };
 "
 `;
@@ -528,7 +528,7 @@ exports[`app --standalone should generate a standalone app correctly without rou
 "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), ]
+  providers: [provideZoneChangeDetection({ eventCoalescing: true })]
 };
 "
 `;
@@ -576,17 +576,6 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('standalone');
   });
 });
-"
-`;
-
-exports[`app --standalone should should not use event coalescing in versions lower than v18 1`] = `
-"import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
-};
 "
 `;
 
@@ -732,17 +721,6 @@ export default defineConfig(() => ({
     },
   },
 }));
-"
-`;
-
-exports[`app angular compat support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
-"import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { appRoutes } from './app.routes';
-
-export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes) ]
-};
 "
 `;
 

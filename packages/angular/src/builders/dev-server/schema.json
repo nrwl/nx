@@ -14,12 +14,6 @@
     }
   ],
   "properties": {
-    "browserTarget": {
-      "type": "string",
-      "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
-      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed when Angular v20 is released."
-    },
     "buildTarget": {
       "type": "string",
       "description": "A build builder target to serve in the format of `project:target[:configuration]`.",
@@ -128,7 +122,7 @@
       ]
     },
     "prebundle": {
-      "description": "Enable and control the Vite-based development server's prebundling capabilities. To enable prebundling, the Angular CLI cache must also be enabled. This option has no effect when using the 'browser' or other Webpack-based builders. _Note: this is only supported in Angular versions >= 17.2.0_.",
+      "description": "Enable and control the Vite-based development server's prebundling capabilities. To enable prebundling, the Angular CLI cache must also be enabled. This option has no effect when using the 'browser' or other Webpack-based builders.",
       "oneOf": [
         { "type": "boolean" },
         {
@@ -147,7 +141,7 @@
     },
     "buildLibsFromSource": {
       "type": "boolean",
-      "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
+      "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `buildTarget` options, or it will default to `true` if it's also not set in the `buildTarget` options.",
       "x-priority": "important"
     },
     "esbuildMiddleware": {
@@ -165,5 +159,5 @@
     }
   },
   "additionalProperties": false,
-  "anyOf": [{ "required": ["buildTarget"] }, { "required": ["browserTarget"] }]
+  "required": ["buildTarget"]
 }

@@ -3,8 +3,7 @@ import { getNgPackagrVersionInfo } from './ng-packagr-version';
 import { importNgPackagrPath } from './package-imports';
 
 export function getStylesheetProcessorFactoryProvider(): FactoryProvider {
-  const { major: ngPackagrMajorVersion, version: ngPackagrVersion } =
-    getNgPackagrVersionInfo();
+  const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
 
   const { STYLESHEET_PROCESSOR_TOKEN } = importNgPackagrPath<
     typeof import('ng-packagr/lib/styles/stylesheet-processor.di')
@@ -20,17 +19,8 @@ export function getStylesheetProcessorFactoryProvider(): FactoryProvider {
         return getStylesheetProcessor();
       }
 
-      if (ngPackagrVersion !== '17.2.0') {
-        const {
-          StylesheetProcessor,
-        } = require('./pre-v19/stylesheet-processor');
-        return StylesheetProcessor;
-      }
-
-      const {
-        AsyncStylesheetProcessor,
-      } = require('./pre-v19/stylesheet-processor');
-      return AsyncStylesheetProcessor;
+      const { StylesheetProcessor } = require('./pre-v19/stylesheet-processor');
+      return StylesheetProcessor;
     },
     deps: [],
   };

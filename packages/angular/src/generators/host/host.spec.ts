@@ -493,28 +493,6 @@ describe('Host App Generator', () => {
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
-
-    describe('compat', () => {
-      it('should generate the correct app component spec file using RouterTestingModule', async () => {
-        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-        updateJson(tree, 'package.json', (json) => ({
-          ...json,
-          dependencies: {
-            '@angular/core': '17.0.0',
-          },
-        }));
-
-        await generateTestHostApplication(tree, {
-          directory: 'host',
-          remotes: ['remote1'],
-          skipFormat: true,
-        });
-
-        expect(
-          tree.read(`host/src/app/app.component.spec.ts`, 'utf-8')
-        ).toMatchSnapshot();
-      });
-    });
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {

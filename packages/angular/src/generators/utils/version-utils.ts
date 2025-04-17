@@ -67,10 +67,10 @@ export function versions(
 ): PackageLatestVersions | PackageCompatVersions {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
   switch (majorAngularVersion) {
-    case 17:
-      return backwardCompatibleVersions.angularV17;
     case 18:
       return backwardCompatibleVersions.angularV18;
+    case 19:
+      return backwardCompatibleVersions.angularV19;
     default:
       return latestVersions;
   }

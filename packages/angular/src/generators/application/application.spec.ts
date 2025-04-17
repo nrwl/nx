@@ -1010,19 +1010,6 @@ describe('app', () => {
       expect(nxWelcomeComponentText).not.toContain('standalone: true');
       expect(nxWelcomeComponentText).not.toContain('standalone: false');
     });
-
-    it('should should not use event coalescing in versions lower than v18', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
-      }));
-
-      await generateApp(appTree, 'standalone', { standalone: true });
-
-      expect(
-        appTree.read('standalone/src/app/app.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
   });
 
   it('should generate correct main.ts', async () => {
@@ -1038,25 +1025,6 @@ describe('app', () => {
         .bootstrapModule(AppModule, {
           ngZoneEventCoalescing: true
         })
-        .catch((err) => console.error(err));
-      "
-    `);
-  });
-
-  it('should should not use event coalescing in versions lower than v18', async () => {
-    updateJson(appTree, 'package.json', (json) => ({
-      ...json,
-      dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
-    }));
-
-    await generateApp(appTree, 'myapp');
-
-    expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-      import { AppModule } from './app/app.module';
-
-      platformBrowserDynamic()
-        .bootstrapModule(AppModule)
         .catch((err) => console.error(err));
       "
     `);
@@ -1326,7 +1294,7 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~17.2.0',
+          '@angular/core': '~18.2.0',
         },
       }));
     });
@@ -1336,82 +1304,31 @@ describe('app', () => {
 
       const { devDependencies } = readJson(appTree, 'package.json');
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
     });
 
-    it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
+    it('should disable modern class fields behavior for versions lower than v18.1', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~18.0.0',
+        },
+      }));
 
-      expect(
-        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should import "RouterTestingModule" in test files', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
-
-      expect(appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { TestBed } from '@angular/core/testing';
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-        import { RouterTestingModule } from '@angular/router/testing';
-
-        describe('AppComponent', () => {
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [AppComponent, NxWelcomeComponent, RouterTestingModule],
-            }).compileComponents();
-          });
-
-          it('should render title', () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            fixture.detectChanges();
-            const compiled = fixture.nativeElement as HTMLElement;
-            expect(compiled.querySelector('h1')?.textContent).toContain(
-              'Welcome my-app'
-            );
-          });
-
-          it(\`should have as title 'my-app'\`, () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            const app = fixture.componentInstance;
-            expect(app.title).toEqual('my-app');
-          });
-        });
-        "
-      `);
-    });
-
-    it('should disable modern class fields behavior', async () => {
       await generateApp(appTree, 'my-app');
 
       expect(
         readJson(appTree, 'my-app/tsconfig.json').compilerOptions
           .useDefineForClassFields
       ).toBe(false);
-    });
-
-    it('should configure the correct assets for versions lower than v18', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { ...json.dependencies, '@angular/core': '~17.0.0' },
-      }));
-
-      await generateApp(appTree, '.', { name: 'my-app' });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.assets).toStrictEqual([
-        './src/favicon.ico',
-        './src/assets',
-      ]);
     });
   });
 });
