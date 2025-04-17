@@ -15,8 +15,7 @@ export class SharedRunningTask implements RunningTask {
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
-    // A shared running task will not yield results
-    return new Promise((res) => {});
+    throw new Error('Results cannot be retrieved from a shared task');
   }
 
   kill(): void {

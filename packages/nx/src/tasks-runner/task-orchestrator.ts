@@ -668,7 +668,8 @@ export class TaskOrchestrator {
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
       if (this.initializingTaskIds.has(task.id)) {
-        await runningTask.getResults();
+        // Hold the thread forever
+        await new Promise(() => {});
       }
       return runningTask;
     }
@@ -721,7 +722,8 @@ export class TaskOrchestrator {
     });
     await this.scheduleNextTasksAndReleaseThreads();
     if (this.initializingTaskIds.has(task.id)) {
-      await childProcess.getResults();
+      // Hold the thread forever
+      await new Promise(() => {});
     }
 
     return childProcess;
