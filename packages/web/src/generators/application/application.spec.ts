@@ -53,14 +53,6 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/**'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
     }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {

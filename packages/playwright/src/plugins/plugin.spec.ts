@@ -548,7 +548,6 @@ describe('@nx/playwright/plugin', () => {
         "outputs": [
           "{projectRoot}/test-results",
         ],
-        "parallelism": false,
       }
     `);
     expect(project.metadata.targetGroups).toMatchInlineSnapshot(`
@@ -768,7 +767,6 @@ describe('@nx/playwright/plugin', () => {
         "outputs": [
           "{projectRoot}/test-results",
         ],
-        "parallelism": false,
       }
     `);
     expect(project.metadata.targetGroups).toMatchInlineSnapshot(`

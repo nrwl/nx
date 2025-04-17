@@ -412,7 +412,6 @@ async function buildCypressTargets(
         inputs,
         outputs,
         dependsOn,
-        parallelism: false,
         metadata: {
           technologies: ['cypress'],
           description: 'Runs Cypress Tests in CI',
@@ -425,6 +424,11 @@ async function buildCypressTargets(
           },
         },
       };
+
+      if (!ciWebServerCommandTask) {
+        targets[options.ciTargetName].parallelism = false;
+      }
+
       ciTargetGroup.push(options.ciTargetName);
     }
   }

@@ -302,7 +302,6 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
-      parallelism: false,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
@@ -317,6 +316,11 @@ async function buildPlaywrightTargets(
         },
       },
     };
+
+    if (!webserverCommandTasks.length) {
+      targets[options.ciTargetName].parallelism = false;
+    }
+
     ciTargetGroup.push(options.ciTargetName);
   }
 

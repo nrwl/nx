@@ -596,7 +596,6 @@ describe('@nx/cypress/plugin', () => {
                       "{projectRoot}/dist/videos",
                       "{projectRoot}/dist/screenshots",
                     ],
-                    "parallelism": false,
                   },
                   "e2e-ci--src/test.cy.ts": {
                     "cache": true,
