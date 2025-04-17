@@ -80,7 +80,7 @@
       },
       "deployUrl": {
         "type": "string",
-        "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations. _Note: this is only supported in Angular versions >= 17.3.0_."
+        "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations."
       },
       "security": {
         "description": "Security features to protect against XSS and other common attacks. _Note: this is only supported in Angular versions >= 19.0.0_.",
@@ -226,7 +226,7 @@
       "clearScreen": {
         "type": "boolean",
         "default": false,
-        "description": "Automatically clear the terminal screen during rebuilds. _Note: this is only supported in Angular versions >= 17.2.0_."
+        "description": "Automatically clear the terminal screen during rebuilds."
       },
       "optimization": {
         "description": "Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.dev/reference/configs/workspace-config#optimization-configuration.",
@@ -259,7 +259,7 @@
                       },
                       "removeSpecialComments": {
                         "type": "boolean",
-                        "description": "Remove comments in global CSS that contains '@license' or '@preserve' or that starts with '//!' or '/*!'. _Note: this is only supported in Angular versions >= 17.1.0_.",
+                        "description": "Remove comments in global CSS that contains '@license' or '@preserve' or that starts with '//!' or '/*!'.",
                         "default": true
                       }
                     },
@@ -293,14 +293,14 @@
         ]
       },
       "loader": {
-        "description": "Defines the type of loader to use with a specified file extension when used with a JavaScript `import`. `text` inlines the content as a string; `binary` inlines the content as a Uint8Array; `file` emits the file and provides the runtime location of the file; `empty` considers the content to be empty and not include it in bundles. _Note: this is only supported in Angular versions >= 17.1.0_.",
+        "description": "Defines the type of loader to use with a specified file extension when used with a JavaScript `import`. `text` inlines the content as a string; `binary` inlines the content as a Uint8Array; `file` emits the file and provides the runtime location of the file; `empty` considers the content to be empty and not include it in bundles.",
         "type": "object",
         "patternProperties": {
           "^\\.\\S+$": { "enum": ["text", "binary", "file", "empty"] }
         }
       },
       "define": {
-        "description": "Defines global identifiers that will be replaced with a specified constant value when found in any JavaScript or TypeScript code including libraries. The value will be used directly. String values must be put in quotes. Identifiers within Angular metadata such as Component Decorators will not be replaced. _Note: this is only supported in Angular versions >= 17.2.0_.",
+        "description": "Defines global identifiers that will be replaced with a specified constant value when found in any JavaScript or TypeScript code including libraries. The value will be used directly. String values must be put in quotes. Identifiers within Angular metadata such as Component Decorators will not be replaced.",
         "type": "object",
         "additionalProperties": { "type": "string" }
       },
@@ -322,7 +322,7 @@
         "default": []
       },
       "outputPath": {
-        "description": "Specify the output path relative to workspace root. _Note: the object notation is only supported in Angular versions >= 17.1.0_.",
+        "description": "Specify the output path relative to workspace root.",
         "oneOf": [
           {
             "type": "object",
@@ -511,7 +511,7 @@
               "preloadInitial": {
                 "type": "boolean",
                 "default": true,
-                "description": "Generates 'preload', 'modulepreload', and 'preconnect' link elements for initial application files and resources. _Note: this is only supported in Angular versions >= 17.1.0_."
+                "description": "Generates 'preload', 'modulepreload', and 'preconnect' link elements for initial application files and resources."
               }
             },
             "required": ["input"]
@@ -694,7 +694,7 @@
         }
       },
       "indexHtmlTransformer": {
-        "description": "Path to a file exposing a default function to transform the `index.html` file. _Note: this is only supported in Angular versions >= 17.1.0_.",
+        "description": "Path to a file exposing a default function to transform the `index.html` file.",
         "type": "string"
       }
     },
