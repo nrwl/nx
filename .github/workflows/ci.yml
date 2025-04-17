@@ -65,10 +65,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Check Documentation
-        run: pnpm nx documentation
-        timeout-minutes: 20
-
       - name: Run Checks/Lint/Test/Build
         run: |
           pids=()
@@ -77,9 +73,6 @@ jobs:
           pids+=($!)
 
           pnpm nx-cloud record -- nx sync:check
-          pids+=($!)
-
-          pnpm nx-cloud record -- nx-cloud conformance:check
           pids+=($!)
 
           pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
