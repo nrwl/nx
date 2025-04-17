@@ -3761,6 +3761,16 @@
     ],
     "migrations": [
       {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-legacy-cache.json",
+        "hidden": false,
+        "name": "remove-legacy-cache",
+        "version": "21.0.0-beta.5",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/remove-legacy-cache",
+        "type": "migration"
+      },
+      {
         "description": "Set `useLegacyCache` to true for migrating workspaces",
         "file": "generated/packages/nx/migrations/use-legacy-cache.json",
         "hidden": false,
