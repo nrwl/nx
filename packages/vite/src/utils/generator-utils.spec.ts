@@ -150,7 +150,7 @@ describe('generator utils', () => {
           plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           // Configuration for building your library.
           // See: https://vitejs.dev/guide/build.html#library-mode
@@ -232,7 +232,7 @@ describe('generator utils', () => {
           plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
           // Uncomment this if you are using workers.
           // worker: {
-          //  plugins: [ nxViteTsPaths() ],
+          //   plugins: () => [ nxViteTsPaths() ],
           // },
           build: {
             outDir: '../dist/myproj',
