@@ -1,7 +1,7 @@
 ---
 title: Automate Updating Dependencies
 description: Learn how to use Nx migrate to automatically update package dependencies, configuration files, and source code to match new package versions.
-keywords: [update]
+keywords: [update, migrate]
 ---
 
 # Automate Updating Dependencies
