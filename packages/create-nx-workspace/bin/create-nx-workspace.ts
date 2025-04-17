@@ -125,7 +125,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('preset', {
             // This describe is hard to auto-fix because of the loop in the code.
-            // eslint-disable-next-line @nx/workspace/valid-command-object
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
