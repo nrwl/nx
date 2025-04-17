@@ -114,11 +114,12 @@ impl AppLifeCycle {
     pub fn print_task_terminal_output(
         &mut self,
         task: Task,
-        status: String,
+        _status: String,
         output: String,
     ) -> napi::Result<()> {
+        debug!("Received task terminal output for {}", task.id);
         if let Ok(mut app) = self.app.lock() {
-            app.print_task_terminal_output(task.id, status.parse().unwrap(), output);
+            app.print_task_terminal_output(task.id, output);
         }
         Ok(())
     }

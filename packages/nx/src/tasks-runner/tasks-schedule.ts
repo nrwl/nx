@@ -101,6 +101,16 @@ export class TasksSchedule {
       : null;
   }
 
+  public getIncompleteTasks(): Task[] {
+    const incompleteTasks: Task[] = [];
+    for (const taskId in this.taskGraph.tasks) {
+      if (!this.completedTasks.has(taskId)) {
+        incompleteTasks.push(this.taskGraph.tasks[taskId]);
+      }
+    }
+    return incompleteTasks;
+  }
+
   private async scheduleTasks() {
     if (this.options.batch || process.env.NX_BATCH_MODE === 'true') {
       await this.scheduleBatches();

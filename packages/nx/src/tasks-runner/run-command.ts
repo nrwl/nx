@@ -75,13 +75,18 @@ const originalConsoleError = console.error.bind(console);
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
+  initiatingTasks: Task[],
   projectNames: string[],
   tasks: Task[],
   taskGraph: TaskGraph,
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
   overrides: Record<string, unknown>
-): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
+): Promise<{
+  lifeCycle: LifeCycle;
+  printSummary?: () => void;
+  renderIsDone: Promise<void>;
+}> {
   const overridesWithoutHidden = { ...overrides };
   delete overridesWithoutHidden['__overrides_unparsed__'];
 
@@ -129,11 +134,7 @@ async function getTerminalOutputLifeCycle(
     let titleText = '';
 
     if (isRunOne) {
-      const mainTaskId = createTaskId(
-        initiatingProject,
-        nxArgs.targets[0],
-        nxArgs.configuration
-      );
+      const mainTaskId = initiatingTasks[0].id;
       pinnedTasks.push(mainTaskId);
       const mainContinuousDependencies =
         taskGraph.continuousDependencies[mainTaskId];
@@ -169,6 +170,7 @@ async function getTerminalOutputLifeCycle(
         args: nxArgs,
         overrides: overridesWithoutHidden,
         initiatingProject,
+        initiatingTasks,
         resolveRenderIsDonePromise,
       });
 
@@ -179,7 +181,6 @@ async function getTerminalOutputLifeCycle(
         process.stderr.write = originalStderrWrite;
         console.log = originalConsoleLog;
         console.error = originalConsoleError;
-        printSummary();
       });
     }
 
@@ -264,7 +265,6 @@ async function getTerminalOutputLifeCycle(
           process.stderr.write = originalStderrWrite;
           console.log = originalConsoleLog;
           console.error = originalConsoleError;
-          printSummary();
           // Print the intercepted Nx Cloud logs
           for (const log of interceptedNxCloudLogs) {
             const logString = log.toString().trimStart();
@@ -278,6 +278,7 @@ async function getTerminalOutputLifeCycle(
 
     return {
       lifeCycle: new CompositeLifeCycle(lifeCycles),
+      printSummary,
       renderIsDone,
     };
   }
@@ -445,6 +446,7 @@ export async function runCommandForTasks(
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
 ): Promise<TaskResults> {
   const projectNames = projectsToRun.map((t) => t.name);
+  const projectNameSet = new Set(projectNames);
 
   const { projectGraph, taskGraph } = await ensureWorkspaceIsInSyncAndGetGraphs(
     currentProjectGraph,
@@ -457,15 +459,23 @@ export async function runCommandForTasks(
   );
   const tasks = Object.values(taskGraph.tasks);
 
-  const { lifeCycle, renderIsDone } = await getTerminalOutputLifeCycle(
-    initiatingProject,
-    projectNames,
-    tasks,
-    taskGraph,
-    nxArgs,
-    nxJson,
-    overrides
+  const initiatingTasks = tasks.filter(
+    (t) =>
+      projectNameSet.has(t.target.project) &&
+      nxArgs.targets.includes(t.target.target)
   );
+
+  const { lifeCycle, renderIsDone, printSummary } =
+    await getTerminalOutputLifeCycle(
+      initiatingProject,
+      initiatingTasks,
+      projectNames,
+      tasks,
+      taskGraph,
+      nxArgs,
+      nxJson,
+      overrides
+    );
 
   const taskResults = await invokeTasksRunner({
     tasks,
@@ -476,9 +486,14 @@ export async function runCommandForTasks(
     nxArgs,
     loadDotEnvFiles: extraOptions.loadDotEnvFiles,
     initiatingProject,
+    initiatingTasks,
   });
 
   await renderIsDone;
+
+  if (printSummary) {
+    printSummary();
+  }
 
   await printNxKey();
 
@@ -814,6 +829,7 @@ export async function invokeTasksRunner({
   nxArgs,
   loadDotEnvFiles,
   initiatingProject,
+  initiatingTasks,
 }: {
   tasks: Task[];
   projectGraph: ProjectGraph;
@@ -823,6 +839,7 @@ export async function invokeTasksRunner({
   nxArgs: NxArgs;
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
+  initiatingTasks: Task[];
 }): Promise<{ [id: string]: TaskResult }> {
   setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
 
@@ -861,6 +878,7 @@ export async function invokeTasksRunner({
     {
       initiatingProject:
         nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+      initiatingTasks,
       projectGraph,
       nxJson,
       nxArgs,
