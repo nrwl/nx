@@ -436,7 +436,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),UsersFacade,provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
 };
 "
 `;
@@ -482,7 +482,7 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
 };
 "
 `;
@@ -729,7 +729,7 @@ import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideStore(),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
 };
 "
 `;
@@ -743,7 +743,7 @@ import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideStore(),provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+  providers: [provideStore(),provideStoreDevtools({ logOnly: !isDevMode() }),provideEffects(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
 };
 "
 `;
