@@ -49,9 +49,7 @@ describe('createConfig', () => {
         "skipTypeChecking": false
 
           }
-        });
-        
-        "
+        });"
     `);
   });
 
@@ -90,9 +88,7 @@ describe('createConfig', () => {
         "browser": "src/main.prod.ts"
 
               }
-            }});
-        
-        "
+            }});"
     `);
   });
 });

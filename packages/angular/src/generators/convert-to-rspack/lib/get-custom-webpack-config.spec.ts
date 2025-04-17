@@ -16,15 +16,16 @@ describe('convertconvertWebpackConfigToUseNxModuleFederationPlugin', () => {
     // ASSERT
     expect(newWebpackConfigContents).toMatchInlineSnapshot(`
       "
-            import { NxModuleFederationPlugin } from '@nx/module-federation/rspack';
+            import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
             import config from './module-federation.config';
             
           
           export default {
             plugins: [
-              new NxModuleFederationPlugin(config, {
+              new NxModuleFederationPlugin({ config }, {
                 dts: false,
               }),
+              new NxModuleFederationDevServerPlugin({ config }),
             ]
           }
           "
@@ -46,7 +47,7 @@ describe('convertconvertWebpackConfigToUseNxModuleFederationPlugin', () => {
     // ASSERT
     expect(newWebpackConfigContents).toMatchInlineSnapshot(`
       "
-            const { NxModuleFederationPlugin } = require('@nx/module-federation/rspack');
+            const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');
             const config = require('./module-federation.config');
             
           
@@ -55,6 +56,7 @@ describe('convertconvertWebpackConfigToUseNxModuleFederationPlugin', () => {
               new NxModuleFederationPlugin({ config }, {
                 dts: false,
               }),
+              new NxModuleFederationDevServerPlugin({ config }),
             ]
           }
           "
