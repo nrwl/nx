@@ -52,9 +52,7 @@ export async function createFiles(
     rootOffset,
     isUsingApplicationBuilder,
     disableModernClassFieldsBehavior,
-    useEventCoalescing: angularMajorVersion >= 18,
-    useRouterTestingModule: angularMajorVersion < 18,
-    // Angular v19 or higher defaults to true, while v18 or lower defaults to false
+    // Angular v19 or higher defaults to true, while lower versions default to false
     setStandaloneFalse: angularMajorVersion >= 19,
     setStandaloneTrue: angularMajorVersion < 19,
     connectCloudUrl,
@@ -72,22 +70,6 @@ export async function createFiles(
     options.appProjectRoot,
     substitutions
   );
-
-  if (angularMajorVersion >= 18) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/base-18+'),
-      options.appProjectRoot,
-      substitutions
-    );
-  } else {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/base-pre18'),
-      options.appProjectRoot,
-      substitutions
-    );
-  }
 
   if (options.standalone) {
     generateFiles(
