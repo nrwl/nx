@@ -42,7 +42,6 @@ export async function withModuleFederation(
 
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: false,
     };
 
     if (
