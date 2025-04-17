@@ -13,7 +13,7 @@ export async function handleRunPreTasksExecution(
   try {
     const envs = await runPreTasksExecution(context);
     return {
-      response: JSON.stringify(envs),
+      response: envs,
       description: 'handleRunPreTasksExecution',
     };
   } catch (e) {
