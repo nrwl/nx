@@ -1,8 +1,9 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
+  generateFiles,
   GeneratorCallback,
   installPackagesTask,
+  joinPathFragments,
   offsetFromRoot,
   readNxJson,
   Tree,
@@ -115,6 +116,22 @@ export async function applicationGenerator(
       skipInstall: options.skipPackageJson,
       skipFormat: true,
     });
+
+    if (options.ssr) {
+      generateFiles(
+        tree,
+        joinPathFragments(__dirname, './files/rspack-ssr'),
+        options.appProjectSourceRoot,
+        {
+          pathToDistFolder: joinPathFragments(
+            offsetFromRoot(options.appProjectRoot),
+            options.outputPath,
+            'browser'
+          ),
+          tmpl: '',
+        }
+      );
+    }
   }
 
   if (!options.skipFormat) {

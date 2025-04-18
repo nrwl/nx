@@ -7,10 +7,27 @@ export declare class ExternalObject<T> {
     [K: symbol]: T
   }
 }
+export declare class AppLifeCycle {
+  constructor(tasks: Array<Task>, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string)
+  startCommand(threadCount?: number | undefined | null): void
+  scheduleTask(task: Task): void
+  startTasks(tasks: Array<Task>, metadata: object): void
+  printTaskTerminalOutput(task: Task, status: string, output: string): void
+  endTasks(taskResults: Array<TaskResult>, metadata: object): void
+  endCommand(): void
+  __init(doneCallback: () => any): void
+  registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  setTaskStatus(taskId: string, status: TaskStatus): void
+  registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
+  __setCloudMessage(message: string): Promise<void>
+}
+
 export declare class ChildProcess {
+  getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   kill(): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
+  cleanup(): void
 }
 
 export declare class FileLock {
@@ -59,6 +76,13 @@ export declare class NxTaskHistory {
   recordTaskRuns(taskRuns: Array<TaskRun>): void
   getFlakyTasks(hashes: Array<string>): Array<string>
   getEstimatedTaskTimings(targets: Array<TaskTarget>): Record<string, number>
+}
+
+export declare class RunningTasksService {
+  constructor(db: ExternalObject<NxDbConnection>)
+  getRunningTasks(ids: Array<string>): Array<string>
+  addRunningTask(taskId: string): void
+  removeRunningTask(taskId: string): void
 }
 
 export declare class RustPseudoTerminal {
@@ -243,6 +267,8 @@ export interface ProjectGraph {
 
 export declare export declare function remove(src: string): void
 
+export declare export declare function restoreTerminal(): void
+
 export interface RuntimeInput {
   runtime: string
 }
@@ -261,6 +287,9 @@ export interface Task {
   target: TaskTarget
   outputs: Array<string>
   projectRoot?: string
+  startTime?: number
+  endTime?: number
+  continuous?: boolean
 }
 
 export interface TaskGraph {
@@ -269,12 +298,31 @@ export interface TaskGraph {
   dependencies: Record<string, Array<string>>
 }
 
+export interface TaskResult {
+  task: Task
+  status: string
+  code: number
+  terminalOutput?: string
+}
+
 export interface TaskRun {
   hash: string
   status: string
   code: number
   start: number
   end: number
+}
+
+export declare const enum TaskStatus {
+  Success = 0,
+  Failure = 1,
+  Skipped = 2,
+  LocalCacheKeptExisting = 3,
+  LocalCache = 4,
+  RemoteCache = 5,
+  NotStarted = 6,
+  InProgress = 7,
+  Shared = 8
 }
 
 export interface TaskTarget {
@@ -290,6 +338,15 @@ export declare export declare function testOnlyTransferFileMap(projectFiles: Rec
  * This wont be needed once the project graph is created in Rust
  */
 export declare export declare function transferProjectGraph(projectGraph: ProjectGraph): ExternalObject<ProjectGraph>
+
+export interface TuiCliArgs {
+  targets?: string[] | undefined
+  tuiAutoExit?: boolean | number | undefined
+}
+
+export interface TuiConfig {
+  autoExit?: boolean | number | undefined
+}
 
 export interface UpdatedWorkspaceFiles {
   fileMap: FileMap

@@ -1938,6 +1938,17 @@
             "tags": ["editor-setup"]
           },
           {
+            "id": "console-migrate-ui",
+            "name": "Migrate UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-migrate-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-migrate-ui",
+            "tags": ["editor-setup"]
+          },
+          {
             "id": "console-run-command",
             "name": "Run Command",
             "description": "",
@@ -2112,6 +2123,17 @@
                 "tags": ["introduction"]
               },
               {
+                "id": "getting-started",
+                "name": "Getting Started",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/getting-started",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/getting-started",
+                "tags": ["getting-started", "angular", "rspack", "setup"]
+              },
+              {
                 "id": "migrate-from-webpack",
                 "name": "Migrate from Angular Webpack",
                 "description": "",
@@ -2132,6 +2154,17 @@
                 "isExternal": false,
                 "path": "/recipes/angular/rspack/handling-configurations",
                 "tags": ["handling-configurations", "configurations"]
+              },
+              {
+                "id": "internationalization",
+                "name": "Internationalization (i18n)",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/internationalization",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/internationalization",
+                "tags": ["internationalization", "i18n"]
               }
             ],
             "isExternal": false,
@@ -3799,6 +3832,17 @@
         "tags": ["editor-setup"]
       },
       {
+        "id": "console-migrate-ui",
+        "name": "Migrate UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-migrate-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-migrate-ui",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "console-run-command",
         "name": "Run Command",
         "description": "",
@@ -3867,6 +3911,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-generate-command",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-migrate-ui": {
+    "id": "console-migrate-ui",
+    "name": "Migrate UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-migrate-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-migrate-ui",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-run-command": {
@@ -4138,6 +4193,17 @@
             "tags": ["introduction"]
           },
           {
+            "id": "getting-started",
+            "name": "Getting Started",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/getting-started",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/getting-started",
+            "tags": ["getting-started", "angular", "rspack", "setup"]
+          },
+          {
             "id": "migrate-from-webpack",
             "name": "Migrate from Angular Webpack",
             "description": "",
@@ -4158,6 +4224,17 @@
             "isExternal": false,
             "path": "/recipes/angular/rspack/handling-configurations",
             "tags": ["handling-configurations", "configurations"]
+          },
+          {
+            "id": "internationalization",
+            "name": "Internationalization (i18n)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/internationalization",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/internationalization",
+            "tags": ["internationalization", "i18n"]
           }
         ],
         "isExternal": false,
@@ -4277,6 +4354,17 @@
         "tags": ["introduction"]
       },
       {
+        "id": "getting-started",
+        "name": "Getting Started",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/getting-started",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/getting-started",
+        "tags": ["getting-started", "angular", "rspack", "setup"]
+      },
+      {
         "id": "migrate-from-webpack",
         "name": "Migrate from Angular Webpack",
         "description": "",
@@ -4297,6 +4385,17 @@
         "isExternal": false,
         "path": "/recipes/angular/rspack/handling-configurations",
         "tags": ["handling-configurations", "configurations"]
+      },
+      {
+        "id": "internationalization",
+        "name": "Internationalization (i18n)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/internationalization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/internationalization",
+        "tags": ["internationalization", "i18n"]
       }
     ],
     "isExternal": false,
@@ -4313,6 +4412,17 @@
     "isExternal": false,
     "path": "/recipes/angular/rspack/introduction",
     "tags": ["introduction"]
+  },
+  "/recipes/angular/rspack/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/getting-started",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/getting-started",
+    "tags": ["getting-started", "angular", "rspack", "setup"]
   },
   "/recipes/angular/rspack/migrate-from-webpack": {
     "id": "migrate-from-webpack",
@@ -4335,6 +4445,17 @@
     "isExternal": false,
     "path": "/recipes/angular/rspack/handling-configurations",
     "tags": ["handling-configurations", "configurations"]
+  },
+  "/recipes/angular/rspack/internationalization": {
+    "id": "internationalization",
+    "name": "Internationalization (i18n)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/internationalization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/internationalization",
+    "tags": ["internationalization", "i18n"]
   },
   "/recipes/angular/migration": {
     "id": "migration",

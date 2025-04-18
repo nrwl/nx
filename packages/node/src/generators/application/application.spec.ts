@@ -51,6 +51,7 @@ describe('app', () => {
                   "buildTarget": "my-node-app:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
@@ -263,6 +264,7 @@ describe('app', () => {
                   "buildTarget": "my-node-app:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
@@ -626,6 +628,7 @@ describe('app', () => {
                     "buildTarget": "@proj/myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
@@ -896,6 +899,7 @@ describe('app', () => {
                   "buildTarget": "@proj/myapp:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
@@ -930,6 +934,7 @@ describe('app', () => {
             "e2e": {
               "dependsOn": [
                 "@proj/myapp:build",
+                "@proj/myapp:serve",
               ],
               "executor": "@nx/jest:jest",
               "options": {

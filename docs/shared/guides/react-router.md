@@ -173,4 +173,4 @@ Now if we serve or app and navigate to `https://localhost:4200/contact` we will 
 
 You can find an example of an Nx Workspace using React Router by clicking below
 
-{% github-repository url="<https://github.com/nrwl/nx-recipes/tree/main/react-router>" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-router" /%}
