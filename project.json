@@ -10,6 +10,12 @@
         "storage": "build/local-registry/storage"
       }
     },
+    "local-registry2": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["echo starting local registry", "nx run @nx/source:local-registry"]
+      }
+    },
     "populate-local-registry-storage": {
       "cache": true,
       "inputs": [
