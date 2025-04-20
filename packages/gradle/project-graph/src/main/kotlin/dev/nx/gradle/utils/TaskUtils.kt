@@ -90,26 +90,24 @@ fun getInputsForTask(
     val mappedInputsIncludeExternal: MutableList<Any> = mutableListOf()
     val inputs = task.inputs
     val externalDependencies = mutableListOf<String>()
-    inputs.sourceFiles
-        .filter { it.exists() }
-        .forEach { file ->
-          val path: String = file.path
-          // replace the absolute path to contain {projectRoot} or {workspaceRoot}
-          val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
-          if (pathWithReplacedRoot != null) { // if the path is inside workspace
-            mappedInputsIncludeExternal.add((pathWithReplacedRoot))
-          }
-          // if the path is outside of workspace
-          if (pathWithReplacedRoot == null &&
-              externalNodes != null) { // add it to external dependencies
-            try {
-              val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
-              externalDep?.let { externalDependencies.add(it) }
-            } catch (e: Exception) {
-              task.logger.info("${task}: get external dependency error $e")
-            }
-          }
+    inputs.sourceFiles.forEach { file ->
+      val path: String = file.path
+      // replace the absolute path to contain {projectRoot} or {workspaceRoot}
+      val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
+      if (pathWithReplacedRoot != null) { // if the path is inside workspace
+        mappedInputsIncludeExternal.add((pathWithReplacedRoot))
+      }
+      // if the path is outside of workspace
+      if (pathWithReplacedRoot == null &&
+          externalNodes != null) { // add it to external dependencies
+        try {
+          val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
+          externalDep?.let { externalDependencies.add(it) }
+        } catch (e: Exception) {
+          task.logger.info("${task}: get external dependency error $e")
         }
+      }
+    }
     if (externalDependencies.isNotEmpty()) {
       mappedInputsIncludeExternal.add(mutableMapOf("externalDependencies" to externalDependencies))
     }

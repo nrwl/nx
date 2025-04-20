@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="dev.nx.gradle.utils.CreateNodeForProjectTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-04-15T22:24:22.189Z" hostname="emilys-MacBook-Pro.local" time="0.009">
-  <properties/>
-  <testcase name="should return GradleNodeReport with targets and metadata()" classname="dev.nx.gradle.utils.CreateNodeForProjectTest" time="0.009"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

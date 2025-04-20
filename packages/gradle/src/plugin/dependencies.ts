@@ -2,6 +2,7 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   DependencyType,
+  logger,
   normalizePath,
   StaticDependency,
   validateDependency,
@@ -60,7 +61,11 @@ export const createDependencies: CreateDependencies<
       };
       validateDependency(dependency, context);
       dependencies.push(dependency);
-    } catch {} // ignore invalid dependencies
+    } catch {
+      logger.warn(
+        `Unable to parse dependency from gradle plugin: ${dependencyFromPlugin.source} -> ${dependencyFromPlugin.target}`
+      );
+    }
   });
 
   return dependencies;

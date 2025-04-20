@@ -1,5 +1,0 @@
-Ktfmt Summary:
-  - Valid formatted files: 2
-  - Invalid formatted files: 0
-  - Skipped files: 0
-  - Failed files: 0
