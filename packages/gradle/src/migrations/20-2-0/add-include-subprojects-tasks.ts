@@ -1,6 +1,6 @@
 import { Tree, readNxJson, updateNxJson } from '@nx/devkit';
 import { hasGradlePlugin } from '../../utils/has-gradle-plugin';
-import { GradlePluginOptions } from '../../plugin/nodes';
+import { GradlePluginOptions } from '../../plugin-v1/nodes';
 
 // This function add options includeSubprojectsTasks as true in nx.json for gradle plugin
 export default function update(tree: Tree) {

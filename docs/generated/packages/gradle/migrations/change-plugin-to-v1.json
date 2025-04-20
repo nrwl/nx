@@ -1,0 +1,14 @@
+{
+  "name": "change-plugin-to-v1",
+  "version": "20.7.0-beta.0",
+  "cli": "nx",
+  "description": "Change @nx/gradle plugin to version 1",
+  "factory": "./src/migrations/20-7-0/change-plugin-to-v1",
+  "implementation": "/packages/gradle/src/migrations/20-7-0/change-plugin-to-v1.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/gradle",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Change @nx/gradle plugin to @nx/gradle/plugin-v1\n\nChange @nx/gradle plugin to version 1 in nx.json\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"plugins\": [\"@nx/gradle\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[5] fileName=\"nx.json\" %}\n{\n  \"plugins\": [\"@nx/gradle/plugin-v1\"]\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

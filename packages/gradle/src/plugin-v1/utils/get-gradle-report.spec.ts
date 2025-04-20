@@ -1,31 +1,103 @@
 import { readFileSync } from 'fs';
+import { fileSync } from 'tmp';
 import { join } from 'path';
 import {
   processGradleDependencies,
   processProjectReports,
+  writeGradleReportToCache,
 } from './get-gradle-report';
 
 describe('processProjectReports', () => {
+  const tmpFile = fileSync();
+
   it('should process project reports', () => {
     const projectReportLines = readFileSync(
       join(__dirname, '__mocks__/gradle-project-report.txt'),
       'utf-8'
-    ).split('\n');
+    )
+      .replaceAll('__dirname__', __dirname)
+      .split('\n');
     const report = processProjectReports(projectReportLines);
     expect(
       Object.keys(Object.fromEntries(report.gradleProjectToTasksTypeMap))
     ).toEqual(['', ':app', ':list', ':utilities']);
+
+    writeGradleReportToCache(tmpFile.name, report);
+    expect(readFileSync(tmpFile.name).toString()).toMatchInlineSnapshot(`
+      "{
+        "gradleFileToGradleProjectMap": {},
+        "gradleProjectToDepsMap": {
+          "": [
+            ":utilities"
+          ],
+          ":app": [
+            ":utilities"
+          ],
+          ":list": [
+            ":utilities"
+          ],
+          ":utilities": [
+            ":utilities"
+          ]
+        },
+        "gradleFileToOutputDirsMap": {},
+        "gradleProjectToTasksTypeMap": {
+          "": {},
+          ":app": {},
+          ":list": {},
+          ":utilities": {}
+        },
+        "gradleProjectToTasksMap": {},
+        "gradleProjectToProjectName": {},
+        "gradleProjectNameToProjectRootMap": {},
+        "gradleProjectToChildProjects": {}
+      }"
+    `);
   });
 
   it('should process project reports with println', () => {
     const projectReportLines = readFileSync(
       join(__dirname, '__mocks__/gradle-project-report-println.txt'),
       'utf-8'
-    ).split('\n');
+    )
+      .replaceAll('__dirname__', __dirname)
+      .split('\n');
     const report = processProjectReports(projectReportLines);
     expect(
       Object.keys(Object.fromEntries(report.gradleProjectToTasksTypeMap))
     ).toEqual(['', ':app', ':list', ':utilities']);
+
+    writeGradleReportToCache(tmpFile.name, report);
+    expect(readFileSync(tmpFile.name).toString()).toMatchInlineSnapshot(`
+      "{
+        "gradleFileToGradleProjectMap": {},
+        "gradleProjectToDepsMap": {
+          "": [
+            ":utilities"
+          ],
+          ":app": [
+            ":utilities"
+          ],
+          ":list": [
+            ":utilities"
+          ],
+          ":utilities": [
+            ":utilities"
+          ]
+        },
+        "gradleFileToOutputDirsMap": {},
+        "gradleProjectToTasksTypeMap": {
+          "": {},
+          ":app": {},
+          ":list": {},
+          ":utilities": {}
+        },
+        "gradleProjectToTasksMap": {},
+        "gradleProjectToProjectName": {},
+        "gradleProjectNameToProjectRootMap": {},
+        "gradleProjectToChildProjects": {}
+      }"
+    `);
   });
 
   it('should process properties report with child projects', () => {

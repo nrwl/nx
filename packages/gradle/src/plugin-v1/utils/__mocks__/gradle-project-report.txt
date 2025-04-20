@@ -1,5 +1,5 @@
 > Task :dependencyReport
-See the report at: file:///tmp/build/reports/project/dependencies.txt
+See the report at: file://__dirname__/__mocks__/gradle-dependencies.txt
 
 > Task :htmlDependencyReport
 See the report at: file:///tmp/build/reports/project/dependencies/index.html
@@ -11,21 +11,16 @@ See the report at: file:///tmp/build/reports/project/properties.txt
 See the report at: file:///tmp/build/reports/project/tasks.txt
 
 > Task :app:dependencyReport
-See the report at: file:///tmp/app/build/reports/project/dependencies.txt
-
-> Task :app:htmlDependencyReport
-See the report at: file:///tmp/app/build/reports/project/dependencies/index.html
+See the report at: file://__dirname__/__mocks__/gradle-dependencies.txt
 
 > Task :app:propertyReport
 See the report at: file:///tmp/app/build/reports/project/properties.txt
 
 > Task :app:taskReport
-REGISTER TASK1: This is executed during the configuration phase
-NAMED TASK1: This is executed during the configuration phase
 See the report at: file:///tmp/app/build/reports/project/tasks.txt
 
 > Task :list:dependencyReport
-See the report at: file:///tmp/list/build/reports/project/dependencies.txt
+See the report at: file://__dirname__/__mocks__/gradle-dependencies.txt
 
 > Task :list:htmlDependencyReport
 See the report at: file:///tmp/list/build/reports/project/dependencies/index.html
@@ -37,10 +32,7 @@ See the report at: file:///tmp/list/build/reports/project/properties.txt
 See the report at: file:///tmp/list/build/reports/project/tasks.txt
 
 > Task :utilities:dependencyReport
-See the report at: file:///tmp/utilities/build/reports/project/dependencies.txt
-
-> Task :utilities:htmlDependencyReport
-See the report at: file:///tmp/utilities/build/reports/project/dependencies/index.html
+See the report at: file://__dirname__/__mocks__/gradle-dependencies.txt
 
 > Task :utilities:propertyReport
 See the report at: file:///tmp/utilities/build/reports/project/properties.txt
