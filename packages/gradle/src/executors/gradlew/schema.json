@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "GradlewImpl executor",
+  "description": "The GradlewImpl executor is used to run Gradle tasks.",
+  "type": "object",
+  "properties": {
+    "taskName": {
+      "type": "string",
+      "description": "The name of the Gradle task to run."
+    },
+    "args": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "The arguments to pass to the Gradle task.",
+      "examples": [["--warning-mode", "all"], "--info"]
+    }
+  },
+  "required": ["taskName"]
+}

@@ -42,6 +42,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       taskResults: Record<string, TaskResult>;
     }> => {
       performance.mark('code-loading:end');
+      console.log('init tasks runner in', opts.parallel, opts.tasks.map((t => t.id)));
 
       // TODO: This polyfills the outputs if someone doesn't pass a task with outputs. Remove this in Nx 20
       opts.tasks.forEach((t) => {

@@ -1,0 +1,20 @@
+{
+  "name": "gradle-batch-runner",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "projectRoot": "packages/gradle/batch-runner",
+  "sourceRoot": "packages/gradle/batch-runner/src",
+  "targets": {
+    "build-base": {
+      "command": "./gradlew :batch-runner:build",
+      "outputs": ["{projectRoot}/build"]
+    },
+    "lint": {
+      "command": "./gradlew :batch-runner:check",
+      "cache": true
+    },
+    "format": {
+      "command": "./gradlew :batch-runner:ktfmtFormat",
+      "cache": true
+    }
+  }
+}
