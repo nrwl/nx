@@ -17,7 +17,9 @@ repositories { mavenCentral() }
 dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
   testImplementation(kotlin("test"))
-  testImplementation("io.mockk:mockk:1.13.8")
+  testImplementation("org.mockito:mockito-core:5.8.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 }
 
 java {

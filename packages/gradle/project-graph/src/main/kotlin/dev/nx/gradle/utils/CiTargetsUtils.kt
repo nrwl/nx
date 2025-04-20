@@ -29,19 +29,19 @@ fun addTestCiTargets(
   val filteredTestFiles = testFiles.filter { isTestFile(it, workspaceRoot) }
 
   filteredTestFiles.forEach { testFile ->
-    val fileName = testFile.name.substringBefore(".")
+    val className = getTestClassNameIfAnnotated(testFile) ?: return@forEach
 
     val testCiTarget =
         buildTestCiTarget(
             gradlewCommand = gradlewCommand,
             projectBuildPath = projectBuildPath,
-            fileName = fileName,
+            testClassName = className,
             testFile = testFile,
             testTask = testTask,
             projectRoot = projectRoot,
             workspaceRoot = workspaceRoot)
 
-    val targetName = "$ciTargetName--$fileName"
+    val targetName = "$ciTargetName--$className"
     targets[targetName] = testCiTarget
     targetGroups[testCiTargetGroup]?.add(targetName)
 
@@ -60,7 +60,18 @@ fun addTestCiTargets(
   }
 }
 
-private fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
+private fun getTestClassNameIfAnnotated(file: File): String? {
+  if (!file.exists()) return null
+
+  val content = file.readText()
+  if (!content.contains("@Test")) return null
+
+  val classRegex = Regex("""class\s+([A-Za-z_][A-Za-z0-9_]*)""")
+  val match = classRegex.find(content)
+  return match?.groupValues?.get(1)
+}
+
+fun ensureTargetGroupExists(targetGroups: TargetGroups, group: String) {
   if (!targetGroups.containsKey(group)) {
     targetGroups[group] = mutableListOf()
   }
@@ -75,7 +86,7 @@ private fun isTestFile(file: File, workspaceRoot: String): Boolean {
 private fun buildTestCiTarget(
     gradlewCommand: String,
     projectBuildPath: String,
-    fileName: String,
+    testClassName: String,
     testFile: File,
     testTask: Task,
     projectRoot: String,
@@ -83,8 +94,9 @@ private fun buildTestCiTarget(
 ): MutableMap<String, Any?> {
   val target =
       mutableMapOf<String, Any?>(
-          "command" to "$gradlewCommand ${projectBuildPath}:test --tests $fileName",
-          "metadata" to getMetadata("Runs Gradle test $fileName in CI", projectBuildPath, "test"),
+          "command" to "$gradlewCommand ${projectBuildPath}:test --tests $testClassName",
+          "metadata" to
+              getMetadata("Runs Gradle test $testClassName in CI", projectBuildPath, "test"),
           "cache" to true,
           "inputs" to arrayOf(replaceRootInPath(testFile.path, projectRoot, workspaceRoot)))
 

@@ -1,10 +1,10 @@
 {
   "name": "change-plugin-to-v1",
-  "version": "20.7.0-beta.0",
+  "version": "21.0.0-beta.5",
   "cli": "nx",
   "description": "Change @nx/gradle plugin to version 1",
-  "factory": "./src/migrations/20-7-0/change-plugin-to-v1",
-  "implementation": "/packages/gradle/src/migrations/20-7-0/change-plugin-to-v1.ts",
+  "factory": "./src/migrations/21-0-0/change-plugin-to-v1",
+  "implementation": "/packages/gradle/src/migrations/21-0-0/change-plugin-to-v1.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/gradle",

@@ -127,8 +127,25 @@ fun processTargetsForProject(
                 it)
           }
         }
-        if (task.name.equals("test")) {
-          task.enabled = false
+
+        // Add the `$ciTargetName-check` target when processing the "check" task
+        if (task.name == "check") {
+          val replacedDependencies =
+              (target["dependsOn"] as? List<*>)?.map { dep ->
+                if (dep.toString() == targetNameOverrides.getOrDefault("testTargetName", "test"))
+                    ciTargetName
+                else dep.toString()
+              } ?: emptyList()
+
+          // Copy the original target and override "dependsOn"
+          val newTarget = target.toMutableMap()
+          newTarget["dependsOn"] = replacedDependencies
+
+          val ciCheckTargetName = "$ciTargetName-check"
+          targets[ciCheckTargetName] = newTarget
+
+          ensureTargetGroupExists(targetGroups, testCiTargetGroup)
+          targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
         }
       }
       logger.info("${Date()} ${project.name}: Processed $task")
