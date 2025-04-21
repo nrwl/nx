@@ -12,9 +12,14 @@ export function transformImagePath(
 
     if (isRelative) {
       return uriTransformer(
-        ['/', documentFilePath.split('/').splice(3).join('/'), '..', src].join(
-          '/'
-        )
+        new URL(
+          [
+            'http://example.com',
+            documentFilePath.split('/').splice(3).join('/'),
+            '..',
+            src,
+          ].join('/')
+        ).pathname
       );
     }
 
