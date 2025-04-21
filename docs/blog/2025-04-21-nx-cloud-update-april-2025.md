@@ -3,7 +3,7 @@ title: 'Nx Cloud Update - Assignment rules come out of beta and more!'
 slug: nx-cloud-update-april-2025
 authors: ['Philip Fulcher']
 tags: ['nx-cloud']
-cover_image: /blog/images/2025-04-16/header.avif
+cover_image: /blog/images/2025-04-21/header.avif
 description: 'Nx Cloud updates for April 2025 include assignment rules coming out of beta, CIPE filters, flaky retry configuration, and more!'
 youtubeUrl: https://youtu.be/mug02alT7rQ
 ---
@@ -58,29 +58,29 @@ We're so excited about this feature that we've built it to work with both [Agent
 
 We're also providing a new UI that tells you exactly what tasks are being run on which agents and the rules impacting them.
 
-![Screenshot of UI showing how assignment rules are affecting tasks](/blog/images/2025-04-16/assignment-rules-viz.avif)
+![Screenshot of UI showing how assignment rules are affecting tasks](/blog/images/2025-04-21/assignment-rules-viz.avif)
 
 ## Find your CIPEs with better filtering
 
-![Screenshot of UI showing filters for CIPEs view](/blog/images/2025-04-16/cipe-filters.avif)
+![Screenshot of UI showing filters for CIPEs view](/blog/images/2025-04-21/cipe-filters.avif)
 
 Having trouble finding a CI Pipeline Execution (CIPE)? We've added new filter options for the CIPEs list. You can now filter by committer, branch, or date range. You can even sort by duration to help find your longest CIPEs.
 
 ## Control how flaky task retries work with your workspace
 
-![Screenshot of UI showing configuration options for flaky task retries](/blog/images/2025-04-16/flaky-retries.avif)
+![Screenshot of UI showing configuration options for flaky task retries](/blog/images/2025-04-21/flaky-retries.avif)
 
 Flaky retries are great at unblocking your CI pipelines by automatically retrying tasks that Nx Cloud detects as flaky. This means you spend less time re-running CI pipelines when you have a task that passes sometimes and fails other times. You now have more control over this process. You can fine-tune how Nx Cloud retries tasks, specify a time range when flakiness is determined, or even turn it off entirely. This helps optimize when tasks are retried so you can control resource use and CI cost.
 
 ## Request access to protected views
 
-![Screenshot of UI showing an option to request access to a protected resource](/blog/images/2025-04-16/request-access.avif)
+![Screenshot of UI showing an option to request access to a protected resource](/blog/images/2025-04-21/request-access.avif)
 
 Access control is important, but it can be time-consuming to give the right access to the right people. Now, users can request access with a simple button click, and an admin will be alerted to adjust their access. This automated process saves your team time by not having to send another email or submit a support ticket for access.
 
 ## Nx Agents supports custom GitHub domains
 
-![Screenshot of UI showing how to use a custom GitHub URL for Nx Agents](/blog/images/2025-04-16/github-url.avif)
+![Screenshot of UI showing how to use a custom GitHub URL for Nx Agents](/blog/images/2025-04-21/github-url.avif)
 
 Using GitHub Enterprise and having a custom URL? Nx Agents now works with these custom domains, check for the option to override your domain during setup.
 
