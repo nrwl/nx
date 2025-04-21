@@ -270,6 +270,7 @@ async function getBuildPaths(reactRouterConfig, isLibMode: boolean) {
 
 async function devTarget(projectRoot: string, isUsingTsSolutionSetup: boolean) {
   const devTarget: TargetConfiguration = {
+    continuous: true,
     command: 'react-router dev',
     options: { cwd: projectRoot },
   };
@@ -292,6 +293,7 @@ async function startTarget(
       : serverBuildPath;
 
   const startTarget: TargetConfiguration = {
+    continuous: true,
     dependsOn: [buildTargetName],
     command: `react-router-serve ${serverPath}`,
     options: { cwd: projectRoot },

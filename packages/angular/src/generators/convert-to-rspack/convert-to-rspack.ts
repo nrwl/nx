@@ -13,7 +13,11 @@ import {
   writeJson,
 } from '@nx/devkit';
 import type { ConvertToRspackSchema } from './schema';
-import { angularRspackVersion, nxVersion } from '../../utils/versions';
+import {
+  angularRspackVersion,
+  nxVersion,
+  tsNodeVersion,
+} from '../../utils/versions';
 import { createConfig } from './lib/create-config';
 import { getCustomWebpackConfig } from './lib/get-custom-webpack-config';
 import { updateTsconfig } from './lib/update-tsconfig';
@@ -27,7 +31,9 @@ import { prompt } from 'enquirer';
 const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
   '@angular-devkit/build-angular:dev-server',
+  '@angular-devkit/build-angular:server',
   '@nx/angular:webpack-browser',
+  '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
   '@nx/angular:module-federation-dev-server',
 ];
@@ -37,21 +43,7 @@ const RENAMED_OPTIONS = {
   ngswConfigPath: 'serviceWorker',
 };
 
-const REMOVED_OPTIONS = [
-  'publicHost',
-  'disableHostCheck',
-  'resourcesOutputPath',
-  'routesFile',
-  'routes',
-  'discoverRoutes',
-  'appModuleBundle',
-  'inputIndexPath',
-  'outputIndexPath',
-  'buildOptimizer',
-  'deployUrl',
-  'buildTarget',
-  'browserTarget',
-];
+const REMOVED_OPTIONS = ['buildOptimizer', 'buildTarget', 'browserTarget'];
 
 function normalizeFromProjectRoot(
   tree: Tree,
@@ -379,6 +371,18 @@ export async function convertToRspack(
       }
       buildTargetNames.push(targetName);
     } else if (
+      target.executor === '@angular-devkit/build-angular:server' ||
+      target.executor === '@nx/angular:webpack-server'
+    ) {
+      createConfigOptions.ssr ??= {};
+      createConfigOptions.ssr.entry ??= normalizeFromProjectRoot(
+        tree,
+        target.options.main,
+        project.root
+      );
+      createConfigOptions.server = './src/main.server.ts';
+      buildTargetNames.push(targetName);
+    } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
       target.executor === '@nx/angular:dev-server' ||
       target.executor === '@nx/angular:module-federation-dev-server'
@@ -406,8 +410,8 @@ export async function convertToRspack(
           );
         }
       }
+      serveTargetNames.push(targetName);
     }
-    serveTargetNames.push(targetName);
   }
 
   const customWebpackConfigInfo = customWebpackConfigPath
@@ -451,6 +455,7 @@ export async function convertToRspack(
       {},
       {
         '@nx/angular-rspack': angularRspackVersion,
+        'ts-node': tsNodeVersion,
       }
     );
     tasks.push(installTask);

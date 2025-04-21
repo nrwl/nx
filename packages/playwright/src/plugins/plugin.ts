@@ -44,7 +44,13 @@ type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 function readTargetsCache(
   cachePath: string
 ): Record<string, PlaywrightTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -159,12 +165,12 @@ async function buildPlaywrightTargets(
 
   const testOutput = getTestOutput(playwrightConfig);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
+  const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
       cwd: '{projectRoot}',
     },
-    parallelism: false,
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
@@ -178,6 +184,12 @@ async function buildPlaywrightTargets(
       },
     },
   };
+
+  if (webserverCommandTasks.length) {
+    baseTargetConfig.dependsOn = getDependsOn(webserverCommandTasks);
+  } else {
+    baseTargetConfig.parallelism = false;
+  }
 
   targets[options.targetName] = {
     ...baseTargetConfig,
@@ -290,7 +302,6 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
-      parallelism: false,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
@@ -305,6 +316,11 @@ async function buildPlaywrightTargets(
         },
       },
     };
+
+    if (!webserverCommandTasks.length) {
+      targets[options.ciTargetName].parallelism = false;
+    }
+
     ciTargetGroup.push(options.ciTargetName);
   }
 
@@ -438,6 +454,74 @@ function addSubfolderToOutput(output: string, subfolder?: string): string {
   return join(output, subfolder);
 }
 
+function getWebserverCommandTasks(
+  playwrightConfig: PlaywrightTestConfig
+): Array<{ project: string; target: string }> {
+  if (!playwrightConfig.webServer) {
+    return [];
+  }
+
+  const tasks: Array<{ project: string; target: string }> = [];
+
+  const webServer = Array.isArray(playwrightConfig.webServer)
+    ? playwrightConfig.webServer
+    : [playwrightConfig.webServer];
+
+  for (const server of webServer) {
+    if (!server.reuseExistingServer) {
+      continue;
+    }
+
+    const task = parseTaskFromCommand(server.command);
+    if (task) {
+      tasks.push(task);
+    }
+  }
+
+  return tasks;
+}
+
+function parseTaskFromCommand(command: string): {
+  project: string;
+  target: string;
+} | null {
+  const nxRunRegex =
+    /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
+  const infixRegex = /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
+
+  const nxRunMatch = command.match(nxRunRegex);
+  if (nxRunMatch) {
+    const [project, target] = nxRunMatch[1].split(':');
+    return { project, target };
+  }
+
+  const infixMatch = command.match(infixRegex);
+  if (infixMatch) {
+    const [target, project] = infixMatch[1].split(' ');
+    return { project, target };
+  }
+
+  return null;
+}
+
+function getDependsOn(
+  tasks: Array<{ project: string; target: string }>
+): TargetConfiguration['dependsOn'] {
+  const projectsPerTask = new Map<string, string[]>();
+
+  for (const { project, target } of tasks) {
+    if (!projectsPerTask.has(target)) {
+      projectsPerTask.set(target, []);
+    }
+    projectsPerTask.get(target).push(project);
+  }
+
+  return Array.from(projectsPerTask.entries()).map(([target, projects]) => ({
+    projects,
+    target,
+  }));
+}
+
 function normalizeOutput(
   path: string,
   workspaceRoot: string,
@@ -454,7 +538,6 @@ function normalizeOutput(
       relative(workspaceRoot, fullPath)
     );
   }
-
   return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 

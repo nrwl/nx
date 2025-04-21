@@ -1,6 +1,6 @@
 ---
 title: 'Nx Powerpack Features'
-description: 'Explore the enterprise-focused features available in Nx Powerpack, including conformance rules, code ownership management, and self-hosted remote caching solutions.'
+description: 'Explore the enterprise-focused features available in Nx Powerpack, including conformance rules and code ownership management.'
 ---
 
 # Powerpack Features
@@ -9,10 +9,11 @@ Nx PowerPack is a suite of paid extensions for the Nx CLI specifically designed 
 
 The following features are available after you [activate a Powerpack license](/nx-enterprise/activate-powerpack):
 
-{% cards cols="2" lgCols="3" mdCols="3" smCols="2" %}
+- [Conformance](/nx-enterprise/powerpack/conformance)
+- [Owners](/nx-enterprise/powerpack/owners)
 
-    {% link-card title="Conformance" type="Powerpack Feature" url="/nx-enterprise/powerpack/conformance" icon="CheckBadgeIcon" /%}
-    {% link-card title="Owners" type="Powerpack Feature"  url="/nx-enterprise/powerpack/owners" icon="UserGroupIcon" /%}
-    {% link-card title="Self-Hosted Remote Cache" type="Powerpack Feature"  url="/nx-enterprise/powerpack/custom-caching" icon="ServerIcon" /%}
+{% callout title="Looking for self-hosted caching?" type="info" %}
 
-{% /cards %}
+Self-hosted caching has previously been part of Powerpack, but no more. It is now free for everyone to use. [Learn more about our self-hosted caching options.](/recipes/running-tasks/self-hosted-caching)
+
+{% /callout %}

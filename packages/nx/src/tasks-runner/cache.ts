@@ -17,6 +17,7 @@ import {
   CachedResult as NativeCacheResult,
   IS_WASM,
   getDefaultMaxCacheSize,
+  HttpRemoteCache,
 } from '../native';
 import { getDbConnection } from '../utils/db-connection';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -131,6 +132,7 @@ export class DbCache {
     if (res) {
       return {
         ...res,
+        terminalOutput: res.terminalOutput ?? '',
         remote: false,
       };
     }
@@ -147,6 +149,7 @@ export class DbCache {
 
         return {
           ...res,
+          terminalOutput: res.terminalOutput ?? '',
           remote: true,
         };
       } else {
@@ -239,6 +242,7 @@ export class DbCache {
         (await this.getSharedCache()) ??
         (await this.getGcsCache()) ??
         (await this.getAzureCache()) ??
+        this.getHttpCache() ??
         null
       );
     }
@@ -266,6 +270,19 @@ export class DbCache {
     const cache = await this.resolveRemoteCache('@nx/azure-cache');
     if (cache) return cache;
     return this.resolveRemoteCache('@nx/powerpack-azure-cache');
+  }
+
+  private getHttpCache(): RemoteCacheV2 | null {
+    if (process.env.NX_SELF_HOSTED_REMOTE_CACHE_SERVER) {
+      if (IS_WASM) {
+        logger.warn(
+          'The HTTP remote cache is not yet supported in the wasm build of Nx.'
+        );
+        return null;
+      }
+      return new HttpRemoteCache();
+    }
+    return null;
   }
 
   private async resolveRemoteCache(pkg: string): Promise<RemoteCacheV2 | null> {

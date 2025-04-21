@@ -165,22 +165,22 @@ describe('nx release conventional commits config', () => {
     const versionResultNoChanges = runCLI(`release version -d`);
 
     expect(versionResultNoChanges).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
+      `${pkg1} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`
+      `${pkg2} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+      `${pkg3} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultNoChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     // Do an invalid conventional commit to ensure that it is not included in the changelog
@@ -194,22 +194,22 @@ describe('nx release conventional commits config', () => {
     const versionResultInvalidConventionalCommit = runCLI(`release version -d`);
 
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
+      `${pkg1} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`
+      `${pkg2} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+      `${pkg3} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     // update my-pkg-3 with a fix commit
@@ -223,22 +223,22 @@ describe('nx release conventional commits config', () => {
     const versionResultDocsChanges = runCLI(`release version -d`);
 
     expect(versionResultDocsChanges).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
+      `${pkg1} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg2} 🚫 Skipping versioning "@proj/${pkg2}" as no changes were detected.`
+      `${pkg2} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+      `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultDocsChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     // update my-pkg-2 with a fix commit
@@ -253,22 +253,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultCustomTypeChanges = runCLI(`release version -d`);
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg1} 🚫 Skipping versioning "@proj/${pkg1}" as no changes were detected.`
+      `${pkg1} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+      `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultCustomTypeChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     updateJson(`${pkg1}/package.json`, (json) => ({
@@ -282,22 +282,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultCustomTypeBreakingChanges = runCLI(`release version -d`);
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+      `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultCustomTypeBreakingChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     updateJson(`${pkg4}/package.json`, (json) => ({
@@ -309,22 +309,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultChoreChanges = runCLI(`release version -d`);
     expect(versionResultChoreChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+      `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
+      `${pkg4} ✍️  New version 0.0.2 written to manifest: ${pkg4}/package.json`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultChoreChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     updateJson(`${pkg5}/package.json`, (json) => ({
@@ -338,22 +338,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultPerfChanges = runCLI(`release version -d`);
     expect(versionResultPerfChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+      `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
+      `${pkg4} ✍️  New version 0.0.2 written to manifest: ${pkg4}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`
+      `${pkg5} ✍️  New version 0.0.2 written to manifest: ${pkg5}/package.json`
     );
     expect(versionResultPerfChanges).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     updateJson(`${pkg6}/package.json`, (json) => ({
@@ -365,22 +365,22 @@ describe('nx release conventional commits config', () => {
 
     const versionResultRefactorChanges = runCLI(`release version -d`);
     expect(versionResultRefactorChanges).toContain(
-      `${pkg1} ✍️  New version 1.0.0 written to ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 1.0.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg2} ✍️  New version 0.1.0 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.1.0 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg3} ✍️  New version 0.0.2 written to ${pkg3}/package.json`
+      `${pkg3} ✍️  New version 0.0.2 written to manifest: ${pkg3}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg4} ✍️  New version 0.0.2 written to ${pkg4}/package.json`
+      `${pkg4} ✍️  New version 0.0.2 written to manifest: ${pkg4}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg5} ✍️  New version 0.0.2 written to ${pkg5}/package.json`
+      `${pkg5} ✍️  New version 0.0.2 written to manifest: ${pkg5}/package.json`
     );
     expect(versionResultRefactorChanges).toContain(
-      `${pkg6} ✍️  New version 0.0.2 written to ${pkg6}/package.json`
+      `${pkg6} ✍️  New version 0.0.2 written to manifest: ${pkg6}/package.json`
     );
 
     // Normally, users would use `nx release` or the programmatic api to ensure that
@@ -493,22 +493,22 @@ describe('nx release conventional commits config', () => {
     const versionResultInvalidConventionalCommit = runCLI(`release version -d`);
 
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg1} ✍️  New version 0.0.2 written to ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.0.2 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg2} ✍️  New version 0.0.2 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+      `${pkg3} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultInvalidConventionalCommit).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     // update my-pkg-1 with a feature commit
@@ -522,22 +522,22 @@ describe('nx release conventional commits config', () => {
     const versionResultFixCommit = runCLI(`release version -d`);
 
     expect(versionResultFixCommit).toContain(
-      `${pkg1} ✍️  New version 0.1.0 written to ${pkg1}/package.json`
+      `${pkg1} ✍️  New version 0.1.0 written to manifest: ${pkg1}/package.json`
     );
     expect(versionResultFixCommit).toContain(
-      `${pkg2} ✍️  New version 0.0.2 written to ${pkg2}/package.json`
+      `${pkg2} ✍️  New version 0.0.2 written to manifest: ${pkg2}/package.json`
     );
     expect(versionResultFixCommit).toContain(
-      `${pkg3} 🚫 Skipping versioning "@proj/${pkg3}" as no changes were detected.`
+      `${pkg3} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultFixCommit).toContain(
-      `${pkg4} 🚫 Skipping versioning "@proj/${pkg4}" as no changes were detected.`
+      `${pkg4} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultFixCommit).toContain(
-      `${pkg5} 🚫 Skipping versioning "@proj/${pkg5}" as no changes were detected.`
+      `${pkg5} 🚫 No changes were detected using git history and the conventional commits standard`
     );
     expect(versionResultFixCommit).toContain(
-      `${pkg6} 🚫 Skipping versioning "@proj/${pkg6}" as no changes were detected.`
+      `${pkg6} 🚫 No changes were detected using git history and the conventional commits standard`
     );
 
     // Normally, users would use `nx release` or the programmatic api to ensure that

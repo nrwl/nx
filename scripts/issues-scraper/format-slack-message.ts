@@ -3,7 +3,6 @@ import { table } from 'markdown-factory';
 
 export function getSlackMessageJson(body: string) {
   return {
-    text: 'Some Text',
     blocks: [
       {
         type: 'section',
@@ -19,8 +18,7 @@ export function getSlackMessageJson(body: string) {
 export function formatGhReport(
   currentData: ReportData,
   trendData: TrendData,
-  prevData: ReportData,
-  unlabeledIssuesUrl: string
+  prevData: ReportData
 ): string {
   const issueDelta = trendData.totalIssueCount;
   const formattedIssueDelta = formatDelta(issueDelta);
@@ -28,7 +26,7 @@ export function formatGhReport(
   const bugDelta = trendData.totalBugCount;
   const formattedBugDelta = formatDelta(bugDelta);
 
-  const header = `Issue Report for ${currentData.collectedDate} <${unlabeledIssuesUrl}|[view unlabeled]>
+  const header = `Issue Report for ${currentData.collectedDate}
 \`\`\`
 Totals, Issues: ${currentData.totalIssueCount} ${formattedIssueDelta} Bugs: ${currentData.totalBugCount} ${formattedBugDelta}\n\n`;
 

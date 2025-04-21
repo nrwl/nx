@@ -6,6 +6,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   names,
+  offsetFromRoot,
   readProjectConfiguration,
   runTasksInSerial,
   stripIndents,
@@ -31,16 +32,33 @@ import {
   nxVersion,
 } from '../../utils/versions';
 import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import {
+  createNxRspackPluginOptions,
+  getDefaultTemplateVariables,
+} from '../application/lib/create-application-files';
 
 export function addModuleFederationFiles(
   host: Tree,
   options: NormalizedSchema<Schema>
 ) {
-  const templateVariables = {
-    ...names(options.projectName),
-    ...options,
-    tmpl: '',
-  };
+  const templateVariables =
+    options.bundler === 'rspack'
+      ? {
+          ...getDefaultTemplateVariables(host, options),
+          rspackPluginOptions: {
+            ...createNxRspackPluginOptions(
+              options,
+              offsetFromRoot(options.appProjectRoot),
+              false
+            ),
+            mainServer: `./server.ts`,
+          },
+        }
+      : {
+          ...names(options.projectName),
+          ...options,
+          tmpl: '',
+        };
 
   generateFiles(
     host,
@@ -106,8 +124,8 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       ? false
       : schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
-    // TODO(colum): remove when MF works with Crystal
-    addPlugin: false,
+    // TODO(colum): remove when Webpack MF works with Crystal
+    addPlugin: !schema.bundler || schema.bundler === 'rspack' ? true : false,
     bundler: schema.bundler ?? 'rspack',
   };
 
@@ -170,13 +188,15 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
   setupTspathForRemote(host, options);
 
   if (options.ssr) {
-    const setupSsrTask = await setupSsrGenerator(host, {
-      project: options.projectName,
-      serverPort: options.devServerPort,
-      skipFormat: true,
-      bundler: options.bundler,
-    });
-    tasks.push(setupSsrTask);
+    if (options.bundler !== 'rspack') {
+      const setupSsrTask = await setupSsrGenerator(host, {
+        project: options.projectName,
+        serverPort: options.devServerPort,
+        skipFormat: true,
+        bundler: options.bundler,
+      });
+      tasks.push(setupSsrTask);
+    }
 
     const setupSsrForRemoteTask = await setupSsrForRemote(
       host,
@@ -186,25 +206,26 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     tasks.push(setupSsrForRemoteTask);
 
     const projectConfig = readProjectConfiguration(host, options.projectName);
-    if (options.bundler === 'rspack') {
-      projectConfig.targets.server.executor = '@nx/rspack:rspack';
-      projectConfig.targets.server.options.rspackConfig = joinPathFragments(
-        projectConfig.root,
-        `rspack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
-      );
-      delete projectConfig.targets.server.options.webpackConfig;
-    } else {
+    if (options.bundler !== 'rspack') {
       projectConfig.targets.server.options.webpackConfig = joinPathFragments(
         projectConfig.root,
         `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
       );
+      updateProjectConfiguration(host, options.projectName, projectConfig);
     }
-    updateProjectConfiguration(host, options.projectName, projectConfig);
   }
   if (!options.setParserOptionsProject) {
     host.delete(
       joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );
+  }
+
+  if (options.host && options.bundler === 'rspack') {
+    const projectConfig = readProjectConfiguration(host, options.projectName);
+    projectConfig.targets.serve ??= {};
+    projectConfig.targets.serve.dependsOn ??= [];
+    projectConfig.targets.serve.dependsOn.push(`${options.host}:serve`);
+    updateProjectConfiguration(host, options.projectName, projectConfig);
   }
 
   if (options.host && options.dynamic) {

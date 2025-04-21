@@ -59,6 +59,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             },
             "my-serve": {
               "command": "webpack-cli serve",
+              "continuous": true,
               "metadata": {
                 "description": "Starts Webpack dev server",
                 "help": {
@@ -85,6 +86,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             },
             "preview-site": {
               "command": "webpack-cli serve",
+              "continuous": true,
               "metadata": {
                 "description": "Starts Webpack dev server in production mode",
                 "help": {
@@ -110,6 +112,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
               },
             },
             "serve-static": {
+              "continuous": true,
               "dependsOn": [
                 "build-something",
               ],
@@ -121,6 +124,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             },
             "watch-deps": {
               "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+              "continuous": true,
               "dependsOn": [
                 "build-deps",
               ],

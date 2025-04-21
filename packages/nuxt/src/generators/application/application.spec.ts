@@ -163,7 +163,6 @@ describe('app', () => {
               nxJson.plugins.find((p) => p.plugin === '@nx/vite/plugin')
             )
           );
-          expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchSnapshot();
         });
       });
 

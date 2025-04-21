@@ -162,6 +162,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/remote-cache"
+              title="Nx Remote Cache"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Remote Cache
+            </Link>
+            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -178,14 +186,6 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
               Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <Link
-              href="/powerpack"
-              title="Nx Powerpack"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Powerpack
-            </Link>
             <Link
               href="/enterprise"
               title="Nx Enterprise"
@@ -400,12 +400,12 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             Pricing
                           </Link>
                           <Link
-                            href="/powerpack"
-                            title="Powerpack"
+                            href="/remote-cache"
+                            title="Nx Remote Cache"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
                           >
-                            Powerpack
+                            Remote Cache
                           </Link>
                           <Link
                             href="/enterprise"

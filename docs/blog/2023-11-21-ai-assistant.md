@@ -35,7 +35,7 @@ In a nutshell, the Nx Docs AI Assistant works in the following way:
 
 This is based on the Web Q&A Tutorial from OpenAI [(https://platform.openai.com/docs/tutorials/web-qa-embeddings)](https://platform.openai.com/docs/tutorials/web-qa-embeddings) and Supabase’s Vector Search example [(https://supabase.com/docs/guides/ai/examples/nextjs-vector-search)](https://supabase.com/docs/guides/ai/examples/nextjs-vector-search).
 
-It’s important to note here that we are not “training the model on our docs”. The model is pretrained. We are just giving the model parts of our docs which are relevant to the user’s question, and the model creates a coherent answer to the question. It’s basically like pasting in ChatGPT a docs page and asking it “how do I do that?”. Except in this case, we’re first searching our documentation and giving GPT only the relevant parts (more about how we do that later in this article), which it can “read” and extract information from.
+It’s important to note here that we are not “training the model in our docs”. The model is pretrained. We are just giving the model parts of our docs which are relevant to the user’s question, and the model creates a coherent answer to the question. It’s basically like pasting in ChatGPT a docs page and asking it “how do I do that?”. Except in this case, we’re first searching our documentation and giving GPT only the relevant parts (more about how we do that later in this article), which it can “read” and extract information from.
 
 ## Step 1: Preprocessing our docs
 

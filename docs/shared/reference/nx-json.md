@@ -140,7 +140,7 @@ Target defaults provide ways to set common options for a particular target in yo
 - `` `${executor}` ``
 - `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
 
-Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/*` would match all of the targets created by a task atomizer plugin.
+Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/**` would match all of the targets created by a task atomizer plugin.
 
 Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
@@ -571,3 +571,32 @@ There are also options for [Nx Cloud](https://nx.app) that are set in the `nx.js
 ```
 
 For more details on configuring Nx Cloud, see the [Nx Cloud Configuration Options page](/ci/reference/config).
+
+## Max Cache Size
+
+The `maxCacheSize` property in `nx.json` allows you to set a limit on the size of the local cache. If it is not set, Nx defaults to a maximum size of 10% of the size of the disk where the cache is stored, up to a maximum of 10GB. This means that if your disk is 100GB, the maximum cache size will be 10GB. If the cache exceeds the specified size, Nx removes the least recently used cache entries until the total size is below 90% of the specified limit.
+
+This behavior can be opted out by setting `maxCacheSize` to `0`.
+
+Valid values for `maxCacheSize` can be specified in bytes, kilobytes (KB), megabytes (MB), or gigabytes (GB). For example, any of the following would be valid values:
+
+| Value    | Description                                                      |
+| -------- | ---------------------------------------------------------------- |
+| `819200` | 819200 bytes (800 KB)                                            |
+| `100MB`  | 100 megabytes (100 \* 1024 \* 1024 bytes)                        |
+| `1GB`    | 1 gigabyte (1024 \* 1024 \* 1024 bytes)                          |
+| `0`      | No limit on the local cache size (disables the cache size limit) |
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "0" // No limit on the local cache size
+}
+```
+
+```json {% fileName="nx.json" %}
+{
+  "maxCacheSize": "10GB" // Set the maximum cache size to 10 gigabytes
+}
+```
+
+Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have not been accessed in the last 7 days.

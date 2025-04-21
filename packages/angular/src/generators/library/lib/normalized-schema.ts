@@ -13,7 +13,6 @@ export interface NormalizedSchema {
     buildable?: boolean;
     publishable?: boolean;
     importPath?: string;
-    standaloneConfig?: boolean;
     spec?: boolean;
     commonModule?: boolean;
     routing?: boolean;

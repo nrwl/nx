@@ -1,7 +1,6 @@
 import * as chalk from 'chalk';
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
-import { Tree } from '../../../generators/tree';
 import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
@@ -12,40 +11,27 @@ export const noDiffInChangelogMessage = chalk.yellow(
   `NOTE: There was no diff detected for the changelog entry. Maybe you intended to pass alternative git references via --from and --to?`
 );
 
-export type ReleaseVersionGeneratorResult = {
-  data: VersionData;
-  callback: (
-    tree: Tree,
-    opts: {
-      dryRun?: boolean;
-      verbose?: boolean;
-      generatorOptions?: Record<string, unknown>;
-    }
-  ) => Promise<
-    | string[]
-    | {
-        changedFiles: string[];
-        deletedFiles: string[];
-      }
-  >;
-};
+// project name -> version data entry
+export type VersionData = Record<string, VersionDataEntry>;
 
-export type VersionData = Record<
-  string,
-  {
-    /**
-     * newVersion will be null in the case that no changes are detected for the project,
-     * e.g. when using conventional commits
-     */
-    newVersion: string | null;
-    currentVersion: string;
-    /**
-     * The list of projects which depend upon the current project.
-     * TODO: investigate generic type for this once more ecosystems are explored
-     */
-    dependentProjects: any[];
-  }
->;
+export interface VersionDataEntry {
+  currentVersion: string;
+  /**
+   * newVersion will be null in the case that no changes are detected for the project,
+   * e.g. when using conventional commits
+   */
+  newVersion: string | null;
+  /**
+   * The list of projects which depend upon the current project.
+   */
+  dependentProjects: {
+    source: string;
+    target: string;
+    type: string;
+    dependencyCollection: string;
+    rawVersionSpec: string;
+  }[];
+}
 
 function isPrerelease(version: string): boolean {
   // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease

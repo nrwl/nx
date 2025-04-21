@@ -116,6 +116,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "dev-serve": {
                     "command": "rsbuild dev",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--mode=development",
@@ -131,6 +132,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "preview-serve": {
                     "command": "rsbuild preview",
+                    "continuous": true,
                     "dependsOn": [
                       "build-something",
                       "^build-something",
@@ -144,6 +146,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "watch-deps": {
                     "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
                     "dependsOn": [
                       "build-deps",
                     ],
