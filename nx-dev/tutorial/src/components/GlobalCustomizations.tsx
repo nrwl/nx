@@ -1,41 +1,41 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { webcontainer } from 'tutorialkit:core';
 import tutorialStore from 'tutorialkit:store';
-import { getCollection } from 'astro:content';
+import { webcontainer } from 'tutorialkit:core';
 
 export function GlobalCustomizations() {
   useEffect(() => {
     // These actions run on every page load
 
     // Disable previous and next buttons if this is the first or last lesson of a tutorial
-    getCollection('tutorial', ({ id }) => {
-      return id.startsWith(
-        document.location.pathname.replace('/tutorials/', '')
-      );
-    }).then((collection) => {
-      const entry = collection[0];
-      if (entry.data?.custom?.first) {
-        const [topPrevButton, bottomPrevButton] = document
-          .querySelectorAll('[class*=i-ph-arrow-left]')
-          .values()
-          .map((el) => el.parentElement);
-        topPrevButton.classList.add('opacity-32', 'pointer-events-none');
-        topPrevButton.setAttribute('aria-disabled', 'true');
-        topPrevButton.removeAttribute('href');
-        bottomPrevButton.remove();
+    function waitForLesson() {
+      if (!tutorialStore.lesson) {
+        setTimeout(waitForLesson, 100);
+      } else {
+        const entry = tutorialStore.lesson;
+        if (entry.data?.custom?.first) {
+          const [topPrevButton, bottomPrevButton] = document
+            .querySelectorAll('[class*=i-ph-arrow-left]')
+            .values()
+            .map((el) => el.parentElement);
+          topPrevButton.classList.add('opacity-32', 'pointer-events-none');
+          topPrevButton.setAttribute('aria-disabled', 'true');
+          topPrevButton.removeAttribute('href');
+          bottomPrevButton?.remove();
+        }
+        if (entry.data?.custom?.last) {
+          const [topNextButton, bottomNextButton] = document
+            .querySelectorAll('[class*=i-ph-arrow-right]')
+            .values()
+            .map((el) => el.parentElement);
+          topNextButton.classList.add('opacity-32', 'pointer-events-none');
+          topNextButton.setAttribute('aria-disabled', 'true');
+          topNextButton.removeAttribute('href');
+          bottomNextButton?.remove();
+        }
       }
-      if (entry.data?.custom?.last) {
-        const [topNextButton, bottomNextButton] = document
-          .querySelectorAll('[class*=i-ph-arrow-right]')
-          .values()
-          .map((el) => el.parentElement);
-        topNextButton.classList.add('opacity-32', 'pointer-events-none');
-        topNextButton.setAttribute('aria-disabled', 'true');
-        topNextButton.removeAttribute('href');
-        bottomNextButton.remove();
-      }
-    });
+    }
+    waitForLesson();
 
     webcontainer.then(async (wc) => {
       // Stub out git command
@@ -43,8 +43,28 @@ export function GlobalCustomizations() {
         'git',
         'echo "Git is not available in a WebContainer"'
       );
-      wc.spawn('export PATH="$PATH:/home/tutorial"');
-      wc.spawn('chmod +x git');
+      const terminal = tutorialStore.terminalConfig.get().panels[0]?.terminal;
+      terminal.input('echo "hi"\n');
+      function callOnce(fn: Function) {
+        let called = false;
+        return function () {
+          if (!called) {
+            called = true;
+            fn();
+          }
+        };
+      }
+      (terminal as any).onLineFeed(
+        callOnce((x) => {
+          setTimeout(() => {
+            terminal.input('export PATH="$PATH:/home/tutorial"\n');
+            setTimeout(() => {
+              terminal.input('clear\n');
+              console.log('Git command stubbed out');
+            }, 10);
+          }, 10);
+        })
+      );
     });
 
     // Run these actions only once
@@ -61,11 +81,6 @@ export function GlobalCustomizations() {
         return;
       }
       const path = filepath.replace('solution:', '');
-      console.log(
-        tutorialStore.lesson.solution,
-        tutorialStore.steps.get(),
-        tutorialStore.lesson.files
-      );
       tutorialStore.updateFile(path, code);
       tutorialStore.setSelectedFile(path);
     }
