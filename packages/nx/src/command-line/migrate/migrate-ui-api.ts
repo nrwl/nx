@@ -1,11 +1,10 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
 import type { FileChange } from '../../generators/tree';
 import {
   getImplementationPath as getMigrationImplementationPath,
-  nxCliPath,
   readMigrationCollection,
 } from './migrate';
 
@@ -131,21 +130,10 @@ export async function runSingleMigration(
       encoding: 'utf-8',
     }).trim();
 
-    const cliPath = nxCliPath(workspacePath);
-    const updatedMigrateLocation = resolve(
-      cliPath,
-      '..',
-      '..',
-      'nx',
-      'src',
-      'command-line',
-      'migrate',
-      'migrate.js'
-    );
-
-    const updatedMigrateModule: typeof import('./migrate') = await import(
-      updatedMigrateLocation
-    );
+    // For Migrate UI, this current module is loaded either from:
+    // 1. The CLI path to the migrated modules. The version of Nx is of the user's choosing. This may or may not have the new migrate API, so Console will check that `runSingleMigration` exists before using it.
+    // 2. Bundled into Console, so the version is fixed to what we build Console with.
+    const updatedMigrateModule = await import('./migrate.js');
 
     const fileChanges = await updatedMigrateModule.runNxOrAngularMigration(
       workspacePath,

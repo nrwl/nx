@@ -322,7 +322,8 @@ export declare const enum TaskStatus {
   RemoteCache = 5,
   NotStarted = 6,
   InProgress = 7,
-  Shared = 8
+  Shared = 8,
+  Stopped = 9
 }
 
 export interface TaskTarget {

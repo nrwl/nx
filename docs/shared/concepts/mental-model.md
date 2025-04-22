@@ -165,7 +165,7 @@ configs. Builds can depend on the `.d.ts` files of the compiled libs instead of 
 After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally,
 and then if it is missing, and if a remote cache is configured, it checks remotely.
 
-If Nx finds the computation, Nx retrieves it and replay it. Nx places the right files in the right folders and prints
+If Nx finds the computation, Nx retrieves it and replays it. Nx places the right files in the right folders and prints
 the terminal output. So from the user's point of view, the command ran the same, just a lot faster.
 
 ![cache](/shared/mental-model/cache.svg)
