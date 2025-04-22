@@ -42,6 +42,56 @@ index 0000000000000000000000000000000000000000..73e43bc2a07ba072afd915e627ff4203
 +  </component>
 +</project>
 \ No newline at end of file
+diff --git a/src/tasks-runner/is-tui-enabled.js b/src/tasks-runner/is-tui-enabled.js
+index d497b19c67c50d1e555c4dd1104531e72212e3ca..9758566f591fe401bbd82da675bdac7fac3209ae 100644
+--- a/src/tasks-runner/is-tui-enabled.js
++++ b/src/tasks-runner/is-tui-enabled.js
+@@ -5,14 +5,18 @@ const devkit_internals_1 = require("../devkit-internals");
+ let tuiEnabled = undefined;
+ function isTuiEnabled(nxJson) {
+     if (tuiEnabled !== undefined) {
++        console.log("[Patched Nx]: tuiEnabled is already set, returning its value", tuiEnabled);
+         return tuiEnabled;
+     }
+     // If the current terminal/environment is not capable of displaying the TUI, we don't run it
+     const isWindows = process.platform === 'win32';
++    console.log("[Patched Nx]: isWindows:", isWindows);
+     const isCapable = process.stderr.isTTY && isUnicodeSupported();
++    console.log("[Patched Nx]: isCapable:", isCapable);
+     // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
+     // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
+     if (!isCapable || isWindows) {
++        console.log("[Patched Nx]: TUI is not capable of displaying, will NOT run");
+         tuiEnabled = false;
+         process.env.NX_TUI = 'false';
+         return tuiEnabled;
+@@ -20,6 +24,7 @@ function isTuiEnabled(nxJson) {
+     // The environment variable takes precedence over the nx.json config
+     if (typeof process.env.NX_TUI === 'string') {
+         tuiEnabled = process.env.NX_TUI === 'true' ? true : false;
++        console.log("[Patched Nx]: NX_TUI is set explicitly: ", tuiEnabled);
+         return tuiEnabled;
+     }
+     // Only read from disk if nx.json config is not already provided (and we have not been able to determine tuiEnabled based on the above checks)
+@@ -28,14 +33,18 @@ function isTuiEnabled(nxJson) {
+     }
+     // Respect user config
+     if (typeof nxJson.tui?.enabled === 'boolean') {
++        console.log("[Patched Nx]: TUI is configured in nx.json: ", nxJson.tui?.enabled);
+         tuiEnabled = Boolean(nxJson.tui?.enabled);
+     }
+     else {
+         // Default to enabling the TUI if the system is capable of displaying it
++        console.log("[Patched Nx]: TUI is not configured in nx.json, defaulting to enabled");
+         tuiEnabled = true;
+     }
+     // Also set the environment variable for consistency and ease of checking on the rust side, for example
+     process.env.NX_TUI = tuiEnabled.toString();
++    console.log("[Patched Nx]: Setting NX_TUI to result: ", tuiEnabled);
++
+     return tuiEnabled;
+ }
+ // Credit to https://github.com/sindresorhus/is-unicode-supported/blob/e0373335038856c63034c8eef6ac43ee3827a601/index.js
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
 index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5ba1b552a 100644
 --- a/src/tasks-runner/task-orchestrator.js
@@ -63,3 +113,38 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5
              const runningTask = await this.runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput);
              if (this.tuiEnabled && runningTask instanceof pseudo_terminal_1.PseudoTtyProcess) {
                  // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+diff --git a/src/tasks-runner/utils.js b/src/tasks-runner/utils.js
+index 83fe5d41b3325124956683ce10e58a3c5eb84506..0c5600d4d3b6fdde62839969e7732d496f15c68f 100644
+--- a/src/tasks-runner/utils.js
++++ b/src/tasks-runner/utils.js
+@@ -370,14 +370,25 @@ function getSerializedArgsForTask(task, isVerbose) {
+ }
+ function shouldStreamOutput(task, initiatingProject) {
+     // For now, disable streaming output on the JS side when running the TUI
+-    if ((0, is_tui_enabled_1.isTuiEnabled)())
++    if ((0, is_tui_enabled_1.isTuiEnabled)()) {
++        console.log("[Patched Nx]: TUI is enabled, will NOT stream output");
+         return false;
+-    if (process.env.NX_STREAM_OUTPUT === 'true')
+-        return true;
+-    if (longRunningTask(task))
++    }
++    if (process.env.NX_STREAM_OUTPUT === 'true') {
++        console.log("[Patched Nx]: NX_STREAM_OUTPUT is true, will stream output");
++    }
++
++    if (longRunningTask(task)) {
++        console.log("[Patched Nx]: Long running task, will stream output");
+         return true;
+-    if (task.target.project === initiatingProject)
++    }
++
++    if (task.target.project === initiatingProject) {
++        console.log("[Patched Nx]: Task is from initiating project, will stream output");
+         return true;
++    }
++
++    console.log("[Patched Nx]: Will NOT stream output");
+     return false;
+ }
+ function isCacheableTask(task, options) {
