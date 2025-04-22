@@ -114,33 +114,34 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5
              if (this.tuiEnabled && runningTask instanceof pseudo_terminal_1.PseudoTtyProcess) {
                  // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
 diff --git a/src/tasks-runner/utils.js b/src/tasks-runner/utils.js
-index 83fe5d41b3325124956683ce10e58a3c5eb84506..0c5600d4d3b6fdde62839969e7732d496f15c68f 100644
+index 83fe5d41b3325124956683ce10e58a3c5eb84506..83ea7b0979b7028a6e1e6c1181ee7631d6e3b4ee 100644
 --- a/src/tasks-runner/utils.js
 +++ b/src/tasks-runner/utils.js
-@@ -370,14 +370,25 @@ function getSerializedArgsForTask(task, isVerbose) {
+@@ -370,14 +370,27 @@ function getSerializedArgsForTask(task, isVerbose) {
  }
  function shouldStreamOutput(task, initiatingProject) {
      // For now, disable streaming output on the JS side when running the TUI
 -    if ((0, is_tui_enabled_1.isTuiEnabled)())
 +    if ((0, is_tui_enabled_1.isTuiEnabled)()) {
-+        console.log("[Patched Nx]: TUI is enabled, will NOT stream output");
++        console.log("[Patched Nx]: TUI is enabled, will NOT stream output", `[${process.pid}]`);
          return false;
 -    if (process.env.NX_STREAM_OUTPUT === 'true')
--        return true;
--    if (longRunningTask(task))
 +    }
++
 +    if (process.env.NX_STREAM_OUTPUT === 'true') {
-+        console.log("[Patched Nx]: NX_STREAM_OUTPUT is true, will stream output");
++        console.log("[Patched Nx]: NX_STREAM_OUTPUT is true, will stream output", `[${process.pid}]`);
+         return true;
+-    if (longRunningTask(task))
 +    }
 +
 +    if (longRunningTask(task)) {
-+        console.log("[Patched Nx]: Long running task, will stream output");
++        console.log("[Patched Nx]: Long running task, will stream output", `[${process.pid}]`);
          return true;
 -    if (task.target.project === initiatingProject)
 +    }
 +
 +    if (task.target.project === initiatingProject) {
-+        console.log("[Patched Nx]: Task is from initiating project, will stream output");
++        console.log("[Patched Nx]: Task is from initiating project, will stream output", `[${process.pid}]`);
          return true;
 +    }
 +
