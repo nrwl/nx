@@ -624,6 +624,11 @@ export default ESLintUtils.RuleCreator(
           projectGraph,
           sourceProject.name,
           targetProject.name
+        ) &&
+        !belongsToDifferentNgEntryPoint(
+          imp,
+          sourceFilePath,
+          sourceProject.data.root
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
