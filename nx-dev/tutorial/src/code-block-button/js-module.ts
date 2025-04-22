@@ -1,3 +1,5 @@
+// Compile this with `npx esbuild nx-dev/tutorial/src/code-block-button/js-module.ts --minify`
+
 (function () {
   /**
    * Handles clicks on a single copy button.
@@ -13,7 +15,7 @@
       copied: string;
       filepath: string;
     };
-    const code = dataset.code.replace(/\u007f/g, '\n');
+    const code = dataset.code?.replace(/\u007f/g, '\n');
     const filepath = dataset.filepath;
 
     button.dispatchEvent(

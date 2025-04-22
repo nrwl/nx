@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useRef } from 'react';
-import tutorialStore from 'tutorialkit:store';
+import { useEffect } from 'react';
 import { webcontainer } from 'tutorialkit:core';
+import tutorialStore from 'tutorialkit:store';
 
 export function GlobalCustomizations() {
   useEffect(() => {
@@ -55,7 +55,7 @@ export function GlobalCustomizations() {
         };
       }
       (terminal as any).onLineFeed(
-        callOnce((x) => {
+        callOnce(() => {
           setTimeout(() => {
             terminal.input('export PATH="$PATH:/home/tutorial"\n');
             setTimeout(() => {
@@ -76,13 +76,15 @@ export function GlobalCustomizations() {
 
     // Apply file changes
     async function applyFileChanges(e: any) {
-      const { code, filepath } = e.detail;
+      const { filepath } = e.detail;
       if (!filepath) {
         return;
       }
-      const path = filepath.replace('solution:', '');
-      tutorialStore.updateFile(path, code);
-      tutorialStore.setSelectedFile(path);
+      tutorialStore.updateFile(
+        filepath,
+        (tutorialStore as any)._lessonSolution[filepath]
+      );
+      tutorialStore.setSelectedFile(filepath);
     }
     document.addEventListener('tutorialkit:applyFileChanges', applyFileChanges);
 

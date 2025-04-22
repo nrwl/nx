@@ -15,6 +15,16 @@ export function applyFileChangesPlugin(): ExpressiveCodePlugin {
     applyFileChangesTexts,
     (codeBlock, isTerminal) =>
       !isTerminal &&
-      codeBlock.metaOptions.getString('path')?.startsWith('solution:')
+      ['solution:', 'file:'].some((prefix) =>
+        codeBlock.metaOptions.getString('path')?.startsWith(prefix)
+      ),
+    (codeBlock, _) => {
+      return {
+        'data-filepath': codeBlock.metaOptions
+          .getString('path')
+          .replace('solution:', '')
+          .replace('file:', ''),
+      };
+    }
   );
 }

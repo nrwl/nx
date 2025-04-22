@@ -4,8 +4,7 @@ import type {
   ResolverContext,
 } from '@expressive-code/core';
 import { codeLineClass, PluginTexts } from '@expressive-code/core';
-import type { Element } from '@expressive-code/core/hast';
-import { h, s } from '@expressive-code/core/hast';
+import { h } from '@expressive-code/core/hast';
 import codeBlockButtonJsModule from './js-module.min';
 
 const terminalLanguageGroups = [
@@ -257,7 +256,11 @@ export function pluginCodeBlockButton(
   shouldShowButton: (
     codeBlock: ExpressiveCodeBlock,
     isTerminal: boolean
-  ) => boolean = () => true
+  ) => boolean = () => true,
+  addAttributes: (
+    codeBlock: ExpressiveCodeBlock,
+    isTerminal: boolean
+  ) => Record<string, string> = () => ({})
 ): ExpressiveCodePlugin {
   return {
     name,
@@ -280,19 +283,6 @@ export function pluginCodeBlockButton(
 
         const extraElements: any[] = [];
 
-        let code = codeBlock.code;
-
-        // remove comment lines starting with `#` from terminal frames
-        if (isTerminal) {
-          code = code.replace(/(?<=^|\n)\s*#.*($|\n+)/g, '').trim();
-
-          /**
-           * Replace all line breaks with a special character
-           * because HAST does not encode them in attribute values
-           * (which seems to work, but looks ugly in the HTML source)
-           */
-          code = code.replace(/\n/g, '\u007f');
-        }
         if (shouldShowButton(codeBlock, isTerminal)) {
           extraElements.push(
             h('div', { className: name }, [
@@ -301,8 +291,7 @@ export function pluginCodeBlockButton(
                 {
                   title: texts.buttonTooltip,
                   'data-copied': texts.buttonExecuted,
-                  'data-code': code,
-                  'data-filepath': codeBlock.metaOptions.getString('path'),
+                  ...addAttributes(codeBlock, isTerminal),
                 },
                 [h('div')]
               ),

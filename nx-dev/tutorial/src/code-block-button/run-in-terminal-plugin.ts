@@ -17,6 +17,20 @@ export function runInTerminalPlugin(): ExpressiveCodePlugin {
     'runInTerminal',
     svg,
     runInTerminalTexts,
-    (_, isTerminal) => isTerminal
+    (_, isTerminal) => isTerminal,
+    (codeBlock, _) => {
+      // remove comment lines starting with `#` from terminal frames
+      let code = codeBlock.code.replace(/(?<=^|\n)\s*#.*($|\n+)/g, '').trim();
+
+      /**
+       * Replace all line breaks with a special character
+       * because HAST does not encode them in attribute values
+       * (which seems to work, but looks ugly in the HTML source)
+       */
+      code = code.replace(/\n/g, '\u007f');
+      return {
+        'data-code': code,
+      };
+    }
   );
 }
