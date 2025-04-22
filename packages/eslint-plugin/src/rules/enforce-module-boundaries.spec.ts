@@ -1391,6 +1391,72 @@ Violation detected in:
     }
   );
 
+  xit('should not error when statically importing dynamic dependencies if it belongs to different entry point', () => {
+    jest.mock('../utils/runtime-lint-utils', () => ({
+      ...jest.requireActual<any>('../utils/runtime-lint-utils'),
+      belongsToDifferentNgEntryPoint: () => true,
+    }));
+
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import { someValue } from "@mycompany/other";',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          otherName: {
+            name: 'otherName',
+            type: 'lib',
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'otherName',
+              type: DependencyType.dynamic,
+            },
+            {
+              source: 'mylibName',
+              target: 'otherName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {
+        mylibName: [
+          createFile(`libs/mylib/src/main.ts`, [
+            ['otherName', DependencyType.static],
+            ['otherName', DependencyType.dynamic],
+          ]),
+        ],
+        otherName: [createFile(`libs/other/index.ts`)],
+      }
+    );
+    expect(failures[0].message).toMatchInlineSnapshot(`
+      "Static imports of lazy-loaded libraries are forbidden.
+
+      Library "otherName" is lazy-loaded in these files:
+      - libs/mylib/src/main.ts"
+    `);
+  });
+
   it('should error on importing an app', () => {
     const failures = runRule(
       {},
