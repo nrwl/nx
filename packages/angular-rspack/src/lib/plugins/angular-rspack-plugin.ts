@@ -18,8 +18,12 @@ import {
   setupCompilationWithParallelCompilation,
   DiagnosticModes,
 } from '@nx/angular-rspack-compiler';
+import { augmentAppWithServiceWorker } from '@angular/build/private';
 import { dirname, normalize, resolve } from 'path';
 import fs_1 from 'fs';
+import { workspaceRoot } from '@nx/devkit';
+import { getLocaleBaseHref } from '../utils/get-locale-base-href';
+import { join } from 'node:path';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
 type Awaited<T> = T extends Promise<infer U> ? U : T;
@@ -255,6 +259,50 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         return data;
       });
     });
+
+    if (this.#_options.serviceWorker) {
+      compiler.hooks.done.tapAsync(
+        PLUGIN_NAME,
+        async (compilation, callback) => {
+          let providedLocales = this.#_options.localize;
+          if (!providedLocales) {
+            await augmentAppWithServiceWorker(
+              this.#_options.root,
+              workspaceRoot,
+              this.#_options.outputPath.browser,
+              this.#_options.baseHref ?? '/',
+              this.#_options.ngswConfigPath
+            );
+          } else if (providedLocales && this.#i18n) {
+            if (typeof providedLocales === 'string') {
+              providedLocales = [providedLocales];
+            } else if (typeof providedLocales === 'boolean') {
+              providedLocales = Array.from(this.#i18n.inlineLocales);
+            }
+            for (const locale of providedLocales) {
+              await augmentAppWithServiceWorker(
+                this.#_options.root,
+                workspaceRoot,
+                join(
+                  this.#_options.outputPath.browser,
+                  this.#i18n.locales[locale]?.subPath ?? locale
+                ),
+                getLocaleBaseHref(
+                  this.#i18n,
+                  locale,
+                  this.#_options.baseHref
+                ) ??
+                  this.#_options.baseHref ??
+                  '/',
+                this.#_options.ngswConfigPath
+              );
+            }
+          }
+
+          callback();
+        }
+      );
+    }
   }
 
   private async setupCompilation(
