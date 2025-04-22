@@ -47,7 +47,6 @@ export interface PluginUnsupportedOptions {
   watch?: boolean;
   poll?: number;
   subresourceIntegrity?: boolean;
-  serviceWorker?: string | false;
   statsJson?: boolean;
   budgets?: BudgetEntry[];
   webWorkerTsConfig?: string;
@@ -73,7 +72,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'watch',
   'poll',
   'subresourceIntegrity',
-  'serviceWorker',
   'statsJson',
   'budgets',
   'webWorkerTsConfig',

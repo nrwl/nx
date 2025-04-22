@@ -136,6 +136,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    */
   localize?: boolean | string[];
   namedChunks?: boolean;
+  /**
+   * Path to ngsw-config.json.
+   */
+  ngswConfigPath?: string;
   optimization?: boolean | OptimizationOptions;
   outputHashing?: OutputHashing;
   outputPath?:
@@ -149,6 +153,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   root?: string;
   scripts?: ScriptOrStyleEntry[];
   server?: string;
+  /**
+   * Generates a service worker config for production builds.
+   */
+  serviceWorker?: boolean;
   skipTypeChecking?: boolean;
   sourceMap?: boolean | Partial<SourceMap>;
   ssr?:

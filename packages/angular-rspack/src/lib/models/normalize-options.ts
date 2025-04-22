@@ -259,6 +259,8 @@ export function normalizeOptions(
     outputPath: normalizeOutputPath(root, options.outputPath),
     polyfills: options.polyfills ?? [],
     root,
+    serviceWorker: options.serviceWorker,
+    ngswConfigPath: options.ngswConfigPath,
     server,
     skipTypeChecking: options.skipTypeChecking ?? false,
     sourceMap: normalizeSourceMap(options.sourceMap),
