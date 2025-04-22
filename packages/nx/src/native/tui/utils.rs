@@ -61,7 +61,8 @@ pub fn sort_task_items(tasks: &mut [TaskItem]) {
                 | TaskStatus::LocalCacheKeptExisting
                 | TaskStatus::LocalCache
                 | TaskStatus::RemoteCache
-                | TaskStatus::Skipped => 2,
+                | TaskStatus::Skipped
+                | TaskStatus::Stopped => 2,
                 TaskStatus::NotStarted => 3,
             }
         };
@@ -326,6 +327,7 @@ mod tests {
                     | TaskStatus::LocalCacheKeptExisting
                     | TaskStatus::LocalCache
                     | TaskStatus::RemoteCache
+                    | TaskStatus::Stopped
                     | TaskStatus::Skipped => 2,
                     TaskStatus::NotStarted => 3,
                 }
