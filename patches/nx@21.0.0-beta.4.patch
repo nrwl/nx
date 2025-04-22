@@ -93,10 +93,40 @@ index d497b19c67c50d1e555c4dd1104531e72212e3ca..9758566f591fe401bbd82da675bdac7f
  }
  // Credit to https://github.com/sindresorhus/is-unicode-supported/blob/e0373335038856c63034c8eef6ac43ee3827a601/index.js
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
-index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5ba1b552a 100644
+index 01d88e6def35cc032c6b5c250c270f35952e0094..a32b3f3c70d1557c60ad2113540a988377afb30a 100644
 --- a/src/tasks-runner/task-orchestrator.js
 +++ b/src/tasks-runner/task-orchestrator.js
-@@ -273,6 +273,7 @@ class TaskOrchestrator {
+@@ -244,17 +244,26 @@ class TaskOrchestrator {
+         // Wait for task to be processed
+         const taskSpecificEnv = await this.processedTasks.get(task.id);
+         await this.preRunSteps([task], { groupId });
++        console.log("[Patched Nx]: NX_STREAM_OUTPUT: ", process.env.NX_STREAM_OUTPUT)
+         const pipeOutput = await this.pipeOutputCapture(task);
+         // obtain metadata
+         const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+         const streamOutput = this.outputStyle === 'static'
+             ? false
+             : (0, utils_1.shouldStreamOutput)(task, this.initiatingProject);
+-        let env = pipeOutput
+-            ? (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, process.env.FORCE_COLOR === undefined
++        console.log("[Patched Nx]: streamOutput: ", streamOutput)
++
++
++        let env;
++        if (pipeOutput) {
++            console.log("[Patched Nx]: Pipe Output is enabled")
++            env = (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, process.env.FORCE_COLOR === undefined
+                 ? 'true'
+                 : process.env.FORCE_COLOR, this.options.skipNxCache, this.options.captureStderr, null, null)
+-            : (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, undefined, this.options.skipNxCache, this.options.captureStderr, temporaryOutputPath, streamOutput);
++        } else {
++            console.log("[Patched Nx]: Pipe Output is disabled")
++            env = (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, undefined, this.options.skipNxCache, this.options.captureStderr, temporaryOutputPath, streamOutput);
++        }
+         let results = doNotSkipCache ? await this.applyCachedResults([task]) : [];
+         // the task wasn't cached
+         if (results.length === 0) {
+@@ -273,6 +282,7 @@ class TaskOrchestrator {
      async runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput) {
          const shouldPrefix = streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
          const targetConfiguration = (0, utils_1.getTargetConfigurationForTask)(task, this.projectGraph);
@@ -104,7 +134,7 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5
          if (process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
              targetConfiguration.executor === 'nx:run-commands' &&
              !shouldPrefix) {
-@@ -349,6 +350,8 @@ class TaskOrchestrator {
+@@ -349,6 +359,8 @@ class TaskOrchestrator {
          }
          else {
              // cache prep
@@ -113,6 +143,33 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5
              const runningTask = await this.runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput);
              if (this.tuiEnabled && runningTask instanceof pseudo_terminal_1.PseudoTtyProcess) {
                  // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+@@ -529,15 +541,25 @@ class TaskOrchestrator {
+     //endregion Lifecycle
+     // region utils
+     async pipeOutputCapture(task) {
++        console.log("[Patched Nx]: Determining to pipe output")
+         try {
+             if (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false') {
++                console.log("[Patched Nx]: NX_NATIVE_COMMAND_RUNNER is true, will pipe output")
+                 return true;
+             }
+             const { schema } = (0, utils_1.getExecutorForTask)(task, this.projectGraph);
+-            return (schema.outputCapture === 'pipe' ||
++
++
++
++             const result = (schema.outputCapture === 'pipe' ||
+                 process.env.NX_STREAM_OUTPUT === 'true');
++
++             console.log("[Patched Nx]: schema.outputCapture: ", schema.outputCapture)
++             console.log("[Patched Nx]: NX_STREAM_OUTPUT: ", process.env.NX_STREAM_OUTPUT)
++             console.log("[Patched Nx]: Pipe Output: ", result)
+         }
+         catch (e) {
++            console.log("[Patched Nx]: Error, will not pipe output: ", e)
+             return false;
+         }
+     }
 diff --git a/src/tasks-runner/utils.js b/src/tasks-runner/utils.js
 index 83fe5d41b3325124956683ce10e58a3c5eb84506..83ea7b0979b7028a6e1e6c1181ee7631d6e3b4ee 100644
 --- a/src/tasks-runner/utils.js
