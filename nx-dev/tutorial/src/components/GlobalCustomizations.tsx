@@ -8,12 +8,11 @@ export function GlobalCustomizations() {
     // These actions run on every page load
 
     // Disable previous and next buttons if this is the first or last lesson of a tutorial
-    function waitForLesson() {
-      if (!tutorialStore.lesson) {
-        setTimeout(waitForLesson, 100);
+    function waitForTopBar() {
+      if (!document.querySelector('#top-bar')) {
+        setTimeout(waitForTopBar, 100);
       } else {
-        const entry = tutorialStore.lesson;
-        if (entry.data?.custom?.first) {
+        if (document.querySelector('#top-bar.first-lesson')) {
           const [topPrevButton, bottomPrevButton] = document
             .querySelectorAll('[class*=i-ph-arrow-left]')
             .values()
@@ -23,7 +22,7 @@ export function GlobalCustomizations() {
           topPrevButton.removeAttribute('href');
           bottomPrevButton?.remove();
         }
-        if (entry.data?.custom?.last) {
+        if (document.querySelector('#top-bar.last-lesson')) {
           const [topNextButton, bottomNextButton] = document
             .querySelectorAll('[class*=i-ph-arrow-right]')
             .values()
@@ -35,7 +34,7 @@ export function GlobalCustomizations() {
         }
       }
     }
-    waitForLesson();
+    waitForTopBar();
 
     webcontainer.then(async (wc) => {
       // Stub out git command
@@ -44,7 +43,10 @@ export function GlobalCustomizations() {
         'echo "Git is not available in a WebContainer"'
       );
       const terminal = tutorialStore.terminalConfig.get().panels[0]?.terminal;
-      terminal.input('echo "hi"\n');
+      if (!terminal) {
+        return;
+      }
+      terminal?.input('echo "hi"\n');
       function callOnce(fn: Function) {
         let called = false;
         return function () {
@@ -60,7 +62,6 @@ export function GlobalCustomizations() {
             terminal.input('export PATH="$PATH:/home/tutorial"\n');
             setTimeout(() => {
               terminal.input('clear\n');
-              console.log('Git command stubbed out');
             }, 10);
           }, 10);
         })

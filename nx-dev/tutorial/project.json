@@ -20,8 +20,7 @@
     },
     "build": {
       "inputs": ["{projectRoot}/src/**/**"],
-      "outputs": ["{projectRoot}/dist"],
-      "dependsOn": ["build-code-block-button"]
+      "outputs": ["{projectRoot}/dist"]
     },
     "lint": {
       "command": "echo no linting",
