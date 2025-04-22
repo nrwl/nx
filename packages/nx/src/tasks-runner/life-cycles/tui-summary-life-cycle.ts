@@ -69,12 +69,14 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (let t of taskResults) {
+    for (const { task, terminalOutput, status } of taskResults) {
       totalCompletedTasks++;
-      inProgressTasks.delete(t.task.id);
-      taskIdsInOrderOfCompletion.push(t.task.id);
+      inProgressTasks.delete(task.id);
+      taskIdsInOrderOfCompletion.push(task.id);
 
-      switch (t.status) {
+      tasksToTerminalOutputs[task.id] = { terminalOutput, taskStatus: status };
+
+      switch (status) {
         case 'remote-cache':
         case 'local-cache':
         case 'local-cache-kept-existing':
@@ -86,7 +88,7 @@ export function getTuiTerminalSummaryLifeCycle({
           break;
         case 'failure':
           totalFailedTasks++;
-          failedTasks.add(t.task.id);
+          failedTasks.add(task.id);
           break;
       }
     }
