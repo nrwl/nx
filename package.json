@@ -3,6 +3,11 @@
   "description": "Smart Monorepos · Fast CI",
   "homepage": "https://nx.dev",
   "private": true,
+  "pnpm": {
+    "patchedDependencies": {
+      "nx@21.0.0-beta.4": "patches/nx@21.0.0-beta.4.patch"
+    }
+  },
   "scripts": {
     "build": "nx run-many --target build --parallel 8 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings,nx-dev-util-ai",
     "commit": "czg",
