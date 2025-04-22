@@ -11,8 +11,8 @@ async function populateLocalRegistryStorage() {
   try {
     const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
     const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
-    process.env.NX_TUI='false';
-    process.env.NX_DAEMON='false';
+    process.env.NX_TUI = 'false';
+    process.env.NX_DAEMON = 'false';
     console.log('Starting local registry to populate');
     registryTeardown = await startLocalRegistry({
       localRegistryTarget: '@nx/nx-source:local-registry',

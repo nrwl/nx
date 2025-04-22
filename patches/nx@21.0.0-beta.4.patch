@@ -1,0 +1,65 @@
+diff --git a/.idea/b2e979e592feb13958efd455eca4c90c.iml b/.idea/b2e979e592feb13958efd455eca4c90c.iml
+new file mode 100644
+index 0000000000000000000000000000000000000000..d6ebd4805981b8400db3e3291c74a743fef9a824
+--- /dev/null
++++ b/.idea/b2e979e592feb13958efd455eca4c90c.iml
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="JAVA_MODULE" version="4">
++  <component name="NewModuleRootManager" inherit-compiler-output="true">
++    <exclude-output />
++    <content url="file://$MODULE_DIR$" />
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..639900d13c6182e452e33a3bd638e70a0146c785
+--- /dev/null
++++ b/.idea/misc.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectRootManager">
++    <output url="file://$PROJECT_DIR$/out" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/.idea/modules.xml b/.idea/modules.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..73e43bc2a07ba072afd915e627ff4203fb58ed3c
+--- /dev/null
++++ b/.idea/modules.xml
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/b2e979e592feb13958efd455eca4c90c.iml" filepath="$PROJECT_DIR$/.idea/b2e979e592feb13958efd455eca4c90c.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
+index 01d88e6def35cc032c6b5c250c270f35952e0094..2197dc0ecd220447a14ce21f72a9c1a5ba1b552a 100644
+--- a/src/tasks-runner/task-orchestrator.js
++++ b/src/tasks-runner/task-orchestrator.js
+@@ -273,6 +273,7 @@ class TaskOrchestrator {
+     async runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput) {
+         const shouldPrefix = streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+         const targetConfiguration = (0, utils_1.getTargetConfigurationForTask)(task, this.projectGraph);
++        console.log("[Patched Nx]: Task ID: ", task.id, `[${process.pid}`)
+         if (process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
+             targetConfiguration.executor === 'nx:run-commands' &&
+             !shouldPrefix) {
+@@ -349,6 +350,8 @@ class TaskOrchestrator {
+         }
+         else {
+             // cache prep
++            console.log("[Patched Nx]: pipeOutput:", pipeOutput)
++            console.log("[Patched Nx]: streamOutput:", streamOutput)
+             const runningTask = await this.runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput);
+             if (this.tuiEnabled && runningTask instanceof pseudo_terminal_1.PseudoTtyProcess) {
+                 // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI

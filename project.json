@@ -13,7 +13,10 @@
     "local-registry2": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["echo starting local registry", "nx run @nx/source:local-registry"]
+        "commands": [
+          "echo starting local registry",
+          "nx run @nx/source:local-registry"
+        ]
       }
     },
     "populate-local-registry-storage": {
