@@ -40,6 +40,7 @@ export function withNx(
         targetName: context.targetName,
         configurationName: context.configurationName,
         projectGraph: context.projectGraph,
+        useLegacyHtmlPlugin: pluginOptions.useLegacyHtmlPlugin ?? false,
       },
       config
     );
