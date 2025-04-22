@@ -93,7 +93,7 @@ index d497b19c67c50d1e555c4dd1104531e72212e3ca..9758566f591fe401bbd82da675bdac7f
  }
  // Credit to https://github.com/sindresorhus/is-unicode-supported/blob/e0373335038856c63034c8eef6ac43ee3827a601/index.js
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
-index 01d88e6def35cc032c6b5c250c270f35952e0094..a7d8a75c8c5218457f32708dc997ab054f175b9d 100644
+index 01d88e6def35cc032c6b5c250c270f35952e0094..3d458ad9a069898c3e1760d1b4d1111694c7463d 100644
 --- a/src/tasks-runner/task-orchestrator.js
 +++ b/src/tasks-runner/task-orchestrator.js
 @@ -21,6 +21,7 @@ const noop_child_process_1 = require("./running-tasks/noop-child-process");
@@ -115,10 +115,11 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..a7d8a75c8c5218457f32708dc997ab05
      }
      async init() {
          // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
-@@ -244,17 +249,26 @@ class TaskOrchestrator {
+@@ -244,17 +249,27 @@ class TaskOrchestrator {
          // Wait for task to be processed
          const taskSpecificEnv = await this.processedTasks.get(task.id);
          await this.preRunSteps([task], { groupId });
++        console.log("[Patched Nx]: initiatingProject: ", this.initiatingProject, `[${process.pid}]`)
 +        console.log("[Patched Nx]: NX_STREAM_OUTPUT: ", process.env.NX_STREAM_OUTPUT)
          const pipeOutput = await this.pipeOutputCapture(task);
          // obtain metadata
@@ -145,7 +146,7 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..a7d8a75c8c5218457f32708dc997ab05
          let results = doNotSkipCache ? await this.applyCachedResults([task]) : [];
          // the task wasn't cached
          if (results.length === 0) {
-@@ -273,6 +287,7 @@ class TaskOrchestrator {
+@@ -273,6 +288,7 @@ class TaskOrchestrator {
      async runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput) {
          const shouldPrefix = streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
          const targetConfiguration = (0, utils_1.getTargetConfigurationForTask)(task, this.projectGraph);
@@ -153,7 +154,7 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..a7d8a75c8c5218457f32708dc997ab05
          if (process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
              targetConfiguration.executor === 'nx:run-commands' &&
              !shouldPrefix) {
-@@ -349,6 +364,8 @@ class TaskOrchestrator {
+@@ -349,6 +365,8 @@ class TaskOrchestrator {
          }
          else {
              // cache prep
@@ -162,7 +163,7 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..a7d8a75c8c5218457f32708dc997ab05
              const runningTask = await this.runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput);
              if (this.tuiEnabled && runningTask instanceof pseudo_terminal_1.PseudoTtyProcess) {
                  // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-@@ -529,15 +546,25 @@ class TaskOrchestrator {
+@@ -529,15 +547,25 @@ class TaskOrchestrator {
      //endregion Lifecycle
      // region utils
      async pipeOutputCapture(task) {
