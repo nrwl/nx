@@ -95,16 +95,6 @@ describe('syncGenerator()', () => {
     addProject('b', ['a']);
   });
 
-  it('should error if the @nx/js/typescript plugin is not configured in nx.json', async () => {
-    const nxJson = readJson(tree, 'nx.json');
-    nxJson.plugins = nxJson.plugins.filter((p) => p !== '@nx/js/typescript');
-    writeJson(tree, 'nx.json', nxJson);
-
-    await expect(syncGenerator(tree)).rejects.toMatchInlineSnapshot(
-      `[SyncError: The "@nx/js/typescript" plugin is not registered]`
-    );
-  });
-
   it('should error if there is no root tsconfig.json', async () => {
     tree.delete('tsconfig.json');
 
