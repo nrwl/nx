@@ -109,8 +109,9 @@ export class TempFs {
       rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
       setWorkspaceRoot(this.previousWorkspaceRoot);
     } catch (e) {
+      // We are experiencing flakiness in CI related to this cleanup, so log only for now
       if (process.env.CI) {
-        console.error(e);
+        console.error(`Failed to cleanup temp dir: ${e}`);
       } else {
         throw e;
       }
@@ -122,8 +123,9 @@ export class TempFs {
       rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
       mkdirSync(this.tempDir, { recursive: true });
     } catch (e) {
+      // We are experiencing flakiness in CI related to this cleanup, so log only for now
       if (process.env.CI) {
-        console.error(e);
+        console.error(`Failed to cleanup temp dir: ${e}`);
       } else {
         throw e;
       }
