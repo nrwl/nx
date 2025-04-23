@@ -64,26 +64,23 @@ An example partial output of running Nx Release with independent releases and co
 
 ```{% command="nx release" %}
 
-NX   Running release version for project: pkg-1
+ NX   Running release version for project: pkg-1
 
-pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
-pkg-1 📄 Resolved the current version as 0.4.0 from git tag "pkg-1@0.4.0".
-pkg-1 📄 Resolved the specifier as "minor" using git history and the conventional commits standard.
-pkg-1 ✍️  New version 0.5.0 written to packages/pkg-1/package.json
+pkg-1 🏷️ Resolved the current version as 0.4.0 from git tag "pkg-1@0.4.0", based on releaseTagPattern "{projectName}@{version}"
+pkg-1 📄 Resolved the specifier as "patch" using git history and the conventional commits standard
+pkg-1 ❓ Applied semver relative bump "patch", derived from conventional commits data, to get new version 0.4.1
+pkg-1 ✍️ New version 0.4.1 written to manifest: packages/pkg-1/package.json
 
-NX   Running release version for project: pkg-2
+ NX   Running release version for project: pkg-2
 
-pkg-2 🔍 Reading data for package "@myorg/pkg-2" from packages/pkg-2/package.json
-pkg-2 📄 Resolved the current version as 0.4.0 from git tag "pkg-2@0.4.0".
-pkg-2 📄 Resolved the specifier as "patch" using git history and the conventional commits standard.
-pkg-2 ✍️  New version 0.4.1 written to packages/pkg-2/package.json
-pkg-2 ✍️  Applying new version 0.4.1 to 1 package which depends on pkg-2
+pkg-2 🏷️ Resolved the current version as 0.4.0 from git tag "pkg-2@0.4.0", based on releaseTagPattern "{projectName}@{version}"
+pkg-2 📄 Resolved the specifier as "minor" using git history and the conventional commits standard
+pkg-2 ❓ Applied semver relative bump "minor", derived from conventional commits data, to get new version 0.5.0
+pkg-2 ✍️ New version 0.5.0 written to manifest: packages/pkg-2/package.json
 
-NX   Running release version for project: pkg-3
+ NX   Running release version for project: pkg-3
 
-pkg-3 🔍 Reading data for package "@myorg/pkg-3" from packages/pkg-3/package.json
-pkg-3 📄 Resolved the current version as 0.4.0 from git tag "pkg-3@0.4.0".
-pkg-3 🚫 No changes were detected using git history and the conventional commits standard.
-pkg-3 🚫 Skipping versioning "@myorg/pkg-3" as no changes were detected.
+pkg-3 🏷️ Resolved the current version as 0.4.0 from git tag "pkg-3@0.4.0", based on releaseTagPattern "{projectName}@{version}"
+pkg-3 🚫 No changes were detected using git history and the conventional commits standard
 
 ```

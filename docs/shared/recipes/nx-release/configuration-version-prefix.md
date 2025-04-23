@@ -1,17 +1,17 @@
 ---
-title: Configure Version Prefix for Dependencies
-description: Learn how to set up custom version prefixes in Nx Release to control how dependency versions are specified in your package.json files, with options for exact, patch, or minor-level compatibility.
+title: Configuring Version Prefix for Dependencies
+description: Learn how to set up custom version prefixes in Nx Release to control how dependency versions are specified in your manifest files (such as package.json, Cargo.toml, etc.), with options for exact, patch, or minor-level compatibility.
 ---
 
 # Configuring Version Prefix for Dependency Versions
 
-This guide explains how to configure a custom version prefix in Nx Release using the `versionPrefix` option. The version prefix allows you to automatically add a specific prefix format to dependencies, providing control over how dependency versions are specified in your project's `package.json` files.
+This guide explains how to configure a custom version prefix in Nx Release using the `versionPrefix` option. The version prefix allows you to automatically add a specific prefix format to dependencies, providing control over how dependency versions are specified in your project's manifest files (such as `package.json`, `Cargo.toml`, etc.).
 
 ## The `versionPrefix` Option
 
-The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) by respecting what is already in the `package.json` file.
+The `versionPrefix` option controls which prefix is applied to dependency versions during the versioning process. By default, `versionPrefix` is set to `"auto"`, which selects a prefix format (either `""`, `"~"`, `"^"`, or `"="`) by respecting what is already in the manifest file.
 
-For example, having the following `package.json` file:
+For example, having the following `package.json` file as an example manifest:
 
 ```json
 {
@@ -45,7 +45,7 @@ Preserving the prefix for `dependency-one` and `dependency-two` and continuing t
 
 You can set `versionPrefix` to one of the following values:
 
-- `"auto"`: Automatically chooses a prefix based on the existing declaration in the `package.json` file. This is the default value.
+- `"auto"`: Automatically chooses a prefix based on the existing declaration in the manifest file. This is the default value.
 - `""`: Uses the exact version without a prefix.
 - `"~"`: Specifies compatibility with patch-level updates.
 - `"^"`: Specifies compatibility with minor-level updates.
@@ -53,13 +53,17 @@ You can set `versionPrefix` to one of the following values:
 
 Example configuration:
 
+{% callout type="note" title="Breaking Changes in Nx 21" %}
+In Nx v21, the configuration structure has changed. The example below shows the Nx 21 format.
+
+For Nx 20, wrap the `versionPrefix` option inside a `generatorOptions` object.
+{% /callout %}
+
 ```json
 {
   "release": {
     "version": {
-      "generatorOptions": {
-        "versionPrefix": "~"
-      }
+      "versionPrefix": "~"
     }
   }
 }
@@ -73,9 +77,7 @@ To set the versionPrefix option globally or for a specific project, add it to ei
 {
   "release": {
     "version": {
-      "generatorOptions": {
-        "versionPrefix": "^" // or "", "~", "^", "=" depending on your preference
-      }
+      "versionPrefix": "^" // or "", "~", "^", "=" depending on your preference
     }
   }
 }

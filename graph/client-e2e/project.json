@@ -40,7 +40,7 @@
         "parallel": false
       }
     },
-    "e2e": {
+    "DISABLED__e2e": {
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {

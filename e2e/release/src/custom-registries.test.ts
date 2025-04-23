@@ -11,7 +11,7 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
-import { NxReleaseVersionV2Configuration } from 'nx/src/config/nx-json';
+import { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 describe('nx release - custom npm registries', () => {
@@ -378,7 +378,7 @@ describe('nx release - custom npm registries', () => {
 
     updateJson<ProjectConfiguration>(`${projectName}/project.json`, (json) => {
       const releaseConfig = (json.release ?? {}) as {
-        version: NxReleaseVersionV2Configuration;
+        version: NxReleaseVersionConfiguration;
       };
 
       if (options.projectConfig) {

@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import {
   NxReleaseConfiguration,
-  NxReleaseVersionV2Configuration,
+  NxReleaseVersionConfiguration,
   readNxJson,
 } from '../../config/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
@@ -233,6 +233,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           projects: args.projects,
           groups: args.groups,
         },
+        versionActionsOptionsOverrides: args.versionActionsOptionsOverrides,
       }
     );
 
@@ -273,10 +274,11 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     printAndFlushChanges(tree, !!args.dryRun);
 
     const { changedFiles: changed, deletedFiles: deleted } =
-      await processor.afterAllProjectsVersioned(
-        (nxReleaseConfig.version as NxReleaseVersionV2Configuration)
-          .versionActionsOptions
-      );
+      await processor.afterAllProjectsVersioned({
+        ...(nxReleaseConfig.version as NxReleaseVersionConfiguration)
+          .versionActionsOptions,
+        ...(args.versionActionsOptionsOverrides ?? {}),
+      });
     changed.forEach((f) => additionalChangedFiles.add(f));
     deleted.forEach((f) => additionalDeletedFiles.add(f));
 

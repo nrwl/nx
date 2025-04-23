@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { ReleaseType } from 'semver';
-import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
+import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type {
   ProjectGraph,
   ProjectGraphDependency,
@@ -106,13 +106,13 @@ export async function resolveVersionActionsForProject(
   // Project level release version config takes priority, if set
   const projectVersionConfig = projectGraphNode.data.release?.version as
     | Pick<
-        NxReleaseVersionV2Configuration,
+        NxReleaseVersionConfiguration,
         'versionActions' | 'versionActionsOptions'
       >
     | undefined;
   const releaseGroupVersionConfig = releaseGroup.version as
     | Pick<
-        NxReleaseVersionV2Configuration,
+        NxReleaseVersionConfiguration,
         'versionActions' | 'versionActionsOptions'
       >
     | undefined;
@@ -194,8 +194,14 @@ export abstract class VersionActions {
    * The interpolated manifest paths to update, if applicable based on the user's configuration, when new
    * versions and dependencies are determined. If no manifest files should be updated based on the user's
    * configuration, this will be an empty array.
+   *
+   * The final value for preserveLocalDependencyProtocols will be based on the resolved config for the current
+   * project and any overrides from the user's configuration for the manifestRootsToUpdate.
    */
-  manifestsToUpdate: string[] = [];
+  manifestsToUpdate: {
+    manifestPath: string;
+    preserveLocalDependencyProtocols: boolean;
+  }[] = [];
 
   constructor(
     public releaseGroup: ReleaseGroupWithName,
@@ -216,9 +222,11 @@ export abstract class VersionActions {
         if (
           tree.exists(join(this.projectGraphNode.data.root, manifestFilename))
         ) {
-          this.finalConfigForProject.manifestRootsToUpdate.push(
-            this.projectGraphNode.data.root
-          );
+          this.finalConfigForProject.manifestRootsToUpdate.push({
+            path: this.projectGraphNode.data.root,
+            preserveLocalDependencyProtocols:
+              this.finalConfigForProject.preserveLocalDependencyProtocols,
+          });
           break;
         }
       }
@@ -226,19 +234,28 @@ export abstract class VersionActions {
 
     const interpolatedManifestRoots =
       this.finalConfigForProject.manifestRootsToUpdate.map((manifestRoot) => {
-        return interpolate(manifestRoot, {
-          workspaceRoot: '',
-          projectRoot: this.projectGraphNode.data.root,
-          projectName: this.projectGraphNode.name,
-        });
+        return {
+          ...manifestRoot,
+          path: interpolate(manifestRoot.path, {
+            workspaceRoot: '',
+            projectRoot: this.projectGraphNode.data.root,
+            projectName: this.projectGraphNode.name,
+          }),
+        };
       });
 
     for (const interpolatedManifestRoot of interpolatedManifestRoots) {
       let hasValidManifest = false;
       for (const manifestFilename of this.validManifestFilenames) {
-        const manifestPath = join(interpolatedManifestRoot, manifestFilename);
+        const manifestPath = join(
+          interpolatedManifestRoot.path,
+          manifestFilename
+        );
         if (tree.exists(manifestPath)) {
-          this.manifestsToUpdate.push(manifestPath);
+          this.manifestsToUpdate.push({
+            ...interpolatedManifestRoot,
+            manifestPath,
+          });
           hasValidManifest = true;
           break;
         }
@@ -248,7 +265,7 @@ export abstract class VersionActions {
           this.validManifestFilenames?.join(' or ');
 
         throw new Error(
-          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available in ./${interpolatedManifestRoot}.
+          `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available in ./${interpolatedManifestRoot.path}.
           
 To fix this you will either need to add a ${validManifestFilenames} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.`
         );
@@ -348,7 +365,7 @@ To fix this you will either need to add a ${validManifestFilenames} file at that
    */
   abstract readCurrentVersionFromRegistry(
     tree: Tree,
-    currentVersionResolverMetadata: NxReleaseVersionV2Configuration['currentVersionResolverMetadata']
+    currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata']
   ): Promise<{
     currentVersion: string | null;
     logText: string;
@@ -396,14 +413,6 @@ To fix this you will either need to add a ${validManifestFilenames} file at that
     currentVersion: string | null;
     dependencyCollection: string | null;
   }>;
-
-  /**
-   * Implementation details of determining if a version specifier uses a local dependency protocol that is relevant to this
-   * specific project. E.g. in a package.json context, `file:` and `workspace:` protocols should return true here.
-   */
-  abstract isLocalDependencyProtocol(
-    versionSpecifier: string
-  ): Promise<boolean>;
 
   /**
    * Implementation details of updating a newly derived version in some source of truth.

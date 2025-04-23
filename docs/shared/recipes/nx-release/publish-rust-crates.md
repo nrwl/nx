@@ -9,6 +9,14 @@ This recipe guides you through versioning Rust libraries, generating changelogs,
 
 {% github-repository url="https://github.com/JamesHenry/release-js-and-rust" /%}
 
+{% callout type="caution" title="Currently requires legacy versioning" %}
+In Nx v21, the implementation details of versioning were rewritten to enhance flexibility and allow for better cross-ecosystem support. An automated migration was provided in Nx v21 to update your configuration to the new format when running `nx migrate`.
+
+During the lifecycle of Nx v21, you can still opt into the old versioning by setting `release.version.useLegacyVersioning` to `true`, which will keep the original configuration structure and behavior. In Nx v22, the legacy versioning implementation will be removed entirely, so this should only be done temporarily to ease the transition.
+
+Importantly, this recipe currently requires the use of legacy versioning, because the `@monodon/rust` plugin does not yet provide the necessary `VersionActions` implementation to support the new versioning behavior. This will be added in a minor release of Nx v21 and this recipe will be updated accordingly.
+{% /callout %}
+
 ## Initialize Nx Release in Your Workspace
 
 ### Install Nx
@@ -35,10 +43,14 @@ Configure which projects to release by adding the `release.projects` property to
 
 For example, to release just the projects in the `crates` directory:
 
-```json nx.json
+```jsonc nx.json
 {
   "release": {
-    "projects": ["crates/*"]
+    "projects": ["crates/*"],
+    "version": {
+      // Legacy versioning is currently required for the @monodon/rust plugin, see the note above for more details
+      "useLegacyVersioning": true
+    }
   }
 }
 ```

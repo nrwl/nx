@@ -3724,6 +3724,16 @@
       }
     },
     "migrations": {
+      "/nx-api/nx/migrations/release-version-config-changes": {
+        "description": "Updates release version config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-version-config-changes.json",
+        "hidden": false,
+        "name": "release-version-config-changes",
+        "version": "21.0.0-beta.1",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/release-version-config-changes",
+        "type": "migration"
+      },
       "/nx-api/nx/migrations/use-legacy-cache": {
         "description": "Set `useLegacyCache` to true for migrating workspaces",
         "file": "generated/packages/nx/migrations/use-legacy-cache.json",
