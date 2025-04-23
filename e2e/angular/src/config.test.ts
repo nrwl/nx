@@ -135,16 +135,9 @@ const angularV1Json = (appName: string) => `{
       "projectType": "application",
       "architect": {
         "e2e": {
-          "builder": "@nx/cypress:cypress",
+          "builder": "@nx/playwright:playwright",
           "options": {
-            "cypressConfig": "${appName}-e2e/cypress.json",
-            "devServerTarget": "${appName}:serve:development",
-            "testingType": "e2e"
-          },
-          "configurations": {
-            "production": {
-              "devServerTarget": "${appName}:serve:production"
-            }
+            "config": "${appName}-e2e/playwright.config.js"
           }
         },
         "lint": {

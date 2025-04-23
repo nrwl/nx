@@ -1218,16 +1218,24 @@ export function normalizeTarget(
   target.parallelism ??= true;
 
   if (target.executor && !('continuous' in target)) {
-    const [executorNodeModule, executorName] = parseExecutor(target.executor);
+    try {
+      const [executorNodeModule, executorName] = parseExecutor(target.executor);
 
-    const { schema } = getExecutorInformation(
-      executorNodeModule,
-      executorName,
-      workspaceRoot,
-      projectsMap
-    );
+      const { schema } = getExecutorInformation(
+        executorNodeModule,
+        executorName,
+        workspaceRoot,
+        projectsMap
+      );
 
-    target.continuous ??= schema.continuous ?? false;
+      if (schema.continuous) {
+        target.continuous ??= schema.continuous;
+      }
+    } catch (e) {
+      // If the executor is not found, we assume that it is not a valid executor.
+      // This means that we should not set the continuous property.
+      // We could throw an error here, but it would be better to just ignore it.
+    }
   }
 
   return target;
