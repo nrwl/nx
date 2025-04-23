@@ -105,12 +105,28 @@ export class TempFs {
   }
 
   cleanup() {
-    rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
-    setWorkspaceRoot(this.previousWorkspaceRoot);
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      setWorkspaceRoot(this.previousWorkspaceRoot);
+    } catch (e) {
+      if (process.env.CI) {
+        console.error(e);
+      } else {
+        throw e;
+      }
+    }
   }
 
   reset() {
-    rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
-    mkdirSync(this.tempDir, { recursive: true });
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      mkdirSync(this.tempDir, { recursive: true });
+    } catch (e) {
+      if (process.env.CI) {
+        console.error(e);
+      } else {
+        throw e;
+      }
+    }
   }
 }
