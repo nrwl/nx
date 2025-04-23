@@ -231,6 +231,12 @@ impl<'a> TerminalPane<'a> {
                     .fg(Color::LightCyan)
                     .add_modifier(Modifier::BOLD),
             ),
+            TaskStatus::Stopped => Span::styled(
+                "  ⯀️  ",
+                Style::default()
+                    .fg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            ),
             TaskStatus::NotStarted => Span::styled(
                 "  ·  ",
                 Style::default()
@@ -249,7 +255,7 @@ impl<'a> TerminalPane<'a> {
             TaskStatus::Failure => Color::Red,
             TaskStatus::Skipped => Color::Yellow,
             TaskStatus::InProgress | TaskStatus::Shared=> Color::LightCyan,
-            TaskStatus::NotStarted => Color::DarkGray,
+            TaskStatus::NotStarted | TaskStatus::Stopped=> Color::DarkGray,
         })
     }
 
@@ -355,6 +361,27 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     self.get_base_style(TaskStatus::Shared)
                 } else {
                     self.get_base_style(TaskStatus::Shared)
+                        .add_modifier(Modifier::DIM)
+                },
+            )])];
+
+            let paragraph = Paragraph::new(message)
+                .block(block)
+                .alignment(Alignment::Center)
+                .style(Style::default());
+
+            Widget::render(paragraph, area, buf);
+            return;
+        }
+
+        // If the task has been stopped but does not have a pty
+        if matches!(state.task_status, TaskStatus::Stopped) && !state.has_pty {
+            let message = vec![Line::from(vec![Span::styled(
+                "Running in another Nx process...",
+                if state.is_focused {
+                    self.get_base_style(TaskStatus::Stopped)
+                } else {
+                    self.get_base_style(TaskStatus::Stopped)
                         .add_modifier(Modifier::DIM)
                 },
             )])];
