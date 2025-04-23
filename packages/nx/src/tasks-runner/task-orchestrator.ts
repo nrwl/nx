@@ -668,8 +668,16 @@ export class TaskOrchestrator {
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
       if (this.initializingTaskIds.has(task.id)) {
-        // Hold the thread forever
-        await new Promise(() => {});
+        await new Promise<void>((res) => {
+          runningTask.onExit((code) => {
+            if (!this.tuiEnabled) {
+              if (code > 128) {
+                process.exit(code);
+              }
+            }
+            res();
+          });
+        });
       }
       return runningTask;
     }
@@ -722,8 +730,16 @@ export class TaskOrchestrator {
     });
     await this.scheduleNextTasksAndReleaseThreads();
     if (this.initializingTaskIds.has(task.id)) {
-      // Hold the thread forever
-      await new Promise(() => {});
+      await new Promise<void>((res) => {
+        childProcess.onExit((code) => {
+          if (!this.tuiEnabled) {
+            if (code > 128) {
+              process.exit(code);
+            }
+          }
+          res();
+        });
+      });
     }
 
     return childProcess;

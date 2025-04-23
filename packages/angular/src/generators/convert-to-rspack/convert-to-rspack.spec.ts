@@ -429,36 +429,40 @@ describe('convert-to-rspack', () => {
       import baseWebpackConfig from './webpack.config';
       import webpackMerge from 'webpack-merge';
 
-      const baseConfig = createConfig({
-        options: {
-          root: __dirname,
+      export default async () => {
+        const baseConfig = await createConfig({
+          options: {
+            root: __dirname,
 
-          outputPath: {
-            base: '../../dist/apps/app',
-          },
-          index: './src/index.html',
-          browser: './src/main.ts',
-          polyfills: ['tslib'],
-          tsConfig: './tsconfig.app.json',
-          assets: [
-            './src/favicon.ico',
-            './src/assets',
-            {
-              input: './public',
-              glob: '**/*',
+            outputPath: {
+              base: '../../dist/apps/app',
             },
-          ],
-          styles: ['./src/styles.scss'],
-          scripts: [],
-        },
-      });
-
-      export default webpackMerge(baseConfig[0], baseWebpackConfig);
+            index: './src/index.html',
+            browser: './src/main.ts',
+            polyfills: ['tslib'],
+            tsConfig: './tsconfig.app.json',
+            assets: [
+              './src/favicon.ico',
+              './src/assets',
+              {
+                input: './public',
+                glob: '**/*',
+              },
+            ],
+            styles: ['./src/styles.scss'],
+            scripts: [],
+          },
+        });
+        return webpackMerge(baseConfig[0], baseWebpackConfig);
+      };
       "
     `);
     expect(tree.read('apps/app/webpack.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "const { NxModuleFederationPlugin } = require('@nx/module-federation/rspack');
+      "const {
+        NxModuleFederationPlugin,
+        NxModuleFederationDevServerPlugin,
+      } = require('@nx/module-federation/rspack');
       const config = require('./module-federation.config');
 
       module.exports = {
@@ -469,6 +473,7 @@ describe('convert-to-rspack', () => {
               dts: false,
             }
           ),
+          new NxModuleFederationDevServerPlugin({ config }),
         ],
       };
       "
@@ -549,31 +554,32 @@ describe('convert-to-rspack', () => {
       import baseWebpackConfig from './webpack.config';
       import webpackMerge from 'webpack-merge';
 
-      const baseConfig = createConfig({
-        options: {
-          root: __dirname,
+      export default async () => {
+        const baseConfig = await createConfig({
+          options: {
+            root: __dirname,
 
-          outputPath: {
-            base: '../../dist/apps/app',
-          },
-          index: './src/index.html',
-          browser: './src/main.ts',
-          polyfills: ['tslib'],
-          tsConfig: './tsconfig.app.json',
-          assets: [
-            './src/favicon.ico',
-            './src/assets',
-            {
-              input: './public',
-              glob: '**/*',
+            outputPath: {
+              base: '../../dist/apps/app',
             },
-          ],
-          styles: ['./src/styles.scss'],
-          scripts: [],
-        },
-      });
-
-      export default webpackMerge(baseConfig[0], baseWebpackConfig);
+            index: './src/index.html',
+            browser: './src/main.ts',
+            polyfills: ['tslib'],
+            tsConfig: './tsconfig.app.json',
+            assets: [
+              './src/favicon.ico',
+              './src/assets',
+              {
+                input: './public',
+                glob: '**/*',
+              },
+            ],
+            styles: ['./src/styles.scss'],
+            scripts: [],
+          },
+        });
+        return webpackMerge(baseConfig[0], baseWebpackConfig);
+      };
       "
     `);
   });

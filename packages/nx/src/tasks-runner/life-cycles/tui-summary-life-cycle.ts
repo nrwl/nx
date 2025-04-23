@@ -58,23 +58,22 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.printTaskTerminalOutput = (task, taskStatus, terminalOutput) => {
+    taskIdsInOrderOfCompletion.push(task.id);
     tasksToTerminalOutputs[task.id] = { terminalOutput, taskStatus };
   };
 
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
       totalStoppedTasks++;
-      taskIdsInOrderOfCompletion.push(taskId);
     }
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (let t of taskResults) {
+    for (const { task, status } of taskResults) {
       totalCompletedTasks++;
-      inProgressTasks.delete(t.task.id);
-      taskIdsInOrderOfCompletion.push(t.task.id);
+      inProgressTasks.delete(task.id);
 
-      switch (t.status) {
+      switch (status) {
         case 'remote-cache':
         case 'local-cache':
         case 'local-cache-kept-existing':
@@ -86,7 +85,7 @@ export function getTuiTerminalSummaryLifeCycle({
           break;
         case 'failure':
           totalFailedTasks++;
-          failedTasks.add(t.task.id);
+          failedTasks.add(task.id);
           break;
       }
     }
