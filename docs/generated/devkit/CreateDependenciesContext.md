@@ -51,7 +51,7 @@ The `nx.json` configuration from the workspace
 
 • `Readonly` **projects**: `Record`\<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
 
-The configuration of each project in the workspace.
+The configuration of each project in the workspace keyed by project name.
 
 ---
 

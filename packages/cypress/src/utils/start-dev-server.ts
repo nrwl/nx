@@ -12,7 +12,10 @@ import {
 import { join } from 'path';
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import * as detectPort from 'detect-port';
-import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from 'nx/src/command-line/run/executor-utils';
 import { existsSync, writeFileSync } from 'fs';
 
 export async function* startDevServer(
@@ -190,7 +193,7 @@ ${e.message || e}`);
       context.projectsConfigurations?.projects?.[target.project];
     const targetConfig = projectConfig.targets[target.target];
 
-    const [collection, executor] = targetConfig.executor.split(':');
+    const [collection, executor] = parseExecutor(targetConfig.executor);
     const { schema } = getExecutorInformation(
       collection,
       executor,

@@ -99,7 +99,7 @@ export interface CreateDependenciesContext {
   readonly externalNodes: ProjectGraph['externalNodes'];
 
   /**
-   * The configuration of each project in the workspace.
+   * The configuration of each project in the workspace keyed by project name.
    */
   readonly projects: Record<string, ProjectConfiguration>;
 

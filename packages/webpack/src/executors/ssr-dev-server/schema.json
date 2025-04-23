@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Webpack SSR Dev Server",
   "description": "Serve a SSR application using webpack.",

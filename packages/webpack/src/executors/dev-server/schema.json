@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Webpack dev server",
   "description": "Serve an application using webpack.",

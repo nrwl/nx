@@ -3,6 +3,7 @@
   "version": 2,
   "title": "Verdaccio Local Registry",
   "description": "Start a local registry with Verdaccio.",
+  "continuous": true,
   "cli": "nx",
   "type": "object",
   "properties": {

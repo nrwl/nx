@@ -40,7 +40,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraph, createTaskId } from './create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 import { isTuiEnabled } from './is-tui-enabled';
 import {
   CompositeLifeCycle,

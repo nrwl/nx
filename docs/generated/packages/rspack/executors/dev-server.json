@@ -6,6 +6,7 @@
     "version": 2,
     "title": "Rspack dev-server executor",
     "description": "Run @rspack/dev-server to serve a project.",
+    "continuous": true,
     "type": "object",
     "properties": {
       "buildTarget": {

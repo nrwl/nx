@@ -3,6 +3,7 @@
   "implementation": "/packages/storybook/src/executors/storybook/storybook.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "Storybook Dev Builder",
     "cli": "nx",
