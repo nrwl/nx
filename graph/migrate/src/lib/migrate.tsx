@@ -17,10 +17,12 @@ import {
   MigrationSettingsPanel,
   AutomaticMigration,
 } from './components';
+import { currentMigrationHasChanges } from './state/automatic/selectors';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
   nxConsoleMetadata: MigrationsJsonMetadata;
+  currentMigrationId?: string;
   onRunMigration: (
     migration: MigrationDetailsWithId,
     configuration: {
@@ -48,6 +50,7 @@ export interface MigrateUIProps {
 export enum PrimaryAction {
   RunMigrations = 'Run Migrations',
   PauseMigrations = 'Pause Migrations',
+  ApproveChanges = 'Approve Changes',
   FinishWithoutSquashingCommits = 'Finish without squashing commits',
   FinishSquashingCommits = 'Finish (squash commits)',
 }
@@ -74,12 +77,20 @@ export function MigrateUI(props: MigrateUIProps) {
   const isDone = useSelector(actor, (state) => state.matches('done'));
   const isInit = useSelector(actor, (state) => state.matches('init'));
   const running = useSelector(actor, (state) => state.matches('running'));
+  const currentMigration = useSelector(
+    actor,
+    (state) => state.context.currentMigration
+  );
+  const approveChanges = useSelector(actor, (state) =>
+    currentMigrationHasChanges(state.context)
+  );
 
   useEffect(() => {
     actor.send({
       type: 'loadInitialData',
       migrations: props.migrations,
       metadata: props.nxConsoleMetadata,
+      currentMigrationId: props.currentMigrationId,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only load initial data when migrations change
   }, [JSON.stringify(props.migrations)]);
@@ -99,15 +110,20 @@ export function MigrateUI(props: MigrateUIProps) {
 
   useEffect(() => {
     if (
-      (primaryAction === PrimaryAction.RunMigrations ||
+      (primaryAction === PrimaryAction.ApproveChanges ||
+        primaryAction === PrimaryAction.RunMigrations ||
         primaryAction === PrimaryAction.PauseMigrations) &&
       !isInit
     ) {
       setPrimaryAction(
-        running ? PrimaryAction.PauseMigrations : PrimaryAction.RunMigrations
+        running
+          ? PrimaryAction.PauseMigrations
+          : approveChanges
+          ? PrimaryAction.ApproveChanges
+          : PrimaryAction.RunMigrations
       );
     }
-  }, [running, primaryAction, isInit]);
+  }, [running, primaryAction, isInit, approveChanges]);
 
   const handlePauseResume = () => {
     if (running) {
@@ -118,7 +134,14 @@ export function MigrateUI(props: MigrateUIProps) {
   };
 
   const handlePrimaryActionSelection = () => {
-    if (
+    if (primaryAction === PrimaryAction.ApproveChanges) {
+      if (currentMigration) {
+        actor.send({
+          type: 'reviewMigration',
+          migrationId: currentMigration.id,
+        });
+      }
+    } else if (
       primaryAction === PrimaryAction.RunMigrations ||
       primaryAction === PrimaryAction.PauseMigrations
     ) {
@@ -224,27 +247,7 @@ export function MigrateUI(props: MigrateUIProps) {
                   {!isDone && (
                     <>
                       {' '}
-                      {!running && (
-                        <li
-                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-                          onClick={() => {
-                            setPrimaryAction(PrimaryAction.RunMigrations);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <span
-                            className={
-                              primaryAction === PrimaryAction.RunMigrations
-                                ? 'inline-block'
-                                : 'opacity-0'
-                            }
-                          >
-                            <CheckIcon className="h-4 w-4" />
-                          </span>
-                          <span>{'Run Migrations'}</span>
-                        </li>
-                      )}
-                      {running && (
+                      {running ? (
                         <li
                           className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                           onClick={() => {
@@ -262,6 +265,44 @@ export function MigrateUI(props: MigrateUIProps) {
                             <CheckIcon className="h-4 w-4" />
                           </span>
                           <span>{'Pause Migrations'}</span>
+                        </li>
+                      ) : approveChanges ? (
+                        <li
+                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          onClick={() => {
+                            setPrimaryAction(PrimaryAction.ApproveChanges);
+                            setIsOpen(false);
+                          }}
+                        >
+                          <span
+                            className={
+                              primaryAction === PrimaryAction.ApproveChanges
+                                ? 'inline-block'
+                                : 'opacity-0'
+                            }
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </span>
+                          <span>{'Approve Changes'}</span>
+                        </li>
+                      ) : (
+                        <li
+                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          onClick={() => {
+                            setPrimaryAction(PrimaryAction.RunMigrations);
+                            setIsOpen(false);
+                          }}
+                        >
+                          <span
+                            className={
+                              primaryAction === PrimaryAction.RunMigrations
+                                ? 'inline-block'
+                                : 'opacity-0'
+                            }
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </span>
+                          <span>{'Run Migrations'}</span>
                         </li>
                       )}
                       <div className="my-1 h-0.5 w-full bg-slate-300/30" />

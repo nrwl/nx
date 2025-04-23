@@ -91,10 +91,11 @@ export const machine = createMachine<
             assign((ctx, event) => {
               ctx.migrations = event.migrations;
               ctx.nxConsoleMetadata = event.metadata;
-              ctx.currentMigration = findFirstIncompleteMigration(
-                event.migrations,
-                event.metadata
-              );
+              ctx.currentMigration =
+                event.migrations.find(
+                  (m) => m.id === event.currentMigrationId
+                ) ??
+                findFirstIncompleteMigration(event.migrations, event.metadata);
             }),
           ],
         },
