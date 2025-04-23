@@ -2,7 +2,7 @@
 title: 'Nx 14.2 — Angular v14, Storybook update, lightweight Nx and more!'
 slug: 'nx-14-2-angular-v14-storybook-update-lightweight-nx-and-more'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-06-09/uScdSDGP4NgCKFrPdznbhw.png'
+cover_image: '/blog/images/2022-06-09/uScdSDGP4NgCKFrPdznbhw.avif'
 tags: [nx, release]
 description: Nx 14.2 brings Angular v14 support, Storybook 6.5, improved Angular CLI migrations, optional nx.json configuration, and significant performance gains.
 ---

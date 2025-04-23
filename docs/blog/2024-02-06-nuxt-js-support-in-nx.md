@@ -1,7 +1,7 @@
 ---
 title: Introducing @nx/nuxt Enhanced Nuxt.js Support in Nx
 slug: 'introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx'
-cover_image: '/blog/images/2024-02-06/featured_img.png'
+cover_image: '/blog/images/2024-02-06/featured_img.avif'
 authors: ['Katerina Skroumpelou']
 tags: [devtools, javascript, monorepos, nuxt]
 description: 'Explore how the new @nx/nuxt plugin enhances Nuxt.js development with automated task recognition and improved monorepo capabilities.'

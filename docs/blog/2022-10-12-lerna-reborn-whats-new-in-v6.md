@@ -2,7 +2,7 @@
 title: "Lerna reborn — What's new in v6?"
 slug: 'lerna-reborn-whats-new-in-v6'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-10-12/RGQCNNO-SSQ8PHnIZ4BVTQ.png'
+cover_image: '/blog/images/2022-10-12/RGQCNNO-SSQ8PHnIZ4BVTQ.avif'
 tags: [nx, release]
 description: Lerna v6 brings default Nx integration, remote caching, PNPM support, dynamic terminal output, and improved task management to speed up your monorepo builds.
 ---

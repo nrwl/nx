@@ -3,7 +3,7 @@ title: 'Modern Angular Testing with Nx'
 slug: modern-angular-testing-with-nx
 authors: ['Jack Hsu']
 tags: ['angular', 'nx']
-cover_image: /blog/images/2025-03-17/modern-angular-testing.png
+cover_image: /blog/images/2025-03-17/modern-angular-testing.avif
 description: 'Learn how Nx enhances Angular testing by integrating modern tools like Playwright and Vitest, improving test speed, reliability, and CI scalability.'
 ---
 

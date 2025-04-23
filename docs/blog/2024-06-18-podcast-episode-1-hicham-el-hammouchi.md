@@ -3,7 +3,7 @@ title: 'Nx Enterprise Podcast Episode 1: Hicham El Hammouchi'
 slug: 'hicham-el-hammouchi-podcast-1'
 authors: ['Zack DeRose']
 tags: [podcast]
-cover_image: /blog/images/2024-06-18/ep-1-hicham.png
+cover_image: /blog/images/2024-06-18/ep-1-hicham.avif
 podcastYoutubeId: 8iiLB_2djZ8
 podcastSpotifyId: 24yagCNpu9EGj0fCwSDQkj
 podcastAmazonUrl: https://music.amazon.com/podcasts/a221fdad-36fd-4695-a5b4-038d7b99d284/episodes/899a2e4c-2e56-4dfa-a3e3-e69eb216f2b0/the-enterprise-software-podcast-by-nx-the-enterprise-software-podcast-by-nx-1-hicham-el-hamouchi

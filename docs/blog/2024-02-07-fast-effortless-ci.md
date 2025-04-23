@@ -2,7 +2,7 @@
 title: Fast, Effortless CI
 slug: 'fast-effortless-ci'
 authors: [Isaac Mann]
-cover_image: '/blog/images/2024-02-07/featured_img.png'
+cover_image: '/blog/images/2024-02-07/featured_img.avif'
 tags: [nx, nx-cloud, release]
 reposts: []
 description: 'Discover how Nx Agents speeds up CI pipelines from 90 to 10 minutes by intelligently distributing tasks and managing resources.'
