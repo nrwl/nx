@@ -1,7 +1,10 @@
 import { minimatch } from 'minimatch';
 import { relative } from 'node:path';
 import { join } from 'node:path/posix';
-import { getExecutorInformation } from '../command-line/run/executor-utils';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../command-line/run/executor-utils';
 import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -429,7 +432,7 @@ export function getExecutorForTask(
   projectGraph: ProjectGraph
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   const executor = getExecutorNameForTask(task, projectGraph);
-  const [nodeModule, executorName] = executor.split(':');
+  const [nodeModule, executorName] = parseExecutor(executor);
 
   return getExecutorInformation(
     nodeModule,
