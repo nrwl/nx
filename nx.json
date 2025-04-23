@@ -271,6 +271,13 @@
         }
       },
       {
+        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "blog/**/!(sitemap).md"
+        }
+      },
+      {
         "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
         "projects": [
           "!.",
