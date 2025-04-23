@@ -23,6 +23,7 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_NO_TIMEOUTS: 'true'
+      NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
 
     steps:
       - name: Checkout

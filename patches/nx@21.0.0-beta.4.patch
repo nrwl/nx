@@ -191,10 +191,10 @@ index 01d88e6def35cc032c6b5c250c270f35952e0094..3d458ad9a069898c3e1760d1b4d11116
          }
      }
 diff --git a/src/tasks-runner/utils.js b/src/tasks-runner/utils.js
-index 83fe5d41b3325124956683ce10e58a3c5eb84506..83ea7b0979b7028a6e1e6c1181ee7631d6e3b4ee 100644
+index 83fe5d41b3325124956683ce10e58a3c5eb84506..6d3d4d0a7775cb47994bac1a45473e7c7e889fe5 100644
 --- a/src/tasks-runner/utils.js
 +++ b/src/tasks-runner/utils.js
-@@ -370,14 +370,27 @@ function getSerializedArgsForTask(task, isVerbose) {
+@@ -370,14 +370,32 @@ function getSerializedArgsForTask(task, isVerbose) {
  }
  function shouldStreamOutput(task, initiatingProject) {
      // For now, disable streaming output on the JS side when running the TUI
@@ -209,6 +209,11 @@ index 83fe5d41b3325124956683ce10e58a3c5eb84506..83ea7b0979b7028a6e1e6c1181ee7631
 +        console.log("[Patched Nx]: NX_STREAM_OUTPUT is true, will stream output", `[${process.pid}]`);
          return true;
 -    if (longRunningTask(task))
++    }
++
++    if (process.env.NX_STREAM_OUTPUT === 'false') {
++        console.log("[Patched Nx]: NX_STREAM_OUTPUT is false, will NOT stream output", `[${process.pid}]`);
++        return false;
 +    }
 +
 +    if (longRunningTask(task)) {
@@ -226,3 +231,6 @@ index 83fe5d41b3325124956683ce10e58a3c5eb84506..83ea7b0979b7028a6e1e6c1181ee7631
      return false;
  }
  function isCacheableTask(task, options) {
+diff --git a/src/utils/git-utils.index-filter.d.ts b/src/utils/git-utils.index-filter.d.ts
+deleted file mode 100644
+index e69de29bb2d1d6434b8b29ae775ad8c2e48c5391..0000000000000000000000000000000000000000
