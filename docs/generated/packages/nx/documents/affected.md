@@ -5,7 +5,7 @@ description: 'Run target for affected projects. See https://nx.dev/ci/features/a
 
 # affected
 
-Run target for affected projects. See [https://nx.dev/ci/features/affected](https://nx.dev/ci/features/affected) for more details.
+Run target for affected projects. See [https://nx.dev/ci/features/affected](/ci/features/affected) for more details.
 
 ## Usage
 

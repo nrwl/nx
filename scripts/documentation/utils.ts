@@ -135,7 +135,7 @@ export function wrapLinks(content: string): string {
   const urlRegex = /(https?:\/\/)[^\s]+[a-zA-Z][a-zA-Z]/g;
   const links = content.match(urlRegex) || [];
   for (const link of links) {
-    const wrappedLink = `[${link}](${link})`;
+    const wrappedLink = `[${link}](${link.replace('https://nx.dev', '')})`;
     content = content.replace(link, wrappedLink);
   }
   return content;
