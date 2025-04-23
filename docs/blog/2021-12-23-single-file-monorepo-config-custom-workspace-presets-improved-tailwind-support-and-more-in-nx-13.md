@@ -2,7 +2,7 @@
 title: 'Single File Monorepo Config, Custom Workspace Presets, Improved Tailwind Support, and more in Nx 13.4!'
 slug: 'single-file-monorepo-config-custom-workspace-presets-improved-tailwind-support-and-more-in-nx-13'
 authors: ['Brandon Roberts']
-cover_image: '/blog/images/2021-12-23/4u3Fw49H5U-sqgyBoGsqw.png'
+cover_image: '/blog/images/2021-12-23/4u3Fw49H5U-sqgyBoGsqw.avif'
 tags: [nx, release]
 description: Nx 13.4 brings single file monorepo configuration, custom workspace presets, enhanced Tailwind support for Angular, and dedicated TypeScript/JavaScript support with @nrwl/js.
 ---

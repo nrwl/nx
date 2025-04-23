@@ -2,7 +2,7 @@
 title: Qwikify your Development with Nx
 slug: 'qwikify-your-development-with-nx'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-08-15/featured_img.png'
+cover_image: '/blog/images/2023-08-15/featured_img.avif'
 tags: [nx, changelog, release]
 description: Learn how to integrate Qwik with Nx for a todo app, covering setup, routes, libraries, Qwik Context, and modular development best practices.
 ---

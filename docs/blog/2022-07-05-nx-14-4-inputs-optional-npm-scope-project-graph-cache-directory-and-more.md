@@ -2,7 +2,7 @@
 title: 'Nx 14.4 — Inputs, optional npm scope, project graph cache directory and more!'
 slug: 'nx-14-4-inputs-optional-npm-scope-project-graph-cache-directory-and-more'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-07-05/lpmHhIiE9v5yJI6nLi2dlw.png'
+cover_image: '/blog/images/2022-07-05/lpmHhIiE9v5yJI6nLi2dlw.avif'
 tags: [nx, release]
 description: 'Nx 14.4 enhances build caching with configurable inputs, simplifies workspace setup with optional npm scope, and optimizes CI performance with project graph improvements.'
 ---

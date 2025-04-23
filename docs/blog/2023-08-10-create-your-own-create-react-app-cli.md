@@ -2,7 +2,7 @@
 title: 'Create Your Own create-react-app CLI'
 slug: 'create-your-own-create-react-app-cli'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.png'
+cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.avif'
 tags: [nx]
 description: Build a custom create-react-app CLI with Nx plugins, including workspace setup, Verdaccio testing, and project template customization for a branded React app scaffolding experience.
 ---

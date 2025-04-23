@@ -5,7 +5,7 @@ date: 2024-03-11
 slug: 'nx-agents-walkthrough-effortlessly-fast-ci-built-for-monorepos'
 authors: ['Rareș Matei']
 tags: [webinar]
-cover_image: /blog/images/2024-03-11/march-webinar.png
+cover_image: /blog/images/2024-03-11/march-webinar.avif
 status: Past - Gated
 registrationUrl: https://go.nx.dev/march-webinar
 ---
