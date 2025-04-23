@@ -219,6 +219,7 @@ async function getBuildTargetConfig(
 
 function getDevTargetConfig(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `next dev`,
     options: {
       cwd: projectRoot,
@@ -230,6 +231,7 @@ function getDevTargetConfig(projectRoot: string) {
 
 function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `next start`,
     options: {
       cwd: projectRoot,

@@ -429,24 +429,6 @@ describe('Angular AST Utils', () => {
 
       expect(isStandalone(tree, tsSourceFile, 'Pipe')).toBe(false);
     });
-
-    it('should support the legacy signature without a Tree', () => {
-      const componentSourceText = `import { Component } from '@angular/core';
-      
-      @Component({
-        standalone: true
-      })
-      export class MyComponent {}
-      `;
-      const tsSourceFile = createSourceFile(
-        'my.component.ts',
-        componentSourceText,
-        ScriptTarget.Latest,
-        true
-      );
-
-      expect(isStandalone(tsSourceFile, 'Component')).toBe(true);
-    });
   });
 
   it('should add a provider to the bootstrapApplication call', () => {

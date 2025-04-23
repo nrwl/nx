@@ -13,6 +13,9 @@ pub struct Task {
     pub target: TaskTarget,
     pub outputs: Vec<String>,
     pub project_root: Option<String>,
+    pub start_time: Option<f64>,
+    pub end_time: Option<f64>,
+    pub continuous: Option<bool>,
 }
 
 #[napi(object)]
@@ -21,6 +24,15 @@ pub struct TaskTarget {
     pub project: String,
     pub target: String,
     pub configuration: Option<String>,
+}
+
+#[napi(object)]
+#[derive(Default, Clone)]
+pub struct TaskResult {
+    pub task: Task,
+    pub status: String,
+    pub code: i32,
+    pub terminal_output: Option<String>,
 }
 
 #[napi(object)]

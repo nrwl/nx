@@ -1,9 +1,9 @@
-import { getPseudoTerminal, PseudoTerminal } from './pseudo-terminal';
+import { createPseudoTerminal, PseudoTerminal } from './pseudo-terminal';
 
 describe('PseudoTerminal', () => {
   let terminal: PseudoTerminal;
-  beforeAll(() => {
-    terminal = getPseudoTerminal(true);
+  beforeEach(() => {
+    terminal = createPseudoTerminal(true);
   });
 
   afterAll(() => {
@@ -17,6 +17,7 @@ describe('PseudoTerminal', () => {
       done();
     });
   });
+
   it('should kill a running command', (done) => {
     const childProcess = terminal.runCommand(
       'sleep 3 && echo "hello world" > file.txt'
@@ -31,15 +32,17 @@ describe('PseudoTerminal', () => {
 
   it('should subscribe to output', (done) => {
     const childProcess = terminal.runCommand('echo "hello world"');
-
     let output = '';
     childProcess.onOutput((chunk) => {
       output += chunk;
     });
 
     childProcess.onExit(() => {
-      expect(output.trim()).toContain('hello world');
-      done();
+      try {
+        expect(output.trim()).toContain('hello world');
+      } finally {
+        done();
+      }
     });
   });
 
@@ -54,20 +57,4 @@ describe('PseudoTerminal', () => {
       });
     });
   }
-
-  it('should run multiple commands', async () => {
-    function runCommand() {
-      return new Promise((res) => {
-        const cp1 = terminal.runCommand('whoami', {});
-
-        cp1.onExit(res);
-      });
-    }
-
-    let i = 0;
-    while (i < 10) {
-      await runCommand();
-      i++;
-    }
-  });
 });

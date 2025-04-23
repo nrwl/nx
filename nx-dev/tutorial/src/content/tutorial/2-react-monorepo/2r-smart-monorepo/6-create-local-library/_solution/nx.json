@@ -64,9 +64,6 @@
   "targetDefaults": {
     "test": {
       "dependsOn": ["^build", "^build", "^build", "^build"]
-    },
-    "e2e-ci--**/*": {
-      "dependsOn": ["^build"]
     }
   },
   "generators": {

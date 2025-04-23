@@ -31,7 +31,9 @@ import { prompt } from 'enquirer';
 const SUPPORTED_EXECUTORS = [
   '@angular-devkit/build-angular:browser',
   '@angular-devkit/build-angular:dev-server',
+  '@angular-devkit/build-angular:server',
   '@nx/angular:webpack-browser',
+  '@nx/angular:webpack-server',
   '@nx/angular:dev-server',
   '@nx/angular:module-federation-dev-server',
 ];
@@ -41,20 +43,13 @@ const RENAMED_OPTIONS = {
   ngswConfigPath: 'serviceWorker',
 };
 
+const DEFAULT_PORT = 4200;
+
 const REMOVED_OPTIONS = [
-  'publicHost',
-  'disableHostCheck',
-  'resourcesOutputPath',
-  'routesFile',
-  'routes',
-  'discoverRoutes',
-  'appModuleBundle',
-  'inputIndexPath',
-  'outputIndexPath',
   'buildOptimizer',
-  'deployUrl',
   'buildTarget',
   'browserTarget',
+  'publicHost',
 ];
 
 function normalizeFromProjectRoot(
@@ -357,6 +352,8 @@ export async function convertToRspack(
 
   validateSupportedBuildExecutor(Object.values(project.targets));
 
+  let projectServePort = DEFAULT_PORT;
+
   for (const [targetName, target] of Object.entries(project.targets)) {
     if (
       target.executor === '@angular-devkit/build-angular:browser' ||
@@ -383,6 +380,18 @@ export async function convertToRspack(
       }
       buildTargetNames.push(targetName);
     } else if (
+      target.executor === '@angular-devkit/build-angular:server' ||
+      target.executor === '@nx/angular:webpack-server'
+    ) {
+      createConfigOptions.ssr ??= {};
+      createConfigOptions.ssr.entry ??= normalizeFromProjectRoot(
+        tree,
+        target.options.main,
+        project.root
+      );
+      createConfigOptions.server = './src/main.server.ts';
+      buildTargetNames.push(targetName);
+    } else if (
       target.executor === '@angular-devkit/build-angular:dev-server' ||
       target.executor === '@nx/angular:dev-server' ||
       target.executor === '@nx/angular:module-federation-dev-server'
@@ -395,6 +404,10 @@ export async function convertToRspack(
           createConfigOptions.devServer,
           project.root
         );
+
+        if (target.options.port !== DEFAULT_PORT) {
+          projectServePort = target.options.port;
+        }
       }
       if (target.configurations) {
         for (const [configurationName, configuration] of Object.entries(
@@ -429,6 +442,12 @@ export async function convertToRspack(
 
   for (const targetName of [...buildTargetNames, ...serveTargetNames]) {
     delete project.targets[targetName];
+  }
+
+  if (projectServePort !== DEFAULT_PORT) {
+    project.targets.serve ??= {};
+    project.targets.serve.options ??= {};
+    project.targets.serve.options.port = projectServePort;
   }
 
   updateProjectConfiguration(tree, projectName, project);

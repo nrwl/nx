@@ -18,8 +18,8 @@ export function TableOfContents({
   const [headings, setHeadings] = useState<TocItem[]>([]);
 
   useEffect(() => {
-    // Find the main content wrapper where markdown content is rendered
-    const content = document.querySelector('[data-document="main"]');
+    // Find the content area where markdown content is rendered
+    const content = document.querySelector('[data-content-area]');
     if (!content) return;
 
     // Get all headings h1-h6 within the content
@@ -42,7 +42,7 @@ export function TableOfContents({
   }, [maxDepth]);
 
   if (headings.length === 0) {
-    return null;
+    return <></>;
   }
 
   return (

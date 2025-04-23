@@ -49,9 +49,7 @@ describe('createConfig', () => {
         "skipTypeChecking": false
 
           }
-        });
-        
-        "
+        });"
     `);
   });
 
@@ -83,16 +81,14 @@ describe('createConfig', () => {
 
           }
         }, {
-            production: {
+            "production": {
               options: {
                 
         "index": "src/index.prod.html",
         "browser": "src/main.prod.ts"
 
               }
-            }});
-        
-        "
+            }});"
     `);
   });
 });

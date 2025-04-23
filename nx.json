@@ -240,7 +240,16 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    "@nx/powerpack-enterprise-cloud"
+    "@nx/powerpack-enterprise-cloud",
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "serveStorybookTargetName": "serve:storybook",
+        "buildStorybookTargetName": "build:storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static:storybook"
+      }
+    }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
@@ -371,5 +380,12 @@
         }
       }
     ]
+  },
+  "generators": {
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "jest"
+      }
+    }
   }
 }

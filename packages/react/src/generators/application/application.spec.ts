@@ -180,7 +180,7 @@ describe('app', () => {
           webServer: {
             command: '${packageCmd} nx run my-app:preview',
             url: 'http://localhost:4300',
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: true,
             cwd: workspaceRoot
           },
           projects: [
@@ -1340,101 +1340,6 @@ describe('app', () => {
         "dependsOn": [
           "^build",
         ],
-      }
-    `);
-  });
-
-  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with playwright', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    let nxJson = readNxJson(tree);
-    delete nxJson.targetDefaults;
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    await applicationGenerator(tree, {
-      directory: 'myapp',
-      addPlugin: true,
-      linter: Linter.None,
-      style: 'none',
-      e2eTestRunner: 'playwright',
-    });
-
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "e2e-ci--**/*": {
-          "dependsOn": [
-            "^build",
-          ],
-        },
-      }
-    `);
-  });
-
-  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with cypress', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    let nxJson = readNxJson(tree);
-    delete nxJson.targetDefaults;
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    await applicationGenerator(tree, {
-      directory: 'myapp',
-      addPlugin: true,
-      linter: Linter.None,
-      style: 'none',
-      e2eTestRunner: 'cypress',
-    });
-
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "e2e-ci--**/*": {
-          "dependsOn": [
-            "^build",
-          ],
-        },
-      }
-    `);
-  });
-
-  it('should add e2e-ci targetDefaults to nxJson when addPlugin=true with cypress and use the defined webpack buildTargetName', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace();
-    let nxJson = readNxJson(tree);
-    delete nxJson.targetDefaults;
-    nxJson.plugins ??= [];
-    nxJson.plugins.push({
-      plugin: '@nx/webpack/plugin',
-      options: {
-        buildTargetName: 'build-base',
-      },
-    });
-    updateNxJson(tree, nxJson);
-
-    // ACT
-    await applicationGenerator(tree, {
-      directory: 'myapp',
-      addPlugin: true,
-      linter: Linter.None,
-      style: 'none',
-      bundler: 'webpack',
-      e2eTestRunner: 'cypress',
-    });
-
-    // ASSERT
-    nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults).toMatchInlineSnapshot(`
-      {
-        "e2e-ci--**/*": {
-          "dependsOn": [
-            "^build-base",
-          ],
-        },
       }
     `);
   });

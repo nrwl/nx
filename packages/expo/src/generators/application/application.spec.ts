@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   getProjects,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -277,56 +276,6 @@ describe('app', () => {
           type: 'ios.app',
         },
       });
-    });
-  });
-
-  describe('cypress', () => {
-    it('should create e2e app with e2e-ci targetDefaults', async () => {
-      await expoApplicationGenerator(appTree, {
-        name: 'my-app',
-        directory: 'my-dir',
-        linter: Linter.EsLint,
-        e2eTestRunner: 'cypress',
-        js: false,
-        skipFormat: false,
-        unitTestRunner: 'none',
-        addPlugin: true,
-      });
-
-      // ASSERT
-      const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^export",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('playwright', () => {
-    it('should create e2e app with e2e-ci targetDefaults', async () => {
-      await expoApplicationGenerator(appTree, {
-        name: 'my-app',
-        directory: 'my-dir',
-        linter: Linter.EsLint,
-        e2eTestRunner: 'playwright',
-        js: false,
-        skipFormat: false,
-        unitTestRunner: 'none',
-        addPlugin: true,
-      });
-
-      // ASSERT
-      const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^export",
-          ],
-        }
-      `);
     });
   });
 

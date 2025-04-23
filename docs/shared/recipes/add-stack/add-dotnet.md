@@ -76,12 +76,6 @@ This generates the following files:
 }
 ```
 
-```json {% fileName=".nx-dotnet.rc.json" %}
-{
-  "nugetPackages": {}
-}
-```
-
 ```xml {% fileName="Directory.Build.props" %}
 <!--
   This file is imported early in the build order.
@@ -118,6 +112,14 @@ This generates the following files:
     <Exec Command="node $(NodeModulesRelativePath)/node_modules/@nx-dotnet/core/src/tasks/check-module-boundaries.js --project-root &quot;$(MSBuildProjectDirRelativePath)&quot;"/>
   </Target>
 </Project>
+```
+
+And on Nx versions earlier than 17:
+
+```json {% fileName=".nx-dotnet.rc.json" %}
+{
+  "nugetPackages": {}
+}
 ```
 
 ## Create an Application

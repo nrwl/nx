@@ -8,6 +8,15 @@ cover_image: /blog/images/articles/monorepos-are-ai-future-proof-bg.jpg
 youtubeUrl: https://youtu.be/RNilYmJJzdk
 ---
 
+{% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
+
+- **Nx Just Made Your LLM Way Smarter**
+- [Making Cursor Smarter with an MCP Server For Nx Monorepos](/blog/nx-made-cursor-smarter)
+- [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
+- [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
+
+{% /callout %}
+
 Everyone is constantly pushing to be more productive: delivering more features, reducing overhead, and keeping up with increasing demands. Companies want to move faster, and engineering teams work toward the same goal, looking for ways to streamline development and ship more with fewer resources. LLMs offer a promising way to boost efficiency, whether by assisting individual developers or improving workflows across a team.
 
 However, the quality of an LLM's response depends entirely on the data and context it has access to. Ask an LLM (in this case, GitHub Copilot with GPT-4o) about the structure of an NPM workspace monorepo, and you probably won't be satisfied with the result:

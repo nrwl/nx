@@ -86,7 +86,7 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
-      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v19."
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v22."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
@@ -110,7 +110,7 @@
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
       "description": "Adds NgRx support to an application or library.",
-      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
+      "x-deprecated": "Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead. It will be removed in Nx v22."
     },
     "ngrx-feature-store": {
       "factory": "./src/generators/ngrx-feature-store/ngrx-feature-store",

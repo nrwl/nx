@@ -58,15 +58,11 @@ describe('Node Applications + webpack', () => {
 
   async function runE2eTests(appName: string, port: number = 5000) {
     process.env.PORT = `${port}`;
-    const childProcess = await runCommandUntil(`serve ${appName}`, (output) => {
-      return output.includes(`http://localhost:${port}`);
-    });
     const result = runCLI(`e2e ${appName}-e2e --verbose`);
     expect(result).toContain('Setting up...');
     expect(result).toContain('Tearing down..');
     expect(result).toContain('Successfully ran target e2e');
 
-    await promisifiedTreeKill(childProcess.pid, 'SIGKILL');
     await killPort(port);
     process.env.PORT = '';
   }
@@ -96,7 +92,7 @@ describe('Node Applications + webpack', () => {
         `generate @nx/node:app apps/${koaApp} --framework=koa --port=7002 --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
       );
       runCLI(
-        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest`
+        `generate @nx/node:app apps/${nestApp} --framework=nest --port=7003 --bundler=webpack --no-interactive --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --verbose`
       );
 
       addLibImport(expressApp, testLib1);
@@ -193,7 +189,9 @@ describe('Node Applications + webpack', () => {
       return config;
     });
 
-    runCLI(`serve ${nodeApp1} --watch=false`);
+    await runCommandUntil(`serve ${nodeApp1} `, (output) =>
+      output.includes('Hello World')
+    );
 
     checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
     checkFilesExist(`dist/apps/${nodeApp2}/main.js`);

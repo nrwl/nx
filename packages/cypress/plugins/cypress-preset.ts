@@ -8,6 +8,7 @@ import { dirname, join, relative } from 'path';
 import type { InlineConfig } from 'vite';
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
 import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
+import * as treeKill from 'tree-kill';
 
 // Importing the cypress type here causes the angular and next unit
 // tests to fail when transpiling, it seems like the cypress types are
@@ -79,7 +80,7 @@ function startWebServer(webServerCommand: string) {
     windowsHide: false,
   });
 
-  return () => {
+  return async () => {
     if (process.platform === 'win32') {
       try {
         execSync('taskkill /pid ' + serverProcess.pid + ' /T /F', {
@@ -91,9 +92,14 @@ function startWebServer(webServerCommand: string) {
         }
       }
     } else {
-      // child.kill() does not work on linux
-      // process.kill will kill the whole process group on unix
-      process.kill(-serverProcess.pid, 'SIGKILL');
+      return new Promise<void>((res, rej) => {
+        treeKill(serverProcess.pid, (err) => {
+          if (err) {
+            rej(err);
+          }
+          res();
+        });
+      });
     }
   };
 }
@@ -133,6 +139,7 @@ export function nxE2EPreset(
       webServerCommands: options?.webServerCommands,
       ciWebServerCommand: options?.ciWebServerCommand,
       ciBaseUrl: options?.ciBaseUrl,
+      reuseExistingServer: options?.webServerConfig?.reuseExistingServer,
     },
 
     async setupNodeEvents(on, config) {
@@ -172,7 +179,7 @@ export function nxE2EPreset(
         const killWebServer = startWebServer(webServerCommand);
 
         on('after:run', () => {
-          killWebServer();
+          return killWebServer();
         });
         await waitForServer(config.baseUrl, options.webServerConfig);
       }

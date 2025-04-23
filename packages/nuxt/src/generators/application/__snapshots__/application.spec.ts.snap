@@ -11,14 +11,6 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
-exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
-{
-  "dependsOn": [
-    "^build-static",
-  ],
-}
-`;
-
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
@@ -410,14 +402,6 @@ exports[`app generated files content - as-provided - myApp general application s
 .cache
 vite.config.*.timestamp*
 vitest.config.*.timestamp*"
-`;
-
-exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
-{
-  "dependsOn": [
-    "^build-static",
-  ],
-}
 `;
 
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `

@@ -30,6 +30,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/console-migrate-ui",
+      "id": "console-migrate-ui",
+      "name": "Migrate UI",
+      "path": "/recipes/nx-console/console-migrate-ui"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/console-run-command",
       "id": "console-run-command",
       "name": "Run Command",
@@ -883,6 +890,13 @@
     },
     {
       "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
@@ -1089,6 +1103,33 @@
       "path": "/recipes/angular/rspack/introduction"
     }
   ],
+  "getting-started": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "rspack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "setup": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
   "migrate-from-webpack": [
     {
       "description": "",
@@ -1114,6 +1155,24 @@
       "id": "handling-configurations",
       "name": "Handling Configurations",
       "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "internationalization": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
+    }
+  ],
+  "i18n": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
     }
   ],
   "deployment": [

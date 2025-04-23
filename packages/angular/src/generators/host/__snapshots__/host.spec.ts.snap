@@ -251,6 +251,7 @@ exports[`Host App Generator --ssr should generate the correct files 10`] = `
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
@@ -475,6 +476,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
@@ -700,6 +702,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }
@@ -910,6 +913,7 @@ exports[`Host App Generator --ssr should generate the correct files when --types
       "serverTarget": "test:server:production",
     },
   },
+  "continuous": true,
   "defaultConfiguration": "development",
   "executor": "@nx/angular:module-federation-dev-ssr",
 }

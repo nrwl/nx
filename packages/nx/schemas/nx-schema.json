@@ -77,6 +77,23 @@
         "$ref": "#/definitions/plugins"
       }
     },
+    "tui": {
+      "type": "object",
+      "description": "Settings for the Nx Terminal User Interface (TUI)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether to enable the Terminal UI whenever possible (based on the current environment and terminal).",
+          "default": true
+        },
+        "autoExit": {
+          "oneOf": [{ "type": "boolean" }, { "type": "number" }],
+          "description": "Whether to exit the TUI automatically after all tasks finish. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.",
+          "default": 3
+        }
+      },
+      "additionalProperties": false
+    },
     "defaultProject": {
       "type": "string",
       "description": "Default project. When project isn't provided, the default project will be used."

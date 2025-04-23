@@ -97,11 +97,13 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "serve-storybook": {
                     "command": "storybook dev",
+                    "continuous": true,
                     "options": {
                       "cwd": "my-app",
                     },
                   },
                   "static-storybook": {
+                    "continuous": true,
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",
@@ -175,6 +177,7 @@ describe('@nx/storybook/plugin', () => {
                     ],
                   },
                   "serve-storybook": {
+                    "continuous": true,
                     "executor": "@storybook/angular:start-storybook",
                     "options": {
                       "browserTarget": "my-ng-app:build-storybook",
@@ -183,6 +186,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "static-storybook": {
+                    "continuous": true,
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",
@@ -257,11 +261,13 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "serve-storybook": {
                     "command": "storybook dev",
+                    "continuous": true,
                     "options": {
                       "cwd": "my-react-lib",
                     },
                   },
                   "static-storybook": {
+                    "continuous": true,
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",

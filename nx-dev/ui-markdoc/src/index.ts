@@ -39,6 +39,8 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
+import { CourseVideo } from '@nx/nx-dev/ui-common';
+import { courseVideo } from './lib/tags/course-video.schema';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
@@ -91,6 +93,7 @@ export const getMarkdocCustomConfig = (
       toc: tableOfContents,
       tweet,
       youtube,
+      'course-video': courseVideo,
       'video-link': videoLink,
       metrics,
       // 'svg-animation': svgAnimation,
@@ -123,6 +126,7 @@ export const getMarkdocCustomConfig = (
     Testimonial,
     Tweet,
     YouTube,
+    CourseVideo,
     VideoLink,
     VideoPlayer,
     Metrics,
@@ -176,4 +180,4 @@ export const renderMarkdown: (
   };
 };
 
-export { Metrics, VideoLink, GithubRepository };
+export { Metrics, VideoLink, GithubRepository, CourseVideo };

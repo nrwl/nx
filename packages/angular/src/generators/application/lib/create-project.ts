@@ -93,6 +93,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
         defaultConfiguration: 'production',
       },
       serve: {
+        continuous: true,
         executor: '@angular-devkit/build-angular:dev-server',
         options: options.port
           ? {

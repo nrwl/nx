@@ -56,7 +56,7 @@ const matrixData: MatrixData = {
   ],
   nodeTLS: 20,
   setup: [
-    { os: 'ubuntu-latest', os_name: 'Linux', os_timeout: 60, package_managers: ['npm', 'pnpm', 'yarn'], node_versions: [18, 20, 22], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] },
+    { os: 'ubuntu-latest', os_name: 'Linux', os_timeout: 60, package_managers: ['npm', 'pnpm', 'yarn'], node_versions: [20, 22], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] },
     { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: [20] },
     { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: [20], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
   ]
