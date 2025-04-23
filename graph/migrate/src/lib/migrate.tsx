@@ -50,7 +50,7 @@ export interface MigrateUIProps {
 export enum PrimaryAction {
   RunMigrations = 'Run Migrations',
   PauseMigrations = 'Pause Migrations',
-  ApproveChanges = 'Approve Changes',
+  ApproveChanges = 'Approve Changes to Continue',
   FinishWithoutSquashingCommits = 'Finish without squashing commits',
   FinishSquashingCommits = 'Finish (squash commits)',
 }
@@ -76,12 +76,12 @@ export function MigrateUI(props: MigrateUIProps) {
   });
   const isDone = useSelector(actor, (state) => state.matches('done'));
   const isInit = useSelector(actor, (state) => state.matches('init'));
-  const running = useSelector(actor, (state) => state.matches('running'));
+  const isRunning = useSelector(actor, (state) => state.matches('running'));
   const currentMigration = useSelector(
     actor,
     (state) => state.context.currentMigration
   );
-  const approveChanges = useSelector(actor, (state) =>
+  const hasChanges = useSelector(actor, (state) =>
     currentMigrationHasChanges(state.context)
   );
 
@@ -116,17 +116,17 @@ export function MigrateUI(props: MigrateUIProps) {
       !isInit
     ) {
       setPrimaryAction(
-        running
+        isRunning
           ? PrimaryAction.PauseMigrations
-          : approveChanges
+          : hasChanges
           ? PrimaryAction.ApproveChanges
           : PrimaryAction.RunMigrations
       );
     }
-  }, [running, primaryAction, isInit, approveChanges]);
+  }, [isRunning, primaryAction, isInit, hasChanges]);
 
   const handlePauseResume = () => {
-    if (running) {
+    if (isRunning) {
       actor.send({ type: 'pause' });
     } else {
       actor.send({ type: 'startRunning' });
@@ -134,14 +134,7 @@ export function MigrateUI(props: MigrateUIProps) {
   };
 
   const handlePrimaryActionSelection = () => {
-    if (primaryAction === PrimaryAction.ApproveChanges) {
-      if (currentMigration) {
-        actor.send({
-          type: 'reviewMigration',
-          migrationId: currentMigration.id,
-        });
-      }
-    } else if (
+    if (
       primaryAction === PrimaryAction.RunMigrations ||
       primaryAction === PrimaryAction.PauseMigrations
     ) {
@@ -218,12 +211,13 @@ export function MigrateUI(props: MigrateUIProps) {
           >
             Cancel
           </button>
-          <div className="flex">
+          <div className="group flex">
             <button
               onClick={handlePrimaryActionSelection}
               type="button"
-              title="Finish"
-              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+              title={primaryAction}
+              disabled={hasChanges}
+              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
             >
               {primaryAction}
             </button>
@@ -231,7 +225,8 @@ export function MigrateUI(props: MigrateUIProps) {
               <button
                 type="button"
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+                disabled={hasChanges}
+                className="border-l-1 flex items-center rounded-r-md border border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
               >
                 <ChevronDownIcon className="h-4 w-4" />
               </button>
@@ -247,45 +242,7 @@ export function MigrateUI(props: MigrateUIProps) {
                   {!isDone && (
                     <>
                       {' '}
-                      {running ? (
-                        <li
-                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-                          onClick={() => {
-                            setPrimaryAction(PrimaryAction.PauseMigrations);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <span
-                            className={
-                              primaryAction === PrimaryAction.PauseMigrations
-                                ? 'inline-block'
-                                : 'opacity-0'
-                            }
-                          >
-                            <CheckIcon className="h-4 w-4" />
-                          </span>
-                          <span>{'Pause Migrations'}</span>
-                        </li>
-                      ) : approveChanges ? (
-                        <li
-                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
-                          onClick={() => {
-                            setPrimaryAction(PrimaryAction.ApproveChanges);
-                            setIsOpen(false);
-                          }}
-                        >
-                          <span
-                            className={
-                              primaryAction === PrimaryAction.ApproveChanges
-                                ? 'inline-block'
-                                : 'opacity-0'
-                            }
-                          >
-                            <CheckIcon className="h-4 w-4" />
-                          </span>
-                          <span>{'Approve Changes'}</span>
-                        </li>
-                      ) : (
+                      {!isRunning && (
                         <li
                           className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                           onClick={() => {
@@ -303,6 +260,26 @@ export function MigrateUI(props: MigrateUIProps) {
                             <CheckIcon className="h-4 w-4" />
                           </span>
                           <span>{'Run Migrations'}</span>
+                        </li>
+                      )}
+                      {isRunning && (
+                        <li
+                          className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          onClick={() => {
+                            setPrimaryAction(PrimaryAction.PauseMigrations);
+                            setIsOpen(false);
+                          }}
+                        >
+                          <span
+                            className={
+                              primaryAction === PrimaryAction.PauseMigrations
+                                ? 'inline-block'
+                                : 'opacity-0'
+                            }
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </span>
+                          <span>{'Pause Migrations'}</span>
                         </li>
                       )}
                       <div className="my-1 h-0.5 w-full bg-slate-300/30" />
