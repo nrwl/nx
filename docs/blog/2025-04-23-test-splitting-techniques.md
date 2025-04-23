@@ -9,11 +9,13 @@ cover_image: /blog/images/articles/bg-test-splitting-techniques.avif
 
 > "There's nothing worse than waiting for a build to complete, or those e2e tests to run. With Nx Cloud, our development team has saved over 104 hours, almost cutting our build times in half. The installation is seamless and the results are immediate. It's nice to have a tool that passively saves so much development time." - Director of Software Development, enterprise digital marketing firm
 
-One of the most impactful core features of Nx is the affected graph. The affected graph helps us to skip unnecessary work and focus only on the things that have been changed, speeding our CI and helping us ship features and hotfixes faster.
+One of the most impactful core features of Nx is the affected graph. The affected graph helps us to skip unnecessary work and focus only on the things that have been changed, speeding up our CI and helping us ship features and hotfixes faster.
 
 However, long-running tasks, especially End-to-End (E2E) tests, can become a significant bottleneck and prevent getting the code changes out faster. This is particularly true for monolithic projects, but also in cases when there is a single large E2E project that covers the entire scope of the application. In these scenarios, the full benefits of an affected graph cannot be realized.
 
 In this guide, we'll explore three techniques to speed up your CI by splitting these lengthy test tasks.
+
+{% toc /%}
 
 ## Built-in Test Sharding
 
@@ -41,7 +43,12 @@ Now that we have our tests sharded, we can distribute the test load and achieve 
 
 ## Nx Atomizer
 
-For more granular control over test distribution, Nx offers the [Atomizer](/ci/features/split-e2e-tasks). This feature allows you to split tasks per file. Splitting then further allows us to distribute long-running tasks across a larger number of agents, providing detailed insights into flaky tests and enabling automatic re-runs. If one of the flaky tests fails, we will still cache the results of all the other task slices and can even have a successful run if the flaky test re-run succeeded.
+{% youtube
+src="https://youtu.be/0YxcxIR7QU0"
+title="10x Faster e2e Tests!"
+width="100%" /%}
+
+For more granular control over test distribution, Nx offers the [Atomizer](/ci/features/split-e2e-tasks). This feature allows you to split tasks per file. This splitting further allows us to distribute long-running tasks across a larger number of agents, providing detailed insights into flaky tests and enabling automatic re-runs. If one of the flaky tests fails, we will still cache the results of all the other task slices and can even have a successful run if the flaky test re-run succeeded.
 
 ![The `nx-e2e` task atomized to 13 e2e sub-tasks](/blog/images/articles/atomized-nx-e2e-ci.avif)
 
@@ -52,12 +59,12 @@ To enable the Atomizer, we need to use supported inferred plugins or create our 
 ```json {% fileName="nx.json" %}
 {
   // ...
-  "plugins": {
+  "plugins": [
     {
       "plugin": "@nx/cypress/plugin",
       "options": {
         "targetName": "e2e",
-        "ciTargetName": "e2e-ci",
+        "ciTargetName": "e2e-ci"
       }
     },
     {
@@ -71,7 +78,7 @@ To enable the Atomizer, we need to use supported inferred plugins or create our 
       "plugin": "@nx/jest/plugin",
       "options": {
         "targetName": "test",
-        "ciTargetName": "test-ci",
+        "ciTargetName": "test-ci"
       }
     },
     {
@@ -83,7 +90,7 @@ To enable the Atomizer, we need to use supported inferred plugins or create our 
         "ciTargetName": "test-ci"
       }
     }
-  }
+  ]
 }
 ```
 
@@ -103,6 +110,7 @@ You can find more information on how to configure the Atomizer on the respective
 In addition to automated splitting like sharding or atomization, manually splitting E2E projects into scopes can provide additional significant performance benefits.
 
 Let's look at the simplified graph below:
+
 ![Nx graph with single application, e2e project and several libraries](/blog/images/articles/single-e2e-project.avif)
 
 Our E2E project contains tests for each of the application features - products, orders and checkout. Any change made in the graph will cause all our E2E tests to be re-run. Even if we only modified `products`, we will still re-run the tests for `orders` and `checkout`. Although the Atomizer will help us split that work per file and distribute it, we will still end up running unnecessary work.
@@ -149,7 +157,7 @@ As of Nx version `20.8.0` you can now combine manual splitting with the Atomizer
 }
 ```
 
-This small improvement gives us best of both worlds - using the Atomizer to automatically split long running tasks into smaller chunks and using manual splitting to skip entire work if dependencies haven't change.
+This small improvement gives us the best of both worlds - using the Atomizer to automatically split long running tasks into smaller chunks and using manual splitting to skip entire work if dependencies haven't changed.
 
 ## Conclusion
 
