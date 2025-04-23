@@ -526,12 +526,19 @@ export class TaskOrchestrator {
           root: workspaceRoot, // only root is needed in runCommands
         } as any);
 
-        if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
-          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-          this.options.lifeCycle.registerRunningTask(
-            task.id,
-            runningTask.getParserAndWriter()
-          );
+        if (this.tuiEnabled) {
+          if (runningTask instanceof PseudoTtyProcess) {
+            // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+            this.options.lifeCycle.registerRunningTask(
+              task.id,
+              runningTask.getParserAndWriter()
+            );
+          } else {
+            this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+            runningTask.onOutput((output) => {
+              this.options.lifeCycle.appendTaskOutput(task.id, output);
+            });
+          }
         }
 
         if (!streamOutput) {
@@ -591,12 +598,19 @@ export class TaskOrchestrator {
         streamOutput
       );
 
-      if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
-        // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-        this.options.lifeCycle.registerRunningTask(
-          task.id,
-          runningTask.getParserAndWriter()
-        );
+      if (this.tuiEnabled) {
+        if (runningTask instanceof PseudoTtyProcess) {
+          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+          this.options.lifeCycle.registerRunningTask(
+            task.id,
+            runningTask.getParserAndWriter()
+          );
+        } else if ('onOutput' in runningTask) {
+          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+          runningTask.onOutput((output) => {
+            this.options.lifeCycle.appendTaskOutput(task.id, output);
+          });
+        }
       }
 
       return runningTask;

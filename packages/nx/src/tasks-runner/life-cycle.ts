@@ -69,6 +69,10 @@ export interface LifeCycle {
     parserAndWriter: ExternalObject<[any, any]>
   ): void;
 
+  registerRunningTaskWithEmptyParser?(taskId: string): void;
+
+  appendTaskOutput?(taskId: string, output: string): void;
+
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
   registerForcedShutdownCallback?(callback: () => void): void;
@@ -159,6 +163,22 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
         l.registerRunningTask(taskId, parserAndWriter);
+      }
+    }
+  }
+
+  registerRunningTaskWithEmptyParser(taskId: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.registerRunningTaskWithEmptyParser) {
+        l.registerRunningTaskWithEmptyParser(taskId);
+      }
+    }
+  }
+
+  appendTaskOutput(taskId: string, output: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.appendTaskOutput) {
+        l.appendTaskOutput(taskId, output);
       }
     }
   }
