@@ -1,0 +1,344 @@
+{
+  "nodes": {
+    "proj": {
+      "targets": {
+        "buildEnvironment": {
+          "cache": true,
+          "metadata": {
+            "description": "Displays all buildscript dependencies declared in root project \u0027gradle-tutorial\u0027.",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :buildEnvironment",
+          "options": { "cwd": "proj" }
+        }
+      },
+      "metadata": {
+        "targetGroups": {
+          "help": ["buildEnvironment"]
+        },
+        "technologies": ["gradle"]
+      },
+      "name": "gradle-tutorial"
+    },
+    "proj/application": {
+      "targets": {
+        "ci--DemoApplicationTest10": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest10.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest10.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest10",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest7": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest7.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest7.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest7",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest6": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest6.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest6.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest6",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest3": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest3.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest3.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest3",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest2": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest2.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest2.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest2",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest9": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest9.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest9.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest9",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest5": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest5.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest5.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest5",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest4": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest4.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest4.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest4",
+          "options": { "cwd": "proj" }
+        },
+        "ci--DemoApplicationTest8": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest8.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            "application:classes",
+            "application:compileJava",
+            "library:jar"
+          ],
+          "metadata": {
+            "description": "Runs Gradle test proj/application/src/test/java/com/example/multimodule/application/DemoApplicationTest8.java in CI",
+            "technologies": ["gradle"]
+          },
+          "command": "./gradlew :application:test --tests DemoApplicationTest8",
+          "options": { "cwd": "proj" }
+        },
+        "ci": {
+          "inputs": [
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest10.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest7.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest6.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest3.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest2.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest9.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest5.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest4.java",
+            "{projectRoot}/src/test/java/com/example/multimodule/application/DemoApplicationTest8.java"
+          ],
+          "outputs": [
+            "{projectRoot}/build/classes/java/test",
+            "{projectRoot}/build/generated/sources/annotationProcessor/java/test",
+            "{projectRoot}/build/generated/sources/headers/java/test",
+            "{projectRoot}/build/tmp/compileTestJava/previous-compilation-data.bin"
+          ],
+          "cache": true,
+          "dependsOn": [
+            {
+              "target": "ci--DemoApplicationTest10",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest7",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest6",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest3",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest2",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest9",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest5",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest4",
+              "projects": "self",
+              "params": "forward"
+            },
+            {
+              "target": "ci--DemoApplicationTest8",
+              "projects": "self",
+              "params": "forward"
+            }
+          ],
+          "metadata": {
+            "description": "Runs Gradle Tests in CI",
+            "technologies": ["gradle"]
+          },
+          "options": { "cwd": "proj" },
+          "executor": "nx:noop"
+        }
+      },
+      "metadata": {
+        "targetGroups": {
+          "verification": ["ci"]
+        },
+        "technologies": ["gradle"]
+      },
+      "name": "application"
+    }
+  }
+}

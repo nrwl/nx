@@ -67,5 +67,8 @@ target
 
 vite.config.*.timestamp*
 
-
 storybook-static
+
+# Ignore Gradle project-specific cache directory
+.gradle
+.kotlin
