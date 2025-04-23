@@ -105,12 +105,12 @@ export class TempFs {
   }
 
   cleanup() {
-    rmSync(this.tempDir, { recursive: true, force: true });
+    rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
     setWorkspaceRoot(this.previousWorkspaceRoot);
   }
 
   reset() {
-    rmSync(this.tempDir, { recursive: true, force: true });
+    rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
     mkdirSync(this.tempDir, { recursive: true });
   }
 }
