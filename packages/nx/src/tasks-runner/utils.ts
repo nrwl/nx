@@ -541,6 +541,7 @@ export function shouldStreamOutput(
   initiatingProject: string | null
 ): boolean {
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
+  if (process.env.NX_STREAM_OUTPUT === 'false') return false;
   if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
   return false;
