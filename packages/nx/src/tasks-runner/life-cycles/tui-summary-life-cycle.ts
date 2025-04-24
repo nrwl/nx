@@ -8,6 +8,7 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
 import figures = require('figures');
+import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -112,6 +113,7 @@ export function getTuiTerminalSummaryLifeCycle({
     } else {
       printRunManySummary();
     }
+    getTasksHistoryLifeCycle()?.printFlakyTasksMessage();
   };
 
   const printRunOneSummary = () => {
