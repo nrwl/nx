@@ -57,6 +57,51 @@ index 5ecf36fd9062120afd92530ba6b15f542d04c810..34adf6d39bf9f1708b7d1fc4e305b00a
      return res;
  }
  function isReady(readyWhenStatus = [], data) {
+diff --git a/src/executors/run-script/run-script.impl.js b/src/executors/run-script/run-script.impl.js
+index 161e0f312156d61186afeb93980778f88f8021df..c8a3e57f4203ef46e3bee042520b047d5ab84a3e 100644
+--- a/src/executors/run-script/run-script.impl.js
++++ b/src/executors/run-script/run-script.impl.js
+@@ -11,6 +11,20 @@ async function default_1(options, context) {
+         let command = pm.run(options.script, options.__unparsed__.join(' '));
+         let cwd = path.join(context.root, context.projectsConfigurations.projects[context.projectName].root);
+         let env = process.env;
++
++        console.log("BEFORE FILTERING PATH");
++        console.log(env.PATH);
++
++
++        console.log("BEFORE RUNNING SCRIPT (UNFILTERED)");
++        (0, child_process_1.execSync)("which pnpm", {
++            stdio: ['inherit', 'inherit', 'inherit'],
++            cwd,
++            env,
++            windowsHide: false,
++        });
++        console.log("AFTER RUNNING SCRIPT (UNFILTERED)");
++
+         // when running nx through npx with node_modules installed with npm, the path gets modified to include the full workspace path with the node_modules folder
+         // This causes issues when running in a pty process, so we filter out the node_modules paths from the PATH
+         // Since the command here will be run with the package manager script command, the path will be modified again within the PTY process itself.
+@@ -18,6 +32,19 @@ async function default_1(options, context) {
+             .filter((p) => !p.startsWith(path.join(context.root, 'node_modules')))
+             .join(path.delimiter) ?? '';
+         env.PATH = filteredPath;
++
++        console.log("AFTER FILTERING PATH");
++        console.log(env.PATH);
++
++        console.log("BEFORE RUNNING SCRIPT (FILTERED)");
++        (0, child_process_1.execSync)("which pnpm", {
++            stdio: ['inherit', 'inherit', 'inherit'],
++            cwd,
++            env,
++            windowsHide: false,
++        });
++        console.log("AFTER RUNNING SCRIPT (FILTERED)");
++
+         if (pseudo_terminal_1.PseudoTerminal.isSupported()) {
+             await ptyProcess(command, cwd, env);
+         }
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
 index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..91b0a9c51db3561f55b87c41770967a8325d3637 100644
 --- a/src/tasks-runner/task-orchestrator.js
