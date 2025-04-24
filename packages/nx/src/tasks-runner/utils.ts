@@ -558,6 +558,7 @@ export function shouldStreamOutput(
   // For now, disable streaming output on the JS side when running the TUI
   if (isTuiEnabled()) return false;
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
+  if (process.env.NX_STREAM_OUTPUT === 'false') return false;
   if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
   return false;

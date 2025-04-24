@@ -2325,6 +2325,16 @@
       }
     },
     "migrations": {
+      "/nx-api/gradle/migrations/change-plugin-to-v1": {
+        "description": "Change @nx/gradle plugin to version 1",
+        "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
+        "hidden": false,
+        "name": "change-plugin-to-v1",
+        "version": "21.0.0-beta.5",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-plugin-to-v1",
+        "type": "migration"
+      },
       "/nx-api/gradle/migrations/add-include-subprojects-tasks": {
         "description": "Add includeSubprojectsTasks to build.gradle file",
         "file": "generated/packages/gradle/migrations/add-include-subprojects-tasks.json",

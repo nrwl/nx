@@ -9,5 +9,6 @@ i18n:
   partTemplate: 'Tutorial: ${title}'
 downloadAsZip: true
 prepareCommands:
+  - ['chmod +x git', 'Stubbing git']
   - ['npm install', 'Installing dependencies']
 ---
