@@ -79,7 +79,8 @@ export class NgRspackPlugin implements RspackPluginInstance {
       new ProgressPlugin().apply(compiler);
     }
     new DefinePlugin({
-      ngDevMode: isProduction ? 'false' : {},
+      // TODO: Replace with ...(this.pluginOptions.optimization.scripts ? { 'ngDevMode': 'false' } : undefined) when Optimization is implemented
+      ...(this.pluginOptions.optimization ? { ngDevMode: 'false' } : {}),
       ngJitMode: this.pluginOptions.aot ? undefined : 'true',
       ngServerMode: this.pluginOptions.hasServer,
       ...(this.pluginOptions.define ?? {}),
