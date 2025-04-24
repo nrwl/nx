@@ -23,6 +23,9 @@ launch-templates:
       - name: Install zip and unzip
         script: sudo apt-get -yqq install zip unzip
 
+      - name: Install tree
+        script: sudo apt-get install tree
+
       - name: Install bun
         script: |
           curl -fsSL https://bun.sh/install | bash
