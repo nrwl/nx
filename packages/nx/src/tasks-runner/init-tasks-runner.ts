@@ -6,6 +6,7 @@ import {
   constructLifeCycles,
   getRunner,
   invokeTasksRunner,
+  setEnvVarsBasedOnArgs,
 } from './run-command';
 import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
 import { performance } from 'perf_hooks';
@@ -133,6 +134,10 @@ async function createOrchestrator(
     }, {} as any),
   };
 
+
+  const nxArgs = { ...options, parallel: tasks.length, lifeCycle: compositedLifeCycle };
+  setEnvVarsBasedOnArgs(nxArgs, true);
+
   const orchestrator = new TaskOrchestrator(
     hasher,
     null,
@@ -140,7 +145,7 @@ async function createOrchestrator(
     projectGraph,
     taskGraph,
     nxJson,
-    { ...options, parallel: tasks.length, lifeCycle: compositedLifeCycle },
+    nxArgs,
     false,
     daemonClient,
     undefined,
