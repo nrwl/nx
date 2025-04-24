@@ -17,7 +17,6 @@ import {
   MigrationSettingsPanel,
   AutomaticMigration,
 } from './components';
-import { currentMigrationHasChanges } from './state/automatic/selectors';
 
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
@@ -77,12 +76,9 @@ export function MigrateUI(props: MigrateUIProps) {
   const isDone = useSelector(actor, (state) => state.matches('done'));
   const isInit = useSelector(actor, (state) => state.matches('init'));
   const isRunning = useSelector(actor, (state) => state.matches('running'));
-  const currentMigration = useSelector(
-    actor,
-    (state) => state.context.currentMigration
-  );
-  const hasChanges = useSelector(actor, (state) =>
-    currentMigrationHasChanges(state.context)
+
+  const isNeedReview = useSelector(actor, (state) =>
+    state.matches('needsReview')
   );
 
   useEffect(() => {
@@ -118,12 +114,12 @@ export function MigrateUI(props: MigrateUIProps) {
       setPrimaryAction(
         isRunning
           ? PrimaryAction.PauseMigrations
-          : hasChanges
+          : isNeedReview
           ? PrimaryAction.ApproveChanges
           : PrimaryAction.RunMigrations
       );
     }
-  }, [isRunning, primaryAction, isInit, hasChanges]);
+  }, [isRunning, primaryAction, isInit, isNeedReview]);
 
   const handlePauseResume = () => {
     if (isRunning) {
@@ -216,7 +212,7 @@ export function MigrateUI(props: MigrateUIProps) {
               onClick={handlePrimaryActionSelection}
               type="button"
               title={primaryAction}
-              disabled={hasChanges}
+              disabled={isNeedReview}
               className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
             >
               {primaryAction}
@@ -225,8 +221,8 @@ export function MigrateUI(props: MigrateUIProps) {
               <button
                 type="button"
                 onClick={() => setIsOpen((prev) => !prev)}
-                disabled={hasChanges}
-                className="border-l-1 flex items-center rounded-r-md border border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+                disabled={isNeedReview}
+                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
               >
                 <ChevronDownIcon className="h-4 w-4" />
               </button>

@@ -37,6 +37,15 @@ export const machine = createMachine<
               target: 'running',
             },
           ],
+          reviewMigration: [
+            {
+              cond: 'currentMigrationCanLeaveReview',
+              target: 'running',
+              actions: assign((ctx, event) => {
+                ctx.reviewedMigrations.push(event.migrationId);
+              }),
+            },
+          ],
         },
       },
       running: {
@@ -74,6 +83,13 @@ export const machine = createMachine<
               target: 'paused',
             },
           ],
+          reviewMigration: {
+            cond: 'currentMigrationCanLeaveReview',
+            target: 'running',
+            actions: assign((ctx, event) => {
+              ctx.reviewedMigrations.push(event.migrationId);
+            }),
+          },
         },
         always: [
           {
