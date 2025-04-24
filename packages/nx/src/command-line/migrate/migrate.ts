@@ -1683,7 +1683,7 @@ async function runMigrations(
   }
   if (nextSteps.length > 0) {
     output.log({
-      title: `Some migrations require additional steps to be completed, please check the following:`,
+      title: `Some migrations have additional information, see below.`,
       bodyLines: nextSteps.map((line) => `- ${line}`),
     });
   }
@@ -1925,5 +1925,5 @@ function isStringArray(value: unknown): value is string[] {
   if (!Array.isArray(value)) {
     return false;
   }
-  return value.reduce((acc, v) => acc && typeof v === 'string', true);
+  return value.every((v) => typeof v === 'string');
 }

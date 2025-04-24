@@ -44,7 +44,7 @@ export async function repair(
     }
     if (nextSteps.length) {
       output.log({
-        title: 'Some next steps may be necessary to complete the repair:',
+        title: 'Some repairs have additional information, see below.',
         bodyLines: nextSteps.map((line) => `  - ${line}`),
       });
     }

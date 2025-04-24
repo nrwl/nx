@@ -7,8 +7,8 @@ import {
 } from './workspace-json-project-json';
 
 import type { NxJsonConfiguration } from './nx-json';
-import { Schema } from '../utils/params';
-import { Tree } from '../generators/tree';
+import type { Schema } from '../utils/params';
+import type { Tree } from '../generators/tree';
 /**
  * A callback function that is executed after changes are made to the file system
  */

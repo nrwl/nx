@@ -1,10 +1,10 @@
 #### Remove Custom Tasks Runners
 
-Removes `tasksRunnerOptions` entries from `nx.json` that contain custom tasks runners. In Nx 21, custom tasks runners are no longer functional. See https://nx.dev/deprecated/custom-tasks-runner for more information.
+Removes `tasksRunnerOptions` entries from `nx.json` that contain custom tasks runners. In Nx 21, custom tasks runners are no longer functional. See /deprecated/custom-tasks-runner for more information.
 
 #### Sample Code Changes
 
-Removes `tasksRunnerOptions` from `nx.json` if it would be empty after removing custom tasks runners.
+Removes custom task runner configuration from `nx.json`.
 
 {% tabs %}
 {% tab label="Before" %}
