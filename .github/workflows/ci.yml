@@ -8,6 +8,10 @@ on:
     branches:
       - "**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
@@ -102,6 +106,7 @@ jobs:
 
   main-macos:
     runs-on: macos-latest
+    
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-macos
       NX_PERF_LOGGING: 'false'
