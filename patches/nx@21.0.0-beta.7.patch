@@ -104,7 +104,7 @@ index 161e0f312156d61186afeb93980778f88f8021df..e89c135283808e85ed14dd6e9bcc45cc
      await terminal.init();
      return new Promise((res, rej) => {
 diff --git a/src/tasks-runner/forked-process-task-runner.js b/src/tasks-runner/forked-process-task-runner.js
-index 13f711170b76fea57ecf58207ff961069249c259..febceb561876ead74cda272ffb887f360dadce9e 100644
+index 13f711170b76fea57ecf58207ff961069249c259..e06277ee1ff4f0a6dea51448b18b4731c0ba7e2e 100644
 --- a/src/tasks-runner/forked-process-task-runner.js
 +++ b/src/tasks-runner/forked-process-task-runner.js
 @@ -26,6 +26,10 @@ class ForkedProcessTaskRunner {
@@ -118,7 +118,7 @@ index 13f711170b76fea57ecf58207ff961069249c259..febceb561876ead74cda272ffb887f36
          this.setupProcessEventListeners();
      }
      // TODO: vsavkin delegate terminal output printing
-@@ -84,6 +88,11 @@ class ForkedProcessTaskRunner {
+@@ -84,6 +88,15 @@ class ForkedProcessTaskRunner {
          const shouldPrefix = streamOutput &&
              process.env.NX_PREFIX_OUTPUT === 'true' &&
              !this.tuiEnabled;
@@ -127,10 +127,14 @@ index 13f711170b76fea57ecf58207ff961069249c259..febceb561876ead74cda272ffb887f36
 +        console.log(JSON.stringify(process.env, null, 2));
 +        console.log('---------------------')
 +
++        console.log(`forked-process-task-runner.forkProcess params`);
++        console.log(JSON.stringify(env, null, 2));
++        console.log('---------------------')
++
          // streamOutput would be false if we are running multiple targets
          // there's no point in running the commands in a pty if we are not streaming the output
          if (pseudo_terminal_1.PseudoTerminal.isSupported() &&
-@@ -117,6 +126,11 @@ class ForkedProcessTaskRunner {
+@@ -117,6 +130,15 @@ class ForkedProcessTaskRunner {
          const childId = task.id;
          const pseudoTerminal = await this.createPseudoTerminal();
          this.pseudoTerminals.add(pseudoTerminal);
@@ -139,9 +143,29 @@ index 13f711170b76fea57ecf58207ff961069249c259..febceb561876ead74cda272ffb887f36
 +        console.log(JSON.stringify(process.env, null, 2));
 +        console.log('---------------------')
 +
++        console.log(`forked-process-task-runner.forkProcessWithPseudoTerminal params`);
++        console.log(JSON.stringify(env, null, 2));
++        console.log('---------------------')
++
          const p = await pseudoTerminal.fork(childId, forkScript, {
              cwd: process.cwd(),
              execArgv: process.execArgv,
+@@ -153,6 +175,15 @@ class ForkedProcessTaskRunner {
+             if (streamOutput) {
+                 output_1.output.logCommand(args.join(' '));
+             }
++
++            console.log(`forked-process-task-runner.forkProcessWithPrefixAndNotTTY`);
++            console.log(JSON.stringify(process.env, null, 2));
++            console.log('---------------------')
++
++            console.log(`forked-process-task-runner.forkProcessWithPrefixAndNotTTY params`);
++            console.log(JSON.stringify(env, null, 2));
++            console.log('---------------------')
++
+             const p = (0, child_process_1.fork)(this.cliPath, {
+                 stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+                 env,
 diff --git a/src/tasks-runner/pseudo-terminal.js b/src/tasks-runner/pseudo-terminal.js
 index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df79affe103 100644
 --- a/src/tasks-runner/pseudo-terminal.js
@@ -165,7 +189,7 @@ index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df7
              throw new Error('Call init() before forking processes');
          }
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
-index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..bc1dbf015797d4fdf07bb56cc8bc383053ba84aa 100644
+index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..53845ef7432e721c7f05c424fc19de65d2cc72c1 100644
 --- a/src/tasks-runner/task-orchestrator.js
 +++ b/src/tasks-runner/task-orchestrator.js
 @@ -61,6 +61,10 @@ class TaskOrchestrator {
@@ -191,12 +215,32 @@ index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..bc1dbf015797d4fdf07bb56cc8bc3830
          // Wait for task to be processed
          const taskSpecificEnv = await this.processedTasks.get(task.id);
          await this.preRunSteps([task], { groupId });
-@@ -376,6 +385,10 @@ class TaskOrchestrator {
+@@ -275,6 +284,15 @@ class TaskOrchestrator {
+     async runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput) {
+         const shouldPrefix = streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+         const targetConfiguration = (0, utils_1.getTargetConfigurationForTask)(task, this.projectGraph);
++
++        console.log(`task-orchestrator.runTask`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
++        console.log(`task-orchestrator.runTask params`);
++        console.log(JSON.stringify(env, null, 2));
++        console.log('---------------------')
++
+         if (process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
+             targetConfiguration.executor === 'nx:run-commands' &&
+             !shouldPrefix) {
+@@ -376,6 +394,14 @@ class TaskOrchestrator {
          }
      }
      async runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput) {
 +        console.log(`task-orchestrator.runTaskInForkedProcess`);
 +        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
++        console.log(`task-orchestrator.runTaskInForkedProcess params`);
++        console.log(JSON.stringify(env, null, 2));
 +        console.log('---------------------')
 +
          try {
