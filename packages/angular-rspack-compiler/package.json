@@ -47,8 +47,7 @@
   },
   "peerDependencies": {
     "@angular/compiler-cli": ">=19.0.0 <20.0.0",
-    "@rsbuild/core": ">=1.0.5 <2.0.0",
-    "@swc/core": ">=1.5.0 <1.11.0"
+    "@rsbuild/core": ">=1.0.5 <2.0.0"
   },
   "nx": {
     "sourceRoot": "packages/angular-rspack-compiler/src",
