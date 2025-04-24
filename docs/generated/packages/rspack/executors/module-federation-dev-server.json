@@ -3,6 +3,7 @@
   "implementation": "/packages/rspack/src/executors/module-federation-dev-server/module-federation-dev-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "Rspack Module Federation Dev Server",
     "description": "Serve a module federation application.",
