@@ -47,6 +47,7 @@ const tsconfig = {
       '@mycompany/other': ['libs/other/src/index.ts'],
       '@mycompany/other/a/b': ['libs/other/src/a/b.ts'],
       '@mycompany/other/a': ['libs/other/src/a/index.ts'],
+      '@mycompany/other/secondary': ['libs/other/src/secondary.ts'],
       '@mycompany/another/a/b': ['libs/another/a/b.ts'],
       '@mycompany/myapp': ['apps/myapp/src/index.ts'],
       '@mycompany/myapp-e2e': ['apps/myapp-e2e/src/index.ts'],
@@ -92,6 +93,13 @@ const fileSys = {
   './libs/other/src/index.ts': '',
   './libs/other/src/a/b.ts': '',
   './libs/other/src/a/index.ts': '',
+  './libs/other/src/secondary.ts': '',
+  './libs/other/package.json': JSON.stringify({
+    exports: {
+      './secondary': './src/secondary.ts',
+      './': './src/index.ts',
+    },
+  }),
   './libs/another/a/b.ts': '',
   './apps/myapp/src/index.ts': '',
   './libs/mylib/src/index.ts': '',
@@ -438,10 +446,6 @@ describe('Enforce Module Boundaries (eslint)', () => {
         { sourceTag: 'private', onlyDependOnLibsWithTags: [] },
       ],
     };
-
-    beforeEach(() => {
-      vol.fromJSON(fileSys, '/root');
-    });
 
     it('should error when the target library does not have the right tag', () => {
       const failures = runRule(
@@ -1391,12 +1395,67 @@ Violation detected in:
     }
   );
 
-  xit('should not error when statically importing dynamic dependencies if it belongs to different entry point', () => {
-    jest.mock('../utils/runtime-lint-utils', () => ({
-      ...jest.requireActual<any>('../utils/runtime-lint-utils'),
-      belongsToDifferentNgEntryPoint: () => true,
-    }));
+  it('should not error when statically importing dynamic dependencies if it belongs to different entry point', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import { someValue } from "@mycompany/other/secondary";',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: 'lib',
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+          otherName: {
+            name: 'otherName',
+            type: 'lib',
+            data: {
+              root: 'libs/other',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'otherName',
+              type: DependencyType.dynamic,
+            },
+            {
+              source: 'mylibName',
+              target: 'otherName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      },
+      {
+        mylibName: [
+          createFile(`libs/mylib/src/main.ts`, [
+            ['otherName', DependencyType.static],
+            ['otherName', DependencyType.dynamic],
+          ]),
+        ],
+        otherName: [
+          createFile(`libs/other/src/index.ts`),
+          createFile(`libs/other/src/secondary.ts`),
+          createFile(`libs/other/package.json`),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
 
+  it('should error when statically importing dynamic dependencies if it belongs to root entry point', () => {
     const failures = runRule(
       {},
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
@@ -1446,15 +1505,14 @@ Violation detected in:
             ['otherName', DependencyType.dynamic],
           ]),
         ],
-        otherName: [createFile(`libs/other/index.ts`)],
+        otherName: [
+          createFile(`libs/other/src/index.ts`),
+          createFile(`libs/other/src/secondary.ts`),
+          createFile(`libs/other/package.json`),
+        ],
       }
     );
-    expect(failures[0].message).toMatchInlineSnapshot(`
-      "Static imports of lazy-loaded libraries are forbidden.
-
-      Library "otherName" is lazy-loaded in these files:
-      - libs/mylib/src/main.ts"
-    `);
+    expect(failures.length).toEqual(1);
   });
 
   it('should error on importing an app', () => {

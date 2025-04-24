@@ -29,7 +29,7 @@ import {
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
-  belongsToDifferentNgEntryPoint,
+  belongsToDifferentEntryPoint,
   DepConstraint,
   findConstraintsFor,
   findDependenciesWithTags,
@@ -412,7 +412,7 @@ export default ESLintUtils.RuleCreator(
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !belongsToDifferentNgEntryPoint(
+          !belongsToDifferentEntryPoint(
             imp,
             sourceFilePath,
             sourceProject.data.root
@@ -623,12 +623,9 @@ export default ESLintUtils.RuleCreator(
           node,
           projectGraph,
           sourceProject.name,
-          targetProject.name
-        ) &&
-        !belongsToDifferentNgEntryPoint(
+          targetProject.name,
           imp,
-          sourceFilePath,
-          sourceProject.data.root
+          sourceFilePath
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
