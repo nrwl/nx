@@ -2429,8 +2429,18 @@
       }
     },
     "migrations": {
+      "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21": {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+        "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
+        "hidden": false,
+        "name": "replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "type": "migration"
+      },
       "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync": {
-        "description": "replace getJestProjects with getJestProjectsAsync",
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
         "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync.json",
         "hidden": false,
         "name": "replace-getJestProjects-with-getJestProjectsAsync",
