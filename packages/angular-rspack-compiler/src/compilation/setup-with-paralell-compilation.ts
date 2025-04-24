@@ -1,6 +1,5 @@
 import type { RsbuildConfig } from '@rsbuild/core';
 import { ParallelCompilation } from '@angular/build/src/tools/angular/compilation/parallel-compilation';
-import { transformFileSync } from '@swc/core';
 import {
   setupCompilation,
   styleTransform,
@@ -32,7 +31,7 @@ export async function setupCompilationWithParallelCompilation(
         modifiedFiles: new Set(rootNames),
         transformStylesheet: styleTransform(componentStylesheetBundler),
         processWebWorker(workerFile: string) {
-          return transformFileSync(workerFile).code;
+          return workerFile;
         },
       },
       () => compilerOptions
