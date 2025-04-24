@@ -61,7 +61,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-2">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 max-lg:rounded-t-[calc(2rem+1px)] lg:rounded-tr-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-tr-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
               <img
                 alt="Nx Atomizer: split large tasks & E2E in chunks"
                 src="/images/enterprise/nx-atomizer.avif"
@@ -86,7 +86,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-3">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-bl-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-bl-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
               <img
                 alt="Nx Agents: simple & fast task distribution"
                 src="/images/enterprise/nx-agents.avif"
@@ -111,7 +111,7 @@ export function MakeYourCiFast(): ReactElement {
             </div>
           </div>
           <div className="relative lg:col-span-3">
-            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-br-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-[calc(theme(borderRadius.lg)+1px)] bg-white shadow ring-1 ring-black/5 lg:rounded-br-[calc(2rem+1px)] dark:bg-slate-950 dark:ring-white/10">
               <img
                 alt="Partner with the Nx Team for guidances"
                 src="/images/enterprise/nx-partnership.avif"
