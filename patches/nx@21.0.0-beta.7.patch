@@ -189,7 +189,7 @@ index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df7
              throw new Error('Call init() before forking processes');
          }
 diff --git a/src/tasks-runner/task-env.js b/src/tasks-runner/task-env.js
-index 879dd7e11af76677dcf80566299ae81cafb49147..979d20e74b0d817ec708ed7bc924cc9326a044b6 100644
+index 879dd7e11af76677dcf80566299ae81cafb49147..2efe34fb6e5b064442613c50061553aef3cd2a83 100644
 --- a/src/tasks-runner/task-env.js
 +++ b/src/tasks-runner/task-env.js
 @@ -19,19 +19,47 @@ function getEnvVariablesForBatchProcess(skipNxCache, captureStderr) {
@@ -240,6 +240,40 @@ index 879dd7e11af76677dcf80566299ae81cafb49147..979d20e74b0d817ec708ed7bc924cc93
      // we have to delete it because if we invoke Nx from within Nx, we need to reset those values
      if (!outputPath) {
          delete res.NX_TERMINAL_OUTPUT_PATH;
+@@ -104,8 +132,14 @@ function loadAndExpandDotEnvFile(filename, environmentVariables, override = fals
+ function unloadDotEnvFile(filename, environmentVariables, override = false) {
+     const parsedDotEnvFile = {};
+     loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
++
++    console.log("parsedDotEnvFile")
++    console.log(JSON.stringify(parsedDotEnvFile, null, 2));
++
+     Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
++        console.log("Evaluating key: ", envVarKey);
+         if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
++            console.log("Deleting key: ", envVarKey, 'with value: ', parsedDotEnvFile[envVarKey]);
+             delete environmentVariables[envVarKey];
+         }
+     });
+@@ -166,8 +200,18 @@ function loadDotEnvFilesForTask(task, environmentVariables) {
+     return environmentVariables;
+ }
+ function unloadDotEnvFiles(environmentVariables) {
++    console.log("unloadDotEnvFiles");
++    console.log("Baseline")
++    console.log(JSON.stringify(environmentVariables, null, 2));
++
++
+     for (const file of ['.env', '.local.env', '.env.local']) {
++        console.log("Unloading: ", file);
+         unloadDotEnvFile((0, node_path_1.join)(workspace_root_1.workspaceRoot, file), environmentVariables);
++
++        console.log("After Unloading: ", file);
++        console.log("Baseline")
++        console.log(JSON.stringify(environmentVariables, null, 2));
+     }
+     return environmentVariables;
+ }
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
 index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..a8acf41efb2d0ed6c4cdee6a193c38ca764272ed 100644
 --- a/src/tasks-runner/task-orchestrator.js
