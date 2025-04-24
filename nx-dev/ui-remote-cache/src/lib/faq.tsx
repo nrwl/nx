@@ -76,23 +76,6 @@ export function Faq(): ReactElement {
       ),
     },
     {
-      question: 'How will versioning be handled in the API specification?',
-      answerJson:
-        'Check out our RFC for more details: https://github.com/nrwl/nx/discussions/30548',
-      answerUi: (
-        <p>
-          Check out our RFC for more details:{' '}
-          <Link
-            href="https://github.com/nrwl/nx/discussions/30548"
-            title="See documentation"
-            className="font-semibold"
-          >
-            Nx Custom Self-Hosted Remote Cache
-          </Link>
-        </p>
-      ),
-    },
-    {
       question:
         'What security measures does Nx Cloud offer beyond the official plugins and third party plugins?',
       answerJson:
