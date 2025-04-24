@@ -49,7 +49,6 @@ export interface PluginUnsupportedOptions {
   subresourceIntegrity?: boolean;
   statsJson?: boolean;
   budgets?: BudgetEntry[];
-  webWorkerTsConfig?: string;
   crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   allowedCommonJsDependencies?: string[];
   prerender?:
@@ -74,7 +73,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'subresourceIntegrity',
   'statsJson',
   'budgets',
-  'webWorkerTsConfig',
   'crossOrigin',
   'allowedCommonJsDependencies',
   'prerender',

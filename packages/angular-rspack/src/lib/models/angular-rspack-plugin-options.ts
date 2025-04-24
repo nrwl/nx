@@ -170,6 +170,11 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   tsConfig?: string;
   useTsProjectReferences?: boolean;
   vendorChunk?: boolean;
+  /**
+   * @deprecated This is a no-op and can be safely removed.
+   * The tsconfig file for web workers.
+   */
+  webWorkerTsConfig?: string;
 }
 
 export interface NormalizedAngularRspackPluginOptions
