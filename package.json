@@ -415,7 +415,7 @@
   "packageManager": "pnpm@9.8.0",
   "pnpm": {
     "patchedDependencies": {
-      "nx@21.0.0-beta.7": "patches/nx@21.0.0-beta.6.patch"
+      "nx@21.0.0-beta.7": "patches/nx@21.0.0-beta.7.patch"
     }
   }
 }
