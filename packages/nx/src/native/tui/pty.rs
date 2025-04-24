@@ -110,11 +110,10 @@ impl PtyInstance {
     }
 
     /// Process output with an existing parser
-    pub fn process_output(parser: &RwLock<Parser>, output: &[u8]) -> io::Result<()> {
-        if let Ok(mut parser_guard) = parser.write() {
+    pub fn process_output(&self, output: &[u8]) {
+        if let Ok(mut parser_guard) = self.parser.write() {
             let normalized = normalize_newlines(output);
-            parser_guard.process(&normalized);
+            parser_guard.process(&normalized)
         }
-        Ok(())
     }
 }

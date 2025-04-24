@@ -182,18 +182,11 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
-    const terminalOutput = this.getTerminalOutput();
-    if (this.exited) {
-      return Promise.resolve({
-        code: this.exitCode,
-        terminalOutput,
-      });
+    if (!this.exited) {
+      await this.waitForExit();
     }
-    await this.waitForExit();
-    return Promise.resolve({
-      code: this.exitCode,
-      terminalOutput,
-    });
+    const terminalOutput = this.getTerminalOutput();
+    return { code: this.exitCode, terminalOutput };
   }
 
   waitForExit() {
