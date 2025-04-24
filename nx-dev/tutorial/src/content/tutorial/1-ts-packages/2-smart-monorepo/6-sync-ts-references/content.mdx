@@ -26,19 +26,19 @@ Set the bundler to `tsc`, the linter to `none` and the unit test runner to `none
 
 Now we can move the `getRandomItem` function from `packages/names/names.ts` and `packages/animals/animals.ts` into the `packages/util/src/lib/util.ts` file.
 
-```ts title="packages/util/src/lib/util.ts"
+```solution:/packages/util/src/lib/util.ts title="packages/util/src/lib/util.ts"
 export function getRandomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 ```
 
-```ts title="packages/animals/animals.ts"
+```solution:/packages/animals/animals.ts title="packages/animals/animals.ts" collapse={3-150}
 import { getRandomItem } from '@tuskdesign/util';
 
 // ...
 ```
 
-```ts title="packages/names/names.ts"
+```solution:/packages/names/names.ts title="packages/names/names.ts" collapse={3-150}
 import { getRandomItem } from '@tuskdesign/util';
 
 // ...

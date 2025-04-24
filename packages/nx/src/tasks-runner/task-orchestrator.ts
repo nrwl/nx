@@ -43,6 +43,7 @@ import {
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -67,6 +68,8 @@ export class TaskOrchestrator {
   );
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
 
+  private initializingTaskIds = new Set(this.initiatingTasks.map((t) => t.id));
+
   private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
   private processedBatches = new Map<Batch, Promise<void>>();
 
@@ -81,13 +84,12 @@ export class TaskOrchestrator {
 
   private runningContinuousTasks = new Map<string, RunningTask>();
 
-  private cleaningUp = false;
-
   // endregion internal state
 
   constructor(
     private readonly hasher: TaskHasher,
     private readonly initiatingProject: string | undefined,
+    private readonly initiatingTasks: Task[],
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
@@ -524,12 +526,19 @@ export class TaskOrchestrator {
           root: workspaceRoot, // only root is needed in runCommands
         } as any);
 
-        if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
-          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-          this.options.lifeCycle.registerRunningTask(
-            task.id,
-            runningTask.getParserAndWriter()
-          );
+        if (this.tuiEnabled) {
+          if (runningTask instanceof PseudoTtyProcess) {
+            // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+            this.options.lifeCycle.registerRunningTask(
+              task.id,
+              runningTask.getParserAndWriter()
+            );
+          } else {
+            this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+            runningTask.onOutput((output) => {
+              this.options.lifeCycle.appendTaskOutput(task.id, output);
+            });
+          }
         }
 
         if (!streamOutput) {
@@ -589,12 +598,19 @@ export class TaskOrchestrator {
         streamOutput
       );
 
-      if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
-        // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-        this.options.lifeCycle.registerRunningTask(
-          task.id,
-          runningTask.getParserAndWriter()
-        );
+      if (this.tuiEnabled) {
+        if (runningTask instanceof PseudoTtyProcess) {
+          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+          this.options.lifeCycle.registerRunningTask(
+            task.id,
+            runningTask.getParserAndWriter()
+          );
+        } else if ('onOutput' in runningTask) {
+          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+          runningTask.onOutput((output) => {
+            this.options.lifeCycle.appendTaskOutput(task.id, output);
+          });
+        }
       }
 
       return runningTask;
@@ -652,16 +668,32 @@ export class TaskOrchestrator {
         this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Shared);
       }
 
+      const runningTask = new SharedRunningTask(
+        this.runningTasksService,
+        task.id
+      );
+
+      this.runningContinuousTasks.set(task.id, runningTask);
+      runningTask.onExit(() => {
+        this.runningContinuousTasks.delete(task.id);
+      });
+
       // task is already running by another process, we schedule the next tasks
       // and release the threads
       await this.scheduleNextTasksAndReleaseThreads();
-
-      // wait for the running task to finish
-      do {
-        console.log(`Waiting for ${task.id} in another nx process`);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      } while (this.runningTasksService.getRunningTasks([task.id]).length);
-      return;
+      if (this.initializingTaskIds.has(task.id)) {
+        await new Promise<void>((res) => {
+          runningTask.onExit((code) => {
+            if (!this.tuiEnabled) {
+              if (code > 128) {
+                process.exit(code);
+              }
+            }
+            res();
+          });
+        });
+      }
+      return runningTask;
     }
 
     const taskSpecificEnv = await this.processedTasks.get(task.id);
@@ -708,15 +740,20 @@ export class TaskOrchestrator {
 
     childProcess.onExit(() => {
       this.runningTasksService.removeRunningTask(task.id);
+      this.runningContinuousTasks.delete(task.id);
     });
-    if (
-      this.initiatingProject === task.target.project &&
-      this.options.targets.length === 1 &&
-      this.options.targets[0] === task.target.target
-    ) {
-      await childProcess.getResults();
-    } else {
-      await this.scheduleNextTasksAndReleaseThreads();
+    await this.scheduleNextTasksAndReleaseThreads();
+    if (this.initializingTaskIds.has(task.id)) {
+      await new Promise<void>((res) => {
+        childProcess.onExit((code) => {
+          if (!this.tuiEnabled) {
+            if (code > 128) {
+              process.exit(code);
+            }
+          }
+          res();
+        });
+      });
     }
 
     return childProcess;
@@ -832,6 +869,8 @@ export class TaskOrchestrator {
   ) {
     this.tasksSchedule.complete(taskResults.map(({ taskId }) => taskId));
 
+    this.cleanUpUnneededContinuousTasks();
+
     for (const { taskId, status } of taskResults) {
       if (this.completedTasks[taskId] === undefined) {
         this.completedTasks[taskId] = status;
@@ -914,11 +953,14 @@ export class TaskOrchestrator {
   // endregion utils
 
   private async cleanup() {
-    this.cleaningUp = true;
     await Promise.all(
       Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {
-          return t.kill();
+          await t.kill();
+          this.options.lifeCycle.setTaskStatus(
+            taskId,
+            NativeTaskStatus.Stopped
+          );
         } catch (e) {
           console.error(`Unable to terminate ${taskId}\nError:`, e);
         } finally {
@@ -926,6 +968,31 @@ export class TaskOrchestrator {
         }
       })
     );
+  }
+
+  private cleanUpUnneededContinuousTasks() {
+    const incompleteTasks = this.tasksSchedule.getIncompleteTasks();
+    const neededContinuousTasks = new Set(this.initializingTaskIds);
+    for (const task of incompleteTasks) {
+      const continuousDependencies =
+        this.taskGraph.continuousDependencies[task.id];
+      for (const continuousDependency of continuousDependencies) {
+        neededContinuousTasks.add(continuousDependency);
+      }
+    }
+
+    for (const taskId of this.runningContinuousTasks.keys()) {
+      if (!neededContinuousTasks.has(taskId)) {
+        const runningTask = this.runningContinuousTasks.get(taskId);
+        if (runningTask) {
+          runningTask.kill();
+          this.options.lifeCycle.setTaskStatus(
+            taskId,
+            NativeTaskStatus.Stopped
+          );
+        }
+      }
+    }
   }
 }
 

@@ -77,6 +77,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
         nxArgs: { ...nxArgs, parallel: opts.parallel },
         loadDotEnvFiles: true,
         initiatingProject: null,
+        initiatingTasks: [],
       });
 
       return {
@@ -135,6 +136,7 @@ async function createOrchestrator(
   const orchestrator = new TaskOrchestrator(
     hasher,
     null,
+    [],
     projectGraph,
     taskGraph,
     nxJson,

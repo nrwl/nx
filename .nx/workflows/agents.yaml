@@ -64,6 +64,13 @@ launch-templates:
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
 
+      - name: Setup Java 21
+        script: |
+          sudo apt update
+          sudo apt install -y openjdk-21-jdk
+          sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+          java -version
+
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
     image: 'ubuntu22.04-node20.11-v10'
@@ -128,3 +135,10 @@ launch-templates:
 
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Setup Java 21
+        script: |
+          sudo apt update
+          sudo apt install -y openjdk-21-jdk
+          sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+          java -version

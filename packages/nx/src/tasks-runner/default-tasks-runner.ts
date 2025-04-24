@@ -113,6 +113,7 @@ export const defaultTasksRunner: TasksRunner<
   context: {
     target: string;
     initiatingProject?: string;
+    initiatingTasks: Task[];
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
@@ -134,6 +135,7 @@ async function runAllTasks(
   options: DefaultTasksRunnerOptions,
   context: {
     initiatingProject?: string;
+    initiatingTasks: Task[];
     projectGraph: ProjectGraph;
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
@@ -145,6 +147,7 @@ async function runAllTasks(
   const orchestrator = new TaskOrchestrator(
     context.hasher,
     context.initiatingProject,
+    context.initiatingTasks,
     context.projectGraph,
     context.taskGraph,
     context.nxJson,

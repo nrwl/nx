@@ -224,6 +224,13 @@ export class ForkedProcessTaskRunner {
       }
       this.pseudoTerminals.delete(pseudoTerminal);
       this.processes.delete(p);
+      if (!streamOutput) {
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          code === 0 ? 'success' : 'failure',
+          terminalOutput
+        );
+      }
       this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
     });
 

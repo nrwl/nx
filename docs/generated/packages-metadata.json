@@ -2310,6 +2310,16 @@
     ],
     "migrations": [
       {
+        "description": "Change @nx/gradle plugin to version 1",
+        "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
+        "hidden": false,
+        "name": "change-plugin-to-v1",
+        "version": "21.0.0-beta.5",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-plugin-to-v1",
+        "type": "migration"
+      },
+      {
         "description": "Add includeSubprojectsTasks to build.gradle file",
         "file": "generated/packages/gradle/migrations/add-include-subprojects-tasks.json",
         "hidden": false,

@@ -17,6 +17,8 @@ export declare class AppLifeCycle {
   endCommand(): void
   __init(doneCallback: () => any): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  registerRunningTaskWithEmptyParser(taskId: string): void
+  appendTaskOutput(taskId: string, output: string): void
   setTaskStatus(taskId: string, status: TaskStatus): void
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
@@ -322,7 +324,8 @@ export declare const enum TaskStatus {
   RemoteCache = 5,
   NotStarted = 6,
   InProgress = 7,
-  Shared = 8
+  Shared = 8,
+  Stopped = 9
 }
 
 export interface TaskTarget {

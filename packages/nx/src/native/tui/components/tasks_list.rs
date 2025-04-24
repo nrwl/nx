@@ -124,6 +124,8 @@ pub enum TaskStatus {
     InProgress,
     // This task is being run in a different process
     Shared,
+    // This continuous task has been stopped by Nx
+    Stopped,
 }
 
 impl std::str::FromStr for TaskStatus {
@@ -951,17 +953,6 @@ impl TasksList {
                         task_result.task.end_time.unwrap() as u128,
                     );
                 }
-
-                // If the task never had a pty, it must mean that it was run outside of the pseudo-terminal.
-                // We create a new parser and writer for the task and register it and then write the final output to the parser
-                if !self.pty_instances.contains_key(&task.name) {
-                    let (parser, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
-                    if let Some(task_result_output) = task_result.terminal_output {
-                        Self::write_output_to_parser(parser, task_result_output);
-                    }
-                    let task_name = task.name.clone();
-                    self.create_and_register_pty_instance(&task_name, parser_and_writer);
-                }
             }
         }
         self.sort_tasks();
@@ -1402,6 +1393,12 @@ impl Component for TasksList {
 
                                 Cell::from(Line::from(spans))
                             }
+                            TaskStatus::Stopped => Cell::from(Line::from(vec![
+                                Span::raw(if is_selected { ">" } else { " " }),
+                                Span::raw(" "),
+                                Span::styled("⯀️", Style::default().fg(Color::DarkGray)),
+                                Span::raw(" "),
+                            ])),
                             TaskStatus::NotStarted => Cell::from(Line::from(vec![
                                 Span::raw(if is_selected { ">" } else { " " }),
                                 // No need for parallel section check for pending tasks

@@ -67,7 +67,11 @@ export interface LifeCycle {
   registerRunningTask?(
     taskId: string,
     parserAndWriter: ExternalObject<[any, any]>
-  ): Promise<void>;
+  ): void;
+
+  registerRunningTaskWithEmptyParser?(taskId: string): void;
+
+  appendTaskOutput?(taskId: string, output: string): void;
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
@@ -152,13 +156,29 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  async registerRunningTask(
+  registerRunningTask(
     taskId: string,
     parserAndWriter: ExternalObject<[any, any]>
-  ): Promise<void> {
+  ): void {
     for (let l of this.lifeCycles) {
       if (l.registerRunningTask) {
-        await l.registerRunningTask(taskId, parserAndWriter);
+        l.registerRunningTask(taskId, parserAndWriter);
+      }
+    }
+  }
+
+  registerRunningTaskWithEmptyParser(taskId: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.registerRunningTaskWithEmptyParser) {
+        l.registerRunningTaskWithEmptyParser(taskId);
+      }
+    }
+  }
+
+  appendTaskOutput(taskId: string, output: string): void {
+    for (let l of this.lifeCycles) {
+      if (l.appendTaskOutput) {
+        l.appendTaskOutput(taskId, output);
       }
     }
   }

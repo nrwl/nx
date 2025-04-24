@@ -114,11 +114,12 @@ impl AppLifeCycle {
     pub fn print_task_terminal_output(
         &mut self,
         task: Task,
-        status: String,
+        _status: String,
         output: String,
     ) -> napi::Result<()> {
+        debug!("Received task terminal output for {}", task.id);
         if let Ok(mut app) = self.app.lock() {
-            app.print_task_terminal_output(task.id, status.parse().unwrap(), output);
+            app.print_task_terminal_output(task.id, output);
         }
         Ok(())
     }
@@ -238,6 +239,18 @@ impl AppLifeCycle {
     ) {
         let mut app = self.app.lock().unwrap();
         app.register_running_task(task_id, parser_and_writer, TaskStatus::InProgress)
+    }
+
+    #[napi]
+    pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
+        let mut app = self.app.lock().unwrap();
+        app.register_running_task_with_empty_parser(task_id)
+    }
+
+    #[napi]
+    pub fn append_task_output(&mut self, task_id: String, output: String) {
+        let mut app = self.app.lock().unwrap();
+        app.append_task_output(task_id, output)
     }
 
     #[napi]
