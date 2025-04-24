@@ -1,6 +1,6 @@
 {
   "name": "remove-custom-tasks-runner",
-  "version": "21.0.0-beta.7",
+  "version": "21.0.0-beta.8",
   "description": "Removes the legacy cache configuration from nx.json",
   "implementation": "/packages/nx/src/migrations/update-21-0-0/remove-custom-tasks-runner.ts",
   "aliases": [],
