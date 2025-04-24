@@ -58,63 +58,147 @@ index 5ecf36fd9062120afd92530ba6b15f542d04c810..34adf6d39bf9f1708b7d1fc4e305b00a
  }
  function isReady(readyWhenStatus = [], data) {
 diff --git a/src/executors/run-script/run-script.impl.js b/src/executors/run-script/run-script.impl.js
-index 161e0f312156d61186afeb93980778f88f8021df..c8a3e57f4203ef46e3bee042520b047d5ab84a3e 100644
+index 161e0f312156d61186afeb93980778f88f8021df..e89c135283808e85ed14dd6e9bcc45ccba6559c1 100644
 --- a/src/executors/run-script/run-script.impl.js
 +++ b/src/executors/run-script/run-script.impl.js
-@@ -11,6 +11,20 @@ async function default_1(options, context) {
+@@ -11,6 +11,11 @@ async function default_1(options, context) {
          let command = pm.run(options.script, options.__unparsed__.join(' '));
          let cwd = path.join(context.root, context.projectsConfigurations.projects[context.projectName].root);
          let env = process.env;
 +
-+        console.log("BEFORE FILTERING PATH");
-+        console.log(env.PATH);
-+
-+
-+        console.log("BEFORE RUNNING SCRIPT (UNFILTERED)");
-+        (0, child_process_1.execSync)("which pnpm", {
-+            stdio: ['inherit', 'inherit', 'inherit'],
-+            cwd,
-+            env,
-+            windowsHide: false,
-+        });
-+        console.log("AFTER RUNNING SCRIPT (UNFILTERED)");
++        console.log("run-script.impl.js");
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
 +
          // when running nx through npx with node_modules installed with npm, the path gets modified to include the full workspace path with the node_modules folder
          // This causes issues when running in a pty process, so we filter out the node_modules paths from the PATH
          // Since the command here will be run with the package manager script command, the path will be modified again within the PTY process itself.
-@@ -18,6 +32,19 @@ async function default_1(options, context) {
+@@ -18,6 +23,7 @@ async function default_1(options, context) {
              .filter((p) => !p.startsWith(path.join(context.root, 'node_modules')))
              .join(path.delimiter) ?? '';
          env.PATH = filteredPath;
 +
-+        console.log("AFTER FILTERING PATH");
-+        console.log(env.PATH);
-+
-+        console.log("BEFORE RUNNING SCRIPT (FILTERED)");
-+        (0, child_process_1.execSync)("which pnpm", {
-+            stdio: ['inherit', 'inherit', 'inherit'],
-+            cwd,
-+            env,
-+            windowsHide: false,
-+        });
-+        console.log("AFTER RUNNING SCRIPT (FILTERED)");
-+
          if (pseudo_terminal_1.PseudoTerminal.isSupported()) {
              await ptyProcess(command, cwd, env);
          }
+@@ -31,6 +37,10 @@ async function default_1(options, context) {
+     }
+ }
+ function nodeProcess(command, cwd, env) {
++    console.log(`run-script.impl.js.nodeProcess`);
++    console.log(JSON.stringify(process.env, null, 2));
++    console.log('---------------------')
++
+     (0, child_process_1.execSync)(command, {
+         stdio: ['inherit', 'inherit', 'inherit'],
+         cwd,
+@@ -39,6 +49,10 @@ function nodeProcess(command, cwd, env) {
+     });
+ }
+ async function ptyProcess(command, cwd, env) {
++    console.log(`run-script.impl.js.ptyProcess`);
++    console.log(JSON.stringify(process.env, null, 2));
++    console.log('---------------------')
++
+     const terminal = (0, pseudo_terminal_1.createPseudoTerminal)();
+     await terminal.init();
+     return new Promise((res, rej) => {
+diff --git a/src/tasks-runner/forked-process-task-runner.js b/src/tasks-runner/forked-process-task-runner.js
+index 13f711170b76fea57ecf58207ff961069249c259..febceb561876ead74cda272ffb887f360dadce9e 100644
+--- a/src/tasks-runner/forked-process-task-runner.js
++++ b/src/tasks-runner/forked-process-task-runner.js
+@@ -26,6 +26,10 @@ class ForkedProcessTaskRunner {
+         this.pseudoTerminals = new Set();
+     }
+     async init() {
++        console.log(`forked-process-task-runner.init`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
+         this.setupProcessEventListeners();
+     }
+     // TODO: vsavkin delegate terminal output printing
+@@ -84,6 +88,11 @@ class ForkedProcessTaskRunner {
+         const shouldPrefix = streamOutput &&
+             process.env.NX_PREFIX_OUTPUT === 'true' &&
+             !this.tuiEnabled;
++
++        console.log(`forked-process-task-runner.forkProcess`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
+         // streamOutput would be false if we are running multiple targets
+         // there's no point in running the commands in a pty if we are not streaming the output
+         if (pseudo_terminal_1.PseudoTerminal.isSupported() &&
+@@ -117,6 +126,11 @@ class ForkedProcessTaskRunner {
+         const childId = task.id;
+         const pseudoTerminal = await this.createPseudoTerminal();
+         this.pseudoTerminals.add(pseudoTerminal);
++
++        console.log(`forked-process-task-runner.forkProcessWithPseudoTerminal`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
+         const p = await pseudoTerminal.fork(childId, forkScript, {
+             cwd: process.cwd(),
+             execArgv: process.execArgv,
+diff --git a/src/tasks-runner/pseudo-terminal.js b/src/tasks-runner/pseudo-terminal.js
+index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df79affe103 100644
+--- a/src/tasks-runner/pseudo-terminal.js
++++ b/src/tasks-runner/pseudo-terminal.js
+@@ -52,9 +52,17 @@ class PseudoTerminal {
+         }
+     }
+     runCommand(command, { cwd, execArgv, jsEnv, quiet, tty, } = {}) {
++        console.log(`pseudo-terminal.runCommand`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
+         return new PseudoTtyProcess(this.rustPseudoTerminal, this.rustPseudoTerminal.runCommand(command, cwd, jsEnv, execArgv, quiet, tty));
+     }
+     async fork(id, script, { cwd, execArgv, jsEnv, quiet, }) {
++        console.log(`pseudo-terminal.fork`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
+         if (!this.initialized) {
+             throw new Error('Call init() before forking processes');
+         }
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
-index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..91b0a9c51db3561f55b87c41770967a8325d3637 100644
+index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..bc1dbf015797d4fdf07bb56cc8bc383053ba84aa 100644
 --- a/src/tasks-runner/task-orchestrator.js
 +++ b/src/tasks-runner/task-orchestrator.js
-@@ -243,6 +243,11 @@ class TaskOrchestrator {
+@@ -61,6 +61,10 @@ class TaskOrchestrator {
+             this.tasksSchedule.init(),
+             'init' in this.cache ? this.cache.init() : null,
+         ]);
++
++        console.log(`task-orchestrator.init`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
+     }
+     async run() {
+         await this.init();
+@@ -243,6 +247,11 @@ class TaskOrchestrator {
      // endregion Batch
      // region Single Task
      async applyFromCacheOrRunTask(doNotSkipCache, task, groupId) {
 +
-+        console.log(`[${task.id}] applyFromCacheOrRunTask`);
-+        console.log(`[${task.id}] PATH: ${process.env.PATH}`);
-+        console.log(process.env.PATH);
++        console.log(`task-orchestrator.applyFromCacheOrRunTask`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
 +
          // Wait for task to be processed
          const taskSpecificEnv = await this.processedTasks.get(task.id);
          await this.preRunSteps([task], { groupId });
+@@ -376,6 +385,10 @@ class TaskOrchestrator {
+         }
+     }
+     async runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput) {
++        console.log(`task-orchestrator.runTaskInForkedProcess`);
++        console.log(JSON.stringify(process.env, null, 2));
++        console.log('---------------------')
++
+         try {
+             const usePtyFork = process.env.NX_NATIVE_COMMAND_RUNNER !== 'false';
+             // Disable the pseudo terminal if this is a run-many or when running a continuous task as part of a run-one
