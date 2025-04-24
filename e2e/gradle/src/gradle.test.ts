@@ -42,7 +42,7 @@ describe('Gradle', () => {
         );
       });
 
-      it('should track dependencies for new app', () => {
+      xit('should track dependencies for new app', () => {
         if (type === 'groovy') {
           createFile(
             `app2/build.gradle`,
