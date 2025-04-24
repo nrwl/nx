@@ -1,0 +1,60 @@
+diff --git a/.idea/72dc59eeaccdbadea0aee5b43a3f9a53.iml b/.idea/72dc59eeaccdbadea0aee5b43a3f9a53.iml
+new file mode 100644
+index 0000000000000000000000000000000000000000..d6ebd4805981b8400db3e3291c74a743fef9a824
+--- /dev/null
++++ b/.idea/72dc59eeaccdbadea0aee5b43a3f9a53.iml
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="JAVA_MODULE" version="4">
++  <component name="NewModuleRootManager" inherit-compiler-output="true">
++    <exclude-output />
++    <content url="file://$MODULE_DIR$" />
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..639900d13c6182e452e33a3bd638e70a0146c785
+--- /dev/null
++++ b/.idea/misc.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectRootManager">
++    <output url="file://$PROJECT_DIR$/out" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/.idea/modules.xml b/.idea/modules.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b8bc9ba7da151d6336029cc1a810b51c6bd5f1f
+--- /dev/null
++++ b/.idea/modules.xml
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/72dc59eeaccdbadea0aee5b43a3f9a53.iml" filepath="$PROJECT_DIR$/.idea/72dc59eeaccdbadea0aee5b43a3f9a53.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
+index ca34c69c83f9e666fd8761810c3d7a827269118c..50591e13e3501d820c91c5078023ef223bb95079 100644
+--- a/src/tasks-runner/task-orchestrator.js
++++ b/src/tasks-runner/task-orchestrator.js
+@@ -243,6 +243,11 @@ class TaskOrchestrator {
+     // endregion Batch
+     // region Single Task
+     async applyFromCacheOrRunTask(doNotSkipCache, task, groupId) {
++
++        console.log(`[${task.id}] applyFromCacheOrRunTask`);
++        console.log(`[${task.id}] PATH: ${process.env.PATH}`);
++        console.log(process.env.PATH);
++
+         // Wait for task to be processed
+         const taskSpecificEnv = await this.processedTasks.get(task.id);
+         await this.preRunSteps([task], { groupId });
