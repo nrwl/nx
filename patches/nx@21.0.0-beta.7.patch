@@ -166,6 +166,22 @@ index 13f711170b76fea57ecf58207ff961069249c259..e06277ee1ff4f0a6dea51448b18b4731
              const p = (0, child_process_1.fork)(this.cliPath, {
                  stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
                  env,
+diff --git a/src/tasks-runner/init-tasks-runner.js b/src/tasks-runner/init-tasks-runner.js
+index bf72fd47c9c45614f5ac50770df6d950a22a9a5d..29e1548d4cc2ca3ed2f3b446d1cab90b7af700b4 100644
+--- a/src/tasks-runner/init-tasks-runner.js
++++ b/src/tasks-runner/init-tasks-runner.js
+@@ -99,7 +99,10 @@ async function createOrchestrator(tasks, projectGraph, taskGraphForHashing, nxJs
+             return acc;
+         }, {}),
+     };
+-    const orchestrator = new task_orchestrator_1.TaskOrchestrator(hasher, null, [], projectGraph, taskGraph, nxJson, { ...options, parallel: tasks.length, lifeCycle: compositedLifeCycle }, false, client_1.daemonClient, undefined, taskGraphForHashing);
++    const nxArgs = { ...options, parallel: tasks.length, lifeCycle: compositedLifeCycle };
++    run_command_1.setEnvVarsBasedOnArgs(nxArgs, true);
++
++    const orchestrator = new task_orchestrator_1.TaskOrchestrator(hasher, null, [], projectGraph, taskGraph, nxJson, nxArgs, false, client_1.daemonClient, undefined, taskGraphForHashing);
+     await orchestrator.init();
+     await Promise.all(tasks.map((task) => orchestrator.processTask(task.id)));
+     return orchestrator;
 diff --git a/src/tasks-runner/pseudo-terminal.js b/src/tasks-runner/pseudo-terminal.js
 index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df79affe103 100644
 --- a/src/tasks-runner/pseudo-terminal.js
@@ -188,15 +204,26 @@ index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df7
          if (!this.initialized) {
              throw new Error('Call init() before forking processes');
          }
+diff --git a/src/tasks-runner/run-command.js b/src/tasks-runner/run-command.js
+index 7ee0aad9225a7ac7fa16f29a62a5a293dfc8036b..82d6517420fb2c580b425b493f31d5c348ae6a82 100644
+--- a/src/tasks-runner/run-command.js
++++ b/src/tasks-runner/run-command.js
+@@ -6,6 +6,7 @@ exports.invokeTasksRunner = invokeTasksRunner;
+ exports.constructLifeCycles = constructLifeCycles;
+ exports.getRunner = getRunner;
+ exports.getRunnerOptions = getRunnerOptions;
++exports.setEnvVarsBasedOnArgs = setEnvVarsBasedOnArgs;
+ const enquirer_1 = require("enquirer");
+ const node_path_1 = require("node:path");
+ const node_util_1 = require("node:util");
 diff --git a/src/tasks-runner/task-env.js b/src/tasks-runner/task-env.js
-index 879dd7e11af76677dcf80566299ae81cafb49147..2efe34fb6e5b064442613c50061553aef3cd2a83 100644
+index 879dd7e11af76677dcf80566299ae81cafb49147..84b181fd61e3551a437b164323260c66d4f7e9a6 100644
 --- a/src/tasks-runner/task-env.js
 +++ b/src/tasks-runner/task-env.js
-@@ -19,19 +19,47 @@ function getEnvVariablesForBatchProcess(skipNxCache, captureStderr) {
+@@ -19,19 +19,45 @@ function getEnvVariablesForBatchProcess(skipNxCache, captureStderr) {
  }
  function getTaskSpecificEnv(task) {
      // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
-+
 +    console.log("taskEnv.getTaskSpecificEnv");
 +    console.log(JSON.stringify(process.env, null, 2));
 +    console.log('---------------------')
@@ -236,11 +263,10 @@ index 879dd7e11af76677dcf80566299ae81cafb49147..2efe34fb6e5b064442613c50061553ae
 +    console.log(JSON.stringify(res, null, 2));
 +    console.log('---------------------')
 +
-+
      // we have to delete it because if we invoke Nx from within Nx, we need to reset those values
      if (!outputPath) {
          delete res.NX_TERMINAL_OUTPUT_PATH;
-@@ -104,8 +132,14 @@ function loadAndExpandDotEnvFile(filename, environmentVariables, override = fals
+@@ -104,8 +130,14 @@ function loadAndExpandDotEnvFile(filename, environmentVariables, override = fals
  function unloadDotEnvFile(filename, environmentVariables, override = false) {
      const parsedDotEnvFile = {};
      loadAndExpandDotEnvFile(filename, parsedDotEnvFile, override);
@@ -255,7 +281,7 @@ index 879dd7e11af76677dcf80566299ae81cafb49147..2efe34fb6e5b064442613c50061553ae
              delete environmentVariables[envVarKey];
          }
      });
-@@ -166,8 +200,18 @@ function loadDotEnvFilesForTask(task, environmentVariables) {
+@@ -166,8 +198,18 @@ function loadDotEnvFilesForTask(task, environmentVariables) {
      return environmentVariables;
  }
  function unloadDotEnvFiles(environmentVariables) {
