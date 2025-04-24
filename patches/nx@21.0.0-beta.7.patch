@@ -188,8 +188,60 @@ index 6a0ad0fa3a69a4f85126cfc6b887238a9399e0a5..bc859609d1f812061c8048a546958df7
          if (!this.initialized) {
              throw new Error('Call init() before forking processes');
          }
+diff --git a/src/tasks-runner/task-env.js b/src/tasks-runner/task-env.js
+index 879dd7e11af76677dcf80566299ae81cafb49147..979d20e74b0d817ec708ed7bc924cc9326a044b6 100644
+--- a/src/tasks-runner/task-env.js
++++ b/src/tasks-runner/task-env.js
+@@ -19,19 +19,47 @@ function getEnvVariablesForBatchProcess(skipNxCache, captureStderr) {
+ }
+ function getTaskSpecificEnv(task) {
+     // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
++
++    console.log("taskEnv.getTaskSpecificEnv");
++    console.log(JSON.stringify(process.env, null, 2));
++    console.log('---------------------')
++
++    console.log("taskEnv.getTaskSpecificEnv values");
++
+     const taskEnv = unloadDotEnvFiles({ ...process.env });
++    console.log("taskEnv")
++    console.log(JSON.stringify(taskEnv, null, 2));
++
++    console.log("NX_LOAD_DOT_ENV_FILES: ", process.env.NX_LOAD_DOT_ENV_FILES);
++
+     return process.env.NX_LOAD_DOT_ENV_FILES === 'true'
+         ? loadDotEnvFilesForTask(task, taskEnv)
+         : // If not loading dot env files, ensure env vars created by system are still loaded
+             taskEnv;
+ }
+ function getEnvVariablesForTask(task, taskSpecificEnv, forceColor, skipNxCache, captureStderr, outputPath, streamOutput) {
++
++    console.log("taskEnv.getEnvVariablesForTask");
++    console.log(JSON.stringify(process.env, null, 2));
++    console.log('---------------------')
++
++    console.log("taskSpecificEnv.getEnvVariablesForTask values");
++    console.log("taskSpecificEnv")
++    console.log(JSON.stringify(taskSpecificEnv, null, 2));
++
++
+     const res = {
+         // Start With Dotenv Variables
+         ...taskSpecificEnv,
+         // Nx Env Variables overrides everything
+         ...getNxEnvVariablesForTask(task, forceColor, skipNxCache, captureStderr, outputPath, streamOutput),
+     };
++
++    console.log("res")
++    console.log(JSON.stringify(res, null, 2));
++    console.log('---------------------')
++
++
+     // we have to delete it because if we invoke Nx from within Nx, we need to reset those values
+     if (!outputPath) {
+         delete res.NX_TERMINAL_OUTPUT_PATH;
 diff --git a/src/tasks-runner/task-orchestrator.js b/src/tasks-runner/task-orchestrator.js
-index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..53845ef7432e721c7f05c424fc19de65d2cc72c1 100644
+index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..a8acf41efb2d0ed6c4cdee6a193c38ca764272ed 100644
 --- a/src/tasks-runner/task-orchestrator.js
 +++ b/src/tasks-runner/task-orchestrator.js
 @@ -61,6 +61,10 @@ class TaskOrchestrator {
@@ -203,19 +255,34 @@ index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..53845ef7432e721c7f05c424fc19de65
      }
      async run() {
          await this.init();
-@@ -243,6 +247,11 @@ class TaskOrchestrator {
+@@ -243,10 +247,15 @@ class TaskOrchestrator {
      // endregion Batch
      // region Single Task
      async applyFromCacheOrRunTask(doNotSkipCache, task, groupId) {
 +
 +        console.log(`task-orchestrator.applyFromCacheOrRunTask`);
 +        console.log(JSON.stringify(process.env, null, 2));
-+        console.log('---------------------')
 +
          // Wait for task to be processed
          const taskSpecificEnv = await this.processedTasks.get(task.id);
          await this.preRunSteps([task], { groupId });
-@@ -275,6 +284,15 @@ class TaskOrchestrator {
+         const pipeOutput = await this.pipeOutputCapture(task);
++        console.log("pipeOutput: ", pipeOutput);
+         // obtain metadata
+         const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+         const streamOutput = this.outputStyle === 'static'
+@@ -258,6 +267,10 @@ class TaskOrchestrator {
+                 : process.env.FORCE_COLOR, this.options.skipNxCache, this.options.captureStderr, null, null)
+             : (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, undefined, this.options.skipNxCache, this.options.captureStderr, temporaryOutputPath, streamOutput);
+         let results = doNotSkipCache ? await this.applyCachedResults([task]) : [];
++
++        console.log('---------------------')
++
++
+         // the task wasn't cached
+         if (results.length === 0) {
+             const childProcess = await this.runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput);
+@@ -275,6 +288,15 @@ class TaskOrchestrator {
      async runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput) {
          const shouldPrefix = streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
          const targetConfiguration = (0, utils_1.getTargetConfigurationForTask)(task, this.projectGraph);
@@ -231,7 +298,7 @@ index b8754a79c8d3166c76ad3eb78f53bec3926e25cc..53845ef7432e721c7f05c424fc19de65
          if (process.env.NX_RUN_COMMANDS_DIRECTLY !== 'false' &&
              targetConfiguration.executor === 'nx:run-commands' &&
              !shouldPrefix) {
-@@ -376,6 +394,14 @@ class TaskOrchestrator {
+@@ -376,6 +398,14 @@ class TaskOrchestrator {
          }
      }
      async runTaskInForkedProcess(task, env, pipeOutput, temporaryOutputPath, streamOutput) {
