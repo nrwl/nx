@@ -137,7 +137,7 @@ let gradleReportCache: GradleReport;
 let gradleCurrentConfigHash: string;
 let gradleReportCachePath: string = join(
   workspaceDataDirectory,
-  'gradle-report.hash'
+  'gradle-report-v1.hash'
 );
 
 export function getCurrentGradleReport() {
