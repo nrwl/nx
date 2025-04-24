@@ -8,6 +8,7 @@ import {
 
 import type { NxJsonConfiguration } from './nx-json';
 import { Schema } from '../utils/params';
+import { Tree } from '../generators/tree';
 /**
  * A callback function that is executed after changes are made to the file system
  */
@@ -65,6 +66,16 @@ export type PackageJsonUpdates = {
     requires?: Record<string, string>;
   };
 };
+
+/**
+ * Represents a migration that is executed when running `nx migrate`.
+ *
+ * Returning a string[] from the migration function will be interpreted as
+ * a list of next steps to be displayed to the user.
+ */
+export type Migration = (
+  tree: Tree
+) => void | Promise<void> | string[] | Promise<string[]>;
 
 export interface MigrationsJsonEntry {
   version: string;

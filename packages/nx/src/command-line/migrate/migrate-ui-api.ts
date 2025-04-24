@@ -135,15 +135,16 @@ export async function runSingleMigration(
     // 2. Bundled into Console, so the version is fixed to what we build Console with.
     const updatedMigrateModule = await import('./migrate.js');
 
-    const fileChanges = await updatedMigrateModule.runNxOrAngularMigration(
-      workspacePath,
-      migration,
-      false,
-      configuration.createCommits,
-      configuration.commitPrefix || 'chore: [nx migration] ',
-      undefined,
-      true
-    );
+    const { changes: fileChanges } =
+      await updatedMigrateModule.runNxOrAngularMigration(
+        workspacePath,
+        migration,
+        false,
+        configuration.createCommits,
+        configuration.commitPrefix || 'chore: [nx migration] ',
+        undefined,
+        true
+      );
 
     const gitRefAfter = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
