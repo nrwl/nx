@@ -71,6 +71,10 @@ launch-templates:
           sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
           java -version
 
+      - name: Locate PNPM Binary
+        script: |
+          which pnpm
+
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
     image: 'ubuntu22.04-node20.11-v10'
