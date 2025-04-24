@@ -96,15 +96,6 @@ impl TerminalPaneData {
                     self.set_interactive(true);
                     return Ok(());
                 }
-                // Handle Ctrl+Z to exit interactive mode
-                KeyCode::Char('z')
-                    if key.modifiers == KeyModifiers::CONTROL
-                        && !self.is_cache_hit
-                        && self.is_interactive =>
-                {
-                    self.set_interactive(false);
-                    return Ok(());
-                }
                 // Only send input to PTY if we're in interactive mode
                 _ if self.is_interactive => match key.code {
                     KeyCode::Char(c) => {

@@ -723,6 +723,13 @@ impl TasksList {
     }
 
     /// Returns true if the currently focused pane is in interactive mode.
+    pub fn set_interactive_mode(&mut self, interactive: bool) {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            self.terminal_pane_data[pane_idx].set_interactive(interactive);
+        }
+    }
+
+    /// Returns true if the currently focused pane is in interactive mode.
     pub fn is_interactive_mode(&self) -> bool {
         match self.focus {
             Focus::MultipleOutput(pane_idx) => self.terminal_pane_data[pane_idx].is_interactive(),

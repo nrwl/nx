@@ -252,6 +252,23 @@ impl App {
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
+                    if matches!(self.focus, Focus::MultipleOutput(_))
+                        && tasks_list.is_interactive_mode()
+                    {
+                        return match key.code {
+                            KeyCode::Char('z') if key.modifiers == KeyModifiers::CONTROL => {
+                                // Disable interactive mode when Ctrl+Z is pressed
+                                tasks_list.set_interactive_mode(false);
+                                Ok(false)
+                            }
+                            _ => {
+                                // The TasksList will forward the key event to the focused terminal pane
+                                tasks_list.handle_key_event(key).ok();
+                                Ok(false)
+                            }
+                        };
+                    }
+
                     // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
                     if matches!(key.code, KeyCode::Char('?'))
                         && !tasks_list.is_interactive_mode()
@@ -322,8 +339,8 @@ impl App {
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
-                    // Handle Ctrl+C to trigger countdown
-                    if (key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL)
+                    // Handle Q or Ctrl+C to trigger countdown
+                    if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL
                         || (!tasks_list.filter_mode && key.code == KeyCode::Char('q'))
                     {
                         self.is_forced_shutdown = true;
@@ -395,41 +412,36 @@ impl App {
 
                     match tasks_list.get_focus() {
                         Focus::MultipleOutput(_) => {
-                            if tasks_list.is_interactive_mode() {
-                                // Send all other keys to the task list (and ultimately through the terminal pane to the PTY)
-                                tasks_list.handle_key_event(key).ok();
-                            } else {
-                                // Handle navigation and special actions
-                                match key.code {
-                                    KeyCode::Tab => {
-                                        tasks_list.focus_next();
-                                        self.focus = tasks_list.get_focus();
-                                    }
-                                    KeyCode::BackTab => {
-                                        tasks_list.focus_previous();
-                                        self.focus = tasks_list.get_focus();
-                                    }
-                                    KeyCode::Esc => {
-                                        tasks_list.set_focus(Focus::TaskList);
-                                        self.focus = Focus::TaskList;
-                                    }
-                                    // Add our new shortcuts here
-                                    KeyCode::Char('c') => {
-                                        tasks_list.handle_key_event(key).ok();
-                                    }
-                                    KeyCode::Char('u') | KeyCode::Char('d')
-                                        if key.modifiers.contains(KeyModifiers::CONTROL) =>
-                                    {
-                                        tasks_list.handle_key_event(key).ok();
-                                    }
-                                    KeyCode::Char('b') => {
-                                        tasks_list.toggle_task_list();
-                                        self.focus = tasks_list.get_focus();
-                                    }
-                                    _ => {
-                                        // Forward other keys for interactivity, scrolling (j/k) etc
-                                        tasks_list.handle_key_event(key).ok();
-                                    }
+                            // Handle navigation and special actions
+                            match key.code {
+                                KeyCode::Tab => {
+                                    tasks_list.focus_next();
+                                    self.focus = tasks_list.get_focus();
+                                }
+                                KeyCode::BackTab => {
+                                    tasks_list.focus_previous();
+                                    self.focus = tasks_list.get_focus();
+                                }
+                                KeyCode::Esc => {
+                                    tasks_list.set_focus(Focus::TaskList);
+                                    self.focus = Focus::TaskList;
+                                }
+                                // Add our new shortcuts here
+                                KeyCode::Char('c') => {
+                                    tasks_list.handle_key_event(key).ok();
+                                }
+                                KeyCode::Char('u') | KeyCode::Char('d')
+                                    if key.modifiers.contains(KeyModifiers::CONTROL) =>
+                                {
+                                    tasks_list.handle_key_event(key).ok();
+                                }
+                                KeyCode::Char('b') => {
+                                    tasks_list.toggle_task_list();
+                                    self.focus = tasks_list.get_focus();
+                                }
+                                _ => {
+                                    // Forward other keys for interactivity, scrolling (j/k) etc
+                                    tasks_list.handle_key_event(key).ok();
                                 }
                             }
                             return Ok(false);
