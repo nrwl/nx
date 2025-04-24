@@ -12765,7 +12765,7 @@ describe('createNxReleaseConfig()', () => {
   });
 
   describe('useLegacyVersioning', () => {
-    it('should be true by default', async () => {
+    it('should be false by default', async () => {
       const res = await createNxReleaseConfig(projectGraph, projectFileMap);
       expect(res.nxReleaseConfig.version.useLegacyVersioning).toBe(false);
     });
