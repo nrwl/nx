@@ -3364,6 +3364,16 @@
       }
     },
     "migrations": {
+      "/nx-api/nx/migrations/remove-custom-tasks-runner": {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-custom-tasks-runner.json",
+        "hidden": false,
+        "name": "remove-custom-tasks-runner",
+        "version": "21.0.0-beta.7",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/remove-custom-tasks-runner",
+        "type": "migration"
+      },
       "/nx-api/nx/migrations/remove-legacy-cache": {
         "description": "Removes the legacy cache configuration from nx.json",
         "file": "generated/packages/nx/migrations/remove-legacy-cache.json",

@@ -1,0 +1,12 @@
+{
+  "name": "remove-custom-tasks-runner",
+  "version": "21.0.0-beta.7",
+  "description": "Removes the legacy cache configuration from nx.json",
+  "implementation": "/packages/nx/src/migrations/update-21-0-0/remove-custom-tasks-runner.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/nx",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Remove Custom Tasks Runners\n\nRemoves `tasksRunnerOptions` entries from `nx.json` that contain custom tasks runners. In Nx 21, custom tasks runners are no longer functional. See https://nx.dev/deprecated/custom-tasks-runner for more information.\n\n#### Sample Code Changes\n\nRemoves `tasksRunnerOptions` from `nx.json` if it would be empty after removing custom tasks runners.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {},\n  \"tasksRunnerOptions\": {\n    \"default\": {\n      \"runner\": \"custom-task-runner\"\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {}\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}

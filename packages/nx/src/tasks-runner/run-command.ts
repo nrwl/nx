@@ -1064,15 +1064,6 @@ export function getRunner(
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
   try {
-    if (isCustomRunnerPath(modulePath)) {
-      output.warn({
-        title: `Custom task runners will be replaced by a new API starting with Nx 21.`,
-        bodyLines: [
-          `For more information, see https://nx.dev/deprecated/custom-tasks-runner`,
-        ],
-      });
-    }
-
     const tasksRunner = loadTasksRunner(modulePath);
 
     return {
@@ -1100,6 +1091,9 @@ function getTasksRunnerPath(
     nxJson.nxCloudAccessToken ||
     // No runner prop in tasks runner options, check if access token is set.
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
+    ['nx-cloud', '@nrwl/nx-cloud'].includes(
+      nxJson.tasksRunnerOptions?.[runner]?.runner
+    ) ||
     // Cloud access token specified in env var.
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     // Nx Cloud ID specified in nxJson
@@ -1167,13 +1161,4 @@ export function getRunnerOptions(
   }
 
   return result;
-}
-
-function isCustomRunnerPath(modulePath: string) {
-  return ![
-    'nx-cloud',
-    '@nrwl/nx-cloud',
-    'nx/tasks-runners/default',
-    defaultTasksRunnerPath,
-  ].includes(modulePath);
 }

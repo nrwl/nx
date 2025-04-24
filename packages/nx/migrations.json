@@ -38,6 +38,11 @@
       "version": "21.0.0-beta.5",
       "description": "Removes the legacy cache configuration from nx.json",
       "implementation": "./src/migrations/update-21-0-0/remove-legacy-cache"
+    },
+    "remove-custom-tasks-runner": {
+      "version": "21.0.0-beta.7",
+      "description": "Removes the legacy cache configuration from nx.json",
+      "implementation": "./src/migrations/update-21-0-0/remove-custom-tasks-runner"
     }
   }
 }
