@@ -227,20 +227,12 @@ export function RemoteCacheSolutions(): ReactElement {
                   </h4>
                 </div>
                 <p className="mt-2 text-sm">
-                  API specs coming soon. See current{' '}
-                  <Link
-                    href="https://github.com/nrwl/nx/discussions/30548"
-                    title="See RFC on GitHub"
-                    className="italic underline"
-                  >
-                    RFC under review
-                  </Link>
-                  .
+                  Create your own custom remote cache server.
                 </p>
 
                 <div className="mt-8">
                   <ButtonLink
-                    href="https://github.com/nrwl/nx/discussions/30548"
+                    href="/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server"
                     aria-describedby="open-api"
                     title="Remote cache api specs"
                     size="default"
