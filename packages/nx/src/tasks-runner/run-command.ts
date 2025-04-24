@@ -802,7 +802,10 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   }
 }
 
-export function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
+export function setEnvVarsBasedOnArgs(
+  nxArgs: NxArgs,
+  loadDotEnvFiles: boolean
+) {
   if (
     nxArgs.outputStyle == 'stream' ||
     process.env.NX_BATCH_MODE === 'true' ||
