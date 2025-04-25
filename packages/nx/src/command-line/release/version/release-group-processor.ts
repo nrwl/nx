@@ -354,6 +354,15 @@ export class ReleaseGroupProcessor {
         );
         this.cachedCurrentVersions.set(projectName, currentVersion);
       }
+
+      // Ensure that there is an entry in versionData for each project being processed, even if they don't end up being bumped
+      for (const projectName of this.allProjectsToProcess) {
+        this.versionData.set(projectName, {
+          currentVersion: this.getCurrentCachedVersionForProject(projectName),
+          newVersion: null,
+          dependentProjects: this.getOriginalDependentProjects(projectName),
+        });
+      }
     }
 
     // Build the dependency relationships between groups
