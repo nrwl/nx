@@ -19,7 +19,7 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import { execSync } from 'node:child_process';
-import type { NxReleaseVersionV2Configuration } from 'nx/src/config/nx-json';
+import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -1128,7 +1128,7 @@ describe('nx release', () => {
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       (
-        nxJson.release.version as NxReleaseVersionV2Configuration
+        nxJson.release.version as NxReleaseVersionConfiguration
       ).fallbackCurrentVersionResolver = 'disk';
       return nxJson;
     });
@@ -1149,14 +1149,14 @@ describe('nx release', () => {
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       (
-        nxJson.release.version as NxReleaseVersionV2Configuration
+        nxJson.release.version as NxReleaseVersionConfiguration
       ).currentVersionResolver = 'registry';
       (
-        nxJson.release.version as NxReleaseVersionV2Configuration
+        nxJson.release.version as NxReleaseVersionConfiguration
       ).currentVersionResolverMetadata = {
         tag: 'other',
       };
-      delete (nxJson.release.version as NxReleaseVersionV2Configuration)
+      delete (nxJson.release.version as NxReleaseVersionConfiguration)
         .fallbackCurrentVersionResolver;
       return nxJson;
     });
@@ -1197,7 +1197,7 @@ describe('nx release', () => {
 
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       (
-        nxJson.release.version as NxReleaseVersionV2Configuration
+        nxJson.release.version as NxReleaseVersionConfiguration
       ).fallbackCurrentVersionResolver = 'disk';
       return nxJson;
     });
