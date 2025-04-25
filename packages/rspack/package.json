@@ -42,6 +42,7 @@
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "^2.0.3",
+    "parse5": "4.0.0",
     "sass": "^1.85.0",
     "sass-embedded": "^1.83.4",
     "sass-loader": "^16.0.4",
