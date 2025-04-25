@@ -8,11 +8,19 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
-      NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+      - name: Install Node
+        # note the step is only released as of v4 of the workflow steps
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
+
+      - name: Check Node Version
+        script: node --version
+
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
@@ -37,11 +45,8 @@ launch-templates:
         script: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
-      - name: Install Pnpm
-        script: |
-          npm install -g pnpm@9.8.0
 
-      - name: Pnpm Install
+      - name: Pnpm Install from lockfile
         script: |
           pnpm install --frozen-lockfile
 
@@ -85,11 +90,18 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
-      NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_NATIVE_LOGGING: 'nx::native::db'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+
+      - name: Install Node
+        # note the step is only released as of v4 of the workflow steps
+        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node/main.yaml'
+
+      - name: Check Node Version
+        script: node --version
+
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         inputs:
@@ -114,11 +126,8 @@ launch-templates:
         script: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
-      - name: Install Pnpm
-        script: |
-          npm install -g pnpm@9.8.0
 
-      - name: Pnpm Install
+      - name: Pnpm Install from lockfile
         script: |
           pnpm install --frozen-lockfile
 
