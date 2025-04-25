@@ -199,8 +199,17 @@ export class TaskOrchestrator {
     );
   }
 
+  processTasks(taskIds: string[]) {
+    for (const taskId of taskIds) {
+      // Task is already handled or being handled
+      if (!this.processedTasks.has(taskId)) {
+        this.processedTasks.set(taskId, this.processTask(taskId));
+      }
+    }
+  }
+
   // region Processing Scheduled Tasks
-  async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
+  private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
     const taskSpecificEnv = getTaskSpecificEnv(task);
 
@@ -245,12 +254,7 @@ export class TaskOrchestrator {
     for (const batch of scheduledBatches) {
       this.processedBatches.set(batch, this.processScheduledBatch(batch));
     }
-    for (const taskId of scheduledTasks) {
-      // Task is already handled or being handled
-      if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processTask(taskId));
-      }
-    }
+    this.processTasks(scheduledTasks);
   }
 
   // endregion Processing Scheduled Tasks
@@ -526,12 +530,19 @@ export class TaskOrchestrator {
           root: workspaceRoot, // only root is needed in runCommands
         } as any);
 
-        if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
-          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-          this.options.lifeCycle.registerRunningTask(
-            task.id,
-            runningTask.getParserAndWriter()
-          );
+        if (this.tuiEnabled) {
+          if (runningTask instanceof PseudoTtyProcess) {
+            // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+            this.options.lifeCycle.registerRunningTask(
+              task.id,
+              runningTask.getParserAndWriter()
+            );
+          } else {
+            this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+            runningTask.onOutput((output) => {
+              this.options.lifeCycle.appendTaskOutput(task.id, output);
+            });
+          }
         }
 
         if (!streamOutput) {
@@ -591,12 +602,19 @@ export class TaskOrchestrator {
         streamOutput
       );
 
-      if (this.tuiEnabled && runningTask instanceof PseudoTtyProcess) {
-        // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
-        this.options.lifeCycle.registerRunningTask(
-          task.id,
-          runningTask.getParserAndWriter()
-        );
+      if (this.tuiEnabled) {
+        if (runningTask instanceof PseudoTtyProcess) {
+          // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
+          this.options.lifeCycle.registerRunningTask(
+            task.id,
+            runningTask.getParserAndWriter()
+          );
+        } else if ('onOutput' in runningTask) {
+          this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
+          runningTask.onOutput((output) => {
+            this.options.lifeCycle.appendTaskOutput(task.id, output);
+          });
+        }
       }
 
       return runningTask;

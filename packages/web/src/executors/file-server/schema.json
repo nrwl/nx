@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "File Server",
   "description": "Serve a web application from a folder. This executor is a wrapper around the [http-server](https://www.npmjs.com/package/http-server) package.",

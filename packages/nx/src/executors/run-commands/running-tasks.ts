@@ -28,12 +28,9 @@ export class ParallelRunningTasks implements RunningTask {
 
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
+  private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
-  constructor(
-    options: NormalizedRunCommandsOptions,
-    context: ExecutorContext,
-    private readonly tuiEnabled: boolean
-  ) {
+  constructor(options: NormalizedRunCommandsOptions, context: ExecutorContext) {
     this.childProcesses = options.commands.map(
       (commandConfig) =>
         new RunningNodeProcess(
@@ -58,6 +55,10 @@ export class ParallelRunningTasks implements RunningTask {
         res({ code, terminalOutput });
       });
     });
+  }
+
+  onOutput(cb: (terminalOutput: string) => void) {
+    this.outputCallbacks.push(cb);
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
@@ -94,6 +95,11 @@ export class ParallelRunningTasks implements RunningTask {
               childProcess: RunningNodeProcess;
               result: { code: number; terminalOutput: string };
             }>((res) => {
+              childProcess.onOutput((terminalOutput) => {
+                for (const cb of this.outputCallbacks) {
+                  cb(terminalOutput);
+                }
+              });
               childProcess.onExit((code, terminalOutput) => {
                 res({
                   childProcess,
@@ -117,12 +123,18 @@ export class ParallelRunningTasks implements RunningTask {
       }
     } else {
       const results = await Promise.all(
-        this.childProcesses.map((childProcess) =>
-          childProcess.getResults().then((result) => ({
+        this.childProcesses.map(async (childProcess) => {
+          childProcess.onOutput((terminalOutput) => {
+            for (const cb of this.outputCallbacks) {
+              cb(terminalOutput);
+            }
+          });
+          const result = await childProcess.getResults();
+          return {
             childProcess,
             result,
-          }))
-        )
+          };
+        })
       );
 
       let terminalOutput = results
@@ -161,6 +173,7 @@ export class SeriallyRunningTasks implements RunningTask {
     [];
   private code: number | null = 0;
   private error: any;
+  private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
   constructor(
     options: NormalizedRunCommandsOptions,
@@ -194,6 +207,10 @@ export class SeriallyRunningTasks implements RunningTask {
     this.exitCallbacks.push(cb);
   }
 
+  onOutput(cb: (terminalOutput: string) => void) {
+    this.outputCallbacks.push(cb);
+  }
+
   send(message: Serializable): void {
     throw new Error('Not implemented');
   }
@@ -218,6 +235,12 @@ export class SeriallyRunningTasks implements RunningTask {
         options.envFile
       );
       this.currentProcess = childProcess;
+
+      childProcess.onOutput((output) => {
+        for (const cb of this.outputCallbacks) {
+          cb(output);
+        }
+      });
 
       let { code, terminalOutput } = await childProcess.getResults();
       this.terminalOutput += terminalOutput;
@@ -286,6 +309,7 @@ class RunningNodeProcess implements RunningTask {
   private childProcess: ChildProcess;
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
+  private outputCallbacks: Array<(terminalOutput: string) => void> = [];
   public command: string;
 
   constructor(
@@ -321,6 +345,10 @@ class RunningNodeProcess implements RunningTask {
     });
   }
 
+  onOutput(cb: (terminalOutput: string) => void) {
+    this.outputCallbacks.push(cb);
+  }
+
   onExit(cb: (code: number, terminalOutput: string) => void): void {
     this.exitCallbacks.push(cb);
   }
@@ -341,13 +369,22 @@ class RunningNodeProcess implements RunningTask {
     });
   }
 
+  private triggerOutputListeners(output: string) {
+    for (const cb of this.outputCallbacks) {
+      cb(output);
+    }
+  }
+
   private addListeners(
     commandConfig: RunCommandsCommandOptions,
     streamOutput: boolean
   ) {
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
+
       this.terminalOutput += output;
+      this.triggerOutputListeners(output);
+
       if (streamOutput) {
         process.stdout.write(output);
       }
@@ -362,7 +399,10 @@ class RunningNodeProcess implements RunningTask {
     });
     this.childProcess.stderr.on('data', (err) => {
       const output = addColorAndPrefix(err, commandConfig);
+
       this.terminalOutput += output;
+      this.triggerOutputListeners(output);
+
       if (streamOutput) {
         process.stderr.write(output);
       }

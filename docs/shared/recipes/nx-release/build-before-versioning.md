@@ -17,7 +17,7 @@ In order to ensure that projects are built before the new version is applied to 
 }
 ```
 
-This command will run the `build` target for all projects before the version step of Nx Release. Any command can be specified, including non-nx commands. This step is often required when [publishing from a custom dist directory](/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-not-update-references-in-my-source-packagejson-files), as the dist directory must be built before the version is applied to the dist directory's package manifest.
+This command will run the `build` target for all projects before the version step of Nx Release. Any command can be specified, including non-nx commands. This step is often required when [publishing from a custom dist directory](/recipes/nx-release/updating-version-references#scenario-2-i-want-to-publish-from-a-custom-dist-directory-and-update-references-in-my-both-my-source-and-dist-packagejson-files), as the dist directory must be built before the version is applied to the dist directory's package manifest.
 
 When using release groups in which the member projects are versioned together, you can use `groupPreVersionCommand` and it will be executed before the versioning step for that release group.
 

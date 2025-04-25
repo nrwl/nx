@@ -6,6 +6,7 @@ import {
   calculateDefaultProjectName,
   combineOptionsForExecutor,
   getExecutorInformation,
+  parseExecutor,
 } from 'nx/src/devkit-internals';
 
 /**
@@ -29,7 +30,9 @@ export function readTargetOptions<T = any>(
     throw new Error(`Unable to find target ${target} for project ${project}`);
   }
 
-  const [nodeModule, executorName] = targetConfiguration.executor.split(':');
+  const [nodeModule, executorName] = parseExecutor(
+    targetConfiguration.executor
+  );
   const { schema } = getExecutorInformation(
     nodeModule,
     executorName,

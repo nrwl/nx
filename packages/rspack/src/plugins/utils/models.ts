@@ -247,6 +247,10 @@ export interface NxAppRspackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Use the legacy WriteIndexHtmlPlugin instead of the built-in HtmlRspackPlugin.
+   */
+  useLegacyHtmlPlugin?: boolean;
 }
 
 export interface NormalizedNxAppRspackPluginOptions
@@ -260,4 +264,5 @@ export interface NormalizedNxAppRspackPluginOptions
   projectGraph: ProjectGraph;
   outputFileName: string;
   assets: AssetGlobPattern[];
+  useLegacyHtmlPlugin: boolean;
 }

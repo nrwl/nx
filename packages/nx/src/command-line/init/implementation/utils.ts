@@ -313,8 +313,10 @@ export function markPackageJsonAsNxProject(packageJsonPath: string) {
 
 export function printFinalMessage({
   learnMoreLink,
+  appendLines,
 }: {
   learnMoreLink?: string;
+  appendLines?: string[];
 }): void {
   const pmc = getPackageManagerCommand();
 
@@ -328,6 +330,7 @@ export function printFinalMessage({
         pmc
       )} graph" to see the graph of projects and tasks in your workspace. https://nx.dev/core-features/explore-graph`,
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
+      ...(appendLines ?? []),
     ].filter(Boolean),
   });
 }

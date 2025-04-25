@@ -1,7 +1,7 @@
 import chalk = require('chalk');
 import { prompt } from 'enquirer';
 import * as ora from 'ora';
-import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
+import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { Tree } from '../../../generators/tree';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
@@ -362,7 +362,7 @@ async function handleNoAvailableDiskFallback({
   projectName: string;
   versionActions: VersionActions;
   specifierSource: Exclude<
-    NxReleaseVersionV2Configuration['specifierSource'],
+    NxReleaseVersionConfiguration['specifierSource'],
     'prompt'
   >;
   currentVersionSourceMessage: string;

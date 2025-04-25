@@ -106,6 +106,8 @@ export function normalizeOptions(
     ),
     generateIndexHtml:
       combinedPluginAndMaybeExecutorOptions.generateIndexHtml ?? true,
+    useLegacyHtmlPlugin:
+      combinedPluginAndMaybeExecutorOptions.useLegacyHtmlPlugin ?? false,
     main: combinedPluginAndMaybeExecutorOptions.main,
     namedChunks: combinedPluginAndMaybeExecutorOptions.namedChunks ?? !isProd,
     optimization: combinedPluginAndMaybeExecutorOptions.optimization ?? isProd,

@@ -2,7 +2,7 @@ import TOML from '@ltd/j-toml';
 import { join } from 'node:path';
 import type {
   NxJsonConfiguration,
-  NxReleaseVersionV2Configuration,
+  NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
 import type {
   ProjectGraph,
@@ -146,7 +146,7 @@ export class ExampleRustVersionActions extends VersionActions {
 
   async readCurrentVersionFromRegistry(
     tree: Tree,
-    _currentVersionResolverMetadata: NxReleaseVersionV2Configuration['currentVersionResolverMetadata']
+    _currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata']
   ): Promise<{
     currentVersion: string;
     logText: string;
@@ -161,8 +161,10 @@ export class ExampleRustVersionActions extends VersionActions {
 
   async updateProjectVersion(tree: Tree, newVersion: string) {
     const logMessages: string[] = [];
-    for (const manifestPath of this.manifestsToUpdate) {
-      const cargoTomlString = tree.read(manifestPath, 'utf-8')!.toString();
+    for (const manifestToUpdate of this.manifestsToUpdate) {
+      const cargoTomlString = tree
+        .read(manifestToUpdate.manifestPath, 'utf-8')!
+        .toString();
       const cargoToml = this.parseCargoToml(cargoTomlString);
       ExampleRustVersionActions.modifyCargoTable(
         cargoToml,
@@ -172,9 +174,9 @@ export class ExampleRustVersionActions extends VersionActions {
       );
       const updatedCargoTomlString =
         ExampleRustVersionActions.stringifyCargoToml(cargoToml);
-      tree.write(manifestPath, updatedCargoTomlString);
+      tree.write(manifestToUpdate.manifestPath, updatedCargoTomlString);
       logMessages.push(
-        `✍️  New version ${newVersion} written to manifest: ${manifestPath}`
+        `✍️  New version ${newVersion} written to manifest: ${manifestToUpdate.manifestPath}`
       );
     }
     return logMessages;
@@ -201,10 +203,7 @@ export class ExampleRustVersionActions extends VersionActions {
     };
   }
 
-  async isLocalDependencyProtocol(_versionSpecifier: string): Promise<boolean> {
-    return false;
-  }
-
+  // NOTE: Does not take the preserveLocalDependencyProtocols setting into account yet
   async updateProjectDependencies(
     tree: Tree,
     _projectGraph: ProjectGraph,
@@ -218,8 +217,10 @@ export class ExampleRustVersionActions extends VersionActions {
     }
 
     const logMessages: string[] = [];
-    for (const manifestPath of this.manifestsToUpdate) {
-      const cargoTomlString = tree.read(manifestPath, 'utf-8')!.toString();
+    for (const manifestToUpdate of this.manifestsToUpdate) {
+      const cargoTomlString = tree
+        .read(manifestToUpdate.manifestPath, 'utf-8')!
+        .toString();
       const cargoToml = this.parseCargoToml(cargoTomlString);
 
       for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
@@ -233,10 +234,10 @@ export class ExampleRustVersionActions extends VersionActions {
 
       const updatedCargoTomlString =
         ExampleRustVersionActions.stringifyCargoToml(cargoToml);
-      tree.write(manifestPath, updatedCargoTomlString);
+      tree.write(manifestToUpdate.manifestPath, updatedCargoTomlString);
 
       logMessages.push(
-        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestPath}`
+        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
       );
     }
     return logMessages;
@@ -259,10 +260,6 @@ export class ExampleNonSemverVersionActions extends VersionActions {
       currentVersion: null,
       dependencyCollection: null,
     };
-  }
-
-  async isLocalDependencyProtocol() {
-    return false;
   }
 
   async updateProjectVersion(tree, newVersion) {

@@ -1,6 +1,8 @@
 ---
 type: lesson
 title: Open a Pull Request
+custom:
+  last: true
 ---
 
 ## Open a Pull Request

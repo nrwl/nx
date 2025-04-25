@@ -26,6 +26,7 @@
   "generators": "./generators.json",
   "exports": {
     ".": "./index.js",
+    "./plugin-v1": "./plugin-v1.js",
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json"
@@ -38,5 +39,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "executors": "./executors.json"
 }

@@ -1,8 +1,8 @@
 import type { PackageJson } from '../utils/package-json';
 import type {
+  LegacyNxReleaseVersionConfiguration,
   NxJsonConfiguration,
   NxReleaseVersionConfiguration,
-  NxReleaseVersionV2Configuration,
 } from './nx-json';
 
 /**
@@ -109,10 +109,13 @@ export interface ProjectConfiguration {
    */
   release?: {
     version?:
-      | Pick<NxReleaseVersionConfiguration, 'generator' | 'generatorOptions'>
+      | Pick<
+          LegacyNxReleaseVersionConfiguration,
+          'generator' | 'generatorOptions'
+        >
       | Pick<
           // Expose a subset of version config options at the project level
-          NxReleaseVersionV2Configuration,
+          NxReleaseVersionConfiguration,
           | 'versionActions'
           | 'versionActionsOptions'
           | 'manifestRootsToUpdate'

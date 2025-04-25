@@ -13,11 +13,8 @@ and the version of NodeJS that we tested it against.
 
 | Nx Version      | Node Version     | Typescript Version |
 | --------------- | ---------------- | ------------------ |
-| 20.x (latest)   | 22.x, 20.x       | ~5.4.2             |
+| 21.x (next)     | 22.x, ^20.19.0,  | ~5.4.2             |
+| 20.x (latest)   | 22.x, 20.x, 18.x | ~5.4.2             |
 | 19.x (previous) | 22.x, 20.x, 18.x | ~5.4.2             |
 | 18.x            | 20.x, 18.x       | ~5.4.2             |
 | 17.x            | 20.x, 18.x       | ~5.1.0             |
-| 16.x            | 20.x, 18.x, 16.x | ~5.1.0             |
-| 15.x            | 18.x, 16.x, 14.x | ~5.0.0             |
-| 14.x            | 16.x, 14.x, 12.x | ~4.7.2             |
-| 13.x            | 14.x, 12.x, 10.x | ~4.6.2             |

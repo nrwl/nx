@@ -16,6 +16,7 @@ export type AutomaticMigrationEvents =
       type: 'loadInitialData';
       migrations: MigrationDetailsWithId[];
       metadata: MigrationsJsonMetadata;
+      currentMigrationId?: string;
     }
   | {
       type: 'updateMetadata';

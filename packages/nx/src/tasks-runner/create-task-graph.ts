@@ -521,7 +521,7 @@ export function getNonDummyDeps(
   }
 }
 
-export function createTaskId(
+function createTaskId(
   project: string,
   target: string,
   configuration: string | undefined

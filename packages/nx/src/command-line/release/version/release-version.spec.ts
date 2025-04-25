@@ -1,5 +1,5 @@
 import * as enquirer from 'enquirer';
-import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
+import { NxReleaseVersionConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { createTreeWithEmptyWorkspace } from '../../../generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from '../../../generators/tree';
@@ -141,7 +141,7 @@ async function releaseVersionGeneratorForTest(
          * because this takes place after all projects have been versioned)
          */
         return processor.afterAllProjectsVersioned(
-          (nxReleaseConfig.version as NxReleaseVersionV2Configuration)
+          (nxReleaseConfig.version as NxReleaseVersionConfiguration)
             .versionActionsOptions
         );
       },

@@ -177,7 +177,6 @@ function applyNxIndependentConfig(
             },
           }),
         ],
-        runtimeChunk: false,
         concatenateModules: true,
       };
 

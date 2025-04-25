@@ -16,7 +16,6 @@ use crate::native::tasks::types::{Task, TaskResult};
 use crate::native::tui::tui::Tui;
 
 use super::config::TuiConfig;
-use super::utils::is_cache_hit;
 use super::{
     action::Action,
     components::{
@@ -109,11 +108,7 @@ impl App {
         }
     }
 
-    pub fn print_task_terminal_output(
-        &mut self,
-        task_id: String,
-        output: String,
-    ) {
+    pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
         if let Some(tasks_list) = self
             .components
             .iter_mut()
@@ -196,6 +191,35 @@ impl App {
         {
             tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
             tasks_list.update_task_status(task_id.clone(), task_status);
+        }
+    }
+
+    pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            let (_, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
+
+            tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
+            tasks_list.update_task_status(task_id.clone(), TaskStatus::InProgress);
+            let _ = tasks_list.handle_resize(None);
+        }
+    }
+
+    pub fn append_task_output(&mut self, task_id: String, output: String) {
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            let pty = tasks_list
+                .pty_instances
+                .get_mut(&task_id)
+                .expect(&format!("{} has not been registered yet.", task_id));
+
+            pty.process_output(output.as_bytes());
         }
     }
 

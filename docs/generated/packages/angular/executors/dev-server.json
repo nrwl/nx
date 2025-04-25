@@ -3,6 +3,7 @@
   "implementation": "/packages/angular/src/builders/dev-server/dev-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Webpack Dev Server",

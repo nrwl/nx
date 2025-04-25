@@ -82,3 +82,22 @@ Nx Release supports creating GitHub releases for project level changelogs as wel
 {% callout type="warning" title="Project and Workspace GitHub Releases" %}
 Nx Release does not support creating GitHub releases for both project level changelogs and the workspace changelog. You will need to choose one or the other.
 {% /callout %}
+
+## Customizing the GitHub instance to use GitHub Enterprise Server
+
+If you are not using github.com, and instead using a self-hosted GitHub Enterprise Server instance, you can use a configuration object instead of the string for "createRelease" to provide the relevant hostname, and optionally override the API base URL, although this is not typically needed as it will default to `https://${hostname}/api/v3`.
+
+```json
+{
+  "release": {
+    "changelog": {
+      "workspaceChangelog": {
+        "createRelease": {
+          "provider": "github-enterprise-server",
+          "hostname": "github.example.com"
+        }
+      }
+    }
+  }
+}
+```

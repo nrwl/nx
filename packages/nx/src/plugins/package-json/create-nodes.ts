@@ -214,7 +214,12 @@ export function buildProjectConfigurationFromPackageJson(
     root: projectRoot,
     name,
     ...packageJson.nx,
-    targets: readTargetsFromPackageJson(packageJson, nxJson),
+    targets: readTargetsFromPackageJson(
+      packageJson,
+      nxJson,
+      projectRoot,
+      workspaceRoot
+    ),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(
       packageJson,

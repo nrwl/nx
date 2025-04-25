@@ -179,12 +179,12 @@ To add the token as a secret to your Github repository, navigate to your reposit
 Note: The `NPM_ACCESS_TOKEN` name is not important other than that it matches the usage in the workflow:
 
 ```yaml
-      - name: Publish packages
-      run: npx nx release publish
-      shell: bash
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-        NPM_CONFIG_PROVENANCE: true
+- name: Publish packages
+  run: npx nx release publish
+  shell: bash
+  env:
+    NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+    NPM_CONFIG_PROVENANCE: true
 ```
 
 [(See full workflow above)](#publish-in-github-actions)

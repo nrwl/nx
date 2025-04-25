@@ -10,24 +10,8 @@ focus: /nx.json
 
 You may have noticed in the `packages/zoo/package.json` file, there is a `serve` script that expects the `build` task to already have created the `dist` folder. Let's set up a task pipeline that will guarantee that the project's `build` task has been run.
 
-```json title="nx.json" {4-6}
-{
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "serve": {
-      "dependsOn": ["build"]
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["{projectRoot}/dist"],
-      "cache": true
-    },
-    "typecheck": {
-      "cache": true
-    }
-  },
-  "defaultBase": "main"
-}
+```solution:/nx.json title="nx.json" {4-6} collapse={2,7-14}
+
 ```
 
 The `serve` target's `dependsOn` line makes Nx run the `build` task for the current project before running the current project's `build` task.

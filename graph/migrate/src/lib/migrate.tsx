@@ -21,6 +21,7 @@ import {
 export interface MigrateUIProps {
   migrations: MigrationDetailsWithId[];
   nxConsoleMetadata: MigrationsJsonMetadata;
+  currentMigrationId?: string;
   onRunMigration: (
     migration: MigrationDetailsWithId,
     configuration: {
@@ -48,6 +49,7 @@ export interface MigrateUIProps {
 export enum PrimaryAction {
   RunMigrations = 'Run Migrations',
   PauseMigrations = 'Pause Migrations',
+  ApproveChanges = 'Approve Changes to Continue',
   FinishWithoutSquashingCommits = 'Finish without squashing commits',
   FinishSquashingCommits = 'Finish (squash commits)',
 }
@@ -73,13 +75,18 @@ export function MigrateUI(props: MigrateUIProps) {
   });
   const isDone = useSelector(actor, (state) => state.matches('done'));
   const isInit = useSelector(actor, (state) => state.matches('init'));
-  const running = useSelector(actor, (state) => state.matches('running'));
+  const isRunning = useSelector(actor, (state) => state.matches('running'));
+
+  const isNeedReview = useSelector(actor, (state) =>
+    state.matches('needsReview')
+  );
 
   useEffect(() => {
     actor.send({
       type: 'loadInitialData',
       migrations: props.migrations,
       metadata: props.nxConsoleMetadata,
+      currentMigrationId: props.currentMigrationId,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only load initial data when migrations change
   }, [JSON.stringify(props.migrations)]);
@@ -99,18 +106,23 @@ export function MigrateUI(props: MigrateUIProps) {
 
   useEffect(() => {
     if (
-      (primaryAction === PrimaryAction.RunMigrations ||
+      (primaryAction === PrimaryAction.ApproveChanges ||
+        primaryAction === PrimaryAction.RunMigrations ||
         primaryAction === PrimaryAction.PauseMigrations) &&
       !isInit
     ) {
       setPrimaryAction(
-        running ? PrimaryAction.PauseMigrations : PrimaryAction.RunMigrations
+        isRunning
+          ? PrimaryAction.PauseMigrations
+          : isNeedReview
+          ? PrimaryAction.ApproveChanges
+          : PrimaryAction.RunMigrations
       );
     }
-  }, [running, primaryAction, isInit]);
+  }, [isRunning, primaryAction, isInit, isNeedReview]);
 
   const handlePauseResume = () => {
-    if (running) {
+    if (isRunning) {
       actor.send({ type: 'pause' });
     } else {
       actor.send({ type: 'startRunning' });
@@ -195,12 +207,13 @@ export function MigrateUI(props: MigrateUIProps) {
           >
             Cancel
           </button>
-          <div className="flex">
+          <div className="group flex">
             <button
               onClick={handlePrimaryActionSelection}
               type="button"
-              title="Finish"
-              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
+              title={primaryAction}
+              disabled={isNeedReview}
+              className="whitespace-nowrap rounded-l-md border border-blue-700 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-600 dark:text-white hover:dark:bg-blue-700"
             >
               {primaryAction}
             </button>
@@ -208,7 +221,8 @@ export function MigrateUI(props: MigrateUIProps) {
               <button
                 type="button"
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
+                disabled={isNeedReview}
+                className="border-l-1 flex items-center rounded-r-md border border-blue-700 bg-blue-500 px-2 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:border-blue-400 disabled:bg-blue-400 disabled:opacity-50 dark:border-blue-700 dark:bg-blue-700 dark:text-white hover:dark:bg-blue-800"
               >
                 <ChevronDownIcon className="h-4 w-4" />
               </button>
@@ -224,7 +238,7 @@ export function MigrateUI(props: MigrateUIProps) {
                   {!isDone && (
                     <>
                       {' '}
-                      {!running && (
+                      {!isRunning && (
                         <li
                           className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                           onClick={() => {
@@ -244,7 +258,7 @@ export function MigrateUI(props: MigrateUIProps) {
                           <span>{'Run Migrations'}</span>
                         </li>
                       )}
-                      {running && (
+                      {isRunning && (
                         <li
                           className="flex cursor-pointer items-center gap-2 p-2 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                           onClick={() => {
