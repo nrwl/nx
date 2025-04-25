@@ -36,6 +36,7 @@ export interface MigrateUIProps {
     }
   ) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onUndoMigration: (migration: MigrationDetailsWithId) => void;
   onCancel: () => void;
   onFinish: (squashCommits: boolean) => void;
   onFileClick: (
@@ -188,13 +189,10 @@ export function MigrateUI(props: MigrateUIProps) {
           onRunMigration={(migration) =>
             props.onRunMigration(migration, { createCommits })
           }
-          onSkipMigration={(migration) => props.onSkipMigration(migration)}
-          onViewImplementation={(migration) =>
-            props.onViewImplementation(migration)
-          }
-          onViewDocumentation={(migration) =>
-            props.onViewDocumentation(migration)
-          }
+          onSkipMigration={props.onSkipMigration}
+          onUndoMigration={props.onUndoMigration}
+          onViewImplementation={props.onViewImplementation}
+          onViewDocumentation={props.onViewDocumentation}
           onFileClick={props.onFileClick}
         />
       </div>
