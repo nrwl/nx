@@ -1,3 +1,9 @@
+---
+title: React Plugin for Nx
+description: Learn how to use the @nx/react plugin to create and manage React applications and libraries in your Nx workspace, including components, hooks, and more.
+keywords: [react]
+---
+
 The React plugin contains executors and generators for managing React applications and libraries within an Nx workspace.
 It provides:
 

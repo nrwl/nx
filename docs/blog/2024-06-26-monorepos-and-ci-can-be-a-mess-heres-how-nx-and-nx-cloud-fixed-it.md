@@ -2,6 +2,7 @@
 title: "Monorepos and CI can be a Mess - Here's How Nx and Nx Cloud Fixed It"
 description: "Continuous Integration (CI) in monorepos can be notoriously slow and unreliable, quickly become a bottleneck for scaling monorepos.
 Learn how Nx and Nx Cloud's new task-based approach ensures fast, resilient, and efficient CI for your monorepo projects."
+date: 2024-06-26
 slug: 'monorepos-and-ci-can-be-a-mess-heres-how-nx-and-nx-cloud-fixed-it'
 authors: ['Juri Strumpflohner']
 tags: [webinar]

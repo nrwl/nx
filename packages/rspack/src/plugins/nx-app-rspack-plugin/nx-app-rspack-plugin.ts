@@ -34,6 +34,20 @@ export class NxAppRspackPlugin {
       this.options.target = target;
     }
 
+    if (
+      compiler.options.entry &&
+      compiler.options.entry['main'] &&
+      typeof compiler.options.entry['main'] === 'object' &&
+      Object.keys(compiler.options.entry['main']).length === 0
+    ) {
+      compiler.options.entry = {};
+    }
+
+    // Prefer `clean` option from Rspack config over our own.
+    if (typeof compiler.options.output.clean !== 'undefined') {
+      this.options.deleteOutputPath = false;
+    }
+
     applyBaseConfig(this.options, compiler.options, {
       useNormalizedEntry: true,
     });

@@ -1,7 +1,7 @@
 import { names, Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../../utils/test-runners';
@@ -29,7 +29,7 @@ export async function normalizeOptions(
     ...schema,
   };
 
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,

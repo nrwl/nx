@@ -87,6 +87,18 @@ describe('Vite Plugin', () => {
           const result = runCLI(`test ${myApp}`);
           expect(result).toContain('Successfully ran target test');
         }, 200_000);
+
+        it('should generate a coverage file specified by the executor', async () => {
+          updateJson(`${myApp}/project.json`, (json) => {
+            json.targets.test.options.reportsDirectory = '../coverage/test-dir';
+            return json;
+          });
+
+          const result = runCLI(`test ${myApp} --coverage`);
+
+          checkFilesExist(`coverage/test-dir/index.html`);
+          expect(result).toContain('Coverage report');
+        }, 200_000);
       });
     });
 

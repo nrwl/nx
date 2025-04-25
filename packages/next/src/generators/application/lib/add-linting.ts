@@ -99,6 +99,7 @@ export async function addLinting(
       addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
         ...extraEslintDependencies.devDependencies,
         'eslint-config-next': eslintConfigNextVersion,
+        '@next/eslint-plugin-next': eslintConfigNextVersion,
       })
     );
   }

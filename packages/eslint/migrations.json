@@ -182,6 +182,14 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.7.0": {
+      "version": "20.7.0-beta.4",
+      "packages": {
+        "eslint-config-prettier": {
+          "version": "^10.0.0"
+        }
+      }
     }
   }
 }

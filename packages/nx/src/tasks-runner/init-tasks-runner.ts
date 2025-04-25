@@ -1,14 +1,30 @@
-import { readNxJson } from '../config/configuration';
+import type { NxJsonConfiguration } from '../config/nx-json';
+import { readNxJson } from '../config/nx-json';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
-import { invokeTasksRunner } from './run-command';
+import {
+  constructLifeCycles,
+  getRunner,
+  invokeTasksRunner,
+  setEnvVarsBasedOnArgs,
+} from './run-command';
 import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
 import { performance } from 'perf_hooks';
 import { getOutputs } from './utils';
 import { loadRootEnvFiles } from '../utils/dotenv';
-import { TaskResult } from './life-cycle';
+import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
+import { TaskOrchestrator } from './task-orchestrator';
+import { createTaskHasher } from '../hasher/create-task-hasher';
+import type { ProjectGraph } from '../config/project-graph';
+import { daemonClient } from '../daemon/client/client';
+import { RunningTask } from './running-tasks/running-task';
+import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 
+/**
+ * This function is deprecated. Do not use this
+ * @deprecated This function is deprecated. Do not use this
+ */
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
   loadRootEnvFiles();
@@ -47,6 +63,10 @@ export async function initTasksRunner(nxArgs: NxArgs) {
           acc[task.id] = [];
           return acc;
         }, {} as any),
+        continuousDependencies: opts.tasks.reduce((acc, task) => {
+          acc[task.id] = [];
+          return acc;
+        }, {} as any),
       };
 
       const taskResults = await invokeTasksRunner({
@@ -58,6 +78,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
         nxArgs: { ...nxArgs, parallel: opts.parallel },
         loadDotEnvFiles: true,
         initiatingProject: null,
+        initiatingTasks: [],
       });
 
       return {
@@ -72,4 +93,110 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       };
     },
   };
+}
+
+async function createOrchestrator(
+  tasks: Task[],
+  projectGraph: ProjectGraph,
+  taskGraphForHashing: TaskGraph,
+  nxJson: NxJsonConfiguration,
+  lifeCycle: LifeCycle
+) {
+  loadRootEnvFiles();
+
+  const invokeRunnerTerminalLifecycle = new InvokeRunnerTerminalOutputLifeCycle(
+    tasks
+  );
+  const taskResultsLifecycle = new TaskResultsLifeCycle();
+  const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
+    ...constructLifeCycles(invokeRunnerTerminalLifecycle),
+    taskResultsLifecycle,
+    lifeCycle,
+  ]);
+
+  const { runnerOptions: options } = getRunner({}, nxJson);
+
+  let hasher = createTaskHasher(projectGraph, nxJson, options);
+
+  const taskGraph: TaskGraph = {
+    roots: tasks.map((task) => task.id),
+    tasks: tasks.reduce((acc, task) => {
+      acc[task.id] = task;
+      return acc;
+    }, {} as any),
+    dependencies: tasks.reduce((acc, task) => {
+      acc[task.id] = [];
+      return acc;
+    }, {} as any),
+    continuousDependencies: tasks.reduce((acc, task) => {
+      acc[task.id] = [];
+      return acc;
+    }, {} as any),
+  };
+
+  const nxArgs = {
+    ...options,
+    parallel: tasks.length,
+    lifeCycle: compositedLifeCycle,
+  };
+  setEnvVarsBasedOnArgs(nxArgs, true);
+
+  const orchestrator = new TaskOrchestrator(
+    hasher,
+    null,
+    [],
+    projectGraph,
+    taskGraph,
+    nxJson,
+    nxArgs,
+    false,
+    daemonClient,
+    undefined,
+    taskGraphForHashing
+  );
+
+  await orchestrator.init();
+
+  orchestrator.processTasks(tasks.map((task) => task.id));
+
+  return orchestrator;
+}
+
+export async function runDiscreteTasks(
+  tasks: Task[],
+  projectGraph: ProjectGraph,
+  taskGraphForHashing: TaskGraph,
+  nxJson: NxJsonConfiguration,
+  lifeCycle: LifeCycle
+) {
+  const orchestrator = await createOrchestrator(
+    tasks,
+    projectGraph,
+    taskGraphForHashing,
+    nxJson,
+    lifeCycle
+  );
+  return tasks.map((task, index) =>
+    orchestrator.applyFromCacheOrRunTask(true, task, index)
+  );
+}
+
+export async function runContinuousTasks(
+  tasks: Task[],
+  projectGraph: ProjectGraph,
+  taskGraphForHashing: TaskGraph,
+  nxJson: NxJsonConfiguration,
+  lifeCycle: LifeCycle
+) {
+  const orchestrator = await createOrchestrator(
+    tasks,
+    projectGraph,
+    taskGraphForHashing,
+    nxJson,
+    lifeCycle
+  );
+  return tasks.reduce((current, task, index) => {
+    current[task.id] = orchestrator.startContinuousTask(task, index);
+    return current;
+  }, {} as Record<string, Promise<RunningTask>>);
 }

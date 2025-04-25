@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { toProjectName } from '../../config/to-project-name';
 import { readJsonFile, readYamlFile } from '../../utils/fileutils';
 import { combineGlobPatterns } from '../../utils/globs';
@@ -143,6 +143,9 @@ export function createNodeFromPackageJson(
     ...json,
     root: projectRoot,
     isInPackageManagerWorkspaces,
+    // change this to bust the cache when making changes that result in different
+    // results for the same hash
+    bust: 1,
   });
 
   const cached = cache[hash];
@@ -209,10 +212,14 @@ export function buildProjectConfigurationFromPackageJson(
 
   const projectConfiguration: ProjectConfiguration & { name: string } = {
     root: projectRoot,
-    sourceRoot: projectRoot,
     name,
     ...packageJson.nx,
-    targets: readTargetsFromPackageJson(packageJson, nxJson),
+    targets: readTargetsFromPackageJson(
+      packageJson,
+      nxJson,
+      projectRoot,
+      workspaceRoot
+    ),
     tags: getTagsFromPackageJson(packageJson),
     metadata: getMetadataFromPackageJson(
       packageJson,

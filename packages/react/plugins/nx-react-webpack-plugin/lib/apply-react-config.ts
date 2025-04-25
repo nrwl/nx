@@ -69,7 +69,11 @@ export function applyReactConfig(
 function addHotReload(
   config: Partial<WebpackOptionsNormalized | Configuration>
 ) {
-  if (config.mode === 'development' && config['devServer']?.hot) {
+  if (
+    config.mode === 'development' &&
+    typeof config['devServer'] === 'object' &&
+    config['devServer']?.hot
+  ) {
     // add `react-refresh/babel` to babel loader plugin
     const babelLoader = config.module.rules.find(
       (rule) =>

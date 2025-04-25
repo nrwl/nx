@@ -28,6 +28,7 @@ Nx.json configuration
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
+- [maxCacheSize](../../devkit/documents/NxJsonConfiguration#maxcachesize): string
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
@@ -41,6 +42,7 @@ Nx.json configuration
 - [sync](../../devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+- [tui](../../devkit/documents/NxJsonConfiguration#tui): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
 - [useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache): boolean
@@ -162,6 +164,14 @@ useful for workspaces that don't have a root package.json + node_modules.
 
 ---
 
+### maxCacheSize
+
+• `Optional` **maxCacheSize**: `string`
+
+Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
+
+---
+
 ### namedInputs
 
 • `Optional` **namedInputs**: `Object`
@@ -277,6 +287,21 @@ Available Task Runners for Nx to use
 #### Index signature
 
 ▪ [tasksRunnerName: `string`]: \{ `options?`: `any` ; `runner?`: `string` }
+
+---
+
+### tui
+
+• `Optional` **tui**: `Object`
+
+Settings for the Nx Terminal User Interface (TUI)
+
+#### Type declaration
+
+| Name        | Type                  | Description                                                                                                                                                                                                                                                                                |
+| :---------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoExit?` | `number` \| `boolean` | Whether to exit the TUI automatically after all tasks finish. - If set to `true`, the TUI will exit immediately. - If set to `false` the TUI will not automatically exit. - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits. |
+| `enabled?`  | `boolean`             | Whether to enable the TUI whenever possible (based on the current environment and terminal).                                                                                                                                                                                               |
 
 ---
 

@@ -8,6 +8,8 @@
   "properties": {
     "projects": {
       "type": "array",
+      "hidden": true,
+      "$comment": "This is not configured/passed by the user. It is provided by the version command.",
       "description": "The ProjectGraphProjectNodes being versioned in the current execution.",
       "items": {
         "type": "object"
@@ -15,15 +17,32 @@
     },
     "projectGraph": {
       "type": "object",
+      "hidden": true,
+      "$comment": "This is not configured/passed by the user. It is provided by the version command.",
       "description": "ProjectGraph instance"
+    },
+    "releaseGroup": {
+      "type": "object",
+      "hidden": true,
+      "$comment": "This is not configured/passed by the user. It is provided by the version command.",
+      "description": "The resolved release group configuration, including name, relevant to all projects in the current execution."
+    },
+    "conventionalCommitsConfig": {
+      "type": "object",
+      "hidden": true,
+      "$comment": "This is not configured/passed by the user. It is provided by the version command.",
+      "description": "The conventional commits configuration to use when determining the next version of the project.",
+      "default": {}
+    },
+    "firstRelease": {
+      "type": "boolean",
+      "hidden": true,
+      "$comment": "This is not configured/passed by the user. It is provided by the version command.",
+      "description": "Whether this is the first release of the project (which skips some validation within the generator)."
     },
     "specifier": {
       "type": "string",
       "description": "Exact version or semver keyword to apply to the selected release group. Overrides specifierSource."
-    },
-    "releaseGroup": {
-      "type": "object",
-      "description": "The resolved release group configuration, including name, relevant to all projects in the current execution."
     },
     "specifierSource": {
       "type": "string",

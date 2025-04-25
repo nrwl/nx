@@ -240,12 +240,21 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    "@nx/powerpack-enterprise-cloud"
+    "@nx/powerpack-enterprise-cloud",
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "serveStorybookTargetName": "serve:storybook",
+        "buildStorybookTargetName": "build:storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static:storybook"
+      }
+    }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 5,
+  "bust": 7,
   "defaultBase": "master",
   "conformance": {
     "rules": [
@@ -253,7 +262,7 @@
         "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
         "projects": ["docs"],
         "options": {
-          "mdGlobPattern": "blog/**/*.md"
+          "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
         }
       },
       {
@@ -371,5 +380,12 @@
         }
       }
     ]
+  },
+  "generators": {
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "jest"
+      }
+    }
   }
 }

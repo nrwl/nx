@@ -16,6 +16,7 @@ import {
   MicrophoneIcon,
   VideoCameraIcon,
   CheckBadgeIcon,
+  LifebuoyIcon,
   BookOpenIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
@@ -274,6 +275,14 @@ export const companyItems: MenuItem[] = [
     description: null,
     icon: BuildingOfficeIcon,
     href: '/customers',
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Partners',
+    description: null,
+    icon: LifebuoyIcon,
+    href: '/partners',
     isNew: false,
     isHighlight: false,
   },

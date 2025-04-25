@@ -22,15 +22,19 @@ import { addRsbuild } from './lib/add-rsbuild';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function applicationGenerator(tree: Tree, options: Schema) {
-  return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
+  return applicationGeneratorInternal(tree, {
+    addPlugin: false,
+    useProjectJson: true,
+    ...options,
+  });
 }
 
 export async function applicationGeneratorInternal(
@@ -56,7 +60,7 @@ export async function applicationGeneratorInternal(
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
 
   const nxJson = readNxJson(tree);
@@ -65,17 +69,20 @@ export async function applicationGeneratorInternal(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: options.projectName,
-      version: '0.0.1',
-      private: true,
-      nx: options.parsedTags?.length
-        ? {
-            tags: options.parsedTags,
-          }
-        : undefined,
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(tree, options.projectName, {
       root: options.appProjectRoot,
@@ -84,6 +91,14 @@ export async function applicationGeneratorInternal(
       tags: options.parsedTags?.length ? options.parsedTags : undefined,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 
   tasks.push(

@@ -16,6 +16,7 @@ export interface ApplicationGeneratorOptions {
   strict?: boolean;
   addPlugin?: boolean;
   useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {

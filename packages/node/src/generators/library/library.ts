@@ -19,7 +19,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
@@ -33,7 +33,6 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export interface NormalizedSchema extends Schema {
@@ -48,6 +47,7 @@ export interface NormalizedSchema extends Schema {
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -58,7 +58,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   const tasks: GeneratorCallback[] = [];
@@ -71,15 +71,15 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   // Create `package.json` first because @nx/js:lib generator will update it.
   if (
+    !options.useProjectJson ||
     options.isUsingTsSolutionConfig ||
     options.publishable ||
     options.buildable
   ) {
     writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+      name: options.importPath,
       version: '0.0.1',
       private: true,
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   }
 
@@ -92,7 +92,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       testEnvironment: 'node',
       skipFormat: true,
       setParserOptionsProject: schema.setParserOptionsProject,
-      useProjectJson: !options.isUsingTsSolutionConfig,
+      useProjectJson: options.useProjectJson,
     })
   );
 
@@ -134,7 +134,7 @@ async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(tree, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -168,13 +168,13 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    projectName: isUsingTsSolutionConfig
-      ? getImportPath(tree, projectName)
-      : projectName,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,
     isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 

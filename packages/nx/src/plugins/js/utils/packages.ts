@@ -1,4 +1,3 @@
-import { minimatch } from 'minimatch';
 import { join } from 'node:path/posix';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
@@ -79,6 +78,8 @@ export function getWorkspacePackagesMetadata<
   };
 }
 
+// adapted from PACKAGE_IMPORTS_EXPORTS_RESOLVE at
+// https://nodejs.org/docs/latest-v22.x/api/esm.html#resolution-algorithm-specification
 export function matchImportToWildcardEntryPointsToProjectMap<
   T extends ProjectGraphProjectNode | ProjectConfiguration
 >(
@@ -89,9 +90,33 @@ export function matchImportToWildcardEntryPointsToProjectMap<
     return null;
   }
 
-  const matchingPair = Object.entries(wildcardEntryPointsToProjectMap).find(
-    ([key]) => minimatch(importPath, key)
+  const entryPoint = Object.keys(wildcardEntryPointsToProjectMap).find(
+    (key) => {
+      const segments = key.split('*');
+      if (segments.length > 2) {
+        return false;
+      }
+
+      const patternBase = segments[0];
+      if (patternBase === importPath) {
+        return false;
+      }
+
+      if (!importPath.startsWith(patternBase)) {
+        return false;
+      }
+
+      const patternTrailer = segments[1];
+      if (
+        patternTrailer?.length > 0 &&
+        (!importPath.endsWith(patternTrailer) || importPath.length < key.length)
+      ) {
+        return false;
+      }
+
+      return true;
+    }
   );
 
-  return matchingPair?.[1];
+  return entryPoint ? wildcardEntryPointsToProjectMap[entryPoint] : null;
 }

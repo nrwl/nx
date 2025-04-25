@@ -1,3 +1,8 @@
+---
+title: Include All package.json Files as Projects
+description: Learn how to configure Nx to include all package.json files as projects in your workspace graph, not just those referenced in workspaces configuration.
+---
+
 # Include All package.json Files as Projects
 
 As of Nx 15.0.11, we only include any `package.json` file that is referenced in the `workspaces` property of the root `package.json` file in the graph. (`lerna.json` for Lerna repos or `pnpm-workspaces.yml` for pnpm repos)

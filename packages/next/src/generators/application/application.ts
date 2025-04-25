@@ -40,6 +40,7 @@ import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -54,8 +55,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: options.js,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
-    formatter: schema.formatter,
+    addTsPlugin: options.isTsSolutionSetup,
+    formatter: options.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -69,6 +70,12 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   createApplicationFiles(host, options);
 
   addProject(host, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const e2eTask = await addE2e(host, options);
   tasks.push(e2eTask);
@@ -144,12 +151,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       : ['.next'],
     options.src ? 'src' : '.'
   );
-
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.useTsSolution) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
-  }
 
   sortPackageJsonFields(host, options.appProjectRoot);
 

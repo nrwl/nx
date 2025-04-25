@@ -7,8 +7,8 @@ import { handleRequest } from './src/main.server';
 const port = process.env['PORT'] || <%= port %>;
 const app = express();
 
-const browserDist = path.join(process.cwd(), '<%= browserBuildOutputPath %>');
-const serverDist = path.join(process.cwd(), '<%= serverBuildOutputPath %>');
+const browserDist = path.join(process.cwd(), '<%= rspackPluginOptions.outputPath %>', 'browser');
+const serverDist = path.join(process.cwd(), '<%= rspackPluginOptions.outputPath %>', 'server');
 const indexPath = path.join(browserDist, 'index.html');
 
 app.use(cors());

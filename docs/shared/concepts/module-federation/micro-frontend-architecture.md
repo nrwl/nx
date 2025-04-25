@@ -1,3 +1,8 @@
+---
+title: Micro Frontend Architecture
+description: Explore how Nx supports Micro Frontend architecture with Module Federation, enabling independent deployment while managing associated challenges.
+---
+
 # Micro Frontend Architecture
 
 Nx provides out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both

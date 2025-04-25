@@ -61,7 +61,7 @@ export function applyWebConfig(
         sri: options.subresourceIntegrity,
         outputPath: path.basename(options.index),
         indexPath: path.join(options.root, options.index),
-        baseHref: options.baseHref,
+        baseHref: options.baseHref !== false ? options.baseHref : undefined,
         deployUrl: options.deployUrl,
         scripts: options.scripts,
         styles: options.styles,
@@ -145,9 +145,9 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sassOptions: {
               fiber: false,
               precision: 8,
@@ -210,9 +210,9 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,
@@ -280,9 +280,9 @@ export function applyWebConfig(
           options: {
             api: 'modern-compiler',
             implementation:
-              options.sassImplementation === 'sass-embedded'
-                ? require.resolve('sass-embedded')
-                : require.resolve('sass'),
+              options.sassImplementation === 'sass'
+                ? require.resolve('sass')
+                : require.resolve('sass-embedded'),
             sourceMap: !!options.sourceMap,
             sassOptions: {
               fiber: false,

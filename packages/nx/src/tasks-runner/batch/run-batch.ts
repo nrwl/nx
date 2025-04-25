@@ -9,20 +9,21 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
 import { ExecutorContext } from '../../config/misc-interfaces';
-import {
-  createProjectGraphAsync,
-  readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
+import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
 import { isAsyncIterator } from '../../utils/async-iterator';
-import { getExecutorInformation } from '../../command-line/run/executor-utils';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { ProjectGraph } from '../../config/project-graph';
 
 function getBatchExecutor(
   executorName: string,
   projects: Record<string, ProjectConfiguration>
 ) {
-  const [nodeModule, exportName] = executorName.split(':');
+  const [nodeModule, exportName] = parseExecutor(executorName);
   return getExecutorInformation(
     nodeModule,
     exportName,
@@ -33,11 +34,11 @@ function getBatchExecutor(
 
 async function runTasks(
   executorName: string,
+  projectGraph: ProjectGraph,
   batchTaskGraph: TaskGraph,
   fullTaskGraph: TaskGraph
 ) {
   const input: Record<string, any> = {};
-  const projectGraph = await createProjectGraphAsync();
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJsonConfiguration = readNxJson();
@@ -116,6 +117,7 @@ process.on('message', async (message: BatchMessage) => {
     case BatchMessageType.RunTasks: {
       const results = await runTasks(
         message.executorName,
+        message.projectGraph,
         message.batchTaskGraph,
         message.fullTaskGraph
       );

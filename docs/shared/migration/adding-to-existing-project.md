@@ -1,3 +1,8 @@
+---
+title: Adding Nx to your Existing Project
+description: Learn how to integrate Nx into an existing non-monorepo project to leverage caching capabilities, speed up CI, and improve your development workflow.
+---
+
 # Adding Nx to your Existing Project
 
 Nx can be added to any type of project, not just monorepos. A large benefit of Nx is its caching feature for package
@@ -349,6 +354,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

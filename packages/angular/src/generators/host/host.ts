@@ -7,7 +7,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -53,7 +53,7 @@ export async function host(tree: Tree, schema: Schema) {
     });
   }
 
-  await ensureProjectName(tree, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const { projectName: hostProjectName, projectRoot: appRoot } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,

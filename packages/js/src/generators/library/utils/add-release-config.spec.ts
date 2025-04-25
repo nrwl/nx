@@ -12,6 +12,8 @@ import {
   addReleaseConfigForTsSolution,
 } from './add-release-config';
 
+const USE_LEGACY_VERSIONING = true;
+
 describe('add release config', () => {
   let tree: Tree;
 
@@ -23,7 +25,12 @@ describe('add release config', () => {
   describe('addReleaseConfigForNonTsSolution', () => {
     it('should update the nx-release-publish target to specify dist/{projectRoot} as the package root', async () => {
       const projectConfig: ProjectConfiguration = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
       expect(projectConfig.targets?.['nx-release-publish']).toEqual({
         options: {
           packageRoot: 'dist/{projectRoot}',
@@ -42,7 +49,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -59,7 +71,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -86,7 +103,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -109,7 +131,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -131,7 +158,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -156,7 +188,12 @@ describe('add release config', () => {
         root: 'libs/my-lib',
         tags: ['one', 'two'],
       };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -178,7 +215,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'packages/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -200,7 +242,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -222,7 +269,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -252,7 +304,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({
@@ -288,7 +345,12 @@ describe('add release config', () => {
       });
 
       const projectConfig = { root: 'libs/my-lib' };
-      await addReleaseConfigForNonTsSolution(tree, 'my-lib', projectConfig);
+      await addReleaseConfigForNonTsSolution(
+        USE_LEGACY_VERSIONING,
+        tree,
+        'my-lib',
+        projectConfig
+      );
 
       const nxJson = readJson(tree, 'nx.json');
       expect(nxJson.release).toEqual({

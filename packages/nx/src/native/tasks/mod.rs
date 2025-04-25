@@ -10,3 +10,5 @@ mod utils;
 pub mod details;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod task_history;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod running_tasks_service;

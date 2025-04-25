@@ -26,6 +26,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -59,7 +60,7 @@ jobs:
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
 "
 `;
 
@@ -170,6 +171,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -215,6 +217,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -267,6 +270,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -301,7 +305,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: bun nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -416,6 +420,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -457,6 +462,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -536,6 +542,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -567,7 +574,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -674,6 +681,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -717,6 +725,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -796,6 +805,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -830,7 +840,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -945,6 +955,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -992,6 +1003,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -1077,6 +1089,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1108,7 +1121,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -1215,6 +1228,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1258,6 +1272,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1337,6 +1352,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1370,7 +1386,7 @@ jobs:
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
       # When you enable task distribution, run the e2e-ci task instead of e2e
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e
 "
 `;
 
@@ -1482,6 +1498,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1527,6 +1544,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -1579,6 +1597,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1613,7 +1632,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: bun nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: bun nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -1729,6 +1748,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -1770,6 +1790,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v1
@@ -1849,6 +1870,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -1880,7 +1902,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -1988,6 +2010,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -2031,6 +2054,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -2110,6 +2134,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -2144,7 +2169,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: pnpm exec nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -2260,6 +2285,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -2307,6 +2333,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
@@ -2392,6 +2419,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
         displayName: 'Set default Azure DevOps organization and project'
@@ -2423,7 +2451,7 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - script: yarn nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) lint test build
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -2531,6 +2559,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud
@@ -2574,6 +2603,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: tree:0
           fetch-depth: 0
 
       # This enables task distribution via Nx Cloud

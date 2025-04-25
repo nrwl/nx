@@ -236,6 +236,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Maintain TypeScript Monorepos",
+            "path": "/features/maintain-ts-monorepos",
+            "id": "maintain-ts-monorepos",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automate Updating Dependencies",
             "path": "/features/automate-updating-dependencies",
             "id": "automate-updating-dependencies",
@@ -355,6 +363,14 @@
         "name": "Generate Code",
         "path": "/features/generate-code",
         "id": "generate-code",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Maintain TypeScript Monorepos",
+        "path": "/features/maintain-ts-monorepos",
+        "id": "maintain-ts-monorepos",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1145,6 +1161,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Self-Host the Remote Cache",
+                "path": "/recipes/running-tasks/self-hosted-caching",
+                "id": "self-hosted-caching",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1391,6 +1415,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Migrate UI",
+                "path": "/recipes/nx-console/console-migrate-ui",
+                "id": "console-migrate-ui",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
@@ -1435,6 +1467,14 @@
                 "name": "Remix with Nx",
                 "path": "/recipes/react/remix",
                 "id": "remix",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "React Router with Nx",
+                "path": "/recipes/react/react-router",
+                "id": "react-router",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1496,6 +1536,55 @@
             "id": "angular",
             "isExternal": false,
             "children": [
+              {
+                "name": "Angular Rspack",
+                "path": "/recipes/angular/rspack",
+                "id": "rspack",
+                "isExternal": false,
+                "children": [
+                  {
+                    "name": "Introduction",
+                    "path": "/recipes/angular/rspack/introduction",
+                    "id": "introduction",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Getting Started",
+                    "path": "/recipes/angular/rspack/getting-started",
+                    "id": "getting-started",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Migrate from Angular Webpack",
+                    "path": "/recipes/angular/rspack/migrate-from-webpack",
+                    "id": "migrate-from-webpack",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Handling Configurations",
+                    "path": "/recipes/angular/rspack/handling-configurations",
+                    "id": "handling-configurations",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  },
+                  {
+                    "name": "Internationalization (i18n)",
+                    "path": "/recipes/angular/rspack/internationalization",
+                    "id": "internationalization",
+                    "isExternal": false,
+                    "children": [],
+                    "disableCollapsible": false
+                  }
+                ],
+                "disableCollapsible": false
+              },
               {
                 "name": "Migration",
                 "path": "/recipes/angular/migration",
@@ -2166,6 +2255,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Self-Host the Remote Cache",
+            "path": "/recipes/running-tasks/self-hosted-caching",
+            "id": "self-hosted-caching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2262,6 +2359,14 @@
         "name": "Migrate to Inferred Tasks (Project Crystal)",
         "path": "/recipes/running-tasks/convert-to-inferred",
         "id": "convert-to-inferred",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Self-Host the Remote Cache",
+        "path": "/recipes/running-tasks/self-hosted-caching",
+        "id": "self-hosted-caching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2692,6 +2797,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Migrate UI",
+            "path": "/recipes/nx-console/console-migrate-ui",
+            "id": "console-migrate-ui",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Command",
             "path": "/recipes/nx-console/console-run-command",
             "id": "console-run-command",
@@ -2743,6 +2856,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Migrate UI",
+        "path": "/recipes/nx-console/console-migrate-ui",
+        "id": "console-migrate-ui",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
@@ -2784,6 +2905,14 @@
             "name": "Remix with Nx",
             "path": "/recipes/react/remix",
             "id": "remix",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "React Router with Nx",
+            "path": "/recipes/react/react-router",
+            "id": "react-router",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2856,6 +2985,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "React Router with Nx",
+        "path": "/recipes/react/react-router",
+        "id": "react-router",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Use Environment Variables in React",
         "path": "/recipes/react/use-environment-variables-in-react",
         "id": "use-environment-variables-in-react",
@@ -2909,6 +3046,55 @@
         "id": "angular",
         "isExternal": false,
         "children": [
+          {
+            "name": "Angular Rspack",
+            "path": "/recipes/angular/rspack",
+            "id": "rspack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Introduction",
+                "path": "/recipes/angular/rspack/introduction",
+                "id": "introduction",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Getting Started",
+                "path": "/recipes/angular/rspack/getting-started",
+                "id": "getting-started",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate from Angular Webpack",
+                "path": "/recipes/angular/rspack/migrate-from-webpack",
+                "id": "migrate-from-webpack",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Handling Configurations",
+                "path": "/recipes/angular/rspack/handling-configurations",
+                "id": "handling-configurations",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Internationalization (i18n)",
+                "path": "/recipes/angular/rspack/internationalization",
+                "id": "internationalization",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
           {
             "name": "Migration",
             "path": "/recipes/angular/migration",
@@ -2975,6 +3161,95 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular Rspack",
+        "path": "/recipes/angular/rspack",
+        "id": "rspack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Introduction",
+            "path": "/recipes/angular/rspack/introduction",
+            "id": "introduction",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Getting Started",
+            "path": "/recipes/angular/rspack/getting-started",
+            "id": "getting-started",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate from Angular Webpack",
+            "path": "/recipes/angular/rspack/migrate-from-webpack",
+            "id": "migrate-from-webpack",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Handling Configurations",
+            "path": "/recipes/angular/rspack/handling-configurations",
+            "id": "handling-configurations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Internationalization (i18n)",
+            "path": "/recipes/angular/rspack/internationalization",
+            "id": "internationalization",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Introduction",
+        "path": "/recipes/angular/rspack/introduction",
+        "id": "introduction",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Getting Started",
+        "path": "/recipes/angular/rspack/getting-started",
+        "id": "getting-started",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate from Angular Webpack",
+        "path": "/recipes/angular/rspack/migrate-from-webpack",
+        "id": "migrate-from-webpack",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Handling Configurations",
+        "path": "/recipes/angular/rspack/handling-configurations",
+        "id": "handling-configurations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Internationalization (i18n)",
+        "path": "/recipes/angular/rspack/internationalization",
+        "id": "internationalization",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3913,8 +4188,8 @@
             "children": [
               {
                 "name": "Free Licenses & Trials",
-                "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
-                "id": "free-licenses-and-trials",
+                "path": "/nx-enterprise/powerpack/licenses-and-trials",
+                "id": "licenses-and-trials",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3931,14 +4206,6 @@
                 "name": "Define Code Ownership at the Project Level",
                 "path": "/nx-enterprise/powerpack/owners",
                 "id": "owners",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Self-Host the Remote Cache",
-                "path": "/nx-enterprise/powerpack/custom-caching",
-                "id": "custom-caching",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3965,8 +4232,8 @@
         "children": [
           {
             "name": "Free Licenses & Trials",
-            "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
-            "id": "free-licenses-and-trials",
+            "path": "/nx-enterprise/powerpack/licenses-and-trials",
+            "id": "licenses-and-trials",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3986,22 +4253,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Self-Host the Remote Cache",
-            "path": "/nx-enterprise/powerpack/custom-caching",
-            "id": "custom-caching",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
       },
       {
         "name": "Free Licenses & Trials",
-        "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
-        "id": "free-licenses-and-trials",
+        "path": "/nx-enterprise/powerpack/licenses-and-trials",
+        "id": "licenses-and-trials",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4018,14 +4277,6 @@
         "name": "Define Code Ownership at the Project Level",
         "path": "/nx-enterprise/powerpack/owners",
         "id": "owners",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Self-Host the Remote Cache",
-        "path": "/nx-enterprise/powerpack/custom-caching",
-        "id": "custom-caching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5355,6 +5606,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Hook into the Task Running Lifecycle",
+            "path": "/extending-nx/recipes/task-running-lifecycle",
+            "id": "task-running-lifecycle",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5459,6 +5718,14 @@
         "name": "Publish a Plugin",
         "path": "/extending-nx/recipes/publish-plugin",
         "id": "publish-plugin",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Hook into the Task Running Lifecycle",
+        "path": "/extending-nx/recipes/task-running-lifecycle",
+        "id": "task-running-lifecycle",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -7176,6 +7443,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "convert-to-rspack",
+                "path": "/nx-api/angular/generators/convert-to-rspack",
+                "name": "convert-to-rspack",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "directive",
                 "path": "/nx-api/angular/generators/directive",
                 "name": "directive",
@@ -8394,6 +8669,31 @@
         "path": "/nx-api/module-federation",
         "name": "module-federation",
         "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/module-federation/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "NxModuleFederationPlugin",
+                "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+                "id": "nx-module-federation-plugin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "NxModuleFederationDevServerPlugin",
+                "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+                "id": "nx-module-federation-dev-server-plugin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
           {
             "id": "migrations",
             "path": "/nx-api/module-federation/migrations",
@@ -10907,18 +11207,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "powerpack-azure-cache",
-        "path": "/nx-api/powerpack-azure-cache",
-        "name": "powerpack-azure-cache",
+        "id": "azure-cache",
+        "path": "/nx-api/azure-cache",
+        "name": "azure-cache",
         "children": [
           {
             "id": "documents",
-            "path": "/nx-api/powerpack-azure-cache/documents",
+            "path": "/nx-api/azure-cache/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/nx-api/powerpack-azure-cache/documents/overview",
+                "path": "/nx-api/azure-cache/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -10933,18 +11233,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "powerpack-conformance",
-        "path": "/nx-api/powerpack-conformance",
-        "name": "powerpack-conformance",
+        "id": "conformance",
+        "path": "/nx-api/conformance",
+        "name": "conformance",
         "children": [
           {
             "id": "documents",
-            "path": "/nx-api/powerpack-conformance/documents",
+            "path": "/nx-api/conformance/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/nx-api/powerpack-conformance/documents/overview",
+                "path": "/nx-api/conformance/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -10952,7 +11252,7 @@
               },
               {
                 "name": "Create a Conformance Rule",
-                "path": "/nx-api/powerpack-conformance/documents/create-conformance-rule",
+                "path": "/nx-api/conformance/documents/create-conformance-rule",
                 "id": "create-conformance-rule",
                 "isExternal": false,
                 "children": [],
@@ -10964,12 +11264,12 @@
           },
           {
             "id": "executors",
-            "path": "/nx-api/powerpack-conformance/executors",
+            "path": "/nx-api/conformance/executors",
             "name": "executors",
             "children": [
               {
                 "id": "bundle-rules",
-                "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
+                "path": "/nx-api/conformance/executors/bundle-rules",
                 "name": "bundle-rules",
                 "children": [],
                 "isExternal": false,
@@ -10981,12 +11281,12 @@
           },
           {
             "id": "generators",
-            "path": "/nx-api/powerpack-conformance/generators",
+            "path": "/nx-api/conformance/generators",
             "name": "generators",
             "children": [
               {
                 "id": "create-rule",
-                "path": "/nx-api/powerpack-conformance/generators/create-rule",
+                "path": "/nx-api/conformance/generators/create-rule",
                 "name": "create-rule",
                 "children": [],
                 "isExternal": false,
@@ -11001,78 +11301,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "powerpack-enterprise-cloud",
-        "path": "/nx-api/powerpack-enterprise-cloud",
-        "name": "powerpack-enterprise-cloud",
-        "children": [
-          {
-            "id": "generators",
-            "path": "/nx-api/powerpack-enterprise-cloud/generators",
-            "name": "generators",
-            "children": [
-              {
-                "id": "init",
-                "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
-                "name": "init",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          }
-        ],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "powerpack-gcs-cache",
-        "path": "/nx-api/powerpack-gcs-cache",
-        "name": "powerpack-gcs-cache",
+        "id": "owners",
+        "path": "/nx-api/owners",
+        "name": "owners",
         "children": [
           {
             "id": "documents",
-            "path": "/nx-api/powerpack-gcs-cache/documents",
+            "path": "/nx-api/owners/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/nx-api/powerpack-gcs-cache/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          }
-        ],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "powerpack-license",
-        "path": "/nx-api/powerpack-license",
-        "name": "powerpack-license",
-        "children": [],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "powerpack-owners",
-        "path": "/nx-api/powerpack-owners",
-        "name": "powerpack-owners",
-        "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/powerpack-owners/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/nx-api/powerpack-owners/documents/overview",
+                "path": "/nx-api/owners/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -11084,12 +11324,12 @@
           },
           {
             "id": "generators",
-            "path": "/nx-api/powerpack-owners/generators",
+            "path": "/nx-api/owners/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/nx-api/powerpack-owners/generators/init",
+                "path": "/nx-api/owners/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -11097,7 +11337,7 @@
               },
               {
                 "id": "sync-codeowners-file",
-                "path": "/nx-api/powerpack-owners/generators/sync-codeowners-file",
+                "path": "/nx-api/owners/generators/sync-codeowners-file",
                 "name": "sync-codeowners-file",
                 "children": [],
                 "isExternal": false,
@@ -11112,18 +11352,18 @@
         "disableCollapsible": false
       },
       {
-        "id": "powerpack-s3-cache",
-        "path": "/nx-api/powerpack-s3-cache",
-        "name": "powerpack-s3-cache",
+        "id": "gcs-cache",
+        "path": "/nx-api/gcs-cache",
+        "name": "gcs-cache",
         "children": [
           {
             "id": "documents",
-            "path": "/nx-api/powerpack-s3-cache/documents",
+            "path": "/nx-api/gcs-cache/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/nx-api/powerpack-s3-cache/documents/overview",
+                "path": "/nx-api/gcs-cache/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -11138,18 +11378,44 @@
         "disableCollapsible": false
       },
       {
-        "id": "powerpack-shared-fs-cache",
-        "path": "/nx-api/powerpack-shared-fs-cache",
-        "name": "powerpack-shared-fs-cache",
+        "id": "s3-cache",
+        "path": "/nx-api/s3-cache",
+        "name": "s3-cache",
         "children": [
           {
             "id": "documents",
-            "path": "/nx-api/powerpack-shared-fs-cache/documents",
+            "path": "/nx-api/s3-cache/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+                "path": "/nx-api/s3-cache/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "shared-fs-cache",
+        "path": "/nx-api/shared-fs-cache",
+        "name": "shared-fs-cache",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/shared-fs-cache/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/shared-fs-cache/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -11161,12 +11427,12 @@
           },
           {
             "id": "generators",
-            "path": "/nx-api/powerpack-shared-fs-cache/generators",
+            "path": "/nx-api/shared-fs-cache/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/nx-api/powerpack-shared-fs-cache/generators/init",
+                "path": "/nx-api/shared-fs-cache/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,

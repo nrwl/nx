@@ -17,7 +17,7 @@ import {
 import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import type { StoriesGeneratorOptions } from './schema';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 import { nxVersion } from '../../utils/versions';
 
 export async function angularStoriesGenerator(
@@ -37,13 +37,12 @@ export async function angularStoriesGenerator(
   const componentInfos = componentsInfo.filter(
     (f) =>
       !options.ignorePaths?.some((pattern) => {
-        const shouldIgnorePath = minimatch(
+        const shouldIgnorePath = picomatch(pattern)(
           joinPathFragments(
             f.moduleFolderPath,
             f.path,
             `${f.componentFileName}.ts`
-          ),
-          pattern
+          )
         );
         return shouldIgnorePath;
       })

@@ -1,3 +1,8 @@
+---
+title: Troubleshoot Cache Misses
+description: Learn how to diagnose and fix issues when Nx tasks are not being replayed from cache as expected, using project configuration checks and Nx Cloud tools.
+---
+
 # Troubleshoot Cache Misses
 
 Problem: A task is being executed when you expect it to be replayed from the cache.

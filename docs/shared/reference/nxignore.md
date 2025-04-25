@@ -1,3 +1,8 @@
+---
+title: .nxignore Reference
+description: Learn how to use the .nxignore file to specify files in your workspace that should be completely ignored by Nx during affected calculations.
+---
+
 # .nxignore
 
 You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should

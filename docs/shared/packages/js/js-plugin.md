@@ -63,6 +63,104 @@ Nx 20 updates the TS monorepo setup when using `--preset=ts`. The workspace is s
 To create with the older setup for TS monorepo with `compilerOptions.paths`, use `create-nx-workspace --preset=apps`.
 {% /callout %}
 
+### How @nx/js Infers Tasks
+
+The `@nx/js/typescript` plugin will add a `typecheck` task to projects that have a `tsconfig.json`.
+
+This plugin adds a `build` task for projects that:
+
+1. Have a runtime tsconfig file (defaults to `tsconfig.lib.json`).
+2. Have a `package.json` file containing entry points that are not source files.
+
+For example, this project is buildable and will have a `build` task.
+
+```json {% fileName="packages/pkg1/package.json" %}
+{
+  "name": "@acme/pkg1",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}
+```
+
+Whereas this project points to source files and will not have a `build` task.
+
+```json {% fileName="packages/pkg1/package.json" %}
+{
+  "name": "@acme/pkg1",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": "./src/index.ts"
+  }
+}
+```
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
+
+### @nx/js Configuration
+
+The `@nx/js/typescript` plugin is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json"
+        }
+      }
+    }
+  ]
+}
+```
+
+You can also set `typecheck` and `build` options to `false` to not infer the corresponding tasks.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "build": false
+      }
+    }
+  ]
+}
+```
+
+### Disable Typechecking
+
+To disable `typecheck` task for a specific project, set the `nx.addTypecheckTarget` property to `false` in `tsconfig.json`.
+
+```json {% fileName="packages/pkg1/tsconfig.json" highlightLines=["10-12"] %}
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ],
+  "nx": {
+    "addTypecheckTarget": false
+  }
+}
+```
+
 ## Create Libraries
 
 You can add a new JS/TS library with the following command:

@@ -200,7 +200,7 @@ npx nx g @nrwl/vite:configuration
 
 This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/nx-api/vite/generators/configuration](/nx-api/vite/generators/configuration)
 
-You can also find all the details about the new Vite package on our docs: [/nx-api/vite](/nx-api/vite)
+You can also find all the details about the new Vite package in our docs: [/nx-api/vite](/nx-api/vite)
 
 ## Adopting Nx has never been easier
 
@@ -271,7 +271,7 @@ This process will ask you a few questions about which operations are cacheable. 
 }
 ```
 
-Read more on our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
+Read more in our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
 
 ## Root-level Scripts
 
@@ -312,7 +312,7 @@ npx nx docs
 
 As the next steps you might obviously want to add `docs` to the [cacheable operations](/ci/reference/config) and [fine-tune it's cache inputs](/recipes/running-tasks/configure-inputs).
 
-Read more about it on our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
+Read more about it in our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
 
 ## Simplified Nx run-commands
 
@@ -386,7 +386,7 @@ For simple commands this was a huge overhead, so we simplified it to just this:
 
 Simple, isn't it! Obviously the expanded form is still there and also useful for when you need more options, run multiple commands or features such as argument forwarding.
 
-You can read all about it on our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
+You can read all about it in our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
 
 ## Coming up
 

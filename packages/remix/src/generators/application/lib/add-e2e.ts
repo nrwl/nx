@@ -8,10 +8,8 @@ import {
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
 import { getPackageVersion } from '../../../utils/versions';
-import { findPluginForConfigFile } from '@nx/devkit/src/utils/find-plugin-for-config-file';
-import { addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function addE2E(tree: Tree, options: NormalizedSchema) {
   const hasRemixPlugin = readNxJson(tree).plugins?.find((p) =>
@@ -32,21 +30,16 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/cypress')
     >('@nx/cypress', getPackageVersion(tree, 'nx'));
 
-    if (isUsingTsSolutionSetup(tree)) {
-      writeJson(
-        tree,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(tree, options.e2eProjectName, {
         projectType: 'application',
@@ -56,6 +49,14 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
         tags: [],
         implicitDependencies: [options.projectName],
       });
+    }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        tree,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
     }
 
     const e2eTask = await configurationGenerator(tree, {
@@ -64,47 +65,14 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       skipFormat: true,
       devServerTarget: e2eWebsServerInfo.e2eDevServerTarget,
       baseUrl: e2eWebsServerInfo.e2eWebServerAddress,
-      webServerCommands: hasRemixPlugin
-        ? {
-            default: e2eWebsServerInfo.e2eWebServerCommand,
-            production: e2eWebsServerInfo.e2eCiWebServerCommand,
-          }
-        : undefined,
-      ciWebServerCommand: hasRemixPlugin
-        ? e2eWebsServerInfo.e2eCiWebServerCommand
-        : undefined,
+      webServerCommands: {
+        default: e2eWebsServerInfo.e2eWebServerCommand,
+        production: e2eWebsServerInfo.e2eCiWebServerCommand,
+      },
+      ciWebServerCommand: e2eWebsServerInfo.e2eCiWebServerCommand,
       ciBaseUrl: e2eWebsServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,
     });
-
-    if (
-      options.addPlugin ||
-      readNxJson(tree).plugins?.find((p) =>
-        typeof p === 'string'
-          ? p === '@nx/cypress/plugin'
-          : p.plugin === '@nx/cypress/plugin'
-      )
-    ) {
-      let buildTarget = '^build';
-      if (hasRemixPlugin) {
-        const matchingPlugin = await findPluginForConfigFile(
-          tree,
-          `@nx/remix/plugin`,
-          joinPathFragments(options.projectRoot, 'remix.config.js')
-        );
-        if (matchingPlugin && typeof matchingPlugin !== 'string') {
-          buildTarget = `^${
-            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
-          }`;
-        }
-      }
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/cypress/plugin',
-        buildTarget,
-        joinPathFragments(options.e2eProjectRoot, `cypress.config.ts`)
-      );
-    }
 
     return e2eTask;
   } else if (options.e2eTestRunner === 'playwright') {
@@ -112,21 +80,16 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/playwright')
     >('@nx/playwright', getPackageVersion(tree, 'nx'));
 
-    if (isUsingTsSolutionSetup(tree)) {
-      writeJson(
-        tree,
-        joinPathFragments(options.e2eProjectRoot, 'package.json'),
-        {
-          name: options.e2eProjectName,
-          version: '0.0.1',
-          private: true,
-          nx: {
-            projectType: 'application',
-            sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-            implicitDependencies: [options.projectName],
-          },
-        }
-      );
+    const packageJson: PackageJson = {
+      name: options.e2eProjectName,
+      version: '0.0.1',
+      private: true,
+    };
+
+    if (!options.useProjectJson) {
+      packageJson.nx = {
+        implicitDependencies: [options.projectName],
+      };
     } else {
       addProjectConfiguration(tree, options.e2eProjectName, {
         projectType: 'application',
@@ -136,6 +99,14 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
         tags: [],
         implicitDependencies: [options.projectName],
       });
+    }
+
+    if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+      writeJson(
+        tree,
+        joinPathFragments(options.e2eProjectRoot, 'package.json'),
+        packageJson
+      );
     }
 
     const e2eTask = await configurationGenerator(tree, {
@@ -151,35 +122,6 @@ export async function addE2E(tree: Tree, options: NormalizedSchema) {
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
     });
-
-    if (
-      options.addPlugin ||
-      readNxJson(tree).plugins?.find((p) =>
-        typeof p === 'string'
-          ? p === '@nx/playwright/plugin'
-          : p.plugin === '@nx/playwright/plugin'
-      )
-    ) {
-      let buildTarget = '^build';
-      if (hasRemixPlugin) {
-        const matchingPlugin = await findPluginForConfigFile(
-          tree,
-          `@nx/remix/plugin`,
-          joinPathFragments(options.projectRoot, 'remix.config.js')
-        );
-        if (matchingPlugin && typeof matchingPlugin !== 'string') {
-          buildTarget = `^${
-            (matchingPlugin.options as any)?.buildTargetName ?? 'build'
-          }`;
-        }
-      }
-      await addE2eCiTargetDefaults(
-        tree,
-        '@nx/playwright/plugin',
-        buildTarget,
-        joinPathFragments(options.e2eProjectRoot, `playwright.config.ts`)
-      );
-    }
 
     return e2eTask;
   } else {

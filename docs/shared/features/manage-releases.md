@@ -1,3 +1,8 @@
+---
+title: 'Manage Releases'
+description: 'Learn how to use Nx release tools to version, generate changelogs, and publish your projects with confidence using conventional commits.'
+---
+
 # Manage Releases - `nx release`
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.

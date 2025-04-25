@@ -21,9 +21,7 @@ As you can see `@tuskdesign/forms` relies on `@tuskdesign/buttons` and as such h
 
 ---
 
-**Prefer a video?**
-
-{% youtube src="https://www.youtube.com/embed/KjZKFGu3_9I?si=L-8oRzy-hV-WF_pS" title="Versioning and Releasing Packages in a Monorepo" /%}
+{% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
 ---
 

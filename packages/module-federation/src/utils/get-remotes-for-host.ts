@@ -59,7 +59,19 @@ function collectRemoteProjects(
   collected.add(remote);
 
   const remoteProjectRoot = remoteProject.root;
-  const remoteProjectTsConfig = remoteProject.targets['build'].options.tsConfig;
+  let remoteProjectTsConfig =
+    remoteProject.targets['build'].options.tsConfig ??
+    [
+      join(remoteProjectRoot, 'tsconfig.app.json'),
+      join(remoteProjectRoot, 'tsconfig.json'),
+      join(context.root, 'tsconfig.json'),
+      join(context.root, 'tsconfig.base.json'),
+    ].find((p) => existsSync(p));
+  if (!remoteProjectTsConfig) {
+    throw new Error(
+      `Could not find a tsconfig for remote project ${remote}. Please add a tsconfig.app.json or tsconfig.json to the project.`
+    );
+  }
   const remoteProjectConfig = getModuleFederationConfig(
     remoteProjectTsConfig,
     context.root,

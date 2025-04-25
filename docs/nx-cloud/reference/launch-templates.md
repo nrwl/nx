@@ -196,29 +196,102 @@ launch-templates:
           base-branch: 'main'
 ```
 
+### `launch-templates.<template-name>.group-name`
+
+You can define "step groups" that run in parallel. This can be useful for taking better advantage of the available CPUs of your chosen resource class.
+In the example below, we can run NPM Install and install the Rust dependencies in parallel, because they do not depend on each other and they write to different places on the filesystem.
+Running them in parallel can reduce agent startup time by up to 2 minutes, which can add up to a lot of compute time savings over the month.
+
+⚠️ Tips for using parallel steps:
+
+- don't assume everything can be run in parallel
+  - you'll notice below we had to run `playwright install` after the parallel group, as it was likely writing to the same locations and fighting for similar resources to `npm install`
+  - experiment with different parallel groups and measure startup times until you land on the most optimal config for your use-case
+- write to PATH once
+  - multiple parallel processes can overwrite each other's changes if they write to the same `>> $NX_CLOUD_ENV` location
+  - below, we only update the PATH variable once at the end `echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV`
+
+```yaml {% fileName=".nx/workflows/agents.yaml" %}
+launch-templates:
+  template-one:
+    init-steps:
+      - group-name: Install Dependencies
+        parallel: true
+        # all the below steps will start at the same time and run in parallel
+        steps:
+          - name: Install Rust
+            script: |
+              curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+              source "~/workspace/.cargo/env"
+              # we write the CARGO_PATH now so that it can be set in the "Start Services" step below
+              echo "CARGO_PATH=~/workspace/.cargo/bin" >> $NX_CLOUD_ENV
+              rustc --version
+              rustup target add wasm32-wasip1-threads
+              cargo fetch
+              cargo check --locked
+          - name: NPM Install
+            uses: 'nrwl/nx-cloud-workflows/main/workflow-steps/install-node-modules/main.yaml'
+          - name: Install Poetry
+            script: |
+              curl -sSL https://install.python-poetry.org | python3 -
+              # we write the POETRY_PATH now so that it can be set in the "Start Services" step below
+              export POETRY_PATH="/home/workflows/.local/bin"
+              export PATH="$POETRY_PATH:$PATH"
+              echo "POETRY_PATH=$POETRY_PATH" >> $NX_CLOUD_ENV
+              poetry --version
+              poetry install
+          - name: Install Localstack
+            script: |
+              curl --output localstack-cli-3.7.0-linux-amd64-onefile.tar.gz --location https://github.com/localstack/localstack-cli/releases/download/v3.7.0/localstack-cli-3.7.0-linux-amd64-onefile.tar.gz
+              sudo tar xvzf localstack-cli-3.7.0-linux-*-onefile.tar.gz -C /usr/local/bin
+      # because both playwright and "npm install" use NPM and write to a lot of the same places on the filesystem, it would be slower to run them both in parallel
+      # so we run playwright after the parallel group above
+      - name: Install Playwright
+        script: npx playwright install --with-deps
+      - name: Start services
+        script: |
+          # we create the PATH here
+          echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV
+          npm run start-docker-services
+```
+
+We can also group steps and run them serially. This is actually the default behaviour when you don't set `parallel: true` for a group.
+
+This can be useful if we have a set of quick enough steps, such as restoring from cache, where we don't need to optimise for speed, and instead we just want them
+grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner:
+
+```yaml
+- group-name: Restore Cache
+  steps:
+    - name: Restore Node Modules Cache
+      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      inputs:
+        key: 'package-lock.json'
+        paths: |
+          ~/.npm
+        base-branch: 'main'
+    - name: Restore Browser Binary Cache
+      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      inputs:
+        key: 'package-lock.json|"browsers"'
+        paths: |
+          '~/.cache/Cypress'
+        base-branch: 'main'
+```
+
 ## Full Example
 
 This is an example of a launch template using all pre-built features:
 
 ```yaml {% fileName="./nx/workflows/agents.yaml" %}
-launch-templates:
-  # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
-  # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
-  my-linux-medium-js:
-    # see the available resource list below
-    resource-class: 'docker_linux_amd64/medium'
-    # see the available image list below
-    image: 'ubuntu22.04-node20.11-v9'
-    # Define environment variables shared among all steps
-    env:
-      MY_ENV_VAR: shared
-      # list out steps to run on the agent before accepting tasks
-      # the agent will need a copy of the source code and dependencies installed
-    init-steps:
-      - name: Checkout
-        # using a reusable step in an external GitHub repo,
-        # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+common-init-steps: &common-init-steps
+  - name: Checkout
+    # using a reusable step in an external GitHub repo,
+    # this step is provided by Nx Cloud: https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+  # group these steps together as they related (it doesn't change anything functionally, but it helps with organising your steps as they will be collapsed together in the UI)
+  - group-name: Restore Cache
+    steps:
       - name: Restore Node Modules Cache
         uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
         # the cache step requires configuration via env vars
@@ -237,32 +310,48 @@ launch-templates:
           paths: |
             '~/.cache/Cypress'
           base-branch: 'main'
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
-      - name: Install Browsers (if needed)
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-browsers/main.yaml'
-        # You can also run a custom script to configure various things on the agent machine
-      - name: Run a custom script
-        script: |
-          git config --global user.email test@test.com
-          git config --global user.name "Test Test"
-      # You can also set any other env vars to be passed to the following steps
-      # by setting their value in the `$NX_CLOUD_ENV` file.
-      # Most commonly for redefining PATH for further steps
-      - name: Setting env
-        script: |
-          # Update PATH with custom value
-          echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
-      - name: Print path from previous step
-        # will include my-folder
-        script: echo $PATH
-      - name: Define env var for a step
-        env:
-          MY_ENV_VAR: 'env-var-for-step'
-        # will print env-var-for-step
-        script: echo $MY_ENV_VAR
-      # after you're last step Nx Agents will start accepting tasks to process
-      # no need to manually start up the agent yourself
+  - name: Install Node Modules
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+  - name: Install Browsers (if needed)
+    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-browsers/main.yaml'
+    # You can also run a custom script to configure various things on the agent machine
+  - name: Run a custom script
+    script: |
+      git config --global user.email test@test.com
+      git config --global user.name "Test Test"
+  # You can also set any other env vars to be passed to the following steps
+  # by setting their value in the `$NX_CLOUD_ENV` file.
+  # Most commonly for redefining PATH for further steps
+  - name: Setting env
+    script: |
+      # Update PATH with custom value
+      echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
+  - name: Print path from previous step
+    # will include my-folder
+    script: echo $PATH
+  - name: Define env var for a step
+    env:
+      MY_ENV_VAR: 'env-var-for-step'
+    # will print env-var-for-step
+    script: echo $MY_ENV_VAR
+  # after you're last step Nx Agents will start accepting tasks to process
+  # no need to manually start up the agent yourself
+
+launch-templates:
+  # Custom template name, the name is referenced via --distribute-on="3 my-linux-medium-js"
+  # You can define as many templates as you need, commonly used to make different sizes or toolchains depending on your workspace needs
+  my-linux-medium-js:
+    # see the available resource list below
+    resource-class: 'docker_linux_amd64/medium'
+    # see the available image list below
+    image: 'ubuntu22.04-node20.11-v9'
+    # Define environment variables shared among all steps
+    env:
+      MY_ENV_VAR: shared
+      # list out steps to run on the agent before accepting tasks
+      # the agent will need a copy of the source code and dependencies installed
+      # note we are using yaml anchors te reduce duplication with the below launch-template (they have the same init-steps)
+    init-steps: *common-init-steps
 
   # another template which does the same as above, but with a large resource class
   # You're not required to define a template for every resource class, only define what you need!
@@ -271,42 +360,9 @@ launch-templates:
     image: 'ubuntu22.04-node20.11-v9'
     env:
       MY_ENV_VAR: shared
-    init-steps:
-      - name: Checkout
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
-      - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml'
-          paths: |
-            ~/.npm
-            # or ~/.cache/yarn
-            # or .pnpm-store
-          base-branch: 'main'
-      - name: Restore Browser Binary Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
-        inputs:
-          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|"browsers"'
-          paths: |
-            '~/.cache/Cypress'
-          base-branch: 'main'
-      - name: Install Node Modules
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
-      - name: Install Browsers (if needed)
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-browsers/main.yaml'
-      - name: Run a custom script
-        script: |
-          git config --global user.email test@test.com
-          git config --global user.name "Test Test"
-      - name: Setting env
-        script: |
-          echo "PATH=$HOME/my-folder:$PATH" >> $NX_CLOUD_ENV
-      - name: Print path from previous step
-        script: echo $PATH
-      - name: Define env var for a step
-        env:
-          MY_ENV_VAR: 'env-var-for-step'
-        script: echo $MY_ENV_VAR
+      # note we are using yaml anchors te reduce duplication with the above launch-template (they have the same init-steps)
+    init-steps: *common-init-steps
+
   # template that installs rust
   my-linux-rust-large:
     resource-class: 'docker_linux_amd64/large'

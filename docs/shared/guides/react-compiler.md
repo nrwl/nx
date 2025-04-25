@@ -1,3 +1,8 @@
+---
+title: React Compiler with Nx
+description: Learn how to enable and configure React Compiler in Nx projects to automatically optimize your React code with memoization for better performance.
+---
+
 # React Compiler with Nx
 
 React 19 comes with an experimental compiler that optimizes application code to automatically memoize code. Read the [official React Compiler documentation](https://react.dev/learn/react-compiler) for more information.

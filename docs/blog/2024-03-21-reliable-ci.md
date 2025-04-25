@@ -4,7 +4,6 @@ slug: 'reliable-ci-a-new-execution-model-fixing-both-flakiness-and-slowness'
 authors: [Victor Savkin]
 cover_image: '/blog/images/2024-03-21/featured_img.png'
 tags: [nx, nx-cloud, releases]
-pinned: true
 description: 'Learn how Nx Cloud revolutionizes CI with a task-based execution model that solves both flaky tests and slow pipelines.'
 ---
 

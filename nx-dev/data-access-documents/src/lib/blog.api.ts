@@ -57,6 +57,7 @@ export class BlogApi {
         authors: authors.filter((author) =>
           frontmatter.authors?.includes(author.name)
         ),
+        eventDate: this.dateFromFileName(file),
         date: this.calculateDate(file, frontmatter),
         time: frontmatter.time,
         status: frontmatter.status,
@@ -103,19 +104,26 @@ export class BlogApi {
     return frontmatter.slug || baseName;
   }
 
+  private dateFromFileName(filename: string): string {
+    const timeString = new Date().toISOString().split('T')[1];
+    const regexp = /^(\d\d\d\d-\d\d-\d\d).+$/;
+    const match = filename.match(regexp);
+    if (match) {
+      return new Date(match[1] + ' ' + timeString).toISOString();
+    } else {
+      throw new Error(`Could not parse date from filename: ${filename}`);
+    }
+  }
+
   private calculateDate(filename: string, frontmatter: any): string {
     const date: Date = new Date();
-    const timeString = date.toTimeString();
+    const timeString = date.toISOString().split('T')[1];
     if (frontmatter.date) {
-      return new Date(frontmatter.date + ' ' + timeString).toISOString();
+      return new Date(
+        frontmatter.date.toISOString().split('T')[0] + 'T' + timeString
+      ).toISOString();
     } else {
-      const regexp = /^(\d\d\d\d-\d\d-\d\d).+$/;
-      const match = filename.match(regexp);
-      if (match) {
-        return new Date(match[1] + ' ' + timeString).toISOString();
-      } else {
-        throw new Error(`Could not parse date from filename: ${filename}`);
-      }
+      return this.dateFromFileName(filename);
     }
   }
 

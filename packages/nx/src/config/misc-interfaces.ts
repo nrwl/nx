@@ -69,10 +69,20 @@ export type PackageJsonUpdates = {
 export interface MigrationsJsonEntry {
   version: string;
   description?: string;
-  cli?: string;
   implementation?: string;
   factory?: string;
   requires?: Record<string, string>;
+}
+
+export type MigrationDetailsWithId = GeneratedMigrationDetails & {
+  id: string;
+};
+export interface GeneratedMigrationDetails {
+  name: string;
+  version: string;
+  package: string;
+  description: string;
+  implementation: string;
 }
 
 export interface MigrationsJson {
@@ -99,6 +109,7 @@ export interface ExecutorConfig {
   schema: {
     version?: number;
     outputCapture?: OutputCaptureMethod;
+    continuous?: boolean;
   } & Schema;
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;

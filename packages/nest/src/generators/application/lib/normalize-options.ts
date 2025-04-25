@@ -1,9 +1,10 @@
 import { Tree, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/eslint';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { Schema as NodeApplicationGeneratorOptions } from '@nx/node/src/generators/application/schema';
 import type { ApplicationGeneratorOptions, NormalizedOptions } from '../schema';
 
@@ -11,7 +12,7 @@ export async function normalizeOptions(
   tree: Tree,
   options: ApplicationGeneratorOptions
 ): Promise<NormalizedOptions> {
-  await ensureProjectName(tree, options, 'application');
+  await ensureRootProjectName(options, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(tree, {
       name: options.name,
@@ -35,6 +36,7 @@ export async function normalizeOptions(
     linter: options.linter ?? Linter.EsLint,
     unitTestRunner: options.unitTestRunner ?? 'jest',
     e2eTestRunner: options.e2eTestRunner ?? 'jest',
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionSetup(tree),
   };
 }
 
@@ -57,5 +59,6 @@ export function toNodeApplicationGeneratorOptions(
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
     isNest: true,
     addPlugin: options.addPlugin,
+    useProjectJson: options.useProjectJson,
   };
 }

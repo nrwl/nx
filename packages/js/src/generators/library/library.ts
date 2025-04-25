@@ -10,6 +10,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -22,15 +23,17 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
+import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
@@ -62,8 +65,6 @@ import type {
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
-import { getImportPath } from '../../utils/get-import-path';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,
@@ -101,18 +102,18 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
-  }
-
   createFiles(tree, options);
 
   await configureProject(tree, options);
 
   if (!options.skipPackageJson) {
     tasks.push(addProjectDependencies(tree, options));
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   if (options.bundler === 'rollup') {
@@ -264,8 +265,9 @@ async function configureProject(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
 ) {
+  const nxJson = readNxJson(tree);
+
   if (options.hasPlugin) {
-    const nxJson = readNxJson(tree);
     ensureProjectIsIncludedInPluginRegistrations(
       nxJson,
       options.projectRoot,
@@ -343,6 +345,7 @@ async function configureProject(
       );
     } else {
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         tree,
         options.name,
         projectConfiguration,
@@ -368,13 +371,7 @@ async function configureProject(
     }
 
     // empty targets are cleaned up automatically by `updateProjectConfiguration`
-    updateProjectConfiguration(
-      tree,
-      options.isUsingTsSolutionConfig
-        ? options.importPath ?? options.name
-        : options.name,
-      projectConfiguration
-    );
+    updateProjectConfiguration(tree, options.name, projectConfiguration);
   } else if (options.config === 'workspace' || options.config === 'project') {
     addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
@@ -638,6 +635,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         options.isUsingTsSolutionConfig &&
         !['none', 'rollup', 'vite'].includes(options.bundler)
       ) {
+        // the file must exist in the TS solution setup
+        const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -646,6 +646,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
           generateExportsField: true,
           packageJsonPath,
           format: ['esm'],
+          skipDevelopmentExports:
+            !tsconfigBase.compilerOptions?.customConditions?.includes(
+              'development'
+            ),
         });
       }
 
@@ -671,6 +675,8 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       options.isUsingTsSolutionConfig &&
       !['none', 'rollup', 'vite'].includes(options.bundler)
     ) {
+      const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
       packageJson = getUpdatedPackageJsonContent(packageJson, {
         main: join(options.projectRoot, 'src/index.ts'),
         outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -679,7 +685,17 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         generateExportsField: true,
         packageJsonPath,
         format: ['esm'],
+        skipDevelopmentExports:
+          !tsconfigBase.compilerOptions?.customConditions?.includes(
+            'development'
+          ),
       });
+    }
+
+    if (!options.useProjectJson && options.name !== options.importPath) {
+      packageJson.nx = {
+        name: options.name,
+      };
     }
 
     writeJson<PackageJson>(tree, packageJsonPath, packageJson);
@@ -760,7 +776,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
-  await ensureProjectName(tree, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -901,9 +917,7 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    name: isUsingTsSolutionConfig
-      ? getImportPath(tree, projectName)
-      : projectName,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
     projectRoot,
     parsedTags,
@@ -1031,10 +1045,7 @@ function createProjectTsConfigs(
         .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
         .join(',\n    '),
       tmpl: '',
-      outDir:
-        options.bundler === 'tsc'
-          ? 'dist'
-          : `out-tsc/${options.projectRoot.split('/').pop()}`,
+      outDir: 'dist',
       emitDeclarationOnly: options.bundler === 'tsc' ? false : true,
     }
   );

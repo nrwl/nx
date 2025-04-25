@@ -38,6 +38,39 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "20.7.1-beta.0": {
+      "version": "20.7.1-beta.0",
+      "packages": {
+        "eslint-config-next": {
+          "version": "^15.2.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.7.1-beta.0-next14": {
+      "version": "20.7.1-beta.0",
+      "requires": {
+        "next": "^14.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~14.2.26",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.7.1-beta.0-next15": {
+      "version": "20.7.1-beta.0",
+      "requires": {
+        "next": "^15.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~15.2.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

@@ -3,8 +3,8 @@ import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
+import { output } from '../../utils/output';
 import {
   createAPI as createReleaseChangelogAPI,
   shouldCreateGitHubRelease,
@@ -17,6 +17,7 @@ import {
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
@@ -79,7 +80,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -254,6 +261,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       await gitPush({
         dryRun: args.dryRun,
         verbose: args.verbose,
+        additionalArgs: nxReleaseConfig.git.pushArgs,
       });
       hasPushedChanges = true;
     }
@@ -361,7 +369,9 @@ async function promptForPublish(): Promise<boolean> {
       },
     ]);
     return reply.confirmation;
-  } catch (e) {
+  } catch {
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }

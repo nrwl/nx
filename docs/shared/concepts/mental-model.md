@@ -1,3 +1,8 @@
+---
+title: Mental Model
+description: Understand how Nx works with project graphs, task graphs, affected commands, and caching to efficiently manage your monorepo development workflow.
+---
+
 # Mental Model
 
 Nx is a VSCode of build tools, with a powerful core, driven by metadata, and extensible through [plugins](/concepts/nx-plugins). Nx works with a
@@ -6,13 +11,13 @@ with project graphs, task graphs, affected commands, computation hashing and cac
 
 ## The project graph
 
-A project graph is used to reflect the source code in your repository and all the external dependencies that aren’t
+A project graph is used to reflect the source code in your repository and all the external dependencies that aren't
 authored in your repository, such as Webpack, React, Angular, and so forth.
 
 ![project-graph](/shared/mental-model/project-graph.svg)
 
 Nx analyzes your file system to detect projects. Projects are identified by the presence of a `package.json` file or `project.json` file. Projects identification can also be customized through plugins. You can manually define dependencies between
-the project nodes, but you don’t have to do it very often. Nx analyzes files’ source code, your installed dependencies, TypeScript
+the project nodes, but you don't have to do it very often. Nx analyzes files' source code, your installed dependencies, TypeScript
 files, and others figuring out these dependencies for you. Nx also stores the cached project graph, so it only
 reanalyzes the files you have changed.
 
@@ -43,8 +48,8 @@ For instance `nx test lib` creates a task graph with a single node:
 
 A task is an invocation of a target. If you invoke the same target twice, you create two tasks.
 
-Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren’t isomorphic, meaning they
-aren’t directly connected. In the case above, `app1` and `app2` depend on `lib`, but
+Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren't isomorphic, meaning they
+aren't directly connected. In the case above, `app1` and `app2` depend on `lib`, but
 running `nx run-many -t test -p app1 app2 lib`, the created task graph will look like this:
 {% side-by-side %}
 
@@ -62,11 +67,11 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
 {% /graph %}
 {% /side-by-side %}
 
-Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks
+Even though the apps depend on `lib`, testing `app1` doesn't depend on the testing `lib`. This means that the two tasks
 can
 run in parallel.
 
-Let’s look at the test target relying on its dependencies.
+Let's look at the test target relying on its dependencies.
 
 ```json
 {
@@ -160,13 +165,13 @@ configs. Builds can depend on the `.d.ts` files of the compiled libs instead of 
 After Nx computes the hash for a task, it then checks if it ran this exact computation before. First, it checks locally,
 and then if it is missing, and if a remote cache is configured, it checks remotely.
 
-If Nx finds the computation, Nx retrieves it and replay it. Nx places the right files in the right folders and prints
-the terminal output. So from the user’s point of view, the command ran the same, just a lot faster.
+If Nx finds the computation, Nx retrieves it and replays it. Nx places the right files in the right folders and prints
+the terminal output. So from the user's point of view, the command ran the same, just a lot faster.
 
 ![cache](/shared/mental-model/cache.svg)
 
-If Nx doesn’t find this computation, Nx runs the task, and after it completes, it takes the outputs and the terminal
-output and stores it locally (and if configured remotely). All of this happens transparently, so you don’t have to worry
+If Nx doesn't find this computation, Nx runs the task, and after it completes, it takes the outputs and the terminal
+output and stores it locally (and if configured remotely). All of this happens transparently, so you don't have to worry
 about it.
 
 Although conceptually this is fairly straightforward, Nx optimizes this to make this experience good for you. For
@@ -209,7 +214,7 @@ it locally.
 ## In summary
 
 - Nx is able to analyze your source code to create a Project Graph.
-- Nx can use the project graph and information about projects’ targets to create a Task Graph.
+- Nx can use the project graph and information about projects' targets to create a Task Graph.
 - Nx is able to perform code-change analysis to create the smallest task graph for your PR.
 - Nx supports computation caching to never execute the same computation twice. This computation cache is pluggable and
   can be distributed.

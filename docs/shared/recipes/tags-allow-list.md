@@ -1,3 +1,8 @@
+---
+title: Tags Allow List
+description: Learn how to create exceptions to your module boundary rules by configuring allow lists that permit specific imports that would otherwise be restricted.
+---
+
 # Tags Allow List
 
 Sometimes there are specific situations where you want to break the tag rules you've set up for project dependencies.

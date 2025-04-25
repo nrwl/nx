@@ -4,11 +4,7 @@ import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { ReleaseType, valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { DependencyBump } from '../../../release/changelog-renderer';
-import {
-  NxReleaseChangelogConfiguration,
-  NxReleaseConfiguration,
-  readNxJson,
-} from '../../config/nx-json';
+import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import {
   FileData,
   ProjectFileMap,
@@ -22,9 +18,9 @@ import {
 } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { interpolate } from '../../tasks-runner/utils';
+import { handleErrors } from '../../utils/handle-errors';
 import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
-import { handleErrors } from '../../utils/handle-errors';
 import { joinPathFragments } from '../../utils/path';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ChangelogOptions } from './command-object';
@@ -39,6 +35,7 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   GroupVersionPlan,
   ProjectsVersionPlan,
@@ -129,7 +126,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -275,7 +278,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     const postGitTasks: PostGitTask[] = [];
 
     let workspaceChangelogChanges: ChangelogChange[] = [];
-    // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+    // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
     let workspaceChangelogCommits: GitCommit[] = [];
 
     // If there are multiple release groups, we'll just skip the workspace changelog anyway.
@@ -393,7 +396,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       nxReleaseConfig,
       workspaceChangelogVersion,
       changes: workspaceChangelogChanges,
-      // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+      // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
       commits: filterHiddenCommits(
         workspaceChangelogCommits,
         nxReleaseConfig.conventionalCommits
@@ -449,7 +452,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
           .map((dep) => {
             return {
               dependencyName: dep.source,
-              newVersion: projectsVersionData[dep.source].newVersion,
+              newVersion: projectsVersionData[dep.source]?.newVersion ?? null,
             };
           })
           .filter((b) => b.newVersion !== null);
@@ -500,7 +503,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       if (releaseGroup.projectsRelationship === 'independent') {
         for (const project of projectNodes) {
           let changes: ChangelogChange[] | null = null;
-          // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+          // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
           let commits: GitCommit[];
 
           if (releaseGroup.resolvedVersionPlans) {
@@ -646,7 +649,7 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
         }
       } else {
         let changes: ChangelogChange[] = [];
-        // TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+        // TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
         let commits: GitCommit[] = [];
         if (releaseGroup.resolvedVersionPlans) {
           changes = (releaseGroup.resolvedVersionPlans as GroupVersionPlan[])
@@ -994,11 +997,15 @@ async function applyChangesAndExit(
   }
 
   if (args.gitPush ?? nxReleaseConfig.changelog.git.push) {
-    output.logSingleLine(`Pushing to git remote "${args.gitRemote}"`);
+    output.logSingleLine(
+      `Pushing to git remote "${args.gitRemote ?? 'origin'}"`
+    );
     await gitPush({
       gitRemote: args.gitRemote,
       dryRun: args.dryRun,
       verbose: args.verbose,
+      additionalArgs:
+        args.gitPushArgs || nxReleaseConfig.changelog.git.pushArgs,
     });
   }
 
@@ -1368,7 +1375,7 @@ function filterHiddenChanges(
   });
 }
 
-// TODO: remove this after the changelog renderer is refactored to remove coupling with git commits
+// TODO(v22): remove this after the changelog renderer is refactored to remove coupling with git commits
 function filterHiddenCommits(
   commits: GitCommit[],
   conventionalCommitsConfig: NxReleaseConfig['conventionalCommits']
@@ -1414,7 +1421,9 @@ async function promptForGitHubRelease(): Promise<boolean> {
       },
     ]);
     return result.confirmation;
-  } catch (e) {
+  } catch {
+    // Ensure the cursor is always restored
+    process.stdout.write('\u001b[?25h');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }

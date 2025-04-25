@@ -12,11 +12,15 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { installedCypressVersion } from '../../utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import { componentConfigurationGenerator } from './component-configuration';
 import { cypressInitGenerator } from '../init/init';
 
-jest.mock('../../utils/cypress-version');
+jest.mock('../../utils/versions', () => ({
+  ...jest.requireActual('../../utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
+
 let projectConfig: ProjectConfiguration = {
   projectType: 'library',
   sourceRoot: 'libs/cool-lib/src',
@@ -39,8 +43,8 @@ let projectConfig: ProjectConfiguration = {
 describe('Cypress Component Configuration', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

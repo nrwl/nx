@@ -1,15 +1,18 @@
-import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { ExecutorContext, stripIndents } from '@nx/devkit';
+import * as detectPort from 'detect-port';
 import * as executorUtils from 'nx/src/command-line/run/executor-utils';
 import * as path from 'path';
-import { installedCypressVersion } from '../../utils/cypress-version';
+import { getTempTailwindPath } from '../../utils/ct-helpers';
+import { getInstalledCypressMajorVersion } from '../../utils/versions';
 import cypressExecutor, { CypressExecutorOptions } from './cypress.impl';
 
 jest.mock('@nx/devkit');
 let devkit = require('@nx/devkit');
 jest.mock('detect-port', () => jest.fn().mockResolvedValue(4200));
-import * as detectPort from 'detect-port';
-jest.mock('../../utils/cypress-version');
+jest.mock('../../utils/versions', () => ({
+  ...jest.requireActual('../../utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 jest.mock('../../utils/ct-helpers');
 const Cypress = require('cypress');
 
@@ -29,8 +32,8 @@ describe('Cypress builder', () => {
   };
   let mockContext: ExecutorContext;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as any;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as any;
   mockContext = {
     root: '/root',
     workspace: { projects: {} },

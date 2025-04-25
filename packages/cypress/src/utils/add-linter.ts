@@ -7,8 +7,10 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { installedCypressVersion } from './cypress-version';
-import { eslintPluginCypressVersion } from './versions';
+import {
+  javaScriptOverride,
+  typeScriptOverride,
+} from '@nx/eslint/src/generators/init/global-eslint-config';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -18,11 +20,8 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import {
-  javaScriptOverride,
-  typeScriptOverride,
-} from '@nx/eslint/src/generators/init/global-eslint-config';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+import { getInstalledCypressMajorVersion, versions } from './versions';
 
 export interface CyLinterOptions {
   project: string;
@@ -77,15 +76,17 @@ export async function addLinterToCyProject(
 
   options.overwriteExisting = options.overwriteExisting || !eslintFile;
 
-  tasks.push(
-    !options.skipPackageJson
-      ? addDependenciesToPackageJson(
-          tree,
-          {},
-          { 'eslint-plugin-cypress': eslintPluginCypressVersion }
-        )
-      : () => {}
-  );
+  if (!options.skipPackageJson) {
+    const pkgVersions = versions(tree);
+
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        { 'eslint-plugin-cypress': pkgVersions.eslintPluginCypressVersion }
+      )
+    );
+  }
 
   if (
     isEslintConfigSupported(tree, projectConfig.root) ||
@@ -119,7 +120,7 @@ export async function addLinterToCyProject(
       );
       tasks.push(addExtendsTask);
     }
-    const cyVersion = installedCypressVersion();
+    const cyVersion = getInstalledCypressMajorVersion(tree);
     /**
      * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
      * That however leads to issues with the CommonJS Cypress plugin file.

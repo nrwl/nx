@@ -94,7 +94,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       config: 'project',
       bundler: options.bundler,
       publishable: options.publishable,
-      importPath: options.npmPackageName,
+      importPath: options.importPath,
       linter: options.linter,
       unitTestRunner: options.unitTestRunner,
       useProjectJson: options.useProjectJson,
@@ -149,9 +149,9 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         projectDirectory: options.projectDirectory,
         pluginOutputPath: joinPathFragments(
           'dist',
-          options.rootProject ? options.name : options.projectRoot
+          options.rootProject ? options.projectName : options.projectRoot
         ),
-        npmPackageName: options.npmPackageName,
+        npmPackageName: options.importPath,
         skipFormat: true,
         rootProject: options.rootProject,
         linter: options.linter,

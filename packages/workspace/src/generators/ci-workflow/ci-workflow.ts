@@ -12,6 +12,7 @@ import {
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
 import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
+import { isUsingTsSolutionSetup } from '../../utilities/typescript/ts-solution-setup';
 
 export interface Schema {
   name: string;
@@ -47,6 +48,7 @@ interface Substitutes {
   nxCloudHost: string;
   hasCypress: boolean;
   hasE2E: boolean;
+  hasTypecheck: boolean;
   hasPlaywright: boolean;
   tmpl: '';
   connectedToCloud: boolean;
@@ -78,6 +80,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
   const hasCypress = allDependencies['@nx/cypress'];
   const hasPlaywright = allDependencies['@nx/playwright'];
   const hasE2E = hasCypress || hasPlaywright;
+  const hasTypecheck = isUsingTsSolutionSetup(tree);
 
   const connectedToCloud = isNxCloudUsed(readJson(tree, 'nx.json'));
 
@@ -92,6 +95,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     hasCypress,
     hasE2E,
     hasPlaywright,
+    hasTypecheck,
     nxCloudHost,
     tmpl: '',
     connectedToCloud,

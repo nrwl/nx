@@ -1,3 +1,8 @@
+---
+title: Nx and the Angular CLI
+description: Compare Nx and Angular CLI features, understand similarities and differences, and learn how Nx enhances Angular development with improved caching, monorepo support, and advanced tooling.
+---
+
 # Nx and the Angular CLI
 
 {% youtube

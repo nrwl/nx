@@ -222,6 +222,7 @@ export function runCreateWorkspace(
     cwd = e2eCwd,
     bundler,
     routing,
+    useReactRouter,
     standaloneApi,
     docker,
     nextAppDir,
@@ -244,6 +245,7 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    useReactRouter?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
@@ -293,6 +295,10 @@ export function runCreateWorkspace(
 
   if (routing !== undefined) {
     command += ` --routing=${routing}`;
+  }
+
+  if (useReactRouter !== undefined) {
+    command += ` --useReactRouter=${useReactRouter}`;
   }
 
   if (base) {
