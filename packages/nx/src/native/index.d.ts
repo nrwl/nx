@@ -254,6 +254,8 @@ export interface NxWorkspaceFilesExternals {
   allWorkspaceFiles: ExternalObject<Array<FileData>>
 }
 
+export declare export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
 export interface Project {
   root: string
   namedInputs?: Record<string, Array<JsInputs>>

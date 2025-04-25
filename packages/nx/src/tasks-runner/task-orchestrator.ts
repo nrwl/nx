@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  parseTaskStatus,
   RunningTasksService,
   TaskDetails,
   TaskStatus as NativeTaskStatus,
@@ -878,6 +879,10 @@ export class TaskOrchestrator {
     for (const { taskId, status } of taskResults) {
       if (this.completedTasks[taskId] === undefined) {
         this.completedTasks[taskId] = status;
+
+        if (this.tuiEnabled) {
+          this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+        }
 
         if (status === 'failure' || status === 'skipped') {
           if (this.bail) {
