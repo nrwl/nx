@@ -48,6 +48,7 @@
     "@ampproject/remapping": "2.3.0",
     "@babel/core": "7.26.10",
     "@nx/angular-rspack-compiler": "workspace:*",
+    "@nx/devkit": "21.0.0-beta.8",
     "autoprefixer": "10.4.21",
     "deepmerge": "^4.3.1",
     "express": "4.21.1",
@@ -74,7 +75,6 @@
     "@angular/build": ">=19.0.0 <20.0.0",
     "@angular/localize": ">=19.0.0 <20.0.0",
     "@angular/ssr": ">=19.0.0 <20.0.0",
-    "@nx/devkit": ">=20.0.0 <21.0.0",
     "@rspack/core": ">=1.0.5 <2.0.0",
     "tailwindcss": "^2.0.0 || ^3.0.0"
   },
