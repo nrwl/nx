@@ -97,7 +97,7 @@ const fileSys = {
   './libs/other/package.json': JSON.stringify({
     exports: {
       './secondary': './src/secondary.ts',
-      './': './src/index.ts',
+      '.': './src/index.ts',
     },
   }),
   './libs/another/a/b.ts': '',

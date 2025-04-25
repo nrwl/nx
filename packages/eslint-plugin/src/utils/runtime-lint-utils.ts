@@ -578,15 +578,46 @@ function getPackageEntryPoints(
     return [];
   }
   const entryPaths: Array<{ path: string; file: string }> = [];
-  for (const [key, value] of Object.entries<string>(exports)) {
-    if (key !== '.' && key !== './') {
+  parseExports(exports, projectRoot, entryPaths);
+  return entryPaths;
+}
+
+export function parseExports(
+  exports: string | null | Record<string, any>,
+  projectRoot: string,
+  entryPaths: Array<{ path: string; file: string }>,
+  basePath: string = '.'
+): Array<{ path: string; file: string }> {
+  if (exports === null) {
+    return;
+  }
+  if (typeof exports === 'string') {
+    if (basePath === '.') {
+      return;
+    } else {
       entryPaths.push({
-        path: joinPathFragments(projectRoot, key),
-        file: joinPathFragments(projectRoot, value),
+        path: joinPathFragments(projectRoot, basePath),
+        file: joinPathFragments(projectRoot, exports),
       });
+      return;
     }
   }
-  return entryPaths;
+
+  // parse conditional exports
+  if (exports.import || exports.require || exports.default || exports.node) {
+    parseExports(
+      exports.default || exports.import || exports.require || exports.node,
+      projectRoot,
+      entryPaths,
+      basePath
+    );
+    return;
+  }
+
+  // parse general nested exports
+  for (const [key, value] of Object.entries(exports)) {
+    parseExports(value, projectRoot, entryPaths, key);
+  }
 }
 
 /**
