@@ -20,6 +20,10 @@ export interface WithWebOptions {
   };
   cssModules?: boolean;
   ssr?: boolean;
+  /**
+   * Use the legacy WriteIndexHtmlPlugin instead of the built-in HtmlRspackPlugin.
+   */
+  useLegacyHtmlPlugin?: boolean;
 }
 
 const processed = new Set();
@@ -42,6 +46,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}) {
         targetName: context.targetName,
         configurationName: context.configurationName,
         projectGraph: context.projectGraph,
+        useLegacyHtmlPlugin: pluginOptions.useLegacyHtmlPlugin ?? false,
       },
       config
     );
