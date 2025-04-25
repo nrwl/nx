@@ -83,7 +83,6 @@ export type IndexElement = IndexExpandedDefinition | string | false;
 export type IndexHtmlTransform = (content: string) => Promise<string>;
 export type NormalizedIndexElement =
   | (IndexExpandedDefinition & {
-      insertionOrder: [string, boolean][];
       transformer: IndexHtmlTransform | undefined;
     })
   | false;
@@ -98,8 +97,18 @@ export interface SourceMap {
 export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   aot?: boolean;
   assets?: AssetElement[];
+  /**
+   * Base url for the application being built.
+   */
+  baseHref?: string;
   browser?: string;
   commonChunk?: boolean;
+  /**
+   * Define the `crossorigin` attribute setting of elements that provide CORS
+   * support.
+   * @default 'none'
+   */
+  crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   /**
    * Defines global identifiers that will be replaced with a specified constant value when found in any JavaScript or TypeScript code including libraries.
    * The value will be used directly.
@@ -110,6 +119,13 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    * Delete the output path before building.
    */
   deleteOutputPath?: boolean;
+  /**
+   * Customize the base path for the URLs of resources in 'index.html' and
+   * component stylesheets. This option is only necessary for specific
+   * deployment scenarios, such as with Angular Elements or when utilizing
+   * different CDN locations.
+   */
+  deployUrl?: string;
   devServer?: DevServerOptions;
   /**
    * Exclude the listed external dependencies from being bundled into the bundle. Instead, the created bundle relies on these dependencies to be available during runtime.
@@ -167,6 +183,11 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
       };
   stylePreprocessorOptions?: StylePreprocessorOptions;
   styles?: ScriptOrStyleEntry[];
+  /**
+   * Enables the use of subresource integrity validation.
+   * @default false
+   */
+  subresourceIntegrity?: boolean;
   tsConfig?: string;
   useTsProjectReferences?: boolean;
   vendorChunk?: boolean;
@@ -184,6 +205,7 @@ export interface NormalizedAngularRspackPluginOptions
   assets: NormalizedAssetElement[];
   browser: string;
   commonChunk: boolean;
+  crossOrigin: 'none' | 'anonymous' | 'use-credentials';
   deleteOutputPath: boolean;
   devServer: NormalizedDevServerOptions;
   externalDependencies: string[];
@@ -199,8 +221,11 @@ export interface NormalizedAngularRspackPluginOptions
   outputHashing: OutputHashing;
   outputPath: OutputPath;
   polyfills: string[];
+  projectName: string | undefined;
   root: string;
   sourceMap: SourceMap;
+  subresourceIntegrity: boolean;
+  supportedBrowsers: string[];
   tsConfig: string;
   vendorChunk: boolean;
 }

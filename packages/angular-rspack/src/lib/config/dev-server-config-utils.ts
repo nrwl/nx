@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { loadEsmModule } from '../utils/misc-helpers';
 
 export function getAllowedHostsConfig(
   allowedHosts: string[] | boolean | undefined,
@@ -141,14 +142,4 @@ function assertIsError(
       'name' in value &&
       'message' in value);
   assert(isError, 'catch clause variable is not an Error instance');
-}
-
-let load: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
-function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
-  load ??= new Function('modulePath', `return import(modulePath);`) as Exclude<
-    typeof load,
-    undefined
-  >;
-
-  return load(modulePath);
 }

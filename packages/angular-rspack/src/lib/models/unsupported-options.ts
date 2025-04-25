@@ -32,7 +32,6 @@ export interface DevServerUnsupportedOptions {
 }
 
 export interface PluginUnsupportedOptions {
-  deployUrl?: string;
   security?: {
     autoCsp?:
       | boolean
@@ -41,15 +40,12 @@ export interface PluginUnsupportedOptions {
         };
   };
   clearScreen?: boolean;
-  baseHref?: string;
   verbose?: boolean;
   progress?: boolean;
   watch?: boolean;
   poll?: number;
-  subresourceIntegrity?: boolean;
   statsJson?: boolean;
   budgets?: BudgetEntry[];
-  crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   allowedCommonJsDependencies?: string[];
   prerender?:
     | boolean
@@ -62,18 +58,14 @@ export interface PluginUnsupportedOptions {
 }
 
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
-  'deployUrl',
   'security',
   'clearScreen',
-  'baseHref',
   'verbose',
   'progress',
   'watch',
   'poll',
-  'subresourceIntegrity',
   'statsJson',
   'budgets',
-  'crossOrigin',
   'allowedCommonJsDependencies',
   'prerender',
   'appShell',

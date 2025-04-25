@@ -1,6 +1,6 @@
 // TODO: Remove this once migrated to Nx
-import { ProjectGraphProjectNode, normalizePath } from '@nx/devkit';
-import { dirname } from 'node:path';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+import { posix } from 'node:path';
 
 type ProjectRootMappings = Map<string, string>;
 
@@ -34,11 +34,11 @@ export function findProjectForPath(
    * Windows may pass Win-style file paths
    * Ensure filePath is in UNIX-style
    */
-  let currentPath = normalizePath(filePath);
+  let currentPath = posix.normalize(filePath);
   for (
     ;
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
+    currentPath != posix.dirname(currentPath);
+    currentPath = posix.dirname(currentPath)
   ) {
     const p = projectRootMap.get(currentPath);
     if (p) {

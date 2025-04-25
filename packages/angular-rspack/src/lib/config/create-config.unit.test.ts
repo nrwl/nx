@@ -87,6 +87,7 @@ describe('createConfig', () => {
           plugins: expect.arrayContaining([
             {
               i18n: expect.objectContaining({}),
+              isPlatformServer: false,
               pluginOptions: expect.objectContaining({
                 ...rest,
                 outputPath: {
@@ -97,23 +98,19 @@ describe('createConfig', () => {
                 },
                 index: expect.objectContaining({
                   input: join(process.cwd(), 'src/index.html'),
-                  insertionOrder: [
-                    ['polyfills', true],
-                    ['main', true],
-                  ],
                   output: 'index.html',
                 }),
                 tsConfig: join(process.cwd(), 'tsconfig.base.json'),
                 sourceMap: {
-                  scripts: true,
-                  styles: true,
+                  scripts: false,
+                  styles: false,
                   hidden: false,
                   vendor: false,
                 },
                 optimization: true,
                 advancedOptimizations: true,
                 useTsProjectReferences: false,
-                polyfills: ['zone.js'],
+                polyfills: [],
                 globalScripts: scripts,
                 globalStyles: styles,
                 devServer: expect.objectContaining({
@@ -218,6 +215,7 @@ describe('createConfig', () => {
           plugins: expect.arrayContaining([
             {
               i18n: expect.objectContaining({}),
+              isPlatformServer: false,
               pluginOptions: expect.objectContaining({
                 outputPath: {
                   base: join(customRoot, 'dist'),
@@ -227,10 +225,6 @@ describe('createConfig', () => {
                 },
                 index: expect.objectContaining({
                   input: join(customRoot, 'src/index.html'),
-                  insertionOrder: [
-                    ['polyfills', true],
-                    ['main', true],
-                  ],
                   output: 'index.html',
                 }),
                 tsConfig: join(customRoot, 'tsconfig.base.json'),
@@ -254,6 +248,7 @@ describe('createConfig', () => {
           plugins: expect.arrayContaining([
             {
               i18n: expect.objectContaining({}),
+              isPlatformServer: false,
               pluginOptions: expect.objectContaining({
                 ...rest,
                 outputPath: {
@@ -264,20 +259,16 @@ describe('createConfig', () => {
                 },
                 index: expect.objectContaining({
                   input: join(process.cwd(), 'src/index.html'),
-                  insertionOrder: [
-                    ['polyfills', true],
-                    ['main', true],
-                  ],
                   output: 'index.html',
                 }),
                 tsConfig: join(process.cwd(), 'tsconfig.base.json'),
                 sourceMap: {
-                  scripts: true,
-                  styles: true,
+                  scripts: false,
+                  styles: false,
                   hidden: false,
                   vendor: false,
                 },
-                polyfills: ['zone.js'],
+                polyfills: [],
                 optimization: false,
                 advancedOptimizations: false,
               }),
