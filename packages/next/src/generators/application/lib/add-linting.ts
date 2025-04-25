@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -41,7 +41,7 @@ export async function addLinting(
     })
   );
 
-  if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
+  if (options.linter === 'eslint' && isEslintConfigSupported(host)) {
     if (useFlatConfig(host)) {
       addPredefinedConfigToFlatLintConfig(
         host,

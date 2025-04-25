@@ -34,7 +34,7 @@ export async function addLinting(
   },
   projectType: 'lib' | 'app'
 ) {
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const tasks: GeneratorCallback[] = [];
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,

@@ -1,6 +1,5 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
@@ -14,7 +13,7 @@ describe('Normalize Options', () => {
   it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
       directory: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'none',
@@ -35,7 +34,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
@@ -54,7 +53,7 @@ describe('Normalize Options', () => {
       directory: 'myApp',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -78,7 +77,7 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
@@ -93,7 +92,7 @@ describe('Normalize Options', () => {
       directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -117,7 +116,7 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
@@ -131,7 +130,7 @@ describe('Normalize Options', () => {
       directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -155,7 +154,7 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
@@ -170,7 +169,7 @@ describe('Normalize Options', () => {
       displayName: 'My App',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -194,7 +193,7 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',

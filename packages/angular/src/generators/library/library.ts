@@ -6,7 +6,6 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import init from '../../generators/init/init';
 import addLintingGenerator from '../add-linting/add-linting';
@@ -180,7 +179,7 @@ async function addLinting(
   host: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return;
   }
   await addLintingGenerator(host, {
