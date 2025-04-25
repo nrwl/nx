@@ -240,7 +240,7 @@ export async function _createConfig(
                     javascript.JavascriptModulesPlugin.getCompilationHooks(
                       compilation
                     ).chunkHash.tap('AngularRspackPlugin', (_, hash) => {
-                      hash.update('$localize' + i18nHash);
+                      hash.update(Buffer.from('$localize' + i18nHash));
                     });
                   }
                 );
