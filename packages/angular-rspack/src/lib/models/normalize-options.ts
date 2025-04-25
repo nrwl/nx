@@ -1,10 +1,6 @@
-import { FileReplacement } from '@nx/angular-rspack-compiler';
-import {
-  normalizePath,
-  readCachedProjectGraph,
-  workspaceRoot,
-  type ProjectGraphProjectNode,
-} from '@nx/devkit';
+import { getSupportedBrowsers } from '@angular/build/private';
+import type { FileReplacement } from '@nx/angular-rspack-compiler';
+import { workspaceRoot, type ProjectGraphProjectNode } from '@nx/devkit';
 import assert from 'node:assert';
 import { existsSync, statSync } from 'node:fs';
 import {
@@ -13,9 +9,15 @@ import {
   extname,
   join,
   normalize,
+  posix,
   relative,
   resolve,
 } from 'node:path';
+import {
+  findProjectForPath,
+  normalizeProjectRoot,
+} from '../utils/find-project-for-path';
+import { retrieveOrCreateProjectGraph } from '../utils/graph';
 import type {
   AngularRspackPluginOptions,
   AssetElement,
@@ -124,9 +126,9 @@ function validateGeneralUnsupportedOptions(
   }
 }
 
-export function normalizeOptions(
+export async function normalizeOptions(
   options: AngularRspackPluginOptions
-): NormalizedAngularRspackPluginOptions {
+): Promise<NormalizedAngularRspackPluginOptions> {
   validateGeneralUnsupportedOptions(options);
 
   const { fileReplacements = [], server, ssr, optimization } = options;
@@ -155,7 +157,7 @@ export function normalizeOptions(
   // const advancedOptimizations = aot && normalizedOptimization.scripts;
   const advancedOptimizations = aot && normalizedOptimization;
 
-  const project = getProject(root);
+  const project = await getProject(root);
 
   const assets =
     project && options.assets?.length
@@ -207,12 +209,39 @@ export function normalizeOptions(
      * This approach can also be applied to service workers, where the `index.csr.html` is served instead of the prerendered `index.html`.
      */
     const indexBaseName = basename(indexOutput);
-    indexOutput =
-      // @TODO: use this once we support prerenderOptions
-      // (normalizedSsr || prerenderOptions) && indexBaseName === 'index.html'
-      normalizedSsr && indexBaseName === 'index.html'
-        ? INDEX_HTML_CSR
-        : indexBaseName;
+    // @TODO: use this once we properly support SSR/SSG options
+    // (normalizedSsr || prerenderOptions) && indexBaseName === 'index.html'
+    //   ? INDEX_HTML_CSR
+    //   : indexBaseName;
+    indexOutput = indexBaseName;
+
+    const entryPoints: [name: string, isEsm: boolean][] = [
+      // TODO: this should be true when !!devServer?.hot (HMR is supported)
+      ['runtime', false],
+      ['polyfills', true],
+      ...(globalStyles.filter((s) => s.initial).map((s) => [s.name, false]) as [
+        string,
+        boolean
+      ][]),
+      ...(globalScripts
+        .filter((s) => s.initial)
+        .map((s) => [s.name, false]) as [string, boolean][]),
+      ['vendor', true],
+      ['main', true],
+    ];
+
+    const duplicates = entryPoints.filter(
+      ([name]) =>
+        entryPoints[0].indexOf(name) !== entryPoints[0].lastIndexOf(name)
+    );
+
+    if (duplicates.length > 0) {
+      throw new Error(
+        `Multiple bundles have been named the same: '${duplicates.join(
+          `', '`
+        )}'.`
+      );
+    }
 
     index = {
       input: resolve(
@@ -220,13 +249,6 @@ export function normalizeOptions(
         typeof options.index === 'string' ? options.index : options.index.input
       ),
       output: indexOutput,
-      insertionOrder: [
-        ['polyfills', true],
-        ...globalStyles.filter((s) => s.initial).map((s) => [s.name, false]),
-        ...globalScripts.filter((s) => s.initial).map((s) => [s.name, false]),
-        ['main', true],
-        // [name, esm]
-      ] as [string, boolean][],
       // @TODO: Add support for transformer
       transformer: undefined,
       // Preload initial defaults to true
@@ -240,10 +262,13 @@ export function normalizeOptions(
     advancedOptimizations,
     assets,
     aot,
+    baseHref: options.baseHref,
     browser: options.browser ?? './src/main.ts',
     commonChunk: options.commonChunk ?? true,
+    crossOrigin: options.crossOrigin ?? 'none',
     define: options.define ?? {},
     deleteOutputPath: options.deleteOutputPath ?? true,
+    deployUrl: options.deployUrl,
     devServer: normalizeDevServer(options.devServer),
     externalDependencies: options.externalDependencies ?? [],
     extractLicenses: options.extractLicenses ?? true,
@@ -255,9 +280,10 @@ export function normalizeOptions(
     inlineStyleLanguage: options.inlineStyleLanguage ?? 'css',
     namedChunks: options.namedChunks ?? false,
     optimization: normalizedOptimization,
-    outputHashing: options.outputHashing ?? 'all',
+    outputHashing: options.outputHashing ?? 'none',
     outputPath: normalizeOutputPath(root, options.outputPath),
     polyfills: options.polyfills ?? [],
+    projectName: project?.name ?? undefined,
     root,
     serviceWorker: options.serviceWorker,
     ngswConfigPath: options.ngswConfigPath,
@@ -265,6 +291,8 @@ export function normalizeOptions(
     skipTypeChecking: options.skipTypeChecking ?? false,
     sourceMap: normalizeSourceMap(options.sourceMap),
     ssr: normalizedSsr,
+    subresourceIntegrity: options.subresourceIntegrity ?? false,
+    supportedBrowsers: getSupportedBrowsers(root, { warn: console.warn }),
     tsConfig,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     vendorChunk: options.vendorChunk ?? false,
@@ -274,15 +302,7 @@ export function normalizeOptions(
 function normalizeSourceMap(
   sourceMap: boolean | Partial<SourceMap> | undefined
 ): SourceMap {
-  if (sourceMap === undefined || sourceMap === true) {
-    return {
-      scripts: true,
-      styles: true,
-      hidden: false,
-      vendor: false,
-    };
-  }
-  if (sourceMap === false) {
+  if (sourceMap === undefined) {
     return {
       scripts: false,
       styles: false,
@@ -290,6 +310,16 @@ function normalizeSourceMap(
       vendor: false,
     };
   }
+
+  if (typeof sourceMap === 'boolean') {
+    return {
+      scripts: sourceMap,
+      styles: sourceMap,
+      hidden: sourceMap,
+      vendor: sourceMap,
+    };
+  }
+
   return {
     scripts: sourceMap.scripts ?? true,
     styles: sourceMap.styles ?? true,
@@ -327,52 +357,26 @@ function normalizeOutputPath(
     | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>)
     | undefined
 ): OutputPath {
-  const defaultBase = join(root, 'dist');
-  const defaultBrowser = join(defaultBase, 'browser');
-  if (!outputPath) {
-    return {
-      base: defaultBase,
-      browser: defaultBrowser,
-      server: join(defaultBase, 'server'),
-      media: join(defaultBrowser, 'media'),
-    };
+  let base =
+    typeof outputPath === 'string' ? outputPath : outputPath?.base ?? 'dist';
+  if (!base.startsWith(root)) {
+    base = join(root, base);
   }
 
-  if (typeof outputPath === 'string') {
-    if (!outputPath.startsWith(root)) {
-      outputPath = join(root, outputPath);
-    }
-    return {
-      base: outputPath,
-      browser: join(outputPath, 'browser'),
-      server: join(outputPath, 'server'),
-      media: join(outputPath, 'browser', 'media'),
-    };
-  }
-  if (outputPath.base && !outputPath.base.startsWith(root)) {
-    outputPath.base = join(root, outputPath.base);
-  }
-  if (outputPath.browser && !outputPath.browser.startsWith(root)) {
-    outputPath.browser = join(root, outputPath.browser);
-  }
-  if (outputPath.server && !outputPath.server.startsWith(root)) {
-    outputPath.server = join(root, outputPath.server);
-  }
-  if (
-    outputPath.browser &&
-    !outputPath.browser.startsWith(outputPath.browser)
-  ) {
-    outputPath.browser = join(outputPath.browser, outputPath.browser);
-  }
+  const browser =
+    typeof outputPath === 'string' || !outputPath?.browser
+      ? join(base, 'browser')
+      : join(base, outputPath.browser);
+  const server =
+    typeof outputPath === 'string' || !outputPath?.server
+      ? join(base, 'server')
+      : join(base, outputPath.server);
+  const media =
+    typeof outputPath === 'string' || !outputPath?.media
+      ? join(browser, 'media')
+      : join(browser, outputPath.media);
 
-  const providedBase = outputPath.base ?? defaultBase;
-  const providedBrowser = outputPath.browser ?? join(providedBase, 'browser');
-  return {
-    base: providedBase,
-    browser: providedBrowser,
-    server: outputPath.server ?? join(outputPath.base ?? defaultBase, 'server'),
-    media: outputPath.media ?? join(providedBrowser, 'media'),
-  };
+  return { base, browser, server, media };
 }
 
 function normalizeAssetPatterns(
@@ -446,7 +450,7 @@ function normalizeAssetPatterns(
 
 function normalizeGlobalEntries(
   rawEntries: ScriptOrStyleEntry[] | undefined,
-  _defaultName: string
+  defaultName: string
 ): GlobalEntry[] {
   if (!rawEntries?.length) {
     return [];
@@ -454,8 +458,6 @@ function normalizeGlobalEntries(
 
   const bundles = new Map<string, GlobalEntry>();
 
-  let warnForInject = false;
-  let warnForBundleName = false;
   for (const rawEntry of rawEntries) {
     let entry: ScriptOrStyleEntry;
     if (typeof rawEntry === 'string') {
@@ -467,65 +469,50 @@ function normalizeGlobalEntries(
 
     const { bundleName, input, inject = true } = entry;
 
-    // @TODO: remove this once we support inject
-    if (inject === false) {
-      warnForInject = true;
-    }
-    // @TODO: remove this once we support bundleName
-    if (bundleName) {
-      warnForBundleName = true;
-    }
-
-    // @TODO: use this once we support inject and bundleName
     // Non-injected entries default to the file name
-    // const name =
-    //   bundleName || (inject ? defaultName : basename(input, extname(input)));
-    const name = basename(input, extname(input));
+    const name =
+      bundleName || (inject ? defaultName : basename(input, extname(input)));
 
     const existing = bundles.get(name);
     if (!existing) {
-      // @TODO: use this once we support inject
-      // bundles.set(name, { name, files: [input], initial: inject });
-      bundles.set(name, { name, files: [input], initial: true });
+      bundles.set(name, { name, files: [input], initial: inject });
       continue;
     }
 
-    // @TODO: uncomment this once we support inject
-    // if (existing.initial !== inject) {
-    //   throw new Error(
-    //     `The "${name}" bundle is mixing injected and non-injected entries. ` +
-    //       'Verify that the project options are correct.'
-    //   );
-    // }
+    if (existing.initial !== inject) {
+      throw new Error(
+        `The "${name}" bundle is mixing injected and non-injected entries. ` +
+          'Verify that the project options are correct.'
+      );
+    }
 
     existing.files.push(input);
-  }
-
-  if (warnForInject) {
-    console.warn(
-      `The "inject" option for scripts/styles is not yet supported.`
-    );
-  }
-  if (warnForBundleName) {
-    console.warn(
-      `The "bundleName" option for scripts/styles is not yet supported.`
-    );
   }
 
   return [...bundles.values()];
 }
 
-function getProject(root: string): ProjectGraphProjectNode | undefined {
+async function getProject(
+  root: string
+): Promise<ProjectGraphProjectNode | undefined> {
   if (global.NX_GRAPH_CREATION) {
     return undefined;
   }
 
-  const projectGraph = readCachedProjectGraph();
+  const projectGraph = await retrieveOrCreateProjectGraph();
+  assert(
+    projectGraph,
+    'Cannot find the project. Please make sure to run this task with the Nx CLI and set "root" to a directory contained in a project.'
+  );
 
   let projectName = process.env.NX_TASK_TARGET_PROJECT;
   if (!projectName) {
     const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
-    projectName = findProjectForPath(root, projectRootMappings) ?? undefined;
+    projectName =
+      findProjectForPath(
+        posix.relative(workspaceRoot, root),
+        projectRootMappings
+      ) ?? undefined;
   }
 
   assert(
@@ -546,33 +533,4 @@ function createProjectRootMappings(
     projectRootMappings.set(normalizeProjectRoot(root), projectName);
   }
   return projectRootMappings;
-}
-
-function findProjectForPath(
-  filePath: string,
-  projectRootMap: Map<string, string>
-): string | undefined {
-  /**
-   * Project Mappings are in UNIX-style file paths
-   * Windows may pass Win-style file paths
-   * Ensure filePath is in UNIX-style
-   */
-  let currentPath = normalizePath(filePath);
-  for (
-    ;
-    currentPath != dirname(currentPath);
-    currentPath = dirname(currentPath)
-  ) {
-    const p = projectRootMap.get(currentPath);
-    if (p) {
-      return p;
-    }
-  }
-
-  return projectRootMap.get(currentPath);
-}
-
-function normalizeProjectRoot(root: string) {
-  root = root === '' ? '.' : root;
-  return root && root.endsWith('/') ? root.substring(0, root.length - 1) : root;
 }

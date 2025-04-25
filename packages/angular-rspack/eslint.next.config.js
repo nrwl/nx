@@ -30,6 +30,7 @@ module.exports = [
             '@angular/core',
             'rxjs',
             '@ng-rspack/build',
+            'postcss-loader',
           ],
         },
       ],

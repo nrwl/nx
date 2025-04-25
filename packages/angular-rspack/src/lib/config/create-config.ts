@@ -1,34 +1,38 @@
 import {
-  Configuration,
-  DevServer,
-  SwcJsMinimizerRspackPlugin,
-  SourceMapDevToolPlugin,
-  RspackPluginInstance,
-  RuleSetRule,
-  CssExtractRspackPlugin,
-  javascript,
-} from '@rspack/core';
-import { merge as rspackMerge } from 'webpack-merge';
-import deepMerge from 'deepmerge';
-import { resolve } from 'path';
-import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
 } from '@nx/angular-rspack-compiler';
 import {
-  AngularRspackPluginOptions,
+  type Configuration,
+  ContextReplacementPlugin,
+  CssExtractRspackPlugin,
+  type DevServer,
+  javascript,
+  LightningCssMinimizerRspackPlugin,
+  type RspackPluginInstance,
+  type RuleSetRule,
+  SourceMapDevToolPlugin,
+  SwcJsMinimizerRspackPlugin,
+} from '@rspack/core';
+import deepMerge from 'deepmerge';
+import { resolve } from 'path';
+import { merge as rspackMerge } from 'webpack-merge';
+import {
+  type AngularRspackPluginOptions,
   normalizeOptions,
-  SourceMap,
+  type SourceMap,
 } from '../models';
 import { NgRspackPlugin } from '../plugins/ng-rspack';
 import { DevToolsIgnorePlugin } from '../plugins/tools/dev-tools-ignore-plugin';
-import { getStyleLoaders, getStylesEntry } from './style-config-utils';
-import { deleteOutputDir, getOutputHashFormat } from './helpers';
+import { isPackageInstalled } from '../utils/misc-helpers';
 import {
   getAllowedHostsConfig,
   getProxyConfig,
 } from './dev-server-config-utils';
+import { getPolyfillsEntry, toRspackEntries } from './entry-points';
+import { deleteOutputDir, getOutputHashFormat } from './helpers';
 import { configureI18n } from './i18n/create-i18n-options';
+import { getStyleLoaders } from './style-config-utils';
 
 function configureSourceMap(sourceMap: SourceMap) {
   const { scripts, styles, hidden, vendor } = sourceMap;
@@ -105,7 +109,7 @@ export async function _createConfig(
         // no-op as i18n is not inlined
       };
 
-  const normalizedOptions = normalizeOptions(_options);
+  const normalizedOptions = await normalizeOptions(_options);
   const isProduction = process.env['NODE_ENV'] === 'production';
   const isDevServer = process.env['WEBPACK_SERVE'];
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
@@ -119,19 +123,32 @@ export async function _createConfig(
     normalizedOptions.sourceMap
   );
 
+  let crossOriginLoading: NonNullable<
+    Configuration['output']
+  >['crossOriginLoading'] = false;
+  if (
+    normalizedOptions.subresourceIntegrity &&
+    normalizedOptions.crossOrigin === 'none'
+  ) {
+    crossOriginLoading = 'anonymous';
+  } else if (normalizedOptions.crossOrigin !== 'none') {
+    crossOriginLoading = normalizedOptions.crossOrigin;
+  }
+
   const defaultConfig: Configuration = {
     context: root,
     mode: isProduction ? 'production' : 'development',
     devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : undefined,
     output: {
-      uniqueName: 'rspack-angular',
-      publicPath: 'auto',
+      uniqueName: normalizedOptions.projectName ?? 'rspack-angular',
+      publicPath: normalizedOptions.deployUrl ?? '',
       clean: normalizedOptions.deleteOutputPath,
-      crossOriginLoading: false,
+      crossOriginLoading,
       trustedTypes: { policyName: 'angular#bundler' },
       sourceMapFilename: normalizedOptions.sourceMap.scripts
         ? '[file].map'
         : undefined,
+      scriptType: 'module',
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js'],
@@ -152,6 +169,15 @@ export async function _createConfig(
     watchOptions: {
       followSymlinks: normalizedOptions.preserveSymlinks,
     },
+    ignoreWarnings: [
+      // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83
+      /Failed to parse source map from/,
+      // https://github.com/webpack-contrib/postcss-loader/blob/bd261875fdf9c596af4ffb3a1a73fe3c549befda/src/index.js#L153-L158
+      /Add postcss as project dependency/,
+      // esbuild will issue a warning, while still hoists the @charset at the very top.
+      // This is caused by a bug in css-loader https://github.com/webpack-contrib/css-loader/issues/1212
+      /"@charset" must be the first rule in the file/,
+    ],
     module: {
       parser: {
         javascript: {
@@ -160,10 +186,13 @@ export async function _createConfig(
         },
       },
       rules: [
-        ...getStyleLoaders(
-          normalizedOptions.stylePreprocessorOptions,
-          normalizedOptions.sourceMap
-        ),
+        {
+          test: /\.?(svg|html)$/,
+          // Only process HTML and SVG which are known Angular component resources.
+          resourceQuery: /\?ngResource/,
+          type: 'asset/source',
+        },
+        ...(await getStyleLoaders(normalizedOptions)),
         ...sourceMapRules,
         { test: /[/\\]rxjs[/\\]add[/\\].+\.js$/, sideEffects: true },
         {
@@ -234,18 +263,22 @@ export async function _createConfig(
       entry: {
         server: {
           import: [
-            (normalizedOptions.ssr as { entry: string }).entry,
+            ...(isPackageInstalled(root, '@angular/platform-server')
+              ? // This import must come before any imports (direct or transitive) that rely on DOM built-ins being
+                // available, such as `@angular/elements`.
+                ['@angular/platform-server/init']
+              : []),
             ...(i18n.shouldInline ? ['@angular/localize/init'] : []),
+            (normalizedOptions.ssr as { entry: string }).entry,
           ],
         },
       },
       output: {
         ...defaultConfig.output,
-        publicPath: '/',
-        clean: normalizedOptions.deleteOutputPath,
         path: normalizedOptions.outputPath.server,
         filename: '[name].js',
         chunkFilename: '[name].js',
+        library: { type: 'commonjs' },
       },
       devServer: {
         headers: {
@@ -299,66 +332,61 @@ export async function _createConfig(
       optimization: {
         chunkIds: normalizedOptions.namedChunks ? 'named' : 'deterministic',
         moduleIds: 'deterministic',
-        ...(normalizedOptions.optimization && !isDevServer
-          ? {
-              minimize: true,
-              runtimeChunk: 'single',
-              splitChunks: {
-                chunks: 'async',
-                minChunks: 1,
-                minSize: 20000,
-                maxAsyncRequests: 30,
-                maxInitialRequests: 30,
-                cacheGroups: {
-                  default: normalizedOptions.commonChunk && {
-                    chunks: 'async',
-                    minChunks: 2,
-                    priority: 10,
+        runtimeChunk: false,
+        emitOnErrors: false,
+        minimizer: normalizedOptions.optimization
+          ? [
+              new SwcJsMinimizerRspackPlugin({
+                minimizerOptions: {
+                  minify: true,
+                  compress: {
+                    passes: 2,
                   },
-                  common: normalizedOptions.commonChunk && {
-                    name: 'common',
-                    chunks: 'async',
-                    minChunks: 2,
-                    enforce: true,
-                    priority: 5,
-                  },
-                  vendors: false,
-                  defaultVendors: normalizedOptions.vendorChunk && {
-                    name: 'vendor',
-                    chunks: (chunk) => chunk.name === 'main',
-                    enforce: true,
-                    test: VENDORS_TEST,
+                  format: {
+                    comments: false,
                   },
                 },
-              },
-              minimizer: [
-                new SwcJsMinimizerRspackPlugin({
-                  minimizerOptions: {
-                    minify: true,
-                    compress: {
-                      passes: 2,
-                    },
-                    format: {
-                      comments: false,
-                    },
-                  },
-                }),
-              ],
-            }
-          : {
-              minimize: false,
-              minimizer: [],
-            }),
+              }),
+              new LightningCssMinimizerRspackPlugin(),
+            ]
+          : [],
+        splitChunks: {
+          chunks: 'async',
+          minChunks: 1,
+          minSize: 20000,
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
+          cacheGroups: {
+            default: normalizedOptions.commonChunk && {
+              chunks: 'async',
+              minChunks: 2,
+              priority: 10,
+            },
+            common: normalizedOptions.commonChunk && {
+              name: 'common',
+              chunks: 'async',
+              minChunks: 2,
+              enforce: true,
+              priority: 5,
+            },
+            vendors: false,
+            defaultVendors: normalizedOptions.vendorChunk && {
+              name: 'vendor',
+              chunks: (chunk) => chunk.name === 'main',
+              enforce: true,
+              test: VENDORS_TEST,
+            },
+          },
+        },
       },
       plugins: [
         ...(defaultConfig.plugins ?? []),
-        new NgRspackPlugin(
-          {
-            ...normalizedOptions,
-            polyfills: ['zone.js/node'],
-          },
-          i18n
-        ),
+        // Fixes Critical dependency: the request of a dependency is an expression
+        new ContextReplacementPlugin(/@?hapi|express[\\/]/),
+        new NgRspackPlugin(normalizedOptions, {
+          i18nOptions: i18n,
+          platform: 'server',
+        }),
       ],
     };
     const mergedConfig = rspackMerge(
@@ -368,7 +396,7 @@ export async function _createConfig(
     configs.push(mergedConfig);
   }
 
-  const browserConfig = {
+  const browserConfig: Configuration = {
     ...defaultConfig,
     name: 'browser',
     ...(normalizedOptions.hasServer && isDevServer
@@ -378,13 +406,20 @@ export async function _createConfig(
     entry: {
       main: {
         import: [
-          normalizedOptions.browser,
           ...(i18n.shouldInline ? ['@angular/localize/init'] : []),
+          normalizedOptions.browser,
         ],
       },
-      styles: {
-        import: getStylesEntry(normalizedOptions),
-      },
+      ...getPolyfillsEntry(normalizedOptions.polyfills, normalizedOptions.aot),
+      ...toRspackEntries(
+        normalizedOptions.globalStyles,
+        normalizedOptions.root,
+        'ngGlobalStyles'
+      ),
+      ...toRspackEntries(
+        normalizedOptions.globalScripts,
+        normalizedOptions.root
+      ),
     },
     devServer: {
       headers: {
@@ -448,8 +483,6 @@ export async function _createConfig(
     output: {
       ...defaultConfig.output,
       hashFunction: isProduction ? 'xxhash64' : undefined,
-      publicPath: 'auto',
-      clean: normalizedOptions.deleteOutputPath,
       path: normalizedOptions.outputPath.browser,
       cssFilename: `[name]${hashFormat.file}.css`,
       filename: `[name]${hashFormat.chunk}.js`,
@@ -459,69 +492,61 @@ export async function _createConfig(
     },
     optimization: {
       chunkIds: normalizedOptions.namedChunks ? 'named' : 'deterministic',
+      emitOnErrors: false,
       moduleIds: 'deterministic',
-      ...(normalizedOptions.optimization && !isDevServer
-        ? {
-            minimize: true,
-            runtimeChunk: false,
-            splitChunks: {
-              chunks: 'all',
-              minChunks: 1,
-              minSize: 20000,
-              maxAsyncRequests: 30,
-              maxInitialRequests: 30,
-              cacheGroups: {
-                default: normalizedOptions.commonChunk && {
-                  chunks: 'async',
-                  minChunks: 2,
-                  priority: 10,
+      runtimeChunk: 'single',
+      minimizer: normalizedOptions.optimization
+        ? [
+            new SwcJsMinimizerRspackPlugin({
+              minimizerOptions: {
+                minify: true,
+                mangle: true,
+                compress: {
+                  passes: 2,
                 },
-                common: normalizedOptions.commonChunk && {
-                  name: 'common',
-                  chunks: 'async',
-                  minChunks: 2,
-                  enforce: true,
-                  priority: 5,
-                },
-                vendors: false,
-                defaultVendors: normalizedOptions.vendorChunk && {
-                  name: 'vendor',
-                  chunks: (chunk) => chunk.name === 'main',
-                  enforce: true,
-                  test: VENDORS_TEST,
+                format: {
+                  comments: false,
                 },
               },
-            },
-            minimizer: [
-              new SwcJsMinimizerRspackPlugin({
-                minimizerOptions: {
-                  minify: true,
-                  mangle: true,
-                  compress: {
-                    passes: 2,
-                  },
-                  format: {
-                    comments: false,
-                  },
-                },
-              }),
-            ],
-          }
-        : {
-            minimize: false,
-            minimizer: [],
-          }),
+            }),
+            new LightningCssMinimizerRspackPlugin(),
+          ]
+        : [],
+      splitChunks: {
+        chunks: 'all',
+        minChunks: 1,
+        minSize: 20000,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        cacheGroups: {
+          default: normalizedOptions.commonChunk && {
+            chunks: 'async',
+            minChunks: 2,
+            priority: 10,
+          },
+          common: normalizedOptions.commonChunk && {
+            name: 'common',
+            chunks: 'async',
+            minChunks: 2,
+            enforce: true,
+            priority: 5,
+          },
+          vendors: false,
+          defaultVendors: normalizedOptions.vendorChunk && {
+            name: 'vendor',
+            chunks: (chunk) => chunk.name === 'main',
+            enforce: true,
+            test: VENDORS_TEST,
+          },
+        },
+      },
     },
     plugins: [
       ...(defaultConfig.plugins ?? []),
-      new NgRspackPlugin(
-        {
-          ...normalizedOptions,
-          polyfills: ['zone.js'],
-          hasServer: false,
-        },
-        i18n
-      ),
+      new NgRspackPlugin(normalizedOptions, {
+        i18nOptions: i18n,
+        platform: 'browser',
+      }),
     ],
   };
   const mergedConfig = rspackMerge(

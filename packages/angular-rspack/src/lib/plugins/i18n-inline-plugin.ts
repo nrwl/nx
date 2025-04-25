@@ -1,13 +1,22 @@
-import { RspackPluginInstance, Compiler, sources } from '@rspack/core';
+import remapping from '@ampproject/remapping';
 import {
-  PluginObj,
+  type PluginObj,
   parseSync,
   transformFromAstAsync,
   types,
 } from '@babel/core';
-import remapping from '@ampproject/remapping';
+import {
+  type Compiler,
+  type RspackPluginInstance,
+  sources,
+} from '@rspack/core';
 import assert from 'node:assert';
-import { I18nOptions, NormalizedAngularRspackPluginOptions } from '../models';
+import type {
+  I18nOptions,
+  NormalizedAngularRspackPluginOptions,
+} from '../models';
+import { getLocaleOutputPaths } from '../utils/i18n';
+import { loadEsmModule } from '../utils/misc-helpers';
 
 /**
  * A Type representing the localize tools module.
@@ -24,6 +33,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
    * This is used to remove the need to repeatedly import the module per file translation.
    */
   #localizeToolsModule: LocalizeUtilityModule | undefined;
+  #outputPaths: Set<string>;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
@@ -31,6 +41,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
   ) {
     this.#pluginOptions = pluginOptions;
     this.#i18n = i18nOptions;
+    this.#outputPaths = new Set(getLocaleOutputPaths(i18nOptions).values());
   }
 
   apply(compiler: Compiler) {
@@ -64,6 +75,9 @@ export class I18nInlinePlugin implements RspackPluginInstance {
           { text: string | Buffer; map: sources.RawSourceMap | null }
         >();
         for (const [filename, { text, map }] of filesToInline.entries()) {
+          if (this.#checkAssetHasBeenProcessed(filename)) {
+            continue;
+          }
           const result = await this.#transformWithBabel(
             text,
             map,
@@ -76,6 +90,9 @@ export class I18nInlinePlugin implements RspackPluginInstance {
           // TODO: Add support for diagnostics
         }
         for (const [filename, source] of additionalFiles.entries()) {
+          if (this.#checkAssetHasBeenProcessed(filename)) {
+            continue;
+          }
           localeFiles.set(filename, {
             text: source.source(),
             map: source.map(),
@@ -87,22 +104,6 @@ export class I18nInlinePlugin implements RspackPluginInstance {
       for (const [localeSubPath, files] of filesToOutput.entries()) {
         for (const [filename, { text, map }] of files.entries()) {
           const localeFileName = `${localeSubPath}/${filename}`;
-          if (localeFileName.endsWith('index.html')) {
-            // update the baseHref for the locale and set the lang attribute
-            const html = typeof text === 'string' ? text : text.toString();
-            const updatedHtml = await this.#updateBaseHrefAndLang(
-              html,
-              localeSubPath
-            );
-            compilation.emitAsset(
-              localeFileName,
-              new sources.RawSource(updatedHtml)
-            );
-            if (compilation.getAsset(filename)) {
-              compilation.deleteAsset(filename);
-            }
-            continue;
-          }
           if (map) {
             compilation.emitAsset(
               localeFileName,
@@ -120,20 +121,8 @@ export class I18nInlinePlugin implements RspackPluginInstance {
     });
   }
 
-  async #updateBaseHrefAndLang(html: string, localeSubPath: string) {
-    // TODO: add support for diagnostics
-    const dir = localeSubPath
-      ? await this.#getLanguageDirection(localeSubPath, [])
-      : undefined;
-    html = html.replace(
-      /<base href="([^"]+)">/g,
-      `<base href="/${localeSubPath}$1">`
-    );
-    html = html.replace(
-      /<html lang="([^"]+)">/g,
-      `<html lang="${localeSubPath}"${dir ? ` dir="${dir}"` : ''}>`
-    );
-    return html;
+  #checkAssetHasBeenProcessed(filename: string) {
+    return this.#outputPaths.has(filename.split('/')[0]);
   }
 
   /**
@@ -145,10 +134,9 @@ export class I18nInlinePlugin implements RspackPluginInstance {
     // Load ESM `@angular/localize/tools` using the TypeScript dynamic import workaround.
     // Once TypeScript provides support for keeping the dynamic import this workaround can be
     // changed to a direct dynamic import.
-    this.#localizeToolsModule ??=
-      await this.#loadEsmModule<LocalizeUtilityModule>(
-        '@angular/localize/tools'
-      );
+    this.#localizeToolsModule ??= await loadEsmModule<LocalizeUtilityModule>(
+      '@angular/localize/tools'
+    );
   }
 
   /**
@@ -192,15 +180,6 @@ export class I18nInlinePlugin implements RspackPluginInstance {
     return { diagnostics, plugins };
   }
 
-  #loadEsmModule<T>(modulePath: string | URL): Promise<T> {
-    const load = new Function(
-      'modulePath',
-      `return import(modulePath);`
-    ) as Exclude<typeof load, undefined>;
-
-    return load(modulePath);
-  }
-
   #assertIsError(value: unknown): asserts value is Error & { code?: string } {
     const isError =
       value instanceof Error ||
@@ -216,7 +195,10 @@ export class I18nInlinePlugin implements RspackPluginInstance {
    * Transforms a JavaScript file using Babel to inline the request locale and translation.
    * @param code A string containing the JavaScript code to transform.
    * @param map A sourcemap object for the provided JavaScript code.
-   * @param options The inline request options to use.
+   * @param filename The filename of the JavaScript file to transform.
+   * @param locale The locale to inline.
+   * @param translation The translation to inline.
+   * @param shouldOptimize Whether to optimize the transformed code.
    * @returns An object containing the code, map, and diagnostics from the transformation.
    */
   async #transformWithBabel(
@@ -283,49 +265,5 @@ export class I18nInlinePlugin implements RspackPluginInstance {
       map: outputMap && JSON.stringify(outputMap),
       diagnostics,
     };
-  }
-
-  async #getLanguageDirection(
-    locale: string,
-    warnings: string[]
-  ): Promise<string | undefined> {
-    const dir = await this.#getLanguageDirectionFromLocales(locale);
-
-    if (!dir) {
-      warnings.push(
-        `Locale data for '${locale}' cannot be found. 'dir' attribute will not be set for this locale.`
-      );
-    }
-
-    return dir;
-  }
-
-  async #getLanguageDirectionFromLocales(
-    locale: string
-  ): Promise<string | undefined> {
-    try {
-      const localeData = (
-        await this.#loadEsmModule<typeof import('@angular/common/locales/en')>(
-          `@angular/common/locales/${locale}`
-        )
-      ).default;
-
-      const dir = localeData[localeData.length - 2];
-
-      return this.#isString(dir) ? dir : undefined;
-    } catch {
-      // In some cases certain locales might map to files which are named only with language id.
-      // Example: `en-US` -> `en`.
-      const [languageId] = locale.split('-', 1);
-      if (languageId !== locale) {
-        return this.#getLanguageDirectionFromLocales(languageId);
-      }
-    }
-
-    return undefined;
-  }
-
-  #isString(value: unknown): value is string {
-    return typeof value === 'string';
   }
 }

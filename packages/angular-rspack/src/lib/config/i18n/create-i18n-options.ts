@@ -1,17 +1,17 @@
-import { createProjectGraphAsync, logger, workspaceRoot } from '@nx/devkit';
 import {
   createI18nOptions as _createI18nOptions,
   createTranslationLoader,
   loadTranslations,
 } from '@angular/build/private';
-import * as path from 'node:path';
+import { logger, workspaceRoot } from '@nx/devkit';
 import { createRequire } from 'node:module';
-import { AngularRspackPluginOptions } from '../../models';
+import { join, relative } from 'node:path';
+import type { AngularRspackPluginOptions } from '../../models';
 import {
   createProjectRootMappings,
   findProjectForPath,
 } from '../../utils/find-project-for-path';
-import { relative } from 'node:path';
+import { retrieveOrCreateProjectGraph } from '../../utils/graph';
 
 /**
  * The base module location used to search for locale specific data.
@@ -47,7 +47,11 @@ async function getI18nMetadata(
 
 async function tryGetI18nMetadataFromProject(projectRoot: string) {
   try {
-    const graph = await createProjectGraphAsync();
+    const graph = await retrieveOrCreateProjectGraph();
+    if (!graph) {
+      return undefined;
+    }
+
     const projectRootMappings = createProjectRootMappings(graph.nodes);
     const root = projectRoot.startsWith(workspaceRoot)
       ? relative(workspaceRoot, projectRoot)
@@ -109,7 +113,7 @@ export async function configureI18n(
   // The trailing slash is required to signal that the path is a directory and not a file.
   const projectRequire = createRequire(projectRoot + '/');
   const localeResolver = (locale: string) =>
-    projectRequire.resolve(path.join(LOCALE_DATA_BASE_MODULE, locale));
+    projectRequire.resolve(join(LOCALE_DATA_BASE_MODULE, locale));
 
   // Load locale data and translations (if present)
   let loader;
