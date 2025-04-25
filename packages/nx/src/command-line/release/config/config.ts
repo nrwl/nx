@@ -28,6 +28,8 @@ import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import { normalizePath } from '../../../utils/path';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github';
+import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
@@ -308,7 +310,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
-              mapAuthorsToGitHubUsernames: true,
+              applyUsernameToAuthors: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -323,7 +325,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
-              mapAuthorsToGitHubUsernames: true,
+              applyUsernameToAuthors: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -374,7 +376,7 @@ export async function createNxReleaseConfig(
       renderer: defaultRendererPath,
       renderOptions: {
         authors: true,
-        mapAuthorsToGitHubUsernames: true,
+        applyUsernameToAuthors: true,
         commitReferences: true,
         versionTitleDate: true,
       },
@@ -1276,14 +1278,20 @@ const supportedCreateReleaseProviders = [
     name: 'github-enterprise-server',
     defaultApiBaseUrl: 'https://__hostname__/api/v3',
   },
+  {
+    name: 'gitlab',
+    defaultApiBaseUrl: 'https://__hostname__/api/v4',
+  },
 ];
 
-// User opts into the default by specifying the string value 'github'
-export const defaultCreateReleaseProvider = {
-  provider: 'github',
-  hostname: 'github.com',
-  apiBaseUrl: 'https://api.github.com',
-} as any;
+/**
+ * Full form of the createRelease config, with the provider, hostname, and apiBaseUrl resolved.
+ */
+export interface ResolvedCreateRemoteReleaseProvider {
+  provider: string;
+  hostname: string;
+  apiBaseUrl: string;
+}
 
 function validateCreateReleaseConfig(
   changelogConfig: NxReleaseChangelogConfiguration
@@ -1295,7 +1303,14 @@ function validateCreateReleaseConfig(
   }
   // GitHub shorthand, expand to full object form, mark as valid
   if (createRelease === 'github') {
-    changelogConfig.createRelease = defaultCreateReleaseProvider;
+    changelogConfig.createRelease =
+      defaultGitHubCreateReleaseProvider as unknown as NxReleaseChangelogConfiguration['createRelease'];
+    return null;
+  }
+  // Gitlab shorthand, expand to full object form, mark as valid
+  if (createRelease === 'gitlab') {
+    changelogConfig.createRelease =
+      defaultGitLabCreateReleaseProvider as unknown as NxReleaseChangelogConfiguration['createRelease'];
     return null;
   }
   // Object config, ensure that properties are valid

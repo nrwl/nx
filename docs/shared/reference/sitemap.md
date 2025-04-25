@@ -83,6 +83,7 @@
       - [Configure Custom Registries](/recipes/nx-release/configure-custom-registries)
       - [Publish in CI/CD](/recipes/nx-release/publish-in-ci-cd)
       - [Automate GitHub Releases](/recipes/nx-release/automate-github-releases)
+      - [Automate GitLab Releases](/recipes/nx-release/automate-gitlab-releases)
       - [Publish Rust Crates](/recipes/nx-release/publish-rust-crates)
       - [Update Your Local Registry Setup to use Nx Release](/recipes/nx-release/update-local-registry-setup)
       - [Configure Changelog Format](/recipes/nx-release/configure-changelog-format)
