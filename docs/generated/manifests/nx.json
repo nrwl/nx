@@ -1938,17 +1938,6 @@
             "tags": ["editor-setup"]
           },
           {
-            "id": "console-migrate-ui",
-            "name": "Migrate UI",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-migrate-ui",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-migrate-ui",
-            "tags": ["editor-setup"]
-          },
-          {
             "id": "console-run-command",
             "name": "Run Command",
             "description": "",
@@ -1968,6 +1957,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-nx-cloud",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-migrate-ui",
+            "name": "Migrate UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-migrate-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-migrate-ui",
             "tags": ["editor-setup"]
           },
           {
@@ -3832,17 +3832,6 @@
         "tags": ["editor-setup"]
       },
       {
-        "id": "console-migrate-ui",
-        "name": "Migrate UI",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-migrate-ui",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-migrate-ui",
-        "tags": ["editor-setup"]
-      },
-      {
         "id": "console-run-command",
         "name": "Run Command",
         "description": "",
@@ -3862,6 +3851,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-nx-cloud",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-migrate-ui",
+        "name": "Migrate UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-migrate-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-migrate-ui",
         "tags": ["editor-setup"]
       },
       {
@@ -3913,17 +3913,6 @@
     "path": "/recipes/nx-console/console-generate-command",
     "tags": ["editor-setup"]
   },
-  "/recipes/nx-console/console-migrate-ui": {
-    "id": "console-migrate-ui",
-    "name": "Migrate UI",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-migrate-ui",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-migrate-ui",
-    "tags": ["editor-setup"]
-  },
   "/recipes/nx-console/console-run-command": {
     "id": "console-run-command",
     "name": "Run Command",
@@ -3944,6 +3933,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-nx-cloud",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-migrate-ui": {
+    "id": "console-migrate-ui",
+    "name": "Migrate UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-migrate-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-migrate-ui",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {
