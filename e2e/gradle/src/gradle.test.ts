@@ -45,7 +45,7 @@ describe('Gradle', () => {
         expect(buildOutput).toContain(':utilities:classes');
       });
 
-      xit('should track dependencies for new app', () => {
+      it('should track dependencies for new app', () => {
         if (type === 'groovy') {
           createFile(
             `app2/build.gradle`,
