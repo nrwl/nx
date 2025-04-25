@@ -23,6 +23,10 @@ To update your workspace, run:
 npx nx migrate latest
 ```
 
+{% callout type="note" title="Visual migration tool from Nx Console" %}
+Want a more visual and guided way to migrate? Check out the [Migrate UI](/recipes/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/getting-started/editor-setup).
+{% /callout %}
+
 ## How Does It Work?
 
 Nx knows where its configuration files are located and ensures they match the expected format. This automated update process, commonly referred to as "migration," becomes even **more powerful when you leverage [Nx plugins](/nx-api)**. Each plugin can provide migrations for its area of competency.
