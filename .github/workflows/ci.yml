@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - master
+    - master
   pull_request:
     branches:
-      - "**"
+    - "**"
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
@@ -28,45 +28,45 @@ jobs:
       NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          filter: tree:0
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        filter: tree:0
 
-      - name: Fetch Master
-        run: git fetch origin master:master
-        if: ${{ github.event_name == 'pull_request' }}
+    - name: Fetch Master
+      run: git fetch origin master:master
+      if: ${{ github.event_name == 'pull_request' }}
 
-      - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: 'master'
+    - name: Set SHAs
+      uses: nrwl/nx-set-shas@v4
+      with:
+        main-branch-name: 'master'
 
-      - name: Start CI Run
-        run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+    - name: Start CI Run
+      run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
 
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@v1
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 9.8.0
-          run_install: false
+    - uses: pnpm/action-setup@v4
+      name: Install pnpm
+      with:
+        version: 9.8.0
+        run_install: false
 
-      - name: Install project dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+    - name: Install project dependencies
+      run: |
+        pnpm install --frozen-lockfile
+        pnpm playwright install --with-deps
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -74,33 +74,33 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Check Documentation
-        run: pnpm nx documentation
-        timeout-minutes: 20
+    - name: Check Documentation
+      run: pnpm nx documentation
+      timeout-minutes: 20
 
-      - name: Run Checks/Lint/Test/Build
-        run: |
-          pids=()
+    - name: Run Checks/Lint/Test/Build
+      run: |
+        pids=()
 
-          pnpm nx-cloud record -- nx format:check &
-          pids+=($!)
+        pnpm nx-cloud record -- nx format:check &
+        pids+=($!)
 
-          pnpm nx-cloud record -- nx sync:check
-          pids+=($!)
+        pnpm nx-cloud record -- nx sync:check
+        pids+=($!)
 
-          pnpm nx-cloud record -- nx-cloud conformance:check
-          pids+=($!)
+        pnpm nx-cloud record -- nx-cloud conformance:check
+        pids+=($!)
 
-          pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
-          pids+=($!)
+        pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
+        pids+=($!)
 
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci &
-          pids+=($!)
+        pnpm nx affected --targets=lint,test,build,e2e,e2e-ci &
+        pids+=($!)
 
-          for pid in "${pids[@]}"; do
-            wait "$pid"
-          done
-        timeout-minutes: 100
+        for pid in "${pids[@]}"; do
+          wait "$pid"
+        done
+      timeout-minutes: 100
 
   main-macos:
     runs-on: macos-latest
@@ -129,57 +129,61 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - name: Fetch Master
-        run: git fetch origin master:master
-        if: ${{ github.event_name == 'pull_request' }}
+    - name: Fetch Master
+      run: git fetch origin master:master
+      if: ${{ github.event_name == 'pull_request' }}
 
-      - name: Restore Homebrew packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            /opt/Homebrew
-            ~/Library/Caches/Homebrew
-          key: nrwl-nx-homebrew-packages
+    - name: Restore Homebrew packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          /opt/homebrew
+          ~/Library/Caches/Homebrew
+        key: nrwl-nx-homebrew-packages
 
-      - name: Configure Detox Environment, Install applesimutils
-        run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-          xcrun simctl shutdown all && xcrun simctl erase all
-        timeout-minutes: 20
+    - name: Configure Detox Environment, Install applesimutils
+      run: |
+        HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
 
-      - name: Save Homebrew Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            /opt/Homebrew
-            ~/Library/Caches/Homebrew
-          key: nrwl-nx-homebrew-packages
+        # Only install applesimutils if not already installed
+        if ! brew ls --versions applesimutils >/dev/null; then
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null 
+        fi
+        xcrun simctl shutdown all && xcrun simctl erase all
+      timeout-minutes: 20
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          version: 9.8.0
-          run_install: false
+    - name: Save Homebrew Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          /opt/homebrew
+          ~/Library/Caches/Homebrew
+        key: nrwl-nx-homebrew-packages
 
-      - name: Install project dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm playwright install --with-deps
+    - uses: pnpm/action-setup@v4
+      name: Install pnpm
+      with:
+        version: 9.8.0
+        run_install: false
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+    - name: Install project dependencies
+      run: |
+        pnpm install --frozen-lockfile
+        pnpm playwright install --with-deps
 
-      - name: Set SHAs
-        uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: 'master'
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
 
-      - name: Run E2E Tests for macOS
-        run: |
-          HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
-          if $HAS_CHANGED; then
-            pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-          else
-            echo "Skip E2E tests for macOS as there are no changes in React Native projects."
-          fi
+    - name: Set SHAs
+      uses: nrwl/nx-set-shas@v4
+      with:
+        main-branch-name: 'master'
+
+    - name: Run E2E Tests for macOS
+      run: |
+        HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
+        if $HAS_CHANGED; then
+          pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+        else
+          echo "Skip E2E tests for macOS as there are no changes in React Native projects."
+        fi
