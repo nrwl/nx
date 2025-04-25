@@ -124,6 +124,8 @@ pub enum TaskStatus {
     InProgress,
     // This task is being run in a different process
     Shared,
+    // This continuous task has been stopped by Nx
+    Stopped,
 }
 
 impl std::str::FromStr for TaskStatus {
@@ -148,6 +150,11 @@ impl std::str::FromStr for TaskStatus {
             _ => Err(format!("Unknown task status: {}", s)),
         }
     }
+}
+
+#[napi]
+pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
+    string_status.as_str().parse().map_err(napi::Error::from_reason)
 }
 
 /// A list component that displays and manages tasks in a terminal UI.
@@ -925,12 +932,12 @@ impl TasksList {
         self.sort_tasks();
     }
 
-    /// Updates their status to InProgress and triggers a sort.
+    /// Updates a task's status and triggers a sort of the list.
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
             task_item.update_status(status);
+            self.sort_tasks();
         }
-        self.sort_tasks();
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
@@ -940,9 +947,6 @@ impl TasksList {
                 .iter_mut()
                 .find(|t| t.name == task_result.task.id)
             {
-                let parsed_status = task_result.status.parse().unwrap();
-                task.update_status(parsed_status);
-
                 if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
                     task.start_time = Some(task_result.task.start_time.unwrap() as u128);
                     task.end_time = Some(task_result.task.end_time.unwrap() as u128);
@@ -951,29 +955,11 @@ impl TasksList {
                         task_result.task.end_time.unwrap() as u128,
                     );
                 }
-
-                // If the task never had a pty, it must mean that it was run outside of the pseudo-terminal.
-                // We create a new parser and writer for the task and register it and then write the final output to the parser
-                if !self.pty_instances.contains_key(&task.name) {
-                    let (parser, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
-                    if let Some(task_result_output) = task_result.terminal_output {
-                        Self::write_output_to_parser(parser, task_result_output);
-                    }
-                    let task_name = task.name.clone();
-                    self.create_and_register_pty_instance(&task_name, parser_and_writer);
-                }
             }
         }
         self.sort_tasks();
         // Re-evaluate the optimal size of the terminal pane and pty because the newly available task outputs might already be being displayed
         let _ = self.handle_resize(None);
-    }
-
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.name == task_id) {
-            task.update_status(status);
-            self.sort_tasks();
-        }
     }
 
     /// Toggles the visibility of the task list panel
@@ -1117,6 +1103,7 @@ impl Component for TasksList {
                         TaskStatus::Success
                             | TaskStatus::Failure
                             | TaskStatus::Skipped
+                            | TaskStatus::Stopped
                             | TaskStatus::LocalCache
                             | TaskStatus::LocalCacheKeptExisting
                             | TaskStatus::RemoteCache
@@ -1402,6 +1389,12 @@ impl Component for TasksList {
 
                                 Cell::from(Line::from(spans))
                             }
+                            TaskStatus::Stopped => Cell::from(Line::from(vec![
+                                Span::raw(if is_selected { ">" } else { " " }),
+                                Span::raw(" "),
+                                Span::styled("⯀️", Style::default().fg(Color::DarkGray)),
+                                Span::raw(" "),
+                            ])),
                             TaskStatus::NotStarted => Cell::from(Line::from(vec![
                                 Span::raw(if is_selected { ">" } else { " " }),
                                 // No need for parallel section check for pending tasks

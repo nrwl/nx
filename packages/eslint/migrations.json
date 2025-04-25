@@ -1,25 +1,5 @@
 {
   "generators": {
-    "update-17-0-0-rename-to-eslint": {
-      "version": "17.0.0-beta.7",
-      "description": "update-17-0-0-rename-to-eslint",
-      "implementation": "./src/migrations/update-17-0-0-rename-to-eslint/update-17-0-0-rename-to-eslint"
-    },
-    "update-typescript-eslint": {
-      "version": "17.1.0-beta.1",
-      "description": "Updates for @typescript-utils/utils v6.9.1+",
-      "implementation": "./src/migrations/update-17-1-0/update-typescript-eslint"
-    },
-    "simplify-eslint-patterns": {
-      "version": "17.2.0-beta.0",
-      "description": "Simplify eslintFilePatterns",
-      "implementation": "./src/migrations/update-17-2-0/simplify-eslint-patterns"
-    },
-    "move-options-to-target-defaults": {
-      "version": "17.2.9",
-      "description": "Move executor options to target defaults",
-      "implementation": "./src/migrations/update-17-2-9/move-options-to-target-defaults"
-    },
     "update-typescript-eslint-v8.13.0": {
       "version": "20.2.0-beta.5",
       "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
@@ -32,67 +12,6 @@
     }
   },
   "packageJsonUpdates": {
-    "17.0.0": {
-      "version": "17.0.0-rc.2",
-      "packages": {
-        "eslint-config-prettier": {
-          "version": "^9.0.0"
-        }
-      }
-    },
-    "17.1.0": {
-      "version": "17.1.0-beta.1",
-      "packages": {
-        "@typescript-eslint/parser": {
-          "version": "^6.9.1"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^6.9.1"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^6.9.1"
-        }
-      }
-    },
-    "17.2.0": {
-      "version": "17.2.0-beta.2",
-      "packages": {
-        "eslint": {
-          "version": "~8.48.0"
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.0",
-      "packages": {
-        "@typescript-eslint/parser": {
-          "version": "^6.13.2"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^6.13.2"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^6.13.2"
-        }
-      }
-    },
-    "18.2.0": {
-      "version": "18.2.0-beta.0",
-      "packages": {
-        "@typescript-eslint/parser": {
-          "version": "^7.3.0"
-        },
-        "@typescript-eslint/eslint-plugin": {
-          "version": "^7.3.0"
-        },
-        "@typescript-eslint/utils": {
-          "version": "^7.3.0"
-        },
-        "eslint": {
-          "version": "~8.57.0"
-        }
-      }
-    },
     "19.5.0": {
       "version": "19.5.0-beta.1",
       "packages": {

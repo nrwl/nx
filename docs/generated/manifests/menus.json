@@ -1415,14 +1415,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Migrate UI",
-                "path": "/recipes/nx-console/console-migrate-ui",
-                "id": "console-migrate-ui",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
@@ -1434,6 +1426,14 @@
                 "name": "Nx Cloud Integration",
                 "path": "/recipes/nx-console/console-nx-cloud",
                 "id": "console-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate UI",
+                "path": "/recipes/nx-console/console-migrate-ui",
+                "id": "console-migrate-ui",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2797,14 +2797,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Migrate UI",
-            "path": "/recipes/nx-console/console-migrate-ui",
-            "id": "console-migrate-ui",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Command",
             "path": "/recipes/nx-console/console-run-command",
             "id": "console-run-command",
@@ -2816,6 +2808,14 @@
             "name": "Nx Cloud Integration",
             "path": "/recipes/nx-console/console-nx-cloud",
             "id": "console-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate UI",
+            "path": "/recipes/nx-console/console-migrate-ui",
+            "id": "console-migrate-ui",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2856,14 +2856,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Migrate UI",
-        "path": "/recipes/nx-console/console-migrate-ui",
-        "id": "console-migrate-ui",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
@@ -2875,6 +2867,14 @@
         "name": "Nx Cloud Integration",
         "path": "/recipes/nx-console/console-nx-cloud",
         "id": "console-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate UI",
+        "path": "/recipes/nx-console/console-migrate-ui",
+        "id": "console-migrate-ui",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -10935,14 +10935,6 @@
                 "disableCollapsible": false
               }
             ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "migrations",
-            "path": "/nx-api/web/migrations",
-            "name": "migrations",
-            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }

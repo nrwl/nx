@@ -8,6 +8,10 @@ on:
     branches:
       - "**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !contains(github.event.type, 'push')}}
+
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
@@ -23,6 +27,7 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_NO_TIMEOUTS: 'true'
+      NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
 
     steps:
       - name: Checkout
@@ -65,6 +70,12 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Check Documentation
         run: pnpm nx documentation
         timeout-minutes: 20
@@ -95,6 +106,7 @@ jobs:
 
   main-macos:
     runs-on: macos-latest
+    
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-macos
       NX_PERF_LOGGING: 'false'
@@ -115,7 +127,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /usr/local/Homebrew
+            /opt/Homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 
@@ -130,7 +142,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /usr/local/Homebrew
+            /opt/Homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 

@@ -12,6 +12,9 @@ import {
   CheckCircleIcon,
   ClockIcon,
   MinusIcon,
+  ArrowPathIcon,
+  XMarkIcon,
+  CheckIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
 import { MigrationCard, MigrationCardHandle } from './migration-card';
@@ -30,6 +33,7 @@ export interface MigrationTimelineProps {
   isInit: boolean;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onUndoMigration: (migration: MigrationDetailsWithId) => void;
   onFileClick: (
     migration: MigrationDetailsWithId,
     file: Omit<FileChange, 'content'>
@@ -50,6 +54,7 @@ export function MigrationTimeline({
   currentMigrationHasChanges,
   onRunMigration,
   onSkipMigration,
+  onUndoMigration,
   onFileClick,
   onViewImplementation,
   onViewDocumentation,
@@ -204,8 +209,12 @@ export function MigrationTimeline({
                                 onRunMigration(migration);
                               }}
                               type="button"
-                              className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
+                              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                             >
+                              <ArrowPathIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />{' '}
                               Rerun
                             </button>
                           )}
@@ -266,6 +275,10 @@ export function MigrationTimeline({
               <MigrationStateCircle
                 migration={migrations[currentMigrationIndex]}
                 nxConsoleMetadata={nxConsoleMetadata}
+                needsAttention={
+                  currentMigrationHasChanges &&
+                  !expandedMigrations[currentMigration.id]
+                }
                 isRunning={currentMigrationRunning}
                 onClick={() => toggleMigrationExpanded(currentMigration.id)}
               />
@@ -300,8 +313,12 @@ export function MigrationTimeline({
                             onRunMigration(currentMigration);
                           }}
                           type="button"
-                          className="rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 dark:text-white hover:dark:bg-red-700"
+                          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                         >
+                          <ArrowPathIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />{' '}
                           Rerun
                         </button>
                       )}
@@ -312,23 +329,38 @@ export function MigrationTimeline({
                             onSkipMigration(currentMigration);
                           }}
                           type="button"
-                          className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
+                          className="flex items-center rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 hover:dark:bg-red-700"
                         >
+                          <XMarkIcon className="h-5 w-5" aria-hidden="true" />{' '}
                           Skip
                         </button>
                       )}
 
                       {currentMigrationHasChanges && (
-                        <button
-                          onClick={() => {
-                            toggleMigrationExpanded(currentMigration.id);
-                            onReviewMigration(currentMigration.id);
-                          }}
-                          type="button"
-                          className="flex items-center rounded-md border border-green-500 bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-600 dark:border-green-700 dark:bg-green-600 dark:text-white hover:dark:bg-green-700"
-                        >
-                          Approve Changes
-                        </button>
+                        <>
+                          <button
+                            onClick={() => {
+                              toggleMigrationExpanded(currentMigration.id);
+                              onUndoMigration(currentMigration);
+                            }}
+                            type="button"
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          >
+                            <XMarkIcon className="h-5 w-5" aria-hidden="true" />{' '}
+                            Undo and Skip
+                          </button>
+                          <button
+                            onClick={() => {
+                              toggleMigrationExpanded(currentMigration.id);
+                              onReviewMigration(currentMigration.id);
+                            }}
+                            type="button"
+                            className="flex items-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-600 dark:bg-blue-600 hover:dark:bg-blue-700"
+                          >
+                            <CheckIcon className="h-5 w-5" aria-hidden="true" />{' '}
+                            Approve Changes
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
@@ -404,8 +436,12 @@ export function MigrationTimeline({
                                 onSkipMigration(migration);
                               }}
                               type="button"
-                              className="rounded-md border border-slate-500 bg-slate-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-600 dark:border-slate-600 dark:bg-slate-600 dark:text-white hover:dark:bg-slate-700"
+                              className="flex items-center gap-2 rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 hover:dark:bg-red-700"
                             >
+                              <XMarkIcon
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                              />{' '}
                               Skip
                             </button>
                           </div>
@@ -505,6 +541,7 @@ interface MigrationStateCircleProps {
   migration: MigrationDetailsWithId;
   nxConsoleMetadata: MigrationsJsonMetadata;
   isRunning?: boolean;
+  needsAttention?: boolean;
   onClick: () => void;
 }
 
@@ -512,6 +549,7 @@ function MigrationStateCircle({
   migration,
   nxConsoleMetadata,
   isRunning,
+  needsAttention,
   onClick,
 }: MigrationStateCircleProps) {
   let bgColor = '';
@@ -551,7 +589,10 @@ function MigrationStateCircle({
 
   return (
     <div
-      className={`absolute left-0 top-0 flex h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`}
+      className={twMerge(
+        `absolute left-0 top-0 flex h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
+        needsAttention ? 'animate-pulse' : ''
+      )}
       onClick={onClick}
     >
       {isRunning ? (

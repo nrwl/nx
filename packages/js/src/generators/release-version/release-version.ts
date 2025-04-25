@@ -1000,7 +1000,7 @@ To fix this you will either need to add a package.json file at that location, or
     // Return the version data so that it can be leveraged by the overall version command
     return {
       data: versionData,
-      callback: async (tree, opts) => {
+      callback: async (tree, { generatorOptions, ...opts }) => {
         const changedFiles: string[] = [];
         const deletedFiles: string[] = [];
 
@@ -1013,6 +1013,7 @@ To fix this you will either need to add a package.json file at that location, or
           ...(await updateLockFile(cwd, {
             ...opts,
             useLegacyVersioning: true,
+            options: generatorOptions,
           }))
         );
         return { changedFiles, deletedFiles };

@@ -5,6 +5,7 @@ import {
   tmpProjPath,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
 import { createFileSync, writeFileSync } from 'fs-extra';
 import { join, resolve } from 'path';
 
@@ -15,14 +16,10 @@ export function createGradleProject(
   packageName: string = 'gradleProject',
   addProjectJsonNamePrefix: string = ''
 ) {
-  e2eConsoleLogger(
-    `Using java version: ${execSync('java -version')} ${execSync(
-      'echo $JAVA_HOME'
-    )}`
-  );
+  e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
   const gradleCommand = isWindows()
-    ? resolve(`${__dirname}/../../gradlew.bat`)
-    : resolve(`${__dirname}/../../gradlew`);
+    ? resolve(`${__dirname}/../../../../gradlew.bat`)
+    : resolve(`${__dirname}/../../../../gradlew`);
   e2eConsoleLogger(
     'Using gradle version: ' +
       execSync(`${gradleCommand} --version`, {
@@ -36,12 +33,25 @@ export function createGradleProject(
   );
   e2eConsoleLogger(
     runCommand(
-      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project`,
+      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite`,
       {
         cwd,
       }
     )
   );
+
+  try {
+    e2eConsoleLogger(
+      runCommand(`${gradleCommand} --stop`, {
+        cwd,
+      })
+    );
+    e2eConsoleLogger(
+      runCommand(`${gradleCommand} clean`, {
+        cwd,
+      })
+    );
+  } catch (e) {}
 
   if (addProjectJsonNamePrefix) {
     createFileSync(join(cwd, 'app/project.json'));
@@ -60,4 +70,35 @@ export function createGradleProject(
       `{"name": "${addProjectJsonNamePrefix}utilities"}`
     );
   }
+
+  addLocalPluginManagement(
+    join(cwd, `settings.gradle${type === 'kotlin' ? '.kts' : ''}`)
+  );
+  addLocalPluginManagement(
+    join(cwd, `buildSrc/settings.gradle${type === 'kotlin' ? '.kts' : ''}`)
+  );
+
+  e2eConsoleLogger(
+    execSync(
+      `${gradleCommand} :project-graph:publishToMavenLocal -x :project-graph:signNxProjectGraphPluginPluginMarkerMavenPublication -x :project-graph:signPluginMavenPublication -x :project-graph:publishNxProjectGraphPluginPluginMarkerMavenPublicationToMavenLocal -x :project-graph:publishPluginMavenPublicationToMavenLocal`,
+      {
+        cwd: `${__dirname}/../../../..`,
+      }
+    ).toString()
+  );
+}
+
+function addLocalPluginManagement(filePath: string) {
+  let content = readFileSync(filePath).toString();
+  content =
+    `pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        mavenCentral()
+        // Add other repositories if needed
+    }
+}
+` + content;
+  writeFileSync(filePath, content);
 }

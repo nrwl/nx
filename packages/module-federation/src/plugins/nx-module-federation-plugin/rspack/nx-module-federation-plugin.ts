@@ -23,6 +23,10 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk = false;
     compiler.options.output.uniqueName = this._options.config.name;
+    if (compiler.options.output.scriptType === 'module') {
+      compiler.options.output.scriptType = undefined;
+      compiler.options.output.module = undefined;
+    }
     if (this._options.isServer) {
       compiler.options.target = 'async-node';
       compiler.options.output.library ??= {

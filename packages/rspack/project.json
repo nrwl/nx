@@ -5,11 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/rspack"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js rspack"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/rspack/README.md"],
+      "command": "node ./scripts/copy-readme.js rspack"
     },
     "build-base": {
       "dependsOn": ["^build-base"],

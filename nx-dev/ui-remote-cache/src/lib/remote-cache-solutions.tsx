@@ -1,9 +1,10 @@
 'use client';
 import { ReactElement } from 'react';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
-import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import Link from 'next/link';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 export function RemoteCacheSolutions(): ReactElement {
   return (
@@ -64,6 +65,24 @@ export function RemoteCacheSolutions(): ReactElement {
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
+                    <span>
+                      Secure against cache poisoning (
+                      <Link
+                        href="/enterprise/security"
+                        prefetch={false}
+                        title="Remote caching security"
+                        className="font-semibold underline"
+                      >
+                        Learn more
+                      </Link>
+                      )
+                    </span>
+                  </li>
+                  <li className="flex items-start justify-start gap-x-2 py-2.5">
+                    <CheckCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
                     <span>Zero configuration</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
@@ -75,6 +94,7 @@ export function RemoteCacheSolutions(): ReactElement {
                       Hosted on Nx Cloud servers or on-premise with{' '}
                       <Link
                         href="/enterprise"
+                        prefetch={false}
                         title="Learn about Nx Enterprise"
                         className="font-semibold underline"
                       >
@@ -90,13 +110,6 @@ export function RemoteCacheSolutions(): ReactElement {
                     <span>
                       Enterprise grade access management and key revocation
                     </span>
-                  </li>
-                  <li className="flex items-start justify-start gap-x-2 py-2.5">
-                    <CheckCircleIcon
-                      aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
-                    />
-                    <span>Secure against cache poisoning</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
@@ -176,6 +189,25 @@ export function RemoteCacheSolutions(): ReactElement {
                     <span>Free for all users</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
+                    <ExclamationCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
+                    <span>
+                      Not recommended for organizations requiring HIPAA or SOC-2
+                      compliance (
+                      <Link
+                        href="/enterprise/security"
+                        prefetch={false}
+                        title="Remote caching security"
+                        className="font-semibold underline"
+                      >
+                        Learn more
+                      </Link>
+                      )
+                    </span>
+                  </li>
+                  <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <CheckCircleIcon
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
@@ -198,23 +230,6 @@ export function RemoteCacheSolutions(): ReactElement {
                       Simple migration path from existing 3rd party plugins
                     </span>
                   </li>
-                  <li className="flex items-start justify-start gap-x-2 py-2.5">
-                    <CheckCircleIcon
-                      aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
-                    />
-                    <span>
-                      SOC-2 compliant (
-                      <a
-                        href="https://security.nx.app/"
-                        title="Check our SOC 2 security report"
-                        className="font-semibold underline"
-                      >
-                        view report
-                      </a>
-                      )
-                    </span>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -227,20 +242,12 @@ export function RemoteCacheSolutions(): ReactElement {
                   </h4>
                 </div>
                 <p className="mt-2 text-sm">
-                  API specs coming soon. See current{' '}
-                  <Link
-                    href="https://github.com/nrwl/nx/discussions/30548"
-                    title="See RFC on GitHub"
-                    className="italic underline"
-                  >
-                    RFC under review
-                  </Link>
-                  .
+                  Create your own custom remote cache server.
                 </p>
 
                 <div className="mt-8">
                   <ButtonLink
-                    href="https://github.com/nrwl/nx/discussions/30548"
+                    href="/recipes/running-tasks/self-hosted-caching#build-your-own-caching-server"
                     aria-describedby="open-api"
                     title="Remote cache api specs"
                     size="default"

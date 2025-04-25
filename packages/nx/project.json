@@ -115,7 +115,12 @@
         }
       ],
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/nx"],
+      "outputs": [
+        "{workspaceRoot}/build/packages/nx/**/*.{node,wasm,js,mjs,cjs}",
+        "{workspaceRoot}/build/packages/nx/src/core/graph",
+        "{workspaceRoot}/build/packages/nx/bin/nx.js",
+        "{workspaceRoot}/build/packages/nx/README.md"
+      ],
       "options": {
         "commands": [
           {

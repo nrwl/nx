@@ -3,6 +3,7 @@
   "implementation": "/packages/next/src/executors/server/server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "pipe",
     "cli": "nx",
     "title": "Next Serve",

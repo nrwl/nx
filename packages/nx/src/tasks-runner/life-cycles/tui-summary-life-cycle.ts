@@ -1,4 +1,5 @@
 import { EOL } from 'node:os';
+import { TaskStatus as NativeTaskStatus } from '../../native';
 import { Task } from '../../config/task-graph';
 import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
@@ -7,6 +8,7 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
 import figures = require('figures');
+import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -18,6 +20,7 @@ export function getTuiTerminalSummaryLifeCycle({
   args,
   overrides,
   initiatingProject,
+  initiatingTasks,
   resolveRenderIsDonePromise,
 }: {
   projectNames: string[];
@@ -25,6 +28,7 @@ export function getTuiTerminalSummaryLifeCycle({
   args: { targets?: string[]; configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
   initiatingProject: string;
+  initiatingTasks: Task[];
   resolveRenderIsDonePromise: (value: void) => void;
 }) {
   const lifeCycle = {} as Partial<LifeCycle>;
@@ -37,6 +41,7 @@ export function getTuiTerminalSummaryLifeCycle({
   let totalSuccessfulTasks = 0;
   let totalFailedTasks = 0;
   let totalCompletedTasks = 0;
+  let totalStoppedTasks = 0;
   let timeTakenText: string;
 
   const failedTasks = new Set<string>();
@@ -54,16 +59,22 @@ export function getTuiTerminalSummaryLifeCycle({
   };
 
   lifeCycle.printTaskTerminalOutput = (task, taskStatus, terminalOutput) => {
-    tasksToTerminalOutputs[task.id] = { terminalOutput, taskStatus };
     taskIdsInOrderOfCompletion.push(task.id);
+    tasksToTerminalOutputs[task.id] = { terminalOutput, taskStatus };
+  };
+
+  lifeCycle.setTaskStatus = (taskId, taskStatus) => {
+    if (taskStatus === NativeTaskStatus.Stopped) {
+      totalStoppedTasks++;
+    }
   };
 
   lifeCycle.endTasks = (taskResults) => {
-    for (let t of taskResults) {
+    for (const { task, status } of taskResults) {
       totalCompletedTasks++;
-      inProgressTasks.delete(t.task.id);
+      inProgressTasks.delete(task.id);
 
-      switch (t.status) {
+      switch (status) {
         case 'remote-cache':
         case 'local-cache':
         case 'local-cache-kept-existing':
@@ -75,7 +86,7 @@ export function getTuiTerminalSummaryLifeCycle({
           break;
         case 'failure':
           totalFailedTasks++;
-          failedTasks.add(t.task.id);
+          failedTasks.add(task.id);
           break;
       }
     }
@@ -102,11 +113,12 @@ export function getTuiTerminalSummaryLifeCycle({
     } else {
       printRunManySummary();
     }
+    getTasksHistoryLifeCycle()?.printFlakyTasksMessage();
   };
 
   const printRunOneSummary = () => {
     let lines: string[] = [];
-    const failure = totalSuccessfulTasks !== totalTasks;
+    const failure = totalSuccessfulTasks + totalStoppedTasks !== totalTasks;
 
     // Prints task outputs in the order they were completed
     // above the summary, since run-one should print all task results.
@@ -153,7 +165,7 @@ export function getTuiTerminalSummaryLifeCycle({
         );
       }
       lines = [output.colors.green(lines.join(EOL))];
-    } else if (totalCompletedTasks === totalTasks) {
+    } else if (totalCompletedTasks + totalStoppedTasks === totalTasks) {
       let text = `Ran target ${output.bold(
         targets[0]
       )} for project ${output.bold(initiatingProject)}`;
@@ -219,7 +231,7 @@ export function getTuiTerminalSummaryLifeCycle({
     console.log('');
 
     const lines: string[] = [];
-    const failure = totalSuccessfulTasks !== totalTasks;
+    const failure = totalSuccessfulTasks + totalStoppedTasks !== totalTasks;
 
     for (const taskId of taskIdsInOrderOfCompletion) {
       const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
@@ -241,7 +253,7 @@ export function getTuiTerminalSummaryLifeCycle({
 
     lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
 
-    if (totalSuccessfulTasks === totalTasks) {
+    if (totalSuccessfulTasks + totalStoppedTasks === totalTasks) {
       const successSummaryRows = [];
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,

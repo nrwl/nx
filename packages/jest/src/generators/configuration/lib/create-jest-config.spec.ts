@@ -75,11 +75,11 @@ describe('createJestConfig', () => {
       },
     });
     const expected = `
-import { getJestProjects } from '@nx/jest';
-export default {
-  projects: getJestProjects(),
+import { getJestProjectsAsync } from '@nx/jest';
+export default async () => ({
+  projects: await getJestProjectsAsync(),
   extraThing: "Goes Here"
-}
+});
 `;
     tree.write('jest.config.ts', expected);
 

@@ -26,7 +26,6 @@ export async function withModuleFederationForSSR(
     };
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: false,
     };
 
     config.plugins.push(
