@@ -795,7 +795,6 @@
       - [init](/nx-api/web/generators/init)
       - [application](/nx-api/web/generators/application)
       - [static-config](/nx-api/web/generators/static-config)
-    - [migrations](/nx-api/web/migrations)
   - [webpack](/nx-api/webpack)
     - [documents](/nx-api/webpack/documents)
       - [Overview](/nx-api/webpack/documents/overview)

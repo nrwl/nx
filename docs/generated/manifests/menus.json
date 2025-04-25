@@ -10937,14 +10937,6 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
-          },
-          {
-            "id": "migrations",
-            "path": "/nx-api/web/migrations",
-            "name": "migrations",
-            "children": [],
-            "isExternal": false,
-            "disableCollapsible": false
           }
         ],
         "isExternal": false,

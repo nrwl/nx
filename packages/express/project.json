@@ -44,11 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/express"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js express"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/express/README.md"],
+      "command": "node ./scripts/copy-readme.js express"
     }
   },
   "implicitDependencies": ["node"]

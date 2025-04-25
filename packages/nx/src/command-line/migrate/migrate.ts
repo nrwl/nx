@@ -1089,9 +1089,11 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } catch (e) {
-    logger.warn(
-      `Unable to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
-    );
+    output.warn({
+      title: `Failed to fetch migrations for ${packageName}@${packageVersion}`,
+      bodyLines: [e.message],
+    });
+    return {};
   } finally {
     await cleanup();
   }

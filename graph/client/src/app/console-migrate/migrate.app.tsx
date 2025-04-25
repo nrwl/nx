@@ -85,6 +85,13 @@ export function MigrateApp({
     });
   };
 
+  const onUndoMigration = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'undo-migration',
+      payload: { migration },
+    });
+  };
+
   const onViewImplementation = (migration: MigrationDetailsWithId) => {
     externalApiService.postEvent({
       type: 'view-implementation',
@@ -109,6 +116,7 @@ export function MigrateApp({
       onFinish={onFinish}
       onFileClick={onFileClick}
       onSkipMigration={onSkipMigration}
+      onUndoMigration={onUndoMigration}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
     ></MigrateUI>

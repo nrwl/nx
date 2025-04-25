@@ -290,6 +290,9 @@ export const PendingApproval: Story = {
     onSkipMigration: (migration) => {
       console.log('skip migration', migration);
     },
+    onUndoMigration: (migration) => {
+      console.log('undo migration', migration);
+    },
     onFileClick: (migration, file) => {
       console.log('file click', migration, file);
     },

@@ -254,8 +254,8 @@ impl<'a> TerminalPane<'a> {
             | TaskStatus::RemoteCache => Color::Green,
             TaskStatus::Failure => Color::Red,
             TaskStatus::Skipped => Color::Yellow,
-            TaskStatus::InProgress | TaskStatus::Shared=> Color::LightCyan,
-            TaskStatus::NotStarted | TaskStatus::Stopped=> Color::DarkGray,
+            TaskStatus::InProgress | TaskStatus::Shared => Color::LightCyan,
+            TaskStatus::NotStarted | TaskStatus::Stopped => Color::DarkGray,
         })
     }
 
@@ -420,7 +420,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         ScrollbarState::default()
                     };
 
-                    let pseudo_term = PseudoTerminal::new(&screen).block(block);
+                    let pseudo_term = PseudoTerminal::new(&*screen).block(block);
                     Widget::render(pseudo_term, area, buf);
 
                     // Only render scrollbar if needed
