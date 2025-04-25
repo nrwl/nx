@@ -74,7 +74,7 @@
       }
     },
     "build": {
-      "outputs": ["{workspaceRoot}/build/packages/workspace"],
+      "outputs": ["{workspaceRoot}/build/packages/workspace/README.md"],
       "command": "node ./scripts/copy-readme.js workspace"
     },
     "add-extra-dependencies": {
