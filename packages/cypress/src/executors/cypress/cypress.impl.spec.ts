@@ -22,7 +22,6 @@ describe('Cypress builder', () => {
   const cypressOptions: CypressExecutorOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,
-    tsConfig: 'apps/my-app-e2e/tsconfig.json',
     devServerTarget: 'my-app:serve',
     exit: true,
     record: false,
@@ -270,7 +269,6 @@ A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v1
     const { success } = await cypressExecutor(
       {
         cypressConfig: 'apps/my-app-e2e/cypress.json',
-        tsConfig: 'apps/my-app-e2e/tsconfig.json',
         devServerTarget: undefined,
         headless: true,
         exit: true,
