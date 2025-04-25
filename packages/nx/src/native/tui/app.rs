@@ -182,7 +182,6 @@ impl App {
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
-        task_status: TaskStatus,
     ) {
         if let Some(tasks_list) = self
             .components
@@ -190,7 +189,7 @@ impl App {
             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
         {
             tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-            tasks_list.update_task_status(task_id.clone(), task_status);
+            tasks_list.set_task_status(task_id.clone(), TaskStatus::InProgress);
         }
     }
 
@@ -203,7 +202,7 @@ impl App {
             let (_, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
 
             tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-            tasks_list.update_task_status(task_id.clone(), TaskStatus::InProgress);
+            tasks_list.set_task_status(task_id.clone(), TaskStatus::InProgress);
             let _ = tasks_list.handle_resize(None);
         }
     }

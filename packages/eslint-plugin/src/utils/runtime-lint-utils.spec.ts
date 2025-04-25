@@ -14,8 +14,9 @@ import {
   hasBannedDependencies,
   hasBannedImport,
   hasNoneOfTheseTags,
-  belongsToDifferentNgEntryPoint,
+  belongsToDifferentEntryPoint,
   isTerminalRun,
+  parseExports,
 } from './runtime-lint-utils';
 import { vol } from 'memfs';
 
@@ -486,14 +487,14 @@ describe('isAngularSecondaryEntrypoint', () => {
   it('should return false if they belong to same entrypoints', () => {
     // main
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/standard',
         'libs/standard/src/subfolder/index.ts',
         'libs/standard'
       )
     ).toBe(false);
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/features',
         'libs/features/src/subfolder/index.ts',
         'libs/features'
@@ -501,14 +502,14 @@ describe('isAngularSecondaryEntrypoint', () => {
     ).toBe(false);
     // secondary
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/standard/secondary',
         'libs/standard/secondary/src/subfolder/index.ts',
         'libs/standard'
       )
     ).toBe(false);
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/features/secondary',
         'libs/features/secondary/random/folder/src/index.ts',
         'libs/features'
@@ -519,14 +520,14 @@ describe('isAngularSecondaryEntrypoint', () => {
   it('should return true if they belong to different entrypoints', () => {
     // main
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/standard',
         'libs/standard/secondary/src/subfolder/index.ts',
         'libs/standard'
       )
     ).toBe(true);
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/features',
         'libs/features/secondary/random/folder/src/index.ts',
         'libs/features'
@@ -534,14 +535,14 @@ describe('isAngularSecondaryEntrypoint', () => {
     ).toBe(true);
     // secondary
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/standard/secondary',
         'libs/standard/src/subfolder/index.ts',
         'libs/standard'
       )
     ).toBe(true);
     expect(
-      belongsToDifferentNgEntryPoint(
+      belongsToDifferentEntryPoint(
         '@project/features/secondary',
         'libs/features/src/subfolder/index.ts',
         'libs/features'
@@ -655,5 +656,90 @@ describe('appIsMFERemote', () => {
   });
   it('should return true for remote apps with no mfe config', () => {
     expect(appIsMFERemote(targetNone)).toBe(false);
+  });
+});
+
+describe('parseExports', () => {
+  it('should return empty array if exports is a string', () => {
+    const result = [];
+    parseExports('index.js', '/root', result);
+    expect(result).toEqual([]);
+  });
+  it('should return empty array if only default conditional exports', () => {
+    const result = [];
+    parseExports({ default: 'index.js', import: 'index.mjs' }, '/root', result);
+    expect(result).toEqual([]);
+  });
+  it('should return empty array if only default require exports', () => {
+    const result = [];
+    parseExports({ require: 'index.cjs' }, '/root', result);
+    expect(result).toEqual([]);
+  });
+  it('should return empty array if only default import exports', () => {
+    const result = [];
+    parseExports({ import: 'index.mjs' }, '/root', result);
+    expect(result).toEqual([]);
+  });
+  it('should return empty array if only default import exports', () => {
+    const result = [];
+    parseExports({ '.': 'index.js' }, '/root', result);
+    expect(result).toEqual([]);
+  });
+  it('should return secondary entry point if exists', () => {
+    const result = [];
+    parseExports(
+      { '.': './src/index.js', './secondary': './src/secondary.js' },
+      '/root',
+      result
+    );
+    expect(result).toEqual([
+      { file: '/root/src/secondary.js', path: '/root/secondary' },
+    ]);
+  });
+  it('should return nested secondary entry point with default export', () => {
+    const result = [];
+    parseExports(
+      { '.': './src/index.js', './secondary': './src/secondary.js' },
+      '/root',
+      result
+    );
+    expect(result).toEqual([
+      { file: '/root/src/secondary.js', path: '/root/secondary' },
+    ]);
+  });
+  it('should return nested conditionalsecondary entry point with default export', () => {
+    const result = [];
+    parseExports(
+      {
+        '.': './src/index.js',
+        './secondary': {
+          default: './src/secondary.js',
+          import: './src/secondary.mjs',
+          require: './src/secondary.cjs',
+        },
+      },
+      '/root',
+      result
+    );
+    expect(result).toEqual([
+      { file: '/root/src/secondary.js', path: '/root/secondary' },
+    ]);
+  });
+  it('should ignore root and null exports', () => {
+    const result = [];
+    parseExports(
+      {
+        '.': './src/index.js',
+        './secondary': './src/secondary.js',
+        './tertiary': './src/tertiary.js',
+        './tertiary/private': null,
+      },
+      '/root',
+      result
+    );
+    expect(result).toEqual([
+      { file: '/root/src/secondary.js', path: '/root/secondary' },
+      { file: '/root/src/tertiary.js', path: '/root/tertiary' },
+    ]);
   });
 });

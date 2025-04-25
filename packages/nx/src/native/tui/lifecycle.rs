@@ -238,7 +238,7 @@ impl AppLifeCycle {
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
         let mut app = self.app.lock().unwrap();
-        app.register_running_task(task_id, parser_and_writer, TaskStatus::InProgress)
+        app.register_running_task(task_id, parser_and_writer)
     }
 
     #[napi]

@@ -388,6 +388,7 @@ module.exports.getTransformableOutputs = nativeBinding.getTransformableOutputs
 module.exports.hashArray = nativeBinding.hashArray
 module.exports.hashFile = nativeBinding.hashFile
 module.exports.IS_WASM = nativeBinding.IS_WASM
+module.exports.parseTaskStatus = nativeBinding.parseTaskStatus
 module.exports.remove = nativeBinding.remove
 module.exports.restoreTerminal = nativeBinding.restoreTerminal
 module.exports.TaskStatus = nativeBinding.TaskStatus

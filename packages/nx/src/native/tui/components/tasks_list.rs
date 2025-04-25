@@ -152,6 +152,11 @@ impl std::str::FromStr for TaskStatus {
     }
 }
 
+#[napi]
+pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
+    string_status.as_str().parse().map_err(napi::Error::from_reason)
+}
+
 /// A list component that displays and manages tasks in a terminal UI.
 /// Provides filtering, sorting, and output display capabilities.
 pub struct TasksList {
@@ -927,12 +932,12 @@ impl TasksList {
         self.sort_tasks();
     }
 
-    /// Updates their status to InProgress and triggers a sort.
+    /// Updates a task's status and triggers a sort of the list.
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
             task_item.update_status(status);
+            self.sort_tasks();
         }
-        self.sort_tasks();
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
@@ -942,9 +947,6 @@ impl TasksList {
                 .iter_mut()
                 .find(|t| t.name == task_result.task.id)
             {
-                let parsed_status = task_result.status.parse().unwrap();
-                task.update_status(parsed_status);
-
                 if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
                     task.start_time = Some(task_result.task.start_time.unwrap() as u128);
                     task.end_time = Some(task_result.task.end_time.unwrap() as u128);
@@ -958,13 +960,6 @@ impl TasksList {
         self.sort_tasks();
         // Re-evaluate the optimal size of the terminal pane and pty because the newly available task outputs might already be being displayed
         let _ = self.handle_resize(None);
-    }
-
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.name == task_id) {
-            task.update_status(status);
-            self.sort_tasks();
-        }
     }
 
     /// Toggles the visibility of the task list panel
@@ -1108,6 +1103,7 @@ impl Component for TasksList {
                         TaskStatus::Success
                             | TaskStatus::Failure
                             | TaskStatus::Skipped
+                            | TaskStatus::Stopped
                             | TaskStatus::LocalCache
                             | TaskStatus::LocalCacheKeptExisting
                             | TaskStatus::RemoteCache
