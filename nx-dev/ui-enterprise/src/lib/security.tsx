@@ -1,10 +1,12 @@
 import {
+  BuildingOfficeIcon,
   GlobeAmericasIcon,
   ServerStackIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { SectionHeading } from '@nx/nx-dev/ui-common';
 import { ReactElement } from 'react';
+import Link from 'next/link';
 
 export function Security(): ReactElement {
   return (
@@ -96,6 +98,31 @@ export function Security(): ReactElement {
                   We support region specific hosting of Nx Cloud in the event IT
                   security or data protection policies restrict international
                   transfers.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-4">
+              <BuildingOfficeIcon
+                aria-hidden="true"
+                className="size-6 shrink-0"
+              />
+              <div>
+                <h4 className="relative text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
+                  Enterprise-grade CI security
+                </h4>
+                <p className="mt-2">
+                  Protect your codebase from artifact poisoning with
+                  infrastructure-first-safeguards, ensuring compliance in
+                  regulated industries (
+                  <Link
+                    href="/enterprise/security"
+                    title="Enterprise-grade CI security"
+                    className="font-semibold"
+                  >
+                    Learn more
+                  </Link>
+                  )
                 </p>
               </div>
             </div>
