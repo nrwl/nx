@@ -1,6 +1,6 @@
 #### Replace Usage of `getJestProjects` with `getJestProjectsAsync`
 
-Replaces the usage of the deprecated `getJestProjects` function with the `getJestProjectsAsync` function.
+Replaces the usage of the removed `getJestProjects` function with the `getJestProjectsAsync` function.
 
 #### Sample Code Changes
 

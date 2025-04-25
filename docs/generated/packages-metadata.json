@@ -2413,7 +2413,17 @@
     ],
     "migrations": [
       {
-        "description": "replace getJestProjects with getJestProjectsAsync",
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+        "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
+        "hidden": false,
+        "name": "replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "version": "21.0.0-beta.9",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "type": "migration"
+      },
+      {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
         "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync.json",
         "hidden": false,
         "name": "replace-getJestProjects-with-getJestProjectsAsync",
