@@ -76,7 +76,6 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { dirSync } from 'tmp';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1394,7 +1393,6 @@ function addSplitConfigurationMigrationIfAvailable(
         version: '15.7.0-beta.0',
         description:
           'Split global configuration files into individual project.json files. This migration has been added automatically to the beginning of your migration set to retroactively make them work with the new version of Nx.',
-        cli: 'nx',
         implementation:
           './src/migrations/update-15-7-0/split-configuration-into-project-json-files',
         package: '@nrwl/workspace',
@@ -1447,7 +1445,6 @@ export async function executeMigrations(
     name: string;
     description?: string;
     version: string;
-    cli?: 'nx' | 'angular';
   }[],
   isVerbose: boolean,
   shouldCreateCommits: boolean,
@@ -1528,7 +1525,6 @@ export async function runNxOrAngularMigration(
     name: string;
     description?: string;
     version: string;
-    cli?: 'nx' | 'angular';
   },
   isVerbose: boolean,
   shouldCreateCommits: boolean,
@@ -1545,7 +1541,7 @@ export async function runNxOrAngularMigration(
     root
   );
   let changes: FileChange[] = [];
-  if (!isAngularMigration(collection, collectionPath, migration.name)) {
+  if (!isAngularMigration(collection, migration.name)) {
     changes = await runNxMigration(
       root,
       collectionPath,
@@ -1662,7 +1658,6 @@ async function runMigrations(
     package: string;
     name: string;
     version: string;
-    cli?: 'nx' | 'angular';
   }[] = readJsonFile(join(root, opts.runMigrations)).migrations;
 
   const migrationsWithNoChanges = await executeMigrations(
@@ -1894,29 +1889,8 @@ function addToNodePath(dir: string) {
   process.env.NODE_PATH = paths.join(delimiter);
 }
 
-// TODO (v21): Remove CLI determination of Angular Migration
-function isAngularMigration(
-  collection: MigrationsJson,
-  collectionPath: string,
-  name: string
-) {
-  const entry = collection.generators?.[name] || collection.schematics?.[name];
-  const shouldBeNx = !!collection.generators?.[name];
-  const shouldBeNg = !!collection.schematics?.[name];
-  if (entry.cli && entry.cli !== 'nx' && collection.generators?.[name]) {
-    output.warn({
-      title: `The migration '${collection.name}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
-      bodyLines: [
-        'In Nx 21, migrations inside `generators` will be treated as Nx Devkit migrations and therefore may not run correctly if they are using Angular Devkit.',
-        'If the migration should be run with Angular Devkit, please place the migration inside `schematics` instead.',
-        "Please open an issue on the plugin's repository if you believe this is an error.",
-      ],
-    });
-  }
-
-  // Currently, if the cli property exists we listen to it. If its nx, its not an ng cli migration.
-  // If the property is not set, we will fall back to our intuition.
-  return entry.cli ? entry.cli !== 'nx' : !shouldBeNx && shouldBeNg;
+function isAngularMigration(collection: MigrationsJson, name: string) {
+  return !collection.generators?.[name] && collection.schematics?.[name];
 }
 
 const getNgCompatLayer = (() => {

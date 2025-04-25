@@ -14,7 +14,6 @@ export async function repair(
         if (!skip) {
           agg.push({
             package: 'nx',
-            cli: 'nx',
             name,
             description: migration.description,
             version: migration.version,
