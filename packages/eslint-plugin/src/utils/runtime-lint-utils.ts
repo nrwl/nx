@@ -210,7 +210,9 @@ export function hasStaticImportOfDynamicResource(
     | TSESTree.ExportNamedDeclaration,
   graph: ProjectGraph,
   sourceProjectName: string,
-  targetProjectName: string
+  targetProjectName: string,
+  importExpr: string,
+  filePath: string
 ): boolean {
   if (
     node.type !== AST_NODE_TYPES.ImportDeclaration ||
@@ -218,10 +220,17 @@ export function hasStaticImportOfDynamicResource(
   ) {
     return false;
   }
-  return onlyLoadChildren(graph, sourceProjectName, targetProjectName, []);
+  return (
+    hasDynamicImport(graph, sourceProjectName, targetProjectName, []) &&
+    !getSecondaryEntryPointPath(
+      importExpr,
+      filePath,
+      graph.nodes[targetProjectName].data.root
+    )
+  );
 }
 
-function onlyLoadChildren(
+function hasDynamicImport(
   graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
@@ -238,7 +247,7 @@ function onlyLoadChildren(
       if (d.target === targetProjectName) {
         return true;
       }
-      return onlyLoadChildren(graph, d.target, targetProjectName, [
+      return hasDynamicImport(graph, d.target, targetProjectName, [
         ...visited,
         sourceProjectName,
       ]);
@@ -490,35 +499,57 @@ export function groupImports(
 /**
  * Checks if source file belongs to a secondary entry point different than the import one
  */
-export function belongsToDifferentNgEntryPoint(
+export function belongsToDifferentEntryPoint(
   importExpr: string,
   filePath: string,
   projectRoot: string
 ): boolean {
-  const resolvedImportFile = resolveModuleByImport(
+  const importEntryPoint = getSecondaryEntryPointPath(
     importExpr,
-    filePath, // not strictly necessary, but speeds up resolution
-    path.join(workspaceRoot, getRootTsConfigFileName())
-  );
-
-  if (!resolvedImportFile) {
-    return false;
-  }
-
-  const importEntryPoint = getAngularEntryPoint(
-    resolvedImportFile,
+    filePath,
     projectRoot
   );
-  const srcEntryPoint = getAngularEntryPoint(filePath, projectRoot);
+  const srcEntryPoint = getEntryPoint(filePath, projectRoot);
 
   // check if the entry point of import expression is different than the source file's entry point
   return importEntryPoint !== srcEntryPoint;
 }
 
-function getAngularEntryPoint(file: string, projectRoot: string): string {
+export function getSecondaryEntryPointPath(
+  importExpr: string,
+  filePath: string,
+  projectRoot: string
+): string | undefined {
+  const resolvedImportFile = resolveModuleByImport(
+    importExpr,
+    filePath, // not strictly necessary, but speeds up resolution
+    path.join(workspaceRoot, getRootTsConfigFileName())
+  );
+  if (!resolvedImportFile) {
+    return undefined;
+  }
+  const entryPoint = getEntryPoint(resolvedImportFile, projectRoot);
+  return entryPoint;
+}
+
+function getEntryPoint(file: string, projectRoot: string): string {
+  const packageEntryPoints = getPackageEntryPoints(projectRoot);
+  const fileEntryPoint = packageEntryPoints.find(
+    (entry) => entry.file === file
+  );
+  if (fileEntryPoint) {
+    return fileEntryPoint.file;
+  }
+
   let parent = joinPathFragments(file, '../');
   while (parent !== `${projectRoot}/`) {
-    // we need to find closest existing ng-package.json
+    const entryPoint = packageEntryPoints.find(
+      (entry) => entry.path === parent
+    );
+    if (entryPoint) {
+      return entryPoint.file;
+    }
+    // for Angular we need to find closest existing ng-package.json
     // in order to determine if the file matches the secondary entry point
     const ngPackageContent = readFileIfExisting(
       path.join(workspaceRoot, parent, 'ng-package.json')
@@ -531,6 +562,62 @@ function getAngularEntryPoint(file: string, projectRoot: string): string {
     parent = joinPathFragments(parent, '../');
   }
   return undefined;
+}
+
+function getPackageEntryPoints(
+  projectRoot: string
+): Array<{ path: string; file: string }> {
+  const packageContent = readFileIfExisting(
+    path.join(workspaceRoot, projectRoot, 'package.json')
+  );
+  if (!packageContent) {
+    return [];
+  }
+  const exports = parseJson(packageContent).exports;
+  if (!exports) {
+    return [];
+  }
+  const entryPaths: Array<{ path: string; file: string }> = [];
+  parseExports(exports, projectRoot, entryPaths);
+  return entryPaths;
+}
+
+export function parseExports(
+  exports: string | null | Record<string, any>,
+  projectRoot: string,
+  entryPaths: Array<{ path: string; file: string }>,
+  basePath: string = '.'
+): Array<{ path: string; file: string }> {
+  if (exports === null) {
+    return;
+  }
+  if (typeof exports === 'string') {
+    if (basePath === '.') {
+      return;
+    } else {
+      entryPaths.push({
+        path: joinPathFragments(projectRoot, basePath),
+        file: joinPathFragments(projectRoot, exports),
+      });
+      return;
+    }
+  }
+
+  // parse conditional exports
+  if (exports.import || exports.require || exports.default || exports.node) {
+    parseExports(
+      exports.default || exports.import || exports.require || exports.node,
+      projectRoot,
+      entryPaths,
+      basePath
+    );
+    return;
+  }
+
+  // parse general nested exports
+  for (const [key, value] of Object.entries(exports)) {
+    parseExports(value, projectRoot, entryPaths, key);
+  }
 }
 
 /**
