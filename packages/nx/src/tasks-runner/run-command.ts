@@ -40,7 +40,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraph, createTaskId } from './create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 import { isTuiEnabled } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
@@ -53,8 +53,7 @@ import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
-import { LegacyTaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle-old';
+import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -803,7 +802,10 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   }
 }
 
-function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
+export function setEnvVarsBasedOnArgs(
+  nxArgs: NxArgs,
+  loadDotEnvFiles: boolean
+) {
   if (
     nxArgs.outputStyle == 'stream' ||
     process.env.NX_BATCH_MODE === 'true' ||
@@ -961,12 +963,9 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  if (!isNxCloudUsed(readNxJson())) {
-    lifeCycles.push(
-      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
-        ? new TaskHistoryLifeCycle()
-        : new LegacyTaskHistoryLifeCycle()
-    );
+  const historyLifeCycle = getTasksHistoryLifeCycle();
+  if (historyLifeCycle) {
+    lifeCycles.push(historyLifeCycle);
   }
   return lifeCycles;
 }

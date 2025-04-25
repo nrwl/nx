@@ -33,6 +33,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { getInstalledJestMajorVersion } from '../utils/version-utils';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { normalize, sep } from 'node:path';
+import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 
 const pmc = getPackageManagerCommand();
 
@@ -654,7 +655,7 @@ function resolveJestPath(projectRoot: string, workspaceRoot: string): string {
   }
 
   resolvedJestPaths[projectRoot] = require.resolve('jest', {
-    paths: [projectRoot, workspaceRoot, __dirname],
+    paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
   });
 
   return resolvedJestPaths[projectRoot];

@@ -1,3 +1,4 @@
+import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJson } from '../config/nx-json';
 import { NxArgs } from '../utils/command-line-utils';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
@@ -6,6 +7,7 @@ import {
   constructLifeCycles,
   getRunner,
   invokeTasksRunner,
+  setEnvVarsBasedOnArgs,
 } from './run-command';
 import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
 import { performance } from 'perf_hooks';
@@ -15,7 +17,6 @@ import { CompositeLifeCycle, LifeCycle, TaskResult } from './life-cycle';
 import { TaskOrchestrator } from './task-orchestrator';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 import type { ProjectGraph } from '../config/project-graph';
-import type { NxJsonConfiguration } from '../config/nx-json';
 import { daemonClient } from '../daemon/client/client';
 import { RunningTask } from './running-tasks/running-task';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
@@ -133,6 +134,13 @@ async function createOrchestrator(
     }, {} as any),
   };
 
+  const nxArgs = {
+    ...options,
+    parallel: tasks.length,
+    lifeCycle: compositedLifeCycle,
+  };
+  setEnvVarsBasedOnArgs(nxArgs, true);
+
   const orchestrator = new TaskOrchestrator(
     hasher,
     null,
@@ -140,7 +148,7 @@ async function createOrchestrator(
     projectGraph,
     taskGraph,
     nxJson,
-    { ...options, parallel: tasks.length, lifeCycle: compositedLifeCycle },
+    nxArgs,
     false,
     daemonClient,
     undefined,
@@ -149,7 +157,7 @@ async function createOrchestrator(
 
   await orchestrator.init();
 
-  await Promise.all(tasks.map((task) => orchestrator.processTask(task.id)));
+  orchestrator.processTasks(tasks.map((task) => task.id));
 
   return orchestrator;
 }

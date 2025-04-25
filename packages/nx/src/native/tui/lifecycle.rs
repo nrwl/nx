@@ -242,6 +242,18 @@ impl AppLifeCycle {
     }
 
     #[napi]
+    pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
+        let mut app = self.app.lock().unwrap();
+        app.register_running_task_with_empty_parser(task_id)
+    }
+
+    #[napi]
+    pub fn append_task_output(&mut self, task_id: String, output: String) {
+        let mut app = self.app.lock().unwrap();
+        app.append_task_output(task_id, output)
+    }
+
+    #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         let mut app = self.app.lock().unwrap();
         app.set_task_status(task_id, status)

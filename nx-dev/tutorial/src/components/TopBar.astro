@@ -1,9 +1,16 @@
 ---
+import { GlobalCustomizations } from "./GlobalCustomizations";
 import { FrontendObservability } from "./Observability";
+import { getCollection } from 'astro:content';
+const entries = await getCollection('tutorial', ({ slug }) => {
+  return slug.startsWith(Astro.url.pathname.replace('/tutorials/', ''));
+});
+const customMeta = (entries[0]?.data as any)?.custom;
+const addedClass = [customMeta?.first && 'first-lesson', customMeta?.last && 'last-lesson', ' '].filter(Boolean).join(' ');
 ---
 
-<nav
-  class="bg-tk-elements-panel-header-backgroundColor transition-theme border-b border-tk-elements-app-borderColor flex max-w-full min-h-[68px]"
+<nav id="top-bar"
+  class={addedClass + "bg-tk-elements-panel-header-backgroundColor transition-theme border-b border-tk-elements-app-borderColor flex max-w-full min-h-[68px]"}
 >
   <div class="flex flex-1 p-1 gap-4 lg:px-8 lg:py-3 text-tk-elements-app-textColor items-center">
     <a
@@ -28,4 +35,5 @@ import { FrontendObservability } from "./Observability";
     </div>
   </div>
   <FrontendObservability client:load />
+  <GlobalCustomizations client:load />
 </nav>

@@ -234,3 +234,76 @@ export const AllCompleted: Story = {
     },
   },
 };
+
+export const PendingApproval: Story = {
+  args: {
+    currentMigrationId: 'migration-2',
+    migrations: [
+      {
+        id: 'migration-1',
+        name: 'migration-1',
+        description: 'Migrate 1',
+        version: '1.0.0',
+        package: 'nx',
+        implementation: './src/migrations/migration-1.ts',
+      },
+      {
+        id: 'migration-2',
+        name: 'migration-2',
+        description: 'Migrate 2',
+        version: '1.0.1',
+        package: '@nx/react',
+        implementation: './src/migrations/migration-2.ts',
+      },
+      {
+        id: 'migration-3',
+        name: 'migration-3',
+        description: 'Migrate 3',
+        version: '1.0.1',
+        package: '@nx/react',
+        implementation: './src/migrations/migration-3.ts',
+      },
+    ],
+    nxConsoleMetadata: {
+      completedMigrations: {
+        'migration-1': {
+          name: 'migration-1',
+          type: 'successful',
+          changedFiles: [],
+          ref: '123',
+        },
+        'migration-2': {
+          name: 'migration-2',
+          type: 'successful',
+          changedFiles: [{ path: 'foo.txt', type: 'CREATE' }],
+          ref: '124',
+        },
+      },
+      targetVersion: '20.3.2',
+    },
+    onRunMigration: (migration) => {
+      console.log('run migration', migration);
+    },
+    onRunMany: (migrations, configuration) => {
+      console.log('run many migrations', migrations, configuration);
+    },
+    onSkipMigration: (migration) => {
+      console.log('skip migration', migration);
+    },
+    onFileClick: (migration, file) => {
+      console.log('file click', migration, file);
+    },
+    onViewImplementation: (migration) => {
+      console.log('view implementation', migration);
+    },
+    onViewDocumentation: (migration) => {
+      console.log('view documentation', migration);
+    },
+    onCancel: () => {
+      console.log('cancel');
+    },
+    onFinish: (squash: boolean) => {
+      console.log('finished', squash);
+    },
+  },
+};

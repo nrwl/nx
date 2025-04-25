@@ -1,6 +1,8 @@
 import tutorialkit from '@tutorialkit/astro';
 import { defineConfig, envField } from 'astro/config';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { runInTerminalPlugin } from './src/code-block-button/run-in-terminal-plugin';
+import { applyFileChangesPlugin } from './src/code-block-button/apply-file-changes-plugin';
 
 export const config = defineConfig({
   base: '/tutorials',
@@ -45,6 +47,8 @@ export const config = defineConfig({
         HeadTags: './src/components/HeadTags.astro',
         TopBar: './src/components/TopBar.astro',
       },
+      defaultRoutes: 'tutorial-only',
+      expressiveCodePlugins: [runInTerminalPlugin(), applyFileChangesPlugin()],
     }),
   ],
 });

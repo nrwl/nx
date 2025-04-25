@@ -110,6 +110,7 @@ export interface ExecutorConfig {
   schema: {
     version?: number;
     outputCapture?: OutputCaptureMethod;
+    continuous?: boolean;
   } & Schema;
   hasherFactory?: () => CustomHasher;
   implementationFactory: () => Executor;
