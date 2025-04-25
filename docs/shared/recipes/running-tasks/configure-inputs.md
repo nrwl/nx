@@ -169,7 +169,7 @@ Plugins which define compile or bundling tasks such as `@nx/webpack/plugin` and 
 
 ```jsonc
 "inputs": [
-  "production", // All files in a project including test files
+  "production", // All files in a project excluding test files
   "^production" // Inputs of a dependencies which may affect behavior of projects which depend on them
 ]
 ```
