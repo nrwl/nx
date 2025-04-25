@@ -12,7 +12,10 @@ import { ExecutorContext } from '../../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
 import { isAsyncIterator } from '../../utils/async-iterator';
-import { getExecutorInformation } from '../../command-line/run/executor-utils';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../../command-line/run/executor-utils';
 import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { ProjectGraph } from '../../config/project-graph';
 
@@ -20,7 +23,7 @@ function getBatchExecutor(
   executorName: string,
   projects: Record<string, ProjectConfiguration>
 ) {
-  const [nodeModule, exportName] = executorName.split(':');
+  const [nodeModule, exportName] = parseExecutor(executorName);
   return getExecutorInformation(
     nodeModule,
     exportName,

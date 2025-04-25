@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  parseTaskStatus,
   RunningTasksService,
   TaskDetails,
   TaskStatus as NativeTaskStatus,
@@ -199,8 +200,17 @@ export class TaskOrchestrator {
     );
   }
 
+  processTasks(taskIds: string[]) {
+    for (const taskId of taskIds) {
+      // Task is already handled or being handled
+      if (!this.processedTasks.has(taskId)) {
+        this.processedTasks.set(taskId, this.processTask(taskId));
+      }
+    }
+  }
+
   // region Processing Scheduled Tasks
-  async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
+  private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
     const taskSpecificEnv = getTaskSpecificEnv(task);
 
@@ -245,12 +255,7 @@ export class TaskOrchestrator {
     for (const batch of scheduledBatches) {
       this.processedBatches.set(batch, this.processScheduledBatch(batch));
     }
-    for (const taskId of scheduledTasks) {
-      // Task is already handled or being handled
-      if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processTask(taskId));
-      }
-    }
+    this.processTasks(scheduledTasks);
   }
 
   // endregion Processing Scheduled Tasks
@@ -874,6 +879,10 @@ export class TaskOrchestrator {
     for (const { taskId, status } of taskResults) {
       if (this.completedTasks[taskId] === undefined) {
         this.completedTasks[taskId] = status;
+
+        if (this.tuiEnabled) {
+          this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+        }
 
         if (status === 'failure' || status === 'skipped') {
           if (this.bail) {

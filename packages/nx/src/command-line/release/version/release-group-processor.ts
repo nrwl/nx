@@ -1,5 +1,8 @@
 import * as semver from 'semver';
-import { NxReleaseVersionV2Configuration } from '../../../config/nx-json';
+import {
+  ManifestRootToUpdate,
+  NxReleaseVersionConfiguration,
+} from '../../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
@@ -32,14 +35,15 @@ import {
  * and referenced throughout the versioning process.
  */
 export interface FinalConfigForProject {
-  specifierSource: NxReleaseVersionV2Configuration['specifierSource'];
-  currentVersionResolver: NxReleaseVersionV2Configuration['currentVersionResolver'];
-  currentVersionResolverMetadata: NxReleaseVersionV2Configuration['currentVersionResolverMetadata'];
-  fallbackCurrentVersionResolver: NxReleaseVersionV2Configuration['fallbackCurrentVersionResolver'];
-  versionPrefix: NxReleaseVersionV2Configuration['versionPrefix'];
-  preserveLocalDependencyProtocols: NxReleaseVersionV2Configuration['preserveLocalDependencyProtocols'];
-  versionActionsOptions: NxReleaseVersionV2Configuration['versionActionsOptions'];
-  manifestRootsToUpdate: NxReleaseVersionV2Configuration['manifestRootsToUpdate'];
+  specifierSource: NxReleaseVersionConfiguration['specifierSource'];
+  currentVersionResolver: NxReleaseVersionConfiguration['currentVersionResolver'];
+  currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata'];
+  fallbackCurrentVersionResolver: NxReleaseVersionConfiguration['fallbackCurrentVersionResolver'];
+  versionPrefix: NxReleaseVersionConfiguration['versionPrefix'];
+  preserveLocalDependencyProtocols: NxReleaseVersionConfiguration['preserveLocalDependencyProtocols'];
+  versionActionsOptions: NxReleaseVersionConfiguration['versionActionsOptions'];
+  // Consistently expanded to the object form for easier processing in VersionActions
+  manifestRootsToUpdate: Array<Exclude<ManifestRootToUpdate, string>>;
 }
 
 interface GroupNode {
@@ -80,6 +84,8 @@ interface ReleaseGroupProcessorOptions {
     projects?: string[];
     groups?: string[];
   };
+  // Optional overrides that may be passed in from the programmatic API
+  versionActionsOptionsOverrides?: Record<string, unknown>;
 }
 
 export class ReleaseGroupProcessor {
@@ -354,6 +360,15 @@ export class ReleaseGroupProcessor {
         );
         this.cachedCurrentVersions.set(projectName, currentVersion);
       }
+
+      // Ensure that there is an entry in versionData for each project being processed, even if they don't end up being bumped
+      for (const projectName of this.allProjectsToProcess) {
+        this.versionData.set(projectName, {
+          currentVersion: this.getCurrentCachedVersionForProject(projectName),
+          newVersion: null,
+          dependentProjects: this.getOriginalDependentProjects(projectName),
+        });
+      }
     }
 
     // Build the dependency relationships between groups
@@ -384,7 +399,7 @@ export class ReleaseGroupProcessor {
 
         // Cache updateDependents setting relevant for each project
         const updateDependents =
-          ((group.version as NxReleaseVersionV2Configuration)
+          ((group.version as NxReleaseVersionConfiguration)
             ?.updateDependents as 'auto' | 'never') || 'auto';
         this.projectToUpdateDependentsSetting.set(project, updateDependents);
       }
@@ -1109,7 +1124,7 @@ export class ReleaseGroupProcessor {
 
   private getCachedFinalConfigForProject(
     projectName: string
-  ): NxReleaseVersionV2Configuration {
+  ): NxReleaseVersionConfiguration {
     const cachedFinalConfig = this.finalConfigsByProject.get(projectName);
     if (!cachedFinalConfig) {
       throw new Error(
@@ -1128,10 +1143,10 @@ export class ReleaseGroupProcessor {
     projectGraphNode: ProjectGraphProjectNode
   ): FinalConfigForProject {
     const releaseGroupVersionConfig = releaseGroup.version as
-      | NxReleaseVersionV2Configuration
+      | NxReleaseVersionConfiguration
       | undefined;
     const projectVersionConfig = projectGraphNode.data.release?.version as
-      | NxReleaseVersionV2Configuration
+      | NxReleaseVersionConfiguration
       | undefined;
 
     /**
@@ -1210,15 +1225,30 @@ Valid values are: ${validReleaseVersionPrefixes
     /**
      * versionActionsOptions, defaults to {}
      */
-    const versionActionsOptions =
+    let versionActionsOptions =
       projectVersionConfig?.versionActionsOptions ??
       releaseGroupVersionConfig?.versionActionsOptions ??
       {};
+    // Apply any optional overrides that may be passed in from the programmatic API
+    versionActionsOptions = {
+      ...versionActionsOptions,
+      ...(this.options.versionActionsOptionsOverrides ?? {}),
+    };
 
-    const manifestRootsToUpdate =
+    const manifestRootsToUpdate = (
       projectVersionConfig?.manifestRootsToUpdate ??
       releaseGroupVersionConfig?.manifestRootsToUpdate ??
-      [];
+      []
+    ).map((manifestRoot) => {
+      if (typeof manifestRoot === 'string') {
+        return {
+          path: manifestRoot,
+          // Apply the project level preserveLocalDependencyProtocols setting that was already resolved
+          preserveLocalDependencyProtocols,
+        };
+      }
+      return manifestRoot;
+    });
 
     return {
       specifierSource,
@@ -1284,16 +1314,6 @@ Valid values are: ${validReleaseVersionPrefixes
           if (!currentDependencyVersion) {
             continue;
           }
-          // If preserveLocalDependencyProtocols is true, and the dependency uses a local dependency protocol, skip updating the dependency
-          if (
-            cachedFinalConfigForProject.preserveLocalDependencyProtocols &&
-            (await versionActions.isLocalDependencyProtocol(
-              currentDependencyVersion
-            ))
-          ) {
-            continue;
-          }
-
           let finalPrefix = '';
           if (cachedFinalConfigForProject.versionPrefix === 'auto') {
             const prefixMatch = currentDependencyVersion?.match(/^([~^=])/);
@@ -1380,7 +1400,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     const releaseGroup = this.groupGraph.get(releaseGroupName)!.group;
     const releaseGroupVersionConfig =
-      releaseGroup.version as NxReleaseVersionV2Configuration;
+      releaseGroup.version as NxReleaseVersionConfiguration;
 
     // Get updateDependents from the release group level config
     const updateDependents =
@@ -1445,7 +1465,7 @@ Valid values are: ${validReleaseVersionPrefixes
 
     // Get updateDependents from the release group level config
     const releaseGroupVersionConfig =
-      releaseGroup.version as NxReleaseVersionV2Configuration;
+      releaseGroup.version as NxReleaseVersionConfiguration;
     const updateDependents =
       (releaseGroupVersionConfig?.updateDependents as 'auto' | 'never') ||
       'auto';

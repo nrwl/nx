@@ -8,8 +8,14 @@
     "replace-getJestProjects-with-getJestProjectsAsync": {
       "cli": "nx",
       "version": "20.0.0-beta.5",
-      "description": "replace getJestProjects with getJestProjectsAsync",
+      "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
       "implementation": "./src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync"
+    },
+    "replace-getJestProjects-with-getJestProjectsAsync-v21": {
+      "cli": "nx",
+      "version": "21.0.0-beta.9",
+      "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+      "implementation": "./src/migrations/update-21-0-0/replace-getJestProjects-with-getJestProjectsAsync"
     }
   },
   "packageJsonUpdates": {

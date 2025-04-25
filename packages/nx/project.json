@@ -106,6 +106,7 @@
       "command": "echo hi"
     },
     "build": {
+      "parallelism": false,
       "dependsOn": ["^build-client", "build-base", "build-native"],
       "inputs": [
         "production",

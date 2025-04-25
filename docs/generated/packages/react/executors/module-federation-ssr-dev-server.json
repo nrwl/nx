@@ -3,6 +3,7 @@
   "implementation": "/packages/react/src/executors/module-federation-ssr-dev-server/module-federation-ssr-dev-server.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "title": "Module Federation SSR Dev Server",
     "description": "Serve a SSR Consumer (host) application along with its known Producers (remotes).",

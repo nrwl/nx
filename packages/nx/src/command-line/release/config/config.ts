@@ -19,7 +19,7 @@ import {
   NxReleaseChangelogConfiguration,
   NxReleaseConfiguration,
   NxReleaseGitConfiguration,
-  NxReleaseVersionV2Configuration,
+  NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
@@ -286,23 +286,14 @@ export async function createNxReleaseConfig(
               defaultGeneratorOptions.currentVersionResolver,
             specifierSource: defaultGeneratorOptions.specifierSource,
             preserveLocalDependencyProtocols:
-              (
-                userConfig.version as
-                  | NxReleaseVersionV2Configuration
-                  | undefined
-              )?.preserveLocalDependencyProtocols ?? true,
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.preserveLocalDependencyProtocols ?? true,
             logUnchangedProjects:
-              (
-                userConfig.version as
-                  | NxReleaseVersionV2Configuration
-                  | undefined
-              )?.logUnchangedProjects ?? true,
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.logUnchangedProjects ?? true,
             updateDependents:
-              (
-                userConfig.version as
-                  | NxReleaseVersionV2Configuration
-                  | undefined
-              )?.updateDependents ?? 'auto',
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.updateDependents ?? 'auto',
           }),
     } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
@@ -482,10 +473,10 @@ export async function createNxReleaseConfig(
       };
     } else {
       (
-        rootVersionWithoutGlobalOptions as NxReleaseVersionV2Configuration
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
       ).currentVersionResolver = 'git-tag';
       (
-        rootVersionWithoutGlobalOptions as NxReleaseVersionV2Configuration
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
       ).specifierSource = 'conventional-commits';
     }
   }
@@ -493,9 +484,9 @@ export async function createNxReleaseConfig(
     delete rootVersionWithoutGlobalOptions.generatorOptions
       .currentVersionResolver;
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
-    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionV2Configuration)
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
       .currentVersionResolver;
-    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionV2Configuration)
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
       .specifierSource;
   }
 
@@ -508,13 +499,13 @@ export async function createNxReleaseConfig(
       };
     } else {
       (
-        rootVersionWithoutGlobalOptions as NxReleaseVersionV2Configuration
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
       ).specifierSource = 'version-plans';
     }
   }
   if (userConfig.versionPlans === false) {
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
-    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionV2Configuration)
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
       .specifierSource;
   }
 
@@ -681,10 +672,10 @@ export async function createNxReleaseConfig(
         };
       } else {
         (
-          finalReleaseGroup.version as NxReleaseVersionV2Configuration
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
         ).currentVersionResolver = 'git-tag';
         (
-          finalReleaseGroup.version as NxReleaseVersionV2Configuration
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
         ).specifierSource = 'conventional-commits';
       }
     }
@@ -692,11 +683,14 @@ export async function createNxReleaseConfig(
       releaseGroup.version?.conventionalCommits === false &&
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
-      delete finalReleaseGroup.version.generatorOptions.currentVersionResolver;
-      delete finalReleaseGroup.version.generatorOptions.specifierSource;
-      delete (finalReleaseGroup.version as NxReleaseVersionV2Configuration)
+      if (USE_LEGACY_VERSIONING) {
+        delete finalReleaseGroup.version.generatorOptions
+          ?.currentVersionResolver;
+        delete finalReleaseGroup.version.generatorOptions?.specifierSource;
+      }
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
         .currentVersionResolver;
-      delete (finalReleaseGroup.version as NxReleaseVersionV2Configuration)
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
         .specifierSource;
     }
 
@@ -712,7 +706,7 @@ export async function createNxReleaseConfig(
         };
       } else {
         (
-          finalReleaseGroup.version as NxReleaseVersionV2Configuration
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
         ).specifierSource = 'version-plans';
       }
     }
@@ -720,8 +714,10 @@ export async function createNxReleaseConfig(
       releaseGroup.versionPlans === false &&
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
-      delete finalReleaseGroup.version.generatorOptions.specifierSource;
-      delete (finalReleaseGroup.version as NxReleaseVersionV2Configuration)
+      if (USE_LEGACY_VERSIONING) {
+        delete finalReleaseGroup.version.generatorOptions?.specifierSource;
+      }
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
         .specifierSource;
     }
     releaseGroups[releaseGroupName] = finalReleaseGroup;
@@ -1110,10 +1106,9 @@ function hasInvalidConventionalCommitsConfig(
   if (
     userConfig.version?.conventionalCommits === true &&
     // v2 config - directly on version config
-    ((userConfig.version as NxReleaseVersionV2Configuration)
+    ((userConfig.version as NxReleaseVersionConfiguration)
       ?.currentVersionResolver ||
-      (userConfig.version as NxReleaseVersionV2Configuration)
-        ?.specifierSource ||
+      (userConfig.version as NxReleaseVersionConfiguration)?.specifierSource ||
       // Legacy config - on generatorOptions
       (userConfig.version as LegacyNxReleaseVersionConfiguration)
         ?.generatorOptions?.currentVersionResolver ||
@@ -1128,9 +1123,9 @@ function hasInvalidConventionalCommitsConfig(
       if (
         group.version?.conventionalCommits === true &&
         // v2 config - directly on version config
-        ((group.version as NxReleaseVersionV2Configuration)
+        ((group.version as NxReleaseVersionConfiguration)
           ?.currentVersionResolver ||
-          (group.version as NxReleaseVersionV2Configuration)?.specifierSource ||
+          (group.version as NxReleaseVersionConfiguration)?.specifierSource ||
           // Legacy config - on generatorOptions
           (group.version as LegacyNxReleaseVersionConfiguration)
             ?.generatorOptions?.currentVersionResolver ||

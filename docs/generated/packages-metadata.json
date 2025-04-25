@@ -2413,7 +2413,17 @@
     ],
     "migrations": [
       {
-        "description": "replace getJestProjects with getJestProjectsAsync",
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+        "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
+        "hidden": false,
+        "name": "replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "version": "21.0.0-beta.9",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "type": "migration"
+      },
+      {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
         "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync.json",
         "hidden": false,
         "name": "replace-getJestProjects-with-getJestProjectsAsync",
@@ -3700,6 +3710,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Updates release version config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-version-config-changes.json",
+        "hidden": false,
+        "name": "release-version-config-changes",
+        "version": "21.0.0-beta.1",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/release-version-config-changes",
+        "type": "migration"
+      },
       {
         "description": "Set `useLegacyCache` to true for migrating workspaces",
         "file": "generated/packages/nx/migrations/use-legacy-cache.json",

@@ -40,7 +40,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraph, createTaskId } from './create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 import { isTuiEnabled } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
@@ -802,7 +802,10 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   }
 }
 
-function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
+export function setEnvVarsBasedOnArgs(
+  nxArgs: NxArgs,
+  loadDotEnvFiles: boolean
+) {
   if (
     nxArgs.outputStyle == 'stream' ||
     process.env.NX_BATCH_MODE === 'true' ||

@@ -18,6 +18,7 @@ import { NxPluginV2 } from '../plugins';
 import { LoadedNxPlugin } from '../plugins/loaded-nx-plugin';
 import { dirname } from 'path';
 import { isProjectConfigurationsError } from '../error-types';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 describe('project-configuration-utils', () => {
   describe('target merging', () => {
@@ -1658,7 +1659,7 @@ describe('project-configuration-utils', () => {
           foo: { command: 'echo {projectRoot}' },
         },
       };
-      expect(normalizeTarget(config.targets.foo, config))
+      expect(normalizeTarget(config.targets.foo, config, workspaceRoot, {}))
         .toMatchInlineSnapshot(`
         {
           "configurations": {},
@@ -1701,8 +1702,8 @@ describe('project-configuration-utils', () => {
       };
       const originalConfig = JSON.stringify(config, null, 2);
 
-      normalizeTarget(config.targets.foo, config);
-      normalizeTarget(config.targets.bar, config);
+      normalizeTarget(config.targets.foo, config, workspaceRoot, {});
+      normalizeTarget(config.targets.bar, config, workspaceRoot, {});
       expect(JSON.stringify(config, null, 2)).toEqual(originalConfig);
     });
   });

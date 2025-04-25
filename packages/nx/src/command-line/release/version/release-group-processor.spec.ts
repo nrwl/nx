@@ -1673,4 +1673,65 @@ describe('ReleaseGroupProcessor', () => {
       );
     });
   });
+
+  describe('versionData', () => {
+    it('should populate versionData even when projects are not versioned', async () => {
+      const {
+        nxReleaseConfig,
+        projectGraph,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        filters,
+      } = await createNxReleaseConfigAndPopulateWorkspace(
+        tree,
+        `
+          __default__ ({ "projectsRelationship": "independent" }):
+            - libtest1@4.5.0 [js]
+            - my-nest-app@1.0.0 [js]
+        `,
+        {
+          version: {
+            conventionalCommits: true,
+          },
+        },
+        mockResolveCurrentVersion
+      );
+
+      const processor = new ReleaseGroupProcessor(
+        tree,
+        projectGraph,
+        nxReleaseConfig,
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        {
+          dryRun: false,
+          verbose: false,
+          firstRelease: false,
+          preid: undefined,
+          filters,
+        }
+      );
+      await processor.init();
+
+      mockDeriveSpecifierFromConventionalCommits.mockImplementation(
+        () => 'none'
+      );
+      await processor.processGroups();
+
+      expect(processor.getVersionData()).toMatchInlineSnapshot(`
+        {
+          "libtest1": {
+            "currentVersion": "4.5.0",
+            "dependentProjects": [],
+            "newVersion": null,
+          },
+          "my-nest-app": {
+            "currentVersion": "1.0.0",
+            "dependentProjects": [],
+            "newVersion": null,
+          },
+        }
+      `);
+    });
+  });
 });
