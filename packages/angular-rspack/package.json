@@ -68,7 +68,10 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@ng-rspack/testing-setup": "workspace:*"
+    "@ng-rspack/testing-setup": "workspace:*",
+    "@code-pushup/models": "^0.63.0",
+    "@code-pushup/utils": "^0.63.0",
+    "jsonc-eslint-parser": "^2.4.0"
   },
   "peerDependencies": {
     "@angular/common": ">=19.0.0 <20.0.0",
@@ -80,6 +83,9 @@
   },
   "peerDependenciesMeta": {
     "tailwindcss": {
+      "optional": true
+    },
+    "@angular/localize": {
       "optional": true
     }
   },
