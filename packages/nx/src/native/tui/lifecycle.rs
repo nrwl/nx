@@ -190,9 +190,14 @@ impl AppLifeCycle {
             // Store callback for cleanup
             app.set_done_callback(done_callback);
 
+            app.register_action_handler(action_tx.clone()).ok();
             for component in app.components.iter_mut() {
                 component.register_action_handler(action_tx.clone()).ok();
-                component.init().ok();
+            }
+
+            app.init(tui.size().unwrap()).ok();
+            for component in app.components.iter_mut() {
+                component.init(tui.size().unwrap()).ok();
             }
         }
         debug!("Initialized Components");
@@ -252,7 +257,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         let mut app = self.app.lock().unwrap();
-        app.set_task_status(task_id, status)
+        app.update_task_status(task_id, status)
     }
 
     #[napi]

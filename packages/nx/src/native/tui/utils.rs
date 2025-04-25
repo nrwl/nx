@@ -1,6 +1,6 @@
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
 
-pub fn format_duration(duration_ms: u128) -> String {
+pub fn format_duration(duration_ms: i64) -> String {
     if duration_ms == 0 {
         "<1ms".to_string()
     } else if duration_ms < 1000 {
@@ -10,7 +10,7 @@ pub fn format_duration(duration_ms: u128) -> String {
     }
 }
 
-pub fn format_duration_since(start_ms: u128, end_ms: u128) -> String {
+pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
     format_duration(end_ms.saturating_sub(start_ms))
 }
 
@@ -94,7 +94,7 @@ mod tests {
     use super::*;
 
     // Helper function to create a TaskItem for testing
-    fn create_task(name: &str, status: TaskStatus, end_time: Option<u128>) -> TaskItem {
+    fn create_task(name: &str, status: TaskStatus, end_time: Option<i64>) -> TaskItem {
         let mut task = TaskItem::new(name.to_string(), false);
         task.status = status;
         task.end_time = end_time;
@@ -372,9 +372,9 @@ mod tests {
     fn test_sort_edge_cases() {
         // Test with extreme end_time values
         let mut tasks = vec![
-            create_task("a", TaskStatus::Success, Some(u128::MAX)),
+            create_task("a", TaskStatus::Success, Some(i64::MAX)),
             create_task("b", TaskStatus::Success, Some(0)),
-            create_task("c", TaskStatus::Success, Some(u128::MAX / 2)),
+            create_task("c", TaskStatus::Success, Some(i64::MAX / 2)),
         ];
 
         sort_task_items(&mut tasks);
