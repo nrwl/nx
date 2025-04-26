@@ -1,13 +1,13 @@
 distribute-on:
-  default: auto linux-medium, 1 linux-extra-large
+  default: auto linux-large, 1 linux-extra-large
 assignment-rules:
   - targets:
       - e2e-ci**
     run-on:
-      - agent: linux-medium
-        parallelism: 1
+      - agent: linux-large
+        parallelism: 2
       - agent: linux-extra-large
-        parallelism: 1
+        parallelism: 3
 
   - projects:
       - nx-dev
@@ -20,13 +20,13 @@ assignment-rules:
   - targets:
       - lint
     run-on:
-      - agent: linux-medium
+      - agent: linux-large
         parallelism: 6
 
   - targets:
       - '*'
     run-on:
-      - agent: linux-medium
+      - agent: linux-large
         parallelism: 3
       - agent: linux-extra-large
         parallelism: 3
