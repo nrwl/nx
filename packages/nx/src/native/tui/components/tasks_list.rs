@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::{any::Any, io};
 use vt100_ctt::Parser;
 
-use crate::native::tui::utils::{is_cache_hit, normalize_newlines, sort_task_items};
+use crate::native::tui::utils::{normalize_newlines, sort_task_items};
 use crate::native::tui::{
     action::Action, app::Focus, components::Component, pty::PtyInstance, utils,
 };
@@ -965,6 +965,16 @@ impl TasksList {
             task_item.update_status(status);
             self.sort_tasks();
         }
+        for (i, data) in self.terminal_pane_data.iter_mut().enumerate() {
+            if self.pane_tasks.as_ref()[i].clone().is_some_and(|id| id == task_id) {
+                let in_progress = status == TaskStatus::InProgress;
+                data.can_be_interactive = in_progress;
+                if !in_progress {
+                    data.set_interactive(false);
+                }
+            }
+        }
+        
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
@@ -2068,7 +2078,7 @@ impl Component for TasksList {
                             {
                                 let mut terminal_pane_data = &mut self.terminal_pane_data[1];
                                 terminal_pane_data.is_continuous = task.continuous;
-                                terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                                // terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
 
                                 let mut has_pty = false;
                                 if let Some(pty) = self.pty_instances.get(task_name) {
@@ -2111,7 +2121,7 @@ impl Component for TasksList {
                         if let Some(task) = self.tasks.iter_mut().find(|t| t.name == *task_name) {
                             let mut terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                             terminal_pane_data.is_continuous = task.continuous;
-                            terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                            // terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
 
                             let mut has_pty = false;
                             if let Some(pty) = self.pty_instances.get(task_name) {
@@ -2153,7 +2163,7 @@ impl Component for TasksList {
                             {
                                 let mut terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                                 terminal_pane_data.is_continuous = task.continuous;
-                                terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                                // terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
 
                                 let mut has_pty = false;
                                 if let Some(pty) = self.pty_instances.get(task_name) {
