@@ -2,10 +2,14 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments } from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
 
-export function createFilesForFramework(tree: Tree, options: NormalizedOptions): void {
-  const templatePath = options.framework === 'fastify'
-    ? joinPathFragments(__dirname, '..', 'files', 'fastify')
-    : joinPathFragments(__dirname, '..', 'files', 'express');
+export function createFilesForFramework(
+  tree: Tree,
+  options: NormalizedOptions
+): void {
+  const templatePath =
+    options.framework === 'fastify'
+      ? joinPathFragments(__dirname, '..', 'files', 'fastify')
+      : joinPathFragments(__dirname, '..', 'files', 'express');
 
   generateFiles(
     tree,
