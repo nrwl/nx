@@ -3,6 +3,7 @@ import type { Linter, LinterType } from '@nx/eslint';
 export interface ApplicationGeneratorOptions {
   directory: string;
   name?: string;
+  framework?: 'express' | 'fastify';
   frontendProject?: string;
   linter?: Linter | LinterType;
   skipFormat?: boolean;

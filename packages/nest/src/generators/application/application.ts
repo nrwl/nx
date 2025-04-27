@@ -4,7 +4,7 @@ import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 
 import { initGenerator } from '../init/init';
 import {
-  createFiles,
+  createFilesForFramework,
   normalizeOptions,
   toNodeApplicationGeneratorOptions,
   updateTsConfig,
@@ -40,7 +40,10 @@ export async function applicationGeneratorInternal(
     toNodeApplicationGeneratorOptions(options)
   );
   tasks.push(nodeApplicationTask);
-  createFiles(tree, options);
+
+  // Dynamically create files based on the selected framework
+  createFilesForFramework(tree, options);
+
   updateTsConfig(tree, options);
 
   if (!options.skipPackageJson) {

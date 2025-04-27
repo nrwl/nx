@@ -63,6 +63,13 @@
       "type": "string",
       "x-priority": "important"
     },
+    "framework": {
+      "description": "The framework to use for the application.",
+      "type": "string",
+      "enum": ["express", "fastify"],
+      "default": "express",
+      "x-priority": "important"
+    },
     "standaloneConfig": {
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean",

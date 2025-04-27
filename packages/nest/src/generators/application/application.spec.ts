@@ -103,6 +103,32 @@ describe('application generator', () => {
     expect(tree.exists(`${appDirectory}/src/app/app.service.ts`)).toBeTruthy();
   });
 
+  it('should generate files for Express framework', async () => {
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      addPlugin: true,
+      framework: 'express',
+    });
+
+    expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
+    expect(
+      tree.read(`${appDirectory}/src/main.ts`, 'utf-8')
+    ).toContain("NestFactory.create(AppModule)");
+  });
+
+  it('should generate files for Fastify framework', async () => {
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      addPlugin: true,
+      framework: 'fastify',
+    });
+
+    expect(tree.exists(`${appDirectory}/src/main.ts`)).toBeTruthy();
+    expect(
+      tree.read(`${appDirectory}/src/main.ts`, 'utf-8')
+    ).toContain("NestFactory.create<NestFastifyApplication>");
+  });
+
   it('should configure tsconfig correctly', async () => {
     await applicationGenerator(tree, {
       directory: appDirectory,
