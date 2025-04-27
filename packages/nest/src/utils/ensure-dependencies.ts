@@ -8,7 +8,10 @@ import {
 } from './versions';
 import { NormalizedOptions } from '../generators/application/schema';
 
-export function ensureDependencies(tree: Tree, options: NormalizedOptions): GeneratorCallback {
+export function ensureDependencies(
+  tree: Tree,
+  options: NormalizedOptions
+): GeneratorCallback {
   return addDependenciesToPackageJson(
     tree,
     {
