@@ -47,7 +47,7 @@ export async function applicationGeneratorInternal(
   updateTsConfig(tree, options);
 
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(tree));
+    tasks.push(ensureDependencies(tree, options));
   }
 
   if (!options.skipFormat) {
