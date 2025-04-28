@@ -492,35 +492,45 @@ function normalizeGlobalEntries(
   return [...bundles.values()];
 }
 
-async function getProject(
-  root: string
-): Promise<ProjectGraphProjectNode | undefined> {
+async function getProject(root: string): Promise<
+  | {
+      name?: string;
+      data: {
+        name?: string;
+        root: string;
+        sourceRoot?: string;
+      };
+    }
+  | undefined
+> {
   if (global.NX_GRAPH_CREATION) {
     return undefined;
   }
 
   const projectGraph = await retrieveOrCreateProjectGraph();
-  assert(
-    projectGraph,
-    'Cannot find the project. Please make sure to run this task with the Nx CLI and set "root" to a directory contained in a project.'
-  );
-
   let projectName = process.env.NX_TASK_TARGET_PROJECT;
-  if (!projectName) {
-    const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
-    projectName =
-      findProjectForPath(
-        posix.relative(workspaceRoot, root),
-        projectRootMappings
-      ) ?? undefined;
+  if (projectGraph) {
+    if (!projectName) {
+      const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
+      projectName =
+        findProjectForPath(
+          posix.relative(workspaceRoot, root),
+          projectRootMappings
+        ) ?? undefined;
+    }
+
+    if (projectName) {
+      return projectGraph.nodes[projectName];
+    }
   }
-
-  assert(
-    projectName,
-    'Cannot find the project. Please make sure to run this task with the Nx CLI and set "root" to a directory contained in a project.'
-  );
-
-  return projectGraph.nodes[projectName];
+  return {
+    name: undefined,
+    data: {
+      name: undefined,
+      root: root,
+      sourceRoot: undefined,
+    },
+  };
 }
 
 function createProjectRootMappings(
