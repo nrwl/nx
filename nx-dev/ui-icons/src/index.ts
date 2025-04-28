@@ -95,6 +95,7 @@ export * from './lib/partners/callstack';
 export * from './lib/partners/hero-devs';
 export * from './lib/partners/push-based';
 export * from './lib/partners/e-square';
+export * from './lib/partners/briebug';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';
