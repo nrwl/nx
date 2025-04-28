@@ -54,7 +54,7 @@ export function CiAccess(): ReactElement {
                     aria-hidden="true"
                     className="absolute left-1 top-1 h-5 w-5"
                   />
-                  Rotate tokens weekly (or as often as needed)
+                  Rotate tokens as needed
                 </span>
               </li>
               <li className="relative pl-9">

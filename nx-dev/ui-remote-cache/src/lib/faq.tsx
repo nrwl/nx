@@ -76,6 +76,29 @@ export function Faq(): ReactElement {
       ),
     },
     {
+      question: 'Is my self-hosted cache setup secure enough?',
+      answerJson:
+        'Most self-hosted cache setups offer basic functionality but lack critical security features. Without enforced input validation, branch isolation, and real-time access control, self-hosted caches are vulnerable to cache poisoning, where compromised or unverified artifacts can silently pollute your builds. We recommend using Nx Cloud, which provides infrastructure-level protections, making it a safer choice for organizations in highly regulated industries.',
+      answerUi: (
+        <p>
+          Most self-hosted cache setups offer basic functionality but lack
+          critical security features. Without enforced input validation, branch
+          isolation, and real-time access control, self-hosted caches are
+          vulnerable to cache poisoning, where compromised or unverified
+          artifacts can silently pollute your builds. We recommend using Nx
+          Cloud, which provides infrastructure-level protections, making it a
+          safer choice for organizations in highly regulated industries.{' '}
+          <Link
+            href="/enterprise/security"
+            title="Learn more"
+            className="font-semibold"
+          >
+            Learn more here.
+          </Link>
+        </p>
+      ),
+    },
+    {
       question:
         'What security measures does Nx Cloud offer beyond the official plugins and third party plugins?',
       answerJson:
