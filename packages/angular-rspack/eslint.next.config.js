@@ -34,6 +34,7 @@ module.exports = [
             '@code-pushup/models',
             '@code-pushup/utils',
             'jsonc-eslint-parser',
+            'vitest',
           ],
         },
       ],
