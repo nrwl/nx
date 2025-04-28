@@ -91,7 +91,7 @@ impl HelpPopup {
         let keybindings = vec![
             // Misc
             ("?", "Toggle this popup"),
-            ("<ctrl>+c", "Quit the TUI"),
+            ("q or <ctrl>+c", "Quit the TUI"),
             ("", ""),
             // Navigation
             ("↑ or k", "Navigate/scroll task output up"),
@@ -106,6 +106,8 @@ impl HelpPopup {
             ("<esc>", "Clear filter"),
             ("", ""),
             // Output Controls
+            ("<enter>", "Open and focus terminal for task"),
+            ("<esc>", "Set focus back to task list"),
             ("<space>", "Quick toggle a single output pane"),
             ("b", "Toggle task list visibility"),
             ("1", "Pin task to be shown in output pane 1"),
@@ -166,12 +168,7 @@ impl HelpPopup {
                         let mut spans = Vec::new();
 
                         // Calculate the total visible length (excluding color codes)
-                        let visible_length = if key_parts.len() > 1 {
-                            key_parts.iter().map(|s| s.len()).sum::<usize>() + 2
-                        // for alignment
-                        } else {
-                            key.len()
-                        };
+                        let visible_length = key.chars().count();
 
                         // Add each key part with the appropriate styling
                         for (i, part) in key_parts.iter().enumerate() {
@@ -188,7 +185,7 @@ impl HelpPopup {
                         }
 
                         // Add padding to align all descriptions
-                        let padding = " ".repeat(11usize.saturating_sub(visible_length));
+                        let padding = " ".repeat(14usize.saturating_sub(visible_length));
                         spans.push(Span::raw(padding));
 
                         // Add the separator and description

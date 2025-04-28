@@ -202,11 +202,7 @@ impl AppLifeCycle {
                 // Handle events using our Tui abstraction
                 if let Some(event) = tui.next().await {
                     if let Ok(mut app) = app_mutex.lock() {
-                        if let Ok(true) = app.handle_event(event, &action_tx) {
-                            tui.exit().ok();
-                            app.call_done_callback();
-                            break;
-                        }
+                        let _ = app.handle_event(event, &action_tx);
 
                         // Check if we should quit based on the timer
                         if let Some(quit_time) = app.quit_at {

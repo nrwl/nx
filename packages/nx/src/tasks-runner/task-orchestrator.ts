@@ -680,6 +680,12 @@ export class TaskOrchestrator {
 
       this.runningContinuousTasks.set(task.id, runningTask);
       runningTask.onExit(() => {
+        if (this.tuiEnabled) {
+          this.options.lifeCycle.setTaskStatus(
+            task.id,
+            NativeTaskStatus.Stopped
+          );
+        }
         this.runningContinuousTasks.delete(task.id);
       });
 
@@ -744,6 +750,9 @@ export class TaskOrchestrator {
     this.runningContinuousTasks.set(task.id, childProcess);
 
     childProcess.onExit(() => {
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
+      }
       this.runningTasksService.removeRunningTask(task.id);
       this.runningContinuousTasks.delete(task.id);
     });
