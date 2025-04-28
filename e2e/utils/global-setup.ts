@@ -59,18 +59,13 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       );
     };
 
-    // global.e2eTeardown = await startLocalRegistry({
-    //   localRegistryTarget: '@nx/nx-source:local-registry',
-    //   verbose: isVerbose,
-    //   clearStorage: requiresLocalRelease,
-    // });
-
     /**
      * Set the published version based on what has previously been loaded into the
      * verdaccio storage.
      */
     if (!requiresLocalRelease) {
-      const publishedVersion = await getPublishedVersion();
+      let publishedVersion = await getPublishedVersion();
+      console.log(`Testing Published version: Nx ${publishedVersion}`);
       if (publishedVersion) {
         process.env.PUBLISHED_VERSION = publishedVersion;
       }
@@ -100,6 +95,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
 }
 
 function getPublishedVersion(): Promise<string | undefined> {
+  execSync(`npm config get registry`, {
+    stdio: 'inherit',
+  });
   return new Promise((resolve) => {
     // Resolve the published nx version from verdaccio
     exec(

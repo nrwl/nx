@@ -1,15 +1,35 @@
 // @ts-check
-const { exec } = require('node:child_process');
+const { exec, execSync } = require('node:child_process');
 const {
   LARGE_BUFFER,
 } = require('nx/src/executors/run-commands/run-commands.impl');
 
 async function populateLocalRegistryStorage() {
-  await new Promise((res) => {
-    setTimeout(() => {
-      res(undefined);
-    }, 5000);
-  });
+  const listenAddress = 'localhost';
+  const port = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+  const registry = `http://${listenAddress}:${port}`;
+  const authToken = 'secretVerdaccioToken';
+
+  while (true) {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    try {
+      await assertLocalRegistryIsRunning(registry);
+      break;
+    } catch {
+      console.log(`Waiting for Local registry to start on ${registry}...`);
+    }
+  }
+
+  process.env.npm_config_registry = registry;
+
+  // bun
+  process.env.BUN_CONFIG_REGISTRY = registry;
+  process.env.BUN_CONFIG_TOKEN = authToken;
+  // yarnv1
+  process.env.YARN_REGISTRY = registry;
+  // yarnv2
+  process.env.YARN_NPM_REGISTRY_SERVER = registry;
+  process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
 
   try {
     const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
@@ -50,3 +70,10 @@ function runLocalRelease(publishVersion, isVerbose) {
   });
 }
 exports.runLocalRelease = runLocalRelease;
+
+async function assertLocalRegistryIsRunning(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+}
