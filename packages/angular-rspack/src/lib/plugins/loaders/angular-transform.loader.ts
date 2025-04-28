@@ -32,7 +32,7 @@ export default function loader(
       NG_RSPACK_SYMBOL_NAME
     ]();
 
-    const request = this.resourcePath;
+    const request = this.resourcePath.replace(/^[A-Z]:/, '');
     const normalizedRequest = normalize(request);
 
     const templateUrls = templateUrlsResolver.resolve(
