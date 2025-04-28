@@ -74,7 +74,7 @@ class AddTestCiTargetsTest {
     assertEquals(2, dependsOn!!.size)
 
     val firstTarget = targets["ci--MyFirstTest"]!!
-    assertEquals(firstTarget["executor"], "@nx/gradle:gradlew")
+    assertEquals(firstTarget["executor"], "@nx/gradle:gradle")
     assertEquals(true, firstTarget["cache"])
     assertTrue((firstTarget["inputs"] as Array<*>)[0].toString().contains("{projectRoot}"))
     assertEquals("nx:noop", parentCi["executor"])

@@ -2,7 +2,7 @@ package dev.nx.gradle.cli
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dev.nx.gradle.data.GradlewTask
+import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.NxBatchOptions
 import dev.nx.gradle.util.logger
 
@@ -23,9 +23,9 @@ fun parseArgs(args: Array<String>): NxBatchOptions {
 
   val gson = Gson()
   val tasksJson = argMap["--tasks"]
-  val tasksMap: Map<String, GradlewTask> =
+  val tasksMap: Map<String, GradleTask> =
       if (tasksJson != null) {
-        val taskType = object : TypeToken<Map<String, GradlewTask>>() {}.type
+        val taskType = object : TypeToken<Map<String, GradleTask>>() {}.type
         gson.fromJson(tasksJson, taskType)
       } else emptyMap()
 

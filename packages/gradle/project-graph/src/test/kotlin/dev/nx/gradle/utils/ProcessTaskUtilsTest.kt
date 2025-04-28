@@ -88,7 +88,7 @@ class ProcessTaskUtilsTest {
             targetNameOverrides = emptyMap())
 
     assertEquals(true, result["cache"])
-    assertEquals(result["executor"], "@nx/gradle:gradlew")
+    assertEquals(result["executor"], "@nx/gradle:gradle")
     assertNotNull(result["metadata"])
     assertNotNull(result["options"])
   }

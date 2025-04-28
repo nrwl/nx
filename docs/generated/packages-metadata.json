@@ -2089,12 +2089,12 @@
     ],
     "executors": [
       {
-        "description": "gradlew.impl executor",
-        "file": "generated/packages/gradle/executors/gradlew.json",
+        "description": "The Gradlew executor is used to run Gradle tasks.",
+        "file": "generated/packages/gradle/executors/gradle.json",
         "hidden": false,
-        "name": "gradlew",
-        "originalFilePath": "/packages/gradle/src/executors/gradlew/schema.json",
-        "path": "gradle/executors/gradlew",
+        "name": "gradle",
+        "originalFilePath": "/packages/gradle/src/executors/gradle/schema.json",
+        "path": "gradle/executors/gradle",
         "type": "executor"
       }
     ],

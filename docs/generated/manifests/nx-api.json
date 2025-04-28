@@ -2104,13 +2104,13 @@
     "root": "/packages/gradle",
     "source": "/packages/gradle/src",
     "executors": {
-      "/nx-api/gradle/executors/gradlew": {
-        "description": "gradlew.impl executor",
-        "file": "generated/packages/gradle/executors/gradlew.json",
+      "/nx-api/gradle/executors/gradle": {
+        "description": "The Gradlew executor is used to run Gradle tasks.",
+        "file": "generated/packages/gradle/executors/gradle.json",
         "hidden": false,
-        "name": "gradlew",
-        "originalFilePath": "/packages/gradle/src/executors/gradlew/schema.json",
-        "path": "/nx-api/gradle/executors/gradlew",
+        "name": "gradle",
+        "originalFilePath": "/packages/gradle/src/executors/gradle/schema.json",
+        "path": "/nx-api/gradle/executors/gradle",
         "type": "executor"
       }
     },

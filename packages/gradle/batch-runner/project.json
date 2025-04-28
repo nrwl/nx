@@ -6,6 +6,12 @@
   "targets": {
     "assemble": {
       "command": "./gradlew :batch-runner:assemble",
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/build.gradle.kts",
+        "{projectRoot}/settings.gradle.kts"
+      ],
+      "outputs": ["{projectRoot}/build"],
       "cache": true
     },
     "test": {

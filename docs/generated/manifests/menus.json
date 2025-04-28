@@ -8393,9 +8393,9 @@
             "name": "executors",
             "children": [
               {
-                "id": "gradlew",
-                "path": "/nx-api/gradle/executors/gradlew",
-                "name": "gradlew",
+                "id": "gradle",
+                "path": "/nx-api/gradle/executors/gradle",
+                "name": "gradle",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

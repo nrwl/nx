@@ -7,7 +7,7 @@ plugins {
   application
   id("com.github.johnrengelman.shadow") version "8.1.1"
   id("com.ncorti.ktfmt.gradle") version "+"
-  // id("dev.nx.gradle.project-graph") version "0.1.0"
+  id("dev.nx.gradle.project-graph") version "0.1.0"
 }
 
 repositories {
@@ -24,9 +24,6 @@ dependencies {
   runtimeOnly("org.slf4j:slf4j-simple:1.7.10")
   implementation("com.google.code.gson:gson:2.10.1")
 }
-
-// Apply a specific Java toolchain to ease working on different environments.
-java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
 
 application {
   // Define the main class for the application.

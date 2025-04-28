@@ -3,7 +3,7 @@ plugins {
   `maven-publish`
   signing
   id("com.ncorti.ktfmt.gradle") version "+"
-  // id("dev.nx.gradle.project-graph") version "0.1.0"
+  id("dev.nx.gradle.project-graph") version "0.1.0"
   id("org.jetbrains.kotlin.jvm") version "2.1.10"
   id("com.gradle.plugin-publish") version "1.2.1"
 }
@@ -108,17 +108,13 @@ afterEvaluate {
       }
     }
   }
+}
 
-  val skipSign = project.findProperty("skipSign") == "true"
-  if (!skipSign) {
-    signing {
-      sign(publishing.publications["pluginMaven"])
-      sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
-    }
+signing {
+  afterEvaluate {
+    sign(publishing.publications["pluginMaven"])
+    sign(publishing.publications["nxProjectGraphPluginPluginMarkerMaven"])
   }
-
-  // Even if signing plugin was applied, we can prevent the sign tasks from running
-  tasks.withType<Sign>().configureEach { onlyIf { !skipSign } }
 }
 
 tasks.test { useJUnitPlatform() }

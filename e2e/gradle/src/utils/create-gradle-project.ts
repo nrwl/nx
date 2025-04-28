@@ -80,7 +80,7 @@ export function createGradleProject(
 
   e2eConsoleLogger(
     execSync(
-      `${gradleCommand} :project-graph:publishToMavenLocal -PskipSign=true`,
+      `${gradleCommand} :project-graph:publishToMavenLocal -x :project-graph:signNxProjectGraphPluginPluginMarkerMavenPublication -x :project-graph:signPluginMavenPublication -x :project-graph:publishNxProjectGraphPluginPluginMarkerMavenPublicationToMavenLocal -x :project-graph:publishPluginMavenPublicationToMavenLocal`,
       {
         cwd: `${__dirname}/../../../..`,
       }

@@ -1,10 +1,11 @@
 import { ExecutorContext } from '@nx/devkit';
-import { GraldewExecutorSchema } from './schema';
-import { execGradleAsync, findGradlewFile } from '../../utils/exec-gradle';
-import { join } from 'node:path';
+import { gradleExecutorSchema } from './schema';
+import { findGradlewFile } from '../../utils/exec-gradle';
+import { dirname, join } from 'node:path';
+import runCommandsImpl from 'nx/src/executors/run-commands/run-commands.impl';
 
-export default async function graldewExecutor(
-  options: GraldewExecutorSchema,
+export default async function gradleExecutor(
+  options: gradleExecutorSchema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   let projectRoot =
@@ -22,15 +23,17 @@ export default async function graldewExecutor(
     args.push(`--tests`, options.testClassName);
   }
   try {
-    const output = await execGradleAsync(gradlewPath, [
-      options.taskName,
-      ...args,
-    ]);
-
-    process.stdout.write(output);
+    await runCommandsImpl(
+      {
+        command: `${gradlewPath} ${options.taskName}`,
+        cwd: dirname(gradlewPath),
+        args: args,
+        __unparsed__: [],
+      },
+      context
+    );
     return { success: true };
   } catch (e) {
-    process.stdout.write(e);
     return { success: false };
   }
 }

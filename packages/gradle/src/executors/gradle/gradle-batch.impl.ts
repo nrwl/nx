@@ -1,10 +1,10 @@
-import { ExecutorContext, logger, output, TaskGraph } from '@nx/devkit';
+import { ExecutorContext, output, TaskGraph } from '@nx/devkit';
 import {
   LARGE_BUFFER,
   RunCommandsOptions,
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
-import { GraldewExecutorSchema } from './schema';
+import { gradleExecutorSchema } from './schema';
 import { findGradlewFile } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
@@ -14,14 +14,14 @@ export const batchRunnerPath = join(
   '../../../batch-runner/build/libs/batch-runner-all.jar'
 );
 
-interface GradlewTask {
+interface GradleTask {
   taskName: string;
   testClassName: string;
 }
 
-export default async function gradlewBatch(
+export default async function gradleBatch(
   taskGraph: TaskGraph,
-  inputs: Record<string, GraldewExecutorSchema>,
+  inputs: Record<string, gradleExecutorSchema>,
   overrides: RunCommandsOptions,
   context: ExecutorContext
 ): Promise<BatchResults> {
@@ -33,17 +33,18 @@ export default async function gradlewBatch(
 
     // set args with passed in args and overrides in command line
     const input = inputs[taskGraph.roots[0]];
+
     let args =
       typeof input.args === 'string'
-        ? input.args.trim()
+        ? input.args.trim().split(' ')
         : Array.isArray(input.args)
-        ? input.args.join(' ')
-        : '';
-    args += overrides.__overrides_unparsed__.length
-      ? ' ' + overrides.__overrides_unparsed__.join(' ')
-      : '';
+        ? input.args
+        : [];
+    if (overrides.__overrides_unparsed__.length) {
+      args.push(...overrides.__overrides_unparsed__);
+    }
 
-    const gradlewTasksToRun: Record<string, GradlewTask> = Object.entries(
+    const gradlewTasksToRun: Record<string, GradleTask> = Object.entries(
       taskGraph.tasks
     ).reduce((gradlewTasksToRun, [taskId, task]) => {
       const gradlewTaskName = inputs[task.id].taskName;
@@ -54,16 +55,13 @@ export default async function gradlewBatch(
       };
       return gradlewTasksToRun;
     }, {});
-    console.log(`Running gradlew batch with args: ${args}`);
-    output.log({
-      title: `Running gradlew batch with args: ${args}`,
-      bodyLines: Object.keys(gradlewTasksToRun),
-    });
     const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
     const batchResults = execSync(
       `java -jar ${batchRunnerPath} --tasks='${JSON.stringify(
         gradlewTasksToRun
-      )}' --workspaceRoot=${root} --args='${args}' ${
+      )}' --workspaceRoot=${root} --args='${args
+        .join(' ')
+        .replaceAll("'", '"')}' ${
         process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
       }`,
       {
@@ -73,14 +71,11 @@ export default async function gradlewBatch(
       }
     );
     const gradlewBatchEnd = performance.mark(`gradlew-batch:end`);
-    const duration = performance.measure(
+    performance.measure(
       `gradlew-batch`,
       gradlewBatchStart.name,
       gradlewBatchEnd.name
     );
-    if (process.env.NX_PERF_LOGGING === 'true') {
-      console.log(`Time for 'gradlew-batch'`, duration.duration);
-    }
     const gradlewBatchResults = JSON.parse(
       batchResults.toString()
     ) as BatchResults;
@@ -96,8 +91,6 @@ export default async function gradlewBatch(
 
     return gradlewBatchResults;
   } catch (e) {
-    logger.error(e);
-    console.error(e);
     output.error({
       title: `Gradlew batch failed`,
       bodyLines: [e.toString()],

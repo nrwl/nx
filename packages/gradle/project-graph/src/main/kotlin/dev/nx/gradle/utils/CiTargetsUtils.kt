@@ -90,7 +90,7 @@ private fun buildTestCiTarget(
 ): MutableMap<String, Any?> {
   val target =
       mutableMapOf<String, Any?>(
-          "executor" to "@nx/gradle:gradlew",
+          "executor" to "@nx/gradle:gradle",
           "options" to
               mapOf(
                   "taskName" to "${projectBuildPath}:${testTask.name}",

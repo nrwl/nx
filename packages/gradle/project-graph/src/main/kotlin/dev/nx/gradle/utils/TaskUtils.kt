@@ -48,7 +48,7 @@ fun processTask(
     target["dependsOn"] = dependsOn
   }
 
-  target["executor"] = "@nx/gradle:gradlew"
+  target["executor"] = "@nx/gradle:gradle"
 
   val metadata =
       getMetadata(
