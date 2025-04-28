@@ -17,7 +17,6 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { IS_WASM } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -84,6 +83,7 @@ async function getTerminalOutputLifeCycle(
 ): Promise<{
   lifeCycle: LifeCycle;
   printSummary?: () => void;
+  restoreTerminal?: () => void;
   renderIsDone: Promise<void>;
 }> {
   const overridesWithoutHidden = { ...overrides };
@@ -277,6 +277,13 @@ async function getTerminalOutputLifeCycle(
 
     return {
       lifeCycle: new CompositeLifeCycle(lifeCycles),
+      restoreTerminal: () => {
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+        restoreTerminal();
+      },
       printSummary,
       renderIsDone,
     };
@@ -464,7 +471,7 @@ export async function runCommandForTasks(
       nxArgs.targets.includes(t.target.target)
   );
 
-  const { lifeCycle, renderIsDone, printSummary } =
+  const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(
       initiatingProject,
       initiatingTasks,
@@ -476,27 +483,34 @@ export async function runCommandForTasks(
       overrides
     );
 
-  const taskResults = await invokeTasksRunner({
-    tasks,
-    projectGraph,
-    taskGraph,
-    lifeCycle,
-    nxJson,
-    nxArgs,
-    loadDotEnvFiles: extraOptions.loadDotEnvFiles,
-    initiatingProject,
-    initiatingTasks,
-  });
+  try {
+    const taskResults = await invokeTasksRunner({
+      tasks,
+      projectGraph,
+      taskGraph,
+      lifeCycle,
+      nxJson,
+      nxArgs,
+      loadDotEnvFiles: extraOptions.loadDotEnvFiles,
+      initiatingProject,
+      initiatingTasks,
+    });
 
-  await renderIsDone;
+    await renderIsDone;
 
-  if (printSummary) {
-    printSummary();
+    if (printSummary) {
+      printSummary();
+    }
+
+    await printNxKey();
+
+    return taskResults;
+  } catch (e) {
+    if (restoreTerminal) {
+      restoreTerminal();
+    }
+    throw e;
   }
-
-  await printNxKey();
-
-  return taskResults;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(

@@ -278,6 +278,12 @@ impl AppLifeCycle {
 
 #[napi]
 pub fn restore_terminal() -> Result<()> {
+    // Restore the terminal to a clean state
+    if let Ok(mut t) = Tui::new() {
+        if let Err(r) = t.exit() {
+            debug!("Unable to exit Terminal: {:?}", r);
+        }
+    }
     // TODO: Maybe need some additional cleanup here in addition to the tui cleanup performed at the end of the render loop?
     Ok(())
 }
