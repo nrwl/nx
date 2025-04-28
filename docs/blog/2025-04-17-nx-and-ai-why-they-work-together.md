@@ -183,6 +183,7 @@ Although it's not entirely impossible, it is significantly harder to provide the
 Learn more:
 
 - 🧠 [Nx AI Docs](/features/enhance-AI)
+- 👩‍💻 [Install Nx Console](/getting-started/editor-setup)
 - 📖 [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 👩‍💻 [Nx Console GitHub](https://github.com/nrwl/nx-console)
