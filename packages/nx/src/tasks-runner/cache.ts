@@ -40,6 +40,7 @@ export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
   // If the user has explicitly disabled the db cache, we can warn...
   if (
+    // TODO(v22): Remove fs cache option
     nxJson.useLegacyCache ||
     process.env.NX_DISABLE_DB === 'true' ||
     process.env.NX_DB_CACHE === 'false'
@@ -59,7 +60,7 @@ export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
       readMoreLink += '#nxrejectunknownlocalcache';
     }
     logger.warn(
-      `Nx is configured to use the legacy cache. This cache will be removed in Nx 21. Read more at ${readMoreLink}.`
+      `Nx is configured to use the legacy cache. This cache will be removed in Nx 22. Read more at ${readMoreLink}.`
     );
     return false;
   }

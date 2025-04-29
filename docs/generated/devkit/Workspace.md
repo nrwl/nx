@@ -447,6 +447,10 @@ Set this to false to disable adding inference plugins when generating new projec
 
 Use the legacy file system cache instead of the db cache
 
+**`Deprecated`**
+
+Use the db cache.
+
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache)

@@ -653,6 +653,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
 
   /**
    * Use the legacy file system cache instead of the db cache
+   * @deprecated Use the db cache.
    */
   useLegacyCache?: boolean;
 
