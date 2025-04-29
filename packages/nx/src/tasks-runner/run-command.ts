@@ -23,7 +23,6 @@ import {
 } from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
-import { isRelativePath } from '../utils/fileutils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -58,6 +57,7 @@ import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
 import {
+  assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
   makeAcyclic,
   validateNoAtomizedTasks,
@@ -357,6 +357,8 @@ function createTaskGraphAndRunValidations(
     overrides,
     extraOptions.excludeTaskDependencies
   );
+
+  assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
 
   const cycle = findCycle(taskGraph);
   if (cycle) {
