@@ -30,7 +30,8 @@ nx show project myproject --web
         "dev": {
           "executor": "nx:run-commands",
           "options": {
-            "command": "vite dev"
+            "command": "vite dev",
+            "continuous": true
           },
           "metadata": {
             "technologies": ["vite"]
@@ -225,39 +226,6 @@ If you are using distributed task execution, tasks will still be run simultaneou
 
 {% /callout %}
 
-### Continuous
-
-In Nx 21+, tasks that never exit can be configured with `"continuous": true` to prevent their dependent tasks from waiting for task completion. For example, the `e2e` task depends on a continuous `serve` task to ensure that the development server is running.
-
-In this example, application's configuration labels the `serve` task as continuous.
-
-```json {% fileName="apps/myapp/project.json" %}
-{
-  "targets": {
-    "serve": {
-      "continuous": true
-    }
-  }
-}
-```
-
-And the E2E project's `e2e` task has a dependency on the `serve` task, which ensures that the server is running when we run the `e2e` task.
-
-```json {% fileName="apps/myapp-e2e/project.json" %}
-{
-  "targets": {
-    "e2e": {
-      "dependsOn": [
-        {
-          "projects": "myapp",
-          "target": "serve"
-        }
-      ]
-    }
-  }
-}
-```
-
 ### Inputs and Named Inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.
@@ -398,10 +366,14 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
+{% callout type="note" title="Dependencies that do not exit" %}
+If you specify a task in `dependsOn` that never exits, then the dependent task will never start. Label such dependencies as [continuous](#continuous) tasks, which tells Nx to not wait for the process to end before starting the dependent task.
+{% /callout %}
+
 You can also express task dependencies with an object syntax:
 
 {% tabs %}
-{% tab label="Version 16+ (self)" %}
+{% tab label="Dependencies on self" %}
 
 ```json
 {
@@ -419,7 +391,7 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
-{% tab label="Version 16+ (dependencies)" %}
+{% tab label="Dependencies on other projects" %}
 
 ```json
 {
@@ -438,7 +410,7 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
-{% tab label="Version 16+ (specific projects)" %}
+{% tab label="Dependencies on specific projects" %}
 
 ```json
 {
@@ -447,25 +419,6 @@ You can also express task dependencies with an object syntax:
       "dependsOn": [
         {
           "projects": ["my-app"], // Run build on "my-app" first
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "projects": "dependencies", // "dependencies" or "self"
           "target": "build", // target name
           "params": "ignore" // "forward" or "ignore", defaults to "ignore"
         }
@@ -503,9 +456,6 @@ Starting from v19.5.0, wildcards can be used to define dependencies in the `depe
 
 You can write the shorthand configuration above in the object syntax like this:
 
-{% tabs %}
-{% tab label="Version 16+" %}
-
 ```json
 {
   "targets": {
@@ -519,29 +469,7 @@ You can write the shorthand configuration above in the object syntax like this:
 }
 ```
 
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    },
-    "test": {
-      "dependsOn": [{ "projects": "self", "target": "build" }]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
 With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
-
-{% tabs %}
-{% tab label="Version 16+" %}
 
 ```json
 {
@@ -566,39 +494,7 @@ With the expanded syntax, you also have a third option available to configure ho
 }
 ```
 
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      // forward params passed to this target to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "forward" }
-      ]
-    },
-    "test": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "ignore" }
-      ]
-    },
-    "lint": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
 This also works when defining a relation for the target of the project itself using `"projects": "self"`:
-
-{% tabs %}
-{% tab label="Version 16+" %}
 
 ```json
 {
@@ -611,29 +507,7 @@ This also works when defining a relation for the target of the project itself us
 }
 ```
 
-{% /tab %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      // forward params passed to this target to the project target
-      "dependsOn": [
-        { "projects": "self", "target": "pre-build", "params": "forward" }
-      ]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
-
 Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
-
-{% tabs %}
-{% tab label="Version 16+" %}
 
 ```json
 {
@@ -648,11 +522,41 @@ Additionally, when using the expanded object syntax, you can specify individual 
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
+
+### Continuous
+
+In Nx 21+, tasks that never exit can be configured with `"continuous": true` to prevent their dependent tasks from waiting for task completion. For example, the `e2e` task depends on a continuous `serve` task to ensure that the development server is running.
+
+In this example, application's configuration labels the `serve` task as continuous.
+
+```json {% fileName="apps/myapp/project.json" %}
+{
+  "targets": {
+    "serve": {
+      "continuous": true
+    }
+  }
+}
+```
+
+And the E2E project's `e2e` task has a dependency on the `serve` task, which ensures that the server is running when we run the `e2e` task.
+
+```json {% fileName="apps/myapp-e2e/project.json" %}
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        {
+          "projects": "myapp",
+          "target": "serve"
+        }
+      ]
+    }
+  }
+}
+```
 
 ### Sync Generators
 
