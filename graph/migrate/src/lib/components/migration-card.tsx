@@ -12,43 +12,13 @@ import {
   PlayIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal/ui-project-details';
-import {
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  useEffect,
-  type ReactNode,
-} from 'react';
+import { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export interface MigrationCardHandle {
   expand: () => void;
   collapse: () => void;
   toggle: () => void;
-}
-
-function convertUrlsToLinks(text: string): ReactNode[] {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
-  const urls = text.match(urlRegex) || [];
-  const result: ReactNode[] = [];
-  for (let i = 0; i < parts.length; i++) {
-    if (urls[i - 1]) {
-      result.push(
-        <a
-          key={i}
-          href={urls[i - 1]}
-          target="_blank"
-          className="text-blue-500 hover:underline"
-        >
-          {urls[i - 1]}
-        </a>
-      );
-    } else if (parts[i]) {
-      result.push(parts[i]);
-    }
-  }
-  return result;
 }
 
 export const MigrationCard = forwardRef<
@@ -230,23 +200,6 @@ export const MigrationCard = forwardRef<
           )}
         </div>
       </div>
-      {succeeded && migrationResult?.nextSteps?.length ? (
-        <div className="pt-2">
-          <div className="my-2 border-t border-slate-200 dark:border-slate-700/60" />
-          <span className="pb-2 text-sm font-bold">
-            More Information & Next Steps
-          </span>
-          <ul className="list-inside list-disc pl-2">
-            {migrationResult?.nextSteps.map((step, idx) => (
-              <li key={idx} className="text-sm">
-                {convertUrlsToLinks(step)}
-              </li>
-            ))}
-          </ul>
-          <p></p>
-        </div>
-      ) : null}
-
       <div className="mt-4 flex justify-end gap-2">
         <button
           onClick={() => onViewImplementation()}
@@ -313,7 +266,7 @@ export const MigrationCard = forwardRef<
                       onFileClick(file);
                     }}
                   >
-                    <code>{file.path}</code>
+                    {file.path}
                   </li>
                 );
               })}
