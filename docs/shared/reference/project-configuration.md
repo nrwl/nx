@@ -527,7 +527,7 @@ configuration above.
 
 ### Continuous
 
-In Nx 21+, tasks that never exit can be configured with `"continuous": true` to prevent their dependent tasks from waiting for task completion. For example, the `e2e` task depends on a continuous `serve` task to ensure that the development server is running.
+In Nx 21+, tasks that never exit (sometimes called long-running processes) can be configured with `"continuous": true` to prevent their dependent tasks from waiting for task completion. For example, the `e2e` task depends on a continuous `serve` task to ensure that the development server is running.
 
 In this example, application's configuration labels the `serve` task as continuous.
 
