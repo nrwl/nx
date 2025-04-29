@@ -163,8 +163,8 @@
     "@typescript-eslint/rule-tester": "^8.19.0",
     "@typescript-eslint/type-utils": "^8.19.0",
     "@typescript-eslint/utils": "^8.19.0",
-    "@webcontainer/api": "1.5.1",
     "@vitejs/plugin-react": "^4.2.0",
+    "@webcontainer/api": "1.5.1",
     "@xstate/immer": "0.3.1",
     "@xstate/inspect": "0.7.0",
     "@xstate/react": "3.0.1",
@@ -412,5 +412,10 @@
       "check-codeowners"
     ]
   },
-  "packageManager": "pnpm@9.8.0"
+  "packageManager": "pnpm@9.8.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "@tutorialkit/react": "patches/@tutorialkit__react.patch"
+    }
+  }
 }

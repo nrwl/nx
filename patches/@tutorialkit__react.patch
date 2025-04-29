@@ -1,0 +1,14 @@
+diff --git a/dist/Panels/PreviewPanel.js b/dist/Panels/PreviewPanel.js
+index 8fe07230d31399924442517a2cae4f80aefcbb11..f7733c0ca44c8abcb2d12cb230f56452e4a5714e 100644
+--- a/dist/Panels/PreviewPanel.js
++++ b/dist/Panels/PreviewPanel.js
+@@ -83,6 +83,9 @@ function Preview({ preview, iframe, previewCount, first, last, toggleTerminal, i
+             iframe.ref.title = preview.title;
+         }
+     }, [preview.url, iframe.ref]);
++    useEffect(() => {
++        reload();
++    }, [preview.url]);
+     function reload() {
+         if (iframe.ref) {
+             reloadPreview(iframe.ref);
