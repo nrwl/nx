@@ -66,15 +66,16 @@
       }
     },
     "version": {
-      "generatorOptions": {
-        "packageRoot": "build/packages/{projectName}",
-        "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true
-      },
       "git": {
         "commit": false,
         "stageChanges": false,
         "tag": false
+      },
+      "currentVersionResolver": "registry",
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["build/packages/{projectName}"],
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   },
