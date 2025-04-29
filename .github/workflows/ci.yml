@@ -27,6 +27,8 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_NO_TIMEOUTS: 'true'
+      NX_ALLOW_NON_CACHEABLE_DTE: 'true'
+      NX_CLOUD_USE_NEW_TASK_APIS: 'true'
       NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
 
     steps:
@@ -106,7 +108,7 @@ jobs:
 
   main-macos:
     runs-on: macos-latest
-    
+
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-macos
       NX_PERF_LOGGING: 'false'
