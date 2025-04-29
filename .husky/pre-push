@@ -2,3 +2,4 @@ pnpm check-lock-files
 pnpm check-commit
 pnpm documentation
 pnpm pretty-quick --check
+node ./scripts/check-branch.js
