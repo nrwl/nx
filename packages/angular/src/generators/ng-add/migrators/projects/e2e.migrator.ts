@@ -16,7 +16,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import { getRootTsConfigPathInTree, insertImport } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { basename, relative } from 'path';
@@ -317,7 +317,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     if (this.isProjectUsingEsLint) {
       await lintProjectGenerator(this.tree, {
         project: this.project.name,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         unitTestRunner: this.options.unitTestRunner,
         tsConfigPaths: [
           joinPathFragments(this.project.newRoot, 'tsconfig.json'),
@@ -347,7 +347,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     );
     await configurationGenerator(this.tree, {
       project: this.project.name,
-      linter: this.isProjectUsingEsLint ? Linter.EsLint : Linter.None,
+      linter: this.isProjectUsingEsLint ? 'eslint' : 'none',
       skipFormat: true,
       // any target would do, we replace it later with the target existing in the project being migrated
       devServerTarget: `${this.appName}:serve`,

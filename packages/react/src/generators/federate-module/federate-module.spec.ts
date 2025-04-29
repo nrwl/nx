@@ -5,7 +5,6 @@ import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { Linter } from '@nx/eslint';
 import remoteGeneratorInternal from '../remote/remote';
 
 describe('federate-module', () => {
@@ -81,7 +80,7 @@ describe('federate-module', () => {
       directory: 'my-existing-remote',
       e2eTestRunner: 'none',
       skipFormat: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: 'none',
       bundler: 'webpack',
