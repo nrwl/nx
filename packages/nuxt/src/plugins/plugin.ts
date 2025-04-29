@@ -182,6 +182,7 @@ function serveTarget(projectRoot: string) {
     options: {
       cwd: projectRoot,
     },
+    continuous: true,
   };
 
   return targetConfig;
@@ -189,6 +190,7 @@ function serveTarget(projectRoot: string) {
 
 function serveStaticTarget(options: NuxtPluginOptions) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStaticTargetName}`,
