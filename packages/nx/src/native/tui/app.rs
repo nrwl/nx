@@ -6,30 +6,33 @@ use ratatui::layout::{Alignment, Rect};
 use ratatui::style::Modifier;
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::Paragraph;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
+use std::collections::HashMap;
+use std::io::{self, Write};
+use std::sync::{Arc, Mutex, RwLock};
+use vt100_ctt::Parser;
 
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
-use crate::native::tasks::types::{Task, TaskResult};
+use crate::native::{
+    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    tasks::types::{Task, TaskResult},
+};
 use crate::native::tui::tui::Tui;
 
-use super::components::layout_manager::{LayoutAreas, LayoutConfig, LayoutManager, PaneArrangement, TaskListVisibility};
-use super::components::task_selection_manager::SelectionMode;
+use super::action::Action;
+use super::components::countdown_popup::CountdownPopup;
+use super::components::help_popup::HelpPopup;
+use super::components::layout_manager::{LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility};
+use super::components::task_selection_manager::{SelectionMode, TaskSelectionManager};
+use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
+use super::components::Component;
 use super::config::TuiConfig;
-use super::utils::is_cache_hit;
-use super::{
-    action::Action,
-    components::{
-        countdown_popup::CountdownPopup,
-        help_popup::HelpPopup,
-        tasks_list::{TaskStatus, TasksList},
-        Component,
-    },
-    tui,
-};
+use super::pty::PtyInstance;
+use super::tui;
+use super::utils::{is_cache_hit, normalize_newlines};
 
 pub struct App {
     pub components: Vec<Box<dyn Component>>,
@@ -50,13 +53,15 @@ pub struct App {
     // Cached result of layout manager's calculate_layout, only updated when necessary (e.g. terminal resize, task list visibility change etc)
     layout_areas: Option<LayoutAreas>,
     terminal_pane_data: [TerminalPaneData; 2],
-    // The task that is currently visually selected in the tasks list
-    selected_task: Option<String>,
     spacebar_mode: bool,
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
     task_list_hidden: bool,
     focused_pane: Option<usize>,     // Currently focused pane (if any)
     action_tx: Option<UnboundedSender<Action>>,
+    resize_debounce_timer: Option<u128>, // Timer for debouncing resize events
+    // task id -> pty instance
+    pty_instances: HashMap<String, Arc<PtyInstance>>,
+    selection_manager: Arc<Mutex<TaskSelectionManager>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,12 +80,13 @@ impl App {
         title_text: String,
     ) -> Result<Self> {
         let task_count = tasks.len();
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
 
         // Determine initial focus
         let mut focus = Focus::TaskList;
         let mut focused_pane = None;
         if let Some(main_task) = pinned_tasks.first() {
-            // selection_manager.select_task(main_task.clone());
+            selection_manager.lock().unwrap().select_task(main_task.clone());
             // Auto-focus the main task
             focus = Focus::MultipleOutput(0);
             focused_pane = Some(0);
@@ -88,13 +94,11 @@ impl App {
         let mut iter = pinned_tasks.iter().take(2).map(|s| s.clone());
         let pane_tasks = [iter.next(), iter.next()];
 
-        let tasks_list = TasksList::new(tasks, pinned_tasks, title_text, matches!(focus, Focus::TaskList));
-        // let layout = Layout::new(tasks, pinned_tasks, title_text);
+        let tasks_list = TasksList::new(tasks, pinned_tasks, title_text, matches!(focus, Focus::TaskList), selection_manager.clone());
         let help_popup = HelpPopup::new();
         let countdown_popup = CountdownPopup::new();
 
         let components: Vec<Box<dyn Component>> = vec![
-            // Box::new(layout),
             Box::new(tasks_list),
             Box::new(help_popup),
             Box::new(countdown_popup),
@@ -116,18 +120,27 @@ impl App {
             frame_area: None,
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::default()],
-            selected_task: None,
             spacebar_mode: false,
             pane_tasks,
             task_list_hidden: false,
             focused_pane,
             action_tx: None,
+            resize_debounce_timer: None,
+            pty_instances: HashMap::new(),
+            selection_manager,
         })
     }
 
     pub fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
         self.action_tx = Some(tx);
         Ok(())
+    }
+
+    fn dispatch_action(&self, action: Action) {
+        let tx = self.action_tx.clone().unwrap();
+        tokio::spawn(async move {
+            let _ = tx.send(action);
+        });
     }
 
     pub fn start_command(&mut self, thread_count: Option<u32>) {
@@ -150,14 +163,9 @@ impl App {
         }
     }
 
-    pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.set_task_status(task_id, status);
-        }
+
+    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
+        self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
@@ -168,22 +176,25 @@ impl App {
         {
             // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
             // Tasks not run within a pseudo-terminal need a new pty instance to print output
-            if !tasks_list.pty_instances.contains_key(&task_id) {
-                let (parser, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
+            if !self.pty_instances.contains_key(&task_id) {
+                let (parser, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
 
                 // Add ANSI escape sequence to hide cursor at the end of output, it would be confusing to have it visible when a task is a cache hit
                 let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
-                TasksList::write_output_to_parser(parser, output_with_hidden_cursor);
+                Self::write_output_to_parser(parser, output_with_hidden_cursor);
 
-                tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-                let _ = tasks_list.handle_resize(None);
+                self.create_and_register_pty_instance(&task_id, parser_and_writer);
+                // Ensure the pty instances get resized appropriately
+                let _ = self.debounce_pty_resize();
                 return;
             }
 
+            // TODO: update to app tasks and what is actually happening here???
             // If the task is continuous, we are only updating the status, not the output
             if let Some(task) = tasks_list.tasks.iter_mut().find(|t| t.name == task_id) {
                 if task.continuous {
-                    let _ = tasks_list.handle_resize(None);
+                    // Ensure the pty instances get resized appropriately
+                    let _ = self.debounce_pty_resize();
                 }
             }
         }
@@ -236,43 +247,24 @@ impl App {
         parser_and_writer: External<(ParserArc, WriterArc)>,
         task_status: TaskStatus,
     ) {
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-            tasks_list.update_task_status(task_id.clone(), task_status);
-        }
+        self.create_and_register_pty_instance(&task_id, parser_and_writer);
+        self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), task_status));
     }
 
     pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            let (_, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
-
-            tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-            tasks_list.update_task_status(task_id.clone(), TaskStatus::InProgress);
-            let _ = tasks_list.handle_resize(None);
-        }
+        let (_, parser_and_writer) = Self::create_empty_parser_and_noop_writer();
+        self.create_and_register_pty_instance(&task_id, parser_and_writer);
+        self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), TaskStatus::InProgress));
+        // Ensure the pty instances get resized appropriately
+        let _ = self.debounce_pty_resize();
     }
 
     pub fn append_task_output(&mut self, task_id: String, output: String) {
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            let pty = tasks_list
-                .pty_instances
-                .get_mut(&task_id)
-                .expect(&format!("{} has not been registered yet.", task_id));
-
-            pty.process_output(output.as_bytes());
-        }
+        let pty = self
+            .pty_instances
+            .get_mut(&task_id)
+            .expect(&format!("{} has not been registered yet.", task_id));
+        pty.process_output(output.as_bytes());
     }
 
     pub fn handle_event(
@@ -282,10 +274,28 @@ impl App {
     ) -> Result<bool> {
         match event {
             tui::Event::Quit => {
-                action_tx.send(Action::Quit)?;
+                let _ = action_tx.send(Action::Quit);
                 return Ok(true);
             }
-            tui::Event::Tick => action_tx.send(Action::Tick)?,
+            tui::Event::Tick => {
+                let _ = action_tx.send(Action::Tick);
+
+                // Check if we have a pending resize that needs to be processed
+                if let Some(timer) = self.resize_debounce_timer {
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis();
+
+                    if now >= timer {
+                        // Timer expired, process the resize
+                        self.handle_pty_resize()?;
+                        self.resize_debounce_timer = None;
+                    }
+                }
+
+                return Ok(false);
+            },
             tui::Event::Render => action_tx.send(Action::Render)?,
             tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
             tui::Event::Key(key) => {
@@ -302,33 +312,26 @@ impl App {
                     return Ok(true);
                 }
 
-                // Get tasks list component to check interactive mode before handling '?' key
-                if let Some(tasks_list) = self
-                    .components
-                    .iter_mut()
-                    .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+                // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
+                if matches!(key.code, KeyCode::Char('?'))
+                    && !self.is_interactive_mode()
+                    && !matches!(self.focus, Focus::CountdownPopup)
                 {
-                    // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
-                    if matches!(key.code, KeyCode::Char('?'))
-                        && !tasks_list.is_interactive_mode()
-                        && !matches!(self.focus, Focus::CountdownPopup)
+                    let show_help_popup = !matches!(self.focus, Focus::HelpPopup);
+                    if let Some(help_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
                     {
-                        let show_help_popup = !matches!(self.focus, Focus::HelpPopup);
-                        if let Some(help_popup) = self
-                            .components
-                            .iter_mut()
-                            .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
-                        {
-                            help_popup.set_visible(show_help_popup);
-                        }
-                        if show_help_popup {
-                            self.previous_focus = self.focus;
-                            self.focus = Focus::HelpPopup;
-                        } else {
-                            self.focus = self.previous_focus;
-                        }
-                        return Ok(false);
+                        help_popup.set_visible(show_help_popup);
                     }
+                    if show_help_popup {
+                        self.previous_focus = self.focus;
+                        self.focus = Focus::HelpPopup;
+                    } else {
+                        self.focus = self.previous_focus;
+                    }
+                    return Ok(false);
                 }
 
                 // If countdown popup is open, handle its keyboard events
@@ -403,34 +406,36 @@ impl App {
                     return Ok(false);
                 }
 
-                // Get tasks list component for handling key events
+                
+                // TODO: is this a duplicate now???
+                // Handle Up/Down keys for scrolling first
+                if matches!(self.focus, Focus::MultipleOutput(_)) {
+                    match key.code {
+                        KeyCode::Up | KeyCode::Down => {
+                            self.handle_key_event(key).ok();
+                            return Ok(false);
+                        }
+                        KeyCode::Char('k') | KeyCode::Char('j')
+                            if !self.is_interactive_mode() =>
+                        {
+                            self.handle_key_event(key).ok();
+                            return Ok(false);
+                        }
+                        _ => {}
+                    }
+                }
+
+                // Get tasks list component for handling some key events
                 if let Some(tasks_list) = self
                     .components
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
-                    // Handle Up/Down keys for scrolling first
-                    if matches!(self.focus, Focus::MultipleOutput(_)) {
-                        match key.code {
-                            KeyCode::Up | KeyCode::Down => {
-                                tasks_list.handle_key_event(key).ok();
-                                return Ok(false);
-                            }
-                            KeyCode::Char('k') | KeyCode::Char('j')
-                                if !tasks_list.is_interactive_mode() =>
-                            {
-                                tasks_list.handle_key_event(key).ok();
-                                return Ok(false);
-                            }
-                            _ => {}
-                        }
-                    }
-
                     match self.focus {
                         Focus::MultipleOutput(_) => {
-                            if tasks_list.is_interactive_mode() {
+                            if self.is_interactive_mode() {
                                 // Send all other keys to the task list (and ultimately through the terminal pane to the PTY)
-                                tasks_list.handle_key_event(key).ok();
+                                self.handle_key_event(key).ok();
                             } else {
                                 // Handle navigation and special actions
                                 match key.code {
@@ -442,12 +447,12 @@ impl App {
                                     }
                                     // Add our new shortcuts here
                                     KeyCode::Char('c') => {
-                                        tasks_list.handle_key_event(key).ok();
+                                        self.handle_key_event(key).ok();
                                     }
                                     KeyCode::Char('u') | KeyCode::Char('d')
                                         if key.modifiers.contains(KeyModifiers::CONTROL) =>
                                     {
-                                        tasks_list.handle_key_event(key).ok();
+                                        self.handle_key_event(key).ok();
                                     }
                                     KeyCode::Char('b') => {
                                         self.toggle_task_list();
@@ -457,7 +462,7 @@ impl App {
                                     }
                                     _ => {
                                         // Forward other keys for interactivity, scrolling (j/k) etc
-                                        tasks_list.handle_key_event(key).ok();
+                                        self.handle_key_event(key).ok();
                                     }
                                 }
                             }
@@ -475,22 +480,28 @@ impl App {
                             match self.focus {
                                 Focus::TaskList => match key.code {
                                     KeyCode::Char('j') if !is_filter_mode => {
-                                        tasks_list.next();
+                                        self.dispatch_action(Action::NextTask);
+                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Down => {
-                                        tasks_list.next();
+                                        self.dispatch_action(Action::NextTask);
+                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Char('k') if !is_filter_mode => {
-                                        tasks_list.previous();
+                                        self.dispatch_action(Action::PreviousTask);
+                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Up => {
-                                        tasks_list.previous();
+                                        self.dispatch_action(Action::PreviousTask);
+                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Left => {
-                                        tasks_list.previous_page();
+                                        self.dispatch_action(Action::PreviousPage);
+                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Right => {
-                                        tasks_list.next_page();
+                                        self.dispatch_action(Action::NextPage);
+                                        let _ = self.debounce_pty_resize();
                                     }
                                     KeyCode::Esc => {
                                         if matches!(self.focus, Focus::HelpPopup) {
@@ -525,19 +536,33 @@ impl App {
                                                         tasks_list.add_filter_char(c);
                                                     } else {
                                                         match c {
-                                                            'j' => tasks_list.next(),
-                                                            'k' => tasks_list.previous(),
-                                                            '1' => self.assign_current_task_to_pane(0),
-                                                            '2' => self.assign_current_task_to_pane(1),
+                                                            'j' => {
+                                                                self.dispatch_action(Action::NextTask);
+                                                                let _ = self.debounce_pty_resize();
+                                                            }
+                                                            'k' => {
+                                                                self.dispatch_action(Action::PreviousTask);
+                                                                let _ = self.debounce_pty_resize();
+                                                            }
+                                                            '1' => {
+                                                                self.assign_current_task_to_pane(0);
+                                                                let _ = self.handle_pty_resize(); // No need to debounce
+                                                            }
+                                                            '2' => {
+                                                                self.assign_current_task_to_pane(1);
+                                                                let _ = self.handle_pty_resize(); // No need to debounce
+                                                            }
                                                             '0' => self.clear_all_panes(),
-                                                            'h' => tasks_list.previous_page(),
-                                                            'l' => tasks_list.next_page(),
-                                                            'b' => {
-                                                                self.toggle_task_list();
+                                                            'h' => {
+                                                                self.dispatch_action(Action::PreviousPage);
+                                                                let _ = self.debounce_pty_resize();
                                                             }
-                                                            'm' => {
-                                                                self.cycle_layout_modes();
+                                                            'l' => {
+                                                                self.dispatch_action(Action::NextPage);
+                                                                let _ = self.debounce_pty_resize();
                                                             }
+                                                            'b' => self.toggle_task_list(),
+                                                            'm' => self.cycle_layout_modes(),
                                                             _ => {}
                                                         }
                                                     }
@@ -584,38 +609,32 @@ impl App {
                 // Record that the user has interacted with the app
                 self.user_has_interacted = true;
 
-                if let Some(tasks_list) = self
-                    .components
-                    .iter_mut()
-                    .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-                {
-                    match mouse.kind {
-                        MouseEventKind::ScrollUp => {
-                            if matches!(self.focus, Focus::MultipleOutput(_)) {
-                                tasks_list
-                                    .handle_key_event(KeyEvent::new(
-                                        KeyCode::Up,
-                                        KeyModifiers::empty(),
-                                    ))
-                                    .ok();
-                            } else if matches!(self.focus, Focus::TaskList) {
-                                tasks_list.previous();
-                            }
+                match mouse.kind {
+                    MouseEventKind::ScrollUp => {
+                        if matches!(self.focus, Focus::MultipleOutput(_)) {
+                            self
+                                .handle_key_event(KeyEvent::new(
+                                    KeyCode::Up,
+                                    KeyModifiers::empty(),
+                                ))
+                                .ok();
+                        } else if matches!(self.focus, Focus::TaskList) {
+                            self.dispatch_action(Action::PreviousTask);
                         }
-                        MouseEventKind::ScrollDown => {
-                            if matches!(self.focus, Focus::MultipleOutput(_)) {
-                                tasks_list
-                                    .handle_key_event(KeyEvent::new(
-                                        KeyCode::Down,
-                                        KeyModifiers::empty(),
-                                    ))
-                                    .ok();
-                            } else if matches!(self.focus, Focus::TaskList) {
-                                tasks_list.next();
-                            }
-                        }
-                        _ => {}
                     }
+                    MouseEventKind::ScrollDown => {
+                        if matches!(self.focus, Focus::MultipleOutput(_)) {
+                            self
+                                .handle_key_event(KeyEvent::new(
+                                    KeyCode::Down,
+                                    KeyModifiers::empty(),
+                                ))
+                                .ok();
+                        } else if matches!(self.focus, Focus::TaskList) {
+                            self.dispatch_action(Action::NextTask);
+                        }
+                    }
+                    _ => {}
                 }
             }
             _ => {}
@@ -654,26 +673,8 @@ impl App {
                 self.frame_area = Some(rect);
                 // Recalculate the layout areas
                 self.recalculate_layout_areas();
-
-                // TODO: turn these into actions and handle them within the components???
-
-                // Ensure the help popup is resized correctly
-                if let Some(help_popup) = self
-                    .components
-                    .iter_mut()
-                    .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
-                {
-                    help_popup.handle_resize(*w, *h);
-                }
-
-                // Propagate resize to PTY instances
-                if let Some(tasks_list) = self
-                    .components
-                    .iter_mut()
-                    .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-                {
-                    tasks_list.handle_resize(Some((*w, *h))).ok();
-                }
+                // Ensure the pty instances get resized appropriately (debounced)
+                let _ = self.debounce_pty_resize();
             }
             Action::Render => {
                 tui.draw(|f| {
@@ -745,22 +746,22 @@ impl App {
                         {
                             // TODO: unify with layout manager maybe???
                             let relevant_pane_task = if self.spacebar_mode {
-                                self.selected_task.clone().unwrap()
+                                self.selection_manager.lock().unwrap().get_selected_task_name().unwrap().clone()
                             } else {
                                 self.pane_tasks[pane_idx].clone().unwrap()
                             };
                             
                             if let Some(task) = tasks_list.tasks.iter_mut().find(|t| t.name == relevant_pane_task) {
-                                let mut terminal_pane_data = &mut self.terminal_pane_data[1];
+                                let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                                 terminal_pane_data.is_continuous = task.continuous;
-                                    terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                                terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
         
                                 let mut has_pty = false;
-                                if let Some(pty) = tasks_list.pty_instances.get(&relevant_pane_task) {
+                                if let Some(pty) = self.pty_instances.get(&relevant_pane_task) {
                                     terminal_pane_data.pty = Some(pty.clone());
                                     has_pty = true;
                                 }
-        
+
                                 let is_focused = match self.focus {
                                     Focus::MultipleOutput(focused_pane_idx) => {
                                         pane_idx == focused_pane_idx
@@ -777,7 +778,7 @@ impl App {
                                 );
         
                                 let terminal_pane = TerminalPane::new()
-                                    .pty_data(&mut terminal_pane_data)
+                                    .pty_data(terminal_pane_data)
                                     .continuous(task.continuous);
         
                                 f.render_stateful_widget(
@@ -785,7 +786,6 @@ impl App {
                                     *pane_area,
                                     &mut state,
                                 );
-        
                             }
                         }
                     }
@@ -804,13 +804,10 @@ impl App {
                     let _ = countdown_popup.draw(f, frame_area);
                 }).ok();
             }
-            Action::SelectTask(task_name) => {
-                self.selected_task = Some(task_name.clone());
-            }
             _ => {}
         }
 
-        // Update components
+        // Update child components with the received action
         for component in self.components.iter_mut() {
             if let Ok(Some(new_action)) = component.update(action.clone()) {
                 action_tx.send(new_action).ok();
@@ -854,62 +851,68 @@ impl App {
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.set_cloud_message(message);
+        if let Some(message) = message {
+            self.dispatch_action(Action::UpdateCloudMessage(message));
         }
     }
 
-    pub fn recalculate_layout_areas(&mut self) {
+    fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
             self.layout_areas = Some(self.layout_manager.calculate_layout(frame_area));
         }
     }
 
     /// Checks if the current view has any visible output panes.
-    pub fn has_visible_panes(&self) -> bool {
+    fn has_visible_panes(&self) -> bool {
         self.pane_tasks.iter().any(|t| t.is_some())
     }
 
     /// Clears all output panes and resets their associated state.
-    pub fn clear_all_panes(&mut self) {
+    fn clear_all_panes(&mut self) {
         self.pane_tasks = [None, None];
         self.focused_pane = None;
         self.focus = Focus::TaskList;
         self.set_spacebar_mode(false, None);
-
-        let tx = self.action_tx.clone().unwrap();
-        tokio::spawn(async move {
-            tx.send(Action::UnpinAllTasks).unwrap();
-        });
+        self.dispatch_action(Action::UnpinAllTasks);
     }
 
     /// Toggles the visibility of the output pane for the currently selected task.
     /// In spacebar mode, the output follows the task selection.
-    pub fn toggle_output_visibility(&mut self) {
-        // Ensure task list is visible after every spacebar interaction
+    fn toggle_output_visibility(&mut self) {
         self.task_list_hidden = false;
         self.layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
 
-        if let Some(task_name) = self.selected_task.clone() {
-            if self.has_visible_panes() {
-                // Always clear all panes when toggling with spacebar
-                self.clear_all_panes();
-                self.set_spacebar_mode(false, None);
-            } else {
-                // Show current task in pane 1 in spacebar mode
-                self.pane_tasks = [Some(task_name.clone()), None];
-                self.focused_pane = None;
-                self.set_spacebar_mode(true, None);
-            }
+        // Extract task name first to end the immutable borrow
+        let task_name = match self.selection_manager.lock().unwrap().get_selected_task_name() {
+            Some(name) => name.clone(),
+            None => return,
+        };
+
+        if self.has_visible_panes() {
+            self.clear_all_panes();
+            self.set_spacebar_mode(false, None);
+        } else {
+            // Show current task in pane 1 in spacebar mode
+            self.pane_tasks = [Some(task_name), None];
+            self.focused_pane = None;
+            self.set_spacebar_mode(true, None);
         }
     }
 
     fn set_spacebar_mode(&mut self, spacebar_mode: bool, selection_mode_override: Option<SelectionMode>) {
         self.spacebar_mode = spacebar_mode;
+
+        let selection_mode = if spacebar_mode {
+            // When entering spacebar mode, we want to track by name by default
+            SelectionMode::TrackByName
+        } else {
+            // When exiting spacebar mode, we want to track by position by default
+            SelectionMode::TrackByPosition
+        };
+        self.selection_manager
+            .lock()
+            .unwrap()
+            .set_selection_mode(selection_mode_override.unwrap_or(selection_mode));
 
         if spacebar_mode {
             self.layout_manager.set_pane_arrangement(PaneArrangement::Single);
@@ -920,13 +923,10 @@ impl App {
         // Recalculate the layout areas
         self.recalculate_layout_areas();
 
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.set_spacebar_mode(spacebar_mode, selection_mode_override);
-        }
+        // Ensure the pty instances get resized appropriately
+        let _ = self.debounce_pty_resize();
+
+        self.dispatch_action(Action::SetSpacebarMode(spacebar_mode));
     }
 
     pub fn focus_next(&mut self) {
@@ -1047,81 +1047,193 @@ impl App {
         }
     }
 
-    pub fn toggle_task_list(&mut self) {
-        // If there are no visible panes, do nothing otherwise the screen will be blank
+    fn toggle_task_list(&mut self) {
+        // If there are no visible panes, do nothing, otherwise the screen will be blank
         if !self.has_visible_panes() {
             return;
         }
         self.task_list_hidden = !self.task_list_hidden;
         self.layout_manager.set_task_list_visibility(if self.task_list_hidden { TaskListVisibility::Hidden } else { TaskListVisibility::Visible });
         self.recalculate_layout_areas();
+        // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
+        let _ = self.handle_pty_resize();
     }
 
-    pub fn cycle_layout_modes(&mut self) {
+    fn cycle_layout_modes(&mut self) {
         // TODO: add visual feedback about layout modes
         self.layout_manager.cycle_layout_mode();
         self.recalculate_layout_areas();
+        // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
+        let _ = self.handle_pty_resize();
     }
 
-    pub fn assign_current_task_to_pane(&mut self, pane_idx: usize) {
-        if let Some(task_name) = self.selected_task.clone() {
-            // If we're in spacebar mode and this is pane 0, convert to pinned mode
-            if self.spacebar_mode && pane_idx == 0 {
-                self.focused_pane = Some(0);
-                // When converting from spacebar to pinned, stay in name-tracking mode
-                self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
-                self.layout_manager.set_pane_arrangement(PaneArrangement::Single);
-                
-                let tx = self.action_tx.clone().unwrap();
-                tokio::spawn(async move {
-                    tx.send(Action::PinTask(task_name, pane_idx)).unwrap();
-                });
-            } else {
-                // Check if the task is already pinned to the pane
-                if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
-                    // Unpin the task if it's already pinned
-                    self.pane_tasks[pane_idx] = None;
+    fn assign_current_task_to_pane(&mut self, pane_idx: usize) {
+        // Extract task name first to end the immutable borrow
+        let task_name = match self.selection_manager.lock().unwrap().get_selected_task_name() {
+            Some(name) => name.clone(),
+            None => return,
+        };
 
-                    // Adjust focused pane if necessary
-                    if !self.has_visible_panes() {
-                        self.focused_pane = None;
-                        self.focus = Focus::TaskList;
-                        // When all panes are cleared, use position-based selection
-                        self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
-                    }
+        // If we're in spacebar mode and this is pane 0, convert to pinned mode
+        if self.spacebar_mode && pane_idx == 0 {
+            self.focused_pane = Some(0);
+            // When converting from spacebar to pinned, stay in name-tracking mode
+            self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+            self.layout_manager.set_pane_arrangement(PaneArrangement::Single);
+            self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
+        } else {
+            // Check if the task is already pinned to the pane
+            if self.pane_tasks[pane_idx].as_deref() == Some(task_name.as_str()) {
+                // Unpin the task if it's already pinned
+                self.pane_tasks[pane_idx] = None;
 
-                    self.layout_manager.set_pane_arrangement(PaneArrangement::None);
-
-                    let tx = self.action_tx.clone().unwrap();
-                    tokio::spawn(async move {
-                        tx.send(Action::UnpinTask(task_name, pane_idx)).unwrap();
-                    });
-                } else {
-                    // Pin the task to the specified pane
-                    self.pane_tasks[pane_idx] = Some(task_name.clone());
-                    self.focused_pane = Some(pane_idx);
+                // Adjust focused pane if necessary
+                if !self.has_visible_panes() {
+                    self.focused_pane = None;
                     self.focus = Focus::TaskList;
+                    // When all panes are cleared, use position-based selection
+                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
+                }
 
-                    // Exit spacebar mode when pinning
-                    // When pinning a task, use name-based selection
-                    self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
+                self.layout_manager.set_pane_arrangement(PaneArrangement::None);
+                self.dispatch_action(Action::UnpinTask(task_name.clone(), pane_idx));
+            } else {
+                // Pin the task to the specified pane
+                self.pane_tasks[pane_idx] = Some(task_name.clone());
+                self.focused_pane = Some(pane_idx);
+                self.focus = Focus::TaskList;
 
-                    if pane_idx == 0 {
-                        self.layout_manager.set_pane_arrangement(PaneArrangement::Single);
-                    } else if pane_idx == 1 {
-                        self.layout_manager.set_pane_arrangement(PaneArrangement::Double);
-                    }
+                // Exit spacebar mode when pinning
+                // When pinning a task, use name-based selection
+                self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
-                    let tx = self.action_tx.clone().unwrap();
-                    tokio::spawn(async move {
-                        tx.send(Action::PinTask(task_name, pane_idx)).unwrap();
-                    });
+                if pane_idx == 0 {
+                    self.layout_manager.set_pane_arrangement(PaneArrangement::Single);
+                } else if pane_idx == 1 {
+                    self.layout_manager.set_pane_arrangement(PaneArrangement::Double);
+                }
+
+                self.dispatch_action(Action::PinTask(task_name.clone(), pane_idx));
+            }
+        }
+
+        // Always re-evaluate the optimal size of the terminal pane(s)
+        self.recalculate_layout_areas();
+        // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
+        let _ = self.handle_pty_resize();
+    }
+
+    /// Forward key events to the currently focused pane, if any.
+    fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+            terminal_pane_data.handle_key_event(key)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Returns true if the currently focused pane is in interactive mode.
+    fn is_interactive_mode(&self) -> bool {
+        match self.focus {
+            Focus::MultipleOutput(pane_idx) => self.terminal_pane_data[pane_idx].is_interactive(),
+            _ => false,
+        }
+    }
+
+    /// Ensures that the PTY instances get resized appropriately based on the latest layout areas.
+    fn debounce_pty_resize(&mut self) -> io::Result<()> {
+        // Get current time in milliseconds
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+
+        // If we have a timer and it's not expired yet, just return
+        if let Some(timer) = self.resize_debounce_timer {
+            if now < timer {
+                return Ok(());
+            }
+        }
+
+        // Set a new timer for 200ms from now
+        self.resize_debounce_timer = Some(now + 200);
+
+        // Process the resize
+        self.handle_pty_resize()
+    }
+
+    /// Actually processes the resize event by updating PTY dimensions.
+    fn handle_pty_resize(&mut self) -> io::Result<()> {
+        if !self.layout_areas.is_some() {
+            return Ok(());
+        }
+
+        let mut needs_sort = false;
+
+        for (pane_idx, pane_area) in self.layout_areas.as_ref().unwrap().terminal_panes.iter().enumerate() {
+            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+            if let Some(pty) = terminal_pane_data.pty.as_ref() {
+                let (pty_height, pty_width) =
+                    TerminalPane::calculate_pty_dimensions(*pane_area);
+
+                // Get current dimensions before resize
+                let old_rows = if let Some(screen) = pty.get_screen() {
+                    let (rows, _) = screen.size();
+                    rows
+                } else {
+                    0
+                };
+                let mut pty_clone = pty.as_ref().clone();
+                pty_clone.resize(pty_height, pty_width)?;
+
+                // If dimensions changed, mark for sort
+                if old_rows != pty_height {
+                    needs_sort = true;
                 }
             }
-
-            // Always re-evaluate the optimal size of the terminal pane(s) and pty(s)
-            // TODO: this isn't actually resizing the ptys right????
-            self.recalculate_layout_areas();
         }
+
+        // Sort tasks if needed after all resizing is complete
+        if needs_sort {
+            self.dispatch_action(Action::SortTasks);
+        }
+
+        Ok(())
+    }
+
+    fn create_and_register_pty_instance(
+        &mut self,
+        task_id: &str,
+        parser_and_writer: External<(ParserArc, WriterArc)>,
+    ) {
+        // Access the contents of the External
+        let parser_and_writer_clone = parser_and_writer.clone();
+        let (parser, writer) = &parser_and_writer_clone;
+        let pty = Arc::new(
+            PtyInstance::new(task_id.to_string(), parser.clone(), writer.clone())
+                .map_err(|e| napi::Error::from_reason(format!("Failed to create PTY: {}", e)))
+                .unwrap(),
+        );
+
+        self.pty_instances.insert(task_id.to_string(), pty.clone());
+    }
+
+    fn create_empty_parser_and_noop_writer() -> (ParserArc, External<(ParserArc, WriterArc)>) {
+        // Use sane defaults for rows, cols and scrollback buffer size. The dimensions will be adjusted dynamically later.
+        let parser = Arc::new(RwLock::new(Parser::new(24, 80, 10000)));
+        let writer: Arc<Mutex<Box<dyn Write + Send>>> =
+            Arc::new(Mutex::new(Box::new(std::io::sink())));
+        (parser.clone(), External::new((parser, writer)))
+    }
+
+    // Writes the given output to the given parser, used for the case where a task is a cache hit, or when it is run outside of the rust pseudo-terminal
+    fn write_output_to_parser(parser: ParserArc, output: String) {
+        let normalized_output = normalize_newlines(output.as_bytes());
+        parser
+            .write()
+            .unwrap()
+            .write_all(&normalized_output)
+            .unwrap();
     }
 }

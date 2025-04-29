@@ -5,7 +5,6 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
     tty::IsTty,
 };
-use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use portable_pty::{CommandBuilder, NativePtySystem, PtyPair, PtySize, PtySystem};
 use std::io::stdout;

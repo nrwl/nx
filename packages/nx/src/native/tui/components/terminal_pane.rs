@@ -254,8 +254,8 @@ impl<'a> TerminalPane<'a> {
             | TaskStatus::RemoteCache => Color::Green,
             TaskStatus::Failure => Color::Red,
             TaskStatus::Skipped => Color::Yellow,
-            TaskStatus::InProgress | TaskStatus::Shared=> Color::LightCyan,
-            TaskStatus::NotStarted | TaskStatus::Stopped=> Color::DarkGray,
+            TaskStatus::InProgress | TaskStatus::Shared => Color::LightCyan,
+            TaskStatus::NotStarted | TaskStatus::Stopped => Color::DarkGray,
         })
     }
 

@@ -185,7 +185,6 @@ impl AppLifeCycle {
         let (action_tx, mut action_rx) = tokio::sync::mpsc::unbounded_channel();
         debug!("Initialized Action Channel");
 
-        
         // Initialize components
         if let Ok(mut app) = app_mutex.lock() {
             app.register_action_handler(action_tx.clone()).ok();
@@ -259,7 +258,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         let mut app = self.app.lock().unwrap();
-        app.set_task_status(task_id, status)
+        app.update_task_status(task_id, status)
     }
 
     #[napi]

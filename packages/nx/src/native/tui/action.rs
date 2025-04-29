@@ -1,3 +1,5 @@
+use super::components::tasks_list::TaskStatus;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
     Tick,
@@ -13,16 +15,20 @@ pub enum Action {
     RemoveFilterChar,
     ScrollUp,
     ScrollDown,
-    // Represents the visual selection of a task in the task list (it may or not have its output pane visible while selected)
-    SelectTask(String),
     PinTask(String, usize),
     UnpinTask(String, usize),
     UnpinAllTasks,
+    SortTasks,
     NextPage,
     PreviousPage,
+    NextTask,
+    PreviousTask,
     ToggleOutput,
     FocusNext,
     FocusPrevious,
+    SetSpacebarMode(bool),
     ScrollPaneUp(usize),
     ScrollPaneDown(usize),
+    UpdateTaskStatus(String, TaskStatus),
+    UpdateCloudMessage(String),
 }

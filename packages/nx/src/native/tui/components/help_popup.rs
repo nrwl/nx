@@ -9,6 +9,9 @@ use ratatui::{
     },
 };
 use std::any::Any;
+use tokio::sync::mpsc::UnboundedSender;
+
+use crate::native::tui::action::Action;
 
 use super::{Component, Frame};
 
@@ -18,6 +21,7 @@ pub struct HelpPopup {
     content_height: usize,
     viewport_height: usize,
     visible: bool,
+    action_tx: Option<UnboundedSender<Action>>,
 }
 
 impl HelpPopup {
@@ -28,6 +32,7 @@ impl HelpPopup {
             content_height: 0,
             viewport_height: 0,
             visible: false,
+            action_tx: None,
         }
     }
 
@@ -325,16 +330,32 @@ impl Clone for HelpPopup {
             content_height: self.content_height,
             viewport_height: self.viewport_height,
             visible: self.visible,
+            action_tx: self.action_tx.clone(),
         }
     }
 }
 
 impl Component for HelpPopup {
+    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+        self.action_tx = Some(tx);
+        Ok(())
+    }
+
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
         }
         Ok(())
+    }
+
+    fn update(&mut self, action: Action) -> Result<Option<Action>> {
+        match action {
+            Action::Resize(w, h) => {
+                self.handle_resize(w, h);
+            }
+            _ => {}
+        }
+        Ok(None)
     }
 
     fn as_any(&self) -> &dyn Any {
