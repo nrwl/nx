@@ -321,6 +321,9 @@ export class TaskOrchestrator {
     batch: Batch,
     groupId: number
   ) {
+    const applyFromCacheOrRunBatchStart = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:start'
+    );
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
@@ -374,9 +377,19 @@ export class TaskOrchestrator {
         groupId
       );
     }
+    // Batch is done, mark it as completed
+    const applyFromCacheOrRunBatchEnd = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
+    );
+    performance.measure(
+      'TaskOrchestrator-apply-from-cache-or-run-batch',
+      applyFromCacheOrRunBatchStart.name,
+      applyFromCacheOrRunBatchEnd.name
+    );
   }
 
   private async runBatch(batch: Batch, env: NodeJS.ProcessEnv) {
+    const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
       const batchProcess =
         await this.forkedProcessTaskRunner.forkProcessForBatch(
@@ -402,6 +415,13 @@ export class TaskOrchestrator {
         task: this.taskGraph.tasks[rootTaskId],
         status: 'failure' as TaskStatus,
       }));
+    } finally {
+      const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
+      performance.measure(
+        'TaskOrchestrator-run-batch',
+        runBatchStart.name,
+        runBatchEnd.name
+      );
     }
   }
 

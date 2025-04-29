@@ -2087,7 +2087,17 @@
         "originalFilePath": "shared/packages/gradle/gradle-plugin"
       }
     ],
-    "executors": [],
+    "executors": [
+      {
+        "description": "The Gradlew executor is used to run Gradle tasks.",
+        "file": "generated/packages/gradle/executors/gradle.json",
+        "hidden": false,
+        "name": "gradle",
+        "originalFilePath": "/packages/gradle/src/executors/gradle/schema.json",
+        "path": "gradle/executors/gradle",
+        "type": "executor"
+      }
+    ],
     "generators": [
       {
         "description": "Initializes a Gradle project in the current workspace",

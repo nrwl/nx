@@ -8388,6 +8388,23 @@
             "disableCollapsible": false
           },
           {
+            "id": "executors",
+            "path": "/nx-api/gradle/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "gradle",
+                "path": "/nx-api/gradle/executors/gradle",
+                "name": "gradle",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "generators",
             "path": "/nx-api/gradle/generators",
             "name": "generators",
