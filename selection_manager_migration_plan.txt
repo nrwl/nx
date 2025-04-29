@@ -1,0 +1,252 @@
+# Selection Manager Migration Plan
+## Moving TaskSelectionManager from TasksList to App level
+
+## Analysis of Current Usage
+
+The selection_manager in TasksList is currently used for:
+
+1. **Initialization**: Created in `new()` method, initialized with pinned tasks
+2. **Navigation**: Used in `next()`, `previous()`, `next_page()`, `previous_page()`
+3. **Selection state**: Methods like `get_selected_task_name()` and `is_selected()`
+4. **Filtering**: Used when applying filters to update entries and change selection mode
+5. **Rendering**: Used to determine visible entries and selection state during rendering
+6. **Mode changes**: Used when toggling visibility modes, spacebar mode, etc.
+
+## Implementation Plan
+
+### 1. Add selection_manager to App struct
+
+```rust
+// In app.rs
+use super::components::task_selection_manager::{SelectionMode, TaskSelectionManager};
+
+pub struct App {
+    // ... existing fields
+    selection_manager: TaskSelectionManager,
+}
+```
+
+### 2. Initialize selection_manager in App::new()
+
+```rust
+// In App::new()
+let mut selection_manager = TaskSelectionManager::new(5); // Default 5 items per page
+
+// Similar to what was in TasksList::new()
+if let Some(main_task) = pinned_tasks.first() {
+    selection_manager.select_task(main_task.clone());
+}
+
+// Add to struct initialization
+App {
+    // ... existing fields
+    selection_manager,
+}
+```
+
+### 3. Create accessor methods in App
+
+```rust
+impl App {
+    // Navigation methods
+    pub fn next_task(&mut self) {
+        self.selection_manager.next();
+    }
+    
+    pub fn previous_task(&mut self) {
+        self.selection_manager.previous();
+    }
+    
+    pub fn next_page(&mut self) {
+        self.selection_manager.next_page();
+    }
+    
+    pub fn previous_page(&mut self) {
+        self.selection_manager.previous_page();
+    }
+    
+    // Selection state methods
+    pub fn get_selected_task_name(&self) -> Option<String> {
+        self.selection_manager.get_selected_task_name()
+    }
+    
+    pub fn is_selected_task(&self, task_name: &str) -> bool {
+        self.selection_manager.is_selected(task_name)
+    }
+    
+    pub fn select_task(&mut self, task_name: String) {
+        self.selection_manager.select_task(task_name);
+    }
+    
+    // Update methods
+    pub fn update_selection_entries(&mut self, entries: Vec<Option<String>>) {
+        self.selection_manager.update_entries(entries);
+    }
+    
+    pub fn set_selection_mode(&mut self, mode: SelectionMode) {
+        self.selection_manager.set_selection_mode(mode);
+    }
+    
+    pub fn set_items_per_page(&mut self, items_per_page: usize) {
+        self.selection_manager.set_items_per_page(items_per_page);
+    }
+    
+    // Pagination methods
+    pub fn get_current_page(&self) -> usize {
+        self.selection_manager.get_current_page()
+    }
+    
+    pub fn get_total_pages(&self) -> usize {
+        self.selection_manager.total_pages()
+    }
+    
+    pub fn get_current_page_entries(&self) -> Vec<Option<String>> {
+        self.selection_manager.get_current_page_entries()
+    }
+}
+```
+
+### 4. Add a reference to App in TasksList
+
+Since App already contains TasksList, we need to provide a way for TasksList to access App's selection methods without creating circular references. We'll use a pattern where App passes methods to TasksList.
+
+```rust
+// In tasks_list.rs, add a new field
+pub struct TasksList {
+    // ... existing fields
+    app_selection: Option<Arc<Mutex<dyn SelectionInterface>>>,
+}
+
+// Define a trait for the selection interface
+pub trait SelectionInterface: Send {
+    fn next(&mut self);
+    fn previous(&mut self);
+    fn next_page(&mut self);
+    fn previous_page(&mut self);
+    fn get_selected_task_name(&self) -> Option<String>;
+    fn is_selected(&self, task_name: &str) -> bool;
+    fn select_task(&mut self, task_name: String);
+    fn update_entries(&mut self, entries: Vec<Option<String>>);
+    fn set_selection_mode(&mut self, mode: SelectionMode);
+    fn set_items_per_page(&mut self, items_per_page: usize);
+    fn get_current_page(&self) -> usize;
+    fn total_pages(&self) -> usize;
+    fn get_current_page_entries(&self) -> Vec<Option<String>>;
+}
+
+// Implement this trait for App
+impl SelectionInterface for App {
+    // Implement all methods by delegating to selection_manager
+}
+```
+
+### 5. Update TasksList methods to use App's selection_manager
+
+```rust
+impl TasksList {
+    pub fn set_app_selection(&mut self, app_selection: Arc<Mutex<dyn SelectionInterface>>) {
+        self.app_selection = Some(app_selection);
+    }
+
+    pub fn next(&mut self) {
+        if let Some(app_selection) = &self.app_selection {
+            app_selection.lock().unwrap().next();
+            self.update_pane_visibility_after_selection_change();
+        } else {
+            // Fallback to local for transitional period
+            self.selection_manager.next();
+            self.update_pane_visibility_after_selection_change();
+        }
+    }
+
+    // Similarly update all other methods that use selection_manager
+}
+```
+
+### 6. Update TasksList rendering to use App's selection state
+
+```rust
+fn create_entries_with_separator(&self, filtered_names: &[String]) -> Vec<Option<String>> {
+    // ... existing code
+    
+    // Update the entries in App's selection manager instead of local
+    if let Some(app_selection) = &self.app_selection {
+        app_selection.lock().unwrap().update_entries(entries.clone());
+    } else {
+        self.selection_manager.update_entries(entries.clone());
+    }
+    
+    entries
+}
+```
+
+### 7. In App, inject selection manager into TasksList
+
+```rust
+// In App::new() or another initialization method
+let app_selection = Arc::new(Mutex::new(self as &mut dyn SelectionInterface));
+if let Some(tasks_list) = self.components.iter_mut()
+    .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>()) {
+    tasks_list.set_app_selection(app_selection);
+}
+```
+
+### 8. Gradual migration strategy
+
+1. First implement all App selection methods and the SelectionInterface
+2. Update TasksList to try using App's selection_manager first, falling back to local
+3. Verify everything works with both implementations
+4. Finally, remove the local selection_manager from TasksList
+
+### 9. Clean up TasksList after successful migration
+
+```rust
+pub struct TasksList {
+    // ... other fields
+    // Remove selection_manager field
+    app_selection: Arc<Mutex<dyn SelectionInterface>>, // Now required
+}
+```
+
+## Alternative Approaches
+
+### Direct Reference Approach
+
+If circular references are not a concern (e.g., using Rc<RefCell<>> in a single-threaded context), we could pass a direct reference to App:
+
+```rust
+pub struct TasksList {
+    // ... existing fields
+    app: Option<Weak<RefCell<App>>>,
+}
+
+// Then use app directly in TasksList methods
+```
+
+### Callback Approach
+
+Instead of storing a reference, pass callbacks for each selection operation:
+
+```rust
+pub struct TasksList {
+    // ... existing fields
+    next_callback: Option<Box<dyn Fn() -> ()>>,
+    previous_callback: Option<Box<dyn Fn() -> ()>>,
+    // etc.
+}
+```
+
+## Potential Issues and Mitigation
+
+1. **Race Conditions**: The use of Arc<Mutex<>> can introduce lock contention. Consider using channels for communication instead.
+
+2. **Error Handling**: Proper error handling if locks fail (e.g., if a thread panics while holding the lock).
+
+3. **Performance**: Frequent locking/unlocking might impact performance. Consider batching operations that need the selection state.
+
+## Testing Strategy
+
+1. Implement unit tests for the new App selection methods
+2. Test each TasksList method with the fallback mechanism
+3. Test the full integration with App's selection manager
+4. Verify that the rendering and selection behavior remain unchanged 

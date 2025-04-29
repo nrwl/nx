@@ -13,8 +13,11 @@ pub enum Action {
     RemoveFilterChar,
     ScrollUp,
     ScrollDown,
-    NextTask,
-    PreviousTask,
+    // Represents the visual selection of a task in the task list (it may or not have its output pane visible while selected)
+    SelectTask(String),
+    PinTask(String, usize),
+    UnpinTask(String, usize),
+    UnpinAllTasks,
     NextPage,
     PreviousPage,
     ToggleOutput,

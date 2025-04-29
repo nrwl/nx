@@ -185,8 +185,11 @@ impl AppLifeCycle {
         let (action_tx, mut action_rx) = tokio::sync::mpsc::unbounded_channel();
         debug!("Initialized Action Channel");
 
+        
         // Initialize components
         if let Ok(mut app) = app_mutex.lock() {
+            app.register_action_handler(action_tx.clone()).ok();
+
             // Store callback for cleanup
             app.set_done_callback(done_callback);
 
