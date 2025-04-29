@@ -2219,6 +2219,16 @@
       }
     },
     "migrations": {
+      "/nx-api/jest/migrations/remove-tsconfig-option-from-jest-executor": {
+        "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
+        "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-option-from-jest-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/remove-tsconfig-option-from-jest-executor",
+        "type": "migration"
+      },
       "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21": {
         "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
         "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
