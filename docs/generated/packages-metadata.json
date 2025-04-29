@@ -5330,6 +5330,16 @@
     ],
     "migrations": [
       {
+        "description": "Remove isolatedConfig option for @nx/webpack:webpack",
+        "file": "generated/packages/webpack/migrations/update-21-0-0-remove-isolated-config.json",
+        "hidden": false,
+        "name": "update-21-0-0-remove-isolated-config",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/webpack",
+        "path": "webpack/migrations/update-21-0-0-remove-isolated-config",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",
         "hidden": false,
