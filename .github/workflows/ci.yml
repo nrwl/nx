@@ -8,10 +8,6 @@ on:
     branches:
       - "**"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !contains(github.event.type, 'push')}}
-
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
@@ -109,12 +105,24 @@ jobs:
   main-macos:
     runs-on: macos-latest
 
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ !contains(github.event_name, 'push')}}
+
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-macos
       NX_PERF_LOGGING: 'false'
       NX_CI_EXECUTION_ENV: 'macos'
       SELECTED_PM: 'npm'
     steps:
+
+      - name: Log concurrency info
+        run: |
+          echo "Concurrency group: ${{ github.workflow }}-${{ github.ref }}"
+          echo "Concurrency cancel-in-progress: ${{ !contains(github.event_name, 'push') }}"
+          echo "Concurrency cancel-event-name: ${{ github.event_name }}"
+        if: always()
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
