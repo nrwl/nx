@@ -61,7 +61,7 @@
     "@ltd/j-toml": "^1.38.0",
     "@module-federation/enhanced": "^0.9.0",
     "@module-federation/sdk": "^0.9.0",
-    "@monodon/rust": "2.1.1",
+    "@monodon/rust": "2.3.0",
     "@napi-rs/cli": "3.0.0-alpha.56",
     "@napi-rs/wasm-runtime": "0.2.4",
     "@nestjs/cli": "^10.0.2",
