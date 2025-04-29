@@ -3805,6 +3805,16 @@
       }
     },
     "migrations": {
+      "/nx-api/react/migrations/update-21-0-0-update-babel-loose": {
+        "description": "Replaces `classProperties.loose` option with `loose`.",
+        "file": "generated/packages/react/migrations/update-21-0-0-update-babel-loose.json",
+        "hidden": false,
+        "name": "update-21-0-0-update-babel-loose",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-21-0-0-update-babel-loose",
+        "type": "migration"
+      },
       "/nx-api/react/migrations/add-mf-env-var-to-target-defaults": {
         "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
         "file": "generated/packages/react/migrations/add-mf-env-var-to-target-defaults.json",
