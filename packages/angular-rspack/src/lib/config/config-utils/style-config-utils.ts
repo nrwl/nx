@@ -1,9 +1,9 @@
-import type { StylePreprocessorOptions } from '@nx/angular-rspack-compiler';
-import { workspaceRoot } from '@nx/devkit';
 import { CssExtractRspackPlugin, type RuleSetUseItem } from '@rspack/core';
+import { workspaceRoot } from '@nx/devkit';
+import type { StylePreprocessorOptions } from '@nx/angular-rspack-compiler';
 import { relative, resolve } from 'node:path';
-import type { NormalizedAngularRspackPluginOptions } from '../models';
-import { findTailwindConfigurationFile } from '../utils/tailwind';
+import type { NormalizedAngularRspackPluginOptions } from '../../models';
+import { findTailwindConfigurationFile } from '../../utils/tailwind';
 
 /**
  * Returns an array of style loaders for sass and less. Both loader´s are always returned

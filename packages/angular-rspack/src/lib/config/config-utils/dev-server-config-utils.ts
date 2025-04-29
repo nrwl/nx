@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { existsSync, promises as fsPromises } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { loadEsmModule } from '../utils/misc-helpers';
+import { loadEsmModule } from '../../utils/misc-helpers';
 
 export function getAllowedHostsConfig(
   allowedHosts: string[] | boolean | undefined,

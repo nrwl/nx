@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import type { GlobalEntry } from '../models';
+import type { GlobalEntry } from '../../models';
 
 export function getEntryPoints(
   globalStyles: GlobalEntry[],

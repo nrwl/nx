@@ -6,7 +6,7 @@ import {
   RspackPluginInstance,
 } from '@rspack/core';
 import { posix, relative, resolve } from 'node:path';
-import { getEntryPoints } from '../config/entry-points';
+import { getEntryPoints } from '../config/config-utils/entry-points';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
