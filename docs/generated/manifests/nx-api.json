@@ -1312,6 +1312,16 @@
       }
     },
     "migrations": {
+      "/nx-api/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor": {
+        "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
+        "file": "generated/packages/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "type": "migration"
+      },
       "/nx-api/cypress/migrations/set-inject-document-domain": {
         "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
         "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",

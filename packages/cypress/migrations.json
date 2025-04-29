@@ -41,6 +41,11 @@
       },
       "description": "Updates the module specifier for the Component Testing `mount` function.",
       "implementation": "./src/migrations/update-20-8-0/update-component-testing-mount-imports"
+    },
+    "remove-tsconfig-and-copy-files-options-from-cypress-executor": {
+      "version": "21.0.0-beta.10",
+      "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
+      "implementation": "./src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor"
     }
   },
   "packageJsonUpdates": {
