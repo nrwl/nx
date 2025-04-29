@@ -225,6 +225,39 @@ If you are using distributed task execution, tasks will still be run simultaneou
 
 {% /callout %}
 
+### Continuous
+
+In Nx 21+, tasks that never exit can be configured with `"continuous": true` to prevent their dependent tasks from waiting for task completion. For example, the `e2e` task depends on a continuous `serve` task to ensure that the development server is running.
+
+In this example, application's configuration labels the `serve` task as continuous.
+
+```json {% fileName="apps/myapp/project.json" %}
+{
+  "targets": {
+    "serve": {
+      "continuous": true
+    }
+  }
+}
+```
+
+And the E2E project's `e2e` task has a dependency on the `serve` task, which ensures that the server is running when we run the `e2e` task.
+
+```json {% fileName="apps/myapp-e2e/project.json" %}
+{
+  "targets": {
+    "e2e": {
+      "dependsOn": [
+        {
+          "projects": "myapp",
+          "target": "serve"
+        }
+      ]
+    }
+  }
+}
+```
+
 ### Inputs and Named Inputs
 
 Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.
