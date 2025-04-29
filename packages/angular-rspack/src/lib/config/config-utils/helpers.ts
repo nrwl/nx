@@ -5,9 +5,17 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { OutputHashing, HashFormat } from '../models';
 import { readdir, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import {
+  AngularRspackPluginOptions,
+  HashFormat,
+  NormalizedAngularRspackPluginOptions,
+  normalizeOptions,
+  OutputHashing,
+} from '../../models';
+import { configureI18n } from '../i18n/create-i18n-options';
+import type { Configuration } from '@rspack/core';
 
 /**
  * Delete an output directory, but error out if it's the root of the project.
@@ -92,4 +100,43 @@ export function getOutputHashFormat(
         script: '',
       };
   }
+}
+
+export async function normalizeOptionWithI18n(
+  options: AngularRspackPluginOptions
+) {
+  const { options: _options, i18n } = await configureI18n(
+    options.root ?? process.cwd(),
+    options
+  );
+  // Update file hashes to include translation file content
+  const i18nHash = i18n.shouldInline
+    ? Object.values(i18n.locales).reduce(
+        (data, locale) =>
+          data + locale.files.map((file) => file.integrity || '').join('|'),
+        ''
+      )
+    : () => {
+        // no-op as i18n is not inlined
+      };
+
+  const normalizedOptions = await normalizeOptions(_options);
+  return { i18n, i18nHash, normalizedOptions };
+}
+
+export function getCrossOriginLoading(
+  normalizedOptions: NormalizedAngularRspackPluginOptions
+) {
+  let crossOriginLoading: NonNullable<
+    Configuration['output']
+  >['crossOriginLoading'] = false;
+  if (
+    normalizedOptions.subresourceIntegrity &&
+    normalizedOptions.crossOrigin === 'none'
+  ) {
+    crossOriginLoading = 'anonymous';
+  } else if (normalizedOptions.crossOrigin !== 'none') {
+    crossOriginLoading = normalizedOptions.crossOrigin;
+  }
+  return crossOriginLoading;
 }

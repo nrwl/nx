@@ -1,8 +1,5 @@
-import {
-  _createConfig,
-  createConfig,
-  handleConfigurations,
-} from './create-config';
+import { _createConfig, createConfig } from './create-config';
+import { handleConfigurations } from './config-utils/user-defined-config-helpers';
 import { beforeEach, expect } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
 import { join } from 'node:path';
