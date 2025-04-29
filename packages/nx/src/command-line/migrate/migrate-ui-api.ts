@@ -27,7 +27,6 @@ export type SuccessfulMigration = {
   name: string;
   changedFiles: Omit<FileChange, 'content'>[];
   ref: string;
-  nextSteps?: string[];
 };
 
 export type FailedMigration = {
@@ -136,7 +135,7 @@ export async function runSingleMigration(
     // 2. Bundled into Console, so the version is fixed to what we build Console with.
     const updatedMigrateModule = await import('./migrate.js');
 
-    const { changes: fileChanges, nextSteps } =
+    const { changes: fileChanges } =
       await updatedMigrateModule.runNxOrAngularMigration(
         workspacePath,
         migration,
@@ -160,8 +159,7 @@ export async function runSingleMigration(
           path: change.path,
           type: change.type,
         })),
-        gitRefAfter,
-        nextSteps
+        gitRefAfter
       )
     );
 
@@ -236,8 +234,7 @@ export function modifyMigrationsJsonMetadata(
 export function addSuccessfulMigration(
   id: string,
   fileChanges: Omit<FileChange, 'content'>[],
-  ref: string,
-  nextSteps: string[]
+  ref: string
 ) {
   return (
     migrationsJsonMetadata: MigrationsJsonMetadata
@@ -253,7 +250,6 @@ export function addSuccessfulMigration(
         name: id,
         changedFiles: fileChanges,
         ref,
-        nextSteps,
       },
     };
     return copied;
