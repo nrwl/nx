@@ -98,6 +98,10 @@ impl TerminalPaneData {
                 }
                 // Only send input to PTY if we're in interactive mode
                 _ if self.is_interactive => match key.code {
+                    KeyCode::Char(c) if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        let ascii_code = (c as u8) - 0x60;
+                        pty_mut.write_input(&[ascii_code])?;
+                    }
                     KeyCode::Char(c) => {
                         pty_mut.write_input(c.to_string().as_bytes())?;
                     }
