@@ -110,14 +110,20 @@ impl PseudoTerminal {
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
                     if let Ok(mut parser) = parser_clone.write() {
-                        let prev = parser.screen().clone();
-
                         parser.process(&buf[..len]);
-                        debug!("{}", parser.get_raw_output().len());
 
-                        let write_buf = parser.screen().contents_diff(&prev);
                         if !quiet {
                             let mut logged_interrupted_error = false;
+
+                            let mut content = String::from_utf8_lossy(&buf[0..len]).to_string();
+                            if content.contains("\x1B[6n") {
+                                trace!("Prevented terminal escape sequence ESC[6n from being printed.");
+                                content = content.replace("\x1B[6n", "");
+                            }
+
+                            let write_buf = content.as_bytes();
+                            debug!("Escaped Stdout: {:?}", write_buf.escape_ascii().to_string());
+
                             while let Err(e) = stdout.write_all(&write_buf) {
                                 match e.kind() {
                                     std::io::ErrorKind::Interrupted => {
