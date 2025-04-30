@@ -139,6 +139,18 @@
         "parallel": false
       }
     },
-    "test-native": {}
+    "test-native": {},
+    "format-native": {
+      "command": "cargo fmt",
+      "options": {
+        "cwd": "{projectRoot}/src/native",
+        "args": ["--all", "--check"]
+      },
+      "configurations": {
+        "fix": {
+          "args": ["--all"]
+        }
+      }
+    }
   }
 }
