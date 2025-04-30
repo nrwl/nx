@@ -60,7 +60,9 @@ private fun getTestClassNameIfAnnotated(file: File): String? {
   return file
       .takeIf { it.exists() }
       ?.readText()
-      ?.takeIf { it.contains("@Test") || it.contains("@TestTemplate") }
+      ?.takeIf {
+        it.contains("@Test") || it.contains("@TestTemplate") || it.contains("@ParameterizedTest")
+      }
       ?.let { content ->
         val className = classDeclarationRegex.find(content)?.groupValues?.getOrNull(1)
         return if (className != null && !className.startsWith("Fake")) {

@@ -140,11 +140,15 @@ fun processTargetsForProject(
       if (task.name == "check" && (hasCiTestTarget || hasCiIntTestTarget)) {
         val replacedDependencies =
             (target["dependsOn"] as? List<*>)?.map { dep ->
-              when (dep.toString()) {
-                testTargetName -> ciTestTargetName ?: dep
-                intTestTargetName -> ciIntTestTargetName ?: dep
-                else -> dep
-              }.toString()
+              val dependsOn = dep.toString()
+              if (ciTestTargetName != null && dependsOn == "${project.name}:$testTargetName") {
+                "${project.name}:$ciTestTargetName"
+              } else if (ciIntTestTargetName != null &&
+                  dependsOn == "${project.name}:$intTestTargetName") {
+                "${project.name}:$ciIntTestTargetName"
+              } else {
+                dep
+              }
             } ?: emptyList()
 
         val newTarget: MutableMap<String, Any?> =
