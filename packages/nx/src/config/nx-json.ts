@@ -191,11 +191,20 @@ export interface NxReleaseChangelogConfiguration {
   createRelease?:
     | false
     | 'github'
+    | 'gitlab'
     | {
         provider: 'github-enterprise-server';
         hostname: string;
         /**
          * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      }
+    | {
+        provider: 'gitlab';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v4`
          */
         apiBaseUrl?: string;
       };
