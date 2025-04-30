@@ -1305,6 +1305,16 @@
     ],
     "migrations": [
       {
+        "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
+        "file": "generated/packages/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/cypress",
+        "path": "cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "type": "migration"
+      },
+      {
         "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
         "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",
         "hidden": false,
@@ -1382,36 +1392,6 @@
         "version": "19.1.0-beta.0",
         "originalFilePath": "/packages/cypress",
         "path": "cypress/migrations/19.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Update to Cypress ^13.6.6 if the workspace is using Cypress v13 to ensure workspaces don't use v13.6.5 which has an issue when verifying Cypress.",
-        "file": "generated/packages/cypress/migrations/update-cypress-version-13-6-6.json",
-        "hidden": false,
-        "name": "update-cypress-version-13-6-6",
-        "version": "18.1.0-beta.3",
-        "originalFilePath": "/packages/cypress",
-        "path": "cypress/migrations/update-cypress-version-13-6-6",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/cypress/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.3",
-        "originalFilePath": "/packages/cypress",
-        "path": "cypress/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/cypress/migrations/17.2.0-beta.2-package-updates.json",
-        "hidden": false,
-        "name": "17.2.0-beta.2-package-updates",
-        "version": "17.2.0-beta.2",
-        "originalFilePath": "/packages/cypress",
-        "path": "cypress/migrations/17.2.0-beta.2-package-updates",
         "type": "migration"
       }
     ],
@@ -1514,26 +1494,6 @@
         "version": "19.2.0-beta.2",
         "originalFilePath": "/packages/detox",
         "path": "detox/migrations/19.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/detox/migrations/18.1.0-package-updates.json",
-        "hidden": false,
-        "name": "18.1.0-package-updates",
-        "version": "18.1.0-beta.0",
-        "originalFilePath": "/packages/detox",
-        "path": "detox/migrations/18.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/detox/migrations/18.0.0-package-updates.json",
-        "hidden": false,
-        "name": "18.0.0-package-updates",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/detox",
-        "path": "detox/migrations/18.0.0-package-updates",
         "type": "migration"
       }
     ],
@@ -1764,96 +1724,6 @@
         "originalFilePath": "/packages/eslint",
         "path": "eslint/migrations/19.5.0-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/18.2.0-package-updates.json",
-        "hidden": false,
-        "name": "18.2.0-package-updates",
-        "version": "18.2.0-beta.0",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/18.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.0",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Move executor options to target defaults",
-        "file": "generated/packages/eslint/migrations/move-options-to-target-defaults.json",
-        "hidden": false,
-        "name": "move-options-to-target-defaults",
-        "version": "17.2.9",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/move-options-to-target-defaults",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/17.2.0-package-updates.json",
-        "hidden": false,
-        "name": "17.2.0-package-updates",
-        "version": "17.2.0-beta.2",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/17.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Simplify eslintFilePatterns",
-        "file": "generated/packages/eslint/migrations/simplify-eslint-patterns.json",
-        "hidden": false,
-        "name": "simplify-eslint-patterns",
-        "version": "17.2.0-beta.0",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/simplify-eslint-patterns",
-        "type": "migration"
-      },
-      {
-        "description": "Updates for @typescript-utils/utils v6.9.1+",
-        "file": "generated/packages/eslint/migrations/update-typescript-eslint.json",
-        "hidden": false,
-        "name": "update-typescript-eslint",
-        "version": "17.1.0-beta.1",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/update-typescript-eslint",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/17.1.0-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-package-updates",
-        "version": "17.1.0-beta.1",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/17.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/eslint/migrations/17.0.0-package-updates.json",
-        "hidden": false,
-        "name": "17.0.0-package-updates",
-        "version": "17.0.0-rc.2",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/17.0.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "update-17-0-0-rename-to-eslint",
-        "file": "generated/packages/eslint/migrations/update-17-0-0-rename-to-eslint.json",
-        "hidden": false,
-        "name": "update-17-0-0-rename-to-eslint",
-        "version": "17.0.0-beta.7",
-        "originalFilePath": "/packages/eslint",
-        "path": "eslint/migrations/update-17-0-0-rename-to-eslint",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -1910,16 +1780,6 @@
         "version": "19.1.0-beta.6",
         "originalFilePath": "/packages/eslint-plugin",
         "path": "eslint-plugin/migrations/update-19-1-0-rename-no-extra-semi",
-        "type": "migration"
-      },
-      {
-        "description": "Rename workspace rules from @nx/workspace/name to @nx/workspace-name",
-        "file": "generated/packages/eslint-plugin/migrations/update-17-2-6-rename-workspace-rules.json",
-        "hidden": false,
-        "name": "update-17-2-6-rename-workspace-rules",
-        "version": "17.2.6-beta.1",
-        "originalFilePath": "/packages/eslint-plugin",
-        "path": "eslint-plugin/migrations/update-17-2-6-rename-workspace-rules",
         "type": "migration"
       }
     ],
@@ -2161,66 +2021,6 @@
         "originalFilePath": "/packages/expo",
         "path": "expo/migrations/19.0.0-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "Remove blockList in metro.config.js",
-        "file": "generated/packages/expo/migrations/update-18-0-0-remove-block-list.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-block-list",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/update-18-0-0-remove-block-list",
-        "type": "migration"
-      },
-      {
-        "description": "Remove symlink target in project.json",
-        "file": "generated/packages/expo/migrations/update-18-0-0-remove-symlink-target.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-symlink-target",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/update-18-0-0-remove-symlink-target",
-        "type": "migration"
-      },
-      {
-        "description": "Remove eas-cli from package.json",
-        "file": "generated/packages/expo/migrations/update-18-0-0-remove-eas-cli.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-eas-cli",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/update-18-0-0-remove-eas-cli",
-        "type": "migration"
-      },
-      {
-        "description": "Remove the offset from the outputDir of the export target",
-        "file": "generated/packages/expo/migrations/update-18-0-0-remove-offset-export-outputDir.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-offset-export-outputDir",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/update-18-0-0-remove-offset-export-outputDir",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/expo/migrations/18.0.0-package-updates.json",
-        "hidden": false,
-        "name": "18.0.0-package-updates",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/18.0.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/expo/migrations/17.1.0-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-package-updates",
-        "version": "17.1.0-beta.0",
-        "originalFilePath": "/packages/expo",
-        "path": "expo/migrations/17.1.0-package-updates",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2287,7 +2087,17 @@
         "originalFilePath": "shared/packages/gradle/gradle-plugin"
       }
     ],
-    "executors": [],
+    "executors": [
+      {
+        "description": "The Gradlew executor is used to run Gradle tasks.",
+        "file": "generated/packages/gradle/executors/gradle.json",
+        "hidden": false,
+        "name": "gradle",
+        "originalFilePath": "/packages/gradle/src/executors/gradle/schema.json",
+        "path": "gradle/executors/gradle",
+        "type": "executor"
+      }
+    ],
     "generators": [
       {
         "description": "Initializes a Gradle project in the current workspace",
@@ -2413,7 +2223,27 @@
     ],
     "migrations": [
       {
-        "description": "replace getJestProjects with getJestProjectsAsync",
+        "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
+        "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-option-from-jest-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/remove-tsconfig-option-from-jest-executor",
+        "type": "migration"
+      },
+      {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+        "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
+        "hidden": false,
+        "name": "replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "version": "21.0.0-beta.9",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "type": "migration"
+      },
+      {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
         "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync.json",
         "hidden": false,
         "name": "replace-getJestProjects-with-getJestProjectsAsync",
@@ -2440,26 +2270,6 @@
         "version": "19.2.0-beta.0",
         "originalFilePath": "/packages/jest",
         "path": "jest/migrations/19.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/jest/migrations/17.2.0-package-updates.json",
-        "hidden": false,
-        "name": "17.2.0-package-updates",
-        "version": "17.2.0-beta.2",
-        "originalFilePath": "/packages/jest",
-        "path": "jest/migrations/17.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Move jest executor options to nx.json targetDefaults",
-        "file": "generated/packages/jest/migrations/move-options-to-target-defaults.json",
-        "hidden": false,
-        "name": "move-options-to-target-defaults",
-        "version": "17.1.0-beta.2",
-        "originalFilePath": "/packages/jest",
-        "path": "jest/migrations/move-options-to-target-defaults",
         "type": "migration"
       }
     ],
@@ -2674,76 +2484,6 @@
         "version": "19.0.0-beta.0",
         "originalFilePath": "/packages/js",
         "path": "js/migrations/19.0.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/js/migrations/18.2.0-package-updates.json",
-        "hidden": false,
-        "name": "18.2.0-package-updates",
-        "version": "18.2.0-beta.0",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/18.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/js/migrations/18.0.4-package-updates.json",
-        "hidden": false,
-        "name": "18.0.4-package-updates",
-        "version": "18.0.4-beta.0",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/18.0.4-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/js/migrations/17.3.0-beta.10-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-beta.10-package-updates",
-        "version": "17.3.0-beta.10",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/17.3.0-beta.10-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/js/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.3",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/js/migrations/17.1.0-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-package-updates",
-        "version": "17.1.0-beta.4",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/17.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Remove deprecated build options",
-        "file": "generated/packages/js/migrations/update-17-0-0-remove-deprecated-build-options.json",
-        "hidden": false,
-        "name": "update-17-0-0-remove-deprecated-build-options",
-        "version": "17.0.2",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/update-17-0-0-remove-deprecated-build-options",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/js/migrations/17.0.0-package-updates.json",
-        "hidden": false,
-        "name": "17.0.0-package-updates",
-        "version": "17.0.0-rc.2",
-        "originalFilePath": "/packages/js",
-        "path": "js/migrations/17.0.0-package-updates",
         "type": "migration"
       }
     ],
@@ -3145,36 +2885,6 @@
         "originalFilePath": "/packages/next",
         "path": "next/migrations/19.0.3-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/next/migrations/18.0.4-package-updates.json",
-        "hidden": false,
-        "name": "18.0.4-package-updates",
-        "version": "18.0.4-beta.0",
-        "originalFilePath": "/packages/next",
-        "path": "next/migrations/18.0.4-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/next/migrations/17.3.1-beta.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.1-beta.0-package-updates",
-        "version": "17.3.1-beta.0",
-        "originalFilePath": "/packages/next",
-        "path": "next/migrations/17.3.1-beta.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Remove patched eslint rule for @next/next/no-html-link-for-pages",
-        "file": "generated/packages/next/migrations/update-17-2-7.json",
-        "hidden": false,
-        "name": "update-17-2-7",
-        "version": "17.2.7",
-        "originalFilePath": "/packages/next",
-        "path": "next/migrations/update-17-2-7",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -3247,26 +2957,6 @@
         "originalFilePath": "/packages/node",
         "path": "node/migrations/20.4.0-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/node/migrations/17.3.1-package-updates.json",
-        "hidden": false,
-        "name": "17.3.1-package-updates",
-        "version": "17.3.1-beta.0",
-        "originalFilePath": "/packages/node",
-        "path": "node/migrations/17.3.1-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/node/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.3",
-        "originalFilePath": "/packages/node",
-        "path": "node/migrations/17.3.0-package-updates",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -3329,26 +3019,6 @@
         "version": "19.6.0-beta.0",
         "originalFilePath": "/packages/nuxt",
         "path": "nuxt/migrations/add-vue-to-storybook-config",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/nuxt/migrations/18.3.0-package-updates.json",
-        "hidden": false,
-        "name": "18.3.0-package-updates",
-        "version": "18.3.0-beta.2",
-        "originalFilePath": "/packages/nuxt",
-        "path": "nuxt/migrations/18.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/nuxt/migrations/18.2.0-package-updates.json",
-        "hidden": false,
-        "name": "18.2.0-package-updates",
-        "version": "18.2.0-beta.0",
-        "originalFilePath": "/packages/nuxt",
-        "path": "nuxt/migrations/18.2.0-package-updates",
         "type": "migration"
       }
     ],
@@ -3701,6 +3371,46 @@
     ],
     "migrations": [
       {
+        "description": "Updates release version config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-version-config-changes.json",
+        "hidden": false,
+        "name": "release-version-config-changes",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/release-version-config-changes",
+        "type": "migration"
+      },
+      {
+        "description": "Updates release changelog config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-changelog-config-changes.json",
+        "hidden": false,
+        "name": "release-changelog-config-changes",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/release-changelog-config-changes",
+        "type": "migration"
+      },
+      {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-legacy-cache.json",
+        "hidden": false,
+        "name": "remove-legacy-cache",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/remove-legacy-cache",
+        "type": "migration"
+      },
+      {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-custom-tasks-runner.json",
+        "hidden": false,
+        "name": "remove-custom-tasks-runner",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/remove-custom-tasks-runner",
+        "type": "migration"
+      },
+      {
         "description": "Set `useLegacyCache` to true for migrating workspaces",
         "file": "generated/packages/nx/migrations/use-legacy-cache.json",
         "hidden": false,
@@ -3748,66 +3458,6 @@
         "version": "19.2.0-beta.2",
         "originalFilePath": "/packages/nx",
         "path": "nx/migrations/19-2-0-move-graph-cache-directory",
-        "type": "migration"
-      },
-      {
-        "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
-        "file": "generated/packages/nx/migrations/move-default-base-to-nx-json-root.json",
-        "hidden": false,
-        "name": "move-default-base-to-nx-json-root",
-        "version": "18.1.0-beta.3",
-        "originalFilePath": "/packages/nx",
-        "path": "nx/migrations/move-default-base-to-nx-json-root",
-        "type": "migration"
-      },
-      {
-        "description": "Updates nx.json to disabled adding plugins when generating projects in an existing Nx workspace",
-        "file": "generated/packages/nx/migrations/18.0.0-disable-adding-plugins-for-existing-workspaces.json",
-        "hidden": false,
-        "name": "18.0.0-disable-adding-plugins-for-existing-workspaces",
-        "version": "18.0.0-beta.2",
-        "originalFilePath": "/packages/nx",
-        "path": "nx/migrations/18.0.0-disable-adding-plugins-for-existing-workspaces",
-        "type": "migration"
-      },
-      {
-        "description": "Updates the nx wrapper.",
-        "file": "generated/packages/nx/migrations/17.3.0-update-nx-wrapper.json",
-        "hidden": false,
-        "name": "17.3.0-update-nx-wrapper",
-        "version": "17.3.0-beta.6",
-        "originalFilePath": "/packages/nx",
-        "path": "nx/migrations/17.3.0-update-nx-wrapper",
-        "type": "migration"
-      },
-      {
-        "description": "Migration for v17.0.0-rc.1",
-        "file": "generated/packages/nx/migrations/rm-default-collection-npm-scope.json",
-        "hidden": false,
-        "name": "rm-default-collection-npm-scope",
-        "version": "17.0.0-rc.1",
-        "originalFilePath": "/packages/nx",
-        "path": "nx/migrations/rm-default-collection-npm-scope",
-        "type": "migration"
-      },
-      {
-        "description": "Use minimal config for tasksRunnerOptions",
-        "file": "generated/packages/nx/migrations/17.0.0-use-minimal-config-for-tasks-runner-options.json",
-        "hidden": false,
-        "name": "17.0.0-use-minimal-config-for-tasks-runner-options",
-        "version": "17.0.0-beta.3",
-        "originalFilePath": "/packages/nx",
-        "path": "nx/migrations/17.0.0-use-minimal-config-for-tasks-runner-options",
-        "type": "migration"
-      },
-      {
-        "description": "Updates the default cache directory to .nx/cache",
-        "file": "generated/packages/nx/migrations/17.0.0-move-cache-directory.json",
-        "hidden": false,
-        "name": "17.0.0-move-cache-directory",
-        "version": "17.0.0-beta.1",
-        "originalFilePath": "/packages/nx",
-        "path": "nx/migrations/17.0.0-move-cache-directory",
         "type": "migration"
       }
     ],
@@ -3891,26 +3541,6 @@
         "version": "19.6.0-beta.0",
         "originalFilePath": "/packages/playwright",
         "path": "playwright/migrations/19-6-0-use-serve-static-preview-for-command",
-        "type": "migration"
-      },
-      {
-        "description": "Remove invalid baseUrl option from @nx/playwright:playwright targets in project.json.",
-        "file": "generated/packages/playwright/migrations/18-1-0-remove-baseUrl-from-project-json.json",
-        "hidden": false,
-        "name": "18-1-0-remove-baseUrl-from-project-json",
-        "version": "18.1.0-beta.3",
-        "originalFilePath": "/packages/playwright",
-        "path": "playwright/migrations/18-1-0-remove-baseUrl-from-project-json",
-        "type": "migration"
-      },
-      {
-        "description": "Add project property to playwright config",
-        "file": "generated/packages/playwright/migrations/17-3-1-add-project-to-config.json",
-        "hidden": false,
-        "name": "17-3-1-add-project-to-config",
-        "version": "17.3.1-beta.0",
-        "originalFilePath": "/packages/playwright",
-        "path": "playwright/migrations/17-3-1-add-project-to-config",
         "type": "migration"
       }
     ],
@@ -4209,6 +3839,16 @@
     ],
     "migrations": [
       {
+        "description": "Replaces `classProperties.loose` option with `loose`.",
+        "file": "generated/packages/react/migrations/update-21-0-0-update-babel-loose.json",
+        "hidden": false,
+        "name": "update-21-0-0-update-babel-loose",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/react",
+        "path": "react/migrations/update-21-0-0-update-babel-loose",
+        "type": "migration"
+      },
+      {
         "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
         "file": "generated/packages/react/migrations/add-mf-env-var-to-target-defaults.json",
         "hidden": false,
@@ -4366,46 +4006,6 @@
         "version": "19.0.0-beta.12",
         "originalFilePath": "/packages/react",
         "path": "react/migrations/19.0.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Ensure targetDefaults inputs for task hashing when '@nx/webpack:webpack' is used are correct for Module Federation.",
-        "file": "generated/packages/react/migrations/fix-target-defaults-for-webpack.json",
-        "hidden": false,
-        "name": "fix-target-defaults-for-webpack",
-        "version": "18.1.1-beta.0",
-        "originalFilePath": "/packages/react",
-        "path": "react/migrations/fix-target-defaults-for-webpack",
-        "type": "migration"
-      },
-      {
-        "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/webpack:webpack' is used for Module Federation.",
-        "file": "generated/packages/react/migrations/add-module-federation-env-var-to-target-defaults.json",
-        "hidden": false,
-        "name": "add-module-federation-env-var-to-target-defaults",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react",
-        "path": "react/migrations/add-module-federation-env-var-to-target-defaults",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/react/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.3",
-        "originalFilePath": "/packages/react",
-        "path": "react/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/react/migrations/17.0.0-beta.0-package-updates.json",
-        "hidden": false,
-        "name": "17.0.0-beta.0-package-updates",
-        "version": "17.0.0-beta.0",
-        "originalFilePath": "/packages/react",
-        "path": "react/migrations/17.0.0-beta.0-package-updates",
         "type": "migration"
       }
     ],
@@ -4673,96 +4273,6 @@
         "originalFilePath": "/packages/react-native",
         "path": "react-native/migrations/19.0.0-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "Add web configuration to react native projects",
-        "file": "generated/packages/react-native/migrations/update-18-0-0-add-web-configuration.json",
-        "hidden": false,
-        "name": "update-18-0-0-add-web-configuration",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-18-0-0-add-web-configuration",
-        "type": "migration"
-      },
-      {
-        "description": "Upgrade react native storybook target to use web",
-        "file": "generated/packages/react-native/migrations/update-18-0-0-change-storybook-targets.json",
-        "hidden": false,
-        "name": "update-18-0-0-change-storybook-targets",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-18-0-0-change-storybook-targets",
-        "type": "migration"
-      },
-      {
-        "description": "Remove blockList in metro.config.js.",
-        "file": "generated/packages/react-native/migrations/update-18-0-0-remove-block-list.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-block-list",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-18-0-0-remove-block-list",
-        "type": "migration"
-      },
-      {
-        "description": "Remove metro-* and @react-native-community/cli-* from package.json devDependencies",
-        "file": "generated/packages/react-native/migrations/update-18-0-0-remove-metro.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-metro",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-18-0-0-remove-metro",
-        "type": "migration"
-      },
-      {
-        "description": "Remove ensure-symlink target",
-        "file": "generated/packages/react-native/migrations/update-18-0-0-remove-symlink-target.json",
-        "hidden": false,
-        "name": "update-18-0-0-remove-symlink-target",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-18-0-0-remove-symlink-target",
-        "type": "migration"
-      },
-      {
-        "description": "Add upgrade target to react native projects",
-        "file": "generated/packages/react-native/migrations/update-18-0-0-add-upgrade-target.json",
-        "hidden": false,
-        "name": "update-18-0-0-add-upgrade-target",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/update-18-0-0-add-upgrade-target",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/react-native/migrations/18.0.0-package-updates.json",
-        "hidden": false,
-        "name": "18.0.0-package-updates",
-        "version": "18.0.0-beta.0",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/18.0.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/react-native/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.3",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/react-native/migrations/17.1.0-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-package-updates",
-        "version": "17.1.0-beta.1",
-        "originalFilePath": "/packages/react-native",
-        "path": "react-native/migrations/17.1.0-package-updates",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -4962,36 +4472,6 @@
         "originalFilePath": "/packages/remix",
         "path": "remix/migrations/20.1.0-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/remix/migrations/18.1.1-package-updates.json",
-        "hidden": false,
-        "name": "18.1.1-package-updates",
-        "version": "18.1.1-beta.0",
-        "originalFilePath": "/packages/remix",
-        "path": "remix/migrations/18.1.1-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/remix/migrations/18.1.0-package-updates.json",
-        "hidden": false,
-        "name": "18.1.0-package-updates",
-        "version": "18.1.0-beta.1",
-        "originalFilePath": "/packages/remix",
-        "path": "remix/migrations/18.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/remix/migrations/17.2.1-package-updates.json",
-        "hidden": false,
-        "name": "17.2.1-package-updates",
-        "version": "17.2.1-beta.0",
-        "originalFilePath": "/packages/remix",
-        "path": "remix/migrations/17.2.1-package-updates",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5052,16 +4532,6 @@
         "version": "19.0.0-beta.0",
         "originalFilePath": "/packages/rollup",
         "path": "rollup/migrations/19.0.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/rollup/migrations/18.2.0-package-updates.json",
-        "hidden": false,
-        "name": "18.2.0-package-updates",
-        "version": "18.2.0-beta.1",
-        "originalFilePath": "/packages/rollup",
-        "path": "rollup/migrations/18.2.0-package-updates",
         "type": "migration"
       }
     ],
@@ -5298,26 +4768,6 @@
         "originalFilePath": "/packages/rspack",
         "path": "rspack/migrations/19.3.0-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/rspack/migrations/18.1.3-package-updates.json",
-        "hidden": false,
-        "name": "18.1.3-package-updates",
-        "version": "18.1.3",
-        "originalFilePath": "/packages/rspack",
-        "path": "rspack/migrations/18.1.3-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/rspack/migrations/18.1.0-package-updates.json",
-        "hidden": false,
-        "name": "18.1.0-package-updates",
-        "version": "18.1.0-beta.0",
-        "originalFilePath": "/packages/rspack",
-        "path": "rspack/migrations/18.1.0-package-updates",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5478,56 +4928,6 @@
         "version": "19.6.0-beta.0",
         "originalFilePath": "/packages/storybook",
         "path": "storybook/migrations/update-19-6-0-add-nx-packages",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/storybook/migrations/18.2.0-package-updates.json",
-        "hidden": false,
-        "name": "18.2.0-package-updates",
-        "version": "18.2.0-beta.1",
-        "originalFilePath": "/packages/storybook",
-        "path": "storybook/migrations/18.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/storybook/migrations/17.2.0-beta.2-package-updates.json",
-        "hidden": false,
-        "name": "17.2.0-beta.2-package-updates",
-        "version": "17.2.0-beta.2",
-        "originalFilePath": "/packages/storybook",
-        "path": "storybook/migrations/17.2.0-beta.2-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/storybook/migrations/17.1.0-beta.4-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-beta.4-package-updates",
-        "version": "17.1.0-beta.4",
-        "originalFilePath": "/packages/storybook",
-        "path": "storybook/migrations/17.1.0-beta.4-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/storybook/migrations/17.1.0-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-package-updates",
-        "version": "17.1.0-beta.3",
-        "originalFilePath": "/packages/storybook",
-        "path": "storybook/migrations/17.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/storybook/migrations/17.0.0-package-updates.json",
-        "hidden": false,
-        "name": "17.0.0-package-updates",
-        "version": "17.0.0-rc.3",
-        "originalFilePath": "/packages/storybook",
-        "path": "storybook/migrations/17.0.0-package-updates",
         "type": "migration"
       }
     ],
@@ -5727,66 +5127,6 @@
         "originalFilePath": "/packages/vite",
         "path": "vite/migrations/update-19-6-0-add-depends-on-for-preview-server",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/vite/migrations/18.1.0-package-updates.json",
-        "hidden": false,
-        "name": "18.1.0-package-updates",
-        "version": "18.1.0-beta.1",
-        "originalFilePath": "/packages/vite",
-        "path": "vite/migrations/18.1.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Move the vitest coverage thresholds in their own object if exists and add reporters.",
-        "file": "generated/packages/vite/migrations/vitest-coverage-and-reporters.json",
-        "hidden": false,
-        "name": "vitest-coverage-and-reporters",
-        "version": "17.3.0-beta.0",
-        "originalFilePath": "/packages/vite",
-        "path": "vite/migrations/vitest-coverage-and-reporters",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/vite/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.0",
-        "originalFilePath": "/packages/vite",
-        "path": "vite/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Update vite config.",
-        "file": "generated/packages/vite/migrations/update-vite-config.json",
-        "hidden": false,
-        "name": "update-vite-config",
-        "version": "17.2.0-beta.10",
-        "originalFilePath": "/packages/vite",
-        "path": "vite/migrations/update-vite-config",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/vite/migrations/17.2.0-package-updates.json",
-        "hidden": false,
-        "name": "17.2.0-package-updates",
-        "version": "17.2.0-beta.2",
-        "originalFilePath": "/packages/vite",
-        "path": "vite/migrations/17.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Move target defaults",
-        "file": "generated/packages/vite/migrations/move-target-defaults.json",
-        "hidden": false,
-        "name": "move-target-defaults",
-        "version": "17.1.0-beta.2",
-        "originalFilePath": "/packages/vite",
-        "path": "vite/migrations/move-target-defaults",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5896,16 +5236,6 @@
         "originalFilePath": "/packages/vue",
         "path": "vue/migrations/19.4.3-package-updates",
         "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/vue/migrations/17.2.0-package-updates.json",
-        "hidden": false,
-        "name": "17.2.0-package-updates",
-        "version": "17.2.0-beta.2",
-        "originalFilePath": "/packages/vue",
-        "path": "vue/migrations/17.2.0-package-updates",
-        "type": "migration"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -5969,18 +5299,7 @@
         "type": "generator"
       }
     ],
-    "migrations": [
-      {
-        "description": "",
-        "file": "generated/packages/web/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.3",
-        "originalFilePath": "/packages/web",
-        "path": "web/migrations/17.3.0-package-updates",
-        "type": "migration"
-      }
-    ],
+    "migrations": [],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "web",
     "packageName": "@nx/web",
@@ -6071,6 +5390,16 @@
     ],
     "migrations": [
       {
+        "description": "Remove isolatedConfig option for @nx/webpack:webpack",
+        "file": "generated/packages/webpack/migrations/update-21-0-0-remove-isolated-config.json",
+        "hidden": false,
+        "name": "update-21-0-0-remove-isolated-config",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/webpack",
+        "path": "webpack/migrations/update-21-0-0-remove-isolated-config",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",
         "hidden": false,
@@ -6118,16 +5447,6 @@
         "version": "19.6.0-beta.1",
         "originalFilePath": "/packages/webpack",
         "path": "webpack/migrations/19.6.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "Add webpack.config.js file when webpackConfig is not defined",
-        "file": "generated/packages/webpack/migrations/update-17-2-1-webpack-config-setup.json",
-        "hidden": false,
-        "name": "update-17-2-1-webpack-config-setup",
-        "version": "17.2.1-beta.0",
-        "originalFilePath": "/packages/webpack",
-        "path": "webpack/migrations/update-17-2-1-webpack-config-setup",
         "type": "migration"
       }
     ],
@@ -6295,36 +5614,6 @@
         "version": "19.5.0-beta.1",
         "originalFilePath": "/packages/workspace",
         "path": "workspace/migrations/19.5.1-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/workspace/migrations/18.2.0-package-updates.json",
-        "hidden": false,
-        "name": "18.2.0-package-updates",
-        "version": "18.2.0-beta.0",
-        "originalFilePath": "/packages/workspace",
-        "path": "workspace/migrations/18.2.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/workspace/migrations/17.3.0-package-updates.json",
-        "hidden": false,
-        "name": "17.3.0-package-updates",
-        "version": "17.3.0-beta.10",
-        "originalFilePath": "/packages/workspace",
-        "path": "workspace/migrations/17.3.0-package-updates",
-        "type": "migration"
-      },
-      {
-        "description": "",
-        "file": "generated/packages/workspace/migrations/17.1.0-package-updates.json",
-        "hidden": false,
-        "name": "17.1.0-package-updates",
-        "version": "17.1.0-beta.4",
-        "originalFilePath": "/packages/workspace",
-        "path": "workspace/migrations/17.1.0-package-updates",
         "type": "migration"
       }
     ],

@@ -30,13 +30,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/console-migrate-ui",
-      "id": "console-migrate-ui",
-      "name": "Migrate UI",
-      "path": "/recipes/nx-console/console-migrate-ui"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/console-run-command",
       "id": "console-run-command",
       "name": "Run Command",
@@ -48,6 +41,13 @@
       "id": "console-nx-cloud",
       "name": "Nx Cloud Integration",
       "path": "/recipes/nx-console/console-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-migrate-ui",
+      "id": "console-migrate-ui",
+      "name": "Migrate UI",
+      "path": "/recipes/nx-console/console-migrate-ui"
     }
   ],
   "run-tasks": [
@@ -679,6 +679,13 @@
       "id": "automate-github-releases",
       "name": "Automate GitHub Releases",
       "path": "/recipes/nx-release/automate-github-releases"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/automate-gitlab-releases",
+      "id": "automate-gitlab-releases",
+      "name": "Automate GitLab Releases",
+      "path": "/recipes/nx-release/automate-gitlab-releases"
     },
     {
       "description": "",

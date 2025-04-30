@@ -57,12 +57,12 @@ interface NxInstallationConfiguration {
 }
 
 /**
- * This named configuration interface will be changing in Nx v21. This interface will be made available
- * under LegacyNxReleaseVersionConfiguration, which is already available as an alias.
+ * This named configuration interface represents the options prior to Nx v21. This interface will be made available
+ * under LegacyNxReleaseVersionConfiguration throughout the lifetime of Nx v21.
  *
  * In Nx v22, this configuration interface will no longer be valid.
  */
-export interface NxReleaseVersionConfiguration {
+export interface LegacyNxReleaseVersionConfiguration {
   generator?: string;
   generatorOptions?: Record<string, unknown>;
   /**
@@ -77,12 +77,15 @@ export interface NxReleaseVersionConfiguration {
    */
   conventionalCommits?: boolean;
 }
-export type LegacyNxReleaseVersionConfiguration = NxReleaseVersionConfiguration;
+
+export type ManifestRootToUpdate =
+  | string
+  | { path: string; preserveLocalDependencyProtocols: boolean };
 
 // NOTE: It's important to keep the nx-schema.json in sync with this interface. If you make changes here, make sure they are reflected in the schema.
-export interface NxReleaseVersionV2Configuration {
+export interface NxReleaseVersionConfiguration {
   /**
-   * Whether to use the legacy versioning strategy. This value will be true in Nx v20 and false in Nx v21.
+   * Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21.
    * The legacy versioning implementation will be removed in Nx v22, as will this flag.
    */
   useLegacyVersioning?: boolean;
@@ -110,8 +113,11 @@ export interface NxReleaseVersionV2Configuration {
    *
    * By default, only the project root will be used, but you could customize this to only version a manifest in a
    * dist directory, or even version multiple manifests in different directories, such as both source and dist.
+   *
+   * For more advanced scenarios, the preserveLocalDependencyProtocols can be overridden per manifest by providing
+   * and object instead of a string.
    */
-  manifestRootsToUpdate?: string[];
+  manifestRootsToUpdate?: ManifestRootToUpdate[];
   /**
    * The resolver to use for determining the current version of a project during versioning.
    * This is needed for versioning approaches which involve relatively modifying a current version
@@ -185,11 +191,20 @@ export interface NxReleaseChangelogConfiguration {
   createRelease?:
     | false
     | 'github'
+    | 'gitlab'
     | {
         provider: 'github-enterprise-server';
         hostname: string;
         /**
          * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      }
+    | {
+        provider: 'gitlab';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v4`
          */
         apiBaseUrl?: string;
       };
@@ -333,7 +348,7 @@ export interface NxReleaseConfiguration {
        */
       version?: (
         | LegacyNxReleaseVersionConfiguration
-        | NxReleaseVersionV2Configuration
+        | NxReleaseVersionConfiguration
       ) & {
         /**
          * A command to run after validation of nx release configuration, but before versioning begins.
@@ -414,7 +429,7 @@ export interface NxReleaseConfiguration {
    */
   version?: (
     | LegacyNxReleaseVersionConfiguration
-    | NxReleaseVersionV2Configuration
+    | NxReleaseVersionConfiguration
   ) & {
     useLegacyVersioning?: boolean;
     git?: NxReleaseGitConfiguration;
@@ -644,11 +659,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
-
-  /**
-   * Use the legacy file system cache instead of the db cache
-   */
-  useLegacyCache?: boolean;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.

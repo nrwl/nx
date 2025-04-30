@@ -5,7 +5,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { migrationGenerator } from './migration';
 import { pluginGenerator } from '../plugin/plugin';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
-import { Linter } from '@nx/eslint';
 
 describe('NxPlugin migration generator', () => {
   let tree: Tree;
@@ -20,7 +19,7 @@ describe('NxPlugin migration generator', () => {
       name: projectName,
       directory: 'packages/my-plugin',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       compiler: 'tsc',
     });
   });

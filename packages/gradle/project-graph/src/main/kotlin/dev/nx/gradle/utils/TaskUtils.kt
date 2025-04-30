@@ -1,10 +1,9 @@
 package dev.nx.gradle.utils
 
-import dev.nx.gradle.data.*
-import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectProvider
+import dev.nx.gradle.data.Dependency
+import dev.nx.gradle.data.ExternalDepData
+import dev.nx.gradle.data.ExternalNode
 import org.gradle.api.Task
-import org.gradle.api.tasks.TaskProvider
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -13,14 +12,12 @@ import org.gradle.api.tasks.TaskProvider
  * - outputs
  * - command
  * - metadata
- * - options with cwd and args
  */
 fun processTask(
     task: Task,
     projectBuildPath: String,
     projectRoot: String,
     workspaceRoot: String,
-    cwd: String,
     externalNodes: MutableMap<String, ExternalNode>,
     dependencies: MutableSet<Dependency>,
     targetNameOverrides: Map<String, String>
@@ -51,13 +48,14 @@ fun processTask(
     target["dependsOn"] = dependsOn
   }
 
-  val gradlewCommand = getGradlewCommand()
-  target["command"] = "$gradlewCommand ${projectBuildPath}:${task.name}"
+  target["executor"] = "@nx/gradle:gradle"
 
-  val metadata = getMetadata(task.description ?: "Run ${task.name}", projectBuildPath, task.name)
+  val metadata =
+      getMetadata(
+          task.description ?: "Run ${projectBuildPath}.${task.name}", projectBuildPath, task.name)
   target["metadata"] = metadata
 
-  target["options"] = mapOf("cwd" to cwd)
+  target["options"] = mapOf("taskName" to "${projectBuildPath}:${task.name}")
 
   return target
 }
@@ -190,54 +188,9 @@ fun getDependsOnForTask(
   }
 
   return try {
-    val dependsOnEntries = task.dependsOn
-
-    // Prefer task.dependsOn
-    if (dependsOnEntries.isNotEmpty()) {
-      val resolvedTasks =
-          dependsOnEntries.flatMap { dep ->
-            when (dep) {
-              is Task -> listOf(dep)
-
-              is TaskProvider<*>,
-              is NamedDomainObjectProvider<*> -> {
-                val providerName = (dep as Named).name
-                val foundTask = task.project.tasks.findByName(providerName)
-                if (foundTask != null) {
-                  listOf(foundTask)
-                } else {
-                  task.logger.info(
-                      "${dep::class.simpleName} '$providerName' did not resolve to a task in project ${task.project.name}")
-                  emptyList()
-                }
-              }
-
-              is String -> {
-                val foundTask = task.project.tasks.findByPath(dep)
-                if (foundTask != null) {
-                  listOf(foundTask)
-                } else {
-                  task.logger.info(
-                      "Task string '$dep' could not be resolved in project ${task.project.name}")
-                  emptyList()
-                }
-              }
-
-              else -> {
-                task.logger.info(
-                    "Unhandled dependency type ${dep::class.java} for task ${task.path}")
-                emptyList()
-              }
-            }
-          }
-
-      if (resolvedTasks.isNotEmpty()) {
-        return mapTasksToNames(resolvedTasks)
-      }
-    }
-
-    // Fallback: taskDependencies.getDependencies(task)
-    val fallbackDeps =
+    // get depends on using taskDependencies.getDependencies(task) because task.dependsOn has
+    // missing deps
+    val dependsOn =
         try {
           task.taskDependencies.getDependencies(null)
         } catch (e: Exception) {
@@ -246,8 +199,8 @@ fun getDependsOnForTask(
           emptySet<Task>()
         }
 
-    if (fallbackDeps.isNotEmpty()) {
-      return mapTasksToNames(fallbackDeps)
+    if (dependsOn.isNotEmpty()) {
+      return mapTasksToNames(dependsOn)
     }
 
     null
@@ -266,14 +219,15 @@ fun getDependsOnForTask(
 fun getMetadata(
     description: String?,
     projectBuildPath: String,
-    taskName: String,
+    helpTaskName: String,
     nonAtomizedTarget: String? = null
 ): Map<String, Any?> {
   val gradlewCommand = getGradlewCommand()
   return mapOf(
       "description" to description,
       "technologies" to arrayOf("gradle"),
-      "help" to mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${taskName}"),
+      "help" to
+          mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${helpTaskName}"),
       "nonAtomizedTarget" to nonAtomizedTarget)
 }
 

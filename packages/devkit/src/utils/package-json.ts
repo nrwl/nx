@@ -287,15 +287,18 @@ export function removeDependenciesFromPackageJson(
     )
   ) {
     updateJson(tree, packageJsonPath, (json) => {
-      for (const dep of dependencies) {
-        delete json.dependencies[dep];
+      if (json.dependencies) {
+        for (const dep of dependencies) {
+          delete json.dependencies[dep];
+        }
+        json.dependencies = sortObjectByKeys(json.dependencies);
       }
-      for (const devDep of devDependencies) {
-        delete json.devDependencies[devDep];
+      if (json.devDependencies) {
+        for (const devDep of devDependencies) {
+          delete json.devDependencies[devDep];
+        }
+        json.devDependencies = sortObjectByKeys(json.devDependencies);
       }
-      json.dependencies = sortObjectByKeys(json.dependencies);
-      json.devDependencies = sortObjectByKeys(json.devDependencies);
-
       return json;
     });
   }

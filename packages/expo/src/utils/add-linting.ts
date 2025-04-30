@@ -26,7 +26,7 @@ interface NormalizedSchema {
 }
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
   const tasks: GeneratorCallback[] = [];

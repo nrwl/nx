@@ -543,6 +543,11 @@
             "type": "object"
           }
         },
+        "continuous": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this target runs continuously until stopped"
+        },
         "parallelism": {
           "type": "boolean",
           "default": true,
@@ -707,49 +712,17 @@
         "$comment": "When using the latest versioning implementation a lot of configuration has been able to move directly onto the version property.",
         "properties": {
           "useLegacyVersioning": {
-            "const": true
+            "const": false
           }
         }
       },
       "then": {
-        "properties": {
-          "useLegacyVersioning": {
-            "type": "boolean",
-            "description": "Whether to use the legacy versioning strategy. This value will be true in Nx v20 and false in Nx v21. The legacy versioning implementation will be removed in Nx v22, as will this flag.",
-            "default": true
-          },
-          "conventionalCommits": {
-            "type": "boolean",
-            "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
-            "default": false
-          },
-          "git": {
-            "$ref": "#/definitions/NxReleaseGitConfiguration"
-          },
-          "preVersionCommand": {
-            "type": "string",
-            "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
-          },
-          "generator": {
-            "type": "string",
-            "description": "The generator implementation to use for versioning.",
-            "default": "@nx/js:release-version"
-          },
-          "generatorOptions": {
-            "type": "object",
-            "description": "These options will be passed to the configured \"release.version.generator\" (which will be \"@nx/js:release-version\" if not set explicitly).",
-            "additionalProperties": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "else": {
         "additionalProperties": false,
         "properties": {
           "useLegacyVersioning": {
             "type": "boolean",
             "description": "Whether to use the legacy versioning strategy. This value will be true in Nx v20 and false in Nx v21. The legacy versioning implementation will be removed in Nx v22, as will this flag.",
-            "default": true
+            "default": false
           },
           "conventionalCommits": {
             "type": "boolean",
@@ -791,10 +764,6 @@
             "enum": ["disk"],
             "description": "The fallback version resolver to use when the configured currentVersionResolver fails to resolve the current version."
           },
-          "firstRelease": {
-            "type": "boolean",
-            "description": "Whether or not this is the first release of one of more projects. This removes certain validation checks that are not possible to enforce if the project has never been released before."
-          },
           "versionPrefix": {
             "type": "string",
             "enum": ["auto", "", "~", "^", "="],
@@ -833,6 +802,38 @@
             "additionalProperties": true
           }
         }
+      },
+      "else": {
+        "properties": {
+          "useLegacyVersioning": {
+            "type": "boolean",
+            "description": "Whether to use the legacy versioning strategy. This value was true in Nx v20 and became false in Nx v21. The legacy versioning implementation will be removed in Nx v22, as will this flag.",
+            "default": false
+          },
+          "conventionalCommits": {
+            "type": "boolean",
+            "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+            "default": false
+          },
+          "git": {
+            "$ref": "#/definitions/NxReleaseGitConfiguration"
+          },
+          "preVersionCommand": {
+            "type": "string",
+            "description": "A command to run after validation of nx release configuration, but before versioning begins. Useful for preparing build artifacts. If --dry-run is passed, the command is still executed, but with the NX_DRY_RUN environment variable set to 'true'."
+          },
+          "generator": {
+            "type": "string",
+            "description": "The generator implementation to use for versioning.",
+            "default": "@nx/js:release-version"
+          },
+          "generatorOptions": {
+            "type": "object",
+            "description": "These options will be passed to the configured \"release.version.generator\" (which will be \"@nx/js:release-version\" if not set explicitly).",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
       }
     },
     "NxReleaseGroupVersionConfiguration": {
@@ -853,7 +854,7 @@
           "oneOf": [
             {
               "type": "string",
-              "enum": ["github"]
+              "enum": ["github", "gitlab"]
             },
             {
               "type": "boolean",
@@ -899,7 +900,7 @@
       "properties": {
         "provider": {
           "type": "string",
-          "enum": ["github-enterprise-server"]
+          "enum": ["github-enterprise-server", "gitlab"]
         },
         "hostname": {
           "type": "string",
@@ -907,7 +908,7 @@
         },
         "apiBaseUrl": {
           "type": "string",
-          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3`"
+          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3` (github) or `https://${hostname}/api/v4` (gitlab)."
         }
       },
       "required": ["provider", "hostname"]

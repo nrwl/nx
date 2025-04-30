@@ -10,14 +10,17 @@ import {
 import { exec } from 'node:child_process';
 import { join } from 'node:path';
 import { AfterAllProjectsVersioned, VersionActions } from 'nx/release';
-import type { NxReleaseVersionV2Configuration } from 'nx/src/config/nx-json';
+import type { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import { parseRegistryOptions } from '../utils/npm-config';
 import { updateLockFile } from './utils/update-lock-file';
 import chalk = require('chalk');
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
-  opts: {
+  {
+    rootVersionActionsOptions,
+    ...opts
+  }: {
     dryRun?: boolean;
     verbose?: boolean;
     rootVersionActionsOptions?: Record<string, unknown>;
@@ -27,6 +30,7 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
     changedFiles: await updateLockFile(cwd, {
       ...opts,
       useLegacyVersioning: false,
+      options: rootVersionActionsOptions,
     }),
     deletedFiles: [],
   };
@@ -61,7 +65,7 @@ export default class JsVersionActions extends VersionActions {
 
   async readCurrentVersionFromRegistry(
     tree: Tree,
-    currentVersionResolverMetadata: NxReleaseVersionV2Configuration['currentVersionResolverMetadata']
+    currentVersionResolverMetadata: NxReleaseVersionConfiguration['currentVersionResolverMetadata']
   ): Promise<{
     currentVersion: string;
     logText: string;
@@ -161,8 +165,91 @@ export default class JsVersionActions extends VersionActions {
     };
   }
 
+  async updateProjectVersion(
+    tree: Tree,
+    newVersion: string
+  ): Promise<string[]> {
+    const logMessages: string[] = [];
+    for (const manifestToUpdate of this.manifestsToUpdate) {
+      updateJson(tree, manifestToUpdate.manifestPath, (json) => {
+        json.version = newVersion;
+        return json;
+      });
+      logMessages.push(
+        `✍️  New version ${newVersion} written to manifest: ${manifestToUpdate.manifestPath}`
+      );
+    }
+    return logMessages;
+  }
+
+  async updateProjectDependencies(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    dependenciesToUpdate: Record<string, string>
+  ): Promise<string[]> {
+    let numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
+    if (numDependenciesToUpdate === 0) {
+      return [];
+    }
+
+    const logMessages: string[] = [];
+    for (const manifestToUpdate of this.manifestsToUpdate) {
+      updateJson(tree, manifestToUpdate.manifestPath, (json) => {
+        const dependencyTypes = [
+          'dependencies',
+          'devDependencies',
+          'peerDependencies',
+          'optionalDependencies',
+        ];
+
+        for (const depType of dependencyTypes) {
+          if (json[depType]) {
+            for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
+              // Resolve the package name from the project graph metadata, as it may not match the project name
+              const packageName =
+                projectGraph.nodes[dep].data.metadata?.js?.packageName;
+              if (!packageName) {
+                throw new Error(
+                  `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
+                );
+              }
+              const currentVersion = json[depType][packageName];
+              if (currentVersion) {
+                // Check if the local dependency protocol should be preserved or not
+                if (
+                  manifestToUpdate.preserveLocalDependencyProtocols &&
+                  this.isLocalDependencyProtocol(currentVersion)
+                ) {
+                  // Reduce the count appropriately to avoid confusing user-facing logs
+                  numDependenciesToUpdate--;
+                  continue;
+                }
+                json[depType][packageName] = version;
+              }
+            }
+          }
+        }
+
+        return json;
+      });
+
+      // If we ignored local dependecy protocols, then we could have dynamically ended up with zero here and we should not log anything related to dependencies
+      if (numDependenciesToUpdate === 0) {
+        return [];
+      }
+
+      const depText =
+        numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
+
+      logMessages.push(
+        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestToUpdate.manifestPath}`
+      );
+    }
+    return logMessages;
+  }
+
   // NOTE: The TODOs were carried over from the original implementation, they are not yet implemented
-  async isLocalDependencyProtocol(versionSpecifier: string): Promise<boolean> {
+  private isLocalDependencyProtocol(versionSpecifier: string): boolean {
     const localPackageProtocols = [
       'file:', // all package managers
       'workspace:', // not npm
@@ -202,72 +289,5 @@ export default class JsVersionActions extends VersionActions {
     //   );
     // }
     return true;
-  }
-
-  async updateProjectVersion(
-    tree: Tree,
-    newVersion: string
-  ): Promise<string[]> {
-    const logMessages: string[] = [];
-    for (const manifestPath of this.manifestsToUpdate) {
-      updateJson(tree, manifestPath, (json) => {
-        json.version = newVersion;
-        return json;
-      });
-      logMessages.push(
-        `✍️  New version ${newVersion} written to manifest: ${manifestPath}`
-      );
-    }
-    return logMessages;
-  }
-
-  async updateProjectDependencies(
-    tree: Tree,
-    projectGraph: ProjectGraph,
-    dependenciesToUpdate: Record<string, string>
-  ): Promise<string[]> {
-    const numDependenciesToUpdate = Object.keys(dependenciesToUpdate).length;
-    const depText =
-      numDependenciesToUpdate === 1 ? 'dependency' : 'dependencies';
-    if (numDependenciesToUpdate === 0) {
-      return [];
-    }
-
-    const logMessages: string[] = [];
-    for (const manifestPath of this.manifestsToUpdate) {
-      updateJson(tree, manifestPath, (json) => {
-        const dependencyTypes = [
-          'dependencies',
-          'devDependencies',
-          'peerDependencies',
-          'optionalDependencies',
-        ];
-
-        for (const depType of dependencyTypes) {
-          if (json[depType]) {
-            for (const [dep, version] of Object.entries(dependenciesToUpdate)) {
-              // Resolve the package name from the project graph metadata, as it may not match the project name
-              const packageName =
-                projectGraph.nodes[dep].data.metadata?.js?.packageName;
-              if (!packageName) {
-                throw new Error(
-                  `Unable to determine the package name for project "${dep}" from the project graph metadata, please ensure that the "@nx/js" plugin is installed and the project graph has been built. If the issue persists, please report this issue on https://github.com/nrwl/nx/issues`
-                );
-              }
-              if (json[depType][packageName]) {
-                json[depType][packageName] = version;
-              }
-            }
-          }
-        }
-
-        return json;
-      });
-
-      logMessages.push(
-        `✍️  Updated ${numDependenciesToUpdate} ${depText} in manifest: ${manifestPath}`
-      );
-    }
-    return logMessages;
   }
 }

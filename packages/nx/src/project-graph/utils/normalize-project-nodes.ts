@@ -1,9 +1,6 @@
 import { ProjectGraphProjectNode } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { CreateDependenciesContext } from '../plugins';
 

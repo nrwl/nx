@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "continuous": true,
   "outputCapture": "pipe",
   "cli": "nx",
   "title": "Next Serve",

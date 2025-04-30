@@ -5,7 +5,6 @@ import {
   Tree,
 } from '@nx/devkit';
 
-import { Linter } from '../utils/linter';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintProjectGenerator } from './lint-project';
 
@@ -78,7 +77,7 @@ describe('@nx/eslint:lint-project (convert to monorepo style)', () => {
 
     await lintProjectGenerator(tree, {
       ...defaultOptions,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: 'nestedpkg',
       setParserOptionsProject: false,
     });

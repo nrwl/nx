@@ -3,7 +3,6 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
@@ -51,7 +50,7 @@ export async function normalizeOptions(
     skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     e2eTestRunner: E2eTestRunner.Playwright,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     strict: true,
     standalone: true,
     directory: appProjectRoot,

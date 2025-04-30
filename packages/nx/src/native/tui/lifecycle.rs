@@ -202,11 +202,7 @@ impl AppLifeCycle {
                 // Handle events using our Tui abstraction
                 if let Some(event) = tui.next().await {
                     if let Ok(mut app) = app_mutex.lock() {
-                        if let Ok(true) = app.handle_event(event, &action_tx) {
-                            tui.exit().ok();
-                            app.call_done_callback();
-                            break;
-                        }
+                        let _ = app.handle_event(event, &action_tx);
 
                         // Check if we should quit based on the timer
                         if let Some(quit_time) = app.quit_at {
@@ -238,7 +234,7 @@ impl AppLifeCycle {
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
         let mut app = self.app.lock().unwrap();
-        app.register_running_task(task_id, parser_and_writer, TaskStatus::InProgress)
+        app.register_running_task(task_id, parser_and_writer)
     }
 
     #[napi]
@@ -282,6 +278,12 @@ impl AppLifeCycle {
 
 #[napi]
 pub fn restore_terminal() -> Result<()> {
+    // Restore the terminal to a clean state
+    if let Ok(mut t) = Tui::new() {
+        if let Err(r) = t.exit() {
+            debug!("Unable to exit Terminal: {:?}", r);
+        }
+    }
     // TODO: Maybe need some additional cleanup here in addition to the tui cleanup performed at the end of the render loop?
     Ok(())
 }

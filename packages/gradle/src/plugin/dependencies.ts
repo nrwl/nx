@@ -8,7 +8,7 @@ import {
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
-import { relative } from 'node:path';
+import { join, relative } from 'node:path';
 
 import {
   getCurrentProjectGraphReport,
@@ -29,7 +29,11 @@ export const createDependencies: CreateDependencies<
     Array.from(GRALDEW_FILES)
   );
   const { gradlewFiles } = splitConfigFiles(files);
-  await populateProjectGraph(context.workspaceRoot, gradlewFiles, options);
+  await populateProjectGraph(
+    context.workspaceRoot,
+    gradlewFiles.map((file) => join(workspaceRoot, file)),
+    options
+  );
   const { dependencies: dependenciesFromReport } =
     getCurrentProjectGraphReport();
 

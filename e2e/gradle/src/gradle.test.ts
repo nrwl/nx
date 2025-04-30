@@ -31,9 +31,7 @@ describe('Gradle', () => {
         expect(projects).toContain(gradleProjectName);
 
         const buildOutput = runCLI('build app', { verbose: true });
-        expect(buildOutput).toContain('nx run list:');
         expect(buildOutput).toContain(':list:classes');
-        expect(buildOutput).toContain('nx run utilities:');
         expect(buildOutput).toContain(':utilities:classes');
 
         checkFilesExist(
@@ -83,11 +81,8 @@ dependencies {
 
         let buildOutput = runCLI('build app2', { verbose: true });
         // app2 depends on app
-        expect(buildOutput).toContain('nx run app:');
         expect(buildOutput).toContain(':app:classes');
-        expect(buildOutput).toContain('nx run list:');
         expect(buildOutput).toContain(':list:classes');
-        expect(buildOutput).toContain('nx run utilities:');
         expect(buildOutput).toContain(':utilities:classes');
 
         checkFilesExist(`app2/build/libs/app2.jar`);
@@ -96,7 +91,7 @@ dependencies {
       it('should run atomized test target', () => {
         updateJson('nx.json', (json) => {
           json.plugins.find((p) => p.plugin === '@nx/gradle').options[
-            'ciTargetName'
+            'ciTestTargetName'
           ] = 'test-ci';
           return json;
         });

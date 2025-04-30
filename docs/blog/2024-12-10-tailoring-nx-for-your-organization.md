@@ -100,7 +100,7 @@ export async function libraryGenerator(
     directory,
     importPath,
     tags: [`type:${options.type}`, `scope:${shared}`],
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });

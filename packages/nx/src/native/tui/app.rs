@@ -10,6 +10,7 @@ use ratatui::widgets::Paragraph;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::debug;
+use tracing::trace;
 
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskResult};
@@ -154,6 +155,10 @@ impl App {
             return;
         }
 
+        self.begin_exit_countdown()
+    }
+
+    fn begin_exit_countdown(&mut self) {
         let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
@@ -182,7 +187,6 @@ impl App {
         &mut self,
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
-        task_status: TaskStatus,
     ) {
         if let Some(tasks_list) = self
             .components
@@ -190,7 +194,7 @@ impl App {
             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
         {
             tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-            tasks_list.update_task_status(task_id.clone(), task_status);
+            tasks_list.set_task_status(task_id.clone(), TaskStatus::InProgress);
         }
     }
 
@@ -203,7 +207,7 @@ impl App {
             let (_, parser_and_writer) = TasksList::create_empty_parser_and_noop_writer();
 
             tasks_list.create_and_register_pty_instance(&task_id, parser_and_writer);
-            tasks_list.update_task_status(task_id.clone(), TaskStatus::InProgress);
+            tasks_list.set_task_status(task_id.clone(), TaskStatus::InProgress);
             let _ = tasks_list.handle_resize(None);
         }
     }
@@ -242,20 +246,29 @@ impl App {
                 // Record that the user has interacted with the app
                 self.user_has_interacted = true;
 
-                // Handle Ctrl+C to quit
-                if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL {
-                    self.is_forced_shutdown = true;
-                    // Quit immediately
-                    self.quit_at = Some(std::time::Instant::now());
-                    return Ok(true);
-                }
-
                 // Get tasks list component to check interactive mode before handling '?' key
                 if let Some(tasks_list) = self
                     .components
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
+                    if matches!(self.focus, Focus::MultipleOutput(_))
+                        && tasks_list.is_interactive_mode()
+                    {
+                        return match key.code {
+                            KeyCode::Char('z') if key.modifiers == KeyModifiers::CONTROL => {
+                                // Disable interactive mode when Ctrl+Z is pressed
+                                tasks_list.set_interactive_mode(false);
+                                Ok(false)
+                            }
+                            _ => {
+                                // The TasksList will forward the key event to the focused terminal pane
+                                tasks_list.handle_key_event(key).ok();
+                                Ok(false)
+                            }
+                        };
+                    }
+
                     // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
                     if matches!(key.code, KeyCode::Char('?'))
                         && !tasks_list.is_interactive_mode()
@@ -287,18 +300,26 @@ impl App {
                         .iter_mut()
                         .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
                     {
-                        if !countdown_popup.is_scrollable() {
-                            countdown_popup.cancel_countdown();
-                            self.quit_at = None;
-                            self.focus = self.previous_focus;
-                            return Ok(false);
-                        }
                         match key.code {
-                            KeyCode::Up | KeyCode::Char('k') => {
+                            KeyCode::Char('q') => {
+                                // Quit immediately
+                                trace!("Confirming shutdown");
+                                self.quit_at = Some(std::time::Instant::now());
+                                return Ok(true);
+                            }
+                            KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
+                                // Quit immediately
+                                trace!("Confirming shutdown");
+                                self.quit_at = Some(std::time::Instant::now());
+                                return Ok(true);
+                            }
+                            KeyCode::Up | KeyCode::Char('k') if countdown_popup.is_scrollable() => {
                                 countdown_popup.scroll_up();
                                 return Ok(false);
                             }
-                            KeyCode::Down | KeyCode::Char('j') => {
+                            KeyCode::Down | KeyCode::Char('j')
+                                if countdown_popup.is_scrollable() =>
+                            {
                                 countdown_popup.scroll_down();
                                 return Ok(false);
                             }
@@ -311,6 +332,21 @@ impl App {
                     }
 
                     return Ok(false);
+                }
+
+                if let Some(tasks_list) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+                {
+                    // Handle Q or Ctrl+C to trigger countdown
+                    if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL
+                        || (!tasks_list.filter_mode && key.code == KeyCode::Char('q'))
+                    {
+                        self.is_forced_shutdown = true;
+                        self.begin_exit_countdown();
+                        return Ok(false);
+                    }
                 }
 
                 // If shortcuts popup is open, handle its keyboard events
@@ -376,37 +412,36 @@ impl App {
 
                     match tasks_list.get_focus() {
                         Focus::MultipleOutput(_) => {
-                            if tasks_list.is_interactive_mode() {
-                                // Send all other keys to the task list (and ultimately through the terminal pane to the PTY)
-                                tasks_list.handle_key_event(key).ok();
-                            } else {
-                                // Handle navigation and special actions
-                                match key.code {
-                                    KeyCode::Tab => {
-                                        tasks_list.focus_next();
-                                        self.focus = tasks_list.get_focus();
-                                    }
-                                    KeyCode::BackTab => {
-                                        tasks_list.focus_previous();
-                                        self.focus = tasks_list.get_focus();
-                                    }
-                                    // Add our new shortcuts here
-                                    KeyCode::Char('c') => {
-                                        tasks_list.handle_key_event(key).ok();
-                                    }
-                                    KeyCode::Char('u') | KeyCode::Char('d')
-                                        if key.modifiers.contains(KeyModifiers::CONTROL) =>
-                                    {
-                                        tasks_list.handle_key_event(key).ok();
-                                    }
-                                    KeyCode::Char('b') => {
-                                        tasks_list.toggle_task_list();
-                                        self.focus = tasks_list.get_focus();
-                                    }
-                                    _ => {
-                                        // Forward other keys for interactivity, scrolling (j/k) etc
-                                        tasks_list.handle_key_event(key).ok();
-                                    }
+                            // Handle navigation and special actions
+                            match key.code {
+                                KeyCode::Tab => {
+                                    tasks_list.focus_next();
+                                    self.focus = tasks_list.get_focus();
+                                }
+                                KeyCode::BackTab => {
+                                    tasks_list.focus_previous();
+                                    self.focus = tasks_list.get_focus();
+                                }
+                                KeyCode::Esc => {
+                                    tasks_list.set_focus(Focus::TaskList);
+                                    self.focus = Focus::TaskList;
+                                }
+                                // Add our new shortcuts here
+                                KeyCode::Char('c') => {
+                                    tasks_list.handle_key_event(key).ok();
+                                }
+                                KeyCode::Char('u') | KeyCode::Char('d')
+                                    if key.modifiers.contains(KeyModifiers::CONTROL) =>
+                                {
+                                    tasks_list.handle_key_event(key).ok();
+                                }
+                                KeyCode::Char('b') => {
+                                    tasks_list.toggle_task_list();
+                                    self.focus = tasks_list.get_focus();
+                                }
+                                _ => {
+                                    // Forward other keys for interactivity, scrolling (j/k) etc
+                                    tasks_list.handle_key_event(key).ok();
                                 }
                             }
                             return Ok(false);
@@ -463,7 +498,7 @@ impl App {
                                             match c {
                                                 '/' => {
                                                     if tasks_list.filter_mode {
-                                                        tasks_list.exit_filter_mode();
+                                                        tasks_list.persist_filter();
                                                     } else {
                                                         tasks_list.enter_filter_mode();
                                                     }
@@ -509,6 +544,13 @@ impl App {
                                             tasks_list.focus_previous();
                                             self.focus = tasks_list.get_focus();
                                         }
+                                    }
+                                    KeyCode::Enter if is_filter_mode => {
+                                        tasks_list.persist_filter();
+                                    }
+                                    KeyCode::Enter => {
+                                        tasks_list.focus_current_task_terminal_pane();
+                                        self.focus = tasks_list.get_focus();
                                     }
                                     _ => {}
                                 },

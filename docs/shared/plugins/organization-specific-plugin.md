@@ -53,7 +53,7 @@ export async function libraryGenerator(
 ) {
   const callbackAfterFilesUpdated = await reactLibraryGenerator(tree, {
     ...options,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -218,7 +218,7 @@ export async function libraryGenerator(
     ...options,
     tags: `scope:${options.scope}`,
     directory: options.directory || `${options.scope}/${options.name}`,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -264,7 +264,7 @@ export async function libraryGenerator(
       ...options,
       tags: `scope:${options.scope}`,
       directory,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: 'vitest',
     })

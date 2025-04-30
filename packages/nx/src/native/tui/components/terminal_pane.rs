@@ -21,7 +21,7 @@ pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
     pub is_interactive: bool,
     pub is_continuous: bool,
-    pub is_cache_hit: bool,
+    pub can_be_interactive: bool,
 }
 
 impl TerminalPaneData {
@@ -30,7 +30,7 @@ impl TerminalPaneData {
             pty: None,
             is_interactive: false,
             is_continuous: false,
-            is_cache_hit: false,
+            can_be_interactive: false,
         }
     }
 
@@ -91,22 +91,17 @@ impl TerminalPaneData {
                     }
                     return Ok(());
                 }
-                // Handle 'i' to enter interactive mode for non cache hit tasks
-                KeyCode::Char('i') if !self.is_cache_hit && !self.is_interactive => {
+                // Handle 'i' to enter interactive mode for in progress tasks
+                KeyCode::Char('i') if self.can_be_interactive && !self.is_interactive => {
                     self.set_interactive(true);
-                    return Ok(());
-                }
-                // Handle Ctrl+Z to exit interactive mode
-                KeyCode::Char('z')
-                    if key.modifiers == KeyModifiers::CONTROL
-                        && !self.is_cache_hit
-                        && self.is_interactive =>
-                {
-                    self.set_interactive(false);
                     return Ok(());
                 }
                 // Only send input to PTY if we're in interactive mode
                 _ if self.is_interactive => match key.code {
+                    KeyCode::Char(c) if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        let ascii_code = (c as u8) - 0x60;
+                        pty_mut.write_input(&[ascii_code])?;
+                    }
                     KeyCode::Char(c) => {
                         pty_mut.write_input(c.to_string().as_bytes())?;
                     }
@@ -254,8 +249,8 @@ impl<'a> TerminalPane<'a> {
             | TaskStatus::RemoteCache => Color::Green,
             TaskStatus::Failure => Color::Red,
             TaskStatus::Skipped => Color::Yellow,
-            TaskStatus::InProgress | TaskStatus::Shared=> Color::LightCyan,
-            TaskStatus::NotStarted | TaskStatus::Stopped=> Color::DarkGray,
+            TaskStatus::InProgress | TaskStatus::Shared => Color::LightCyan,
+            TaskStatus::NotStarted | TaskStatus::Stopped => Color::DarkGray,
         })
     }
 
@@ -420,7 +415,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         ScrollbarState::default()
                     };
 
-                    let pseudo_term = PseudoTerminal::new(&screen).block(block);
+                    let pseudo_term = PseudoTerminal::new(&*screen).block(block);
                     Widget::render(pseudo_term, area, buf);
 
                     // Only render scrollbar if needed
@@ -435,7 +430,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
 
                     // Show interactive/readonly status for focused, non-cache hit, tasks
-                    if state.is_focused && !pty_data.is_cache_hit {
+                    if state.task_status == TaskStatus::InProgress && state.is_focused {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![

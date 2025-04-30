@@ -1,14 +1,4 @@
 {
   "generators": {},
-  "packageJsonUpdates": {
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    }
-  }
+  "packageJsonUpdates": {}
 }

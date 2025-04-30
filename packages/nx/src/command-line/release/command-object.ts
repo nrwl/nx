@@ -45,7 +45,13 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
+    /**
+     * @deprecated Use versionActionsOptionsOverrides instead.
+     *
+     * Using generatorOptionsOverrides is only valid when release.version.useLegacyVersioning is set to true.
+     */
     generatorOptionsOverrides?: Record<string, unknown>;
+    versionActionsOptionsOverrides?: Record<string, unknown>;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -58,7 +64,7 @@ export type ChangelogOptions = NxReleaseArgs &
     to?: string;
     from?: string;
     interactive?: string;
-    createRelease?: false | 'github';
+    createRelease?: false | 'github' | 'gitlab';
   };
 
 export type PublishOptions = NxReleaseArgs &

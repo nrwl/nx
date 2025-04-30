@@ -17,14 +17,12 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
-import { IS_WASM } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
 } from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
-import { isRelativePath } from '../utils/fileutils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -40,7 +38,7 @@ import {
   processSyncGeneratorResultErrors,
 } from '../utils/sync-generators';
 import { workspaceRoot } from '../utils/workspace-root';
-import { createTaskGraph, createTaskId } from './create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 import { isTuiEnabled } from './is-tui-enabled';
 import {
   CompositeLifeCycle,
@@ -53,13 +51,13 @@ import { createRunOneDynamicOutputRenderer } from './life-cycles/dynamic-run-one
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { TaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
-import { LegacyTaskHistoryLifeCycle } from './life-cycles/task-history-life-cycle-old';
+import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
 import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-cycle';
 import {
+  assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
   makeAcyclic,
   validateNoAtomizedTasks,
@@ -85,6 +83,7 @@ async function getTerminalOutputLifeCycle(
 ): Promise<{
   lifeCycle: LifeCycle;
   printSummary?: () => void;
+  restoreTerminal?: () => void;
   renderIsDone: Promise<void>;
 }> {
   const overridesWithoutHidden = { ...overrides };
@@ -278,6 +277,13 @@ async function getTerminalOutputLifeCycle(
 
     return {
       lifeCycle: new CompositeLifeCycle(lifeCycles),
+      restoreTerminal: () => {
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+        restoreTerminal();
+      },
       printSummary,
       renderIsDone,
     };
@@ -351,6 +357,8 @@ function createTaskGraphAndRunValidations(
     overrides,
     extraOptions.excludeTaskDependencies
   );
+
+  assertTaskGraphDoesNotContainInvalidTargets(taskGraph);
 
   const cycle = findCycle(taskGraph);
   if (cycle) {
@@ -465,7 +473,7 @@ export async function runCommandForTasks(
       nxArgs.targets.includes(t.target.target)
   );
 
-  const { lifeCycle, renderIsDone, printSummary } =
+  const { lifeCycle, renderIsDone, printSummary, restoreTerminal } =
     await getTerminalOutputLifeCycle(
       initiatingProject,
       initiatingTasks,
@@ -477,27 +485,34 @@ export async function runCommandForTasks(
       overrides
     );
 
-  const taskResults = await invokeTasksRunner({
-    tasks,
-    projectGraph,
-    taskGraph,
-    lifeCycle,
-    nxJson,
-    nxArgs,
-    loadDotEnvFiles: extraOptions.loadDotEnvFiles,
-    initiatingProject,
-    initiatingTasks,
-  });
+  try {
+    const taskResults = await invokeTasksRunner({
+      tasks,
+      projectGraph,
+      taskGraph,
+      lifeCycle,
+      nxJson,
+      nxArgs,
+      loadDotEnvFiles: extraOptions.loadDotEnvFiles,
+      initiatingProject,
+      initiatingTasks,
+    });
 
-  await renderIsDone;
+    await renderIsDone;
 
-  if (printSummary) {
-    printSummary();
+    if (printSummary) {
+      printSummary();
+    }
+
+    await printNxKey();
+
+    return taskResults;
+  } catch (e) {
+    if (restoreTerminal) {
+      restoreTerminal();
+    }
+    throw e;
   }
-
-  await printNxKey();
-
-  return taskResults;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -803,7 +818,10 @@ async function confirmRunningTasksWithSyncFailures(): Promise<void> {
   }
 }
 
-function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
+export function setEnvVarsBasedOnArgs(
+  nxArgs: NxArgs,
+  loadDotEnvFiles: boolean
+) {
   if (
     nxArgs.outputStyle == 'stream' ||
     process.env.NX_BATCH_MODE === 'true' ||
@@ -961,12 +979,9 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  if (!isNxCloudUsed(readNxJson())) {
-    lifeCycles.push(
-      process.env.NX_DISABLE_DB !== 'true' && !IS_WASM
-        ? new TaskHistoryLifeCycle()
-        : new LegacyTaskHistoryLifeCycle()
-    );
+  const historyLifeCycle = getTasksHistoryLifeCycle();
+  if (historyLifeCycle) {
+    lifeCycles.push(historyLifeCycle);
   }
   return lifeCycles;
 }
@@ -1051,15 +1066,6 @@ export function getRunner(
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
   try {
-    if (isCustomRunnerPath(modulePath)) {
-      output.warn({
-        title: `Custom task runners will be replaced by a new API starting with Nx 21.`,
-        bodyLines: [
-          `For more information, see https://nx.dev/deprecated/custom-tasks-runner`,
-        ],
-      });
-    }
-
     const tasksRunner = loadTasksRunner(modulePath);
 
     return {
@@ -1082,20 +1088,14 @@ function getTasksRunnerPath(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>
 ) {
-  let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
-
-  if (modulePath) {
-    if (isRelativePath(modulePath)) {
-      return join(workspaceRoot, modulePath);
-    }
-    return modulePath;
-  }
-
   const isCloudRunner =
     // No tasksRunnerOptions for given --runner
     nxJson.nxCloudAccessToken ||
     // No runner prop in tasks runner options, check if access token is set.
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
+    ['nx-cloud', '@nrwl/nx-cloud'].includes(
+      nxJson.tasksRunnerOptions?.[runner]?.runner
+    ) ||
     // Cloud access token specified in env var.
     process.env.NX_CLOUD_ACCESS_TOKEN ||
     // Nx Cloud ID specified in nxJson
@@ -1163,13 +1163,4 @@ export function getRunnerOptions(
   }
 
   return result;
-}
-
-function isCustomRunnerPath(modulePath: string) {
-  return ![
-    'nx-cloud',
-    '@nrwl/nx-cloud',
-    'nx/tasks-runners/default',
-    defaultTasksRunnerPath,
-  ].includes(modulePath);
 }

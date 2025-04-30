@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  parseTaskStatus,
   RunningTasksService,
   TaskDetails,
   TaskStatus as NativeTaskStatus,
@@ -199,8 +200,17 @@ export class TaskOrchestrator {
     );
   }
 
+  processTasks(taskIds: string[]) {
+    for (const taskId of taskIds) {
+      // Task is already handled or being handled
+      if (!this.processedTasks.has(taskId)) {
+        this.processedTasks.set(taskId, this.processTask(taskId));
+      }
+    }
+  }
+
   // region Processing Scheduled Tasks
-  async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
+  private async processTask(taskId: string): Promise<NodeJS.ProcessEnv> {
     const task = this.taskGraph.tasks[taskId];
     const taskSpecificEnv = getTaskSpecificEnv(task);
 
@@ -245,12 +255,7 @@ export class TaskOrchestrator {
     for (const batch of scheduledBatches) {
       this.processedBatches.set(batch, this.processScheduledBatch(batch));
     }
-    for (const taskId of scheduledTasks) {
-      // Task is already handled or being handled
-      if (!this.processedTasks.has(taskId)) {
-        this.processedTasks.set(taskId, this.processTask(taskId));
-      }
-    }
+    this.processTasks(scheduledTasks);
   }
 
   // endregion Processing Scheduled Tasks
@@ -285,7 +290,7 @@ export class TaskOrchestrator {
       // No output files to restore
       !!outputs.length &&
       // Remote caches are restored to output dirs when applied and using db cache
-      (!cachedResult.remote || !dbCacheEnabled(this.nxJson)) &&
+      (!cachedResult.remote || !dbCacheEnabled()) &&
       // Output files have not been touched since last run
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
     if (shouldCopyOutputsFromCache) {
@@ -316,6 +321,9 @@ export class TaskOrchestrator {
     batch: Batch,
     groupId: number
   ) {
+    const applyFromCacheOrRunBatchStart = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:start'
+    );
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
@@ -369,9 +377,19 @@ export class TaskOrchestrator {
         groupId
       );
     }
+    // Batch is done, mark it as completed
+    const applyFromCacheOrRunBatchEnd = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
+    );
+    performance.measure(
+      'TaskOrchestrator-apply-from-cache-or-run-batch',
+      applyFromCacheOrRunBatchStart.name,
+      applyFromCacheOrRunBatchEnd.name
+    );
   }
 
   private async runBatch(batch: Batch, env: NodeJS.ProcessEnv) {
+    const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
       const batchProcess =
         await this.forkedProcessTaskRunner.forkProcessForBatch(
@@ -397,6 +415,13 @@ export class TaskOrchestrator {
         task: this.taskGraph.tasks[rootTaskId],
         status: 'failure' as TaskStatus,
       }));
+    } finally {
+      const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
+      performance.measure(
+        'TaskOrchestrator-run-batch',
+        runBatchStart.name,
+        runBatchEnd.name
+      );
     }
   }
 
@@ -675,6 +700,12 @@ export class TaskOrchestrator {
 
       this.runningContinuousTasks.set(task.id, runningTask);
       runningTask.onExit(() => {
+        if (this.tuiEnabled) {
+          this.options.lifeCycle.setTaskStatus(
+            task.id,
+            NativeTaskStatus.Stopped
+          );
+        }
         this.runningContinuousTasks.delete(task.id);
       });
 
@@ -739,6 +770,9 @@ export class TaskOrchestrator {
     this.runningContinuousTasks.set(task.id, childProcess);
 
     childProcess.onExit(() => {
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
+      }
       this.runningTasksService.removeRunningTask(task.id);
       this.runningContinuousTasks.delete(task.id);
     });
@@ -874,6 +908,10 @@ export class TaskOrchestrator {
     for (const { taskId, status } of taskResults) {
       if (this.completedTasks[taskId] === undefined) {
         this.completedTasks[taskId] = status;
+
+        if (this.tuiEnabled) {
+          this.options.lifeCycle.setTaskStatus(taskId, parseTaskStatus(status));
+        }
 
         if (status === 'failure' || status === 'skipped') {
           if (this.bail) {

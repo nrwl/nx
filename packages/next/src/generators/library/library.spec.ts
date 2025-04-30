@@ -7,7 +7,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 
@@ -25,7 +24,7 @@ describe('next library', () => {
   it('should use @nx/next images.d.ts file', async () => {
     const baseOptions: Schema = {
       directory: '',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
@@ -47,7 +46,7 @@ describe('next library', () => {
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
     const baseOptions: Schema = {
       directory: '',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
@@ -79,7 +78,7 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
       directory: 'my-buildable-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
@@ -95,7 +94,7 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
@@ -122,7 +121,7 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       directory: 'my-lib',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',
@@ -164,7 +163,7 @@ describe('next library', () => {
     it('should add project references when using TS solution', async () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: false,
         skipTsConfig: false,
         unitTestRunner: 'jest',
@@ -287,7 +286,7 @@ describe('next library', () => {
       const appTree = createTreeWithEmptyWorkspace();
       await libraryGenerator(appTree, {
         directory: 'my-buildable-lib',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         skipTsConfig: false,
         unitTestRunner: 'jest',
@@ -302,7 +301,7 @@ describe('next library', () => {
     it('should create a correct package.json for buildable libraries', async () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         skipTsConfig: false,
         unitTestRunner: 'jest',
@@ -387,7 +386,7 @@ describe('next library', () => {
 
       await libraryGenerator(tree, {
         directory: 'mylib',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         skipTsConfig: false,
         unitTestRunner: 'jest',
@@ -448,7 +447,7 @@ describe('next library', () => {
     it('should generate project.json if useProjectJson is true', async () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         unitTestRunner: 'jest',
         style: 'css',
         addPlugin: true,

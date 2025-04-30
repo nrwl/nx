@@ -36,7 +36,7 @@ impl HelpText {
             // Show minimal hint
             let hint = vec![
                 Span::styled("quit: ", base_style.fg(Color::DarkGray)),
-                Span::styled("<ctrl>+c", base_style.fg(Color::Cyan)),
+                Span::styled("q", base_style.fg(Color::Cyan)),
                 Span::styled("  ", base_style.fg(Color::DarkGray)),
                 Span::styled("help: ", base_style.fg(Color::DarkGray)),
                 Span::styled("?  ", base_style.fg(Color::Cyan)),
@@ -53,7 +53,7 @@ impl HelpText {
             // Show full shortcuts
             let shortcuts = vec![
                 Span::styled("quit: ", base_style.fg(Color::DarkGray)),
-                Span::styled("<ctrl>+c", base_style.fg(Color::Cyan)),
+                Span::styled("q", base_style.fg(Color::Cyan)),
                 Span::styled("  ", base_style.fg(Color::DarkGray)),
                 Span::styled("help: ", base_style.fg(Color::DarkGray)),
                 Span::styled("?", base_style.fg(Color::Cyan)),
@@ -70,8 +70,8 @@ impl HelpText {
                 Span::styled(" or ", base_style.fg(Color::DarkGray)),
                 Span::styled("2", base_style.fg(Color::Cyan)),
                 Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("focus output: ", base_style.fg(Color::DarkGray)),
-                Span::styled("<tab>", base_style.fg(Color::Cyan)),
+                Span::styled("show output: ", base_style.fg(Color::DarkGray)),
+                Span::styled("<enter>", base_style.fg(Color::Cyan)),
             ];
 
             f.render_widget(

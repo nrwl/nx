@@ -1309,6 +1309,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Automate GitLab Releases",
+                "path": "/recipes/nx-release/automate-gitlab-releases",
+                "id": "automate-gitlab-releases",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Publish Rust Crates",
                 "path": "/recipes/nx-release/publish-rust-crates",
                 "id": "publish-rust-crates",
@@ -1415,14 +1423,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Migrate UI",
-                "path": "/recipes/nx-console/console-migrate-ui",
-                "id": "console-migrate-ui",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
@@ -1434,6 +1434,14 @@
                 "name": "Nx Cloud Integration",
                 "path": "/recipes/nx-console/console-nx-cloud",
                 "id": "console-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate UI",
+                "path": "/recipes/nx-console/console-migrate-ui",
+                "id": "console-migrate-ui",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2555,6 +2563,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Automate GitLab Releases",
+            "path": "/recipes/nx-release/automate-gitlab-releases",
+            "id": "automate-gitlab-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Publish Rust Crates",
             "path": "/recipes/nx-release/publish-rust-crates",
             "id": "publish-rust-crates",
@@ -2665,6 +2681,14 @@
         "name": "Automate GitHub Releases",
         "path": "/recipes/nx-release/automate-github-releases",
         "id": "automate-github-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automate GitLab Releases",
+        "path": "/recipes/nx-release/automate-gitlab-releases",
+        "id": "automate-gitlab-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2797,14 +2821,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Migrate UI",
-            "path": "/recipes/nx-console/console-migrate-ui",
-            "id": "console-migrate-ui",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Command",
             "path": "/recipes/nx-console/console-run-command",
             "id": "console-run-command",
@@ -2816,6 +2832,14 @@
             "name": "Nx Cloud Integration",
             "path": "/recipes/nx-console/console-nx-cloud",
             "id": "console-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate UI",
+            "path": "/recipes/nx-console/console-migrate-ui",
+            "id": "console-migrate-ui",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2856,14 +2880,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Migrate UI",
-        "path": "/recipes/nx-console/console-migrate-ui",
-        "id": "console-migrate-ui",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
@@ -2875,6 +2891,14 @@
         "name": "Nx Cloud Integration",
         "path": "/recipes/nx-console/console-nx-cloud",
         "id": "console-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate UI",
+        "path": "/recipes/nx-console/console-migrate-ui",
+        "id": "console-migrate-ui",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8388,6 +8412,23 @@
             "disableCollapsible": false
           },
           {
+            "id": "executors",
+            "path": "/nx-api/gradle/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "gradle",
+                "path": "/nx-api/gradle/executors/gradle",
+                "name": "gradle",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "generators",
             "path": "/nx-api/gradle/generators",
             "name": "generators",
@@ -10935,14 +10976,6 @@
                 "disableCollapsible": false
               }
             ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "migrations",
-            "path": "/nx-api/web/migrations",
-            "name": "migrations",
-            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }

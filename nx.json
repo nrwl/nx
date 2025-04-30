@@ -66,15 +66,16 @@
       }
     },
     "version": {
-      "generatorOptions": {
-        "packageRoot": "build/packages/{projectName}",
-        "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true
-      },
       "git": {
         "commit": false,
         "stageChanges": false,
         "tag": false
+      },
+      "currentVersionResolver": "registry",
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["build/packages/{projectName}"],
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   },
@@ -149,13 +150,17 @@
     },
     "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false,
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false,
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -254,7 +259,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 7,
+  "bust": 1,
   "defaultBase": "master",
   "conformance": {
     "rules": [

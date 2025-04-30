@@ -44,17 +44,18 @@ class AddTestCiTargetsTest {
 
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
-    val ciTargetName = "ci"
+    val ciTestTargetName = "ci"
 
     addTestCiTargets(
         testFiles = testFiles,
         projectBuildPath = ":project-a",
         testTask = testTask,
+        testTargetName = "test",
         targets = targets,
         targetGroups = targetGroups,
         projectRoot = projectRoot.absolutePath,
         workspaceRoot = workspaceRoot.absolutePath,
-        ciTargetName = ciTargetName)
+        ciTestTargetName = ciTestTargetName)
 
     // Assert each test file created a CI target
     assertTrue(targets.containsKey("ci--MyFirstTest"))
@@ -73,7 +74,7 @@ class AddTestCiTargetsTest {
     assertEquals(2, dependsOn!!.size)
 
     val firstTarget = targets["ci--MyFirstTest"]!!
-    assertTrue(firstTarget["command"].toString().contains("--tests MyFirstTest"))
+    assertEquals(firstTarget["executor"], "@nx/gradle:gradle")
     assertEquals(true, firstTarget["cache"])
     assertTrue((firstTarget["inputs"] as Array<*>)[0].toString().contains("{projectRoot}"))
     assertEquals("nx:noop", parentCi["executor"])

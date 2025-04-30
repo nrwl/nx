@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::{any::Any, io};
 use vt100_ctt::Parser;
 
-use crate::native::tui::utils::{is_cache_hit, normalize_newlines, sort_task_items};
+use crate::native::tui::utils::{normalize_newlines, sort_task_items};
 use crate::native::tui::{
     action::Action, app::Focus, components::Component, pty::PtyInstance, utils,
 };
@@ -150,6 +150,11 @@ impl std::str::FromStr for TaskStatus {
             _ => Err(format!("Unknown task status: {}", s)),
         }
     }
+}
+
+#[napi]
+pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
+    string_status.as_str().parse().map_err(napi::Error::from_reason)
 }
 
 /// A list component that displays and manages tasks in a terminal UI.
@@ -380,9 +385,7 @@ impl TasksList {
     /// If there is existing filter text that isn't persisted, persists it instead.
     pub fn enter_filter_mode(&mut self) {
         if !self.filter_text.is_empty() && !self.filter_persisted {
-            // If we have filter text and it's not persisted, pressing / should persist it
-            self.filter_persisted = true;
-            self.filter_mode = false;
+            self.persist_filter();
         } else {
             // Otherwise enter normal filter mode
             self.filter_persisted = false;
@@ -394,6 +397,11 @@ impl TasksList {
     pub fn exit_filter_mode(&mut self) {
         self.filter_mode = false;
         self.filter_persisted = false;
+    }
+
+    pub fn persist_filter(&mut self) {
+        self.filter_persisted = true;
+        self.filter_mode = false;
     }
 
     /// Clears the current filter and resets filter-related state.
@@ -671,6 +679,23 @@ impl TasksList {
         };
     }
 
+    pub fn focus_current_task_terminal_pane(&mut self) {
+        if let Some(task_name) = self.selection_manager.get_selected_task_name() {
+            // Find which pane contains this task
+            let pane_idx = self
+                .pane_tasks
+                .iter()
+                .position(|t| t.as_deref() == Some(task_name.as_str()))
+                .unwrap_or_else(|| {
+                    self.assign_current_task_to_pane(0);
+                    0
+                });
+            // Set focus to this pane
+            self.focus = Focus::MultipleOutput(pane_idx);
+            self.focused_pane = Some(pane_idx);
+        }
+    }
+
     /// Gets the table style based on the current focus state.
     /// Returns a dimmed style when focus is not on the task list.
     fn get_table_style(&self) -> Style {
@@ -694,6 +719,13 @@ impl TasksList {
             terminal_pane_data.handle_key_event(key)
         } else {
             Ok(())
+        }
+    }
+
+    /// Returns true if the currently focused pane is in interactive mode.
+    pub fn set_interactive_mode(&mut self, interactive: bool) {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            self.terminal_pane_data[pane_idx].set_interactive(interactive);
         }
     }
 
@@ -927,12 +959,22 @@ impl TasksList {
         self.sort_tasks();
     }
 
-    /// Updates their status to InProgress and triggers a sort.
+    /// Updates a task's status and triggers a sort of the list.
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task_id) {
             task_item.update_status(status);
+            self.sort_tasks();
         }
-        self.sort_tasks();
+        for (i, data) in self.terminal_pane_data.iter_mut().enumerate() {
+            if self.pane_tasks.as_ref()[i].clone().is_some_and(|id| id == task_id) {
+                let in_progress = status == TaskStatus::InProgress;
+                data.can_be_interactive = in_progress;
+                if !in_progress {
+                    data.set_interactive(false);
+                }
+            }
+        }
+        
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
@@ -942,9 +984,6 @@ impl TasksList {
                 .iter_mut()
                 .find(|t| t.name == task_result.task.id)
             {
-                let parsed_status = task_result.status.parse().unwrap();
-                task.update_status(parsed_status);
-
                 if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
                     task.start_time = Some(task_result.task.start_time.unwrap() as u128);
                     task.end_time = Some(task_result.task.end_time.unwrap() as u128);
@@ -958,13 +997,6 @@ impl TasksList {
         self.sort_tasks();
         // Re-evaluate the optimal size of the terminal pane and pty because the newly available task outputs might already be being displayed
         let _ = self.handle_resize(None);
-    }
-
-    pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.name == task_id) {
-            task.update_status(status);
-            self.sort_tasks();
-        }
     }
 
     /// Toggles the visibility of the task list panel
@@ -1108,6 +1140,7 @@ impl Component for TasksList {
                         TaskStatus::Success
                             | TaskStatus::Failure
                             | TaskStatus::Skipped
+                            | TaskStatus::Stopped
                             | TaskStatus::LocalCache
                             | TaskStatus::LocalCacheKeptExisting
                             | TaskStatus::RemoteCache
@@ -1736,7 +1769,7 @@ impl Component for TasksList {
                         )
                     } else {
                         format!(
-                            "  -> {} tasks filtered out. Press / to persist, <esc> to clear",
+                            "  -> {} tasks filtered out. Press <enter> to persist, <esc> to clear",
                             hidden_tasks
                         )
                     }
@@ -2045,7 +2078,7 @@ impl Component for TasksList {
                             {
                                 let mut terminal_pane_data = &mut self.terminal_pane_data[1];
                                 terminal_pane_data.is_continuous = task.continuous;
-                                terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                                // terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
 
                                 let mut has_pty = false;
                                 if let Some(pty) = self.pty_instances.get(task_name) {
@@ -2088,7 +2121,7 @@ impl Component for TasksList {
                         if let Some(task) = self.tasks.iter_mut().find(|t| t.name == *task_name) {
                             let mut terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                             terminal_pane_data.is_continuous = task.continuous;
-                            terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                            // terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
 
                             let mut has_pty = false;
                             if let Some(pty) = self.pty_instances.get(task_name) {
@@ -2130,7 +2163,7 @@ impl Component for TasksList {
                             {
                                 let mut terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                                 terminal_pane_data.is_continuous = task.continuous;
-                                terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
+                                // terminal_pane_data.is_cache_hit = is_cache_hit(task.status);
 
                                 let mut has_pty = false;
                                 if let Some(pty) = self.pty_instances.get(task_name) {

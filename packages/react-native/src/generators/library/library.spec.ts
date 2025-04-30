@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
-import { Linter } from '@nx/eslint';
 import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
 import { Schema } from './schema';
 
@@ -18,7 +17,7 @@ describe('lib', () => {
 
   const defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',

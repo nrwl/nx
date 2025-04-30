@@ -47,7 +47,7 @@ export async function addLinterToCyProject(
   tree: Tree,
   options: CyLinterOptions
 ) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
 
@@ -70,7 +70,7 @@ export async function addLinterToCyProject(
     );
   }
 
-  if (!options.linter || options.linter !== Linter.EsLint) {
+  if (!options.linter || options.linter !== 'eslint') {
     return runTasksInSerial(...tasks);
   }
 
