@@ -46,7 +46,7 @@ Use `nx release --dry-run` to preview the GitLab release instead of creating it.
 
 ## Disable File Creation
 
-Since GitLab releases contain the changelog, you may wish to disable the generation and management of local the `CHANGELOG.md` file. To do this, set `release.changelog.workspaceChangelog.file` to `false` in `nx.json`:
+Since GitLab releases contain the changelog, you may wish to disable the generation and management of the local `CHANGELOG.md` file. To do this, set `release.changelog.workspaceChangelog.file` to `false` in `nx.json`:
 
 ```json
 {
@@ -85,7 +85,7 @@ Nx Release does not support creating GitLab releases for both project level chan
 
 ## Customizing the GitLab instance
 
-If you are not using gitlab.com, and instead using a self-hosted GitLab instance, you can use a configuration object instead of the string for "createRelease" to provide the relevant hostname, and optionally override the API base URL, although this is not typically needed as it will default to `https://${hostname}/api/v4`.
+If you are not using gitlab.com, and are instead using a self-hosted GitLab instance, you can use a configuration object instead of the string for "createRelease" to provide the relevant hostname, and optionally override the API base URL, although this is not typically needed as it will default to `https://${hostname}/api/v4`.
 
 ```json
 {
