@@ -106,8 +106,8 @@ jobs:
     runs-on: macos-latest
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: ${{ !contains(github.event_name, 'push')}}
+      group: ${{ github.workflow }}-${{ github.ref }}${{ contains(github.event_name, 'push') && format('-{0}', github.sha) || '' }}
+      cancel-in-progress: true
 
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-macos
@@ -118,7 +118,7 @@ jobs:
 
       - name: Log concurrency info
         run: |
-          echo "Concurrency group: ${{ github.workflow }}-${{ github.ref }}"
+          echo "Concurrency group: ${{ github.workflow }}-${{ github.ref }}${{ contains(github.event_name, 'push') && format('-{0}', github.sha) || '' }}"
           echo "Concurrency cancel-in-progress: ${{ !contains(github.event_name, 'push') }}"
           echo "Concurrency cancel-event-name: ${{ github.event_name }}"
         if: always()
