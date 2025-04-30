@@ -1,4 +1,5 @@
 use color_eyre::eyre::Result;
+use hashbrown::HashSet;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
@@ -18,6 +19,7 @@ use crate::native::{
         action::Action,
         app::Focus,
         components::Component,
+        lifecycle::RunMode,
         utils::{format_duration_since, sort_task_items},
     },
 };
@@ -168,7 +170,6 @@ pub struct TasksList {
     pub filter_mode: bool,
     filter_text: String,
     filter_persisted: bool, // Whether the filter is in a persisted state
-    pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
     spacebar_mode: bool,    // Whether we're in spacebar mode (output follows selection)
     cloud_message: Option<String>,
     max_parallel: usize, // Maximum number of parallel tasks
@@ -176,6 +177,8 @@ pub struct TasksList {
     pub action_tx: Option<UnboundedSender<Action>>,
     focus: Focus,
     pinned_tasks: [Option<String>; 2],
+    initiating_tasks: HashSet<String>,
+    run_mode: RunMode,
 }
 
 impl TasksList {
@@ -183,7 +186,8 @@ impl TasksList {
     /// Converts the input tasks into TaskItems and initializes the UI state.
     pub fn new(
         tasks: Vec<Task>,
-        pinned_tasks: Vec<String>,
+        initiating_tasks: HashSet<String>,
+        run_mode: RunMode,
         initial_focus: Focus,
         title_text: String,
         selection_manager: Arc<Mutex<TaskSelectionManager>>,
@@ -196,9 +200,6 @@ impl TasksList {
 
         let filtered_names = Vec::new();
 
-        let mut iter = pinned_tasks.into_iter().take(2);
-        let pane_tasks = [iter.next(), iter.next()];
-
         Self {
             selection_manager,
             filtered_names,
@@ -207,7 +208,6 @@ impl TasksList {
             filter_mode: false,
             filter_text: String::new(),
             filter_persisted: false,
-            pane_tasks,
             spacebar_mode: false,
             cloud_message: None,
             max_parallel: DEFAULT_MAX_PARALLEL,
@@ -215,6 +215,8 @@ impl TasksList {
             action_tx: None,
             focus: initial_focus,
             pinned_tasks: [None, None],
+            initiating_tasks,
+            run_mode,
         }
     }
 
@@ -256,17 +258,26 @@ impl TasksList {
     }
 
     /// Creates a list of task entries with separators between different status groups.
-    /// Groups tasks into in-progress, completed, and pending, with None values as separators.
+    /// Groups tasks into in-progress, (maybe) highlighted, completed, and pending, with None values as separators.
     /// NEEDS ANALYSIS: Consider if this complex grouping logic should be moved to a dedicated type.
     fn create_entries_with_separator(&self, filtered_names: &[String]) -> Vec<Option<String>> {
         // Create vectors for each status group
         let mut in_progress = Vec::new();
+        let mut highlighted = Vec::new();
         let mut completed = Vec::new();
         let mut pending = Vec::new();
 
         // Single iteration to categorize tasks
         for task_name in filtered_names {
             if let Some(task) = self.tasks.iter().find(|t| &t.name == task_name) {
+                // If we're in run one mode, and the task is an initiating task, highlight it
+                if matches!(self.run_mode, RunMode::RunOne)
+                    && self.initiating_tasks.contains(task_name)
+                    && !matches!(task.status, TaskStatus::InProgress)
+                {
+                    highlighted.push(task_name.clone());
+                    continue;
+                }
                 match task.status {
                     TaskStatus::InProgress => in_progress.push(task_name.clone()),
                     TaskStatus::NotStarted => pending.push(task_name.clone()),
@@ -296,6 +307,12 @@ impl TasksList {
 
             // Always add a separator after the parallel tasks section with a bottom cap
             // This will be marked for special styling with the bottom box corner
+            entries.push(None);
+        }
+
+        // Add highlighted tasks followed by a separator, if there are any
+        if !highlighted.is_empty() {
+            entries.extend(highlighted.into_iter().map(Some));
             entries.push(None);
         }
 
@@ -417,7 +434,7 @@ impl TasksList {
     /// Updates filtered tasks and selection manager entries.
     pub fn apply_filter(&mut self) {
         // Set the appropriate selection mode based on our current state
-        let should_track_by_name = self.spacebar_mode || self.has_visible_panes();
+        let should_track_by_name = self.spacebar_mode;
         let mode = if should_track_by_name {
             SelectionMode::TrackByName
         } else {
@@ -452,11 +469,6 @@ impl TasksList {
             .update_entries(entries);
     }
 
-    /// Checks if the current view has any visible output panes.
-    pub fn has_visible_panes(&self) -> bool {
-        self.pane_tasks.iter().any(|t| t.is_some())
-    }
-
     /// Gets the table style based on the current focus state.
     /// Returns a dimmed style when focus is not on the task list.
     fn get_table_style(&self) -> Style {
@@ -481,7 +493,7 @@ impl TasksList {
 
     pub fn sort_tasks(&mut self) {
         // Set the appropriate selection mode based on our current state
-        let should_track_by_name = self.spacebar_mode || self.has_visible_panes();
+        let should_track_by_name = self.spacebar_mode;
         let mode = if should_track_by_name {
             SelectionMode::TrackByName
         } else {
@@ -492,8 +504,16 @@ impl TasksList {
             .unwrap()
             .set_selection_mode(mode);
 
+        // If we're in run one mode, and there are initiating tasks, sort them as highlighted tasks
+        let highlighted_tasks =
+            if matches!(self.run_mode, RunMode::RunOne) && !self.initiating_tasks.is_empty() {
+                self.initiating_tasks.clone()
+            } else {
+                HashSet::new()
+            };
+
         // Sort the tasks
-        sort_task_items(&mut self.tasks);
+        sort_task_items(&mut self.tasks, &highlighted_tasks);
 
         // Update filtered indices to match new order
         self.filtered_names = self.tasks.iter().map(|t| t.name.clone()).collect();

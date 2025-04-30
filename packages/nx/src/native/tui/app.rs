@@ -1,5 +1,6 @@
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
+use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use ratatui::layout::{Alignment, Rect, Size};
@@ -32,6 +33,7 @@ use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::components::Component;
 use super::config::TuiConfig;
+use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
 use super::tui;
 use super::utils::normalize_newlines;
@@ -76,6 +78,8 @@ pub enum Focus {
 impl App {
     pub fn new(
         tasks: Vec<Task>,
+        initiating_tasks: HashSet<String>,
+        run_mode: RunMode,
         pinned_tasks: Vec<String>,
         tui_config: TuiConfig,
         title_text: String,
@@ -86,7 +90,8 @@ impl App {
         let initial_focus = Focus::TaskList;
         let tasks_list = TasksList::new(
             tasks.clone(),
-            pinned_tasks.clone(),
+            initiating_tasks,
+            run_mode,
             initial_focus,
             title_text,
             selection_manager.clone(),
