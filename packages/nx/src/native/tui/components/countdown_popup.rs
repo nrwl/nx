@@ -98,16 +98,31 @@ impl CountdownPopup {
     }
 
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
+        // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
+        if area.height == 0 || area.width == 0 || 
+           area.x >= f.area().width || 
+           area.y >= f.area().height {
+            return;  // Area is out of bounds, don't try to render
+        }
+
+        // Ensure area is entirely within frame bounds
+        let safe_area = Rect {
+            x: area.x,
+            y: area.y,
+            width: area.width.min(f.area().width.saturating_sub(area.x)),
+            height: area.height.min(f.area().height.saturating_sub(area.y)),
+        };
+        
         let popup_height = 9;
         let popup_width = 70;
 
         // Make sure we don't exceed the available area
-        let popup_height = popup_height.min(area.height.saturating_sub(4));
-        let popup_width = popup_width.min(area.width.saturating_sub(4));
+        let popup_height = popup_height.min(safe_area.height.saturating_sub(4));
+        let popup_width = popup_width.min(safe_area.width.saturating_sub(4));
 
         // Calculate the top-left position to center the popup
-        let popup_x = area.x + (area.width.saturating_sub(popup_width)) / 2;
-        let popup_y = area.y + (area.height.saturating_sub(popup_height)) / 2;
+        let popup_x = safe_area.x + (safe_area.width.saturating_sub(popup_width)) / 2;
+        let popup_y = safe_area.y + (safe_area.height.saturating_sub(popup_height)) / 2;
 
         // Create popup area with fixed dimensions
         let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
