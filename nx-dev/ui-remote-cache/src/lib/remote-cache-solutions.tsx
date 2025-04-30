@@ -77,7 +77,7 @@ export function RemoteCacheSolutions(): ReactElement {
                         title="Remote caching security"
                         className="font-semibold underline"
                       >
-                        Learn more
+                        learn more
                       </Link>
                       )
                     </span>
@@ -88,7 +88,7 @@ export function RemoteCacheSolutions(): ReactElement {
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
                     <span>
-                      SOC-2 compliant (
+                      SOC 2 compliant (
                       <a
                         href="https://security.nx.app/"
                         title="Check our SOC 2 security report"
@@ -198,7 +198,7 @@ export function RemoteCacheSolutions(): ReactElement {
                       className="h-6 w-5 flex-none text-yellow-600 dark:text-yellow-500"
                     />
                     <span>
-                      Not recommended for organizations requiring HIPAA or SOC-2
+                      Not recommended for organizations requiring HIPAA or SOC 2
                       compliance (
                       <Link
                         href="/enterprise/security"
@@ -206,7 +206,7 @@ export function RemoteCacheSolutions(): ReactElement {
                         title="Remote caching security"
                         className="font-semibold underline"
                       >
-                        Learn more
+                        learn more
                       </Link>
                       )
                     </span>
