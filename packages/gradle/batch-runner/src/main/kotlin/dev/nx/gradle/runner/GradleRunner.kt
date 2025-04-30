@@ -3,7 +3,7 @@ package dev.nx.gradle.runner
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
 import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
-import dev.nx.gradle.runner.OutputProcessor.splitOutputPerTask
+import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
 import org.gradle.tooling.ProjectConnection
@@ -13,6 +13,7 @@ fun runTasksInParallel(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
     additionalArgs: String,
+    excludeTasks: List<String>
 ): Map<String, TaskResult> {
   logger.info("▶️ Running all tasks in a single Gradle run: ${tasks.keys.joinToString(", ")}")
 
@@ -29,27 +30,26 @@ fun runTasksInParallel(
   val args = buildList {
     // --info is for terminal per task
     // --continue is for continue running tasks if one failed in a batch
-    // --parallel and --build-cache are for performance
+    // --parallel is for performance
     // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 10 seconds
-    addAll(
-        listOf(
-            "--info",
-            "--continue",
-            "--parallel",
-            "--build-cache",
-            "-Dorg.gradle.daemon.idletimeout=10000"))
+    addAll(listOf("--info", "--continue", "-Dorg.gradle.daemon.idletimeout=10000"))
     addAll(additionalArgs.split(" ").filter { it.isNotBlank() })
+
+    // Add --exclude-task for each excluded task
+    if (excludeTasks.isNotEmpty()) {
+      excludeTasks.forEach { taskName ->
+        add("--exclude-task")
+        add(taskName)
+      }
+    }
   }
   logger.info("🏳️ Args: ${args.joinToString(", ")}")
-
-  val taskNames = tasks.values.map { it.taskName }.distinct()
 
   if (buildTasks.isNotEmpty()) {
     allResults.putAll(
         runBuildLauncher(
             connection,
             buildTasks.associate { it.key to it.value },
-            taskNames,
             args,
             outputStream,
             errorStream))
@@ -60,7 +60,6 @@ fun runTasksInParallel(
         runTestLauncher(
             connection,
             testClassTasks.associate { it.key to it.value },
-            taskNames,
             args,
             outputStream,
             errorStream))
@@ -72,21 +71,24 @@ fun runTasksInParallel(
 fun runBuildLauncher(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
-    taskNames: List<String>,
     args: List<String>,
     outputStream: ByteArrayOutputStream,
     errorStream: ByteArrayOutputStream
 ): Map<String, TaskResult> {
+  val taskNames = tasks.values.map { it.taskName }.distinct().toTypedArray()
+  logger.info("📋 Collected ${taskNames.size} unique task names: ${taskNames.joinToString(", ")}")
+
   val taskStartTimes = mutableMapOf<String, Long>()
   val taskResults = mutableMapOf<String, TaskResult>()
 
+  val globalStart = System.currentTimeMillis()
   var globalOutput: String
 
   try {
     connection
         .newBuild()
         .apply {
-          forTasks(*taskNames.toTypedArray())
+          forTasks(*taskNames)
           withArguments(*args.toTypedArray())
           setStandardOutput(outputStream)
           setStandardError(errorStream)
@@ -97,17 +99,20 @@ fun runBuildLauncher(
   } catch (e: Exception) {
     globalOutput =
         buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
-    logger.warning("\ud83d\udca5 Gradle run failed: ${e.message}")
+    logger.warning("\ud83d\udca5 Gradle run failed: ${e.message} ${errorStream}")
   } finally {
     outputStream.close()
     errorStream.close()
   }
 
-  val perTaskOutput = splitOutputPerTask(globalOutput)
-  tasks.forEach { (taskId, taskConfig) ->
-    val taskOutput = perTaskOutput[taskConfig.taskName] ?: globalOutput
-    taskResults[taskId]?.let { taskResults[taskId] = it.copy(terminalOutput = taskOutput) }
-  }
+  val globalEnd = System.currentTimeMillis()
+  finalizeTaskResults(
+      tasks = tasks,
+      taskResults = taskResults,
+      globalOutput = globalOutput,
+      errorStream = errorStream,
+      globalStart = globalStart,
+      globalEnd = globalEnd)
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
@@ -116,11 +121,13 @@ fun runBuildLauncher(
 fun runTestLauncher(
     connection: ProjectConnection,
     tasks: Map<String, GradleTask>,
-    taskNames: List<String>,
     args: List<String>,
     outputStream: ByteArrayOutputStream,
     errorStream: ByteArrayOutputStream
 ): Map<String, TaskResult> {
+  val taskNames = tasks.values.map { it.taskName }.distinct().toTypedArray()
+  logger.info("📋 Collected ${taskNames.size} unique task names: ${taskNames.joinToString(", ")}")
+
   val taskStartTimes = mutableMapOf<String, Long>()
   val taskResults = mutableMapOf<String, TaskResult>()
   val testTaskStatus = mutableMapOf<String, Boolean>()
@@ -140,9 +147,19 @@ fun runTestLauncher(
     connection
         .newTestLauncher()
         .apply {
-          forTasks(*taskNames.toTypedArray())
-          tasks.values.mapNotNull { it.testClassName }.forEach { withJvmTestClasses(it) }
-          withArguments(*args.toTypedArray())
+          forTasks(*taskNames)
+          tasks.values
+              .mapNotNull { it.testClassName }
+              .forEach {
+                logger.info("Registering test class: $it")
+                withArguments("--tests", it)
+                withJvmTestClasses(it)
+              }
+          withArguments(
+              *args.toTypedArray(),
+              "-Dorg.gradle.workers.max=3",
+              "-PmaxParallelForks=3",
+              "-Dorg.gradle.parallel=true")
           setStandardOutput(outputStream)
           setStandardError(errorStream)
           addProgressListener(
@@ -153,9 +170,10 @@ fun runTestLauncher(
         .run()
     globalOutput = buildTerminalOutput(outputStream, errorStream)
   } catch (e: Exception) {
+    logger.warning(errorStream.toString())
     globalOutput =
         buildTerminalOutput(outputStream, errorStream) + "\nException occurred: ${e.message}"
-    logger.warning("\ud83d\udca5 Gradle test run failed: ${e.message}")
+    logger.warning("\ud83d\udca5 Gradle test run failed: ${e.message} ${errorStream}")
   } finally {
     outputStream.close()
     errorStream.close()
@@ -175,11 +193,13 @@ fun runTestLauncher(
     }
   }
 
-  val perTaskOutput = splitOutputPerTask(globalOutput)
-  tasks.forEach { (taskId, taskConfig) ->
-    val taskOutput = perTaskOutput[taskConfig.taskName] ?: globalOutput
-    taskResults[taskId]?.let { taskResults[taskId] = it.copy(terminalOutput = taskOutput) }
-  }
+  finalizeTaskResults(
+      tasks = tasks,
+      taskResults = taskResults,
+      globalOutput = globalOutput,
+      errorStream = errorStream,
+      globalStart = globalStart,
+      globalEnd = globalEnd)
 
   logger.info("\u2705 Finished test tasks")
   return taskResults
