@@ -73,6 +73,15 @@
         "{workspaceRoot}/docs/external-generated",
         "{workspaceRoot}/docs/generated"
       ]
+    },
+    "lint": {
+      "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "lint-pnpm-lock": {
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
     }
   }
 }

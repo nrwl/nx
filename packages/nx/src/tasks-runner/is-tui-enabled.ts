@@ -1,5 +1,6 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
 import { readNxJsonFromDisk } from '../devkit-internals';
+import { IS_WASM } from '../native';
 import { isCI } from '../utils/is-ci';
 
 let tuiEnabled = undefined;
@@ -31,7 +32,7 @@ export function isTuiEnabled(
 
   // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
   // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
-  if (isCI() || isWindows) {
+  if (isCI() || isWindows || IS_WASM) {
     tuiEnabled = false;
     process.env.NX_TUI = 'false';
     return tuiEnabled;

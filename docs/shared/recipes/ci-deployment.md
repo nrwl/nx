@@ -13,10 +13,6 @@ Additionally, we should generate pruned lock file according to the generated `pa
 
 Nx offers two varieties of Webpack plugin which can be used to generate `package.json`.
 
-{% tabs %}
-
-{% tab label="Nx 18+" %}
-
 ## Basic Plugin Configuration
 
 `@nx/webpack/plugin` plugin is compatible with a conventional webpack configuration setup which offers a smooth integration with the Webpack CLI.
@@ -69,23 +65,6 @@ module.exports = {
   ],
 };
 ```
-
-{% /tab %}
-
-{% tab label="Nx < 18" %}
-
-## Supported executors
-
-The `@nx/webpack:webpack` executor supports the `generatePackageJson` flag which generates both `package.json` as well as the lock file.
-
-Some executors automatically generate output `package.json` and the lock file generation is supported using the `generateLockfile` flag:
-
-- `@nx/js:swc`
-- `@nx/js:tsc`
-- `@nx/next:build`
-
-{% /tab %}
-{% /tabs %}
 
 ## Programmatic usage
 

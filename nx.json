@@ -120,14 +120,7 @@
       }
     },
     "lint": {
-      "dependsOn": [
-        "build-native",
-        "^build-native",
-        "@nx/nx-source:lint-pnpm-lock"
-      ]
-    },
-    "lint-pnpm-lock": {
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
       "cache": true,
