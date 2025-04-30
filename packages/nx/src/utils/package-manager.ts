@@ -11,7 +11,7 @@ import {
 } from 'yaml';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
-import { gte, lt } from 'semver';
+import { gte, lt, parse } from 'semver';
 import { dirSync } from 'tmp';
 import { promisify } from 'util';
 
@@ -213,25 +213,15 @@ export function getPackageManagerVersion(
   packageManager: PackageManager = detectPackageManager(),
   cwd = process.cwd()
 ): string {
-  const nxJson = readNxJson();
-  if (nxJson.cli.packageManagerVersion) {
-    return nxJson.cli.packageManagerVersion;
-  }
-  let version;
+  let version: string;
   if (existsSync(join(cwd, 'package.json'))) {
-    const packageVersion = readJsonFile<PackageJson>(
+    const packageManagerEntry = readJsonFile<PackageJson>(
       join(cwd, 'package.json')
     )?.packageManager;
-    if (packageVersion) {
-      const [packageManagerFromPackageJson, versionFromPackageJson] =
-        packageVersion.split('@');
-      if (
-        packageManagerFromPackageJson === packageManager &&
-        versionFromPackageJson
-      ) {
-        version = versionFromPackageJson;
-      }
-    }
+    version = parseVersionFromPackageManagerField(
+      packageManager,
+      packageManagerEntry
+    );
   }
   if (!version) {
     try {
@@ -246,6 +236,29 @@ export function getPackageManagerVersion(
     throw new Error(`Cannot determine the version of ${packageManager}.`);
   }
   return version;
+}
+
+export function parseVersionFromPackageManagerField(
+  requestedPackageManager: string,
+  packageManagerFieldValue: string | undefined
+): null | string {
+  if (!packageManagerFieldValue) return null;
+  const [packageManagerFromPackageJson, versionFromPackageJson] =
+    packageManagerFieldValue.split('@');
+  if (
+    versionFromPackageJson &&
+    // If it's a URL, it's not a valid range by default, unless users set `COREPACK_ENABLE_UNSAFE_CUSTOM_URLS=1`.
+    // In the unsafe case, there's no way to reliably pare out the version since it could be anything, e.g. http://mydomain.com/bin/yarn.js.
+    // See: https://github.com/nodejs/corepack/blob/2b43f26/sources/corepackUtils.ts#L110-L112
+    !URL.canParse(versionFromPackageJson) &&
+    packageManagerFromPackageJson === requestedPackageManager &&
+    versionFromPackageJson
+  ) {
+    // The range could have a validation hash attached, like "3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa".
+    // We just want to parse out the "<major>.<minor>.<patch>". Semver treats "+" as a build, which is not included in the resulting version.
+    return parse(versionFromPackageJson)?.version ?? null;
+  }
+  return null;
 }
 
 /**
