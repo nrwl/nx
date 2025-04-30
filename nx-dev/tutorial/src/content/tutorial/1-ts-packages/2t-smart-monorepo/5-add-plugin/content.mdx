@@ -41,7 +41,7 @@ First, let's remove the existing `build` and `typecheck` scripts from each proje
 Now let's add the `@nx/js` plugin:
 
 ```shell
-npx nx add @nx/js
+nx add @nx/js
 ```
 
 Your output should look like this:
@@ -62,7 +62,7 @@ The `nx add` command installs the version of the plugin that matches your repo's
 Open the project details view for the `zoo` package and look at the `build` task.
 
 ```shell
-npx nx show project @tuskdesign/zoo
+nx show project @tuskdesign/zoo
 ```
 
 Notice that the `inputs` that are inferred for the `build` task match the `include` and `exclude` settings in the `tsconfig.lib.json` file. As those settings are changed, the cache `inputs` will automatically update to the correct values.

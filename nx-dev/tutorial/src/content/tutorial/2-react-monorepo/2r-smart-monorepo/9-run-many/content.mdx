@@ -12,15 +12,15 @@ title: Run Multiple Tasks
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```bash
-npx nx test react-store # runs the tests for react-store
-npx nx lint inventory # runs the linter on inventory
-npx nx e2e react-store-e2e # runs e2e tests for the react-store
+nx test react-store # runs the tests for react-store
+nx lint inventory # runs the linter on inventory
+nx e2e react-store-e2e # runs e2e tests for the react-store
 ```
 
 More conveniently, we can also run tasks in parallel using the following syntax:
 
 ```shell
-npx nx run-many -t test
+nx run-many -t test
 ```
 
 ### Cache Tasks
@@ -30,7 +30,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
 ```shell
-npx nx run-many -t test lint e2e
+nx run-many -t test lint e2e
 ```
 
 ```

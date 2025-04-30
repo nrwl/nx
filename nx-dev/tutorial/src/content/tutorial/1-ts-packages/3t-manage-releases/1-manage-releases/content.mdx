@@ -32,13 +32,13 @@ Now you're ready to use the `nx release` command to publish the `animals` and `n
 To preview your first release, run:
 
 ```shell
-npx nx release --first-release --dry-run
+nx release --first-release --dry-run
 ```
 
 The command will ask you a series of questions and then show you what the results would be. Once you are happy with the results, run it again without the `--dry-run` flag:
 
 ```shell
-npx nx release --first-release
+nx release --first-release
 ```
 
 After this first release, you can remove the `--first-release` flag and just run `nx release --dry-run`. There is also a [dedicated feature page](/features/manage-releases) that goes into more detail about how to use the `nx release` command.
