@@ -38,9 +38,6 @@ Make sure to install the `@nx/detox` version that matches the version of `nx` in
 
 In any Nx workspace, you can install `@nx/detox` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/detox
 ```
@@ -80,24 +77,6 @@ The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 Once a Detox configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `startTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build` and `test`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/detox` package with your package manager.
-
-```shell
-npm add -D @nx/detox
-```
-
-### Generating Applications
-
-By default, when creating a mobile application, Nx will use Detox to create the e2e tests project.
-
-```shell
-nx g @nx/react-native:app apps/frontend --e2eTestRunner=deotx
-nx g @nx/expo:app apps/frontend --e2eTestRunner=detox
-```
 
 ## Using Detox
 
