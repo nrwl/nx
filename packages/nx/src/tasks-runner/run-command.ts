@@ -188,6 +188,7 @@ async function getTerminalOutputLifeCycle(
     if (tasks.length > 0) {
       appLifeCycle = new AppLifeCycle(
         tasks,
+        initiatingTasks.map((t) => t.id),
         pinnedTasks,
         nxArgs ?? {},
         nxJson.tui ?? {},

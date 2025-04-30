@@ -64,6 +64,7 @@ impl AppLifeCycle {
     #[napi(constructor)]
     pub fn new(
         tasks: Vec<Task>,
+        initiating_tasks: Vec<String>,
         pinned_tasks: Vec<String>,
         tui_cli_args: TuiCliArgs,
         tui_config: TuiConfig,
@@ -75,10 +76,13 @@ impl AppLifeCycle {
         // Convert JSON TUI configuration to our Rust TuiConfig
         let rust_tui_config = RustTuiConfig::from((tui_config, &rust_tui_cli_args));
 
+        let initiating_tasks = initiating_tasks.into_iter().collect();
+
         Self {
             app: Arc::new(std::sync::Mutex::new(
                 App::new(
                     tasks.into_iter().map(|t| t.into()).collect(),
+                    initiating_tasks,
                     pinned_tasks,
                     rust_tui_config,
                     title_text,

@@ -1,5 +1,6 @@
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
+use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use ratatui::layout::{Alignment, Rect};
@@ -52,11 +53,12 @@ pub enum Focus {
 impl App {
     pub fn new(
         tasks: Vec<Task>,
+        initiating_tasks: HashSet<String>,
         pinned_tasks: Vec<String>,
         tui_config: TuiConfig,
         title_text: String,
     ) -> Result<Self> {
-        let tasks_list = TasksList::new(tasks, pinned_tasks, title_text);
+        let tasks_list = TasksList::new(tasks, initiating_tasks, pinned_tasks, title_text);
         let help_popup = HelpPopup::new();
         let countdown_popup = CountdownPopup::new();
         let focus = tasks_list.get_focus();

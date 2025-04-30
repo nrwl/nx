@@ -13,8 +13,8 @@ pub struct Task {
     pub target: TaskTarget,
     pub outputs: Vec<String>,
     pub project_root: Option<String>,
-    pub start_time: Option<f64>,
-    pub end_time: Option<f64>,
+    pub start_time: Option<i64>,
+    pub end_time: Option<i64>,
     pub continuous: Option<bool>,
 }
 

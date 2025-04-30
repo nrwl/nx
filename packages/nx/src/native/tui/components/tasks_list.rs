@@ -1,5 +1,6 @@
 use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
+use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -48,9 +49,8 @@ pub struct TaskItem {
     pub status: TaskStatus,
     terminal_output: String,
     pub continuous: bool,
-    start_time: Option<u128>,
-    // Public to aid with sorting utility and testing
-    pub end_time: Option<u128>,
+    pub start_time: Option<i64>,
+    pub end_time: Option<i64>,
 }
 
 impl Clone for TaskItem {
@@ -154,7 +154,10 @@ impl std::str::FromStr for TaskStatus {
 
 #[napi]
 pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
-    string_status.as_str().parse().map_err(napi::Error::from_reason)
+    string_status
+        .as_str()
+        .parse()
+        .map_err(napi::Error::from_reason)
 }
 
 /// A list component that displays and manages tasks in a terminal UI.
@@ -163,8 +166,9 @@ pub struct TasksList {
     // task id -> pty instance
     pub pty_instances: HashMap<String, Arc<PtyInstance>>,
     selection_manager: TaskSelectionManager,
-    pub tasks: Vec<TaskItem>,    // Source of truth - all tasks
-    filtered_names: Vec<String>, // Names of tasks that match the filter
+    pub tasks: Vec<TaskItem>,          // Source of truth - all tasks
+    initiating_tasks: HashSet<String>, // IDs of tasks which initiated the command
+    filtered_names: Vec<String>,       // Names of tasks that match the filter
     throbber_counter: usize,
     pub filter_mode: bool,
     filter_text: String,
@@ -186,7 +190,12 @@ pub struct TasksList {
 impl TasksList {
     /// Creates a new TasksList with the given tasks.
     /// Converts the input tasks into TaskItems and initializes the UI state.
-    pub fn new(tasks: Vec<Task>, pinned_tasks: Vec<String>, title_text: String) -> Self {
+    pub fn new(
+        tasks: Vec<Task>,
+        initiating_tasks: HashSet<String>,
+        pinned_tasks: Vec<String>,
+        title_text: String,
+    ) -> Self {
         let mut task_items = Vec::new();
 
         for task in tasks {
@@ -210,11 +219,12 @@ impl TasksList {
         let mut iter = pinned_tasks.into_iter().take(2);
         let pane_tasks = [iter.next(), iter.next()];
 
-        Self {
+        let mut s = Self {
             pty_instances: HashMap::new(),
             selection_manager,
             filtered_names,
             tasks: task_items,
+            initiating_tasks,
             throbber_counter: 0,
             filter_mode: false,
             filter_text: String::new(),
@@ -231,7 +241,12 @@ impl TasksList {
             title_text,
             resize_debounce_timer: None,
             pending_resize: None,
-        }
+        };
+
+        // Sort tasks to populate task selection list
+        s.sort_tasks();
+
+        s
     }
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
@@ -842,7 +857,7 @@ impl TasksList {
         self.selection_manager.set_selection_mode(mode);
 
         // Sort the tasks
-        sort_task_items(&mut self.tasks);
+        sort_task_items(&mut self.tasks, &self.initiating_tasks);
 
         // Update filtered indices to match new order
         self.filtered_names = self.tasks.iter().map(|t| t.name.clone()).collect();
@@ -954,6 +969,7 @@ impl TasksList {
         for task in tasks {
             if let Some(task_item) = self.tasks.iter_mut().find(|t| t.name == task.id) {
                 task_item.update_status(TaskStatus::InProgress);
+                task_item.start_time = task.start_time;
             }
         }
         self.sort_tasks();
@@ -966,7 +982,10 @@ impl TasksList {
             self.sort_tasks();
         }
         for (i, data) in self.terminal_pane_data.iter_mut().enumerate() {
-            if self.pane_tasks.as_ref()[i].clone().is_some_and(|id| id == task_id) {
+            if self.pane_tasks.as_ref()[i]
+                .clone()
+                .is_some_and(|id| id == task_id)
+            {
                 let in_progress = status == TaskStatus::InProgress;
                 data.can_be_interactive = in_progress;
                 if !in_progress {
@@ -974,7 +993,6 @@ impl TasksList {
                 }
             }
         }
-        
     }
 
     pub fn end_tasks(&mut self, task_results: Vec<TaskResult>) {
@@ -985,11 +1003,11 @@ impl TasksList {
                 .find(|t| t.name == task_result.task.id)
             {
                 if task_result.task.start_time.is_some() && task_result.task.end_time.is_some() {
-                    task.start_time = Some(task_result.task.start_time.unwrap() as u128);
-                    task.end_time = Some(task_result.task.end_time.unwrap() as u128);
+                    task.start_time = Some(task_result.task.start_time.unwrap());
+                    task.end_time = Some(task_result.task.end_time.unwrap());
                     task.duration = utils::format_duration_since(
-                        task_result.task.start_time.unwrap() as u128,
-                        task_result.task.end_time.unwrap() as u128,
+                        task_result.task.start_time.unwrap(),
+                        task_result.task.end_time.unwrap(),
                     );
                 }
             }
@@ -2272,32 +2290,5 @@ impl Component for TasksList {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
-    }
-}
-
-impl Default for TasksList {
-    fn default() -> Self {
-        Self {
-            pty_instances: HashMap::new(),
-            selection_manager: TaskSelectionManager::default(),
-            tasks: Vec::new(),
-            filtered_names: Vec::new(),
-            throbber_counter: 0,
-            filter_mode: false,
-            filter_text: String::new(),
-            filter_persisted: false,
-            focus: Focus::TaskList,
-            pane_tasks: [None, None],
-            focused_pane: None,
-            is_dimmed: false,
-            spacebar_mode: false,
-            terminal_pane_data: [TerminalPaneData::default(), TerminalPaneData::default()],
-            task_list_hidden: false,
-            cloud_message: None,
-            max_parallel: DEFAULT_MAX_PARALLEL,
-            title_text: String::new(),
-            resize_debounce_timer: None,
-            pending_resize: None,
-        }
     }
 }

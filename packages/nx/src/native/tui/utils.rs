@@ -1,6 +1,7 @@
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
+use hashbrown::HashSet;
 
-pub fn format_duration(duration_ms: u128) -> String {
+pub fn format_duration(duration_ms: i64) -> String {
     if duration_ms == 0 {
         "<1ms".to_string()
     } else if duration_ms < 1000 {
@@ -10,7 +11,7 @@ pub fn format_duration(duration_ms: u128) -> String {
     }
 }
 
-pub fn format_duration_since(start_ms: u128, end_ms: u128) -> String {
+pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
     format_duration(end_ms.saturating_sub(start_ms))
 }
 
@@ -43,7 +44,7 @@ pub fn normalize_newlines(input: &[u8]) -> Vec<u8> {
 /// Within each status category:
 /// - For completed tasks: sort by end_time if available, then by name
 /// - For other statuses: sort by name
-pub fn sort_task_items(tasks: &mut [TaskItem]) {
+pub fn sort_task_items(tasks: &mut [TaskItem], initating_tasks: &HashSet<String>) {
     tasks.sort_by(|a, b| {
         // Map status to a numeric category for sorting
         let status_to_category = |status: &TaskStatus| -> u8 {
@@ -68,6 +69,20 @@ pub fn sort_task_items(tasks: &mut [TaskItem]) {
             return a_category.cmp(&b_category);
         }
 
+        if a_category == 0 {
+            match (a.start_time, b.start_time) {
+                (Some(time_a), Some(time_b)) => {
+                    let time_cmp = time_a.cmp(&time_b);
+                    if time_cmp != std::cmp::Ordering::Equal {
+                        return time_cmp;
+                    }
+                }
+                (Some(_), None) => return std::cmp::Ordering::Less,
+                (None, Some(_)) => return std::cmp::Ordering::Greater,
+                (None, None) => {}
+            }
+        }
+
         // For completed tasks, sort by end_time if available
         if a_category == 1 || a_category == 2 {
             // Failure or Success categories
@@ -84,8 +99,15 @@ pub fn sort_task_items(tasks: &mut [TaskItem]) {
             }
         }
 
-        // For all other cases or as a tiebreaker, sort by name
-        a.name.cmp(&b.name)
+        match (
+            initating_tasks.contains(&a.name),
+            initating_tasks.contains(&b.name),
+        ) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            // For all other cases or as a tiebreaker, sort by name
+            _ => a.name.cmp(&b.name),
+        }
     });
 }
 
@@ -94,7 +116,7 @@ mod tests {
     use super::*;
 
     // Helper function to create a TaskItem for testing
-    fn create_task(name: &str, status: TaskStatus, end_time: Option<u128>) -> TaskItem {
+    fn create_task(name: &str, status: TaskStatus, end_time: Option<i64>) -> TaskItem {
         let mut task = TaskItem::new(name.to_string(), false);
         task.status = status;
         task.end_time = end_time;
@@ -110,7 +132,7 @@ mod tests {
             create_task("task4", TaskStatus::Failure, Some(200)),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Expected order: InProgress, Failure, Success, NotStarted
         assert_eq!(tasks[0].status, TaskStatus::InProgress);
@@ -127,7 +149,7 @@ mod tests {
             create_task("task3", TaskStatus::Success, Some(200)),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Should be sorted by end_time: 100, 200, 300
         assert_eq!(tasks[0].name, "task2");
@@ -143,7 +165,7 @@ mod tests {
             create_task("task3", TaskStatus::Success, None),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Tasks with end_time come before those without
         assert_eq!(tasks[0].name, "task2");
@@ -160,7 +182,7 @@ mod tests {
             create_task("b", TaskStatus::NotStarted, None),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Should be sorted alphabetically: a, b, c
         assert_eq!(tasks[0].name, "a");
@@ -181,7 +203,7 @@ mod tests {
             create_task("s", TaskStatus::NotStarted, None),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Expected groups by status:
         // 1. InProgress: "u", "y" (alphabetical)
@@ -226,7 +248,7 @@ mod tests {
             create_task("b", TaskStatus::Success, Some(100)),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // When end_times are the same, should sort by name
         assert_eq!(tasks[0].name, "a");
@@ -239,9 +261,22 @@ mod tests {
         let mut tasks: Vec<TaskItem> = vec![];
 
         // Should not panic on empty list
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         assert!(tasks.is_empty());
+    }
+
+    #[test]
+    fn test_sort_initiating_tasks() {
+        let mut tasks = vec![create_task("a", TaskStatus::NotStarted, None), create_task("b", TaskStatus::NotStarted, None)];
+
+        // Should not change a single-element list
+        let mut initiating_tasks = HashSet::new();
+        initiating_tasks.insert("b".to_string());
+        sort_task_items(&mut tasks, &initiating_tasks);
+
+        assert_eq!(tasks[0].name, "b");
+        assert_eq!(tasks[0].name, "a");
     }
 
     #[test]
@@ -249,7 +284,7 @@ mod tests {
         let mut tasks = vec![create_task("task", TaskStatus::Success, Some(100))];
 
         // Should not change a single-element list
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         assert_eq!(tasks.len(), 1);
         assert_eq!(tasks[0].name, "task");
@@ -267,7 +302,7 @@ mod tests {
         let original_names = tasks.iter().map(|t| t.name.clone()).collect::<Vec<_>>();
 
         // Sort should maintain original order for equal elements
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         let sorted_names = tasks.iter().map(|t| t.name.clone()).collect::<Vec<_>>();
         assert_eq!(sorted_names, original_names);
@@ -304,7 +339,7 @@ mod tests {
             .collect();
 
         // Sort should not panic with large random dataset
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Verify the sort maintains the expected ordering rules
         for i in 1..tasks.len() {
@@ -372,12 +407,12 @@ mod tests {
     fn test_sort_edge_cases() {
         // Test with extreme end_time values
         let mut tasks = vec![
-            create_task("a", TaskStatus::Success, Some(u128::MAX)),
+            create_task("a", TaskStatus::Success, Some(i64::MAX)),
             create_task("b", TaskStatus::Success, Some(0)),
-            create_task("c", TaskStatus::Success, Some(u128::MAX / 2)),
+            create_task("c", TaskStatus::Success, Some(i64::MAX / 2)),
         ];
 
-        sort_task_items(&mut tasks);
+        sort_task_items(&mut tasks, &HashSet::new());
 
         // Should sort by end_time: 0, MAX/2, MAX
         assert_eq!(tasks[0].name, "b");
