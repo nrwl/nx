@@ -4,7 +4,7 @@ import {
   RunCommandsOptions,
 } from 'nx/src/executors/run-commands/run-commands.impl';
 import { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
-import { gradleExecutorSchema } from './schema';
+import { GradleExecutorSchema } from './schema';
 import { findGradlewFile } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
@@ -12,6 +12,7 @@ import {
   createPseudoTerminal,
   PseudoTerminal,
 } from 'nx/src/tasks-runner/pseudo-terminal';
+import { getExcludeTasksArgs } from './get-exclude-task';
 
 export const batchRunnerPath = join(
   __dirname,
@@ -25,7 +26,7 @@ interface GradleTask {
 
 export default async function gradleBatch(
   taskGraph: TaskGraph,
-  inputs: Record<string, gradleExecutorSchema>,
+  inputs: Record<string, GradleExecutorSchema>,
   overrides: RunCommandsOptions,
   context: ExecutorContext
 ): Promise<BatchResults> {
@@ -48,17 +49,36 @@ export default async function gradleBatch(
       args.push(...overrides.__overrides_unparsed__);
     }
 
-    const gradlewTasksToRun: Record<string, GradleTask> = Object.entries(
-      taskGraph.tasks
-    ).reduce((gradlewTasksToRun, [taskId, task]) => {
-      const gradlewTaskName = inputs[task.id].taskName;
-      const testClassName = inputs[task.id].testClassName;
-      gradlewTasksToRun[taskId] = {
-        taskName: gradlewTaskName,
-        testClassName: testClassName,
-      };
-      return gradlewTasksToRun;
-    }, {});
+    const gradlewTaskIdsToRun = Object.keys(taskGraph.tasks);
+    const gradlewTasksToRun: Record<string, GradleTask> =
+      gradlewTaskIdsToRun.reduce((gradlewTasksToRun, taskId) => {
+        const task = taskGraph.tasks[taskId];
+        const gradlewTaskName = inputs[task.id].taskName;
+        const testClassName = inputs[task.id].testClassName;
+        gradlewTasksToRun[taskId] = {
+          taskName: gradlewTaskName,
+          testClassName: testClassName,
+        };
+        return gradlewTasksToRun;
+      }, {});
+
+    getExcludeTasksArgs(
+      context.projectGraph,
+      gradlewTaskIdsToRun.map((taskId) => {
+        const task = taskGraph.tasks[taskId];
+        return {
+          project: task?.target?.project,
+          target: task?.target?.target,
+          excludeDependsOn: inputs[taskId]?.excludeDependsOn,
+        };
+      }),
+      gradlewTaskIdsToRun
+    ).forEach((arg) => {
+      if (arg) {
+        args.push(arg);
+      }
+    });
+
     const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
 
     const usePseudoTerminal =
@@ -87,6 +107,7 @@ export default async function gradleBatch(
       batchResults = batchResults.replace(command, '');
       const startIndex = batchResults.indexOf('{');
       const endIndex = batchResults.lastIndexOf('}');
+      // only keep the json part
       batchResults = batchResults.substring(startIndex, endIndex + 1);
     } else {
       batchResults = execSync(command, {

@@ -3,7 +3,7 @@ package dev.nx.gradle.runner
 import dev.nx.gradle.data.GradleTask
 import dev.nx.gradle.data.TaskResult
 import dev.nx.gradle.runner.OutputProcessor.buildTerminalOutput
-import dev.nx.gradle.runner.OutputProcessor.splitOutputPerTask
+import dev.nx.gradle.runner.OutputProcessor.finalizeTaskResults
 import dev.nx.gradle.util.logger
 import java.io.ByteArrayOutputStream
 import org.gradle.tooling.ProjectConnection
@@ -27,9 +27,20 @@ fun runTasksInParallel(
   val errorStream = ByteArrayOutputStream()
 
   val args = buildList {
-    addAll(listOf("--info", "--continue", "--parallel", "--build-cache"))
+    // --info is for terminal per task
+    // --continue is for continue running tasks if one failed in a batch
+    // --parallel and --build-cache are for performance
+    // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 10 seconds
+    addAll(
+        listOf(
+            "--info",
+            "--continue",
+            "--parallel",
+            "--build-cache",
+            "-Dorg.gradle.daemon.idletimeout=10000"))
     addAll(additionalArgs.split(" ").filter { it.isNotBlank() })
   }
+  logger.info("🏳️ Args: ${args.joinToString(", ")}")
 
   val taskNames = tasks.values.map { it.taskName }.distinct()
 
@@ -69,6 +80,7 @@ fun runBuildLauncher(
   val taskStartTimes = mutableMapOf<String, Long>()
   val taskResults = mutableMapOf<String, TaskResult>()
 
+  val globalStart = System.currentTimeMillis()
   var globalOutput: String
 
   try {
@@ -92,11 +104,14 @@ fun runBuildLauncher(
     errorStream.close()
   }
 
-  val perTaskOutput = splitOutputPerTask(globalOutput)
-  tasks.forEach { (taskId, taskConfig) ->
-    val taskOutput = perTaskOutput[taskConfig.taskName] ?: globalOutput
-    taskResults[taskId]?.let { taskResults[taskId] = it.copy(terminalOutput = taskOutput) }
-  }
+  val globalEnd = System.currentTimeMillis()
+  finalizeTaskResults(
+      tasks = tasks,
+      taskResults = taskResults,
+      globalOutput = globalOutput,
+      errorStream = errorStream,
+      globalStart = globalStart,
+      globalEnd = globalEnd)
 
   logger.info("\u2705 Finished build tasks")
   return taskResults
@@ -164,11 +179,13 @@ fun runTestLauncher(
     }
   }
 
-  val perTaskOutput = splitOutputPerTask(globalOutput)
-  tasks.forEach { (taskId, taskConfig) ->
-    val taskOutput = perTaskOutput[taskConfig.taskName] ?: globalOutput
-    taskResults[taskId]?.let { taskResults[taskId] = it.copy(terminalOutput = taskOutput) }
-  }
+  finalizeTaskResults(
+      tasks = tasks,
+      taskResults = taskResults,
+      globalOutput = globalOutput,
+      errorStream = errorStream,
+      globalStart = globalStart,
+      globalEnd = globalEnd)
 
   logger.info("\u2705 Finished test tasks")
   return taskResults
