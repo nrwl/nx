@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
     connection =
         GradleConnector.newConnector().forProjectDirectory(File(options.workspaceRoot)).connect()
 
-    val results = runTasksInParallel(connection, options.tasks, options.args)
+    val results = runTasksInParallel(connection, options.tasks, options.args, options.excludeTasks)
 
     val reportJson = Gson().toJson(results)
     println(reportJson)
