@@ -6,7 +6,6 @@ tags: ['nx']
 cover_image: /blog/images/articles/cursor-nx-mcp-heroimg.jpg
 description: 'Learn how Nx enhances Cursor IDE with a dedicated MCP server, providing AI assistants with rich monorepo metadata for smarter code assistance.'
 youtubeUrl: https://youtu.be/V2W94Sq_v6A
-pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
@@ -15,6 +14,7 @@ pinned: true
 - **Making Cursor Smarter with an MCP Server For Nx Monorepos**
 - [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
 - [Nx and AI: Why They Work so Well Together](/blog/nx-and-ai-why-they-work-together)
+- [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
 
 {% /callout %}
 
