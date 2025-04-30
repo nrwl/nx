@@ -495,6 +495,11 @@
     "url": "https://github.com/getlarge/nx-heroku"
   },
   {
+    "name": "@getlarge/nx-node-sea",
+    "description": "Plugin that provides integration with Node.js Single Executable Applications (SEA).",
+    "url": "https://github.com/getlarge/nx-node-sea"
+  },
+  {
     "name": "@huge-nx/conventions",
     "description": "Plugin to generate and manage Nx workspaces by adhering to established workspace conventions.",
     "url": "https://github.com/jogelin/huge-nx"
