@@ -8,7 +8,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -272,6 +272,11 @@ export interface ProjectGraph {
 export declare export declare function remove(src: string): void
 
 export declare export declare function restoreTerminal(): void
+
+export declare const enum RunMode {
+  RunOne = 0,
+  RunMany = 1
+}
 
 export interface RuntimeInput {
   runtime: string
