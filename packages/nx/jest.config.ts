@@ -8,5 +8,5 @@ export default {
   displayName: 'nx',
   preset: '../../jest.preset.js',
   // Ensure cargo insta snapshots do not get picked up by jest
-  testPathIgnorePatterns: ['<rootDir>/src/native'],
+  testPathIgnorePatterns: ['<rootDir>/src/native/tui'],
 };
