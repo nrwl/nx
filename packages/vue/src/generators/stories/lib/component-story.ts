@@ -23,8 +23,8 @@ export function createComponentStories(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const proj = getProjects(host).get(project);
-  const sourceRoot = proj.sourceRoot;
+  const projectConfiguration = getProjects(host).get(project);
+  const { root: sourceRoot } = projectConfiguration;
 
   const componentFilePath = joinPathFragments(sourceRoot, componentPath);
 
