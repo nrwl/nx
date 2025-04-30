@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  IS_WASM,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
@@ -55,7 +56,9 @@ export class TaskOrchestrator {
     this.tuiEnabled
   );
 
-  private runningTasksService = new RunningTasksService(getDbConnection());
+  private runningTasksService = !IS_WASM
+    ? new RunningTasksService(getDbConnection())
+    : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
@@ -686,7 +689,10 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
-    if (this.runningTasksService.getRunningTasks([task.id]).length) {
+    if (
+      this.runningTasksService &&
+      this.runningTasksService.getRunningTasks([task.id]).length
+    ) {
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {
