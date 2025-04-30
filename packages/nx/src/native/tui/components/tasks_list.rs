@@ -322,7 +322,7 @@ impl TasksList {
             .iter()
             .any(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::NotStarted));
 
-        is_first_page && has_active_tasks && !self.is_loading_state()
+        is_first_page && has_active_tasks
     }
 
     // Add a helper method to check if we're in the initial loading state
@@ -695,7 +695,7 @@ impl Component for TasksList {
             let table_area = chunks[0];
             let filter_area = chunks[1];
             let pagination_area = chunks[3]; // Bottom bar area
-            
+
             // Only render filter if active
             // After rendering the table, render the filter text (we know filter is active here)
             let hidden_tasks = self.tasks.len() - self.filtered_names.len();
@@ -740,7 +740,7 @@ impl Component for TasksList {
             let filter_paragraph = Paragraph::new(filter_lines).alignment(Alignment::Left);
 
             f.render_widget(filter_paragraph, filter_area);
-            
+
             (table_area, pagination_area)
         } else {
             // When filter is not active, use simpler layout
@@ -1530,21 +1530,26 @@ impl Component for TasksList {
 
                     let cloud_message_paragraph =
                         Paragraph::new(message_line).alignment(Alignment::Right);
-                    
+
                     // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
                     let cloud_message_area = bottom_bar_layout[2];
-                    if cloud_message_area.width > 0 && cloud_message_area.height > 0 && 
-                       cloud_message_area.x < f.area().width &&
-                       cloud_message_area.y < f.area().height {
-                        
+                    if cloud_message_area.width > 0
+                        && cloud_message_area.height > 0
+                        && cloud_message_area.x < f.area().width
+                        && cloud_message_area.y < f.area().height
+                    {
                         // Ensure area is entirely within frame bounds
                         let safe_area = Rect {
                             x: cloud_message_area.x,
                             y: cloud_message_area.y,
-                            width: cloud_message_area.width.min(f.area().width.saturating_sub(cloud_message_area.x)),
-                            height: cloud_message_area.height.min(f.area().height.saturating_sub(cloud_message_area.y)),
+                            width: cloud_message_area
+                                .width
+                                .min(f.area().width.saturating_sub(cloud_message_area.x)),
+                            height: cloud_message_area
+                                .height
+                                .min(f.area().height.saturating_sub(cloud_message_area.y)),
                         };
-                        
+
                         f.render_widget(cloud_message_paragraph, safe_area);
                     }
                 }
