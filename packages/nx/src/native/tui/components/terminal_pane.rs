@@ -297,7 +297,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 width: area.width.min(buf.area().width.saturating_sub(area.x)),
                 height: area.height.min(buf.area().height.saturating_sub(area.y)),
             };
-            
+
             if safe_area.width > 0 && safe_area.height > 0 {
                 // Only attempt to render if we have a valid area
                 let text = "...";
@@ -308,7 +308,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             }
             return;
         }
-        
+
         // Ensure the area doesn't extend beyond buffer boundaries
         let safe_area = Rect {
             x: area.x,
@@ -316,7 +316,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
             width: area.width.min(buf.area().width.saturating_sub(area.x)),
             height: area.height.min(buf.area().height.saturating_sub(area.y)),
         };
-        
+
         let base_style = self.get_base_style(state.task_status);
         let border_style = if state.is_focused {
             base_style

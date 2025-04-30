@@ -117,7 +117,9 @@ impl PseudoTerminal {
 
                             let mut content = String::from_utf8_lossy(&buf[0..len]).to_string();
                             if content.contains("\x1B[6n") {
-                                trace!("Prevented terminal escape sequence ESC[6n from being printed.");
+                                trace!(
+                                    "Prevented terminal escape sequence ESC[6n from being printed."
+                                );
                                 content = content.replace("\x1B[6n", "");
                             }
 

@@ -99,10 +99,12 @@ impl CountdownPopup {
 
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
         // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
-        if area.height == 0 || area.width == 0 || 
-           area.x >= f.area().width || 
-           area.y >= f.area().height {
-            return;  // Area is out of bounds, don't try to render
+        if area.height == 0
+            || area.width == 0
+            || area.x >= f.area().width
+            || area.y >= f.area().height
+        {
+            return; // Area is out of bounds, don't try to render
         }
 
         // Ensure area is entirely within frame bounds
@@ -112,7 +114,7 @@ impl CountdownPopup {
             width: area.width.min(f.area().width.saturating_sub(area.x)),
             height: area.height.min(f.area().height.saturating_sub(area.y)),
         };
-        
+
         let popup_height = 9;
         let popup_width = 70;
 
