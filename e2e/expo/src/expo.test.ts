@@ -14,6 +14,7 @@ import {
   killPorts,
   createFile,
   removeFile,
+  ensureCypressInstallation,
 } from 'e2e/utils';
 import { join } from 'path';
 
@@ -24,8 +25,9 @@ describe('@nx/expo', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --linter=eslint`
+      `generate @nx/expo:app ${appName} --no-interactive --e2eTestRunner=cypress --unitTestRunner=jest --linter=eslint`
     );
+    ensureCypressInstallation();
   });
 
   afterAll(() => cleanupProject());

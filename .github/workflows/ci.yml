@@ -167,6 +167,16 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
 
+      ## TODO remove this after checking why it is needed for macos pipeline else it fails with /bin/sh: bun: command not found
+      ## See ref: https://staging.nx.app/runs/g75tGV9tMK?utm_source=pull-request&utm_medium=comment
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2.11'
+
+      - name: Verify Bun installation
+        run: bun --version
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -175,11 +185,23 @@ jobs:
         with:
           main-branch-name: 'master'
 
+      - name: Accept Xcode license
+        run: |
+          sudo xcodebuild -license accept
+          sudo xcodebuild -runFirstLaunch
+
+      - name: Enable Developer Mode
+        run: |
+          sudo DevToolsSecurity -enable
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
       - name: Run E2E Tests for macOS
         run: |
           HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
           if $HAS_CHANGED; then
-            pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            npx nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
           else
             echo "Skip E2E tests for macOS as there are no changes in React Native projects."
           fi

@@ -12,11 +12,12 @@ export default async function (globalConfig: Config.ConfigGlobals) {
       process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
 
     /**
-     * For e2e-ci we populate the verdaccio storage up front, but for other workflows we need
+     * For e2e-ci & macos-local-e2e we populate the verdaccio storage up front, but for other workflows we need
      * to run the full local release process before running tests.
      */
     const requiresLocalRelease =
-      !process.env.NX_TASK_TARGET_TARGET?.startsWith('e2e-ci');
+      !process.env.NX_TASK_TARGET_TARGET?.startsWith('e2e-ci') &&
+      !process.env.NX_TASK_TARGET_TARGET?.startsWith('e2e-macos-local');
 
     const listenAddress = 'localhost';
     const port = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';

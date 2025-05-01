@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   cleanupProject,
+  ensureCypressInstallation,
   getPackageManagerCommand,
   killPorts,
   newProject,
@@ -26,6 +27,7 @@ describe('@nx/expo (legacy)', () => {
 
   beforeAll(() => {
     proj = newProject({ packages: ['@nx/expo'] });
+    ensureCypressInstallation();
     // we create empty preset above which skips creation of `production` named input
 
     originalEnv = process.env.NX_ADD_PLUGINS;
