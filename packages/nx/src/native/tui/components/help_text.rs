@@ -27,10 +27,12 @@ impl HelpText {
 
     pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
         // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
-        if area.height == 0 || area.width == 0 || 
-           area.x >= f.area().width || 
-           area.y >= f.area().height {
-            return;  // Area is out of bounds, don't try to render
+        if area.height == 0
+            || area.width == 0
+            || area.x >= f.area().width
+            || area.y >= f.area().height
+        {
+            return; // Area is out of bounds, don't try to render
         }
 
         // Ensure area is entirely within frame bounds

@@ -195,7 +195,7 @@ impl LayoutManager {
                 terminal_panes: Vec::new(),
             };
         }
-        
+
         match self.task_list_visibility {
             TaskListVisibility::Hidden => self.calculate_layout_hidden_task_list(area),
             TaskListVisibility::Visible => self.calculate_layout_visible_task_list(area),
@@ -252,19 +252,15 @@ impl LayoutManager {
         }
 
         // Prevent divide-by-zero
-        let task_list_height = if area.height < 3 {
-            1
-        } else {
-            area.height / 3
-        };
-        
+        let task_list_height = if area.height < 3 { 1 } else { area.height / 3 };
+
         // Apply padding only if there's enough space
         let padding_height = if area.height > task_list_height + self.vertical_padding {
             self.vertical_padding
         } else {
             0
         };
-        
+
         // Ensure terminal pane has at least 1 row
         let available_height = area.height.saturating_sub(task_list_height);
         let terminal_pane_height = available_height.saturating_sub(padding_height);
@@ -311,19 +307,15 @@ impl LayoutManager {
         }
 
         // Prevent divide-by-zero
-        let task_list_width = if area.width < 3 {
-            1
-        } else {
-            area.width / 3
-        };
-        
+        let task_list_width = if area.width < 3 { 1 } else { area.width / 3 };
+
         // Apply padding only if there's enough space
         let padding_width = if area.width > task_list_width + self.horizontal_padding {
             self.horizontal_padding
         } else {
             0
         };
-        
+
         // Ensure terminal pane has at least 1 column
         let available_width = area.width.saturating_sub(task_list_width);
         let terminal_pane_width = available_width.saturating_sub(padding_width);
@@ -440,7 +432,10 @@ mod tests {
     fn test_default_properties() {
         let layout_manager = LayoutManager::new(5);
         assert_eq!(layout_manager.get_pane_arrangement(), PaneArrangement::None);
-        assert_eq!(layout_manager.get_task_list_visibility(), TaskListVisibility::Visible);
+        assert_eq!(
+            layout_manager.get_task_list_visibility(),
+            TaskListVisibility::Visible
+        );
         assert_eq!(layout_manager.get_task_count(), 5);
     }
 
@@ -689,43 +684,43 @@ mod tests {
     fn test_padding_between_components() {
         let mut layout_manager = LayoutManager::new(5);
         let area = create_test_area(100, 60);
-        
+
         // Test with default horizontal padding (2)
         layout_manager.set_mode(LayoutMode::Horizontal);
         layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
-        
+
         let layout = layout_manager.calculate_layout(area);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
-        
+
         // The gap between task list and terminal pane should equal the horizontal padding
         assert_eq!(terminal_pane.x - (task_list.x + task_list.width), 2);
-        
+
         // Test with increased horizontal padding
         layout_manager.set_horizontal_padding(3);
         let layout = layout_manager.calculate_layout(area);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
-        
+
         // The gap should now be 3
         assert_eq!(terminal_pane.x - (task_list.x + task_list.width), 3);
-        
+
         // Test with vertical layout and default vertical padding (1)
         layout_manager.set_mode(LayoutMode::Vertical);
         let layout = layout_manager.calculate_layout(area);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
-        
+
         // The gap should be vertical and equal to the vertical padding
         assert_eq!(terminal_pane.y - (task_list.y + task_list.height), 1);
-        
+
         // Test with increased vertical padding
         layout_manager.set_vertical_padding(2);
         let layout = layout_manager.calculate_layout(area);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
-        
+
         // The gap should now be 2
         assert_eq!(terminal_pane.y - (task_list.y + task_list.height), 2);
     }
