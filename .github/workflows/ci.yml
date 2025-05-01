@@ -143,8 +143,8 @@ jobs:
 
       - name: Configure Detox Environment, Install applesimutils
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
           xcrun simctl shutdown all && xcrun simctl erase all
         timeout-minutes: 20
 
