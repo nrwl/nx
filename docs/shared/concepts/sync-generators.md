@@ -110,7 +110,7 @@ Nx processes the file system in order to [create the project graph](/features/ex
 └─ myorg
    ├─ apps
    │  ├─ app1
-   │  └─ app1
+   │  └─ app2
    ├─ libs
    │  └─ lib
    ├─ nx.json

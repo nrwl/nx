@@ -1,9 +1,9 @@
+use super::contains_glob_pattern;
 use crate::native::glob::glob_group::GlobGroup;
 use crate::native::glob::glob_parser::parse_glob;
+use itertools::Either::{Left, Right};
 use itertools::Itertools;
 use std::collections::HashSet;
-use itertools::Either::{Left, Right};
-use super::contains_glob_pattern;
 
 #[derive(Debug)]
 enum GlobType {
@@ -120,15 +120,13 @@ pub fn partition_glob(glob: &str) -> anyhow::Result<(String, Vec<String>)> {
     let (leading_dir_segments, pattern_segments): (Vec<String>, _) = groups
         .into_iter()
         .filter(|group| !group.is_empty())
-        .partition_map(|group| {
-            match &group[0] {
-                GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
-                    Left(value.to_string())
-                }
-                _ => {
-                    has_patterns = true;
-                    Right(group)
-                }
+        .partition_map(|group| match &group[0] {
+            GlobGroup::NonSpecial(value) if !contains_glob_pattern(&value) && !has_patterns => {
+                Left(value.to_string())
+            }
+            _ => {
+                has_patterns = true;
+                Right(group)
             }
         });
 
@@ -267,7 +265,8 @@ mod test {
 
     #[test]
     fn should_partition_glob_with_leading_dirs() {
-        let (leading_dirs, globs) = super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
+        let (leading_dirs, globs) =
+            super::partition_glob("dist/app/**/!(README|LICENSE).(js|ts)").unwrap();
         assert_eq!(leading_dirs, "dist/app");
         assert_eq!(globs, ["!**/{README,LICENSE}.{js,ts}", "**/*.{js,ts}",]);
     }

@@ -50,7 +50,7 @@ import { SharedRunningTask } from './running-tasks/shared-running-task';
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
-  private readonly tuiEnabled = isTuiEnabled(this.nxJson);
+  private readonly tuiEnabled = isTuiEnabled();
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(
     this.options,
     this.tuiEnabled

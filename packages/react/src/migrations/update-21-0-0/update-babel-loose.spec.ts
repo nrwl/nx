@@ -50,4 +50,21 @@ describe('update-babel-loose migration', () => {
     const content = tree.read(filePath, 'utf-8');
     expect(content).toBe('invalid json content');
   });
+
+  it('should work when @nx/react/babel is not present', async () => {
+    const filePath = '.babelrc';
+    tree.write(filePath, '{ "preset": [] } }');
+
+    await updateBabelLoose(tree);
+
+    let content = tree.read(filePath, 'utf-8');
+    expect(content).toMatch('{ "preset": [] } }');
+
+    tree.write(filePath, '{}');
+
+    await updateBabelLoose(tree);
+
+    content = tree.read(filePath, 'utf-8');
+    expect(content).toMatch('{}');
+  });
 });
