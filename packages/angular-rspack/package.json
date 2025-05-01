@@ -39,6 +39,10 @@
       "types": "./dist/lib/plugins/loaders/angular-transform.loader.d.ts",
       "default": "./dist/lib/plugins/loaders/angular-transform.loader.js"
     },
+    "./loaders/platform-server-exports-loader": {
+      "types": "./dist/lib/plugins/loaders/platform-server-exports.loader.d.ts",
+      "default": "./dist/lib/plugins/loaders/platform-server-exports.loader.js"
+    },
     "./ssr": {
       "types": "./dist/lib/ssr/server.d.ts",
       "default": "./dist/lib/ssr/server.js"
@@ -57,6 +61,7 @@
     "less-loader": "^12.2.0",
     "license-webpack-plugin": "^4.0.2",
     "parse5-html-rewriting-stream": "7.0.0",
+    "piscina": "4.9.2",
     "postcss": "8.5.3",
     "postcss-loader": "8.1.1",
     "resolve-url-loader": "^5.0.0",
@@ -77,6 +82,8 @@
     "@angular/common": ">=19.0.0 <20.0.0",
     "@angular/build": ">=19.0.0 <20.0.0",
     "@angular/localize": ">=19.0.0 <20.0.0",
+    "@angular/platform-server": ">=19.0.0 <20.0.0",
+    "zone.js": ">=0.14.0 <0.16.0",
     "@angular/ssr": ">=19.0.0 <20.0.0",
     "@rspack/core": ">=1.0.5 <2.0.0",
     "tailwindcss": "^2.0.0 || ^3.0.0"
@@ -86,6 +93,12 @@
       "optional": true
     },
     "@angular/localize": {
+      "optional": true
+    },
+    "@angular/platform-server": {
+      "optional": true
+    },
+    "zone.js": {
       "optional": true
     }
   },

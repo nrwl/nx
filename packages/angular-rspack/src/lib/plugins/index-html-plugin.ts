@@ -11,6 +11,7 @@ import { assertIsError } from '../utils/misc-helpers';
 import { ensureOutputPaths } from '../utils/i18n';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
 import { urlJoin } from '../utils/url-join';
+import { getIndexOutputFile } from '../utils/index-file/get-index-output-file';
 
 export interface IndexHtmlPluginOptions extends IndexHtmlGeneratorOptions {
   baseHref: string | undefined;
@@ -151,12 +152,4 @@ export class IndexHtmlPlugin
       ? urlJoin(this.options.baseHref || '', baseHrefSuffix)
       : undefined;
   }
-}
-
-function getIndexOutputFile(index: IndexExpandedDefinition): string {
-  if (typeof index === 'string') {
-    return basename(index);
-  }
-
-  return index.output || 'index.html';
 }
