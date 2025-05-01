@@ -39,6 +39,21 @@
         "version": "^2.6.26",
         "alwaysAddToPackageJson": false
       }
+    },
+    "21.0.0": {
+      "version": "21.0.0-beta.13",
+      "@module-federation/enhanced": {
+        "version": "^0.13.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@module-federation/runtime": {
+        "version": "^0.13.0",
+        "alwaysAddToPackageJson": false
+      },
+      "@module-federation/sdk": {
+        "version": "^0.13.0",
+        "alwaysAddToPackageJson": false
+      }
     }
   }
 }
