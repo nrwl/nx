@@ -47,12 +47,6 @@ export interface PluginUnsupportedOptions {
   statsJson?: boolean;
   budgets?: BudgetEntry[];
   allowedCommonJsDependencies?: string[];
-  prerender?:
-    | boolean
-    | {
-        routesFile?: string;
-        discoverRoutes?: boolean;
-      };
   appShell?: boolean;
   outputMode?: 'static' | 'server';
 }
@@ -67,7 +61,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'statsJson',
   'budgets',
   'allowedCommonJsDependencies',
-  'prerender',
   'appShell',
   'outputMode',
 ];

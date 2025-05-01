@@ -12,6 +12,7 @@ import {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
+import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
 
 export async function getBrowserConfig(
   root: string,
@@ -118,6 +119,28 @@ export async function getBrowserConfig(
       module: true,
     },
     optimization: getOptimization(normalizedOptions, 'browser'),
+    module: {
+      ...defaultConfig.module,
+      rules: [
+        {
+          test: TS_ALL_EXT_REGEX,
+          use: [
+            {
+              loader: 'builtin:swc-loader',
+              options: {
+                jsc: {
+                  parser: {
+                    syntax: 'typescript',
+                  },
+                  target: 'es2022',
+                },
+              },
+            },
+          ],
+        },
+        ...(defaultConfig.module?.rules ?? []),
+      ],
+    },
     plugins: [
       ...(defaultConfig.plugins ?? []),
       new NgRspackPlugin(normalizedOptions, {

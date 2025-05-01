@@ -86,14 +86,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           }
         );
 
-        compiler.hooks.done.tap(PLUGIN_NAME, (stats) => {
-          if (stats.hasErrors() || stats.hasWarnings()) {
-            setTimeout(() => {
-              process.exit(stats.hasErrors() ? 1 : 0);
-            }, 1000);
-          }
-        });
-
         callback();
       }
     );

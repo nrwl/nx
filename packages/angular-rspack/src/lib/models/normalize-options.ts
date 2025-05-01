@@ -283,6 +283,7 @@ export async function normalizeOptions(
     outputHashing: options.outputHashing ?? 'none',
     outputPath: normalizeOutputPath(root, options.outputPath),
     polyfills: options.polyfills ?? [],
+    prerender: options.prerender ?? false,
     projectName: project?.name ?? undefined,
     root,
     serviceWorker: options.serviceWorker,

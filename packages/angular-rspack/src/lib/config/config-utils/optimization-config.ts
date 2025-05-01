@@ -21,9 +21,18 @@ export function getOptimization(
           new SwcJsMinimizerRspackPlugin({
             minimizerOptions: {
               minify: true,
-              compress: {
-                passes: 2,
-              },
+              ...(platform === 'server'
+                ? {
+                    mangle: {
+                      reserved: [
+                        'renderApplication',
+                        'renderModule',
+                        'ɵSERVER_CONTEXT',
+                        'ɵgetRoutesFromAngularRouterConfig',
+                      ],
+                    },
+                  }
+                : {}),
               format: {
                 comments: false,
               },

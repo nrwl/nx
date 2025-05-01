@@ -91,17 +91,6 @@ export async function getCommonConfig(
           test: TS_ALL_EXT_REGEX,
           use: [
             {
-              loader: 'builtin:swc-loader',
-              options: {
-                jsc: {
-                  parser: {
-                    syntax: 'typescript',
-                  },
-                  target: 'es2022',
-                },
-              },
-            },
-            {
               loader: require.resolve(
                 '@nx/angular-rspack/loaders/angular-loader'
               ),

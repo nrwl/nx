@@ -25,6 +25,7 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
   sslCert?: string;
   sslKey?: string;
 }
+
 export interface NormalizedDevServerOptions extends DevServerOptions {
   allowedHosts: string[] | boolean;
   host: string;
@@ -162,6 +163,25 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
     | string
     | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
   polyfills?: string[];
+  /**
+   * Prerender (SSG) pages of your application during build time.
+   */
+  prerender?:
+    | boolean
+    | {
+        /**
+         * The routes to render.
+         */
+        routes?: string[];
+        /**
+         * The path to a file that contains a list of all routes to prerender, separated by newlines. This option is useful if you want to prerender routes with parameterized URLs.
+         */
+        routesFile?: string;
+        /**
+         * Whether the builder should process the Angular Router configuration to find all unparameterized routes and prerender them.
+         */
+        discoverRoutes?: boolean;
+      };
   /**
    * Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set.
    */
