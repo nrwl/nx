@@ -7,6 +7,8 @@ launch-templates:
       GIT_AUTHOR_NAME: Test
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
+      COREPACK_DEFAULT_TO_LATEST: '0'
+      COREPACK_ENABLE_AUTO_PIN: '0'
       SELECTED_PM: 'pnpm'
 
       NX_NATIVE_LOGGING: 'nx::native::db'
