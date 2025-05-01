@@ -86,7 +86,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
     }
   }
 
-  public kill(signal?: NodeJS.Signals | number) {
+  public kill(signal?: NodeJS.Signals) {
     if (this.childProcess.connected) {
       this.childProcess.kill(signal);
     }
@@ -209,7 +209,7 @@ export class NodeChildProcessWithDirectOutput implements RunningTask {
     return this.terminalOutput;
   }
 
-  kill(signal?: NodeJS.Signals | number): void {
+  kill(signal?: NodeJS.Signals): void {
     if (this.childProcess.connected) {
       this.childProcess.kill(signal);
     }
