@@ -106,11 +106,13 @@ export class PseudoTerminal {
       execArgv,
       jsEnv,
       quiet,
+      commandLabel,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
+      commandLabel?: string;
     }
   ) {
     if (!this.initialized) {
@@ -125,7 +127,8 @@ export class PseudoTerminal {
         cwd,
         jsEnv,
         execArgv,
-        quiet
+        quiet,
+        commandLabel
       ),
       id,
       this.pseudoIPC

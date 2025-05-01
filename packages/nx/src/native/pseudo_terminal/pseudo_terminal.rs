@@ -181,6 +181,7 @@ impl PseudoTerminal {
         exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
+        command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
         let command_dir = get_directory(command_dir)?;
 
@@ -206,15 +207,15 @@ impl PseudoTerminal {
 
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
 
-        let command_info = format!("> {}\n\n\r", command);
+        let command_clone = command.clone();
+        let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
         self.stdout_tx.send(command_info.clone()).ok();
 
         self.parser
             .write()
             .expect("Failed to acquire parser write lock")
             .process(command_info.as_bytes());
-
-        trace!("Running {}", command);
+        trace!("Running {}", command_clone);
         let mut child = pair.slave.spawn_command(cmd)?;
         self.running.store(true, Ordering::SeqCst);
 
@@ -234,11 +235,11 @@ impl PseudoTerminal {
 
         trace!("spawning thread to wait for command");
         std::thread::spawn(move || {
-            trace!("Waiting for {}", command);
+            trace!("Waiting for {}", command_clone);
 
             let res = child.wait();
             if let Ok(exit) = res {
-                trace!("{} Exited", command);
+                trace!("{} Exited", command_clone);
                 // This mitigates the issues with ConPTY on windows and makes it work.
                 running_clone.store(false, Ordering::SeqCst);
                 if cfg!(windows) {
@@ -261,7 +262,7 @@ impl PseudoTerminal {
                 }
                 exit_to_process_tx.send(exit.to_string()).ok();
             } else {
-                trace!("Error waiting for {}", command);
+                trace!("Error waiting for {}", command_clone);
             };
         });
 
