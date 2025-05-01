@@ -1,7 +1,7 @@
 import { readNxJson } from '../../config/nx-json';
 import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
 import { NxArgs } from '../../utils/command-line-utils';
-import { Argv, ParserConfigurationOptions } from 'yargs';
+import { Argv, coerce, ParserConfigurationOptions } from 'yargs';
 
 interface ExcludeOptions {
   exclude: string[];
@@ -49,24 +49,24 @@ export interface TuiOptions {
 }
 
 export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
-  return yargs.options('tuiAutoExit', {
-    describe:
-      'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
-    type: 'string',
-    coerce: (value) => {
-      if (value === 'true') {
-        return true;
+  return yargs
+    .options('tuiAutoExit', {
+      describe:
+        'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
+      type: 'string',
+      coerce: (v) => coerceTuiAutoExit(v),
+    })
+    .middleware((args) => {
+      if (args.tuiAutoExit !== undefined) {
+        process.env.NX_TUI_AUTO_EXIT = args.tuiAutoExit.toString();
+      } else if (process.env.NX_TUI_AUTO_EXIT) {
+        args.tuiAutoExit = coerceTuiAutoExit(
+          process.env.NX_TUI_AUTO_EXIT
+          // have to cast here because yarg's typings do not account for the
+          // coercion function
+        ) as unknown as string;
       }
-      if (value === 'false') {
-        return false;
-      }
-      const num = Number(value);
-      if (!Number.isNaN(num)) {
-        return num;
-      }
-      throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
-    },
-  }) as Argv<T & TuiOptions>;
+    }) as Argv<T & TuiOptions>;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -394,3 +394,17 @@ export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
     return Number(args['parallel']);
   }
 }
+
+const coerceTuiAutoExit = (value: string) => {
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  const num = Number(value);
+  if (!Number.isNaN(num)) {
+    return num;
+  }
+  throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
+};
