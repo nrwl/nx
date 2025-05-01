@@ -2,6 +2,7 @@ import type { NxJsonConfiguration } from '../config/nx-json';
 import { IS_WASM } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
+import { logger } from '../utils/logger';
 
 let tuiEnabled = undefined;
 
@@ -33,12 +34,16 @@ export function shouldUseTui(
     skipCapabilityCheck || (process.stderr.isTTY && isUnicodeSupported());
 
   if (!isCapable) {
+    if (shouldUseTui(nxJson, nxArgs, true)) {
+      // The current environment is not capable of displaying the TUI, but the user has
+      // specified that they want to use it. This is likely a mistake, so we log a warning.
+      // NOTE: isCI, isWindows, and IS_WASM are not part of the capability check
+      // and as such would return false in the second check, and therefore not warn.
+      logger.warn(
+        'The current environment is not capable of displaying the TUI. Falling back to `dynamic-legacy` output style.'
+      );
+    }
     return false;
-  }
-
-  // The environment variable takes precedence over the nx.json config
-  if (typeof process.env.NX_TUI === 'string') {
-    return process.env.NX_TUI === 'true';
   }
 
   if (['static', 'stream', 'dynamic-legacy'].includes(nxArgs.outputStyle)) {
@@ -46,6 +51,21 @@ export function shouldUseTui(
     return false;
   }
 
+  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+    return true;
+  }
+
+  // The environment variable takes precedence over the nx.json config, but
+  // are lower priority than the CLI args as they are less likely to change
+  // between runs, whereas the CLI args are specified by the user for each run.
+  if (typeof process.env.NX_TUI === 'string') {
+    return process.env.NX_TUI === 'true';
+  }
+
+  // BELOW THIS LINE ARE "repo specific" checks, instead of "user specific" checks.
+  // "user specific" checks are specified by the current user rather than the repo
+  // settings which are applied for all users of the repo... so they are more specific
+  // and take priority.
   if (
     // Interactive TUI doesn't make sense on CI
     isCI() ||
@@ -56,10 +76,6 @@ export function shouldUseTui(
     IS_WASM
   ) {
     return false;
-  }
-
-  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
-    return true;
   }
 
   // Respect user config
