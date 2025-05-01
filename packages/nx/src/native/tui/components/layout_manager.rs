@@ -125,12 +125,23 @@ impl LayoutManager {
         self.mode
     }
 
-    /// Cycles the layout mode.
-    pub fn cycle_layout_mode(&mut self) {
+    /// Manually toggle the layout mode.
+    /// Initially we will be attempting to automatically pick the best layout using auto, but with this function we should
+    /// figure out our current orientation and toggle it to the opposite.
+    /// i.e. in the simple case, if currently horizontal, toggle to vertical and vice versa.
+    /// In the case where we are in auto mode, we need to figure out our current orientation and set the mode to the opposite.
+    pub fn toggle_layout_mode(&mut self, area: Rect) {
         self.mode = match self.mode {
-            LayoutMode::Auto => LayoutMode::Vertical,
+            LayoutMode::Auto => {
+                // If we are in auto mode, we need to figure out our current orientation and set the mode to the opposite.
+                if self.is_vertical_layout_preferred(area.width, area.height, self.task_count) {
+                    LayoutMode::Horizontal
+                } else {
+                    LayoutMode::Vertical
+                }
+            }
             LayoutMode::Vertical => LayoutMode::Horizontal,
-            LayoutMode::Horizontal => LayoutMode::Auto,
+            LayoutMode::Horizontal => LayoutMode::Vertical,
         };
     }
 

@@ -296,12 +296,31 @@ impl App {
                 // Record that the user has interacted with the app
                 self.user_has_interacted = true;
 
-                // Handle Ctrl+C to quit
-                if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL {
+                // Handle Ctrl+C to quit, unless we're in interactive mode and the focus is on a terminal pane
+                if key.code == KeyCode::Char('c')
+                    && key.modifiers == KeyModifiers::CONTROL
+                    && !(matches!(self.focus, Focus::MultipleOutput(_))
+                        && self.is_interactive_mode())
+                {
                     self.is_forced_shutdown = true;
                     // Quit immediately
                     self.quit_at = Some(std::time::Instant::now());
                     return Ok(true);
+                }
+
+                if matches!(self.focus, Focus::MultipleOutput(_)) && self.is_interactive_mode() {
+                    return match key.code {
+                        KeyCode::Char('z') if key.modifiers == KeyModifiers::CONTROL => {
+                            // Disable interactive mode when Ctrl+Z is pressed
+                            self.set_interactive_mode(false);
+                            Ok(false)
+                        }
+                        _ => {
+                            // The TasksList will forward the key event to the focused terminal pane
+                            self.handle_key_event(key).ok();
+                            Ok(false)
+                        }
+                    };
                 }
 
                 // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
@@ -372,10 +391,8 @@ impl App {
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
-                    // Handle Q or Ctrl+C to trigger countdown
-                    if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL
-                        || (!tasks_list.filter_mode && key.code == KeyCode::Char('q'))
-                    {
+                    // Handle Q to trigger countdown
+                    if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
                         self.is_forced_shutdown = true;
                         self.begin_exit_countdown();
                         return Ok(false);
@@ -473,7 +490,9 @@ impl App {
                                         self.toggle_task_list();
                                     }
                                     KeyCode::Char('m') => {
-                                        self.cycle_layout_modes();
+                                        if let Some(area) = self.frame_area {
+                                            self.toggle_layout_mode(area);
+                                        }
                                     }
                                     _ => {
                                         // Forward other keys for interactivity, scrolling (j/k) etc
@@ -587,7 +606,12 @@ impl App {
                                                                 let _ = self.debounce_pty_resize();
                                                             }
                                                             'b' => self.toggle_task_list(),
-                                                            'm' => self.cycle_layout_modes(),
+                                                            'm' => {
+                                                                if let Some(area) = self.frame_area
+                                                                {
+                                                                    self.toggle_layout_mode(area);
+                                                                }
+                                                            }
                                                             _ => {}
                                                         }
                                                     }
@@ -870,12 +894,23 @@ impl App {
                                     _ => false,
                                 };
 
+                                // Figure out if this pane is the next tab target
+                                let is_next_tab_target = !is_focused
+                                    && match self.focus {
+                                        // If the task list is focused, the next tab target is the first pane
+                                        Focus::TaskList => pane_idx == 0,
+                                        // If the first pane is focused, the next tab target is the second pane
+                                        Focus::MultipleOutput(0) => pane_idx == 1,
+                                        _ => false,
+                                    };
+
                                 let mut state = TerminalPaneState::new(
                                     task.name.clone(),
                                     task.status,
                                     task.continuous,
                                     is_focused,
                                     has_pty,
+                                    is_next_tab_target,
                                 );
 
                                 let terminal_pane = TerminalPane::new()
@@ -1164,9 +1199,8 @@ impl App {
         let _ = self.handle_pty_resize();
     }
 
-    fn cycle_layout_modes(&mut self) {
-        // TODO: add visual feedback about layout modes
-        self.layout_manager.cycle_layout_mode();
+    fn toggle_layout_mode(&mut self, area: Rect) {
+        self.layout_manager.toggle_layout_mode(area);
         self.recalculate_layout_areas();
         // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
         let _ = self.handle_pty_resize();
@@ -1260,6 +1294,12 @@ impl App {
         match self.focus {
             Focus::MultipleOutput(pane_idx) => self.terminal_pane_data[pane_idx].is_interactive(),
             _ => false,
+        }
+    }
+
+    pub fn set_interactive_mode(&mut self, interactive: bool) {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            self.terminal_pane_data[pane_idx].set_interactive(interactive);
         }
     }
 
