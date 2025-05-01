@@ -1,0 +1,10 @@
+{
+  "executors": {
+    "gradle": {
+      "batchImplementation": "./src/executors/gradle/gradle-batch.impl",
+      "implementation": "./src/executors/gradle/gradle.impl",
+      "schema": "./src/executors/gradle/schema.json",
+      "description": "The Gradlew executor is used to run Gradle tasks."
+    }
+  }
+}

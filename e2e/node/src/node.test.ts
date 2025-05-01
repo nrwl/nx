@@ -337,13 +337,12 @@ module.exports = {
         },
       }
     );
+    await killPorts(port);
+    await promisifiedTreeKill(p.pid, 'SIGKILL');
 
     const e2eRsult = await runCLIAsync(`e2e ${nestapp}-e2e`);
 
     expect(e2eRsult.combinedOutput).toContain('Test Suites: 1 passed, 1 total');
-
-    await killPorts(port);
-    await promisifiedTreeKill(p.pid, 'SIGKILL');
   }, 120000);
 
   it('should generate a nest application with docker', async () => {

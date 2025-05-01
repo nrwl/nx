@@ -8,14 +8,14 @@ import { readJsonFile } from '../../utils/fileutils';
 import { getPackageNameFromImportPath } from '../../utils/get-package-name-from-import-path';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../utils/package-manager';
 import { nxVersion } from '../../utils/versions';
 import { globWithWorkspaceContextSync } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
-import {
-  configurePlugins,
-  runPackageManagerInstallPlugins,
-} from './configure-plugins';
+import { configurePlugins, installPluginPackages } from './configure-plugins';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 import { addNxToTurborepo } from './implementation/add-nx-to-turborepo';
@@ -24,10 +24,12 @@ import { generateDotNxSetup } from './implementation/dot-nx/add-nx-scripts';
 import {
   createNxJsonFile,
   initCloud,
+  isCRA,
   isMonorepo,
   printFinalMessage,
   updateGitIgnore,
 } from './implementation/utils';
+import { addNxToCraRepo } from './implementation/react';
 
 export interface InitArgs {
   interactive: boolean;
@@ -35,38 +37,15 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
   verbose?: boolean;
+  force?: boolean;
 }
 
 export async function initHandler(options: InitArgs): Promise<void> {
   process.env.NX_RUNNING_NX_INIT = 'true';
   const version =
-    process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
+    process.env.NX_VERSION ?? (prerelease(nxVersion) ? nxVersion : 'latest');
   if (process.env.NX_VERSION) {
     output.log({ title: `Using version ${process.env.NX_VERSION}` });
-  }
-
-  if (!existsSync('package.json') || options.useDotNxInstallation) {
-    if (process.platform !== 'win32') {
-      console.log(
-        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx --help`'
-      );
-    } else {
-      console.log(
-        'Setting Nx up installation in `.nx`. You can run Nx commands like: `./nx.bat --help`'
-      );
-    }
-    generateDotNxSetup(version);
-    const nxJson = readNxJson(process.cwd());
-    const { plugins } = await detectPlugins(nxJson, options.interactive);
-    plugins.forEach((plugin) => {
-      runNxSync(`add ${plugin}`, {
-        stdio: 'inherit',
-      });
-    });
-
-    // invokes the wrapper, thus invoking the initial installation process
-    runNxSync('--version', { stdio: 'ignore' });
-    return;
   }
 
   // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
@@ -82,15 +61,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  const packageJson: PackageJson = readJsonFile('package.json');
+  const _isNonJs = !existsSync('package.json') || options.useDotNxInstallation;
+  const packageJson: PackageJson = _isNonJs
+    ? null
+    : readJsonFile('package.json');
   const _isTurborepo = existsSync('turbo.json');
-  const _isMonorepo = isMonorepo(packageJson);
-
-  const learnMoreLink = _isTurborepo
-    ? 'https://nx.dev/recipes/adopting-nx/from-turborepo'
-    : _isMonorepo
-    ? 'https://nx.dev/getting-started/tutorials/npm-workspaces-tutorial'
-    : 'https://nx.dev/recipes/adopting-nx/adding-to-existing-project';
+  const _isMonorepo = _isNonJs ? false : isMonorepo(packageJson);
+  const _isCRA = _isNonJs ? false : isCRA(packageJson);
 
   /**
    * Turborepo users must have set up individual scripts already, and we keep the transition as minimal as possible.
@@ -103,16 +80,30 @@ export async function initHandler(options: InitArgs): Promise<void> {
       interactive: options.interactive,
     });
     printFinalMessage({
-      learnMoreLink,
+      learnMoreLink: 'https://nx.dev/recipes/adopting-nx/from-turborepo',
     });
     return;
   }
 
-  if (_isMonorepo) {
+  const pmc = getPackageManagerCommand();
+
+  if (_isCRA) {
+    await addNxToCraRepo({
+      addE2e: false,
+      force: options.force,
+      vite: true,
+      integrated: false,
+      interactive: options.interactive,
+      nxCloud: false,
+    });
+  } else if (_isMonorepo) {
     await addNxToMonorepo({
       interactive: options.interactive,
       nxCloud: false,
     });
+  } else if (_isNonJs) {
+    generateDotNxSetup(version);
+    console.log('');
   } else {
     await addNxToNpmRepo({
       interactive: options.interactive,
@@ -125,7 +116,6 @@ export async function initHandler(options: InitArgs): Promise<void> {
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   const repoRoot = process.cwd();
-  const pmc = getPackageManagerCommand();
 
   createNxJsonFile(repoRoot, [], [], {});
   updateGitIgnore(repoRoot);
@@ -134,14 +124,22 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   output.log({ title: '🧐 Checking dependencies' });
 
-  const { plugins, updatePackageScripts } = await detectPlugins(
-    nxJson,
-    options.interactive
-  );
+  let plugins: string[];
+  let updatePackageScripts: boolean;
+
+  if (_isCRA) {
+    plugins = ['@nx/vite'];
+    updatePackageScripts = true;
+  } else {
+    const { plugins: _plugins, updatePackageScripts: _updatePackageScripts } =
+      await detectPlugins(nxJson, options.interactive);
+    plugins = _plugins;
+    updatePackageScripts = _updatePackageScripts;
+  }
 
   output.log({ title: '📦 Installing Nx' });
 
-  runPackageManagerInstallPlugins(repoRoot, pmc, plugins);
+  installPluginPackages(repoRoot, pmc, plugins);
   await configurePlugins(
     plugins,
     updatePackageScripts,
@@ -156,7 +154,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
   }
 
   printFinalMessage({
-    learnMoreLink,
+    appendLines: _isMonorepo
+      ? [
+          `- Learn how Nx helps manage your TypeScript monorepo at https://nx.dev/features/maintain-ts-monorepos.`,
+        ]
+      : [
+          `- Learn how Nx works with any type of project at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.`,
+        ],
   });
 }
 
@@ -182,6 +186,7 @@ const npmPackageToPluginMap: Record<string, `@nx/${string}`> = {
   'react-native': '@nx/react-native',
   '@remix-run/dev': '@nx/remix',
   '@rsbuild/core': '@nx/rsbuild',
+  '@react-router/dev': '@nx/react',
 };
 
 export async function detectPlugins(

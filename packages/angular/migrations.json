@@ -1,74 +1,5 @@
 {
   "generators": {
-    "remove-library-generator-simple-module-name-option": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace the deprecated library generator 'simpleModuleName' option from generator defaults with 'simpleName'",
-      "factory": "./src/migrations/update-16-0-0/remove-library-generator-simple-module-name-option"
-    },
-    "update-16-0-0-add-nx-packages": {
-      "cli": "nx",
-      "version": "16.0.0-beta.1",
-      "description": "Replace @nrwl/angular with @nx/angular",
-      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
-    },
-    "remove-protractor-defaults-from-generators": {
-      "cli": "nx",
-      "version": "16.0.0-beta.6",
-      "description": "Remove protractor as default e2eTestRunner from nxJson and project configurations",
-      "implementation": "./src/migrations/update-16-0-0/remove-protractor-defaults"
-    },
-    "remove-karma-defaults-from-generators": {
-      "cli": "nx",
-      "version": "16.0.0-beta.6",
-      "description": "Remove karma as default unitTestRunner from nxJson and project configurations",
-      "implementation": "./src/migrations/update-16-0-0/remove-karma-defaults"
-    },
-    "remove-render-module-platform-server-exports": {
-      "cli": "nx",
-      "version": "16.1.0-beta.1",
-      "requires": {
-        "@angular/core": ">=15.0.0"
-      },
-      "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
-      "factory": "./src/migrations/update-16-1-0/remove-render-module-platform-server-exports"
-    },
-    "remove-ngcc-invocation": {
-      "cli": "nx",
-      "version": "16.1.0-beta.1",
-      "requires": {
-        "@angular/core": ">=16.0.0-rc.4"
-      },
-      "description": "Remove 'ngcc' invocation if exists from the 'postinstall' script in package.json.",
-      "factory": "./src/migrations/update-16-1-0/remove-ngcc-invocation"
-    },
-    "extract-app-config-for-standalone": {
-      "cli": "nx",
-      "version": "16.1.0-beta.1",
-      "requires": {
-        "@angular/core": ">=16.0.0-rc.4"
-      },
-      "description": "Extract the app config for standalone apps",
-      "factory": "./src/migrations/update-16-1-0/extract-standalone-config-from-bootstrap"
-    },
-    "update-server-executor-config": {
-      "cli": "nx",
-      "version": "16.1.0-beta.1",
-      "requires": {
-        "@angular/core": ">=16.0.0-rc.4"
-      },
-      "description": "Update server executors' configuration to disable 'buildOptimizer' for non optimized builds.",
-      "factory": "./src/migrations/update-16-1-0/update-server-executor-config"
-    },
-    "update-angular-cli-version-16-0-0": {
-      "cli": "nx",
-      "version": "16.1.0-beta.1",
-      "requires": {
-        "@angular/core": ">=16.0.0"
-      },
-      "description": "Update the @angular/cli package version to ~16.0.0.",
-      "factory": "./src/migrations/update-16-1-0/update-angular-cli"
-    },
     "switch-data-persistence-operators-imports-to-ngrx-router-store": {
       "cli": "nx",
       "version": "16.2.0-beta.0",
@@ -347,6 +278,30 @@
       },
       "description": "Update the @angular/cli package version to ~19.1.0.",
       "factory": "./src/migrations/update-20-4-0/update-angular-cli"
+    },
+    "update-angular-cli-version-19-2-0": {
+      "cli": "nx",
+      "version": "20.5.0-beta.5",
+      "requires": {
+        "@angular/core": ">=19.2.0"
+      },
+      "description": "Update the @angular/cli package version to ~19.2.0.",
+      "factory": "./src/migrations/update-20-5-0/update-angular-cli"
+    },
+    "set-continuous-option": {
+      "cli": "nx",
+      "version": "21.0.0-beta.3",
+      "description": "Set the `continuous` option to `true` for continuous tasks.",
+      "factory": "./src/migrations/update-21-0-0/set-continuous-option"
+    },
+    "change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence": {
+      "cli": "nx",
+      "version": "21.0.0-beta.5",
+      "requires": {
+        "@ngrx/store": ">=16.0.0"
+      },
+      "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+      "factory": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence"
     }
   },
   "packageJsonUpdates": {
@@ -1049,6 +1004,22 @@
         "@angular-eslint/utils": {
           "version": "^18.0.1",
           "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^18.0.1",
+          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -1316,6 +1287,10 @@
           "version": "~19.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/google-maps": {
+          "version": "~19.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "ng-packagr": {
           "version": "~19.0.0",
           "alwaysAddToPackageJson": false
@@ -1368,6 +1343,22 @@
         "@angular-eslint/utils": {
           "version": "^19.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
         }
       }
     },
@@ -1408,6 +1399,22 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/utils": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^19.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
           "version": "^19.0.2",
           "alwaysAddToPackageJson": false
         }
@@ -1480,8 +1487,131 @@
           "version": "~19.1.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/google-maps": {
+          "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        },
         "ng-packagr": {
           "version": "~19.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.5.0": {
+      "version": "20.5.0-beta.5",
+      "x-prompt": "Do you want to update the Angular version to v19.2?",
+      "requires": {
+        "@angular/core": ">=19.1.0 <19.2.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/build": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1902.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1902.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~19.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~19.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/google-maps": {
+          "version": "~19.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~19.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.5.0-angular-eslint": {
+      "version": "20.5.0-rc.1",
+      "requires": {
+        "eslint": "^8.57.0 || ^9.0.0",
+        "@angular/core": ">= 19.0.0 < 20.0.0"
+      },
+      "packages": {
+        "angular-eslint": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/utils": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/schematics": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/test-utils": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/builder": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/bundled-angular-compiler": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.8.1": {
+      "version": "20.8.1-beta.0",
+      "packages": {
+        "@nx/angular-rspack": {
+          "version": "^20.7.0",
           "alwaysAddToPackageJson": false
         }
       }

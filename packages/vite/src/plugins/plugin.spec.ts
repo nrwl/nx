@@ -69,6 +69,39 @@ describe('@nx/vite/plugin', () => {
       expect(nodes).toMatchSnapshot();
     });
 
+    it('should not create nodes when react-router.config is present', async () => {
+      tempFs.createFileSync('react-router.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "vite.config.ts",
+            {
+              "projects": {
+                ".": {
+                  "metadata": {},
+                  "root": ".",
+                  "targets": {},
+                },
+              },
+            },
+          ],
+        ]
+      `);
+    });
+
     it('should create nodes when rollupOptions contains input', async () => {
       // Don't need index.html if we're setting inputs
       tempFs.removeFileSync('index.html');
@@ -252,6 +285,39 @@ describe('@nx/vite/plugin', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+
+    it('should not create nodes when react-router.config is present', async () => {
+      tempFs.createFileSync('my-app/react-router.config.ts', '');
+
+      const nodes = await createNodesFunction(
+        ['my-app/vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+        },
+        context
+      );
+
+      expect(nodes).toMatchInlineSnapshot(`
+        [
+          [
+            "my-app/vite.config.ts",
+            {
+              "projects": {
+                "my-app": {
+                  "metadata": {},
+                  "root": "my-app",
+                  "targets": {},
+                },
+              },
+            },
+          ],
+        ]
+      `);
+    });
   });
 
   describe('Library mode', () => {
@@ -389,6 +455,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "dev": {
                       "command": "vite",
+                      "continuous": true,
                       "metadata": {
                         "description": "Starts Vite dev server",
                         "help": {
@@ -409,6 +476,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "preview": {
                       "command": "vite preview",
+                      "continuous": true,
                       "dependsOn": [
                         "build",
                       ],
@@ -432,6 +500,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "serve": {
                       "command": "vite",
+                      "continuous": true,
                       "metadata": {
                         "deprecated": "Use devTargetName instead. This option will be removed in Nx 22.",
                         "description": "Starts Vite dev server",
@@ -452,6 +521,7 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "serve-static": {
+                      "continuous": true,
                       "executor": "@nx/web:file-server",
                       "options": {
                         "buildTarget": "build",
@@ -460,6 +530,7 @@ describe('@nx/vite/plugin', () => {
                     },
                     "watch-deps": {
                       "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "continuous": true,
                       "dependsOn": [
                         "build-deps",
                       ],

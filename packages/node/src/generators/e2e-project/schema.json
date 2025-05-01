@@ -59,6 +59,10 @@
       "default": false,
       "hidden": true,
       "x-priority": "internal"
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["project"]

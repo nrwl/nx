@@ -1,3 +1,8 @@
+---
+title: Intro to Nx
+description: Nx is a powerful open-source build system that enhances developer productivity, optimizes CI performance, and maintains code quality with features like task caching and distribution.
+---
+
 # Intro to Nx
 
 Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. [Check out our video](/getting-started/why-nx) to learn more about what Nx is about.
@@ -61,7 +66,7 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
-{% link-card title="TypeScript Packages" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
+{% link-card title="TypeScript Monorepo" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
 
 {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
 

@@ -1,8 +1,8 @@
-# Custom Distributed Task Execution on GitLab
+# Manual Distributed Task Execution on GitLab
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
-## Run Custom Agents on GitLab
+## Run Agents on GitLab
 
 Run agents directly on GitLab with the workflow below:
 

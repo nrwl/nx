@@ -3,7 +3,7 @@ title: 'Who Gave JavaScript a Build Step?!?'
 slug: who-gave-js-a-build-step
 authors: [Zack DeRose]
 tags: []
-cover_image: /blog/images/2025-01-09/thumbnail.png
+cover_image: /blog/images/2025-01-09/thumbnail.avif
 description: 'Explore the evolution of JavaScript build tools with Webpack maintainer Zack Jackson, from simple script tags to modern bundling solutions.'
 ---
 

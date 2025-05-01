@@ -35,12 +35,6 @@ async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
 ): Promise<Configuration | Configuration[]> {
-  if (options.isolatedConfig && !options.webpackConfig) {
-    throw new Error(
-      `Using "isolatedConfig" without a "webpackConfig" is not supported.`
-    );
-  }
-
   let userDefinedWebpackConfig = null;
   if (options.webpackConfig) {
     userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
@@ -53,11 +47,7 @@ async function getWebpackConfigs(
     }
   }
 
-  const config = options.isolatedConfig
-    ? {}
-    : (options.target === 'web'
-        ? composePluginsSync(withNx(options), withWeb(options))
-        : withNx(options))({}, { options, context });
+  const config = {};
 
   if (
     typeof userDefinedWebpackConfig === 'function' &&

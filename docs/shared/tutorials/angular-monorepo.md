@@ -130,7 +130,7 @@ Nx uses the following syntax to run tasks:
 
 The project tasks are defined in the `project.json` file.
 
-```json {% fileName="apps/angular-store/project.json"}
+```json {% fileName="apps/angular-store/project.json" %}
 {
   "name": "angular-store",
   ...
@@ -147,7 +147,7 @@ The project tasks are defined in the `project.json` file.
 
 Each target contains a configuration object that tells Nx how to run that target.
 
-```json {% fileName="project.json"}
+```json {% fileName="project.json" %}
 {
   "name": "angular-store",
   ...
@@ -468,16 +468,15 @@ export const appRoutes: Route[] = [
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
+```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,5] %}
 import { Component } from '@angular/core';
 import { ProductsComponent } from '@angular-monorepo/products';
 
 @Component({
-  standalone: true,
   imports: [ProductsComponent],
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'inventory';
@@ -1290,6 +1289,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

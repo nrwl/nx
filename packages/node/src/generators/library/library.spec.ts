@@ -519,6 +519,7 @@ describe('lib', () => {
       expect(tree.exists('my-dir/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
     });
   });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -530,6 +531,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -544,6 +546,7 @@ describe('lib', () => {
         directory: 'mylib',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       } as Schema);
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -652,6 +655,61 @@ describe('lib', () => {
       `);
     });
 
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(tree.read('mylib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/mylib",
+          "version": "0.0.1",
+          "private": true,
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "types": "./dist/index.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.d.ts",
+              "import": "./dist/index.js",
+              "default": "./dist/index.js"
+            }
+          },
+          "dependencies": {
+            "tslib": "^2.3.0"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(
+        readJson(tree, 'mylib/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
     it('should set correct options for swc', async () => {
       await libraryGenerator(tree, {
         directory: 'mylib',
@@ -659,6 +717,7 @@ describe('lib', () => {
         compiler: 'swc',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       } as Schema);
 
       expect(readJson(tree, 'mylib/package.json')).toMatchInlineSnapshot(`
@@ -669,6 +728,7 @@ describe('lib', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -699,6 +759,74 @@ describe('lib', () => {
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        name: 'my-lib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        name: '@proj/my-lib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        linter: 'none',
+        unitTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'mylib',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(tree.exists('mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "mylib",
+          "sourceRoot": "mylib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'mylib/package.json').nx).toBeUndefined();
     });
   });
 });

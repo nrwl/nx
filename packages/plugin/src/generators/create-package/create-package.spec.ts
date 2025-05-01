@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
@@ -26,7 +25,7 @@ const getSchema: (
   skipTsConfig: false,
   skipFormat: false,
   skipLintChecks: false,
-  linter: Linter.EsLint,
+  linter: 'eslint',
   unitTestRunner: 'jest',
   ...overrides,
 });
@@ -44,7 +43,7 @@ describe('NxPlugin Create Package Generator', () => {
       skipTsConfig: false,
       skipFormat: false,
       skipLintChecks: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       unitTestRunner: 'jest',
     });
   });

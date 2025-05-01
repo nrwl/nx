@@ -1,26 +1,30 @@
 use std::collections::HashMap;
-
 use tracing::trace;
 
 use super::child_process::ChildProcess;
 use super::os;
-use super::pseudo_terminal::{create_pseudo_terminal, run_command};
+use super::pseudo_terminal::PseudoTerminal;
 use crate::native::logger::enable_logger;
 
 #[napi]
-pub struct RustPseudoTerminal {}
+pub struct RustPseudoTerminal {
+    pseudo_terminal: PseudoTerminal,
+}
 
 #[napi]
 impl RustPseudoTerminal {
     #[napi(constructor)]
     pub fn new() -> napi::Result<Self> {
         enable_logger();
-        Ok(Self {})
+
+        let pseudo_terminal = PseudoTerminal::default()?;
+
+        Ok(Self { pseudo_terminal })
     }
 
     #[napi]
     pub fn run_command(
-        &self,
+        &mut self,
         command: String,
         command_dir: Option<String>,
         js_env: Option<HashMap<String, String>>,
@@ -28,24 +32,15 @@ impl RustPseudoTerminal {
         quiet: Option<bool>,
         tty: Option<bool>,
     ) -> napi::Result<ChildProcess> {
-        let pseudo_terminal = create_pseudo_terminal()?;
-        run_command(
-            &pseudo_terminal,
-            command,
-            command_dir,
-            js_env,
-            exec_argv,
-            quiet,
-            tty,
-        )
+        self.pseudo_terminal
+            .run_command(command, command_dir, js_env, exec_argv, quiet, tty)
     }
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
     /// this makes it possible to be backwards compatible with the old implementation
     #[napi]
-    #[allow(clippy::too_many_arguments)]
     pub fn fork(
-        &self,
+        &mut self,
         id: String,
         fork_script: String,
         pseudo_ipc_path: String,

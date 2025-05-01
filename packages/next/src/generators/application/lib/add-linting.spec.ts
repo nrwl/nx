@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addLinting } from './add-linting';
-import { Linter } from '@nx/eslint';
 import { NormalizedSchema } from './normalize-options';
 
 describe('updateEslint', () => {
@@ -16,18 +15,20 @@ describe('updateEslint', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-app',
+      projectSimpleName: 'my-app',
       appProjectRoot: 'my-app',
       directory: 'my-app',
-      linter: Linter.EsLint,
+      importPath: '@proj/my-app',
+      linter: 'eslint',
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
       outputPath: 'dist/my-app',
-      name: 'my-app',
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
       styledModule: null,
+      isTsSolutionSetup: false,
     };
     tree = createTreeWithEmptyWorkspace();
     const project: ProjectConfiguration = {

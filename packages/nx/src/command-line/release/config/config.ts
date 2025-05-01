@@ -14,19 +14,26 @@
 import { join, relative } from 'node:path';
 import { URL } from 'node:url';
 import {
+  LegacyNxReleaseVersionConfiguration,
   NxJsonConfiguration,
   NxReleaseChangelogConfiguration,
+  NxReleaseConfiguration,
+  NxReleaseGitConfiguration,
+  NxReleaseVersionConfiguration,
 } from '../../../config/nx-json';
 import { ProjectFileMap, ProjectGraph } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
-import { workspaceRoot } from '../../../utils/workspace-root';
 import { normalizePath } from '../../../utils/path';
+import { workspaceRoot } from '../../../utils/workspace-root';
+import { defaultCreateReleaseProvider as defaultGitHubCreateReleaseProvider } from '../utils/remote-release-clients/github';
+import { defaultCreateReleaseProvider as defaultGitLabCreateReleaseProvider } from '../utils/remote-release-clients/gitlab';
 import { resolveChangelogRenderer } from '../utils/resolve-changelog-renderer';
 import { resolveNxJsonConfigErrorMessage } from '../utils/resolve-nx-json-error-message';
 import { DEFAULT_CONVENTIONAL_COMMITS_CONFIG } from './conventional-commits';
+import { shouldUseLegacyVersioning } from './use-legacy-versioning';
 
 type DeepRequired<T> = Required<{
   [K in keyof T]: T[K] extends Required<T[K]> ? T[K] : DeepRequired<T[K]>;
@@ -55,6 +62,9 @@ type RemoveBooleanFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
 
 export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
 
+export const DEFAULT_VERSION_ACTIONS_PATH =
+  '@nx/js/src/release/version-actions';
+
 /**
  * Our source of truth is a deeply required variant of the user-facing config interface, so that command
  * implementations can be sure that properties will exist and do not need to repeat the same checks over
@@ -66,16 +76,16 @@ export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
  */
 export type NxReleaseConfig = Omit<
   DeepRequired<
-    NxJsonConfiguration['release'] & {
+    NxReleaseConfiguration & {
       groups: DeepRequired<
         RemoveTrueFromPropertiesOnEach<
-          EnsureProjectsArray<NxJsonConfiguration['release']['groups']>,
+          EnsureProjectsArray<NxReleaseConfiguration['groups']>,
           'changelog'
         >
       >;
       // Remove the true shorthand from the changelog config types, it will be normalized to a default object
       changelog: RemoveTrueFromProperties<
-        DeepRequired<NxJsonConfiguration['release']['changelog']>,
+        DeepRequired<NxReleaseConfiguration['changelog']>,
         'workspaceChangelog' | 'projectChangelogs'
       >;
       // Remove the false shorthand from the conventionalCommits config types, it will be normalized to a semver bump of "none" and to be hidden on the changelog
@@ -84,7 +94,7 @@ export type NxReleaseConfig = Omit<
           DeepRequired<
             RemoveBooleanFromProperties<
               DeepRequired<
-                NxJsonConfiguration['release']['conventionalCommits']['types']
+                NxReleaseConfiguration['conventionalCommits']['types']
               >,
               string
             >
@@ -105,7 +115,7 @@ export interface CreateNxReleaseConfigError {
     | 'RELEASE_GROUP_MATCHES_NO_PROJECTS'
     | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
-    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS'
+    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS'
     | 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG'
     | 'CANNOT_RESOLVE_CHANGELOG_RENDERER'
     | 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER'
@@ -147,12 +157,14 @@ export async function createNxReleaseConfig(
   if (hasInvalidConventionalCommitsConfig(userConfig)) {
     return {
       error: {
-        code: 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS',
+        code: 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS',
         data: {},
       },
       nxReleaseConfig: null,
     };
   }
+
+  const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(userConfig);
 
   const gitDefaults = {
     commit: false,
@@ -163,6 +175,7 @@ export async function createNxReleaseConfig(
     tagArgs: '',
     stageChanges: false,
     push: false,
+    pushArgs: '',
   };
   const versionGitDefaults = {
     ...gitDefaults,
@@ -259,12 +272,32 @@ export async function createNxReleaseConfig(
     projectsRelationship: workspaceProjectsRelationship,
     git: gitDefaults,
     version: {
+      useLegacyVersioning: USE_LEGACY_VERSIONING,
       git: versionGitDefaults,
       conventionalCommits: userConfig.version?.conventionalCommits || false,
-      generator: '@nx/js:release-version',
-      generatorOptions: defaultGeneratorOptions,
       preVersionCommand: userConfig.version?.preVersionCommand || '',
-    },
+      ...(USE_LEGACY_VERSIONING
+        ? {
+            generator: '@nx/js:release-version',
+            generatorOptions: defaultGeneratorOptions,
+          }
+        : {
+            versionActions: DEFAULT_VERSION_ACTIONS_PATH,
+            versionActionsOptions: {},
+            currentVersionResolver:
+              defaultGeneratorOptions.currentVersionResolver,
+            specifierSource: defaultGeneratorOptions.specifierSource,
+            preserveLocalDependencyProtocols:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.preserveLocalDependencyProtocols ?? true,
+            logUnchangedProjects:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.logUnchangedProjects ?? true,
+            updateDependents:
+              (userConfig.version as NxReleaseVersionConfiguration | undefined)
+                ?.updateDependents ?? 'auto',
+          }),
+    } as DeepRequired<NxReleaseConfiguration['version']>,
     changelog: {
       git: changelogGitDefaults,
       workspaceChangelog: disableWorkspaceChangelog
@@ -277,7 +310,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
-              mapAuthorsToGitHubUsernames: true,
+              applyUsernameToAuthors: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -292,7 +325,7 @@ export async function createNxReleaseConfig(
             renderer: defaultRendererPath,
             renderOptions: {
               authors: true,
-              mapAuthorsToGitHubUsernames: true,
+              applyUsernameToAuthors: true,
               commitReferences: true,
               versionTitleDate: true,
             },
@@ -318,12 +351,23 @@ export async function createNxReleaseConfig(
 
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
     projectsRelationship: groupProjectsRelationship,
-    version: {
-      conventionalCommits: false,
-      generator: '@nx/js:release-version',
-      generatorOptions: {},
-      groupPreVersionCommand: '',
-    },
+    version: USE_LEGACY_VERSIONING
+      ? ({
+          conventionalCommits: false,
+          generator: '@nx/js:release-version',
+          generatorOptions: {},
+          groupPreVersionCommand: '',
+        } as DeepRequired<
+          NxReleaseConfiguration['groups']['string']['version']
+        >)
+      : ({
+          conventionalCommits: false,
+          versionActions: DEFAULT_VERSION_ACTIONS_PATH,
+          versionActionsOptions: {},
+          groupPreVersionCommand: '',
+        } as DeepRequired<
+          NxReleaseConfiguration['groups']['string']['version']
+        >),
     changelog: {
       createRelease: false,
       entryWhenNoChanges:
@@ -332,7 +376,7 @@ export async function createNxReleaseConfig(
       renderer: defaultRendererPath,
       renderOptions: {
         authors: true,
-        mapAuthorsToGitHubUsernames: true,
+        applyUsernameToAuthors: true,
         commitReferences: true,
         versionTitleDate: true,
       },
@@ -359,7 +403,9 @@ export async function createNxReleaseConfig(
     [
       WORKSPACE_DEFAULTS.version,
       // Merge in the git defaults from the top level
-      { git: versionGitDefaults } as NxReleaseConfig['version'],
+      {
+        git: versionGitDefaults,
+      } as NxReleaseConfig['version'],
       {
         git: userConfig.git as Partial<NxReleaseConfig['git']>,
       } as NxReleaseConfig['version'],
@@ -407,35 +453,62 @@ export async function createNxReleaseConfig(
     );
 
   // these options are not supported at the group level, only the root/command level
-  const rootVersionWithoutGlobalOptions = {
+  let rootVersionWithoutGlobalOptions = {
     ...rootVersionConfig,
-  };
+  } as DeepRequired<
+    {
+      useLegacyVersioning?: boolean;
+      git?: NxReleaseGitConfiguration;
+      preVersionCommand?: string;
+    } & LegacyNxReleaseVersionConfiguration
+  >;
   delete rootVersionWithoutGlobalOptions.git;
   delete rootVersionWithoutGlobalOptions.preVersionCommand;
 
   // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.version?.conventionalCommits === true) {
-    rootVersionWithoutGlobalOptions.generatorOptions = {
-      ...rootVersionWithoutGlobalOptions.generatorOptions,
-      currentVersionResolver: 'git-tag',
-      specifierSource: 'conventional-commits',
-    };
+    if (USE_LEGACY_VERSIONING) {
+      rootVersionWithoutGlobalOptions.generatorOptions = {
+        ...rootVersionWithoutGlobalOptions.generatorOptions,
+        currentVersionResolver: 'git-tag',
+        specifierSource: 'conventional-commits',
+      };
+    } else {
+      (
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
+      ).currentVersionResolver = 'git-tag';
+      (
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
+      ).specifierSource = 'conventional-commits';
+    }
   }
   if (userConfig.version?.conventionalCommits === false) {
     delete rootVersionWithoutGlobalOptions.generatorOptions
       .currentVersionResolver;
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
+      .currentVersionResolver;
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
+      .specifierSource;
   }
 
   // Apply versionPlans shorthand to the final group defaults if explicitly configured in the original user config
   if (userConfig.versionPlans) {
-    rootVersionWithoutGlobalOptions.generatorOptions = {
-      ...rootVersionWithoutGlobalOptions.generatorOptions,
-      specifierSource: 'version-plans',
-    };
+    if (USE_LEGACY_VERSIONING) {
+      rootVersionWithoutGlobalOptions.generatorOptions = {
+        ...rootVersionWithoutGlobalOptions.generatorOptions,
+        specifierSource: 'version-plans',
+      };
+    } else {
+      (
+        rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration
+      ).specifierSource = 'version-plans';
+    }
   }
   if (userConfig.versionPlans === false) {
     delete rootVersionWithoutGlobalOptions.generatorOptions.specifierSource;
+    delete (rootVersionWithoutGlobalOptions as NxReleaseVersionConfiguration)
+      .specifierSource;
   }
 
   const groups: NxReleaseConfig['groups'] =
@@ -462,9 +535,9 @@ export async function createNxReleaseConfig(
              * be the valid source of truth for that type of config.
              */
             version: deepMergeDefaults(
-              [GROUP_DEFAULTS.version],
+              [GROUP_DEFAULTS.version] as any,
               rootVersionWithoutGlobalOptions
-            ),
+            ) as any,
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
@@ -551,7 +624,7 @@ export async function createNxReleaseConfig(
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
         [
-          GROUP_DEFAULTS.version,
+          GROUP_DEFAULTS.version as any,
           { ...rootVersionWithoutGlobalOptions, groupPreVersionCommand: '' },
         ],
         releaseGroup.version
@@ -584,39 +657,71 @@ export async function createNxReleaseConfig(
       projects: matchingProjects,
     });
 
+    finalReleaseGroup.version =
+      finalReleaseGroup.version as unknown as DeepRequired<
+        LegacyNxReleaseVersionConfiguration & {
+          groupPreVersionCommand?: string;
+        }
+      >;
+
     // Apply conventionalCommits shorthand to the final group if explicitly configured in the original group
     if (releaseGroup.version?.conventionalCommits === true) {
-      finalReleaseGroup.version.generatorOptions = {
-        ...finalReleaseGroup.version.generatorOptions,
-        currentVersionResolver: 'git-tag',
-        specifierSource: 'conventional-commits',
-      };
+      if (USE_LEGACY_VERSIONING) {
+        finalReleaseGroup.version.generatorOptions = {
+          ...finalReleaseGroup.version.generatorOptions,
+          currentVersionResolver: 'git-tag',
+          specifierSource: 'conventional-commits',
+        };
+      } else {
+        (
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
+        ).currentVersionResolver = 'git-tag';
+        (
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
+        ).specifierSource = 'conventional-commits';
+      }
     }
     if (
       releaseGroup.version?.conventionalCommits === false &&
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
-      delete finalReleaseGroup.version.generatorOptions.currentVersionResolver;
-      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+      if (USE_LEGACY_VERSIONING) {
+        delete finalReleaseGroup.version.generatorOptions
+          ?.currentVersionResolver;
+        delete finalReleaseGroup.version.generatorOptions?.specifierSource;
+      }
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
+        .currentVersionResolver;
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
+        .specifierSource;
     }
 
     // Apply versionPlans shorthand to the final group if explicitly configured in the original group
     if (releaseGroup.versionPlans) {
-      finalReleaseGroup.version = {
-        ...finalReleaseGroup.version,
-        generatorOptions: {
-          ...finalReleaseGroup.version?.generatorOptions,
-          specifierSource: 'version-plans',
-        },
-      };
+      if (USE_LEGACY_VERSIONING) {
+        finalReleaseGroup.version = {
+          ...finalReleaseGroup.version,
+          generatorOptions: {
+            ...finalReleaseGroup.version?.generatorOptions,
+            specifierSource: 'version-plans',
+          },
+        };
+      } else {
+        (
+          finalReleaseGroup.version as NxReleaseVersionConfiguration
+        ).specifierSource = 'version-plans';
+      }
     }
     if (
       releaseGroup.versionPlans === false &&
       releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
     ) {
-      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+      if (USE_LEGACY_VERSIONING) {
+        delete finalReleaseGroup.version.generatorOptions?.specifierSource;
+      }
+      delete (finalReleaseGroup.version as NxReleaseVersionConfiguration)
+        .specifierSource;
     }
-
     releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
@@ -755,7 +860,8 @@ function fillUnspecifiedConventionalCommitsProperties(
 }
 
 export async function handleNxReleaseConfigError(
-  error: CreateNxReleaseConfigError
+  error: CreateNxReleaseConfigError,
+  useLegacyVersioning: boolean
 ): Promise<never> {
   switch (error.code) {
     case 'PROJECTS_AND_GROUPS_DEFINED':
@@ -808,13 +914,16 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
-    case 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS':
+    case 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS':
       {
         const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
           'release',
         ]);
+        const text = useLegacyVersioning
+          ? '"version.generatorOptions"'
+          : 'configuration options';
         output.error({
-          title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related "version.generatorOptions" that it sets for you. Please use one or the other:`,
+          title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related ${text} that it sets for you. Please use one or the other:`,
           bodyLines: [nxJsonMessage],
         });
       }
@@ -837,6 +946,7 @@ export async function handleNxReleaseConfigError(
         title: `There was an error when resolving the configured changelog renderer at path: ${error.data.workspaceRelativePath}`,
         bodyLines: [nxJsonMessage],
       });
+      break;
     }
     case 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER':
       {
@@ -989,7 +1099,7 @@ function deepMergeDefaults<T>(
 
 /**
  * We want to prevent users from setting both the conventionalCommits shorthand and any of the related
- * generatorOptions at the same time, since it is at best redundant, and at worst invalid.
+ * configuration options at the same time, since it is at best redundant, and at worst invalid.
  */
 function hasInvalidConventionalCommitsConfig(
   userConfig: NxJsonConfiguration['release']
@@ -997,8 +1107,15 @@ function hasInvalidConventionalCommitsConfig(
   // at the root
   if (
     userConfig.version?.conventionalCommits === true &&
-    (userConfig.version?.generatorOptions?.currentVersionResolver ||
-      userConfig.version?.generatorOptions?.specifierSource)
+    // v2 config - directly on version config
+    ((userConfig.version as NxReleaseVersionConfiguration)
+      ?.currentVersionResolver ||
+      (userConfig.version as NxReleaseVersionConfiguration)?.specifierSource ||
+      // Legacy config - on generatorOptions
+      (userConfig.version as LegacyNxReleaseVersionConfiguration)
+        ?.generatorOptions?.currentVersionResolver ||
+      (userConfig.version as LegacyNxReleaseVersionConfiguration)
+        ?.generatorOptions?.specifierSource)
   ) {
     return true;
   }
@@ -1007,8 +1124,15 @@ function hasInvalidConventionalCommitsConfig(
     for (const group of Object.values(userConfig.groups)) {
       if (
         group.version?.conventionalCommits === true &&
-        (group.version?.generatorOptions?.currentVersionResolver ||
-          group.version?.generatorOptions?.specifierSource)
+        // v2 config - directly on version config
+        ((group.version as NxReleaseVersionConfiguration)
+          ?.currentVersionResolver ||
+          (group.version as NxReleaseVersionConfiguration)?.specifierSource ||
+          // Legacy config - on generatorOptions
+          (group.version as LegacyNxReleaseVersionConfiguration)
+            ?.generatorOptions?.currentVersionResolver ||
+          (group.version as LegacyNxReleaseVersionConfiguration)
+            ?.generatorOptions?.specifierSource)
       ) {
         return true;
       }
@@ -1154,14 +1278,20 @@ const supportedCreateReleaseProviders = [
     name: 'github-enterprise-server',
     defaultApiBaseUrl: 'https://__hostname__/api/v3',
   },
+  {
+    name: 'gitlab',
+    defaultApiBaseUrl: 'https://__hostname__/api/v4',
+  },
 ];
 
-// User opts into the default by specifying the string value 'github'
-export const defaultCreateReleaseProvider = {
-  provider: 'github',
-  hostname: 'github.com',
-  apiBaseUrl: 'https://api.github.com',
-} as any;
+/**
+ * Full form of the createRelease config, with the provider, hostname, and apiBaseUrl resolved.
+ */
+export interface ResolvedCreateRemoteReleaseProvider {
+  provider: string;
+  hostname: string;
+  apiBaseUrl: string;
+}
 
 function validateCreateReleaseConfig(
   changelogConfig: NxReleaseChangelogConfiguration
@@ -1173,7 +1303,14 @@ function validateCreateReleaseConfig(
   }
   // GitHub shorthand, expand to full object form, mark as valid
   if (createRelease === 'github') {
-    changelogConfig.createRelease = defaultCreateReleaseProvider;
+    changelogConfig.createRelease =
+      defaultGitHubCreateReleaseProvider as unknown as NxReleaseChangelogConfiguration['createRelease'];
+    return null;
+  }
+  // Gitlab shorthand, expand to full object form, mark as valid
+  if (createRelease === 'gitlab') {
+    changelogConfig.createRelease =
+      defaultGitLabCreateReleaseProvider as unknown as NxReleaseChangelogConfiguration['createRelease'];
     return null;
   }
   // Object config, ensure that properties are valid

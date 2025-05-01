@@ -1,0 +1,23 @@
+{
+  "name": "@tuskdesign/source",
+  "workspaces": [
+    "packages/*"
+  ],
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nx/js": "^20.8.1",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "nx": "20.8.1",
+    "tslib": "^2.8.0",
+    "typescript": "~5.5.2"
+  },
+  "dependencies": {}
+}

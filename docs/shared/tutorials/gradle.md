@@ -27,12 +27,29 @@ To verify that Gradle was installed correctly, run this command:
 gradle --version
 ```
 
-Nx also requires NodeJS to be installed. If you do not have NodeJS installed, you can
-install it from the [NodeJS website](https://nodejs.org/en/download).
+To streamline this tutorial, we'll install Nx globally on your system. You can use Homebrew (Mac only) or a manually installed Node version (any OS).
+
+{% tabs %}
+{% tab label="Homebrew" %}
+
+Make sure [Homebrew is installed](https://brew.sh/), then install Nx globally with these commands:
 
 ```shell
-node -v
+brew tap nrwl/nx
+brew install nx
 ```
+
+{% /tab %}
+{% tab label="Node" %}
+
+Install node from the [NodeJS website](https://nodejs.org/en/download), then install Nx globally with this command:
+
+```shell
+npm install --global nx
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Getting Started
 
@@ -350,6 +367,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -357,10 +375,10 @@ jobs:
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-jvm" --stop-agents-after="build"
 
-      - name: Set up JDK 17 for x64
+      - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 

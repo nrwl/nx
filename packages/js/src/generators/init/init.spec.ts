@@ -208,7 +208,8 @@ describe('js init generator', () => {
           "noUnusedLocals": true,
           "skipLibCheck": true,
           "strict": true,
-          "target": "es2022"
+          "target": "es2022",
+          "customConditions": ["development"]
         }
       }
       "

@@ -16,7 +16,8 @@ export const typesReactIsV18Version = '18.3.0';
 export const typesReactIsVersion = '19.0.0';
 export const reactViteVersion = '^4.2.0';
 
-export const typesNodeVersion = '18.16.9';
+// Needed for React-Router
+export const typesNodeVersion = '^20.0.0';
 
 export const babelPresetReactVersion = '^7.14.5';
 export const babelCoreVersion = '^7.14.5';
@@ -32,6 +33,8 @@ export const emotionBabelPlugin = '11.11.0';
 export const styledJsxVersion = '5.1.2';
 
 export const reactRouterDomVersion = '6.29.0';
+export const reactRouterVersion = '^7.2.0';
+export const reactRouterIsBotVersion = '^4.4.0';
 
 export const testingLibraryReactVersion = '16.1.0';
 export const testingLibraryDomVersion = '10.4.0';
@@ -58,8 +61,8 @@ export const typesExpressVersion = '^4.17.21';
 export const isbotVersion = '^3.6.5';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.12';
-export const moduleFederationNodeVersion = '^2.6.21';
-export const moduleFederationEnhancedVersion = '^0.8.8';
+export const moduleFederationNodeVersion = '^2.6.26';
+export const moduleFederationEnhancedVersion = '^0.9.0';
 
 // style preprocessors
 export const lessVersion = '3.12.2';

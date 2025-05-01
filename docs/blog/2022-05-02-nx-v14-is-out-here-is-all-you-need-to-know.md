@@ -2,7 +2,7 @@
 title: 'Nx v14 is out — Here is all you need to know!'
 slug: 'nx-v14-is-out-here-is-all-you-need-to-know'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-02/UAN1p_RMt38_IvB3CRpYTA.png'
+cover_image: '/blog/images/2022-05-02/UAN1p_RMt38_IvB3CRpYTA.avif'
 tags: [nx, release]
 description: Nx v14 delivers enhanced performance, simplified core structure, improved terminal output, local plugins, automated CI, module federation, and React 18 support.
 ---
@@ -197,14 +197,14 @@ This can be a game-changer when building huge apps. Stay tuned for more content 
 
 We recommend this approach if you want to speed up local serve and build times, but you still deploy the application as a whole.
 
-Read more on our docs: [/concepts/module-federation/faster-builds-with-module-federation](/concepts/module-federation/faster-builds-with-module-federation)
+Read more in our docs: [/concepts/module-federation/faster-builds-with-module-federation](/concepts/module-federation/faster-builds-with-module-federation)
 
 ## Micro Frontend Architecture with Nx
 
 As mentioned in the previous section, Nx v14 comes with out-of-the-box for Webpack Module Federation. The Micro Frontend architecture builds on top of that and adds the ability for independent deployability. While Module Federation enables faster builds by vertically slicing your application into smaller ones, the MFE architecture layers _independent deployments_  
 on top of federation. Teams should only choose MFEs if they want to deploy their host and remotes on different cadences.
 
-Read more on our docs: [/concepts/module-federation/micro-frontend-architecture](/concepts/module-federation/micro-frontend-architecture)
+Read more in our docs: [/concepts/module-federation/micro-frontend-architecture](/concepts/module-federation/micro-frontend-architecture)
 
 ## Dark mode for Project Graph as well as path tracking
 
@@ -242,7 +242,7 @@ In version 13.4 we released a brand new dedicated package for developing pure Ja
 
 We kept improving it, adding SWC support (including an easy migration between TSC → SWC using an Nx generator) and we're currently looking into automated publishing support.
 
-Read all the details on our docs: [/getting-started/intro](/getting-started/intro)
+Read all the details in our docs: [/getting-started/intro](/getting-started/intro)
 
 ## React
 

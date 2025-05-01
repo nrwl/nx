@@ -2,12 +2,12 @@
   "name": "replace-getJestProjects-with-getJestProjectsAsync",
   "cli": "nx",
   "version": "20.0.0-beta.5",
-  "description": "replace getJestProjects with getJestProjectsAsync",
+  "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
   "implementation": "/packages/jest/src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/jest",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Replace Usage of `getJestProjects` with `getJestProjectsAsync`\n\nReplaces the usage of the deprecated `getJestProjects` function with the `getJestProjectsAsync` function.\n\n#### Sample Code Changes\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"jest.config.ts\" %}\nimport { getJestProjects } from '@nx/jest';\n\nexport default {\n  projects: getJestProjects(),\n};\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"jest.config.ts\" %}\nimport { getJestProjectsAsync } from '@nx/jest';\n\nexport default async () => ({\n  projects: await getJestProjectsAsync(),\n});\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }

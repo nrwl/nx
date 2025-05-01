@@ -33,6 +33,7 @@ export function normalizeOptions(
             styles: options.optimization,
           }
         : options.optimization,
+    sassImplementation: options.sassImplementation ?? 'sass',
   };
   if (options.assets) {
     normalizedOptions.assets = normalizeAssets(

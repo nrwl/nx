@@ -20,7 +20,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
-import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
@@ -32,14 +31,21 @@ import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
 } from 'nx/src/nx-cloud/utilities/onboarding';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
+  return await applicationGeneratorInternal(tree, {
+    useProjectJson: true,
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(tree, {
@@ -66,18 +72,20 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   tasks.push(ensureDependencies(tree, options));
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(tree, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
-      version: '0.0.1',
-      private: true,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: `${options.appProjectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(tree, options.projectName, {
       root: options.appProjectRoot,
@@ -86,6 +94,14 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       tags: options.parsedTags?.length ? options.parsedTags : undefined,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 
   generateFiles(
@@ -140,11 +156,17 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   updateGitIgnore(tree);
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
   tasks.push(
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? Linter.EsLint,
+      linter: options.linter ?? 'eslint',
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
     })
@@ -191,12 +213,6 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
         ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
         : undefined
     );
-  }
-
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
   }
 
   sortPackageJsonFields(tree, options.appProjectRoot);

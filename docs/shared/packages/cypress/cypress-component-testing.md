@@ -1,3 +1,8 @@
+---
+title: Cypress Component Testing
+description: Learn how to set up and use Cypress component testing in your Nx workspace for React, Angular, and Next.js projects, including configuration and test execution.
+---
+
 # Cypress Component Testing
 
 > Component testing requires Cypress v10 and above.

@@ -4,14 +4,12 @@ import {
   NxModuleFederationConfigOverride,
 } from '../../../utils/models';
 import { getModuleFederationConfig } from '../../../with-module-federation/rspack/utils';
-import { NxModuleFederationDevServerConfig } from '../../models';
-import { NxModuleFederationDevServerPlugin } from './nx-module-federation-dev-server-plugin';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
   constructor(
     private _options: {
       config: ModuleFederationConfig;
-      devServerConfig?: NxModuleFederationDevServerConfig;
+      isServer?: boolean;
     },
     private configOverride?: NxModuleFederationConfigOverride
   ) {}
@@ -22,15 +20,37 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     }
 
     // This is required to ensure Module Federation will build the project correctly
+    compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk = false;
+    compiler.options.output.uniqueName = this._options.config.name;
+    if (compiler.options.output.scriptType === 'module') {
+      compiler.options.output.scriptType = undefined;
+      compiler.options.output.module = undefined;
+    }
+    if (this._options.isServer) {
+      compiler.options.target = 'async-node';
+      compiler.options.output.library ??= {
+        type: 'commonjs-module',
+      };
+      compiler.options.output.library.type = 'commonjs-module';
+    }
 
-    const isDevServer = !!process.env['WEBPACK_SERVE'];
-
-    // TODO(colum): Add support for SSR
-    const config = getModuleFederationConfig(this._options.config);
+    const config = getModuleFederationConfig(this._options.config, {
+      isServer: this._options.isServer,
+    });
     const sharedLibraries = config.sharedLibraries;
     const sharedDependencies = config.sharedDependencies;
     const mappedRemotes = config.mappedRemotes;
+
+    const runtimePlugins = [];
+    if (this.configOverride?.runtimePlugins) {
+      runtimePlugins.push(...(this.configOverride.runtimePlugins ?? []));
+    }
+    if (this._options.isServer) {
+      runtimePlugins.push(
+        require.resolve('@module-federation/node/runtimePlugin')
+      );
+    }
 
     new (require('@module-federation/enhanced/rspack').ModuleFederationPlugin)({
       name: this._options.config.name.replace(/-/g, '_'),
@@ -40,25 +60,21 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
       shared: {
         ...(sharedDependencies ?? {}),
       },
+      ...(this._options.isServer
+        ? {
+            library: {
+              type: 'commonjs-module',
+            },
+            remoteType: 'script',
+          }
+        : {}),
       ...(this.configOverride ? this.configOverride : {}),
-      runtimePlugins: this.configOverride
-        ? this.configOverride.runtimePlugins ?? []
-        : [],
+      runtimePlugins,
       virtualRuntimeEntry: true,
     }).apply(compiler);
 
     if (sharedLibraries) {
       sharedLibraries.getReplacementPlugin().apply(compiler as any);
-    }
-
-    if (isDevServer) {
-      new NxModuleFederationDevServerPlugin({
-        config: this._options.config,
-        devServerConfig: {
-          ...(this._options.devServerConfig ?? {}),
-          host: this._options.devServerConfig?.host ?? 'localhost',
-        },
-      }).apply(compiler);
     }
   }
 }

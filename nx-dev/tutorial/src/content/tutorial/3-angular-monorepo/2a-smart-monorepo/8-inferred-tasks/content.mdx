@@ -1,0 +1,61 @@
+---
+type: lesson
+title: Inferred Tasks
+previews:
+  - {
+      port: 4211,
+      title: 'Project Details View',
+      pathname: '/project-details/angular-store-e2e',
+    }
+---
+
+### Inferred Tasks
+
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=424"></VideoLink> */}
+
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. All tasks from the `angular-store` project are defined in its `project.json` file, but the companion `angular-store-e2e` project has its tasks inferred from configuration files. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup), [Project Details View](/recipes/nx-console/console-project-details) or run:
+
+```shell
+npx nx show project angular-store-e2e
+```
+
+If you expand the `e2e` task, you can see that it was created by the `@nx/cypress` plugin by analyzing the `apps/angular-store-e2e/cypress.config.ts` file. Notice the outputs are defined as:
+
+```json
+[
+  "{workspaceRoot}/dist/cypress/apps/angular-store-e2e/videos",
+  "{workspaceRoot}/dist/cypress/apps/angular-store-e2e/screenshots"
+]
+```
+
+This value is being read from the `videosFolder` and `screenshotsFolder` defined by the `nxE2EPreset` in your `apps/angular-store-e2e/cypress.config.ts` file. Let's change their value in your `apps/angular-store-e2e/cypress.config.ts` file:
+
+```ts title="apps/angular-store-e2e/cypress.config.ts" {8-10}
+// ...
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      // ...
+    }),
+    baseUrl: 'http://localhost:4200',
+    videosFolder: '../dist/cypress/apps/angular-store-e2e/videos-changed',
+    screenshotsFolder:
+      '../dist/cypress/apps/angular-store-e2e/screenshots-changed',
+  },
+});
+```
+
+Now if you close the project details view (Ctrl-C in the terminal) and open it again, the outputs for the `e2e` target will be:
+
+```json
+[
+  "{workspaceRoot}/apps/dist/cypress/apps/angular-store-e2e/videos-changed",
+  "{workspaceRoot}/apps/dist/cypress/apps/angular-store-e2e/screenshots-changed"
+]
+```
+
+This feature ensures that Nx will always cache the correct files.
+
+You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.

@@ -6,7 +6,7 @@ export function Pill({
   tooltip,
 }: {
   text: string;
-  color?: 'grey' | 'green' | 'yellow';
+  color?: 'grey' | 'green' | 'yellow' | 'red';
   tooltip?: string;
 }) {
   return (
@@ -19,7 +19,9 @@ export function Pill({
         color === 'green' &&
           'bg-green-400/10 text-green-500 ring-green-500/40 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20',
         color === 'yellow' &&
-          'bg-yellow-50 text-yellow-600 ring-yellow-500/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-500/20'
+          'bg-yellow-50 text-yellow-600 ring-yellow-500/40 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-500/20',
+        color === 'red' &&
+          'bg-red-50 text-red-600 ring-red-500/40 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-500/20'
       )}
     >
       {text}

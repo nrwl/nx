@@ -1,3 +1,8 @@
+---
+title: Nx Glossary
+description: A comprehensive reference of Nx-specific terminology to help you understand the concepts and features of the Nx ecosystem.
+---
+
 # Glossary
 
 This is a short list of Nx-specific terms that will help you understand the rest of the documentation.

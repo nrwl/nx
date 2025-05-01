@@ -26,7 +26,7 @@
   "homepage": "https://nx.dev",
   "peerDependencies": {
     "@typescript-eslint/parser": "^6.13.2 || ^7.0.0 || ^8.0.0",
-    "eslint-config-prettier": "^9.0.0"
+    "eslint-config-prettier": "^10.0.0"
   },
   "peerDependenciesMeta": {
     "eslint-config-prettier": {

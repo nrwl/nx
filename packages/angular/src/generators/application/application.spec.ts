@@ -1,5 +1,4 @@
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { Tree, updateProjectConfiguration, writeJson } from '@nx/devkit';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -7,10 +6,11 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  Tree,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -25,7 +25,10 @@ import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 jest.mock('enquirer');
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
@@ -42,8 +45,8 @@ jest.mock('@nx/devkit', () => {
 describe('app', () => {
   let appTree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(null);
@@ -61,7 +64,6 @@ describe('app', () => {
     // ASSERT
     const { dependencies, devDependencies } = readJson(appTree, 'package.json');
 
-    expect(dependencies['@angular/animations']).toBe(angularVersion);
     expect(dependencies['@angular/common']).toBe(angularVersion);
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
@@ -570,7 +572,7 @@ describe('app', () => {
   describe('--linter', () => {
     describe('eslint', () => {
       it('should add lint target to application', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: 'eslint' });
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
           {
@@ -580,7 +582,7 @@ describe('app', () => {
       });
 
       it('should add eslint plugin and no lint target to e2e project', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const nxJson = readNxJson(appTree);
         expect(nxJson.plugins).toMatchInlineSnapshot(`
@@ -602,13 +604,6 @@ describe('app', () => {
             },
           ]
         `);
-        expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
         expect(
           readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
         ).toBeUndefined();
@@ -616,7 +611,7 @@ describe('app', () => {
 
       it('should not add eslint plugin when no e2e test runner', async () => {
         await generateApp(appTree, 'my-app', {
-          linter: Linter.EsLint,
+          linter: 'eslint',
           e2eTestRunner: E2eTestRunner.None,
         });
 
@@ -624,7 +619,7 @@ describe('app', () => {
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
@@ -680,7 +675,7 @@ describe('app', () => {
 
     describe('none', () => {
       it('should add no lint target', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.None });
+        await generateApp(appTree, 'my-app', { linter: 'none' });
         expect(
           readProjectConfiguration(appTree, 'my-app').targets.lint
         ).toBeUndefined();
@@ -1244,6 +1239,65 @@ describe('app', () => {
       `);
     });
 
+    it('should generate a correct setup when --bundler=rspack including a correct config file and no build target', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+      });
+
+      const project = readProjectConfiguration(appTree, 'app1');
+      expect(project.targets.build).not.toBeDefined();
+      expect(appTree.exists('app1/rspack.config.ts')).toBeTruthy();
+      expect(appTree.read('app1/rspack.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should generate a correct setup when --bundler=rspack and ssr', async () => {
+      await generateApp(appTree, 'app2', {
+        bundler: 'rspack',
+        ssr: true,
+      });
+
+      const project = readProjectConfiguration(appTree, 'app2');
+      expect(appTree.exists('app2/rspack.config.ts')).toBeTruthy();
+      expect(appTree.read('app2/rspack.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(appTree.read('app2/src/server.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should generate use crystal jest when --bundler=rspack', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+        unitTestRunner: UnitTestRunner.Jest,
+      });
+
+      const project = readProjectConfiguration(appTree, 'app1');
+      expect(project.targets.test).not.toBeDefined();
+
+      const nxJson = readNxJson(appTree);
+      const jestPlugin = nxJson.plugins.find(
+        (p) =>
+          (typeof p === 'string' && p === '@nx/jest/plugin') ||
+          (typeof p !== 'string' && p.plugin === '@nx/jest/plugin')
+      );
+      expect(jestPlugin).toBeDefined();
+    });
+
+    it('should generate use crystal vitest when --bundler=rspack', async () => {
+      await generateApp(appTree, 'app1', {
+        bundler: 'rspack',
+        unitTestRunner: UnitTestRunner.Vitest,
+      });
+
+      const project = readProjectConfiguration(appTree, 'app1');
+      expect(project.targets.test).not.toBeDefined();
+
+      const nxJson = readNxJson(appTree);
+      const vitePlugin = nxJson.plugins.find(
+        (p) =>
+          (typeof p === 'string' && p === '@nx/vite/plugin') ||
+          (typeof p !== 'string' && p.plugin === '@nx/vite/plugin')
+      );
+      expect(vitePlugin).toBeDefined();
+    });
+
     it('should generate target options "browser" and "buildTarget"', async () => {
       await generateApp(appTree, 'my-app', { standalone: true });
 
@@ -1371,7 +1425,7 @@ async function generateApp(
     skipFormat: true,
     e2eTestRunner: E2eTestRunner.Cypress,
     unitTestRunner: UnitTestRunner.Jest,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     standalone: false,
     ...options,
   });

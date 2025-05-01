@@ -17,7 +17,7 @@ import type {
 } from './public-api';
 import { createNodesFromFiles } from './utils';
 import { isIsolationEnabled } from './isolation/enabled';
-import { isDaemonEnabled } from '../../daemon/client/enabled';
+import { isDaemonEnabled } from '../../daemon/client/client';
 
 export class LoadedNxPlugin {
   index?: number;
@@ -60,16 +60,9 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.createNodes && !plugin.createNodesV2) {
-      this.createNodes = [
-        plugin.createNodes[0],
-        (configFiles, context) =>
-          createNodesFromFiles(
-            plugin.createNodes[1],
-            configFiles,
-            this.options,
-            context
-          ).then((results) => results.map((r) => [this.name, r[0], r[1]])),
-      ];
+      throw new Error(
+        `Plugin ${plugin.name} only provides \`createNodes\` which was removed in Nx 21, it should provide a \`createNodesV2\` implementation.`
+      );
     }
 
     if (plugin.createNodesV2) {
@@ -123,10 +116,7 @@ export class LoadedNxPlugin {
       this.preTasksExecution = async (context: PreTasksExecutionContext) => {
         const updates = {};
         let originalEnv = process.env;
-        if (
-          isIsolationEnabled() ||
-          isDaemonEnabled(context.nxJsonConfiguration)
-        ) {
+        if (isIsolationEnabled() || isDaemonEnabled()) {
           process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
             set: (target, key: string, value) => {
               target[key] = value;

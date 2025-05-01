@@ -7,6 +7,7 @@ export interface Schema {
   skipTests?: boolean;
   export?: boolean;
   classComponent?: boolean;
+  skipFormat?: boolean;
 
   /**
    * @deprecated Provide the full file path including the file extension in the `path` option. This option will be removed in Nx v21.

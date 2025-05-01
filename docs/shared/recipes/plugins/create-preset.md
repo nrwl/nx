@@ -1,3 +1,8 @@
+---
+title: Create a Custom Plugin Preset
+description: Learn how to create a custom preset generator for your Nx plugin that can be used with create-nx-workspace to generate customized workspaces.
+---
+
 # Create a Custom Plugin Preset
 
 When you create a new nx workspace, you run the command: [`npx create-nx-workspace`](/nx-api/nx/documents/create-nx-workspace).

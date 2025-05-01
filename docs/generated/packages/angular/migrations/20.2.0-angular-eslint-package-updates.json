@@ -22,6 +22,22 @@
     "@angular-eslint/utils": {
       "version": "^19.0.0",
       "alwaysAddToPackageJson": false
+    },
+    "@angular-eslint/schematics": {
+      "version": "^19.0.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@angular-eslint/test-utils": {
+      "version": "^19.0.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@angular-eslint/builder": {
+      "version": "^19.0.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@angular-eslint/bundled-angular-compiler": {
+      "version": "^19.0.0",
+      "alwaysAddToPackageJson": false
     }
   },
   "aliases": [],

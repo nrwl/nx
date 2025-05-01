@@ -656,7 +656,6 @@ const packagesIndexes = {
   '/nest': '/packages/nest',
   '/next': '/packages/next',
   '/node': '/packages/node',
-  '/react': '/packages/react',
   '/react-native': '/packages/react',
   '/rollup': '/packages/rollup',
   '/storybook': '/packages/storybook',
@@ -879,7 +878,7 @@ const missingAndCatchAllRedirects = {
   // catch all
   '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
   '/(l|latest|p|previous)/:path*': '/:path*',
-  '/(a|angular|r|react|n|node)/:path*': '/:path*',
+  '/(a|angular|n|node)/:path*': '/:path*',
   // Storybook
   '/(l|latest)/(r|react)/storybook/overview': '/storybook/overview-react',
   '/(l|latest)/(a|angular)/storybook/overview': '/storybook/overview-angular',
@@ -1178,9 +1177,54 @@ const enterpriseNxSection = {
   '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
   '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
   '/features/powerpack/custom-caching':
-    '/nx-enterprise/powerpack/custom-caching',
+    '/recipes/running-tasks/self-hosted-caching',
   '/recipes/installation/activate-powerpack':
     '/nx-enterprise/activate-powerpack',
+};
+
+const manualDTEUpdate = {
+  '/ci/recipes/enterprise/dte': '/ci/recipes/dte',
+  '/ci/recipes/enterprise/dte/github-dte': '/ci/recipes/dte/github-dte',
+  '/ci/recipes/enterprise/dte/circle-ci-dte': '/ci/recipes/dte/circle-ci-dte',
+  '/ci/recipes/enterprise/dte/azure-dte': '/ci/recipes/dte/azure-dte',
+  '/ci/recipes/enterprise/dte/bitbucket-dte': '/ci/recipes/dte/bitbucket-dte',
+  '/ci/recipes/enterprise/dte/gitlab-dte': '/ci/recipes/dte/gitlab-dte',
+  '/ci/recipes/enterprise/dte/jenkins-dte': '/ci/recipes/dte/jenkins-dte',
+  '/showcase/benchmarks/dte': '/showcase/benchmarks/nx-agents',
+};
+
+const powerpackRedirects = {
+  '/nx-enterprise/powerpack/custom-caching':
+    '/recipes/running-tasks/self-hosted-caching',
+  '/nx-enterprise/powerpack/free-licenses-and-trials':
+    '/nx-enterprise/powerpack/licenses-and-trials',
+
+  // Redirects for renamed powerpack packages
+  '/nx-api/powerpack-owners': '/nx-api/owners',
+  '/nx-api/powerpack-owners/documents/overview':
+    '/nx-api/owners/documents/overview',
+
+  '/nx-api/powerpack-conformance': '/nx-api/conformance',
+  '/nx-api/powerpack-conformance/documents/overview':
+    '/nx-api/conformance/documents/overview',
+  '/nx-api/powerpack-conformance/documents/create-conformance-rule':
+    '/nx-api/conformance/documents/create-conformance-rule',
+
+  '/nx-api/powerpack-azure-cache': '/nx-api/azure-cache',
+  '/nx-api/powerpack-azure-cache/documents/overview':
+    '/nx-api/azure-cache/documents/overview',
+
+  '/nx-api/powerpack-gcs-cache': '/nx-api/gcs-cache',
+  '/nx-api/powerpack-gcs-cache/documents/overview':
+    '/nx-api/gcs-cache/documents/overview',
+
+  '/nx-api/powerpack-s3-cache': '/nx-api/s3-cache',
+  '/nx-api/powerpack-s3-cache/documents/overview':
+    '/nx-api/s3-cache/documents/overview',
+
+  '/nx-api/powerpack-shared-fs-cache': '/nx-api/shared-fs-cache',
+  '/nx-api/powerpack-shared-fs-cache/documents/overview':
+    '/nx-api/shared-fs-cache/documents/overview',
 };
 
 /**
@@ -1217,4 +1261,6 @@ module.exports = {
   featurePagesUpdate,
   marketing,
   enterpriseNxSection,
+  manualDTEUpdate,
+  powerpackRedirects,
 };

@@ -1,6 +1,11 @@
 import * as yargs from 'yargs';
 
-import { withAffectedOptions, withRunManyOptions } from './shared-options';
+import {
+  withAffectedOptions,
+  withOutputStyleOption,
+  withRunManyOptions,
+} from './shared-options';
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 const argv = yargs.default([]);
 
@@ -76,5 +81,52 @@ describe('shared-options', () => {
         })
       );
     });
+  });
+
+  describe('withOutputStyle', () => {
+    it('should coerce outputStyle based on NX_TUI', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: 'true',
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+        },
+        () => {
+          const command = withOutputStyleOption(argv);
+          const result = command.parseSync([]);
+          expect(result['output-style']).toEqual('tui');
+        }
+      ));
+
+    it('should set NX_TUI if using not set', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: false,
+          CI: 'false',
+          NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+        },
+        () => {
+          const command = withOutputStyleOption(argv);
+          const result = command.parseSync([]);
+          expect(process.env.NX_TUI).toEqual('true');
+        }
+      ));
+
+    it.each(['dynamic', 'tui'])(
+      'should set NX_TUI if using output-style=%s',
+      () =>
+        withEnvironmentVariables(
+          {
+            NX_TUI: false,
+            CI: 'false',
+            NX_TUI_SKIP_CAPABILITY_CHECK: 'true',
+          },
+          () => {
+            const command = withOutputStyleOption(argv);
+            const result = command.parseSync(['--output-style', 'dynamic']);
+            expect(process.env.NX_TUI).toEqual('true');
+          }
+        )
+    );
   });
 });

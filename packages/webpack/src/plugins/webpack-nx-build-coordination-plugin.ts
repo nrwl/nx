@@ -1,9 +1,8 @@
 import { exec } from 'child_process';
 import type { Compiler } from 'webpack';
-import { daemonClient } from 'nx/src/daemon/client/client';
+import { daemonClient, isDaemonEnabled } from 'nx/src/daemon/client/client';
 import { BatchFunctionRunner } from 'nx/src/command-line/watch/watch';
 import { output } from 'nx/src/utils/output';
-import { isDaemonEnabled } from 'nx/src/daemon/client/enabled';
 
 type PluginOptions = {
   skipInitialBuild?: boolean;

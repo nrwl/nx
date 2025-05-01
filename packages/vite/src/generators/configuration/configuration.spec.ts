@@ -331,7 +331,7 @@ describe('@nx/vite:configuration', () => {
   });
 
   describe('TS solution setup', () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace();
       updateJson(tree, '/package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
@@ -341,6 +341,7 @@ describe('@nx/vite:configuration', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -371,6 +372,7 @@ describe('@nx/vite:configuration', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -384,6 +386,31 @@ describe('@nx/vite:configuration', () => {
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+      addProjectConfiguration(tree, 'my-lib', {
+        root: 'packages/my-lib',
+      });
+      writeJson(tree, 'packages/my-lib/tsconfig.lib.json', {});
+      writeJson(tree, 'packages/my-lib/tsconfig.json', {});
+
+      await viteConfigurationGenerator(tree, {
+        addPlugin: true,
+        uiFramework: 'none',
+        project: 'my-lib',
+        projectType: 'library',
+        newProject: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'packages/my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should create package.json without exports field for apps', async () => {

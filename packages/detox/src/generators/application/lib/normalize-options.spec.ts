@@ -1,6 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
@@ -21,16 +20,16 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       e2eDirectory: 'apps/my-app-e2e',
       appProject: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       addPlugin: true,
       framework: 'react-native',
-      e2eName: 'my-app-e2e',
       e2eDirectory: 'apps/my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
@@ -38,8 +37,9 @@ describe('Normalize Options', () => {
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
       isUsingTsSolutionConfig: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       js: false,
+      useProjectJson: true,
     });
   });
 
@@ -62,14 +62,15 @@ describe('Normalize Options', () => {
       appClassName: 'MyApp',
       appFileName: 'my-app',
       appRoot: 'apps/my-app',
-      e2eName: 'my-app-e2e',
       e2eDirectory: 'apps/my-app-e2e',
       appProject: 'my-app',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
       js: false,
+      useProjectJson: true,
     });
   });
 
@@ -94,12 +95,14 @@ describe('Normalize Options', () => {
       appFileName: 'my-app',
       appRoot: 'apps/my-app',
       e2eProjectRoot: 'directory',
+      importPath: '@proj/directory-my-app-e2e',
       e2eName: 'directory-my-app-e2e',
       e2eDirectory: 'directory',
       e2eProjectName: 'directory-my-app-e2e',
       framework: 'react-native',
       isUsingTsSolutionConfig: false,
       js: false,
+      useProjectJson: true,
     });
   });
 });

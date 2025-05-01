@@ -11,7 +11,6 @@ import {
   generateTestHostApplication,
   generateTestRemoteApplication,
 } from '../utils/testing';
-import { Linter } from '@nx/eslint';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -550,7 +549,7 @@ describe('Host App Generator', () => {
         remotes: [remote],
         dynamic: true,
         e2eTestRunner: E2eTestRunner.None,
-        linter: Linter.None,
+        linter: 'none',
         style: 'css',
         unitTestRunner: UnitTestRunner.None,
         typescriptConfiguration: false,

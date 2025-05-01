@@ -25,6 +25,9 @@ interface BaseSchema {
 }
 
 export type SchemaWithBrowserTarget = BaseSchema & {
+  /**
+   * @deprecated Use `buildTarget` instead. It will be removed when Angular v20 is released.
+   */
   browserTarget: string;
 };
 

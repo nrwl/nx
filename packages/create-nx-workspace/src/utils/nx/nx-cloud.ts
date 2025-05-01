@@ -31,7 +31,7 @@ export async function getOnboardingInfo(
   nxCloud: NxCloud,
   token: string,
   directory: string,
-  useGithub?: boolean
+  useGitHub?: boolean
 ) {
   // nx-ignore-next-line
   const { createNxCloudOnboardingURL } = require(require.resolve(
@@ -50,7 +50,7 @@ export async function getOnboardingInfo(
   const connectCloudUrl = await createNxCloudOnboardingURL(
     source,
     token,
-    useGithub ??
+    useGitHub ??
       (nxCloud === 'yes' || nxCloud === 'github' || nxCloud === 'circleci'),
     code
   );

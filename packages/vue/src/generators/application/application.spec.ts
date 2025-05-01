@@ -59,14 +59,6 @@ describe('application generator', () => {
       tree.read('test-e2e/playwright.config.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
-    expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-      .toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "^build",
-        ],
-      }
-    `);
   });
 
   it('should set up project correctly for rsbuild', async () => {
@@ -188,6 +180,8 @@ describe('application generator', () => {
         ...options,
         style: 'none',
         linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -223,7 +217,7 @@ describe('application generator', () => {
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
@@ -244,14 +238,15 @@ describe('application generator', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'test/package.json');
+      expect(packageJson.name).toBe('@proj/test');
+      expect(packageJson.nx).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'test/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
           "private",
-          "nx",
         ]
       `);
       expect(readJson(tree, 'test/tsconfig.json')).toMatchInlineSnapshot(`
@@ -276,10 +271,10 @@ describe('application generator', () => {
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/test",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/test/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "vite/client",
             ],
@@ -354,6 +349,73 @@ describe('application generator', () => {
           ],
         }
       `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        ...options,
+        name: 'myapp',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      const packageJson = readJson(tree, 'test/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        ...options,
+        directory: 'myapp',
+        e2eTestRunner: 'cypress',
+        style: 'none',
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

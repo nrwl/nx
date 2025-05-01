@@ -4,6 +4,7 @@
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Module Federation SSR Dev Server Target",
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "description": "The module-federation-ssr-dev-server executor is reserved exclusively for use with host SSR Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
     "type": "object",

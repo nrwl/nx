@@ -137,6 +137,7 @@ describe('@nx/angular/plugin', () => {
                         "command": "ng run my-app:serve:production",
                       },
                     },
+                    "continuous": true,
                     "metadata": {
                       "description": "Run the "serve" target for "my-app".",
                       "help": {
@@ -435,6 +436,7 @@ describe('@nx/angular/plugin', () => {
                         "command": "ng run org1-app1:serve:production",
                       },
                     },
+                    "continuous": true,
                     "metadata": {
                       "description": "Run the "serve" target for "org1-app1".",
                       "help": {
@@ -619,6 +621,7 @@ describe('@nx/angular/plugin', () => {
                         "command": "ng run org2-app1:serve:production",
                       },
                     },
+                    "continuous": true,
                     "metadata": {
                       "description": "Run the "serve" target for "org2-app1".",
                       "help": {

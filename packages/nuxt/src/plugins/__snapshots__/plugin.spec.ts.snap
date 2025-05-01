@@ -30,6 +30,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           ],
         },
         "acme-serve-static": {
+          "continuous": true,
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "acme-build-static",
@@ -68,12 +69,14 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
         },
         "my-serve": {
           "command": "nuxt dev",
+          "continuous": true,
           "options": {
             "cwd": "my-app",
           },
         },
         "watch-deps": {
           "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+          "continuous": true,
           "dependsOn": [
             "build-deps",
           ],
@@ -143,11 +146,13 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
         },
         "serve": {
           "command": "nuxt dev",
+          "continuous": true,
           "options": {
             "cwd": ".",
           },
         },
         "serve-static": {
+          "continuous": true,
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "build-static",
@@ -158,6 +163,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
         },
         "watch-deps": {
           "command": "npx nx watch --projects nuxt --includeDependentProjects -- npx nx build-deps nuxt",
+          "continuous": true,
           "dependsOn": [
             "build-deps",
           ],

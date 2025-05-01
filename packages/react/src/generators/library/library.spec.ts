@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import {
   getProjects,
   readJson,
@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
@@ -18,15 +17,18 @@ import { Schema } from './schema';
 const { load } = require('@zkochan/js-yaml');
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions', () => ({
+  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+  getInstalledCypressMajorVersion: jest.fn(),
+}));
 describe('lib', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
+    ReturnType<typeof getInstalledCypressMajorVersion>
+  > = getInstalledCypressMajorVersion as never;
   let defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
@@ -480,7 +482,7 @@ describe('lib', () => {
       await applicationGenerator(tree, {
         compiler: 'babel',
         e2eTestRunner: 'none',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         unitTestRunner: 'jest',
         directory: 'my-app',
@@ -507,7 +509,7 @@ describe('lib', () => {
     it('should initialize routes if none were set up then add new route', async () => {
       await applicationGenerator(tree, {
         e2eTestRunner: 'none',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         skipFormat: true,
         unitTestRunner: 'jest',
         directory: 'my-app',
@@ -551,7 +553,7 @@ describe('lib', () => {
             tsConfig: './tsconfig.lib.json',
             compiler: 'babel',
             external: ["react","react-dom","react/jsx-runtime"],
-            format: ['esm'],
+            format: ["esm"],
             assets:[{ input: '.', output: '.', glob: 'README.md'}],
           }, {
             // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
@@ -939,6 +941,7 @@ module.exports = withNx(
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -954,6 +957,7 @@ module.exports = withNx(
         bundler: 'vite',
         unitTestRunner: 'vitest',
         directory: 'libs/mylib',
+        useProjectJson: false,
       });
 
       expect(tree.read('libs/mylib/vite.config.ts', 'utf-8'))
@@ -988,7 +992,7 @@ module.exports = withNx(
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es']
+              formats: ['es' as const]
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -999,7 +1003,7 @@ module.exports = withNx(
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: './test-output/vitest/coverage',
@@ -1052,9 +1056,9 @@ module.exports = withNx(
             "jsx": "react-jsx",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/mylib",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/mylib/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "node",
               "@nx/react/typings/cssmodule.d.ts",
@@ -1145,6 +1149,7 @@ module.exports = withNx(
         bundler: 'none',
         unitTestRunner: 'none',
         directory: 'libs/mylib',
+        useProjectJson: false,
       });
 
       await libraryGenerator(tree, {
@@ -1153,6 +1158,7 @@ module.exports = withNx(
         unitTestRunner: 'none',
         directory: 'libs/myjslib',
         js: true,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
@@ -1192,6 +1198,7 @@ module.exports = withNx(
         bundler: 'rollup',
         unitTestRunner: 'none',
         directory: 'libs/mylib',
+        useProjectJson: false,
       });
 
       expect(tree.read('libs/mylib/rollup.config.cjs', 'utf-8'))
@@ -1207,7 +1214,7 @@ module.exports = withNx(
             tsConfig: './tsconfig.lib.json',
             compiler: 'babel',
             external: ["react","react-dom","react/jsx-runtime"],
-            format: ['esm'],
+            format: ["esm"],
             assets:[{ input: '.', output: '.', glob: 'README.md'}],
           }, {
             // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
@@ -1234,6 +1241,7 @@ module.exports = withNx(
         directory: 'libs/mylib',
         publishable: true,
         importPath: '@acme/mylib',
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'libs/mylib/package.json')).toMatchInlineSnapshot(`
@@ -1241,6 +1249,7 @@ module.exports = withNx(
           "exports": {
             ".": {
               "default": "./dist/index.esm.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.esm.js",
               "types": "./dist/index.esm.d.ts",
             },
@@ -1260,6 +1269,27 @@ module.exports = withNx(
       `);
     });
 
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'rollup',
+        directory: 'libs/mylib',
+        publishable: true,
+        importPath: '@acme/mylib',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'libs/mylib/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
     it('should add project to workspaces when using TS solution', async () => {
       tree.write('pnpm-workspace.yaml', `packages:`);
 
@@ -1269,11 +1299,75 @@ module.exports = withNx(
         unitTestRunner: 'none',
         directory: 'mylib',
         name: 'mylib',
+        useProjectJson: false,
       });
       const pnpmContent = tree.read('pnpm-workspace.yaml', 'utf-8');
       const pnpmWorkspaceFile = load(pnpmContent);
 
       expect(pnpmWorkspaceFile.packages).toEqual(['mylib']);
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'libs/my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'libs/my-lib',
+        name: '@proj/my-lib',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'libs/my-lib',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'libs/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+        directory: 'libs/mylib',
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('libs/mylib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/mylib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/mylib",
+          "projectType": "library",
+          "root": "libs/mylib",
+          "sourceRoot": "libs/mylib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'libs/mylib/package.json').nx).toBeUndefined();
     });
   });
 });

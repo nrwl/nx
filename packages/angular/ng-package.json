@@ -15,7 +15,7 @@
     "@typescript-eslint/",
     "picocolors",
     "ignore",
-    "minimatch",
+    "picomatch",
     "rxjs-for-await",
     "webpack-merge",
     "ts-node",

@@ -1,3 +1,8 @@
+---
+title: Creating a Module Federation Host
+description: Learn how to generate and configure a host application for Module Federation in React and Angular using Nx generators.
+---
+
 # Creating a Host
 
 A `host` is the term within [Module Federation](https://module-federation.io/docs/en/mf-docs/0.2/getting-started/) given

@@ -222,6 +222,7 @@ export function runCreateWorkspace(
     cwd = e2eCwd,
     bundler,
     routing,
+    useReactRouter,
     standaloneApi,
     docker,
     nextAppDir,
@@ -244,6 +245,7 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    useReactRouter?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
@@ -295,6 +297,10 @@ export function runCreateWorkspace(
     command += ` --routing=${routing}`;
   }
 
+  if (useReactRouter !== undefined) {
+    command += ` --useReactRouter=${useReactRouter}`;
+  }
+
   if (base) {
     command += ` --defaultBase="${base}"`;
   }
@@ -335,51 +341,6 @@ export function runCreateWorkspace(
     command += ` --prefix=${prefix}`;
   }
 
-  if (packageManager === 'bun') {
-    /**
-     * `bunx` does not seem to work well at all with custom registries, I tried many combinations of flags and config files.
-     *
-     * The only viable workaround currently seems to be to write a package.json and a bunfig.toml in the e2e directory,
-     * install create-nx-workspace using `bun install` (which _does_ seem to respect the registry settings), and _then_
-     * run `bunx create-nx-workspace` (but without the version number added with @{version}).
-     */
-    writeFileSync(
-      join(cwd, 'bunfig.toml'),
-      // Also set up a dedicated cache directory to hopefully avoid conflicts with the global cache
-      `
-[install]
-cache = ".bun-cache"
-registry = "${registry}"
-`.trim()
-    );
-    writeFileSync(
-      join(cwd, 'package.json'),
-      `
-{
-  "private": true,
-  "name": "only-here-to-make-bunx-happy"
-}
-    `
-    );
-    const output = execSync('bun install create-nx-workspace', {
-      cwd,
-      stdio: 'pipe',
-      env: {
-        CI: 'true',
-        ...process.env,
-      },
-      encoding: 'utf-8',
-    });
-    const publishedVersion = getPublishedVersion();
-    // Ensure that it installed the version published for the e2e tests
-    if (!output.includes(publishedVersion)) {
-      console.error(output);
-      throw new Error(
-        `bunx create-nx-workspace did not install the version published for the e2e tests: ${publishedVersion}, in ${cwd}`
-      );
-    }
-  }
-
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
@@ -400,32 +361,10 @@ registry = "${registry}"
       });
     }
 
-    if (packageManager === 'bun') {
-      // We also have to add an explicit bunfig.toml in the workspace itself as bun does not seem to use the setting applied by the local registry logic
-      // (via `npm set config registry`), unlike all other package managers.
-      updateFile(
-        'bunfig.toml',
-        `
-[install]
-registry = { url = "${registry}", token = "secretVerdaccioToken" }
-`.trim()
-      );
-    }
-
     return create;
   } catch (e) {
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
-  } finally {
-    // Clean up files related to bun workarounds
-    if (packageManager === 'bun') {
-      removeSync(join(cwd, 'bunfig.toml'));
-      removeSync(join(cwd, 'package.json'));
-      removeSync(join(cwd, '.bun-cache'));
-      removeSync(join(cwd, 'node_modules'));
-      removeSync(join(cwd, 'bun.lock'));
-      removeSync(join(cwd, 'bun.lockb'));
-    }
   }
 }
 

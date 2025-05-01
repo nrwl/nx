@@ -1,6 +1,8 @@
-import { composePlugins, withNx, withReact } from '@nx/rspack';
-import { withModuleFederation } from '@nx/module-federation/rspack';
+import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
+import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
+import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';
 import { ModuleFederationConfig } from '@nx/module-federation';
+import { join } from 'path';
 
 import baseConfig from './module-federation.config';
 
@@ -30,10 +32,36 @@ const prodConfig: ModuleFederationConfig = {
 	],
 };
 
-// Nx plugins for rspack to build config object from Nx options and context.
-/**
- * DTS Plugin is disabled in Nx Workspaces as Nx already provides Typing support for Module Federation
- * The DTS Plugin can be enabled by setting dts: true
- * Learn more about the DTS Plugin here: https://module-federation.io/configure/dts.html
- */
-export default composePlugins(withNx(), withReact(), withModuleFederation(prodConfig, { dts: false }));
+export default {
+  output: {
+    path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
+    publicPath: 'auto'
+  },
+  devServer: {
+    port: <%= devServerPort %>,
+    historyApiFallback: {
+      index: '/index.html',
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+  },
+  plugins: [
+    new NxAppRspackPlugin({
+      tsConfig: '<%= rspackPluginOptions.tsConfig %>',
+      main: '<%= rspackPluginOptions.main %>',
+      index: '<%= rspackPluginOptions.index %>',
+      baseHref: '<%= rspackPluginOptions.baseHref %>',
+      assets: <%- JSON.stringify(rspackPluginOptions.assets) %>,
+      styles: <%- JSON.stringify(rspackPluginOptions.styles) %>,
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactRspackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+    new NxModuleFederationPlugin({ config: prodConfig }, { dts: false }),
+    new NxModuleFederationDevServerPlugin({ config: prodConfig }),
+  ],
+};

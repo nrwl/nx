@@ -1,4 +1,5 @@
 import { CommandModule } from 'yargs';
+import { handleErrors } from '../../utils/handle-errors';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
@@ -8,8 +9,8 @@ import {
   withOverrides,
   withRunOptions,
   withTargetAndConfigurationOption,
+  withTuiOptions,
 } from '../yargs-utils/shared-options';
-import { handleErrors } from '../../utils/handle-errors';
 
 export const yargsAffectedCommand: CommandModule = {
   command: 'affected',
@@ -17,9 +18,11 @@ export const yargsAffectedCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(
-          withOutputStyleOption(
-            withTargetAndConfigurationOption(withBatch(yargs))
+        withTuiOptions(
+          withRunOptions(
+            withOutputStyleOption(
+              withTargetAndConfigurationOption(withBatch(yargs))
+            )
           )
         )
       )
@@ -56,7 +59,9 @@ export const yargsAffectedTestCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withTuiOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        )
       ),
       'affected'
     ),
@@ -80,7 +85,9 @@ export const yargsAffectedBuildCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withTuiOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        )
       ),
       'affected'
     ),
@@ -104,7 +111,9 @@ export const yargsAffectedLintCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withTuiOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        )
       ),
       'affected'
     ),
@@ -128,7 +137,9 @@ export const yargsAffectedE2ECommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withAffectedOptions(
-        withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        withTuiOptions(
+          withRunOptions(withOutputStyleOption(withConfiguration(yargs)))
+        )
       ),
       'affected'
     ),

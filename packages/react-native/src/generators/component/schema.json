@@ -59,6 +59,12 @@
       "alias": "C",
       "description": "Use class components instead of functional component.",
       "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "required": ["path"]

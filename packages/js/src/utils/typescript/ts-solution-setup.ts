@@ -1,4 +1,5 @@
 import {
+  globAsync,
   joinPathFragments,
   offsetFromRoot,
   output,
@@ -10,7 +11,11 @@ import {
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path/posix';
 import { FsTree } from 'nx/src/generators/tree';
-import { isUsingPackageManagerWorkspaces } from '../package-manager-workspaces';
+import {
+  getPackageManagerWorkspacesPatterns,
+  getProjectPackageManagerWorkspaceState,
+  isUsingPackageManagerWorkspaces,
+} from '../package-manager-workspaces';
 import { getNeededCompilerOptionOverrides } from './configuration';
 
 export function isUsingTypeScriptPlugin(tree: Tree): boolean {
@@ -105,9 +110,10 @@ export function assertNotUsingTsSolutionSetup(
 }
 
 export function findRuntimeTsConfigName(
-  tree: Tree,
-  projectRoot: string
+  projectRoot: string,
+  tree?: Tree
 ): string | null {
+  tree ??= new FsTree(workspaceRoot, false);
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.app.json')))
     return 'tsconfig.app.json';
   if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.lib.json')))
@@ -137,9 +143,7 @@ export function updateTsconfigFiles(
 
       json.compilerOptions = {
         ...json.compilerOptions,
-        // Make sure d.ts files from typecheck does not conflict with bundlers.
-        // Other tooling like jest write to "out-tsc/jest" to we just default to "out-tsc/<project-name>".
-        outDir: joinPathFragments('out-tsc', projectRoot.split('/').at(-1)),
+        outDir: 'dist',
         rootDir,
         ...compilerOptions,
       };
@@ -209,15 +213,36 @@ export function updateTsconfigFiles(
   }
 }
 
-export function addProjectToTsSolutionWorkspace(
+export async function addProjectToTsSolutionWorkspace(
   tree: Tree,
   projectDir: string
 ) {
-  // If dir is "libs/foo" then use "libs/*" so we don't need so many entries in the workspace file.
-  // If dir is nested like "libs/shared/foo" then we add "libs/shared/*".
-  // If the dir is just "foo" then we have to add it as is.
+  const state = getProjectPackageManagerWorkspaceState(tree, projectDir);
+  if (state === 'included') {
+    return;
+  }
+
+  // If dir is "libs/foo", we try to use "libs/*" but we only do it if it's
+  // safe to do so. So, we first check if adding that pattern doesn't result
+  // in extra projects being matched. If extra projects are matched, or the
+  // dir is just "foo" then we add it as is.
   const baseDir = dirname(projectDir);
-  const pattern = baseDir === '.' ? projectDir : `${baseDir}/*`;
+  let pattern = projectDir;
+  if (baseDir !== '.') {
+    const patterns = getPackageManagerWorkspacesPatterns(tree);
+    const projectsBefore =
+      patterns.length > 0 ? await globAsync(tree, patterns) : [];
+    patterns.push(`${baseDir}/*/package.json`);
+    const projectsAfter = await globAsync(tree, patterns);
+
+    if (projectsBefore.length + 1 === projectsAfter.length) {
+      // Adding the pattern to the parent directory only results in one extra
+      // project being matched, which is the project we're adding. It's safe
+      // to add the pattern to the parent directory.
+      pattern = `${baseDir}/*`;
+    }
+  }
+
   if (tree.exists('pnpm-workspace.yaml')) {
     const { load, dump } = require('@zkochan/js-yaml');
     const workspaceFile = tree.read('pnpm-workspace.yaml', 'utf-8');
@@ -262,4 +287,17 @@ export function getProjectType(
     : null;
   if (!packageJson?.exports) return 'application';
   return 'library';
+}
+
+export function getProjectSourceRoot(
+  tree: Tree,
+  projectSourceRoot: string | undefined,
+  projectRoot: string
+): string | undefined {
+  return (
+    projectSourceRoot ??
+    (tree.exists(joinPathFragments(projectRoot, 'src'))
+      ? joinPathFragments(projectRoot, 'src')
+      : projectRoot)
+  );
 }

@@ -100,7 +100,7 @@ export function BlogDetails({ post, allPosts }: BlogDetailsProps) {
       </div>
 
       {/* Main grid layout */}
-      <div className="mx-auto max-w-7xl px-4 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 lg:px-8" data-content-area>
         <div className="relative isolate grid grid-cols-1 gap-8 xl:grid-cols-[200px_minmax(0,1fr)_200px]">
           <div className="hidden min-h-full xl:block">
             {post.metrics && (

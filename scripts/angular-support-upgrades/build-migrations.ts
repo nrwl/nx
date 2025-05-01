@@ -42,6 +42,7 @@ async function addMigrationPackageGroup(
         '@angular/core',
         '@angular/material',
         '@angular/cdk',
+        '@angular/google-maps',
         '@angular/ssr',
         '@angular/pwa',
         '@angular/build',

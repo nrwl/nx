@@ -52,7 +52,7 @@ describe('release publishable libraries', () => {
 
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js', '@nx/react', '@nx/angular'],
+      packages: ['@nx/js', '@nx/react', '@nx/angular', '@nx/vue'],
     });
 
     // Normalize git committer information so it is deterministic in snapshots
@@ -88,10 +88,9 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from dist/packages/{project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.0 from git tag "v0.0.0".
-      {project-name} 📄 Using the provided version specifier "0.0.2".
-      {project-name} ✍️  New version 0.0.2 written to dist/packages/{project-name}/package.json
+      {project-name} 🏷️  Resolved the current version as 0.0.0 from git tag "v0.0.0", based on releaseTagPattern "v{version}"
+      {project-name} ❓ Applied explicit semver value "0.0.2", from the given specifier, to get new version 0.0.2
+      {project-name} ✍️  New version 0.0.2 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.2",
@@ -144,10 +143,9 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from dist/packages/{project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.2 from git tag "v0.0.2".
-      {project-name} 📄 Using the provided version specifier "0.0.3".
-      {project-name} ✍️  New version 0.0.3 written to dist/packages/{project-name}/package.json
+      {project-name} 🏷️  Resolved the current version as 0.0.2 from git tag "v0.0.2", based on releaseTagPattern "v{version}"
+      {project-name} ❓ Applied explicit semver value "0.0.3", from the given specifier, to get new version 0.0.3
+      {project-name} ✍️  New version 0.0.3 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.3",
@@ -202,10 +200,9 @@ describe('release publishable libraries', () => {
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from dist/packages/{project-name}/package.json
-      {project-name} 📄 Resolved the current version as 0.0.3 from git tag "v0.0.3".
-      {project-name} 📄 Using the provided version specifier "0.0.4".
-      {project-name} ✍️  New version 0.0.4 written to dist/packages/{project-name}/package.json
+      {project-name} 🏷️  Resolved the current version as 0.0.3 from git tag "v0.0.3", based on releaseTagPattern "v{version}"
+      {project-name} ❓ Applied explicit semver value "0.0.4", from the given specifier, to get new version 0.0.4
+      {project-name} ✍️  New version 0.0.4 written to manifest: dist/packages/{project-name}/package.json
       "name": "@proj/{project-name}",
       -   "version": "0.0.1",
       +   "version": "0.0.4",
@@ -241,6 +238,59 @@ describe('release publishable libraries', () => {
       filename:      proj-{project-name}-0.0.4.tgz
       package size:  XXX.XXX kb
       unpacked size: XXX.XXX kb
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files: X
+      Published to ${e2eRegistryUrl} with tag "latest"
+      NX   Successfully ran target nx-release-publish for project {project-name}
+    `);
+  });
+
+  it('should be able to release publishable vue library', async () => {
+    const vueLib = uniq('my-pkg-');
+    runCLI(
+      `generate @nx/vue:lib packages/${vueLib} --bundler=vite --publishable --importPath=@proj/${vueLib} --no-interactive`
+    );
+    runCLI('sync');
+
+    const releaseOutput = runCLI(`release --specifier 0.0.5 --yes`);
+    expect(releaseOutput).toMatchInlineSnapshot(`
+      NX   Executing pre-version command
+      NX   Running release version for project: {project-name}
+      {project-name} 🏷️  Resolved the current version as 0.0.4 from git tag "v0.0.4", based on releaseTagPattern "v{version}"
+      {project-name} ❓ Applied explicit semver value "0.0.5", from the given specifier, to get new version 0.0.5
+      {project-name} ✍️  New version 0.0.5 written to manifest: dist/packages/{project-name}/package.json
+      "name": "@proj/{project-name}",
+      -   "version": "0.0.1",
+      +   "version": "0.0.5",
+      "main": "./index.js",
+      NX   Staging changed files with git
+      No files to stage. Skipping git add.
+      NX   Generating an entry in CHANGELOG.md for v0.0.5
+      + ## 0.0.5 (YYYY-MM-DD)
+      +
+      + This was a version bump only, there were no code changes.
+      +
+      ## 0.0.4 (YYYY-MM-DD)
+      This was a version bump only, there were no code changes.
+      NX   Staging changed files with git
+      NX   Committing changes with git
+      NX   Tagging commit with git
+      NX   Running target nx-release-publish for project {project-name}:
+      - {project-name}
+      > nx run {project-name}:nx-release-publish
+      📦  @proj/{project-name}@0.0.5
+      === Tarball Contents ===
+      XXB README.md
+      XXB index.d.ts
+      XXB index.mjs
+      XXXB package.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       0.0.5
+      filename:      proj-{project-name}-0.0.5.tgz
+      package size: XXXB
+      unpacked size: XXXB
       shasum:        {SHASUM}
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files: X

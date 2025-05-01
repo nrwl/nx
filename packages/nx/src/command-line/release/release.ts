@@ -3,28 +3,28 @@ import { rmSync } from 'node:fs';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { output } from '../../utils/output';
 import { handleErrors } from '../../utils/handle-errors';
-import {
-  createAPI as createReleaseChangelogAPI,
-  shouldCreateGitHubRelease,
-} from './changelog';
+import { output } from '../../utils/output';
+import { createAPI as createReleaseChangelogAPI } from './changelog';
 import { ReleaseOptions, VersionOptions } from './command-object';
 import {
   IMPLICIT_DEFAULT_RELEASE_GROUP,
+  NxReleaseConfig,
+  ResolvedCreateRemoteReleaseProvider,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
 import { deepMergeJson } from './config/deep-merge-json';
 import { filterReleaseGroups } from './config/filter-release-groups';
+import { shouldUseLegacyVersioning } from './config/use-legacy-versioning';
 import {
   readRawVersionPlans,
   setResolvedVersionPlansOnGroups,
 } from './config/version-plans';
 import { createAPI as createReleasePublishAPI } from './publish';
 import { getCommitHash, gitAdd, gitCommit, gitPush, gitTag } from './utils/git';
-import { createOrUpdateGithubRelease } from './utils/github';
 import { printConfigAndExit } from './utils/print-config';
+import { createRemoteReleaseClient } from './utils/remote-release-clients/remote-release-client';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   createCommitMessageValues,
@@ -79,7 +79,13 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       userProvidedReleaseConfig
     );
     if (configError) {
-      return await handleNxReleaseConfigError(configError);
+      const USE_LEGACY_VERSIONING = shouldUseLegacyVersioning(
+        userProvidedReleaseConfig
+      );
+      return await handleNxReleaseConfigError(
+        configError,
+        USE_LEGACY_VERSIONING
+      );
     }
     // --print-config exits directly as it is not designed to be combined with any other programmatic operations
     if (args.printConfig) {
@@ -130,14 +136,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       (shouldCommit || userProvidedReleaseConfig.git?.stageChanges) ?? false;
     const shouldTag = userProvidedReleaseConfig.git?.tag ?? true;
 
-    const shouldCreateWorkspaceRelease = shouldCreateGitHubRelease(
+    const shouldCreateWorkspaceRemoteRelease = shouldCreateRemoteRelease(
       nxReleaseConfig.changelog.workspaceChangelog
     );
-    // If the workspace or any of the release groups specify that a github release should be created, we need to push the changes to the remote
+    // If the workspace or any of the release groups specify that a remote release should be created, we need to push the changes to the remote
     const shouldPush =
-      (shouldCreateWorkspaceRelease ||
+      (shouldCreateWorkspaceRemoteRelease ||
         releaseGroups.some((group) =>
-          shouldCreateGitHubRelease(group.changelog)
+          shouldCreateRemoteRelease(group.changelog)
         )) ??
       false;
 
@@ -254,26 +260,35 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
       await gitPush({
         dryRun: args.dryRun,
         verbose: args.verbose,
+        additionalArgs: nxReleaseConfig.git.pushArgs,
       });
       hasPushedChanges = true;
     }
 
     let latestCommit: string | undefined;
 
-    if (shouldCreateWorkspaceRelease && changelogResult.workspaceChangelog) {
+    if (
+      shouldCreateWorkspaceRemoteRelease &&
+      changelogResult.workspaceChangelog
+    ) {
+      const remoteReleaseClient = await createRemoteReleaseClient(
+        // shouldCreateWorkspaceRemoteRelease() ensures that the createRelease property exists and is not false
+        (nxReleaseConfig.changelog.workspaceChangelog as any)
+          .createRelease as ResolvedCreateRemoteReleaseProvider
+      );
       if (!hasPushedChanges) {
         throw new Error(
-          'It is not possible to create a github release for the workspace without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config'
+          `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the workspace without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
         );
       }
 
-      output.logSingleLine(`Creating GitHub Release`);
+      output.logSingleLine(
+        `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
+      );
 
       latestCommit = await getCommitHash('HEAD');
-      await createOrUpdateGithubRelease(
-        nxReleaseConfig.changelog.workspaceChangelog
-          ? nxReleaseConfig.changelog.workspaceChangelog.createRelease
-          : false,
+
+      await remoteReleaseClient.createOrUpdateRelease(
         changelogResult.workspaceChangelog.releaseVersion,
         changelogResult.workspaceChangelog.contents,
         latestCommit,
@@ -282,11 +297,19 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     for (const releaseGroup of releaseGroups) {
-      const shouldCreateProjectReleases = shouldCreateGitHubRelease(
+      const shouldCreateProjectRemoteReleases = shouldCreateRemoteRelease(
         releaseGroup.changelog
       );
+      if (
+        shouldCreateProjectRemoteReleases &&
+        changelogResult.projectChangelogs
+      ) {
+        const remoteReleaseClient = await createRemoteReleaseClient(
+          // shouldCreateProjectRemoteReleases() ensures that the createRelease property exists and is not false
+          (releaseGroup.changelog as any)
+            .createRelease as ResolvedCreateRemoteReleaseProvider
+        );
 
-      if (shouldCreateProjectReleases && changelogResult.projectChangelogs) {
         const projects = args.projects?.length
           ? // If the user has passed a list of projects, we need to use the filtered list of projects within the release group
             Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
@@ -302,20 +325,19 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
 
           if (!hasPushedChanges) {
             throw new Error(
-              'It is not possible to create a github release for the project without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config'
+              `It is not possible to create a ${remoteReleaseClient.remoteReleaseProviderName} release for the project without pushing the changes to the remote, please ensure that you have not disabled git push in your nx release config`
             );
           }
 
-          output.logSingleLine(`Creating GitHub Release`);
+          output.logSingleLine(
+            `Creating ${remoteReleaseClient.remoteReleaseProviderName} Release`
+          );
 
           if (!latestCommit) {
             latestCommit = await getCommitHash('HEAD');
           }
 
-          await createOrUpdateGithubRelease(
-            releaseGroup.changelog
-              ? releaseGroup.changelog.createRelease
-              : false,
+          await remoteReleaseClient.createOrUpdateRelease(
             changelog.releaseVersion,
             changelog.contents,
             latestCommit,
@@ -361,8 +383,22 @@ async function promptForPublish(): Promise<boolean> {
       },
     ]);
     return reply.confirmation;
-  } catch (e) {
+  } catch {
+    // Ensure the cursor is always restored before exiting
+    process.stdout.write('\u001b[?25h');
     // Handle the case where the user exits the prompt with ctrl+c
     return false;
   }
+}
+
+function shouldCreateRemoteRelease(
+  changelogConfig:
+    | NxReleaseConfig['changelog']['workspaceChangelog']
+    | NxReleaseConfig['changelog']['projectChangelogs']
+    | NxReleaseConfig['groups'][number]['changelog']
+): boolean {
+  if (changelogConfig === false) {
+    return false;
+  }
+  return changelogConfig.createRelease !== false;
 }

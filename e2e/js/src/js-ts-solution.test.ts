@@ -3,6 +3,7 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
   newProject,
+  readJson,
   runCLI,
   runCommand,
   uniq,
@@ -66,11 +67,15 @@ describe('JS - TS solution setup', () => {
     );
 
     // add deps, each parent lib imports all child libs
-    const addImports = (parentLib: string) => {
+    const addImports = (parentLib: string, includeRollupChildLib = false) => {
       updateFile(
         `packages/${parentLib}/src/index.ts`,
-        (content) => `export * from '@proj/${esbuildChildLib}';
-export * from '@proj/${rollupChildLib}';
+        (content) => `export * from '@proj/${esbuildChildLib}';${
+          includeRollupChildLib
+            ? `
+export * from '@proj/${rollupChildLib}';`
+            : ''
+        }
 export * from '@proj/${swcChildLib}';
 export * from '@proj/${tscChildLib}';
 export * from '@proj/${viteChildLib}';
@@ -79,7 +84,7 @@ ${content}`
     };
 
     addImports(esbuildParentLib);
-    addImports(rollupParentLib);
+    addImports(rollupParentLib, true);
     addImports(swcParentLib);
     addImports(tscParentLib);
     addImports(viteParentLib);
@@ -87,11 +92,13 @@ ${content}`
     const pm = getSelectedPackageManager();
     if (pm === 'pnpm') {
       // for pnpm we need to add the local packages as dependencies to each consumer package.json
-      const addDeps = (parentLib: string) => {
+      const addDeps = (parentLib: string, includeRollupChildLib = false) => {
         updateJson(`packages/${parentLib}/package.json`, (json) => {
           json.dependencies ??= {};
           json.dependencies[`@proj/${esbuildChildLib}`] = 'workspace:*';
-          json.dependencies[`@proj/${rollupChildLib}`] = 'workspace:*';
+          if (includeRollupChildLib) {
+            json.dependencies[`@proj/${rollupChildLib}`] = 'workspace:*';
+          }
           json.dependencies[`@proj/${swcChildLib}`] = 'workspace:*';
           json.dependencies[`@proj/${tscChildLib}`] = 'workspace:*';
           json.dependencies[`@proj/${viteChildLib}`] = 'workspace:*';
@@ -100,7 +107,7 @@ ${content}`
       };
 
       addDeps(esbuildParentLib);
-      addDeps(rollupParentLib);
+      addDeps(rollupParentLib, true);
       addDeps(swcParentLib);
       addDeps(tscParentLib);
       addDeps(viteParentLib);
@@ -114,36 +121,36 @@ ${content}`
 
     // check build
     expect(runCLI(`build ${esbuildParentLib}`)).toContain(
-      `Successfully ran target build for project @proj/${esbuildParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${esbuildParentLib}`
     );
     expect(runCLI(`build ${rollupParentLib}`)).toContain(
-      `Successfully ran target build for project @proj/${rollupParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${rollupParentLib}`
     );
     expect(runCLI(`build ${swcParentLib}`)).toContain(
-      `Successfully ran target build for project @proj/${swcParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${swcParentLib}`
     );
     expect(runCLI(`build ${tscParentLib}`)).toContain(
-      `Successfully ran target build for project @proj/${tscParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${tscParentLib}`
     );
     expect(runCLI(`build ${viteParentLib}`)).toContain(
-      `Successfully ran target build for project @proj/${viteParentLib} and 5 tasks it depends on`
+      `Successfully ran target build for project @proj/${viteParentLib}`
     );
 
     // check typecheck
     expect(runCLI(`typecheck ${esbuildParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${esbuildParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${esbuildParentLib}`
     );
     expect(runCLI(`typecheck ${rollupParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${rollupParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${rollupParentLib}`
     );
     expect(runCLI(`typecheck ${swcParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${swcParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${swcParentLib}`
     );
     expect(runCLI(`typecheck ${tscParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${tscParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${tscParentLib}`
     );
     expect(runCLI(`typecheck ${viteParentLib}`)).toContain(
-      `Successfully ran target typecheck for project @proj/${viteParentLib} and 5 tasks it depends on`
+      `Successfully ran target typecheck for project @proj/${viteParentLib}`
     );
 
     // check lint
@@ -178,6 +185,30 @@ ${content}`
     );
     expect(runCLI(`test ${viteParentLib}`)).toContain(
       `Successfully ran target test for project @proj/${viteParentLib}`
+    );
+  }, 300_000);
+
+  it('should respect and support generating libraries with a name different than the import path', () => {
+    const lib1 = uniq('lib1');
+
+    runCLI(
+      `generate @nx/js:lib packages/${lib1} --name=${lib1} --bundler=vite --linter=eslint --unitTestRunner=jest`
+    );
+
+    const packageJson = readJson(`packages/${lib1}/package.json`);
+    expect(packageJson.nx.name).toBe(lib1);
+
+    expect(runCLI(`build ${lib1}`)).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
+    expect(runCLI(`typecheck ${lib1}`)).toContain(
+      `Successfully ran target typecheck for project ${lib1}`
+    );
+    expect(runCLI(`lint ${lib1}`)).toContain(
+      `Successfully ran target lint for project ${lib1}`
+    );
+    expect(runCLI(`test ${lib1}`)).toContain(
+      `Successfully ran target test for project ${lib1}`
     );
   }, 300_000);
 });
