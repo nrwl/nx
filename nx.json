@@ -1,8 +1,5 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
-  "tui": {
-    "autoExit": true
-  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
