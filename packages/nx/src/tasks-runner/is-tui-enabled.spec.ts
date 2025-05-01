@@ -1,5 +1,4 @@
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
-import { logger } from '../utils/logger';
 import { shouldUseTui } from './is-tui-enabled';
 
 describe('shouldUseTui', () => {
@@ -139,26 +138,4 @@ describe('shouldUseTui', () => {
         }
       ));
   });
-
-  it('should warn if the TUI is enabled but not supported', () =>
-    withEnvironmentVariables(
-      {
-        NX_TUI: 'true',
-        CI: 'false',
-      },
-      () => {
-        const spy = jest.spyOn(logger, 'warn').mockImplementationOnce(() => {});
-        process.stderr.isTTY = false;
-
-        expect(shouldUseTui({}, {}, false)).toBe(false);
-
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy.mock.calls[0]).toMatchInlineSnapshot(`
-          [
-            "The current environment is not capable of displaying the TUI. Falling back to \`dynamic-legacy\` output style.",
-          ]
-        `);
-        process.stderr.isTTY = true;
-      }
-    ));
 });

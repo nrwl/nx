@@ -34,15 +34,6 @@ export function shouldUseTui(
     skipCapabilityCheck || (process.stderr.isTTY && isUnicodeSupported());
 
   if (!isCapable) {
-    if (shouldUseTui(nxJson, nxArgs, true)) {
-      // The current environment is not capable of displaying the TUI, but the user has
-      // specified that they want to use it. This is likely a mistake, so we log a warning.
-      // NOTE: isCI, isWindows, and IS_WASM are not part of the capability check
-      // and as such would return false in the second check, and therefore not warn.
-      logger.warn(
-        'The current environment is not capable of displaying the TUI. Falling back to `dynamic-legacy` output style.'
-      );
-    }
     return false;
   }
 
