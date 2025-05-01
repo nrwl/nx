@@ -142,6 +142,7 @@
     "test-native": {},
     "format-native": {
       "command": "cargo fmt",
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}/src/native",
         "args": ["--all", "--check"]
