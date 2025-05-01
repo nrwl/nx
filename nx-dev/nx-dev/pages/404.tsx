@@ -18,6 +18,9 @@ export function FourOhFour(): JSX.Element {
     return urls[Math.floor(Math.random() * urls.length)];
   })();
   useEffect(() => {
+    if (window.location.pathname?.startsWith('/tutorials')) {
+      window.location.reload();
+    }
     const handleRouteChange = (url: URL) =>
       sendCustomEvent('custom_page_view', '404', url.toString());
     router.events.on('routeChangeStart', (url) => handleRouteChange(url));
