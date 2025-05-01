@@ -392,7 +392,7 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
-                  "name": "Terminal UI",
+                  "name": "Use the Terminal UI",
                   "id": "terminal-ui",
                   "tags": ["run-tasks", "terminal-ui"],
                   "file": "shared/recipes/running-tasks/terminal-ui"

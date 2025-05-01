@@ -56,7 +56,7 @@
       - [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
       - [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
       - [Define a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
-      - [Terminal UI](/recipes/running-tasks/terminal-ui)
+      - [Use the Terminal UI](/recipes/running-tasks/terminal-ui)
       - [Run Custom Commands](/recipes/running-tasks/run-commands-executor)
       - [Pass Args to Commands](/recipes/running-tasks/pass-args-to-commands)
       - [Run Tasks in Parallel](/recipes/running-tasks/run-tasks-in-parallel)

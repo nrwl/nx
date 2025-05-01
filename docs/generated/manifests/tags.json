@@ -104,7 +104,7 @@
       "description": "",
       "file": "shared/recipes/running-tasks/terminal-ui",
       "id": "terminal-ui",
-      "name": "Terminal UI",
+      "name": "Use the Terminal UI",
       "path": "/recipes/running-tasks/terminal-ui"
     },
     {
@@ -982,7 +982,7 @@
       "description": "",
       "file": "shared/recipes/running-tasks/terminal-ui",
       "id": "terminal-ui",
-      "name": "Terminal UI",
+      "name": "Use the Terminal UI",
       "path": "/recipes/running-tasks/terminal-ui"
     }
   ],

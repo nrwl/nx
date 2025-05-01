@@ -3,15 +3,17 @@ title: Terminal UI
 description: 'Learn how to leverage and configure the Nx Terminal UI when running tasks'
 ---
 
-# Nx Terminal UI
+# Use the Nx Terminal UI
+
+In version 21, Nx provides an interactive UI in the terminal to help you view the results of multiple tasks that are running in parallel.
 
 ![Terminal UI Example](/shared/recipes/running-tasks/tui-example.png)
 
-## Enabling/Disabling the Terminal UI
+## Enable/Disable the Terminal UI
 
 If your terminal and environment are supported then the Terminal UI will be enabled by default when you run any tasks with `nx run`/`nx run-many`/`nx affected` in Nx v21 and later. The Terminal UI will not be used in CI environments.
 
-If you want to manually disable the Terminal UI, you can set `NX_TUI=false` in your environment, or set the following in your `nx.json` configuration file.
+If you want to manually disable the Terminal UI, you can set `NX_TUI=false` in your environment variables, or set `tui.enabled` to `false` in your `nx.json` configuration file.
 
 ```json {% fileName="nx.json" %}
 {
@@ -21,17 +23,17 @@ If you want to manually disable the Terminal UI, you can set `NX_TUI=false` in y
 }
 ```
 
-## Configuring the Terminal UI
+## Configure the Terminal UI
 
-In addition to disabling the Terminal UI in `nx.json`, there are some additional configuration options that can be set.
+There are also some configuration options that control the way the terminal UI behaves.
 
 ### Auto-Exit
 
-By default, the Terminal UI will automatically exit after 3 seconds once all relevant tasks have finished running. You can adjust this behavior in the following ways:
+By default, the Terminal UI will automatically exit 3 seconds after all relevant tasks have finished running. You can adjust this behavior in the following ways:
 
-- Set `"tui.autoExitAfter"` to a number to change the number of seconds to wait before auto-exiting.
-- Set `"tui.autoExitAfter"` to `false` to disable auto-exiting and keep the Terminal UI open until you manually exit it with `<ctrl>+c`.
-- Set `"tui.autoExitAfter"` to `true` to exit automatically immediately after all tasks have finished running.
+- Set `"tui.autoExit"` to a number to change the number of seconds to wait before auto-exiting.
+- Set `"tui.autoExit"` to `false` to disable auto-exiting and keep the Terminal UI open until you manually exit it with `<ctrl>+c`.
+- Set `"tui.autoExit"` to `true` to exit automatically immediately after all tasks have finished running.
 
 ```json {% fileName="nx.json" %}
 {
@@ -40,3 +42,11 @@ By default, the Terminal UI will automatically exit after 3 seconds once all rel
   }
 }
 ```
+
+## Use the Terminal UI
+
+The terminal UI is entirely controlled through keyboard shortcuts. You can view a list of the available shortcuts by typing `?`:
+
+![Terminal UI Help](/shared/recipes/running-tasks/tui-help.png)
+
+You can use these commands to hide and show up to 2 tasks at a time, filter the listed tasks and interact with tasks that are prompting for user input.

@@ -1091,7 +1091,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Terminal UI",
+                "name": "Use the Terminal UI",
                 "path": "/recipes/running-tasks/terminal-ui",
                 "id": "terminal-ui",
                 "isExternal": false,
@@ -2193,7 +2193,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Terminal UI",
+            "name": "Use the Terminal UI",
             "path": "/recipes/running-tasks/terminal-ui",
             "id": "terminal-ui",
             "isExternal": false,
@@ -2308,7 +2308,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Terminal UI",
+        "name": "Use the Terminal UI",
         "path": "/recipes/running-tasks/terminal-ui",
         "id": "terminal-ui",
         "isExternal": false,
