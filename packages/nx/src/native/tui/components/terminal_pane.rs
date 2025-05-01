@@ -221,7 +221,7 @@ impl<'a> TerminalPane<'a> {
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::Stopped => Span::styled(
-                "  ⯀️  ",
+                "  ◼  ",
                 Style::default()
                     .fg(Color::DarkGray)
                     .add_modifier(Modifier::BOLD),

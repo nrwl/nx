@@ -772,12 +772,7 @@ impl TasksList {
     }
 
     /// Renders the main task table.
-    fn render_task_table(
-        &self,
-        f: &mut Frame<'_>,
-        table_area: Rect,
-        has_narrow_area_width: bool,
-    ) {
+    fn render_task_table(&self, f: &mut Frame<'_>, table_area: Rect, has_narrow_area_width: bool) {
         let visible_entries = self
             .selection_manager
             .lock()
@@ -1035,7 +1030,7 @@ impl TasksList {
                         TaskStatus::Stopped => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("⯀️", Style::default().fg(Color::DarkGray)),
+                            Span::styled("◼", Style::default().fg(Color::DarkGray)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::NotStarted => Cell::from(Line::from(vec![
@@ -1335,7 +1330,7 @@ impl TasksList {
                     [
                         Constraint::Length(15), // Width for pagination (with padding)
                         Constraint::Fill(1),    // Help text gets all remaining space
-                        Constraint::Length(1), // Minimal extra space
+                        Constraint::Length(1),  // Minimal extra space
                     ]
                 })
                 .split(pagination_area)

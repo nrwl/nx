@@ -143,15 +143,15 @@ impl App {
         let pinned_tasks = self.pinned_tasks.clone();
         for (idx, task) in pinned_tasks.iter().enumerate() {
             if idx < 2 {
-                if idx == 0 {
-                    self.selection_manager
-                        .lock()
-                        .unwrap()
-                        .select_task(task.clone());
-                    self.dispatch_action(Action::SortTasks);
+                self.selection_manager
+                    .lock()
+                    .unwrap()
+                    .select_task(task.clone());
+
+                if pinned_tasks.len() == 1 && idx == 0 {
                     self.display_and_focus_current_task_in_terminal_pane(true);
                 } else {
-                    self.pane_tasks[idx] = Some(task.clone());
+                    self.assign_current_task_to_pane(idx);
                 }
             }
         }
