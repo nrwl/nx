@@ -16,7 +16,7 @@ export const expressVersion = '^4.21.2';
 export const typesExpressVersion = '^4.17.21';
 export const browserSyncVersion = '^3.0.0';
 export const moduleFederationNodeVersion = '^2.6.26';
-export const moduleFederationEnhancedVersion = '^0.9.0';
+export const moduleFederationEnhancedVersion = '^0.13.0';
 
 export const angularEslintVersion = '^19.2.0';
 export const typescriptEslintVersion = '^7.16.0';
