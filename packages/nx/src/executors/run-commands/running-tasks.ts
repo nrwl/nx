@@ -359,13 +359,21 @@ class RunningNodeProcess implements RunningTask {
 
   kill(signal?: NodeJS.Signals | number): Promise<void> {
     return new Promise<void>((res, rej) => {
-      treeKill(this.childProcess.pid, signal, (err) => {
-        if (err) {
-          rej(err);
-        } else {
+      if (process.platform === 'win32' || process.platform === 'darwin') {
+        if (this.childProcess.kill(signal)) {
           res();
+        } else {
+          rej('Unable to kill process');
         }
-      });
+      } else {
+        treeKill(this.childProcess.pid, signal, (err) => {
+          if (err) {
+            rej(err);
+          } else {
+            res();
+          }
+        });
+      }
     });
   }
 
