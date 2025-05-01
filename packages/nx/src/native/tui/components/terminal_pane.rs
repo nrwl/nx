@@ -145,6 +145,7 @@ pub struct TerminalPaneState {
     pub scroll_offset: usize,
     pub scrollbar_state: ScrollbarState,
     pub has_pty: bool,
+    pub is_next_tab_target: bool,
 }
 
 impl TerminalPaneState {
@@ -154,6 +155,7 @@ impl TerminalPaneState {
         is_continuous: bool,
         is_focused: bool,
         has_pty: bool,
+        is_next_tab_target: bool,
     ) -> Self {
         Self {
             task_name,
@@ -163,6 +165,7 @@ impl TerminalPaneState {
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
             has_pty,
+            is_next_tab_target,
         }
     }
 }
@@ -192,20 +195,11 @@ impl<'a> TerminalPane<'a> {
 
     fn get_status_icon(&self, status: TaskStatus) -> Span {
         match status {
-            TaskStatus::Success => Span::styled(
+            TaskStatus::Success
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache => Span::styled(
                 "  ✔  ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::LocalCacheKeptExisting | TaskStatus::LocalCache => Span::styled(
-                "  ◼ ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::RemoteCache => Span::styled(
-                "  ▼  ",
                 Style::default()
                     .fg(Color::Green)
                     .add_modifier(Modifier::BOLD),
@@ -227,7 +221,7 @@ impl<'a> TerminalPane<'a> {
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::Stopped => Span::styled(
-                "  ⯀️  ",
+                "  ◼  ",
                 Style::default()
                     .fg(Color::DarkGray)
                     .add_modifier(Modifier::BOLD),
@@ -326,11 +320,24 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let status_icon = self.get_status_icon(state.task_status);
         let block = Block::default()
-            .title(Line::from(vec![
-                status_icon.clone(),
-                Span::raw(format!("{}  ", state.task_name))
-                    .style(Style::default().fg(Color::White)),
-            ]))
+            .title(Line::from(if state.is_focused {
+                vec![
+                    status_icon.clone(),
+                    Span::raw(format!("{}  ", state.task_name))
+                        .style(Style::default().fg(Color::White)),
+                ]
+            } else {
+                vec![
+                    status_icon.clone(),
+                    Span::raw(format!("{}  ", state.task_name))
+                        .style(Style::default().fg(Color::White)),
+                    if state.is_next_tab_target {
+                        Span::raw("Press <tab> to focus  ")
+                    } else {
+                        Span::raw("")
+                    },
+                ]
+            }))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
