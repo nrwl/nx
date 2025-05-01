@@ -203,6 +203,7 @@ export class ForkedProcessTaskRunner {
       execArgv: process.execArgv,
       jsEnv: env,
       quiet: !streamOutput,
+      commandLabel: `nx run ${task.id}`,
     });
 
     p.send({
