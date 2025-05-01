@@ -19,26 +19,11 @@ Make sure to install the `@nx/jest` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/jest` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/jest
 ```
 
 This will install the correct version of `@nx/jest`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/jest` package with your package manager.
-
-```shell
-npm add -D @nx/jest
-```
-
-{% /tab %}
-{% /tabs %}
 
 #### Configuring @nx/jest/plugin for both E2E and Unit Tests
 

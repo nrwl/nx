@@ -8,7 +8,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -18,7 +17,7 @@ describe('library', () => {
 
   let defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'vitest',

@@ -543,6 +543,11 @@
             "type": "object"
           }
         },
+        "continuous": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this target runs continuously until stopped"
+        },
         "parallelism": {
           "type": "boolean",
           "default": true,
@@ -849,7 +854,7 @@
           "oneOf": [
             {
               "type": "string",
-              "enum": ["github"]
+              "enum": ["github", "gitlab"]
             },
             {
               "type": "boolean",
@@ -895,7 +900,7 @@
       "properties": {
         "provider": {
           "type": "string",
-          "enum": ["github-enterprise-server"]
+          "enum": ["github-enterprise-server", "gitlab"]
         },
         "hostname": {
           "type": "string",
@@ -903,7 +908,7 @@
         },
         "apiBaseUrl": {
           "type": "string",
-          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3`"
+          "description": "The base URL for the relevant VCS provider API. If not set, this will default to `https://${hostname}/api/v3` (github) or `https://${hostname}/api/v4` (gitlab)."
         }
       },
       "required": ["provider", "hostname"]

@@ -167,5 +167,8 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.12.0"
   }
 }

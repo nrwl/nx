@@ -1,3 +1,4 @@
+use hashbrown::HashSet;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use napi::JsObject;
@@ -54,6 +55,12 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
 }
 
 #[napi]
+pub enum RunMode {
+    RunOne,
+    RunMany,
+}
+
+#[napi]
 #[derive(Clone)]
 pub struct AppLifeCycle {
     app: Arc<Mutex<App>>,
@@ -64,6 +71,8 @@ impl AppLifeCycle {
     #[napi(constructor)]
     pub fn new(
         tasks: Vec<Task>,
+        initiating_tasks: Vec<String>,
+        run_mode: RunMode,
         pinned_tasks: Vec<String>,
         tui_cli_args: TuiCliArgs,
         tui_config: TuiConfig,
@@ -75,10 +84,14 @@ impl AppLifeCycle {
         // Convert JSON TUI configuration to our Rust TuiConfig
         let rust_tui_config = RustTuiConfig::from((tui_config, &rust_tui_cli_args));
 
+        let initiating_tasks = initiating_tasks.into_iter().collect();
+
         Self {
             app: Arc::new(std::sync::Mutex::new(
                 App::new(
                     tasks.into_iter().map(|t| t.into()).collect(),
+                    initiating_tasks,
+                    run_mode,
                     pinned_tasks,
                     rust_tui_config,
                     title_text,
@@ -190,9 +203,14 @@ impl AppLifeCycle {
             // Store callback for cleanup
             app.set_done_callback(done_callback);
 
+            app.register_action_handler(action_tx.clone()).ok();
             for component in app.components.iter_mut() {
                 component.register_action_handler(action_tx.clone()).ok();
-                component.init().ok();
+            }
+
+            app.init(tui.size().unwrap()).ok();
+            for component in app.components.iter_mut() {
+                component.init(tui.size().unwrap()).ok();
             }
         }
         debug!("Initialized Components");
@@ -202,11 +220,7 @@ impl AppLifeCycle {
                 // Handle events using our Tui abstraction
                 if let Some(event) = tui.next().await {
                     if let Ok(mut app) = app_mutex.lock() {
-                        if let Ok(true) = app.handle_event(event, &action_tx) {
-                            tui.exit().ok();
-                            app.call_done_callback();
-                            break;
-                        }
+                        let _ = app.handle_event(event, &action_tx);
 
                         // Check if we should quit based on the timer
                         if let Some(quit_time) = app.quit_at {
@@ -256,7 +270,7 @@ impl AppLifeCycle {
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
         let mut app = self.app.lock().unwrap();
-        app.set_task_status(task_id, status)
+        app.update_task_status(task_id, status)
     }
 
     #[napi]
@@ -282,6 +296,12 @@ impl AppLifeCycle {
 
 #[napi]
 pub fn restore_terminal() -> Result<()> {
+    // Restore the terminal to a clean state
+    if let Ok(mut t) = Tui::new() {
+        if let Err(r) = t.exit() {
+            debug!("Unable to exit Terminal: {:?}", r);
+        }
+    }
     // TODO: Maybe need some additional cleanup here in addition to the tui cleanup performed at the end of the render loop?
     Ok(())
 }

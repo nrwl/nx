@@ -3,7 +3,7 @@ title: Monorepos - Why Speed Matters
 slug: 'monorepos-why-speed-matters'
 authors: ['Katerina Skroumpelou', 'Jeff Cross']
 tags: [nx, nxdevtools, speed, ci]
-cover_image: '/blog/images/2024-03-20/featured_img.png'
+cover_image: '/blog/images/2024-03-20/featured_img.avif'
 description: 'Discover how Nx enhances development speed through Rust integration, improved caching, Nx Agents, and test atomization features.'
 ---
 

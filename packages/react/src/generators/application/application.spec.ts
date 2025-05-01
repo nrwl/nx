@@ -13,7 +13,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
@@ -46,7 +45,7 @@ describe('app', () => {
     e2eTestRunner: 'cypress',
     skipFormat: true,
     directory: 'my-app',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     strict: true,
     addPlugin: true,
@@ -685,7 +684,7 @@ describe('app', () => {
   });
 
   it('should add .eslintrc.json and dependencies', async () => {
-    await applicationGenerator(appTree, { ...schema, linter: Linter.EsLint });
+    await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
 
     const packageJson = readJson(appTree, '/package.json');
 
@@ -1327,7 +1326,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       directory: 'myapp',
       addPlugin: false,
-      linter: Linter.None,
+      linter: 'none',
       style: 'none',
       e2eTestRunner: 'none',
     });
@@ -1368,7 +1367,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'vitest',
@@ -1537,7 +1536,7 @@ describe('app', () => {
         directory: 'myapp',
         name: 'myapp',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'vitest',
@@ -1563,7 +1562,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1573,7 +1572,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'libs/nested1',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1582,7 +1581,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'libs/nested2',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1610,7 +1609,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1620,7 +1619,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'apps/nested1',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1630,7 +1629,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'apps/nested2',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1640,7 +1639,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'packages/shared/util',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'none',
@@ -1662,7 +1661,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'apps/my-app',
         bundler: 'webpack',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
@@ -1715,7 +1714,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'apps/my-app',
         bundler: 'webpack',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: false,
@@ -1733,7 +1732,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'apps/my-app',
         bundler: 'rspack',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         e2eTestRunner: 'none',
         addPlugin: false,
@@ -1751,7 +1750,7 @@ describe('app', () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
         addPlugin: true,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         style: 'none',
         bundler: 'vite',
         unitTestRunner: 'vitest',

@@ -3,7 +3,6 @@ import { componentGenerator } from './component';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree } from '@nx/devkit';
 import { libraryGenerator } from '@nx/react';
-import { Linter } from '@nx/eslint';
 
 describe('component', () => {
   let tree: Tree;
@@ -18,7 +17,7 @@ describe('component', () => {
     });
     await libraryGenerator(tree, {
       directory: libName,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       skipFormat: true,
       skipTsConfig: false,

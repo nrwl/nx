@@ -2,7 +2,7 @@
 title: 'Helping the Environment by Saving Two Centuries of Compute time'
 slug: 'helping-the-environment-by-saving-two-centuries-of-compute-time'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-08-18/FBQVoC9YXF7wlq3dhxfQMQ.png'
+cover_image: '/blog/images/2022-08-18/FBQVoC9YXF7wlq3dhxfQMQ.avif'
 tags: [nx]
 description: "Discover how Nx's caching and computation-saving features have saved over 200 years of compute time, reducing CO2 emissions through efficient task execution."
 ---

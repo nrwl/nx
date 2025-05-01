@@ -21,7 +21,7 @@ function getSwcCmd(
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
   let inputDir: string;
-  // TODO(v21): remove inline feature
+  // TODO(v22): remove inline feature
   if (inline) {
     inputDir = originalProjectRoot.split('/')[0];
   } else {

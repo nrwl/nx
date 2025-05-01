@@ -3,7 +3,7 @@ title: Next-Gen Module Federation Deployments with Nx and Zephyr Cloud
 slug: next-gen-module-federation-deployment
 authors: ['Colum Ferry']
 tags: [nx, module federation, rspack, zephyr cloud]
-cover_image: /blog/images/2024-09-12/next-gen-module-federation-deployments.png
+cover_image: /blog/images/2024-09-12/next-gen-module-federation-deployments.avif
 published: true
 description: Learn how Nx and Zephyr Cloud simplify deploying Micro Frontends with Module Federation, making it easier to manage multiple build artifacts.
 ---

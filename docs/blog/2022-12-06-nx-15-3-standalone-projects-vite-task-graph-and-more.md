@@ -2,7 +2,7 @@
 title: 'Nx 15.3 — Standalone Projects, Vite, Task Graph and more!'
 slug: 'nx-15-3-standalone-projects-vite-task-graph-and-more'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.png'
+cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.avif'
 tags: [nx, release]
 description: Nx 15.3 introduces standalone projects, Vite and Vitest tooling, enhanced task graph visualization, and simplified project adoption, now reaching 3M weekly downloads.
 ---

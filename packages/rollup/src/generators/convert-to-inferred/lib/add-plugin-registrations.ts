@@ -5,7 +5,7 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { minimatch } from 'minimatch';
+import picomatch = require('picomatch');
 
 export async function addPluginRegistrations<T>(
   tree: Tree,
@@ -38,7 +38,7 @@ export async function addPluginRegistrations<T>(
     } else if (existingPlugin.include) {
       if (
         !existingPlugin.include.some((include) =>
-          minimatch(projectIncludeGlob, include, { dot: true })
+          picomatch(include)(projectIncludeGlob)
         )
       ) {
         existingPlugin.include.push(projectIncludeGlob);

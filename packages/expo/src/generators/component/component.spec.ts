@@ -2,7 +2,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import expoApplicationGenerator from '../application/application';
 import expoLibraryGenerator from '../library/library';
 import { expoComponentGenerator } from './component';
@@ -29,7 +28,7 @@ describe('component', () => {
 
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -37,7 +36,7 @@ describe('component', () => {
     });
     await expoLibraryGenerator(appTree, {
       directory: projectName,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: false,
       skipTsConfig: false,
       unitTestRunner: 'jest',

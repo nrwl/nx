@@ -12,11 +12,9 @@ const { withLess } = require('@nx/next/plugins/with-less');
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  nx: {
-    // Set this to true if you would like to to use SVGR
-    // See: https://github.com/gregberge/svgr
-    svgr: false,
-  },
+  // Use this to set Nx-specific options
+  // See: https://nx.dev/recipes/next/next-config-setup
+  nx: {},
 };
 
 const plugins = [
@@ -36,11 +34,9 @@ module.exports = composePlugins(...plugins)(nextConfig);
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  nx: {
-    // Set this to true if you would like to to use SVGR
-    // See: https://github.com/gregberge/svgr
-    svgr: false,
-  },
+  // Use this to set Nx-specific options
+  // See: https://nx.dev/recipes/next/next-config-setup
+  nx: {},
   <% if (style === 'styled-components') { %>
   compiler: {
     // For other options, see https://styled-components.com/docs/tooling#babel-plugin
@@ -66,11 +62,9 @@ module.exports = composePlugins(...plugins)(nextConfig);
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  nx: {
-    // Set this to true if you would like to use SVGR
-    // See: https://github.com/gregberge/svgr
-    svgr: false,
-  },
+  // Use this to set Nx-specific options
+  // See: https://nx.dev/recipes/next/next-config-setup
+  nx: {},
 };
 
 const plugins = [

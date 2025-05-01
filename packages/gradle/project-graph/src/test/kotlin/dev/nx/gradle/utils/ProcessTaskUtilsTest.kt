@@ -83,13 +83,12 @@ class ProcessTaskUtilsTest {
             projectBuildPath = ":project",
             projectRoot = project.projectDir.path,
             workspaceRoot = project.rootDir.path,
-            cwd = ".",
             externalNodes = mutableMapOf(),
             dependencies = mutableSetOf(),
             targetNameOverrides = emptyMap())
 
     assertEquals(true, result["cache"])
-    assertTrue((result["command"] as String).contains("gradlew"))
+    assertEquals(result["executor"], "@nx/gradle:gradle")
     assertNotNull(result["metadata"])
     assertNotNull(result["options"])
   }

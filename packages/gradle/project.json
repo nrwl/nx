@@ -12,6 +12,11 @@
       }
     },
     "build-base": {
+      "dependsOn": [
+        "^build-base",
+        "build-native",
+        "gradle-batch-runner:assemble"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "assets": [
@@ -41,6 +46,11 @@
             "input": "packages/gradle",
             "glob": "**/*.d.ts",
             "output": "/"
+          },
+          {
+            "input": "packages/gradle/batch-runner",
+            "glob": "**/*.jar",
+            "output": "/batch-runner"
           },
           {
             "input": "",

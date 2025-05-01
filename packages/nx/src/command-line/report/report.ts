@@ -303,7 +303,7 @@ export async function getReportData(): Promise<ReportData> {
     }
   }
 
-  let cache = dbCacheEnabled(nxJson)
+  let cache = dbCacheEnabled()
     ? {
         max:
           nxJson.maxCacheSize !== undefined

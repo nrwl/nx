@@ -3,7 +3,7 @@ title: '"The Pit of Success" w/ Ruben Casas of Postman | Nx Enterprise Podcast E
 slug: 'pit-of-success-podcast-5'
 authors: ['Zack DeRose']
 tags: [podcast]
-cover_image: /blog/images/2024-09-18/podcast-5-thumbnail.png
+cover_image: /blog/images/2024-09-18/podcast-5-thumbnail.avif
 podcastYoutubeId: oTZLTNtndxc
 podcastSpotifyId: 7LJlqLGR708OccUwyzz9wT
 podcastAmazonUrl: https://music.amazon.com/podcasts/a221fdad-36fd-4695-a5b4-038d7b99d284/episodes/352e8cef-b8df-4e81-be38-96a0cf62e0f5/the-enterprise-software-podcast-by-nx-the-enterprise-software-podcast-by-nx-5-ruben-casas-postman

@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  IS_WASM,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
@@ -49,13 +50,15 @@ import { SharedRunningTask } from './running-tasks/shared-running-task';
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
-  private readonly tuiEnabled = isTuiEnabled(this.nxJson);
+  private readonly tuiEnabled = isTuiEnabled();
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(
     this.options,
     this.tuiEnabled
   );
 
-  private runningTasksService = new RunningTasksService(getDbConnection());
+  private runningTasksService = !IS_WASM
+    ? new RunningTasksService(getDbConnection())
+    : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
@@ -290,7 +293,7 @@ export class TaskOrchestrator {
       // No output files to restore
       !!outputs.length &&
       // Remote caches are restored to output dirs when applied and using db cache
-      (!cachedResult.remote || !dbCacheEnabled(this.nxJson)) &&
+      (!cachedResult.remote || !dbCacheEnabled()) &&
       // Output files have not been touched since last run
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
     if (shouldCopyOutputsFromCache) {
@@ -321,6 +324,9 @@ export class TaskOrchestrator {
     batch: Batch,
     groupId: number
   ) {
+    const applyFromCacheOrRunBatchStart = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:start'
+    );
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
@@ -374,9 +380,19 @@ export class TaskOrchestrator {
         groupId
       );
     }
+    // Batch is done, mark it as completed
+    const applyFromCacheOrRunBatchEnd = performance.mark(
+      'TaskOrchestrator-apply-from-cache-or-run-batch:end'
+    );
+    performance.measure(
+      'TaskOrchestrator-apply-from-cache-or-run-batch',
+      applyFromCacheOrRunBatchStart.name,
+      applyFromCacheOrRunBatchEnd.name
+    );
   }
 
   private async runBatch(batch: Batch, env: NodeJS.ProcessEnv) {
+    const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
       const batchProcess =
         await this.forkedProcessTaskRunner.forkProcessForBatch(
@@ -402,6 +418,13 @@ export class TaskOrchestrator {
         task: this.taskGraph.tasks[rootTaskId],
         status: 'failure' as TaskStatus,
       }));
+    } finally {
+      const runBatchEnd = performance.mark('TaskOrchestrator-run-batch:end');
+      performance.measure(
+        'TaskOrchestrator-run-batch',
+        runBatchStart.name,
+        runBatchEnd.name
+      );
     }
   }
 
@@ -666,7 +689,10 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
-    if (this.runningTasksService.getRunningTasks([task.id]).length) {
+    if (
+      this.runningTasksService &&
+      this.runningTasksService.getRunningTasks([task.id]).length
+    ) {
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {
@@ -680,6 +706,12 @@ export class TaskOrchestrator {
 
       this.runningContinuousTasks.set(task.id, runningTask);
       runningTask.onExit(() => {
+        if (this.tuiEnabled) {
+          this.options.lifeCycle.setTaskStatus(
+            task.id,
+            NativeTaskStatus.Stopped
+          );
+        }
         this.runningContinuousTasks.delete(task.id);
       });
 
@@ -744,6 +776,9 @@ export class TaskOrchestrator {
     this.runningContinuousTasks.set(task.id, childProcess);
 
     childProcess.onExit(() => {
+      if (this.tuiEnabled) {
+        this.options.lifeCycle.setTaskStatus(task.id, NativeTaskStatus.Stopped);
+      }
       this.runningTasksService.removeRunningTask(task.id);
       this.runningContinuousTasks.delete(task.id);
     });

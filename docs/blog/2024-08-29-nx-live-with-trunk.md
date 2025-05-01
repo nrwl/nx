@@ -3,7 +3,7 @@ title: How to Fast-Track Your PRs with Trunk.io | Nx Live
 slug: nx-live-trunk-io
 authors: ['Zack DeRose']
 tags: [livestream]
-cover_image: /blog/images/2024-08-29/nx-live-trunk.png
+cover_image: /blog/images/2024-08-29/nx-live-trunk.avif
 youtubeUrl: https://youtube.com/live/E8Gh-Vkxok0
 description: Live demo with Trunk.io's David on optimizing PR workflows using Nx and Trunk Merge Queues, featuring first-class Nx support for improved dev efficiency.
 ---

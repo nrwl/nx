@@ -1,7 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
 import {
-  getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
@@ -9,7 +8,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
@@ -19,7 +17,7 @@ describe('lib', () => {
 
   const defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',

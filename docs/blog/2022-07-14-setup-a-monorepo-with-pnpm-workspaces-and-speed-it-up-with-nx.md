@@ -2,7 +2,7 @@
 title: 'Setup a Monorepo with PNPM workspaces and speed it up with Nx!'
 slug: 'setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-07-14/ABrBjQPg4SrYzFQQXFxY-Q.png'
+cover_image: '/blog/images/2022-07-14/ABrBjQPg4SrYzFQQXFxY-Q.avif'
 tags: [nx, tutorial]
 description: Learn to set up a monorepo with PNPM workspaces for Remix and React projects, then enhance it with Nx's task scheduling and caching features.
 ---

@@ -2,7 +2,7 @@
 title: "The React CLI you always wanted but didn't know about"
 slug: 'the-react-cli-you-always-wanted-but-didnt-know-about'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-03-29/YR6QUEZel3nlNcTo6Pdlwg.png'
+cover_image: '/blog/images/2022-03-29/YR6QUEZel3nlNcTo6Pdlwg.avif'
 tags: [nx]
 description: Discover Nx as a powerful CLI for React development with built-in project generation, build tools, and pre-configured integrations for modern tooling.
 ---

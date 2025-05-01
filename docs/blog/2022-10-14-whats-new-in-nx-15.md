@@ -2,7 +2,7 @@
 title: What's new in Nx 15?
 slug: 'whats-new-in-nx-15'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.png'
+cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.avif'
 tags: [nx, release]
 description: 'Explore the major features and improvements introduced in Nx version 15, including enhanced performance and developer experience.'
 ---

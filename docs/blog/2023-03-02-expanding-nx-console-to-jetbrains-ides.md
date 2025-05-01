@@ -2,7 +2,7 @@
 title: 'Expanding Nx Console to JetBrains IDEs'
 slug: 'expanding-nx-console-to-jetbrains-ides'
 authors: ['Max Kless']
-cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.png'
+cover_image: '/blog/images/2023-03-02/lEAhfd3d17hGichyT-oGbw.avif'
 tags: [nx]
 description: Explore the technical journey of bringing Nx Console to JetBrains IDEs, featuring Language Server integration and Generate UI implementation for IntelliJ.
 ---

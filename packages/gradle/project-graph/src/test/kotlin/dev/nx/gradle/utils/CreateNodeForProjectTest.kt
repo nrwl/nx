@@ -45,7 +45,6 @@ class CreateNodeForProjectTest {
     assertEquals(project.name, projectNode.name)
     assertNotNull(projectNode.targets["compileJava"], "Expected compileJava target")
     assertNotNull(projectNode.targets["test"], "Expected test target")
-    assertEquals("build", projectNode.metadata.targetGroups.keys.firstOrNull())
 
     // Dependencies and external nodes should default to empty
     assertTrue(result.dependencies.isEmpty(), "Expected no dependencies")

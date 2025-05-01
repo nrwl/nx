@@ -29,10 +29,25 @@
       "implementation": "./src/migrations/update-20-0-1/use-legacy-cache",
       "x-repair-skip": true
     },
+    "remove-legacy-cache": {
+      "version": "21.0.0-beta.8",
+      "description": "Removes the legacy cache configuration from nx.json",
+      "implementation": "./src/migrations/update-21-0-0/remove-legacy-cache"
+    },
+    "remove-custom-tasks-runner": {
+      "version": "21.0.0-beta.8",
+      "description": "Removes the legacy cache configuration from nx.json",
+      "implementation": "./src/migrations/update-21-0-0/remove-custom-tasks-runner"
+    },
     "release-version-config-changes": {
-      "version": "21.0.0-beta.1",
+      "version": "21.0.0-beta.11",
       "description": "Updates release version config based on the breaking changes in Nx v21",
       "implementation": "./src/migrations/update-21-0-0/release-version-config-changes"
+    },
+    "release-changelog-config-changes": {
+      "version": "21.0.0-beta.11",
+      "description": "Updates release changelog config based on the breaking changes in Nx v21",
+      "implementation": "./src/migrations/update-21-0-0/release-changelog-config-changes"
     }
   }
 }

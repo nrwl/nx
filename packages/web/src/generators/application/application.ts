@@ -28,7 +28,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/eslint';
 import { join } from 'path';
 import {
   nxVersion,
@@ -673,7 +672,7 @@ async function normalizeOptions(
     : [];
 
   options.style = options.style || 'css';
-  options.linter = options.linter || ('eslint' as Linter.EsLint);
+  options.linter = options.linter || 'eslint';
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'playwright';
 

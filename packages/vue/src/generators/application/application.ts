@@ -9,7 +9,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -123,7 +122,7 @@ export async function applicationGeneratorInternal(
       {
         name: options.projectName,
         projectRoot: options.appProjectRoot,
-        linter: options.linter ?? Linter.EsLint,
+        linter: options.linter ?? 'eslint',
         unitTestRunner: options.unitTestRunner,
         skipPackageJson: options.skipPackageJson,
         setParserOptionsProject: options.setParserOptionsProject,

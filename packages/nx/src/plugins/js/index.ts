@@ -8,6 +8,8 @@ import {
   CreateDependencies,
   CreateDependenciesContext,
   CreateNodes,
+  createNodesFromFiles,
+  CreateNodesV2,
 } from '../../project-graph/plugins';
 import {
   getLockFileDependencies,
@@ -33,6 +35,13 @@ interface ParsedLockFile {
 }
 
 let parsedLockFile: ParsedLockFile = {};
+
+export const createNodesV2: CreateNodesV2 = [
+  combineGlobPatterns(LOCKFILES),
+  (files, _, context) => {
+    return createNodesFromFiles(createNodes[1], files, _, context);
+  },
+];
 
 export const createNodes: CreateNodes = [
   // Look for all lockfiles

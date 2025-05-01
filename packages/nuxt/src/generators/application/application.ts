@@ -20,7 +20,6 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
-import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
@@ -167,7 +166,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     await addLinting(tree, {
       projectName: options.projectName,
       projectRoot: options.appProjectRoot,
-      linter: options.linter ?? Linter.EsLint,
+      linter: options.linter ?? 'eslint',
       unitTestRunner: options.unitTestRunner,
       rootProject: options.rootProject,
     })

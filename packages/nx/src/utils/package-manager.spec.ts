@@ -15,6 +15,7 @@ import {
   isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  parseVersionFromPackageManagerField,
   PackageManager,
 } from './package-manager';
 
@@ -519,6 +520,31 @@ describe('package-manager', () => {
           "
         `);
       });
+    });
+  });
+
+  describe('parseVersionFromPackageManagerField', () => {
+    it('should return null for invalid semver', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'bad')).toEqual(null);
+      expect(parseVersionFromPackageManagerField('yarn', '2.1')).toEqual(null);
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b'
+        )
+      ).toEqual(null);
+    });
+
+    it('should <major>.<minor>.<patch> version', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'yarn@3.2.3')).toEqual(
+        '3.2.3'
+      );
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa'
+        )
+      ).toEqual('3.2.3');
     });
   });
 });

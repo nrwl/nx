@@ -2,7 +2,7 @@
 title: 'Bundling a Node API with Fastify, esbuild, and Nx'
 slug: 'bundling-a-node-api-with-fastify-esbuild-and-nx'
 authors: ['Jack Hsu']
-cover_image: '/blog/images/2023-02-28/PADY_RKrkXj39p4nj79ESw.png'
+cover_image: '/blog/images/2023-02-28/PADY_RKrkXj39p4nj79ESw.avif'
 tags: [nx, tutorial]
 description: Build and deploy a Node.js API with Fastify, Nx, esbuild, Docker, and Fly.io.
 ---

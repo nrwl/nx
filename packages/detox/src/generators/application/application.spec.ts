@@ -9,7 +9,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint/src/generators/utils/linter';
 
 import detoxApplicationGenerator from './application';
 
@@ -30,7 +29,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
       });
@@ -101,7 +100,7 @@ describe('detox application generator', () => {
         e2eName: 'my-app-e2e',
         e2eDirectory: 'my-dir',
         appProject: 'my-dir-my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
       });
@@ -172,7 +171,7 @@ describe('detox application generator', () => {
         e2eName: 'my-app-e2e',
         e2eDirectory: 'e2e-dir',
         appProject: 'my-dir-my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
       });
@@ -242,7 +241,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
       });
@@ -334,7 +333,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'expo',
         addPlugin: true,
       });
@@ -416,7 +415,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
       });
@@ -461,7 +460,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'my-app-e2e',
         appProject: 'my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
       });
@@ -528,7 +527,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'apps/my-app-e2e',
         appProject: 'my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
         useProjectJson: false,
@@ -589,7 +588,7 @@ describe('detox application generator', () => {
       await detoxApplicationGenerator(tree, {
         e2eDirectory: 'apps/my-app-e2e',
         appProject: 'my-app',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
         skipFormat: true,
@@ -670,7 +669,7 @@ describe('detox application generator', () => {
         e2eDirectory: 'apps/my-app-e2e',
         appProject: 'my-app',
         e2eName: 'my-app-e2e',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
         skipFormat: true,
@@ -698,7 +697,7 @@ describe('detox application generator', () => {
         e2eDirectory: 'apps/my-app-e2e',
         appProject: 'my-app',
         e2eName: 'my-app-e2e',
-        linter: Linter.None,
+        linter: 'none',
         framework: 'react-native',
         addPlugin: true,
         skipFormat: true,

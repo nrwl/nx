@@ -2,7 +2,7 @@
 title: 'From Bootstrapped to Venture-Backed: Nx Raises $8.6M'
 slug: 'from-bootstrapped-to-venture-backed'
 authors: ['Jeff Cross']
-cover_image: '/blog/images/2022-11-17/a3eT-mjLsXTiHU5m.png'
+cover_image: '/blog/images/2022-11-17/a3eT-mjLsXTiHU5m.avif'
 tags: [nx]
 description: Nx raises $8.6M seed round led by Nexus Venture Partners and A16z to scale open source Nx, Nx Cloud, and Nx Enterprise, powering 75% of JavaScript monorepo tooling.
 ---

@@ -45,7 +45,6 @@ Nx.json configuration
 - [tui](../../devkit/documents/NxJsonConfiguration#tui): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
-- [useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
@@ -318,14 +317,6 @@ Set this to false to disable the daemon.
 • `Optional` **useInferencePlugins**: `boolean`
 
 Set this to false to disable adding inference plugins when generating new projects
-
----
-
-### useLegacyCache
-
-• `Optional` **useLegacyCache**: `boolean`
-
-Use the legacy file system cache instead of the db cache
 
 ---
 

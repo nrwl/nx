@@ -27,6 +27,7 @@ export type SuccessfulMigration = {
   name: string;
   changedFiles: Omit<FileChange, 'content'>[];
   ref: string;
+  nextSteps?: string[];
 };
 
 export type FailedMigration = {
@@ -135,15 +136,16 @@ export async function runSingleMigration(
     // 2. Bundled into Console, so the version is fixed to what we build Console with.
     const updatedMigrateModule = await import('./migrate.js');
 
-    const fileChanges = await updatedMigrateModule.runNxOrAngularMigration(
-      workspacePath,
-      migration,
-      false,
-      configuration.createCommits,
-      configuration.commitPrefix || 'chore: [nx migration] ',
-      undefined,
-      true
-    );
+    const { changes: fileChanges, nextSteps } =
+      await updatedMigrateModule.runNxOrAngularMigration(
+        workspacePath,
+        migration,
+        false,
+        configuration.createCommits,
+        configuration.commitPrefix || 'chore: [nx migration] ',
+        undefined,
+        true
+      );
 
     const gitRefAfter = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
@@ -158,7 +160,8 @@ export async function runSingleMigration(
           path: change.path,
           type: change.type,
         })),
-        gitRefAfter
+        gitRefAfter,
+        nextSteps
       )
     );
 
@@ -233,7 +236,8 @@ export function modifyMigrationsJsonMetadata(
 export function addSuccessfulMigration(
   id: string,
   fileChanges: Omit<FileChange, 'content'>[],
-  ref: string
+  ref: string,
+  nextSteps: string[]
 ) {
   return (
     migrationsJsonMetadata: MigrationsJsonMetadata
@@ -249,6 +253,7 @@ export function addSuccessfulMigration(
         name: id,
         changedFiles: fileChanges,
         ref,
+        nextSteps,
       },
     };
     return copied;

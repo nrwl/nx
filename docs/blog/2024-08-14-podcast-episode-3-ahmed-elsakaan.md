@@ -3,7 +3,7 @@ title: 'Nx Enterprise Podcast Episode 3: Ahmed Elsakaan'
 slug: 'ahmed-elsakaan-podcast-3'
 authors: ['Zack DeRose']
 tags: [podcast]
-cover_image: /blog/images/2024-08-14/ep-3-ahmed.png
+cover_image: /blog/images/2024-08-14/ep-3-ahmed.avif
 podcastYoutubeId: l_b6EOXqYRg
 podcastSpotifyId: 4d4oE8B3y9BmECZ3P4uvDP
 podcastAmazonUrl: https://music.amazon.com/podcasts/a221fdad-36fd-4695-a5b4-038d7b99d284/episodes/28209cf9-1b88-48b5-a798-7b24c843e9b1/the-enterprise-software-podcast-by-nx-the-enterprise-software-podcast-by-nx-3-ahmed-elsakaan

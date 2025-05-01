@@ -17,9 +17,6 @@
   "files": [
     "nx.linux-x64-gnu.node"
   ],
-  "engines": {
-    "node": ">= 10"
-  },
   "libc": [
     "glibc"
   ],

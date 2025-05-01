@@ -37,32 +37,7 @@ export type CachedResult = {
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
 // This function is called once during tasks runner initialization. It checks if the db cache is enabled and logs a warning if it is not.
-export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
-  // If the user has explicitly disabled the db cache, we can warn...
-  if (
-    nxJson.useLegacyCache ||
-    process.env.NX_DISABLE_DB === 'true' ||
-    process.env.NX_DB_CACHE === 'false'
-  ) {
-    let readMoreLink = 'https://nx.dev/deprecated/legacy-cache';
-    if (
-      nxJson.tasksRunnerOptions?.default?.runner &&
-      !['nx-cloud', 'nx/tasks-runners/default', '@nrwl/nx-cloud'].includes(
-        nxJson.tasksRunnerOptions.default.runner
-      )
-    ) {
-      readMoreLink += '#tasksrunneroptions';
-    } else if (
-      process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === '0' ||
-      process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE === 'false'
-    ) {
-      readMoreLink += '#nxrejectunknownlocalcache';
-    }
-    logger.warn(
-      `Nx is configured to use the legacy cache. This cache will be removed in Nx 21. Read more at ${readMoreLink}.`
-    );
-    return false;
-  }
+export function dbCacheEnabled() {
   // ...but if on wasm and the the db cache isnt supported we shouldn't warn
   if (IS_WASM) {
     return false;
@@ -85,7 +60,7 @@ export function dbCacheEnabled(nxJson: NxJsonConfiguration = readNxJson()) {
 // Do not change the order of these arguments as this function is used by nx cloud
 export function getCache(options: DefaultTasksRunnerOptions): DbCache | Cache {
   const nxJson = readNxJson();
-  return dbCacheEnabled(nxJson)
+  return dbCacheEnabled()
     ? new DbCache({
         // Remove this in Nx 21
         nxCloudRemoteCache: isNxCloudUsed(nxJson) ? options.remoteCache : null,

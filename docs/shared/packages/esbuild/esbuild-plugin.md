@@ -22,26 +22,11 @@ Make sure to install the `@nx/esbuild` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/esbuild` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/esbuild
 ```
 
 This will install the correct version of `@nx/esbuild`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/esbuild` package with your package manager.
-
-```shell
-npm add -D @nx/esbuild
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/esbuild Plugin
 

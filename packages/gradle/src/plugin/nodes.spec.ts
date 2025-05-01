@@ -82,12 +82,12 @@ describe('@nx/gradle/plugin/nodes', () => {
     expect(results).toMatchSnapshot();
   });
 
-  it('should create nodes with atomized tests targets based on gradle if ciTargetName is specified', async () => {
+  it('should create nodes with atomized tests targets based on gradle if ciTestTargetName is specified', async () => {
     const results = await createNodesFunction(
       ['proj/application/build.gradle'],
       {
         buildTargetName: 'build',
-        ciTargetName: 'test-ci',
+        ciTestTargetName: 'test-ci',
       },
       context
     );
@@ -95,7 +95,7 @@ describe('@nx/gradle/plugin/nodes', () => {
     expect(results).toMatchSnapshot();
   });
 
-  it('should not create nodes with atomized tests targets based on gradle if ciTargetName is not specified', async () => {
+  it('should not create nodes with atomized tests targets based on gradle if ciTestTargetName is not specified', async () => {
     const results = await createNodesFunction(
       ['proj/application/build.gradle'],
       {

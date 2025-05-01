@@ -87,7 +87,23 @@ Or they can be [defined per-project](/reference/project-configuration#dependson)
 {% /tab %}
 {% /tabs %}
 
-## Visualize task dependencies
+## Continuous Task Dependencies
+
+If a task has a dependency that never exits, then the task will never start. To support this scenario, you can mark the dependency as a [continuous task](/reference/project-configuration#continuous). Labeling a task as continuous tells Nx to not wait for the process to exit, and it will be run alongside its dependents.
+
+```json {% fileName="apps/myapp/project.json" %}
+{
+  "targets": {
+    "serve": {
+      "continuous": true
+    }
+  }
+}
+```
+
+The `continuous` option is most useful for running development servers. For example, the `e2e` task depends on a continuous `serve` task that starts the server to be tested againts.
+
+## Visualize Task Dependencies
 
 You can also visualize the actual task graph (alongside the projects) using [Nx graph](/features/explore-graph). This can be useful for debugging purposes.
 

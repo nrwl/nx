@@ -8,4 +8,3 @@ use crate::native::project_graph::types::ProjectGraph;
 pub fn transfer_project_graph(project_graph: ProjectGraph) -> External<ProjectGraph> {
     External::new(project_graph)
 }
-

@@ -6,10 +6,6 @@ export interface JestExecutorOptions {
   detectLeaks?: boolean;
   jestConfig: string;
   testFile?: string;
-  /**
-   * @deprecated set in the jest config file instead
-   **/
-  setupFile?: string;
   bail?: boolean | number;
   ci?: boolean;
   color?: boolean;
@@ -41,4 +37,11 @@ export interface JestExecutorOptions {
   watchAll?: boolean;
   testLocationInResults?: boolean;
   testTimeout?: number;
+
+  /**
+   * @deprecated Use the `setupFilesAfterEnv` option in the Jest configuration
+   * file instead. See https://jestjs.io/docs/configuration#setupfilesafterenv-array.
+   * It will be removed in Nx v22.
+   */
+  setupFile?: string;
 }

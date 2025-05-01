@@ -40,6 +40,8 @@ export class PseudoTerminal {
 
   private initialized: boolean = false;
 
+  private childProcesses = new Set<PseudoTtyProcess>();
+
   static isSupported() {
     return process.stdout.isTTY && supportedPtyPlatform();
   }
@@ -55,6 +57,11 @@ export class PseudoTerminal {
   }
 
   shutdown() {
+    for (const cp of this.childProcesses) {
+      try {
+        cp.kill();
+      } catch {}
+    }
     if (this.initialized) {
       this.pseudoIPC.close();
     }
@@ -76,7 +83,7 @@ export class PseudoTerminal {
       tty?: boolean;
     } = {}
   ) {
-    return new PseudoTtyProcess(
+    const cp = new PseudoTtyProcess(
       this.rustPseudoTerminal,
       this.rustPseudoTerminal.runCommand(
         command,
@@ -87,6 +94,8 @@ export class PseudoTerminal {
         tty
       )
     );
+    this.childProcesses.add(cp);
+    return cp;
   }
 
   async fork(
@@ -121,6 +130,7 @@ export class PseudoTerminal {
       id,
       this.pseudoIPC
     );
+    this.childProcesses.add(cp);
 
     await this.pseudoIPC.waitForChildReady(id);
 

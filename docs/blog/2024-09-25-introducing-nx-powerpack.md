@@ -3,7 +3,7 @@ title: Introducing Nx Powerpack
 slug: introducing-nx-powerpack
 authors: [Juri Strumpflohner]
 tags: [nx, release]
-cover_image: /blog/images/introducing-powerpack/thumbnail.png
+cover_image: /blog/images/introducing-powerpack/thumbnail.avif
 description: Introducing Nx Powerpack, a paid extension suite for enterprise use cases, ensuring Nx remains open source and existing features are free.
 ---
 

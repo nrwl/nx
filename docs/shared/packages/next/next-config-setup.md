@@ -16,7 +16,7 @@ understand workspace libraries, and other Nx-specific features. See below for an
 module.exports = withNx({
   // Nx configuration goes here
   nx: {
-    svgr: false,
+    babelUpwardRootMode: true,
   },
   // Add Next.js configuration goes here
 });
@@ -38,7 +38,9 @@ The `withNx` Next.js plugin provides integration with Nx, including support for 
 
 Type: `boolean`
 
-Set this to true if you would like to to use SVGR. See: https://react-svgr.com/
+Set this to true if you would like to use SVGR. See: https://react-svgr.com/
+
+**Deprecated:** Configure SVGR support in your `next.config.js` file without Nx. This option will be removed in Nx 22. See: https://react-svgr.com/docs/next/
 
 #### babelUpwardRootMode
 
@@ -60,9 +62,8 @@ const { composePlugins, withNx } = require('@nx/next');
  **/
 const nextConfig = {
   nx: {
-    // Set this to true if you would like to to use SVGR
-    // See: https://github.com/gregberge/svgr
-    svgr: false,
+    svgr: true,
+    babelUpwardRootMode: true,
   },
   // Add Next.js configuration here
 };

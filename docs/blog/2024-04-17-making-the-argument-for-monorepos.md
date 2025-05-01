@@ -5,7 +5,7 @@ date: 2024-04-17
 slug: 'making-the-argument-for-monorepos'
 authors: ['Miroslav Jonaš']
 tags: [webinar]
-cover_image: /blog/images/2024-04-17/april-webinar.png
+cover_image: /blog/images/2024-04-17/april-webinar.avif
 status: Past - Gated
 registrationUrl: https://go.nx.dev/april-webinar
 ---

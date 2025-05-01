@@ -1,6 +1,5 @@
 import { addProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
@@ -21,7 +20,7 @@ describe('Normalize Options', () => {
       framework: 'react-native',
       e2eDirectory: 'apps/my-app-e2e',
       appProject: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
@@ -38,7 +37,7 @@ describe('Normalize Options', () => {
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
       isUsingTsSolutionConfig: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       js: false,
       useProjectJson: true,
     });

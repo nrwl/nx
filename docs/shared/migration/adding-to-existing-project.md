@@ -169,7 +169,8 @@ nx show project my-workspace --web
         "dev": {
           "options": {
             "cwd": ".",
-            "command": "next dev"
+            "command": "next dev",
+            "continuous": true
           },
           "executor": "nx:run-commands",
           "configurations": {},
@@ -180,7 +181,8 @@ nx show project my-workspace --web
         "start": {
           "options": {
             "cwd": ".",
-            "command": "next start"
+            "command": "next start",
+            "continuous": true
           },
           "dependsOn": ["build"],
           "executor": "nx:run-commands",

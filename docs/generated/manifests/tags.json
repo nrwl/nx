@@ -682,6 +682,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/automate-gitlab-releases",
+      "id": "automate-gitlab-releases",
+      "name": "Automate GitLab Releases",
+      "path": "/recipes/nx-release/automate-gitlab-releases"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/publish-rust-crates",
       "id": "publish-rust-crates",
       "name": "Publish Rust Crates",

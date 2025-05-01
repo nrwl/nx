@@ -2,7 +2,7 @@
 title: 'How Lerna just got 10x faster!'
 slug: 'lerna-used-to-walk-now-it-can-fly'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-25/WPGHapKqT3IguWjeN5UgWg.png'
+cover_image: '/blog/images/2022-05-25/WPGHapKqT3IguWjeN5UgWg.avif'
 tags: [nx]
 description: Lerna v5.1 introduces the useNx flag for dramatic performance gains, making it 5.3x faster than Turborepo with added caching and task execution features.
 ---

@@ -10,6 +10,8 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
 
+  private exitCode: number;
+
   constructor(
     private childProcess: ChildProcess,
     { streamOutput, prefix }: { streamOutput: boolean; prefix: string }
@@ -39,6 +41,7 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
 
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) code = signalToCode(signal);
+      this.exitCode = code;
       for (const cb of this.exitCallbacks) {
         cb(code, this.terminalOutput);
       }
@@ -64,6 +67,12 @@ export class NodeChildProcessWithNonDirectOutput implements RunningTask {
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (typeof this.exitCode === 'number') {
+      return {
+        code: this.exitCode,
+        terminalOutput: this.terminalOutput,
+      };
+    }
     return new Promise((res) => {
       this.onExit((code, terminalOutput) => {
         res({ code, terminalOutput });

@@ -3,7 +3,7 @@ title: Handling CORS In Your Workspace
 slug: handling-cors
 authors: [Mike Hartington]
 tags: [nx]
-cover_image: '/blog/images/2024-11-14/cors.png'
+cover_image: '/blog/images/2024-11-14/cors.avif'
 description: Learn to handle CORS issues in web development, with practical examples and solutions for common challenges.
 ---
 
