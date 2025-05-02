@@ -4,14 +4,13 @@
   "projectRoot": "packages/gradle/batch-runner",
   "sourceRoot": "packages/gradle/batch-runner/src",
   "targets": {
-    "assemble": {
-      "outputs": ["{projectRoot}/build"]
-    },
     "lint": {
-      "command": "nx ktfmtCheck gradle-batch-runner"
+      "command": "nx ktfmtCheck gradle-batch-runner",
+      "cache": true
     },
     "format": {
-      "command": "nx ktfmtFormat gradle-batch-runner"
+      "command": "nx ktfmtFormat gradle-batch-runner",
+      "cache": true
     }
   }
 }

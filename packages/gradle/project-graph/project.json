@@ -3,10 +3,12 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
     "lint": {
-      "command": "nx ktfmtCheck gradle-project-graph"
+      "command": "nx ktfmtCheck gradle-project-graph",
+      "cache": true
     },
     "format": {
-      "command": "nx ktfmtFormat gradle-project-graph"
+      "command": "nx ktfmtFormat gradle-project-graph",
+      "cache": true
     },
     "publish-staging": {
       "command": "nx publish gradle-project-graph",
