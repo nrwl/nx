@@ -6,8 +6,8 @@ export function getStylesheetProcessorFactoryProvider(): FactoryProvider {
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
 
   const { STYLESHEET_PROCESSOR_TOKEN } = importNgPackagrPath<
-    typeof import('ng-packagr/lib/styles/stylesheet-processor.di')
-  >('ng-packagr/lib/styles/stylesheet-processor.di', ngPackagrMajorVersion);
+    typeof import('ng-packagr/src/lib/styles/stylesheet-processor.di')
+  >('ng-packagr/src/lib/styles/stylesheet-processor.di', ngPackagrMajorVersion);
 
   return {
     provide: STYLESHEET_PROCESSOR_TOKEN,
