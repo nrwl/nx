@@ -54,8 +54,26 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Detect pnpm in package.json
+        id: detect-pm
+        run: |
+          if grep -q '"packageManager"\s*:\s*"pnpm@' package.json; then
+            echo "has_pm=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pm=false" >> $GITHUB_OUTPUT
+          fi
+
+      ## If pnpm is not detected in package.json, we will install it
+      - name: Setup pnpm (from package.json)
+        uses: pnpm/action-setup@v4
+        if: steps.detect-pm.outputs.has_pm == 'true'
+        with:
+          run_install: false
+
+      ## If pnpm is not detected in package.json, we will install it at this step
+      - name: Setup pnpm (fallback)
+        uses: pnpm/action-setup@v4
+        if: steps.detect-pm.outputs.has_pm == 'false'
         with:
           version: 9.8.0
           run_install: false
@@ -156,8 +174,26 @@ jobs:
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Detect pnpm in package.json
+        id: detect-pm
+        run: |
+          if grep -q '"packageManager"\s*:\s*"pnpm@' package.json; then
+            echo "has_pm=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_pm=false" >> $GITHUB_OUTPUT
+          fi
+
+      ## If pnpm is not detected in package.json, we will install it
+      - name: Setup pnpm (from package.json)
+        uses: pnpm/action-setup@v4
+        if: steps.detect-pm.outputs.has_pm == 'true'
+        with:
+          run_install: false
+
+      ## If pnpm is not detected in package.json, we will install it at this step
+      - name: Setup pnpm (fallback)
+        uses: pnpm/action-setup@v4
+        if: steps.detect-pm.outputs.has_pm == 'false'
         with:
           version: 9.8.0
           run_install: false
