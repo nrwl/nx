@@ -56,7 +56,7 @@ impl HelpText {
                 Span::styled("q", base_style.fg(Color::Cyan)),
                 Span::styled("  ", base_style.fg(Color::DarkGray)),
                 Span::styled("help: ", base_style.fg(Color::DarkGray)),
-                Span::styled("?  ", base_style.fg(Color::Cyan)),
+                Span::styled("?", base_style.fg(Color::Cyan)),
             ];
             f.render_widget(
                 Paragraph::new(Line::from(hint)).alignment(if self.align_left {
@@ -92,7 +92,7 @@ impl HelpText {
             ];
 
             f.render_widget(
-                Paragraph::new(Line::from(shortcuts)).alignment(Alignment::Center),
+                Paragraph::new(Line::from(shortcuts)).alignment(Alignment::Right),
                 safe_area,
             );
         }
