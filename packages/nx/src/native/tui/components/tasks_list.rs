@@ -38,6 +38,12 @@ const DURATION_NOT_YET_KNOWN: &str = "...";
 // This is just a fallback value, the real value will be set via start_command on the lifecycle
 const DEFAULT_MAX_PARALLEL: usize = 0;
 
+// Constants for layout calculation
+const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
+const FULL_HELP_WIDTH: u16 = 86; // Full help text width
+const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
+const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Pag, Cloud, Help
+
 /// Represents an individual task with its current state and execution details.
 pub struct TaskItem {
     // Public to aid with sorting utility and testing
@@ -672,66 +678,6 @@ impl TasksList {
         Row::new(empty_cells)
     }
 
-    /// Determines the main layout chunks for the draw function.
-    fn determine_main_layout(
-        &self,
-        area: Rect,
-        filter_is_active: bool,
-        has_short_area_height: bool,
-    ) -> Vec<Rect> {
-        Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(if filter_is_active {
-                // When filter is active, keep the original layout with space for filter display
-                if has_short_area_height {
-                    vec![
-                        Constraint::Fill(1),   // Table gets most space
-                        Constraint::Length(2), // Filter display (when active)
-                        Constraint::Length(1), // Empty line between filter and pagination
-                        Constraint::Length(1), // Bottom bar (pagination) - Fits on one line
-                    ]
-                } else if area.width < 90 {
-                    // Use 90 as the breakpoint for vertical bottom bar
-                    vec![
-                        Constraint::Fill(1),   // Table gets most space
-                        Constraint::Length(2), // Filter display (when active)
-                        Constraint::Length(1), // Empty line between filter and pagination
-                        Constraint::Length(2), // Bottom bar (2 units for stacked layout)
-                    ]
-                } else {
-                    // Width >= 90
-                    vec![
-                        Constraint::Fill(1),   // Table gets most space
-                        Constraint::Length(2), // Filter display (when active)
-                        Constraint::Length(1), // Empty line between filter and pagination
-                        Constraint::Length(1), // Bottom bar - Fits on one line horizontally
-                    ]
-                }
-            } else {
-                // When filter is not active, don't allocate space for it
-                if has_short_area_height {
-                    vec![
-                        Constraint::Fill(1),   // Table gets all available space
-                        Constraint::Length(1), // Bottom bar (pagination) - Fits on one line
-                    ]
-                } else if area.width < 90 {
-                    // Use 90 as the breakpoint for vertical bottom bar
-                    vec![
-                        Constraint::Fill(1),   // Table gets all available space
-                        Constraint::Length(2), // Bottom bar (2 units for stacked layout)
-                    ]
-                } else {
-                    // Width >= 90
-                    vec![
-                        Constraint::Fill(1),   // Table gets all available space
-                        Constraint::Length(1), // Bottom bar - Fits on one line horizontally
-                    ]
-                }
-            })
-            .split(area)
-            .to_vec() // Convert Rc<[Rect]> to Vec<Rect>
-    }
-
     /// Renders the filter display area.
     fn render_filter(&self, f: &mut Frame<'_>, filter_area: Rect) {
         let hidden_tasks = self.tasks.len() - self.filtered_names.len();
@@ -1297,45 +1243,11 @@ impl TasksList {
         f.render_widget(t, table_area);
     }
 
-    /// Determines the layout for the bottom bar components (pagination, help, cloud message).
-    fn determine_bottom_bar_layout(
-        &self,
-        pagination_area: Rect, // The overall area allocated for the bottom bar
-        needs_vertical_bottom_layout: bool,
-        has_cloud_message: bool,
-        // Removed has_short_area_height parameter
-    ) -> Vec<Rect> {
-        if needs_vertical_bottom_layout {
-            // Stack vertically when area is limited - always create 2 constraints
-            // The rendering logic will decide if the second chunk is used
-            Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(vec![
-                    Constraint::Length(1), // Pagination
-                    Constraint::Length(1), // Help text (may be unused if height is short)
-                ])
-                .split(pagination_area)
-                .to_vec() // Convert Rc<[Rect]> to Vec<Rect>
-        } else {
-            // Horizontal layout
-            Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(if has_cloud_message {
-                    [
-                        Constraint::Length(15), // Width for pagination (with padding)
-                        Constraint::Length(24), // Smaller width for help text when cloud message is present
-                        Constraint::Fill(1),    // Cloud message gets most of the remaining space
-                    ]
-                } else {
-                    [
-                        Constraint::Length(15), // Width for pagination (with padding)
-                        Constraint::Fill(1),    // Help text gets all remaining space
-                        Constraint::Length(1),  // Minimal extra space
-                    ]
-                })
-                .split(pagination_area)
-                .to_vec() // Convert Rc<[Rect]> to Vec<Rect>
-        }
+    /// Calculates the required width for the pagination display string.
+    fn calculate_pagination_width(&self) -> u16 {
+        let current_page = self.selection_manager.lock().unwrap().get_current_page() + 1; // Display is 1-based
+        let total_pages = self.selection_manager.lock().unwrap().total_pages();
+        format!("  <- {}/{} ->", current_page, total_pages).len() as u16
     }
 
     /// Renders the pagination component.
@@ -1344,7 +1256,6 @@ impl TasksList {
         let current_page = self.selection_manager.lock().unwrap().get_current_page();
         let pagination = Pagination::new(current_page, total_pages);
 
-        // Reverted: Always apply left padding for alignment
         let padded_area = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
@@ -1364,115 +1275,90 @@ impl TasksList {
         help_text_area: Rect,
         is_collapsed: bool,
         is_dimmed: bool,
-        // Removed has_short_area_height parameter again
     ) {
-        // Removed explicit height check again
         let help_text = HelpText::new(is_collapsed, is_dimmed, false);
         help_text.render(f, help_text_area);
     }
 
-    /// Renders the cloud message component.
+    /// Renders messages received from Nx Cloud
     fn render_cloud_message(&self, f: &mut Frame<'_>, cloud_message_area: Rect, is_dimmed: bool) {
         if let Some(message) = &self.cloud_message {
-            // Only render if it likely contains a URL (current behavior)
-            if message.contains("https://") {
-                let available_width = cloud_message_area.width as usize;
+            let available_width = cloud_message_area.width;
+            // Ensure minimum width to render anything
+            if available_width == 0 || cloud_message_area.height == 0 {
+                return;
+            }
 
-                let message_line = if let Some(url_pos) = message.find("https://") {
-                    let prefix = &message[0..url_pos];
-                    let url = &message[url_pos..];
+            let message_style = if is_dimmed {
+                Style::default().fg(Color::DarkGray).dim()
+            } else {
+                Style::default().fg(Color::DarkGray)
+            };
 
-                    let prefix_style = if is_dimmed {
-                        Style::default().fg(Color::DarkGray).dim()
-                    } else {
-                        Style::default().fg(Color::DarkGray)
-                    };
-
-                    let url_style = if is_dimmed {
-                        Style::default().fg(Color::LightCyan).underlined().dim()
-                    } else {
-                        Style::default().fg(Color::LightCyan).underlined()
-                    };
-
-                    // Logic for truncating message/URL based on available width
-                    if available_width < 30 {
-                        // Show only URL, truncate if needed
-                        let shortened_url = if url.len() > available_width.saturating_sub(3) {
-                            format!(
-                                "{}...",
-                                &url[..available_width.saturating_sub(3).min(url.len())]
-                            )
-                        } else {
-                            url.to_string()
-                        };
-                        Line::from(vec![Span::styled(shortened_url, url_style)])
-                    } else {
-                        // Try to show prefix and URL, truncate if needed
-                        if prefix.len() + url.len() > available_width.saturating_sub(3) {
-                            let max_url_len = available_width.saturating_sub(8); // Reserve space for prefix + "..."
-                            let shortened_url = if url.len() > max_url_len {
-                                format!("{}...", &url[..max_url_len.min(url.len())])
-                            } else {
-                                url.to_string()
-                            };
-                            let remaining_space =
-                                available_width.saturating_sub(shortened_url.len() + 3);
-                            if remaining_space > 5 && !prefix.is_empty() {
-                                let shortened_prefix = if prefix.len() > remaining_space {
-                                    format!("{}...", &prefix[..remaining_space.saturating_sub(3)])
-                                } else {
-                                    prefix.to_string()
-                                };
-                                Line::from(vec![
-                                    Span::styled(shortened_prefix, prefix_style),
-                                    Span::styled(shortened_url, url_style),
-                                ])
-                            } else {
-                                Line::from(vec![Span::styled(shortened_url, url_style)])
-                            }
-                        } else {
-                            Line::from(vec![
-                                Span::styled(prefix, prefix_style),
-                                Span::styled(url, url_style),
-                            ])
-                        }
-                    }
-                } else {
-                    // Non-URL message (currently not rendered, but handle defensively)
-                    let display_message = if message.len() > available_width {
-                        format!("{}...", &message[..available_width.saturating_sub(3)])
-                    } else {
-                        message.clone()
-                    };
-                    let message_style = if is_dimmed {
-                        Style::default().fg(Color::DarkGray).dim()
-                    } else {
-                        Style::default().fg(Color::DarkGray)
-                    };
-                    Line::from(vec![Span::styled(display_message, message_style)])
-                };
-
-                let cloud_message_paragraph =
-                    Paragraph::new(message_line).alignment(Alignment::Right);
-
-                // Safety check to prevent rendering outside buffer bounds
-                if cloud_message_area.width > 0
-                    && cloud_message_area.height > 0
-                    && cloud_message_area.x < f.area().width
-                    && cloud_message_area.y < f.area().height
-                {
-                    let safe_area = Rect {
-                        x: cloud_message_area.x,
-                        y: cloud_message_area.y,
-                        width: cloud_message_area
-                            .width
-                            .min(f.area().width.saturating_sub(cloud_message_area.x)),
-                        height: cloud_message_area
-                            .height
-                            .min(f.area().height.saturating_sub(cloud_message_area.y)),
-                    };
-                    f.render_widget(cloud_message_paragraph, safe_area);
+            // No URL present in the message, render the message as is if it fits, otherwise truncate
+            if !message.contains("https://") {
+                let message_line = Line::from(Span::styled(message.as_str(), message_style));
+                // Line fits as is
+                if message_line.width() <= available_width as usize {
+                    let cloud_message_paragraph =
+                        Paragraph::new(message_line).alignment(Alignment::Left);
+                    f.render_widget(cloud_message_paragraph, cloud_message_area);
+                    return;
                 }
+                // Line doesn't fit, truncate
+                let max_message_render_len = available_width.saturating_sub(3); // Reserve for "..."
+                let truncated_message =
+                    format!("{}...", &message[..max_message_render_len as usize]);
+                let cloud_message_paragraph =
+                    Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
+                        .alignment(Alignment::Left);
+                f.render_widget(cloud_message_paragraph, cloud_message_area);
+                return;
+            }
+
+            // Find URL position
+            let url_start_pos = message.find("https://").unwrap_or(message.len());
+            // Figure out the "prefix" (i.e. any message contents before the URL)
+            let prefix = &message[0..url_start_pos];
+            let url = &message[url_start_pos..];
+
+            let prefix_len = prefix.len() as u16;
+            let url_len = url.len() as u16;
+
+            let mut spans = vec![];
+
+            let url_style = if is_dimmed {
+                Style::default().fg(Color::LightCyan).underlined().dim()
+            } else {
+                Style::default().fg(Color::LightCyan).underlined()
+            };
+
+            // Determine what fits, prioritizing the URL
+            if url_len <= available_width {
+                // Full URL Fits, check if the full message does, and if so, render the full thing
+                if prefix_len + url_len <= available_width {
+                    spans.push(Span::styled(prefix, message_style));
+                    spans.push(Span::styled(url, url_style));
+                } else {
+                    // Only URL fits, do not render the prefix
+                    spans.push(Span::styled(url, url_style));
+                }
+            } else if available_width >= MIN_CLOUD_URL_WIDTH {
+                // Full URL doesn't fit, but Truncated URL does.
+                let max_url_render_len = available_width.saturating_sub(3); // Reserve for "..."
+                let truncated_url = format!("{}...", &url[..max_url_render_len as usize]);
+                spans.push(Span::styled(truncated_url, url_style));
+            } else {
+                // Not enough space for even truncated URL, show nothing...
+                // Hopefully in this situation user can make their terminal bigger or switch layout mode
+            }
+
+            if !spans.is_empty() {
+                let message_line = Line::from(spans);
+                let cloud_message_paragraph =
+                    Paragraph::new(message_line).alignment(Alignment::Left);
+
+                f.render_widget(cloud_message_paragraph, cloud_message_area);
             }
         }
     }
@@ -1485,93 +1371,375 @@ impl Component for TasksList {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+        // --- 1. Calculate Context ---
         let has_narrow_area_width = area.width < 90;
-        // let has_very_narrow_area_width = area.width < 60; // No longer directly used for layout
-        let has_short_area_height = area.height < 12;
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
-        let is_dimmed = !self.is_task_list_focused(); // Used for multiple components
-
-        // 1. Determine Main Layout
-        let chunks = self.determine_main_layout(area, filter_is_active, has_short_area_height);
-
-        // 2. Assign Areas and Render Filter (if active)
-        let table_area;
-        let bottom_bar_area; // Area for pagination, help, cloud msg
-
-        if filter_is_active {
-            table_area = chunks[0];
-            let filter_area = chunks[1];
-            bottom_bar_area = chunks[3]; // Bottom bar area is the 4th chunk when filter is active
-            self.render_filter(f, filter_area);
-        } else {
-            table_area = chunks[0];
-            bottom_bar_area = chunks[1]; // Bottom bar is the 2nd chunk when filter is inactive
-        }
-
-        // 3. Recalculate Pages (needs table height)
-        // Reserve space for header (1), top margin (1), empty row (1) and table border (1) = 4
-        self.recalculate_pages(table_area.height.saturating_sub(4));
-
-        // 4. Render Task Table
-        self.render_task_table(f, table_area, has_narrow_area_width);
-
-        // 5. Determine Bottom Bar Layout & Render Components
-        let needs_vertical_bottom_layout = has_narrow_area_width; // Exclude short height
+        let is_dimmed = !self.is_task_list_focused();
         let has_cloud_message = self.cloud_message.is_some();
 
-        // Special handling for short height: Create a horizontal layout within the single line
-        if has_short_area_height {
-            if !bottom_bar_area.is_empty() {
-                // Manually create horizontal layout for the single bottom line
-                let short_layout = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([
-                        Constraint::Length(12), // Space for pagination (incl padding)
-                        Constraint::Fill(1),    // Space for help text
-                    ])
-                    .split(bottom_bar_area);
+        // --- 2. Determine Bottom Layout Mode ---
+        enum BottomLayoutMode {
+            SingleLine { help_collapsed: bool }, // Pag + Cloud + Help
+            TwoLine { help_collapsed: bool },    // Cloud / Pag + Help
+            NoCloud { help_collapsed: bool },    // Pag + Help
+        }
+        let layout_mode: BottomLayoutMode;
 
-                if short_layout.len() >= 2 {
-                    let pagination_chunk = short_layout[0];
-                    let help_text_chunk = short_layout[1];
-                    // Render pagination into its chunk (render_pagination applies internal padding)
-                    self.render_pagination(f, pagination_chunk, is_dimmed);
-                    // Render help text into its chunk, always collapsed
-                    self.render_help_text(f, help_text_chunk, true, is_dimmed);
-                }
-            }
-        } else if needs_vertical_bottom_layout {
-            // Vertical layout (narrow width, but NOT short height)
-            let bottom_bar_chunks = self.determine_bottom_bar_layout(
-                bottom_bar_area,
-                true, // is vertical
-                has_cloud_message,
-            );
-            if bottom_bar_chunks.len() >= 2 {
-                let pagination_chunk_area = bottom_bar_chunks[0];
-                let help_text_chunk_area = bottom_bar_chunks[1];
-                self.render_pagination(f, pagination_chunk_area, is_dimmed);
-                // Help text is always collapsed in vertical layout
-                self.render_help_text(f, help_text_chunk_area, true, is_dimmed);
+        if has_cloud_message {
+            // Estimate cloud width (this might overestimate if URL gets truncated, but good for initial check)
+            let cloud_text_width = if let Some(message) = &self.cloud_message {
+                let url_start_pos = message.find("https://").unwrap_or(message.len());
+                let prefix = &message[0..url_start_pos];
+                let url = &message[url_start_pos..];
+                (prefix.len() + url.len()) as u16
+            } else {
+                0
+            };
+
+            let required_width_full_help = self.calculate_pagination_width()
+                + cloud_text_width
+                + FULL_HELP_WIDTH
+                + MIN_BOTTOM_SPACING;
+            let required_width_collapsed_help = self.calculate_pagination_width()
+                + cloud_text_width
+                + COLLAPSED_HELP_WIDTH
+                + MIN_BOTTOM_SPACING;
+
+            if required_width_full_help <= area.width {
+                layout_mode = BottomLayoutMode::SingleLine {
+                    help_collapsed: false,
+                };
+            } else if required_width_collapsed_help <= area.width {
+                layout_mode = BottomLayoutMode::SingleLine {
+                    help_collapsed: true,
+                };
+            } else {
+                layout_mode = BottomLayoutMode::TwoLine {
+                    help_collapsed: true,
+                }; // Force collapse in two-line mode
             }
         } else {
-            // Horizontal layout (Wide enough and tall enough)
-            let bottom_bar_chunks = self.determine_bottom_bar_layout(
-                bottom_bar_area,
-                false, // is horizontal
-                has_cloud_message,
-            );
-            if bottom_bar_chunks.len() >= 2 {
-                let pagination_chunk_area = bottom_bar_chunks[0];
-                let help_text_chunk_area = bottom_bar_chunks[1];
+            // No Cloud message is present
+            let required_width_full_help =
+                self.calculate_pagination_width() + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
+            let required_width_collapsed_help =
+                self.calculate_pagination_width() + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
 
-                self.render_pagination(f, pagination_chunk_area, is_dimmed);
-                let help_is_collapsed = has_cloud_message;
-                self.render_help_text(f, help_text_chunk_area, help_is_collapsed, is_dimmed);
+            if required_width_full_help <= area.width {
+                layout_mode = BottomLayoutMode::NoCloud {
+                    help_collapsed: false,
+                };
+            } else if required_width_collapsed_help <= area.width {
+                layout_mode = BottomLayoutMode::NoCloud {
+                    help_collapsed: true,
+                };
+            } else {
+                // Force vertical PagHelp split, treat as TwoLine for structure, ensure help is collapsed
+                layout_mode = BottomLayoutMode::TwoLine {
+                    help_collapsed: true,
+                };
+            }
+        }
 
-                if has_cloud_message && bottom_bar_chunks.len() >= 3 {
-                    let cloud_message_chunk_area = bottom_bar_chunks[2];
-                    self.render_cloud_message(f, cloud_message_chunk_area, is_dimmed);
+        // --- 3. Calculate Main Vertical Split ---
+        let mut vertical_constraints = vec![Constraint::Fill(1)]; // Table first
+        let mut bottom_row_indices: std::collections::HashMap<&str, usize> =
+            std::collections::HashMap::new();
+        let mut current_chunk_index = 1; // Index for chunks after the table
+
+        // Determine if help will be collapsed for the separator logic
+        let final_help_collapsed = match layout_mode {
+            BottomLayoutMode::SingleLine { help_collapsed } => help_collapsed,
+            BottomLayoutMode::TwoLine { help_collapsed } => help_collapsed,
+            BottomLayoutMode::NoCloud { help_collapsed } => help_collapsed,
+        };
+
+        let needs_filter_separator = matches!(layout_mode, BottomLayoutMode::TwoLine {..} | BottomLayoutMode::NoCloud {..} if has_cloud_message || !final_help_collapsed);
+        let final_help_width = if final_help_collapsed {
+            COLLAPSED_HELP_WIDTH
+        } else {
+            FULL_HELP_WIDTH
+        };
+        let needs_pag_help_vertical_split =
+            self.calculate_pagination_width() + final_help_width + MIN_BOTTOM_SPACING > area.width;
+
+        if filter_is_active {
+            vertical_constraints.push(Constraint::Length(2)); // Filter area below table
+            bottom_row_indices.insert("filter", current_chunk_index);
+            current_chunk_index += 1;
+            if needs_filter_separator || matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
+                // Add separator if filter isn't the very last thing
+                vertical_constraints.push(Constraint::Length(1)); // Separator
+                bottom_row_indices.insert("filter_sep", current_chunk_index);
+                current_chunk_index += 1;
+            }
+        }
+        if matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
+            // Reserve space for cloud or the top part of vertical PagHelp
+            vertical_constraints.push(Constraint::Length(1));
+            bottom_row_indices.insert("cloud_or_pag_vertical", current_chunk_index);
+            current_chunk_index += 1;
+            // Add separator between cloud and pag/help rows in two-line mode
+            vertical_constraints.push(Constraint::Length(1));
+            bottom_row_indices.insert("cloud_paghelp_sep", current_chunk_index);
+            current_chunk_index += 1;
+        }
+        // Reserve space for pag/help row or the bottom part of vertical PagHelp
+        vertical_constraints.push(Constraint::Length(1));
+        bottom_row_indices.insert("paghelp_or_help_vertical", current_chunk_index);
+
+        let vertical_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vertical_constraints)
+            .split(area);
+
+        // --- 4. Assign Areas ---
+        let table_area = vertical_chunks[0]; // Table is always the first chunk
+        let filter_area = bottom_row_indices
+            .get("filter")
+            .map(|&i| vertical_chunks[i]);
+        // Separator area not needed directly
+        let cloud_or_pag_vertical_area = bottom_row_indices
+            .get("cloud_or_pag_vertical")
+            .map(|&i| vertical_chunks[i]);
+        let paghelp_or_help_vertical_area = bottom_row_indices
+            .get("paghelp_or_help_vertical")
+            .map(|&i| vertical_chunks[i])
+            .unwrap(); // Must exist at this point
+
+        // --- 5. Render Table (Recalculate Pages First) ---
+        self.recalculate_pages(table_area.height.saturating_sub(4));
+        self.render_task_table(f, table_area, has_narrow_area_width);
+
+        // --- 6. Render Filter ---
+        if let Some(area) = filter_area {
+            if area.height > 0
+                && area.width > 0
+                && area.y < f.area().height
+                && area.x < f.area().width
+            {
+                let safe_area = Rect {
+                    x: area.x,
+                    y: area.y,
+                    width: area.width.min(f.area().width.saturating_sub(area.x)),
+                    height: area.height.min(f.area().height.saturating_sub(area.y)),
+                };
+                self.render_filter(f, safe_area);
+            }
+        }
+
+        // --- 7. Render Bottom Rows ---
+        // Use final_help_collapsed and final_help_width from here down
+        let help_is_collapsed = final_help_collapsed;
+        let help_text_width = final_help_width;
+
+        match layout_mode {
+            BottomLayoutMode::SingleLine { .. } => {
+                // Don't need help_collapsed from enum variant now
+                // Pag + Cloud + Help on one line (pag_help_area)
+                // Calculate exact cloud width based on available space in single line
+                let cloud_message_render_width = area
+                    .width
+                    .saturating_sub(self.calculate_pagination_width().max(12)) // Ensure min width for Pag
+                    .saturating_sub(help_text_width) // Use final calculated width
+                    .saturating_sub(MIN_BOTTOM_SPACING);
+
+                let constraints = vec![
+                    Constraint::Length(self.calculate_pagination_width().max(12)),
+                    Constraint::Length(cloud_message_render_width),
+                    Constraint::Fill(1),
+                    Constraint::Length(help_text_width),
+                ];
+                let row_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints(constraints)
+                    .split(paghelp_or_help_vertical_area);
+
+                // Render components with safety checks
+                if row_chunks.len() > 0
+                    && row_chunks[0].height > 0
+                    && row_chunks[0].width > 0
+                    && row_chunks[0].y < f.area().height
+                {
+                    self.render_pagination(f, row_chunks[0].intersection(f.area()), is_dimmed);
+                }
+                if row_chunks.len() > 1
+                    && row_chunks[1].height > 0
+                    && row_chunks[1].width > 0
+                    && row_chunks[1].y < f.area().height
+                {
+                    self.render_cloud_message(f, row_chunks[1].intersection(f.area()), is_dimmed);
+                }
+                if row_chunks.len() > 3
+                    && row_chunks[3].height > 0
+                    && row_chunks[3].width > 0
+                    && row_chunks[3].y < f.area().height
+                {
+                    self.render_help_text(
+                        f,
+                        row_chunks[3].intersection(f.area()),
+                        help_is_collapsed,
+                        is_dimmed,
+                    );
+                }
+            }
+            BottomLayoutMode::TwoLine { .. } => {
+                // Cloud (if present) row first
+                if has_cloud_message {
+                    if let Some(area) = cloud_or_pag_vertical_area {
+                        if area.height > 0
+                            && area.width > 0
+                            && area.y < f.area().height
+                            && area.x < f.area().width
+                        {
+                            // Apply padding safely
+                            let constraints = [Constraint::Length(2), Constraint::Fill(1)];
+                            let padded_chunks = Layout::default()
+                                .direction(Direction::Horizontal)
+                                .constraints(constraints)
+                                .split(area);
+                            if padded_chunks.len() >= 2 {
+                                let safe_padded_area = padded_chunks[1].intersection(f.area());
+                                if safe_padded_area.height > 0 && safe_padded_area.width > 0 {
+                                    self.render_cloud_message(f, safe_padded_area, is_dimmed);
+                                }
+                            } else {
+                                // Fallback: Render in original area if padding fails
+                                let safe_area = area.intersection(f.area());
+                                if safe_area.height > 0 && safe_area.width > 0 {
+                                    self.render_cloud_message(f, safe_area, is_dimmed);
+                                }
+                            }
+                        }
+                    }
+                }
+                // Then Pag + Help row (or split vertically if needed)
+                if needs_pag_help_vertical_split {
+                    // Split paghelp_or_help_vertical_area vertically
+                    let pag_help_chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Length(1), Constraint::Length(1)])
+                        .split(paghelp_or_help_vertical_area);
+                    if pag_help_chunks.len() >= 2 {
+                        // Render Pag into top chunk, Help into bottom chunk
+                        let pag_area = pag_help_chunks[0];
+                        let help_area = pag_help_chunks[1];
+
+                        // Render pagination with safety check
+                        if pag_area.height > 0 && pag_area.width > 0 && pag_area.y < f.area().height
+                        {
+                            self.render_pagination(f, pag_area.intersection(f.area()), is_dimmed);
+                        }
+                        // Render help text with safety check
+                        if help_area.height > 0
+                            && help_area.width > 0
+                            && help_area.y < f.area().height
+                        {
+                            self.render_help_text(
+                                f,
+                                help_area.intersection(f.area()),
+                                help_is_collapsed,
+                                is_dimmed,
+                            );
+                        }
+                    }
+                } else {
+                    // Render Pag + Help horizontally in paghelp_or_help_vertical_area
+                    let constraints = vec![
+                        Constraint::Length(self.calculate_pagination_width().max(12)),
+                        Constraint::Fill(1),
+                        Constraint::Length(help_text_width),
+                    ];
+                    let row_chunks = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints(constraints)
+                        .split(paghelp_or_help_vertical_area);
+
+                    // Render components with safety checks
+                    if row_chunks.len() > 0
+                        && row_chunks[0].height > 0
+                        && row_chunks[0].width > 0
+                        && row_chunks[0].y < f.area().height
+                    {
+                        self.render_pagination(f, row_chunks[0].intersection(f.area()), is_dimmed);
+                    }
+                    if row_chunks.len() > 2
+                        && row_chunks[2].height > 0
+                        && row_chunks[2].width > 0
+                        && row_chunks[2].y < f.area().height
+                    {
+                        self.render_help_text(
+                            f,
+                            row_chunks[2].intersection(f.area()),
+                            help_is_collapsed,
+                            is_dimmed,
+                        );
+                    }
+                }
+            }
+            BottomLayoutMode::NoCloud { .. } => {
+                // Pag + Help row (split vertically if needed)
+                if needs_pag_help_vertical_split {
+                    // Split paghelp_or_help_vertical_area vertically
+                    let pag_help_chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Length(1), Constraint::Length(1)])
+                        .split(paghelp_or_help_vertical_area);
+                    if pag_help_chunks.len() >= 2 {
+                        if pag_help_chunks[0].height > 0
+                            && pag_help_chunks[0].width > 0
+                            && pag_help_chunks[0].y < f.area().height
+                        {
+                            self.render_pagination(
+                                f,
+                                pag_help_chunks[0].intersection(f.area()),
+                                is_dimmed,
+                            );
+                        }
+                        if pag_help_chunks[1].height > 0
+                            && pag_help_chunks[1].width > 0
+                            && pag_help_chunks[1].y < f.area().height
+                        {
+                            self.render_help_text(
+                                f,
+                                pag_help_chunks[1].intersection(f.area()),
+                                help_is_collapsed,
+                                is_dimmed,
+                            );
+                        }
+                    }
+                } else {
+                    // Render Pag + Help horizontally
+                    let constraints = vec![
+                        Constraint::Length(self.calculate_pagination_width().max(12)),
+                        Constraint::Fill(1),
+                        Constraint::Length(help_text_width),
+                    ];
+                    let row_chunks = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints(constraints)
+                        .split(paghelp_or_help_vertical_area);
+
+                    // Render components with safety checks
+                    if row_chunks.len() > 0
+                        && row_chunks[0].height > 0
+                        && row_chunks[0].width > 0
+                        && row_chunks[0].y < f.area().height
+                    {
+                        self.render_pagination(f, row_chunks[0].intersection(f.area()), is_dimmed);
+                    }
+                    if row_chunks.len() > 2
+                        && row_chunks[2].height > 0
+                        && row_chunks[2].width > 0
+                        && row_chunks[2].y < f.area().height
+                    {
+                        self.render_help_text(
+                            f,
+                            row_chunks[2].intersection(f.area()),
+                            help_is_collapsed,
+                            is_dimmed,
+                        );
+                    }
                 }
             }
         }
@@ -1668,10 +1836,8 @@ impl Component for TasksList {
 mod tests {
     use super::*;
     use crate::native::tasks::types::TaskTarget;
-    use crate::native::tui::lifecycle::RunMode;
     use ratatui::backend::TestBackend;
     use ratatui::Terminal;
-    use std::sync::{Arc, Mutex};
 
     // Helper function to create a TasksList with test task data
     fn create_test_tasks_list() -> (TasksList, Vec<Task>) {
@@ -1731,7 +1897,6 @@ mod tests {
         (tasks_list, test_tasks)
     }
 
-    // Basic test function to render the TasksList to a TestBackend
     fn create_test_terminal(width: u16, height: u16) -> Terminal<TestBackend> {
         let backend = TestBackend::new(width, height);
         Terminal::new(backend).unwrap()
@@ -1752,7 +1917,6 @@ mod tests {
 
         // No tasks have been started yet
 
-        // Render to the test backend and assert the snapshot
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
     }
@@ -1769,7 +1933,6 @@ mod tests {
             .update(Action::StartTasks(vec![test_tasks[0].clone()]))
             .ok();
 
-        // Render to the test backend and assert the snapshot
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
     }
@@ -1961,8 +2124,8 @@ mod tests {
         tasks_list.update(Action::AddFilterChar('p')).ok();
         tasks_list.update(Action::AddFilterChar('p')).ok();
         tasks_list.update(Action::AddFilterChar('1')).ok();
-        // Persist the filter (normally by pressing '/')
-        tasks_list.add_filter_char('/');
+
+        tasks_list.persist_filter();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
@@ -2060,7 +2223,7 @@ mod tests {
         // Set a cloud message with a URL
         tasks_list
             .update(Action::UpdateCloudMessage(
-                "View results at https://nx.app/runs/123".to_string(),
+                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
             ))
             .ok();
 
@@ -2254,7 +2417,7 @@ mod tests {
         let mut tasks_list = TasksList::new(
             test_tasks,
             initiating_tasks,
-            RunMode::RunOne, // Run One mode
+            RunMode::RunOne,
             Focus::TaskList,
             "Run One Mode".to_string(),
             selection_manager,
@@ -2275,12 +2438,339 @@ mod tests {
     #[test]
     fn test_medium_width_rendering() {
         let (mut tasks_list, _) = create_test_tasks_list();
-        // Test with 70 width which is in the 60-90 range
         let mut terminal = create_test_terminal(70, 15);
 
         // Set focus away from task list to verify help text shows regardless
         tasks_list
             .update(Action::UpdateFocus(Focus::MultipleOutput(0)))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_wide_and_short_rendering() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(160, 10);
+
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_without_url() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(90, 15);
+
+        // Set a cloud message without a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "This is some warning from Nx Cloud".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_without_url_super_wide() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(150, 15);
+
+        // Set a cloud message without a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "This is some warning from Nx Cloud".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_two_line_layout() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(60, 15);
+
+        tasks_list
+            .update(Action::EndTasks(vec![
+                TaskResult {
+                    task: test_tasks[0].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[1].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[2].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+            ]))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[1].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[2].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+
+        // Set a cloud message
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_very_narrow_pag_help_handling() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(25, 15);
+
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_very_narrow_pag_help_handling_with_cloud_message() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(25, 15);
+
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Add a cloud message without a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "The remote cache will not be read from or written to during this run.".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_wide() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(120, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_wide_with_cloud_message() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(120, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        // Set a cloud message
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "The remote cache will not be read from or written to during this run.".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_narrow() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(40, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_narrow_with_cloud_message() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(40, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        // Set a cloud message
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "The remote cache will not be read from or written to during this run.".to_string(),
+            ))
             .ok();
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
