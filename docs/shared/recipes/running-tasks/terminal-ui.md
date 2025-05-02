@@ -9,6 +9,10 @@ In version 21, Nx provides an interactive UI in the terminal to help you view th
 
 ![Terminal UI Example](/shared/recipes/running-tasks/tui-example.png)
 
+{% callout type="note" title="Windows Compatibility" %}
+The initial Nx 21 release disables the Terminal UI on Windows. We are currently working on Windows support, so stay tuned.
+{% /callout %}
+
 ## Enable/Disable the Terminal UI
 
 If your terminal and environment are supported then the Terminal UI will be enabled by default when you run any tasks with `nx run`/`nx run-many`/`nx affected` in Nx v21 and later. The Terminal UI will not be used in CI environments.
