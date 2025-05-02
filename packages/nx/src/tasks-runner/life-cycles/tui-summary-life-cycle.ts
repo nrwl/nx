@@ -233,13 +233,14 @@ export function getTuiTerminalSummaryLifeCycle({
   const printRunManySummary = () => {
     console.log('');
 
-    const lines: string[] = [];
+    const lines: string[] = [''];
     const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
 
     for (const taskId of taskIdsInOrderOfCompletion) {
       const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
       if (taskStatus === 'failure') {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
+        output.addNewline();
         lines.push(
           `${LEFT_PAD}${output.colors.red(
             figures.cross
