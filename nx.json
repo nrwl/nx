@@ -127,7 +127,11 @@
     },
     "e2e-local": {
       "cache": true,
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["e2eInputs", "^production"],
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
