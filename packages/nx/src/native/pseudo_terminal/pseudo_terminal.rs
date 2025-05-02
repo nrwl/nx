@@ -110,7 +110,9 @@ impl PseudoTerminal {
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
                     if let Ok(mut parser) = parser_clone.write() {
-                        parser.process(&buf[..len]);
+                        if is_within_nx_tui {
+                            parser.process(&buf[..len]);
+                        }
 
                         if !quiet {
                             let mut logged_interrupted_error = false;
