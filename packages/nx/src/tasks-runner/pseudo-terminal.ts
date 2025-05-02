@@ -6,15 +6,15 @@ import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 
 // Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<() => void> = [];
+const pseudoTerminalShutdownCallbacks: Array<(s?: NodeJS.Signals) => void> = [];
 process.on('SIGINT', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGINT'));
 });
 process.on('SIGTERM', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGTERM'));
 });
 process.on('SIGHUP', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGHUP'));
 });
 process.on('exit', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
@@ -56,10 +56,10 @@ export class PseudoTerminal {
     this.initialized = true;
   }
 
-  shutdown() {
+  shutdown(s?: NodeJS.Signals) {
     for (const cp of this.childProcesses) {
       try {
-        cp.kill();
+        cp.kill(s);
       } catch {}
     }
     if (this.initialized) {
@@ -192,10 +192,10 @@ export class PseudoTtyProcess implements RunningTask {
     this.outputCallbacks.push(callback);
   }
 
-  kill(): void {
+  kill(s?: NodeJS.Signals): void {
     if (this.isAlive) {
       try {
-        this.childProcess.kill();
+        this.childProcess.kill(s);
       } catch {
         // when the child process completes before we explicitly call kill, this will throw
         // do nothing

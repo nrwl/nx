@@ -23,7 +23,7 @@ use tracing::log::trace;
 use vt100_ctt::Parser;
 
 use super::os;
-use crate::native::pseudo_terminal::child_process::ChildProcess;
+use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
 
 pub struct PseudoTerminal {
     pub pty_pair: PtyPair,
@@ -226,7 +226,11 @@ impl PseudoTerminal {
             trace!("Enabling raw mode");
             enable_raw_mode().expect("Failed to enter raw terminal mode");
         }
-        let process_killer = child.clone_killer();
+        let process_killer = ProcessKiller::new(
+            child
+                .process_id()
+                .expect("unable to determine child process id") as i32,
+        );
 
         trace!("Getting running clone");
         let running_clone = self.running.clone();
@@ -318,7 +322,7 @@ mod tests {
         while i < 10 {
             println!("Running {}", i);
             let cp1 = pseudo_terminal
-                .run_command(String::from("whoami"), None, None, None)
+                .run_command(String::from("whoami"), None, None, None, None, None)
                 .unwrap();
             cp1.wait_receiver.recv().unwrap();
             i += 1;
