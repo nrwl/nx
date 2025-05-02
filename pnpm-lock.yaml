@@ -12,6 +12,9 @@ patchedDependencies:
   '@tutorialkit/react':
     hash: kkebbkg5j2fp5xasb2zxj4epiu
     path: patches/@tutorialkit__react.patch
+  '@tutorialkit/runtime':
+    hash: hk53eb52jekvcw6odp5rwqzfly
+    path: patches/@tutorialkit__runtime.patch
 
 importers:
 
@@ -29135,7 +29138,7 @@ snapshots:
       '@nanostores/react': 0.7.2(nanostores@0.10.3)(react@18.3.1)
       '@stackblitz/sdk': 1.11.0
       '@tutorialkit/react': 1.5.0(patch_hash=kkebbkg5j2fp5xasb2zxj4epiu)(@types/react-dom@18.3.0)(@types/react@18.3.20)(postcss@8.4.38)(react-dom@18.3.1(react@18.3.1))(rollup@4.22.0)(vite@6.2.0(@types/node@20.16.10)(jiti@1.21.6)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.0)(yaml@2.6.1))
-      '@tutorialkit/runtime': 1.5.0
+      '@tutorialkit/runtime': 1.5.0(patch_hash=hk53eb52jekvcw6odp5rwqzfly)
       '@tutorialkit/theme': 1.5.0(postcss@8.4.38)(rollup@4.22.0)(vite@6.2.0(@types/node@20.16.10)(jiti@1.21.6)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.0)(yaml@2.6.1))
       '@tutorialkit/types': 1.5.0
       '@types/react': 18.3.20
@@ -29199,7 +29202,7 @@ snapshots:
       '@radix-ui/react-context-menu': 2.2.7(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dialog': 1.1.7(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@replit/codemirror-lang-svelte': 6.0.0(@codemirror/autocomplete@6.18.6)(@codemirror/lang-css@6.3.1)(@codemirror/lang-html@6.4.9)(@codemirror/lang-javascript@6.2.3)(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.36.5)(@lezer/common@1.2.3)(@lezer/highlight@1.2.1)(@lezer/javascript@1.4.21)(@lezer/lr@1.4.2)
-      '@tutorialkit/runtime': 1.5.0
+      '@tutorialkit/runtime': 1.5.0(patch_hash=hk53eb52jekvcw6odp5rwqzfly)
       '@tutorialkit/theme': 1.5.0(postcss@8.4.38)(rollup@4.22.0)(vite@6.2.0(@types/node@20.16.10)(jiti@1.21.6)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.0)(yaml@2.6.1))
       '@webcontainer/api': 1.5.1
       '@xterm/addon-fit': 0.10.0(@xterm/xterm@5.5.0)
@@ -29246,7 +29249,7 @@ snapshots:
       '@radix-ui/react-context-menu': 2.2.7(@types/react-dom@18.3.0)(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dialog': 1.1.7(@types/react-dom@18.3.0)(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@replit/codemirror-lang-svelte': 6.0.0(@codemirror/autocomplete@6.18.6)(@codemirror/lang-css@6.3.1)(@codemirror/lang-html@6.4.9)(@codemirror/lang-javascript@6.2.3)(@codemirror/language@6.11.0)(@codemirror/state@6.5.2)(@codemirror/view@6.36.5)(@lezer/common@1.2.3)(@lezer/highlight@1.2.1)(@lezer/javascript@1.4.21)(@lezer/lr@1.4.2)
-      '@tutorialkit/runtime': 1.5.0
+      '@tutorialkit/runtime': 1.5.0(patch_hash=hk53eb52jekvcw6odp5rwqzfly)
       '@tutorialkit/theme': 1.5.0(postcss@8.4.38)(rollup@4.22.0)(vite@6.2.0(@types/node@20.16.10)(jiti@1.21.6)(less@4.1.3)(sass-embedded@1.85.1)(sass@1.55.0)(stylus@0.64.0)(terser@5.39.0)(yaml@2.6.1))
       '@webcontainer/api': 1.5.1
       '@xterm/addon-fit': 0.10.0(@xterm/xterm@5.5.0)
@@ -29269,7 +29272,7 @@ snapshots:
       - supports-color
       - vite
 
-  '@tutorialkit/runtime@1.5.0':
+  '@tutorialkit/runtime@1.5.0(patch_hash=hk53eb52jekvcw6odp5rwqzfly)':
     dependencies:
       '@tutorialkit/types': 1.5.0
       '@webcontainer/api': 1.5.1
