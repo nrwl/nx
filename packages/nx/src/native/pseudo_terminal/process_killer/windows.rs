@@ -15,7 +15,7 @@ impl ProcessKiller {
     }
 
     // windows doesn't have different signals to kill with
-    pub fn kill(&self, _: Option<String>) -> anyhow::Result<()> {
+    pub fn kill(&self, _: Option<&str>) -> anyhow::Result<()> {
         let pc = WinProcess::open(self.pid as DWORD).expect("!open");
         pc.kill()
             .map_err(|e| anyhow::anyhow!("Failed to kill process {}: {}", self.pid, e))?;
