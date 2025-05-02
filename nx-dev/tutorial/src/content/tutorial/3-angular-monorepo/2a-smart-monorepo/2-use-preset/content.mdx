@@ -28,7 +28,7 @@ If you experience technical issues with the in-browser tutorial, try refreshing 
 :::
 
 ```shell
-npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo
+npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo --nx-cloud=skip
 ```
 
 ```
@@ -40,7 +40,6 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Which unit test runner would you like to use? · jest
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Which CI provider would you like to use? · github
 ```
 
 Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. We'll talk more about how Nx integrates with GitHub Actions later in the tutorial. The above command generates the following structure:
