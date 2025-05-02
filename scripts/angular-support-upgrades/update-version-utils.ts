@@ -1,6 +1,9 @@
 import { readFileSync, writeFileSync } from 'fs';
 
-function updateAngularVersionUtils(packageVersionMap: Map<string, string>) {
+function updateAngularVersionUtils(
+  packageVersionMap: Map<string, string>,
+  isPrerelease: boolean
+) {
   const pathToFile = 'packages/angular/src/utils/versions.ts';
   let versionUtilContents = readFileSync(pathToFile, { encoding: 'utf-8' });
 
@@ -9,23 +12,30 @@ function updateAngularVersionUtils(packageVersionMap: Map<string, string>) {
   const ngPackagrVersion = packageVersionMap.get('ng-packagr')!;
 
   versionUtilContents = versionUtilContents.replace(
-    /export const angularVersion = '~.+';/,
-    `export const angularVersion = '~${angularVersion}';`
+    /export const angularVersion = '.+';/,
+    `export const angularVersion = '${
+      isPrerelease ? angularVersion : `~${angularVersion}`
+    }';`
   );
   versionUtilContents = versionUtilContents.replace(
-    /export const angularDevkitVersion = '~.+';/,
-    `export const angularDevkitVersion = '~${angularDevkitVersion}';`
+    /export const angularDevkitVersion = '.+';/,
+    `export const angularDevkitVersion = '${
+      isPrerelease ? angularDevkitVersion : `~${angularDevkitVersion}`
+    }';`
   );
   versionUtilContents = versionUtilContents.replace(
-    /export const ngPackagrVersion = '~.+';/,
-    `export const ngPackagrVersion = '~${ngPackagrVersion}';`
+    /export const ngPackagrVersion = '.+';/,
+    `export const ngPackagrVersion = '${
+      isPrerelease ? ngPackagrVersion : `~${ngPackagrVersion}`
+    }';`
   );
 
   writeFileSync(pathToFile, versionUtilContents);
 }
 
 function updateWorkspaceAngularVersionUtils(
-  packageVersionMap: Map<string, string>
+  packageVersionMap: Map<string, string>,
+  isPrerelease: boolean
 ) {
   const pathToFile = 'packages/workspace/src/utils/versions.ts';
   let versionUtilContents = readFileSync(pathToFile, { encoding: 'utf-8' });
@@ -34,15 +44,20 @@ function updateWorkspaceAngularVersionUtils(
 
   versionUtilContents = versionUtilContents.replace(
     /export const angularCliVersion = '~.+';/,
-    `export const angularCliVersion = '~${angularDevkitVersion}';`
+    `export const angularCliVersion = '${
+      isPrerelease ? angularDevkitVersion : `~${angularDevkitVersion}`
+    }';`
   );
 
   writeFileSync(pathToFile, versionUtilContents);
 }
 
-export function updateVersionUtils(packageVersionMap: Map<string, string>) {
+export function updateVersionUtils(
+  packageVersionMap: Map<string, string>,
+  isPrerelease: boolean
+) {
   console.log('⏳ - Writing Util Files...');
-  updateAngularVersionUtils(packageVersionMap);
-  updateWorkspaceAngularVersionUtils(packageVersionMap);
+  updateAngularVersionUtils(packageVersionMap, isPrerelease);
+  updateWorkspaceAngularVersionUtils(packageVersionMap, isPrerelease);
   console.log('✅ - Wrote Util Files');
 }
