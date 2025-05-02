@@ -959,6 +959,7 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+
         with:
           version: 9
 
@@ -1007,6 +1008,7 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+
         with:
           version: 9
 
@@ -2289,6 +2291,7 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+
         with:
           version: 9
 
@@ -2337,6 +2340,7 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
+
         with:
           version: 9
 

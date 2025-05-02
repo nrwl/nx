@@ -19,11 +19,14 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      <% if(packageManager == 'pnpm'){ %>
+      <% if(packageManager === 'pnpm'){ %>
       - uses: pnpm/action-setup@v4
+      <% if(!hasPnpmVersion){ %>
         with:
           version: 9
+        <% } %>
       <% } %>
+
       <% if(packageManager == 'bun'){ %>
       - uses: oven-sh/setup-bun@v1
         with:
