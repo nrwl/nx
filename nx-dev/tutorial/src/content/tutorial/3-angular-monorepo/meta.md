@@ -5,7 +5,7 @@ meta:
   title: 'Nx Tutorial: Angular Monorepo'
   image: /images/nx-media.png
 filesystem:
-  watch: true
+  watch: ['/*.json', '/libs', '/(apps|libs)/**']
 terminal:
   panels: 'terminal'
   open: true

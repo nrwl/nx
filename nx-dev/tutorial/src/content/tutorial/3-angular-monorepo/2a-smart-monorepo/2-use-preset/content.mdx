@@ -86,6 +86,12 @@ The setup includes:
 - ESLint preconfigured
 - Jest preconfigured
 
+:::info
+
+The Cypress e2e task does not run in a web container. To see the e2e tests in action, download the repo and run `nx e2e angular-store-e2e` on your local machine.
+
+:::
+
 One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
 
 The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.
