@@ -15,13 +15,20 @@ export async function getCloudClient(options: CloudTaskRunnerOptions) {
   nxCloudClient.configureLightClientRequire()(paths);
 
   return {
-    invoke: (command: string) => {
+    invoke: (command: string, exit = true) => {
       if (command in nxCloudClient.commands) {
         nxCloudClient.commands[command]()
-          .then(() => process.exit(0))
+          .then(() => {
+            if (exit) {
+              process.exit(0);
+            }
+          })
           .catch((e) => {
             console.error(e);
-            process.exit(1);
+            if (exit) {
+              process.exit(1);
+            }
+            throw e;
           });
       } else {
         throw new UnknownCommandError(
