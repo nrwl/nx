@@ -1,60 +1,81 @@
 import type { NxJsonConfiguration } from '../config/nx-json';
-import { readNxJsonFromDisk } from '../devkit-internals';
 import { IS_WASM } from '../native';
+import { NxArgs } from '../utils/command-line-utils';
 import { isCI } from '../utils/is-ci';
+import { logger } from '../utils/logger';
 
 let tuiEnabled = undefined;
 
-export function isTuiEnabled(
-  nxJson?: NxJsonConfiguration,
-  skipCapableCheck = false
-) {
-  if (tuiEnabled !== undefined) {
-    return tuiEnabled;
-  }
+/**
+ * @returns If tui is enabled
+ */
+export function isTuiEnabled() {
+  return process.env.NX_TUI === 'true';
+}
 
+/**
+ * Determines if the TUI should be enabled for the current environment.
+ *
+ * **Note:** This function should almost never be called directly. Instead, use the `isTuiEnabled` function.
+ *
+ * @param nxJson `nx.json`
+ * @param nxArgs CLI Flags passed into Nx
+ * @param skipCapabilityCheck Mainly used for unit tests.
+ * @returns `true` if the TUI should be enabled, `false` otherwise.
+ */
+export function shouldUseTui(
+  nxJson: NxJsonConfiguration,
+  nxArgs: NxArgs,
+  skipCapabilityCheck = process.env.NX_TUI_SKIP_CAPABILITY_CHECK === 'true'
+) {
   // If the current terminal/environment is not capable of displaying the TUI, we don't run it
   const isWindows = process.platform === 'win32';
   const isCapable =
-    skipCapableCheck || (process.stderr.isTTY && isUnicodeSupported());
+    skipCapabilityCheck || (process.stderr.isTTY && isUnicodeSupported());
 
   if (!isCapable) {
-    tuiEnabled = false;
-    process.env.NX_TUI = 'false';
-    return tuiEnabled;
+    return false;
   }
 
-  // The environment variable takes precedence over the nx.json config
+  if (['static', 'stream', 'dynamic-legacy'].includes(nxArgs.outputStyle)) {
+    // If the user has specified a non-TUI output style, we disable the TUI
+    return false;
+  }
+
+  if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
+    return true;
+  }
+
+  // The environment variable takes precedence over the nx.json config, but
+  // are lower priority than the CLI args as they are less likely to change
+  // between runs, whereas the CLI args are specified by the user for each run.
   if (typeof process.env.NX_TUI === 'string') {
-    tuiEnabled = process.env.NX_TUI === 'true';
-    return tuiEnabled;
+    return process.env.NX_TUI === 'true';
   }
 
-  // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
-  // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
-  if (isCI() || isWindows || IS_WASM) {
-    tuiEnabled = false;
-    process.env.NX_TUI = 'false';
-    return tuiEnabled;
-  }
-
-  // Only read from disk if nx.json config is not already provided (and we have not been able to determine tuiEnabled based on the above checks)
-  if (!nxJson) {
-    nxJson = readNxJsonFromDisk();
+  // BELOW THIS LINE ARE "repo specific" checks, instead of "user specific" checks.
+  // "user specific" checks are specified by the current user rather than the repo
+  // settings which are applied for all users of the repo... so they are more specific
+  // and take priority.
+  if (
+    // Interactive TUI doesn't make sense on CI
+    isCI() ||
+    // TODO(@JamesHenry): Remove this check once Windows issues are fixed.
+    // Windows is not working well right now, temporarily disable it on Windows even if it has been specified as enabled
+    isWindows ||
+    // WASM needs further testing
+    IS_WASM
+  ) {
+    return false;
   }
 
   // Respect user config
   if (typeof nxJson.tui?.enabled === 'boolean') {
-    tuiEnabled = Boolean(nxJson.tui?.enabled);
-  } else {
-    // Default to enabling the TUI if the system is capable of displaying it
-    tuiEnabled = true;
+    return Boolean(nxJson.tui?.enabled);
   }
 
-  // Also set the environment variable for consistency and ease of checking on the rust side, for example
-  process.env.NX_TUI = tuiEnabled.toString();
-
-  return tuiEnabled;
+  // Default to enabling the TUI if the system is capable of displaying it
+  return true;
 }
 
 // Credit to https://github.com/sindresorhus/is-unicode-supported/blob/e0373335038856c63034c8eef6ac43ee3827a601/index.js

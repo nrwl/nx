@@ -2,7 +2,7 @@
 title: What if Nx Plugins Were More Like VSCode Extensions
 slug: 'what-if-nx-plugins-were-more-like-vscode-extensions'
 authors: [Juri Strumpflohner]
-cover_image: '/blog/images/2024-02-05/featured_img.png'
+cover_image: '/blog/images/2024-02-05/featured_img.avif'
 tags: [nx, releases]
 reposts: []
 description: Introducing Project Crystal in Nx 18, a transformative approach to Nx plugins that makes them more transparent and lightweight, featuring inferred targets, reduced configuration overhead, and improved monorepo adoption.

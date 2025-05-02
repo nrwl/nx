@@ -145,6 +145,7 @@ pub struct TerminalPaneState {
     pub scroll_offset: usize,
     pub scrollbar_state: ScrollbarState,
     pub has_pty: bool,
+    pub is_next_tab_target: bool,
 }
 
 impl TerminalPaneState {
@@ -154,6 +155,7 @@ impl TerminalPaneState {
         is_continuous: bool,
         is_focused: bool,
         has_pty: bool,
+        is_next_tab_target: bool,
     ) -> Self {
         Self {
             task_name,
@@ -163,6 +165,7 @@ impl TerminalPaneState {
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
             has_pty,
+            is_next_tab_target,
         }
     }
 }
@@ -192,20 +195,11 @@ impl<'a> TerminalPane<'a> {
 
     fn get_status_icon(&self, status: TaskStatus) -> Span {
         match status {
-            TaskStatus::Success => Span::styled(
+            TaskStatus::Success
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache => Span::styled(
                 "  ✔  ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::LocalCacheKeptExisting | TaskStatus::LocalCache => Span::styled(
-                "  ◼ ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            TaskStatus::RemoteCache => Span::styled(
-                "  ▼  ",
                 Style::default()
                     .fg(Color::Green)
                     .add_modifier(Modifier::BOLD),
@@ -227,7 +221,7 @@ impl<'a> TerminalPane<'a> {
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::Stopped => Span::styled(
-                "  ⯀️  ",
+                "  ◼  ",
                 Style::default()
                     .fg(Color::DarkGray)
                     .add_modifier(Modifier::BOLD),
@@ -287,6 +281,36 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
     type State = TerminalPaneState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        // Add bounds checking to prevent panic when terminal is too narrow
+        // Safety check: ensure area is at least 5x5 to render anything properly
+        if area.width < 5 || area.height < 5 {
+            // Just render a minimal indicator instead of a full pane
+            let safe_area = Rect {
+                x: area.x,
+                y: area.y,
+                width: area.width.min(buf.area().width.saturating_sub(area.x)),
+                height: area.height.min(buf.area().height.saturating_sub(area.y)),
+            };
+
+            if safe_area.width > 0 && safe_area.height > 0 {
+                // Only attempt to render if we have a valid area
+                let text = "...";
+                let paragraph = Paragraph::new(text)
+                    .style(Style::default().fg(Color::Gray))
+                    .alignment(Alignment::Center);
+                Widget::render(paragraph, safe_area, buf);
+            }
+            return;
+        }
+
+        // Ensure the area doesn't extend beyond buffer boundaries
+        let safe_area = Rect {
+            x: area.x,
+            y: area.y,
+            width: area.width.min(buf.area().width.saturating_sub(area.x)),
+            height: area.height.min(buf.area().height.saturating_sub(area.y)),
+        };
+
         let base_style = self.get_base_style(state.task_status);
         let border_style = if state.is_focused {
             base_style
@@ -296,11 +320,24 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let status_icon = self.get_status_icon(state.task_status);
         let block = Block::default()
-            .title(Line::from(vec![
-                status_icon.clone(),
-                Span::raw(format!("{}  ", state.task_name))
-                    .style(Style::default().fg(Color::White)),
-            ]))
+            .title(Line::from(if state.is_focused {
+                vec![
+                    status_icon.clone(),
+                    Span::raw(format!("{}  ", state.task_name))
+                        .style(Style::default().fg(Color::White)),
+                ]
+            } else {
+                vec![
+                    status_icon.clone(),
+                    Span::raw(format!("{}  ", state.task_name))
+                        .style(Style::default().fg(Color::White)),
+                    if state.is_next_tab_target {
+                        Span::raw("Press <tab> to focus  ")
+                    } else {
+                        Span::raw("")
+                    },
+                ]
+            }))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
@@ -319,7 +356,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
-            Widget::render(paragraph, area, buf);
+            Widget::render(paragraph, safe_area, buf);
             return;
         }
 
@@ -342,7 +379,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
-            Widget::render(paragraph, area, buf);
+            Widget::render(paragraph, safe_area, buf);
             return;
         }
 
@@ -365,7 +402,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
-            Widget::render(paragraph, area, buf);
+            Widget::render(paragraph, safe_area, buf);
             return;
         }
 
@@ -386,11 +423,11 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
-            Widget::render(paragraph, area, buf);
+            Widget::render(paragraph, safe_area, buf);
             return;
         }
 
-        let inner_area = block.inner(area);
+        let inner_area = block.inner(safe_area);
 
         if let Some(pty_data) = &self.pty_data {
             if let Some(pty) = &pty_data.pty {
@@ -416,7 +453,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     };
 
                     let pseudo_term = PseudoTerminal::new(&*screen).block(block);
-                    Widget::render(pseudo_term, area, buf);
+                    Widget::render(pseudo_term, safe_area, buf);
 
                     // Only render scrollbar if needed
                     if needs_scrollbar {
@@ -426,10 +463,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .end_symbol(Some("↓"))
                             .style(border_style);
 
-                        scrollbar.render(area, buf, &mut state.scrollbar_state);
+                        scrollbar.render(safe_area, buf, &mut state.scrollbar_state);
                     }
 
-                    // Show interactive/readonly status for focused, non-cache hit, tasks
+                    // Show interactive/readonly status for focused, in progress tasks
                     if state.task_status == TaskStatus::InProgress && state.is_focused {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
@@ -458,17 +495,20 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .map(|span| span.content.len())
                             .sum::<usize>();
 
-                        let bottom_right_area = Rect {
-                            x: area.x + area.width - text_width as u16 - 3,
-                            y: area.y + area.height - 1,
-                            width: text_width as u16 + 2,
-                            height: 1,
-                        };
+                        // Ensure status text doesn't extend past safe area
+                        if text_width as u16 + 3 < safe_area.width {
+                            let bottom_right_area = Rect {
+                                x: safe_area.x + safe_area.width - text_width as u16 - 3,
+                                y: safe_area.y + safe_area.height - 1,
+                                width: text_width as u16 + 2,
+                                height: 1,
+                            };
 
-                        Paragraph::new(bottom_text)
-                            .alignment(Alignment::Right)
-                            .style(border_style)
-                            .render(bottom_right_area, buf);
+                            Paragraph::new(bottom_text)
+                                .alignment(Alignment::Right)
+                                .style(border_style)
+                                .render(bottom_right_area, buf);
+                        }
 
                         // Top right status
                         let top_text = if self.is_currently_interactive() {
@@ -489,47 +529,53 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .map(|span| span.content.len())
                             .sum::<usize>();
 
-                        let top_right_area = Rect {
-                            x: area.x + area.width - mode_width as u16 - 3,
-                            y: area.y,
-                            width: mode_width as u16 + 2,
-                            height: 1,
-                        };
+                        // Ensure status text doesn't extend past safe area
+                        if mode_width as u16 + 3 < safe_area.width {
+                            let top_right_area = Rect {
+                                x: safe_area.x + safe_area.width - mode_width as u16 - 3,
+                                y: safe_area.y,
+                                width: mode_width as u16 + 2,
+                                height: 1,
+                            };
 
-                        Paragraph::new(top_text)
-                            .alignment(Alignment::Right)
-                            .style(border_style)
-                            .render(top_right_area, buf);
+                            Paragraph::new(top_text)
+                                .alignment(Alignment::Right)
+                                .style(border_style)
+                                .render(top_right_area, buf);
+                        }
                     } else if needs_scrollbar {
                         // Render padding for both top and bottom when scrollbar is present
                         let padding_text = Line::from(vec![Span::raw("  ")]);
                         let padding_width = 2;
 
-                        // Top padding
-                        let top_right_area = Rect {
-                            x: area.x + area.width - padding_width - 3,
-                            y: area.y,
-                            width: padding_width + 2,
-                            height: 1,
-                        };
+                        // Ensure paddings don't extend past safe area
+                        if padding_width + 3 < safe_area.width {
+                            // Top padding
+                            let top_right_area = Rect {
+                                x: safe_area.x + safe_area.width - padding_width - 3,
+                                y: safe_area.y,
+                                width: padding_width + 2,
+                                height: 1,
+                            };
 
-                        Paragraph::new(padding_text.clone())
-                            .alignment(Alignment::Right)
-                            .style(border_style)
-                            .render(top_right_area, buf);
+                            Paragraph::new(padding_text.clone())
+                                .alignment(Alignment::Right)
+                                .style(border_style)
+                                .render(top_right_area, buf);
 
-                        // Bottom padding
-                        let bottom_right_area = Rect {
-                            x: area.x + area.width - padding_width - 3,
-                            y: area.y + area.height - 1,
-                            width: padding_width + 2,
-                            height: 1,
-                        };
+                            // Bottom padding
+                            let bottom_right_area = Rect {
+                                x: safe_area.x + safe_area.width - padding_width - 3,
+                                y: safe_area.y + safe_area.height - 1,
+                                width: padding_width + 2,
+                                height: 1,
+                            };
 
-                        Paragraph::new(padding_text)
-                            .alignment(Alignment::Right)
-                            .style(border_style)
-                            .render(bottom_right_area, buf);
+                            Paragraph::new(padding_text)
+                                .alignment(Alignment::Right)
+                                .style(border_style)
+                                .render(bottom_right_area, buf);
+                        }
                     }
                 }
             }

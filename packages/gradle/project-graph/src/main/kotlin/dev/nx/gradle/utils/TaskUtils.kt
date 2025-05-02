@@ -27,6 +27,11 @@ fun processTask(
   val target = mutableMapOf<String, Any?>()
   target["cache"] = true // set cache to be always true
 
+  val continuous = isContinuous(task)
+  if (continuous) {
+    target["continuous"] = true
+  }
+
   // process inputs
   val inputs = getInputsForTask(task, projectRoot, workspaceRoot, externalNodes)
   if (!inputs.isNullOrEmpty()) {
@@ -299,4 +304,8 @@ fun replaceRootInPath(p: String, projectRoot: String, workspaceRoot: String): St
     return path
   }
   return null
+}
+
+fun isContinuous(task: Task): Boolean {
+  return task.name == "bootRun"
 }

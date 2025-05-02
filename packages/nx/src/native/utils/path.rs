@@ -1,4 +1,4 @@
-use crate::native::{utils::normalize_trait::Normalize, types::FileData};
+use crate::native::{types::FileData, utils::normalize_trait::Normalize};
 use std::path::{Path, PathBuf};
 
 impl Normalize for Path {
@@ -65,13 +65,9 @@ mod test {
             FileData {
                 file: "foo-other/not-child".into(),
                 hash: "123".into(),
-            }
+            },
         ];
         let child_files = get_child_files(&directory, files);
-        assert_eq!(child_files, [
-            "foo/bar",
-            "foo/baz",
-            "foo/child/bar",
-        ]);
+        assert_eq!(child_files, ["foo/bar", "foo/baz", "foo/child/bar",]);
     }
 }

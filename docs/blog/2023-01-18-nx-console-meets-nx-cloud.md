@@ -2,7 +2,7 @@
 title: 'Nx Console meets Nx Cloud'
 slug: 'nx-console-meets-nx-cloud'
 authors: ['Max Kless']
-cover_image: '/blog/images/2023-01-18/Mkqkadhkk7DydWvPg5L0bA.png'
+cover_image: '/blog/images/2023-01-18/Mkqkadhkk7DydWvPg5L0bA.avif'
 tags: [nx]
 description: Nx Console 17.28.0 integrates Nx Cloud features directly into VSCode, bringing remote caching, distributed task execution, and VCS integration with streamlined setup.
 ---

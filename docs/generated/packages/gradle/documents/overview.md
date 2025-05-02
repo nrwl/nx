@@ -14,32 +14,112 @@ Nx adds the following features to your workspace:
 - [Run only tasks affected by a PR](/ci/features/affected)
 - [Interactively explore your workspace](/features/explore-graph)
 
-## Add Nx to a Gradle Workspace
+{% callout type="info" title="Java Compatibility" %}
+This plugin requires Java 17 or newer. Using older Java versions is unsupported and may lead to issues. If you need support for an older version, please create an issue on [Github](https://github.com/nrwl/nx)!
+{% /callout %}
 
-In any Gradle workspace, run the following command to add Nx and select @nx/gradle:
+## Setup @nx/gradle
+
+### Install Nx
+
+You can install Nx globally. Depending on your package manager, use one of the following commands:
+
+{% tabs %}
+{% tab label="Homebrew" %}
+
+```shell
+brew tap nrwl/nx
+brew install nx
+```
+
+{% /tab %}
+{% tab label="Chocolatey" %}
+
+```shell
+choco install nx
+```
+
+{% /tab %}
+{% tab label="npm" %}
+
+```shell
+npm add --global nx@latest
+```
+
+{% /tab %}
+{% /tabs %}
+
+### Add Nx to a Gradle Workspace
+
+In any Gradle workspace, run the following command to add Nx and the `@nx/gradle` plugin:
 
 ```shell {% skipRescope=true %}
-npx nx@latest init
+nx init
 ```
 
 Then, you can run Gradle tasks using Nx. For example:
 
+```shell {% skipRescope=true %}
+nx build <your gradle library>
+```
+
+## How @nx/gradle Infers Tasks
+
+The `@nx/gradle` plugin relies on a companion Gradle plugin, `dev.nx.gradle.project-graph`, to analyze your Gradle build structure. When using `nx add`, the Gradle plugin is added as a dependency to the root Gradle build file. In most cases, the generator will add the task definition to trigger the plugin but if it's missing, add the following configuration to your Gradle configuration:
+
 {% tabs %}
-{% tab label="Mac/Linux" %}
+{% tab label="build.gradle.kts" %}
+
+```kotlin {% fileName="build.gradle.kts" %}
+plugins {
+    id("dev.nx.gradle.project-graph") version("+")
+}
+
+allprojects {
+    apply {
+        plugin("dev.nx.gradle.project-graph")
+    }
+}
+```
+
+{% /tab %}
+{% tab label="build.gradle" %}
+
+```groovy {% skipRescope=true %}
+plugins {
+    id 'dev.nx.gradle.project-graph' version '+'
+}
+
+allprojects {
+    apply plugin: 'dev.nx.gradle.project-graph'
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+The `dev.nx.gradle.project-graph` plugin introduces a task named `nxProjectGraph`. This task analyzes your Gradle projects and their tasks, outputting the structure as JSON. The `@nx/gradle` plugin then uses this JSON data to accurately build the Nx project graph. If Nx has any issue generate the project graph JSON, you can run the `nxProjectGraph` task manually:
+
+{% tabs %}
+{% tab label="Mac OS/Linux" %}
 
 ```shell {% skipRescope=true %}
-./nx build <your gradle library>
+./gradlew nxProjectGraph
 ```
 
 {% /tab %}
 {% tab label="Windows" %}
 
 ```shell {% skipRescope=true %}
-nx.bat build <your gradle library>
+.\gradlew.bat nxProjectGraph
 ```
 
 {% /tab %}
 {% /tabs %}
+
+## View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project` in the command line.
 
 ## Setting Up @nx/gradle in a Nx Workspace
 
@@ -49,14 +129,7 @@ In any Nx workspace, you can install `@nx/gradle` by running the following comma
 nx add @nx/gradle
 ```
 
-## How @nx/gradle Infers Tasks
-
-The `@nx/gradle` plugin will create an Nx project for each Gradle configuration file present. Any of the following files will be recognized as a Gradle configuration file:
-
-- `build.gradle`
-- `build.gradle.kts`
-
-### @nx/gradle Configuration
+## @nx/gradle Configuration
 
 The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 
@@ -69,7 +142,7 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
         "testTargetName": "test",
         "classesTargetName": "classes",
         "buildTargetName": "build",
-        "ciTargetName": "test-ci"
+        "ciTestTargetName": "test-ci"
       }
     }
   ]
@@ -78,9 +151,9 @@ The `@nx/gradle` is configured in the `plugins` array in `nx.json`.
 
 Once a Gradle configuration file has been identified, the targets are created with the name you specify under `testTargetName`, `classesTargetName` or `buildTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `test`, `classes` and `build`.
 
-### Splitting E2E Tests
+### Splitting Tests
 
-The `@nx/gradle` plugin will automatically split your e2e tasks by file if you provide a `ciTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). This will create a target with that name which can be used in CI to run the tests for each file in a distributed fashion.
+The `@nx/gradle` plugin will automatically split your testing tasks by test class if you provide a `ciTestTargetName`. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks). Nx will create a task with the name that you specify which can be used in CI to run the tests for each test class in a distributed fashion.
 
 ```json {% fileName="nx.json" highlightLines=[6] %}
 {
@@ -88,13 +161,44 @@ The `@nx/gradle` plugin will automatically split your e2e tasks by file if you p
     {
       "plugin": "@nx/gradle",
       "options": {
-        "ciTargetName": "test-ci"
+        "ciTestTargetName": "test-ci"
       }
     }
   ]
 }
 ```
 
-## View Inferred Tasks
+### Continuous Tasks
 
-To view inferred tasks for a project, open the [project details view](/features/explore-graph#explore-projects-in-your-workspace) in Nx Console or run `nx show project my-project --web` in the command line.
+Gradle doesn't have a standard way to identify tasks which are [continuous](https://nx-dev-git-docs-gradle-publish-nrwl.vercel.app/reference/project-configuration#continuous), like `bootRun` for serving a Spring Boot project. To ensure Nx handles these continuous tasks correctly, you can explicitly mark them as continuous.
+
+{% tabs %}
+{% tab label="nx.json" %}
+
+In the `nx.json`, you can specify the target default configuration like so:
+
+```json {% fileName="nx.json" highlightLines=[4] %}
+{
+  "targetDefaults": {
+    "someTask": {
+      "continuous": true
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+In a `project.json`, you can specify the target configuration like so:
+
+```json {% fileName="project.json" highlightLines=[3] %}
+{
+  "someTask": {
+    "continuous": true
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
