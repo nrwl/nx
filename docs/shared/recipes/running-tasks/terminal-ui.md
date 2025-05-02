@@ -3,7 +3,7 @@ title: Terminal UI
 description: 'Learn how to leverage and configure the Nx Terminal UI when running tasks'
 ---
 
-# Use the Nx Terminal UI
+# Nx Terminal UI
 
 In version 21, Nx provides an interactive UI in the terminal to help you view the results of multiple tasks that are running in parallel.
 
