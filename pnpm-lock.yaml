@@ -336,6 +336,9 @@ importers:
       '@nx/eslint-plugin':
         specifier: 21.0.0-rc.1
         version: 21.0.0-rc.1(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@typescript-eslint/parser@8.20.0(eslint@8.57.0)(typescript@5.7.3))(eslint-config-prettier@10.1.2(eslint@8.57.0))(eslint@8.57.0)(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
+      '@nx/gradle':
+        specifier: 21.0.0-rc.1
+        version: 21.0.0-rc.1(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
       '@nx/jest':
         specifier: 21.0.0-rc.1
         version: 21.0.0-rc.1(@babel/traverse@7.26.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(babel-plugin-macros@3.1.0)(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(ts-node@10.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@types/node@20.16.10)(typescript@5.7.3))(typescript@5.7.3)(verdaccio@6.0.5(encoding@0.1.13)(typanion@3.14.0))
@@ -5727,6 +5730,9 @@ packages:
     peerDependenciesMeta:
       '@zkochan/js-yaml':
         optional: true
+
+  '@nx/gradle@21.0.0-rc.1':
+    resolution: {integrity: sha512-1BBW5PQfV40J59/1r79Y2FqArTUgPg7+2ZsEP7s1Wc+dbcRqb0ZA4YP4dTRF+z5/No2ls0a0slQDrU0XglbOCQ==}
 
   '@nx/graph@0.4.2':
     resolution: {integrity: sha512-8sdn77o3O/BeKukKRDTPcktbMGLq4w0B5cij3SUJjzFXEZUmKCKs4LXt4VO48EV0qB4zEmuNYdhVp2erfDF7Jg==}
@@ -25900,6 +25906,12 @@ snapshots:
       - nx
       - supports-color
       - verdaccio
+
+  '@nx/gradle@21.0.0-rc.1(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))':
+    dependencies:
+      '@nx/devkit': 21.0.0-rc.1(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))
+    transitivePeerDependencies:
+      - nx
 
   '@nx/graph@0.4.2(@nx/devkit@21.0.0-rc.1(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11))))(nx@21.0.0-rc.1(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.11))(@swc/types@0.1.21)(typescript@5.7.3))(@swc/core@1.5.7(@swc/helpers@0.5.11)))(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.26.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)':
     dependencies:

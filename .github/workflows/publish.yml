@@ -138,6 +138,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
+              apt-get update && apt-get install -y openjdk-17-jdk &&
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
@@ -147,6 +148,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
+              apk add --no-cache openjdk17 &&
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
@@ -165,6 +167,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64
             build: |-
               set -e &&
+              apt-get update && apt-get install -y openjdk-17-jdk &&
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
@@ -190,6 +193,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
             build: |-
               set -e &&
+              apk add --no-cache openjdk17 &&
               rustup target add aarch64-unknown-linux-musl &&
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
