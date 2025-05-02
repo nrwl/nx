@@ -97,7 +97,8 @@ export async function resolveVersionActionsForProject(
   tree: Tree,
   releaseGroup: ReleaseGroupWithName,
   projectGraphNode: ProjectGraphProjectNode,
-  finalConfigForProject: FinalConfigForProject
+  finalConfigForProject: FinalConfigForProject,
+  isInProjectsToProcess: boolean
 ): Promise<{
   versionActionsPath: string;
   versionActions: VersionActions;
@@ -172,7 +173,7 @@ export async function resolveVersionActionsForProject(
     finalConfigForProject
   );
   // Initialize the version actions with all the required manifest paths etc
-  await versionActions.init(tree);
+  await versionActions.init(tree, isInProjectsToProcess);
   return {
     versionActionsPath,
     versionActions,
@@ -212,7 +213,7 @@ export abstract class VersionActions {
   /**
    * Asynchronous initialization of the version actions and validation of certain configuration options.
    */
-  async init(tree: Tree): Promise<void> {
+  async init(tree: Tree, isInProjectsToProcess: boolean): Promise<void> {
     // Default to the first available source manifest root, if applicable, if no custom manifest roots are provided
     if (
       this.validManifestFilenames?.length &&
@@ -260,14 +261,20 @@ export abstract class VersionActions {
           break;
         }
       }
-      if (!hasValidManifest) {
+      /**
+       * If projects or groups filters are applied, it is possible that the project is not being actively processed
+       * and we should not throw an error in this case.
+       */
+      if (!hasValidManifest && isInProjectsToProcess) {
         const validManifestFilenames =
           this.validManifestFilenames?.join(' or ');
 
         throw new Error(
           `The project "${this.projectGraphNode.name}" does not have a ${validManifestFilenames} file available in ./${interpolatedManifestRoot.path}.
-          
-To fix this you will either need to add a ${validManifestFilenames} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.`
+
+To fix this you will either need to add a ${validManifestFilenames} file at that location, or configure "release" within your nx.json to exclude "${this.projectGraphNode.name}" from the current release group, or amend the "release.version.manifestRootsToUpdate" configuration to point to where the relevant manifest should be.
+
+It is also possible that the project is being processed because of a dependency relationship between what you are directly versioning and the project/release group, in which case you will need to amend your filters to include all relevant projects and release groups.`
         );
       }
     }
