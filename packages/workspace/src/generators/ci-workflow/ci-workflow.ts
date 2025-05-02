@@ -52,7 +52,7 @@ interface Substitutes {
   hasPlaywright: boolean;
   tmpl: '';
   connectedToCloud: boolean;
-  hasPnpmVersion: boolean;
+  packageManagerVersion: string;
 }
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
@@ -73,8 +73,6 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
   } catch {}
 
   const packageJson = readJson(tree, 'package.json');
-  // check if packagejson has packagemanager and its pnpm
-  const packageManagerPrefixPnpm = packageJson?.pnpm?.packageManager;
   const allDependencies = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
@@ -95,8 +93,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManagerPrefix,
     packageManagerPreInstallPrefix,
     mainBranch: deduceDefaultBase(),
-    hasPnpmVersion:
-      packageManagerPrefixPnpm && !!packageManagerPrefixPnpm?.split('@')[1],
+    packageManagerVersion: packageJson?.packageManager?.split('@')[1],
     hasCypress,
     hasE2E,
     hasPlaywright,
