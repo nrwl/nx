@@ -2,24 +2,14 @@
   "name": "gradle-project-graph",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
-    "test": {
-      "command": "./gradlew :project-graph:test",
-      "options": {
-        "args": []
-      },
-      "cache": true
-    },
     "lint": {
-      "command": "./gradlew :project-graph:ktfmtCheck",
-      "cache": true
+      "command": "nx ktfmtCheck gradle-project-graph"
     },
     "format": {
-      "command": "./gradlew :project-graph:ktfmtFormat",
-      "cache": true
+      "command": "nx ktfmtFormat gradle-project-graph"
     },
     "publish-staging": {
-      "command": "./gradlew :project-graph:publish",
-      "cache": true,
+      "command": "nx publish gradle-project-graph",
       "outputs": ["{projectRoot}/build/staging"]
     },
     "zip-staging": {
