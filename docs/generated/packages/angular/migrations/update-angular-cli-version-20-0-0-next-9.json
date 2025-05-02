@@ -1,9 +1,9 @@
 {
-  "name": "update-angular-cli-version-20-0-0-next-5",
+  "name": "update-angular-cli-version-20-0-0-next-9",
   "cli": "nx",
   "version": "21.2.0-beta.0",
-  "requires": { "@angular/core": ">=20.0.0-next.6" },
-  "description": "Update the @angular/cli package version to ~20.0.0-next.5.",
+  "requires": { "@angular/core": ">=20.0.0-next.9" },
+  "description": "Update the @angular/cli package version to 20.0.0-next.9.",
   "factory": "./src/migrations/update-21-2-0/update-angular-cli",
   "implementation": "/packages/angular/src/migrations/update-21-2-0/update-angular-cli.ts",
   "aliases": [],

@@ -9,7 +9,7 @@ import browserslist from 'browserslist';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 const Piscina = require('piscina');
-import { colors } from 'ng-packagr/lib/utils/color';
+import { colors } from 'ng-packagr/src/lib/utils/color';
 import { workspaceRoot } from '@nx/devkit';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
