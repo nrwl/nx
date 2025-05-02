@@ -17,6 +17,7 @@ import {
   getTaskDetails,
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
+import { RunMode } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -89,7 +90,9 @@ async function getTerminalOutputLifeCycle(
   const overridesWithoutHidden = { ...overrides };
   delete overridesWithoutHidden['__overrides_unparsed__'];
 
-  if (isTuiEnabled(nxJson)) {
+  const isRunOne = initiatingProject != null;
+
+  if (isTuiEnabled()) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
     const createPatchedConsoleMethod = (
@@ -188,6 +191,8 @@ async function getTerminalOutputLifeCycle(
     if (tasks.length > 0) {
       appLifeCycle = new AppLifeCycle(
         tasks,
+        initiatingTasks.map((t) => t.id),
+        isRunOne ? RunMode.RunOne : RunMode.RunMany,
         pinnedTasks,
         nxArgs ?? {},
         nxJson.tui ?? {},
@@ -290,7 +295,6 @@ async function getTerminalOutputLifeCycle(
   }
 
   const { runnerOptions } = getRunner(nxArgs, nxJson);
-  const isRunOne = initiatingProject != null;
   const useDynamicOutput = shouldUseDynamicLifeCycle(
     tasks,
     runnerOptions,

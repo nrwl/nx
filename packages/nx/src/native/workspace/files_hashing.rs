@@ -61,7 +61,11 @@ fn hash_files(files: Vec<NxFile>) -> Vec<(String, NxFileHashed)> {
             })
             .collect::<Vec<_>>()
     } else {
-        trace!("hashing workspace files in {} chunks of {}", num_parallelism, chunks);
+        trace!(
+            "hashing workspace files in {} chunks of {}",
+            num_parallelism,
+            chunks
+        );
         files
             .par_chunks(chunks)
             .flat_map_iter(|chunks| {

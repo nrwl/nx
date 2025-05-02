@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use tracing::trace;
+use watchexec::command;
 
 use super::child_process::ChildProcess;
 use super::os;
@@ -31,6 +32,7 @@ impl RustPseudoTerminal {
         exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
+        command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
         self.pseudo_terminal.run_command(
             command,
@@ -39,6 +41,7 @@ impl RustPseudoTerminal {
             exec_argv,
             quiet,
             tty,
+            command_label,
         )
     }
 
@@ -54,6 +57,7 @@ impl RustPseudoTerminal {
         js_env: Option<HashMap<String, String>>,
         exec_argv: Option<Vec<String>>,
         quiet: bool,
+        command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
         let command = format!(
             "node {} {} {}",
@@ -70,6 +74,7 @@ impl RustPseudoTerminal {
             exec_argv,
             Some(quiet),
             Some(true),
+            command_label,
         )
     }
 }

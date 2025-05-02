@@ -3,7 +3,7 @@ title: Evolving Nx
 slug: evolving-nx
 authors: [Jeff Cross]
 tags: [nx, release]
-cover_image: /blog/images/evolving-nx/thumbnail.png
+cover_image: /blog/images/evolving-nx/thumbnail.avif
 description: Nx's journey from a side project to a tool for millions, including Nx Cloud and Nx Powerpack developments.
 ---
 

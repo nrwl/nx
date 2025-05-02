@@ -8,7 +8,7 @@ type MatrixDataOS = {
   os_name: string, // short name that will be printed in the report and on the action
   os_timeout: number, // 60
   package_managers: string[], // package managers to run on this OS
-  node_versions: number[], // node versions to run on this OS
+  node_versions: Array<number | string>, // node versions to run on this OS
   excluded?: string[], // projects to exclude from running on this OS
 };
 
@@ -56,23 +56,23 @@ const matrixData: MatrixData = {
   ],
   nodeTLS: 20,
   setup: [
-    { os: 'ubuntu-latest', os_name: 'Linux', os_timeout: 60, package_managers: ['npm', 'pnpm', 'yarn'], node_versions: [20, 22], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] },
-    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: [20] },
-    { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: [20], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
+    { os: 'ubuntu-latest', os_name: 'Linux', os_timeout: 60, package_managers: ['npm', 'pnpm', 'yarn'], node_versions: ['20.19.0', "22.12.0"], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] },
+    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['20.19.0'] },
+    { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['20.19.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
   ]
 };
 
 const matrix: Array<{
   project: string,
   codeowners: string,
-  node_version: number,
+  node_version: number | string,
   package_manager: string,
   os: string,
   os_name: string,
   os_timeout: number
 }> = [];
 
-function addMatrixCombo(project: MatrixDataProject, nodeVersion: number, pm: number, os: number) {
+function addMatrixCombo(project: MatrixDataProject, nodeVersion: number | string, pm: number, os: number) {
   matrix.push({
     project: project.name,
     codeowners: project.codeowners,

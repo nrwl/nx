@@ -21,9 +21,6 @@ Make sure to install the `@nx/playwright` version that matches the version of `n
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/playwright
 ```
@@ -70,18 +67,6 @@ The `targetName` and `ciTargetName` options control the name of the inferred Pla
 `@nx/playwright/plugin` leverages Nx Atomizer to split your e2e tests into smaller tasks in a fully automated way. This allows for a much more efficient distribution of tasks in CI. You can read more about the Atomizer feature [here](/ci/features/split-e2e-tasks).
 
 If you would like to disable Atomizer for Playwright tasks, set `ciTargetName` to `false`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/playwright` package with your package manager.
-
-```shell {% skipRescope=true %}
-npm add -D @nx/playwright
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## E2E Testing
 

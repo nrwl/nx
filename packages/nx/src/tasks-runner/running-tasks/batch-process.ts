@@ -76,7 +76,7 @@ export class BatchProcess {
     }
   }
 
-  kill(signal?: NodeJS.Signals | number): void {
+  kill(signal?: NodeJS.Signals): void {
     if (this.childProcess.connected) {
       this.childProcess.kill(signal);
     }

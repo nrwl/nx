@@ -10,6 +10,7 @@ import { runCommands } from '../executors/run-commands/run-commands.impl';
 import { getTaskDetails, hashTask } from '../hasher/hash-task';
 import { TaskHasher } from '../hasher/task-hasher';
 import {
+  IS_WASM,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
@@ -24,7 +25,7 @@ import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
-import { TaskMetadata } from './life-cycle';
+import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
@@ -49,13 +50,15 @@ import { SharedRunningTask } from './running-tasks/shared-running-task';
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
   private cache: DbCache | Cache = getCache(this.options);
-  private readonly tuiEnabled = isTuiEnabled(this.nxJson);
+  private readonly tuiEnabled = isTuiEnabled();
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(
     this.options,
     this.tuiEnabled
   );
 
-  private runningTasksService = new RunningTasksService(getDbConnection());
+  private runningTasksService = !IS_WASM
+    ? new RunningTasksService(getDbConnection())
+    : null;
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.taskGraph,
@@ -105,16 +108,15 @@ export class TaskOrchestrator {
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
-      this.tasksSchedule.init(),
+      this.tasksSchedule.init().then(() => {
+        return this.tasksSchedule.scheduleNextTasks();
+      }),
       'init' in this.cache ? this.cache.init() : null,
     ]);
   }
 
   async run() {
     await this.init();
-
-    // initial scheduling
-    await this.tasksSchedule.scheduleNextTasks();
 
     performance.mark('task-execution:start');
 
@@ -157,6 +159,10 @@ export class TaskOrchestrator {
     return this.completedTasks;
   }
 
+  public nextBatch() {
+    return this.tasksSchedule.nextBatch();
+  }
+
   private async executeNextBatchOfTasksUsingTaskSchedule() {
     // completed all the tasks
     if (!this.tasksSchedule.hasTasks() || this.bailed) {
@@ -168,7 +174,7 @@ export class TaskOrchestrator {
       this.options.skipNxCache === undefined;
 
     this.processAllScheduledTasks();
-    const batch = this.tasksSchedule.nextBatch();
+    const batch = this.nextBatch();
     if (batch) {
       const groupId = this.closeGroup();
 
@@ -200,7 +206,7 @@ export class TaskOrchestrator {
     );
   }
 
-  processTasks(taskIds: string[]) {
+  private processTasks(taskIds: string[]) {
     for (const taskId of taskIds) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
@@ -248,7 +254,7 @@ export class TaskOrchestrator {
     );
   }
 
-  private processAllScheduledTasks() {
+  public processAllScheduledTasks() {
     const { scheduledTasks, scheduledBatches } =
       this.tasksSchedule.getAllScheduledTasks();
 
@@ -261,13 +267,7 @@ export class TaskOrchestrator {
   // endregion Processing Scheduled Tasks
 
   // region Applying Cache
-  private async applyCachedResults(tasks: Task[]): Promise<
-    {
-      task: Task;
-      code: number;
-      status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
-    }[]
-  > {
+  private async applyCachedResults(tasks: Task[]): Promise<TaskResult[]> {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
@@ -316,11 +316,11 @@ export class TaskOrchestrator {
   // endregion Applying Cache
 
   // region Batch
-  private async applyFromCacheOrRunBatch(
+  public async applyFromCacheOrRunBatch(
     doNotSkipCache: boolean,
     batch: Batch,
     groupId: number
-  ) {
+  ): Promise<TaskResult[]> {
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
@@ -332,11 +332,9 @@ export class TaskOrchestrator {
 
     await this.preRunSteps(tasks, { groupId });
 
-    let results: {
-      task: Task;
-      status: TaskStatus;
-      terminalOutput?: string;
-    }[] = doNotSkipCache ? await this.applyCachedResults(tasks) : [];
+    let results: TaskResult[] = doNotSkipCache
+      ? await this.applyCachedResults(tasks)
+      : [];
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
@@ -386,9 +384,13 @@ export class TaskOrchestrator {
       applyFromCacheOrRunBatchStart.name,
       applyFromCacheOrRunBatchEnd.name
     );
+    return results;
   }
 
-  private async runBatch(batch: Batch, env: NodeJS.ProcessEnv) {
+  private async runBatch(
+    batch: Batch,
+    env: NodeJS.ProcessEnv
+  ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
       const batchProcess =
@@ -402,6 +404,7 @@ export class TaskOrchestrator {
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
+        code: result.success ? 0 : 1,
         task: {
           ...this.taskGraph.tasks[taskId],
           startTime: result.startTime,
@@ -413,6 +416,7 @@ export class TaskOrchestrator {
     } catch (e) {
       return batch.taskGraph.roots.map((rootTaskId) => ({
         task: this.taskGraph.tasks[rootTaskId],
+        code: 1,
         status: 'failure' as TaskStatus,
       }));
     } finally {
@@ -432,7 +436,7 @@ export class TaskOrchestrator {
     doNotSkipCache: boolean,
     task: Task,
     groupId: number
-  ) {
+  ): Promise<TaskResult> {
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
 
@@ -686,7 +690,10 @@ export class TaskOrchestrator {
   }
 
   async startContinuousTask(task: Task, groupId: number) {
-    if (this.runningTasksService.getRunningTasks([task.id]).length) {
+    if (
+      this.runningTasksService &&
+      this.runningTasksService.getRunningTasks([task.id]).length
+    ) {
       await this.preRunSteps([task], { groupId });
 
       if (this.tuiEnabled) {

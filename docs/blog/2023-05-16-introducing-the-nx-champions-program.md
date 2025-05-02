@@ -2,7 +2,7 @@
 title: 'Introducing the Nx Champions Program'
 slug: 'introducing-the-nx-champions-program'
 authors: ['Isaac Mann']
-cover_image: '/blog/images/2023-05-16/cVGLh0H-uOpy7-D6.png'
+cover_image: '/blog/images/2023-05-16/cVGLh0H-uOpy7-D6.avif'
 tags: [nx]
 description: Introducing the Nx Champions program, recognizing and supporting community leaders in Nx expertise, content creation, and community bridging.
 ---

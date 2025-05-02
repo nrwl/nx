@@ -246,7 +246,7 @@ describe('Remix - Convert To Inferred', () => {
           devTargetName: 'custom-dev',
           startTargetName: 'start',
           typecheckTargetName: 'typecheck',
-          staticServeTargetName: 'static-serve',
+          serveStaticTargetName: 'serve-static',
         },
       });
       updateNxJson(tree, nxJson);

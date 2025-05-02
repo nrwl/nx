@@ -158,12 +158,15 @@ mod tests {
         let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
-            hash(&[
-                file_data1.hash.as_bytes(),
-                file_data1.file.as_bytes(),
-                file_data3.hash.as_bytes(),
-                file_data3.file.as_bytes()
-            ].concat())
+            hash(
+                &[
+                    file_data1.hash.as_bytes(),
+                    file_data1.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
+                    file_data3.file.as_bytes()
+                ]
+                .concat()
+            )
         );
     }
 
@@ -205,12 +208,15 @@ mod tests {
         let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
-            hash(&[
-                file_data1.hash.as_bytes(),
-                file_data1.file.as_bytes(),
-                file_data3.hash.as_bytes(),
-                file_data3.file.as_bytes(),
-            ].concat())
+            hash(
+                &[
+                    file_data1.hash.as_bytes(),
+                    file_data1.file.as_bytes(),
+                    file_data3.hash.as_bytes(),
+                    file_data3.file.as_bytes(),
+                ]
+                .concat()
+            )
         );
     }
 }

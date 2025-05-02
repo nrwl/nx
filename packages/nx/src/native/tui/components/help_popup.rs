@@ -9,6 +9,9 @@ use ratatui::{
     },
 };
 use std::any::Any;
+use tokio::sync::mpsc::UnboundedSender;
+
+use crate::native::tui::action::Action;
 
 use super::{Component, Frame};
 
@@ -18,6 +21,7 @@ pub struct HelpPopup {
     content_height: usize,
     viewport_height: usize,
     visible: bool,
+    action_tx: Option<UnboundedSender<Action>>,
 }
 
 impl HelpPopup {
@@ -28,6 +32,7 @@ impl HelpPopup {
             content_height: 0,
             viewport_height: 0,
             visible: false,
+            action_tx: None,
         }
     }
 
@@ -67,6 +72,23 @@ impl HelpPopup {
     }
 
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
+        // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
+        if area.height == 0
+            || area.width == 0
+            || area.x >= f.area().width
+            || area.y >= f.area().height
+        {
+            return; // Area is out of bounds, don't try to render
+        }
+
+        // Ensure area is entirely within frame bounds
+        let safe_area = Rect {
+            x: area.x,
+            y: area.y,
+            width: area.width.min(f.area().width.saturating_sub(area.x)),
+            height: area.height.min(f.area().height.saturating_sub(area.y)),
+        };
+
         let percent_y = 85;
         let percent_x = 70;
 
@@ -77,7 +99,7 @@ impl HelpPopup {
                 Constraint::Percentage(percent_y),
                 Constraint::Percentage((100 - percent_y) / 2),
             ])
-            .split(area);
+            .split(safe_area);
 
         let popup_area = Layout::default()
             .direction(Direction::Horizontal)
@@ -110,6 +132,10 @@ impl HelpPopup {
             ("<esc>", "Set focus back to task list"),
             ("<space>", "Quick toggle a single output pane"),
             ("b", "Toggle task list visibility"),
+            (
+                "m",
+                "Toggle between vertical and horizontal layouts (auto by default)",
+            ),
             ("1", "Pin task to be shown in output pane 1"),
             ("2", "Pin task to be shown in output pane 2"),
             (
@@ -322,16 +348,32 @@ impl Clone for HelpPopup {
             content_height: self.content_height,
             viewport_height: self.viewport_height,
             visible: self.visible,
+            action_tx: self.action_tx.clone(),
         }
     }
 }
 
 impl Component for HelpPopup {
+    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+        self.action_tx = Some(tx);
+        Ok(())
+    }
+
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
         }
         Ok(())
+    }
+
+    fn update(&mut self, action: Action) -> Result<Option<Action>> {
+        match action {
+            Action::Resize(w, h) => {
+                self.handle_resize(w, h);
+            }
+            _ => {}
+        }
+        Ok(None)
     }
 
     fn as_any(&self) -> &dyn Any {

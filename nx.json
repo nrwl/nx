@@ -120,14 +120,7 @@
       }
     },
     "lint": {
-      "dependsOn": [
-        "build-native",
-        "^build-native",
-        "@nx/nx-source:lint-pnpm-lock"
-      ]
-    },
-    "lint-pnpm-lock": {
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
       "cache": true,
@@ -143,7 +136,10 @@
     "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
@@ -268,6 +264,13 @@
         "projects": ["docs"],
         "options": {
           "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
+        }
+      },
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "blog/**/!(sitemap).md"
         }
       },
       {

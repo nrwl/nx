@@ -2,7 +2,7 @@
 title: 'Nx 15.7 — Node Support, Angular LTS, Lockfile Pruning'
 slug: 'nx-15-7-node-support-angular-lts-lockfile-pruning'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-02-16/2AAo-mng7QyJP9yC80zNFQ.png'
+cover_image: '/blog/images/2023-02-16/2AAo-mng7QyJP9yC80zNFQ.avif'
 tags: [nx, release]
 description: Nx 15.7 introduces first-class Node.js support, detached Angular version support, enhanced lockfile parsing, and Storybook 7.0 beta integration.
 ---

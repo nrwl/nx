@@ -1,6 +1,9 @@
 export function isCI() {
+  if (process.env.CI === 'false') {
+    return false;
+  }
   return (
-    (process.env.CI && process.env.CI !== 'false') ||
+    process.env.CI ||
     process.env.TF_BUILD === 'true' ||
     process.env.GITHUB_ACTIONS === 'true' ||
     process.env.BUILDKITE === 'true' ||

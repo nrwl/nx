@@ -1,3 +1,4 @@
+use super::process_killer::ProcessKiller;
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{bounded, Receiver};
@@ -8,7 +9,6 @@ use napi::{
     },
     Env, JsFunction,
 };
-use portable_pty::ChildKiller;
 use std::io::Write;
 use std::sync::{Arc, Mutex, RwLock};
 use tracing::warn;
@@ -21,7 +21,7 @@ pub enum ChildProcessMessage {
 #[napi]
 pub struct ChildProcess {
     parser: Arc<RwLock<Parser>>,
-    process_killer: Box<dyn ChildKiller + Sync + Send>,
+    process_killer: ProcessKiller,
     message_receiver: Receiver<String>,
     pub(crate) wait_receiver: Receiver<String>,
     thread_handles: Vec<Sender<()>>,
@@ -32,7 +32,7 @@ impl ChildProcess {
     pub fn new(
         parser: Arc<RwLock<Parser>>,
         writer_arc: Arc<Mutex<Box<dyn Write + Send>>>,
-        process_killer: Box<dyn ChildKiller + Sync + Send>,
+        process_killer: ProcessKiller,
         message_receiver: Receiver<String>,
         exit_receiver: Receiver<String>,
     ) -> Self {
@@ -51,9 +51,9 @@ impl ChildProcess {
         External::new((self.parser.clone(), self.writer_arc.clone()))
     }
 
-    #[napi]
-    pub fn kill(&mut self) -> anyhow::Result<()> {
-        self.process_killer.kill().map_err(anyhow::Error::from)
+    #[napi(ts_args_type = "signal?: NodeJS.Signals")]
+    pub fn kill(&mut self, signal: Option<&str>) -> anyhow::Result<()> {
+        self.process_killer.kill(signal)
     }
 
     #[napi]

@@ -2,7 +2,7 @@
 title: 'Determine your User Location with Netlify Edge Functions'
 slug: 'determine-your-user-location-with-netlify-edge-functions'
 authors: ['Nicholas Cunningham']
-cover_image: '/blog/images/2023-05-26/G2ynKDm6DIKLcZ2fJlV0dw.png'
+cover_image: '/blog/images/2023-05-26/G2ynKDm6DIKLcZ2fJlV0dw.avif'
 tags: [nx, tutorial]
 description: A guide to user location detection using Nx and Netlify Edge Functions, with serverless function setup, IP geolocation integration, and deployment for region-aware web apps.
 ---
