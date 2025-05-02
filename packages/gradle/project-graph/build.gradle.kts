@@ -124,3 +124,9 @@ afterEvaluate {
 tasks.test { useJUnitPlatform() }
 
 java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }
+
+allprojects {
+    apply {
+        plugin("dev.nx.gradle.project-graph")
+    }
+  }

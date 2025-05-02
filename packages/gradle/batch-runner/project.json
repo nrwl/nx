@@ -5,29 +5,13 @@
   "sourceRoot": "packages/gradle/batch-runner/src",
   "targets": {
     "assemble": {
-      "command": "./gradlew :batch-runner:assemble",
-      "inputs": [
-        "{projectRoot}/src/**",
-        "{projectRoot}/build.gradle.kts",
-        "{projectRoot}/settings.gradle.kts"
-      ],
-      "outputs": ["{projectRoot}/build"],
-      "cache": true
-    },
-    "test": {
-      "command": "./gradlew :batch-runner:test",
-      "options": {
-        "args": []
-      },
-      "cache": true
+      "outputs": ["{projectRoot}/build"]
     },
     "lint": {
-      "command": "./gradlew :batch-runner:ktfmtCheck",
-      "cache": true
+      "command": "nx ktfmtCheck gradle-batch-runner"
     },
     "format": {
-      "command": "./gradlew :batch-runner:ktfmtFormat",
-      "cache": true
+      "command": "nx ktfmtFormat gradle-batch-runner"
     }
   }
 }

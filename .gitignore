@@ -98,6 +98,7 @@ node_modules/
 *.sw?
 .specstory/**
 .cursorindexingignore
+.cursor
 # OS specific
 # Task files
 tasks.json

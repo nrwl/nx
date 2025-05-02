@@ -4,3 +4,8 @@ plugins {
 }
 
 group = "dev.nx"
+allprojects {
+    apply {
+        plugin("dev.nx.gradle.project-graph")
+    }
+  }
