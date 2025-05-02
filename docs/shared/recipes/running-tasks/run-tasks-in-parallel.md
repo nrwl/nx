@@ -11,6 +11,12 @@ If you want to increase the number of processes running tasks to, say, 5 (by def
 npx nx build myapp --parallel=5
 ```
 
+You can also set parallel based on the percentage of the number of logical CPUs.
+
+```shell
+npx nx build myapp --parallel=50%
+```
+
 Note, you can also change the default in `nx.json`, like this:
 
 {% tabs %}
