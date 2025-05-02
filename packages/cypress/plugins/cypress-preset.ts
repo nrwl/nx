@@ -94,7 +94,7 @@ function startWebServer(webServerCommand: string) {
     } else {
       return new Promise<void>((res, rej) => {
         if (process.platform === 'win32' || process.platform === 'darwin') {
-          if (this.childProcess.kill()) {
+          if (serverProcess.kill()) {
             res();
           } else {
             rej('Unable to kill process');
