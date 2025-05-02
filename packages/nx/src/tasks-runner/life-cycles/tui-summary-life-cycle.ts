@@ -167,7 +167,7 @@ export function getTuiTerminalSummaryLifeCycle({
         );
       }
       lines = [output.colors.green(lines.join(EOL))];
-    } else if (totalCompletedTasks + stoppedTasks.size === totalTasks) {
+    } else if (inProgressTasks.size === 0) {
       let text = `Ran target ${output.bold(
         targets[0]
       )} for project ${output.bold(initiatingProject)}`;
@@ -190,7 +190,7 @@ export function getTuiTerminalSummaryLifeCycle({
 
       const viewLogs = viewLogsFooterRows(totalFailedTasks);
 
-      lines = [
+      lines.push(
         output.colors.red(
           [
             output.applyNxPrefix(
@@ -209,11 +209,10 @@ export function getTuiTerminalSummaryLifeCycle({
             )}`,
             ...viewLogs,
           ].join(EOL)
-        ),
-      ];
+        )
+      );
     } else {
-      lines = [
-        ...output.getVerticalSeparatorLines('red'),
+      lines.push(
         output.applyNxPrefix(
           'red',
           output.colors.red(
@@ -221,8 +220,8 @@ export function getTuiTerminalSummaryLifeCycle({
               targets[0]
             )} for project ${output.bold(initiatingProject)}`
           ) + output.dim(` (${timeTakenText})`)
-        ),
-      ];
+        )
+      );
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
