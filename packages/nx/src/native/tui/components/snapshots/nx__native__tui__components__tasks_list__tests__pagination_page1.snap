@@ -16,4 +16,4 @@ expression: terminal.backend()
 "  ·    task3                                                                                         ...             ..."
 "  ·    task4                                                                                         ...             ..."
 "                                                                                                                        "
-"  ← 1/2 →                quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>           "
+"  ← 1/2 →                           quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
