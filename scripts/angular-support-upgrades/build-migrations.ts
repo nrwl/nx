@@ -8,11 +8,14 @@ import {
   getAngularCliMigrationGeneratorSpec,
 } from './files/angular-cli-upgrade-migration';
 
+const migrationGeneratorPrefix = 'update-angular-cli-version-';
+
 async function addMigrationPackageGroup(
   angularPackageMigrations: Record<string, any>,
   targetNxVersion: string,
   targetNxMigrationVersion: string,
-  packageVersionMap: Map<string, string>
+  packageVersionMap: Map<string, string>,
+  isPrerelease: boolean
 ) {
   angularPackageMigrations.packageJsonUpdates[targetNxVersion] = {
     version: `${targetNxMigrationVersion}`,
@@ -55,7 +58,7 @@ async function addMigrationPackageGroup(
     angularPackageMigrations.packageJsonUpdates[targetNxVersion].packages[
       pkgName
     ] = {
-      version: `~${version}`,
+      version: isPrerelease ? version : `~${version}`,
       alwaysAddToPackageJson: pkgName === '@angular/core',
     };
   }
@@ -104,20 +107,72 @@ function findPreviousVersion(
     compare(b.version, a.version)
   );
 
-  const previousUpdate = sortedUpdates.find(
-    (update: any) =>
-      update.packages['@angular/core'] &&
-      update.packages['@angular/core'].version.replace(/^[~^]/, '') !==
-        angularCoreNewVersion
-  )!;
+  const {
+    major: newMajorVersion,
+    minor: newMinorVersion,
+    patch: newPatchVersion,
+  } = parse(angularCoreNewVersion)!;
+
+  const previousUpdate = sortedUpdates.find((update: any) => {
+    if (!update.packages['@angular/core']) {
+      return false;
+    }
+
+    const {
+      major: updateMajorVersion,
+      minor: updateMinorVersion,
+      patch: updatePatchVersion,
+    } = parse(update.packages['@angular/core'].version.replace(/^[~^]/, ''))!;
+
+    return (
+      updateMajorVersion !== newMajorVersion ||
+      updateMinorVersion !== newMinorVersion ||
+      updatePatchVersion !== newPatchVersion
+    );
+  })!;
 
   return previousUpdate.packages['@angular/core'].version.replace(/^[~^]/, '');
+}
+
+function deletePreviousPrereleaseMigration(
+  angularPackageMigrations: Record<string, any>,
+  angularCoreVersion: string
+) {
+  const { major, minor, patch } = parse(angularCoreVersion)!;
+
+  const existingMigration = Object.keys(
+    angularPackageMigrations.generators
+  ).find((migration) => {
+    if (!migration.startsWith(migrationGeneratorPrefix)) {
+      return false;
+    }
+
+    const angularCliVersion = migration.replace(migrationGeneratorPrefix, '');
+
+    if (!/^[0-9]+-[0-9]+-[0-9]+-.*$/.test(angularCliVersion)) {
+      return false;
+    }
+
+    const [existingMajor, existingMinor, existingPatch] =
+      angularCliVersion.split('-');
+
+    return (
+      +existingMajor === major &&
+      +existingMinor === minor &&
+      +existingPatch === patch
+    );
+  });
+
+  if (existingMigration) {
+    delete angularPackageMigrations.generators[existingMigration];
+  }
 }
 
 export async function buildMigrations(
   packageVersionMap: Map<string, string>,
   targetNxVersion: string,
-  targetNxMigrationVersion: string
+  targetNxMigrationVersion: string,
+  isPrerelease: boolean
 ) {
   console.log('⏳ - Writing migrations...');
   const pathToMigrationsJsonFile = 'packages/angular/migrations.json';
@@ -133,12 +188,15 @@ export async function buildMigrations(
     angularPackageMigrations,
     targetNxVersion,
     targetNxMigrationVersion,
-    packageVersionMap
+    packageVersionMap,
+    isPrerelease
   );
 
   const angularCLIVersion = packageVersionMap.get('@angular/cli') as string;
-  const angularCliMigrationGeneratorContents =
-    getAngularCliMigrationGenerator(angularCLIVersion);
+  const angularCliMigrationGeneratorContents = getAngularCliMigrationGenerator(
+    angularCLIVersion,
+    isPrerelease
+  );
   const angularCliMigrationGeneratorSpecContents =
     getAngularCliMigrationGeneratorSpec();
 
@@ -156,19 +214,29 @@ export async function buildMigrations(
   const migrationGeneratorFolderName =
     'update-' + targetNxVersion.replace(/\./g, '-');
   const migrationFileName = 'update-angular-cli';
-  const generatorName = `update-angular-cli-version-${angularCLIVersion.replace(
+  const generatorName = `${migrationGeneratorPrefix}${angularCLIVersion.replace(
     /\./g,
     '-'
   )}`;
 
-  const angularCoreVersion = packageVersionMap.get('@angular/core');
+  const angularCoreVersion = packageVersionMap.get('@angular/core')!;
+
+  if (isPrerelease) {
+    deletePreviousPrereleaseMigration(
+      angularPackageMigrations,
+      angularCoreVersion
+    );
+  }
+
   angularPackageMigrations.generators[generatorName] = {
     cli: 'nx',
     version: targetNxMigrationVersion,
     requires: {
       '@angular/core': `>=${angularCoreVersion}`,
     },
-    description: `Update the @angular/cli package version to ~${angularCLIVersion}.`,
+    description: `Update the @angular/cli package version to ${
+      isPrerelease ? angularCLIVersion : `~${angularCLIVersion}`
+    }.`,
     factory: `./src/migrations/${migrationGeneratorFolderName}/${migrationFileName}`,
   };
 
