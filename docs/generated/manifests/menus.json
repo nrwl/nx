@@ -1091,6 +1091,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Use the Terminal UI",
+                "path": "/recipes/running-tasks/terminal-ui",
+                "id": "terminal-ui",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
@@ -2193,6 +2201,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Use the Terminal UI",
+            "path": "/recipes/running-tasks/terminal-ui",
+            "id": "terminal-ui",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
@@ -2295,6 +2311,14 @@
         "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use the Terminal UI",
+        "path": "/recipes/running-tasks/terminal-ui",
+        "id": "terminal-ui",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
