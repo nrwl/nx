@@ -295,13 +295,12 @@ const allOutputStyles = [
   'static',
   'stream',
   'stream-without-prefixes',
-  'compact',
 ] as const;
 
 export type OutputStyle = (typeof allOutputStyles)[number];
 
-export function withOutputStyleOption(
-  yargs: Argv,
+export function withOutputStyleOption<T>(
+  yargs: Argv<T>,
   choices: ReadonlyArray<OutputStyle> = [
     'dynamic-legacy',
     'dynamic',
@@ -312,7 +311,7 @@ export function withOutputStyleOption(
   ]
 ) {
   return yargs
-    .option('output-style', {
+    .option('outputStyle', {
       describe: `Defines how Nx emits outputs tasks logs. **tui**: enables the Nx Terminal UI, recommended for local development environments. **dynamic-legacy**: use dynamic-legacy output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended for local development environments where tui is not supported. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
       type: 'string',
       choices,
@@ -323,12 +322,12 @@ export function withOutputStyleOption(
         if (useTui) {
           // We have to set both of these because `check` runs after the normalization that
           // handles the kebab-case'd args -> camelCase'd args translation.
-          args['output-style'] = 'tui';
+          (args as any)['output-style'] = 'tui';
           (args as any).outputStyle = 'tui';
         }
         process.env.NX_TUI = useTui.toString();
       },
-    ]);
+    ]) as Argv<T & { outputStyle: OutputStyle }>;
 }
 
 export function withRunOneOptions(yargs: Argv) {

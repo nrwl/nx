@@ -905,8 +905,7 @@ export async function invokeTasksRunner({
       lifeCycle: compositedLifeCycle,
     },
     {
-      initiatingProject:
-        nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+      initiatingProject,
       initiatingTasks,
       projectGraph,
       nxJson,
