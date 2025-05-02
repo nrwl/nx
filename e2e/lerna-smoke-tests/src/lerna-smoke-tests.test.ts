@@ -10,6 +10,7 @@ import {
   tmpProjPath,
   updateJson,
 } from '@nx/e2e/utils';
+// Ignore this
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
