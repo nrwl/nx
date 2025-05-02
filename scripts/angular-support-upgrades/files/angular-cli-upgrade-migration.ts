@@ -1,8 +1,9 @@
 export const getAngularCliMigrationGenerator = (
-  version: string
+  version: string,
+  isPrerelease: boolean
 ) => `import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
-export const angularCliVersion = '~${version}';
+export const angularCliVersion = '${isPrerelease ? version : `~${version}`}';
 
 export default async function (tree: Tree) {
   let shouldFormat = false;
