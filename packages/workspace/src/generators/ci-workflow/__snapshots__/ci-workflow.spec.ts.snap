@@ -174,14 +174,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -190,6 +185,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - run: npx cypress install
@@ -225,14 +226,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -241,6 +237,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - run: npx cypress install
@@ -694,14 +696,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -710,6 +707,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
@@ -743,14 +746,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -759,6 +757,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
@@ -978,19 +982,23 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: corepack prepare pnpm@9.8
+          version: 9.8.0
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -1024,19 +1032,23 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: corepack prepare pnpm@9.8
+          version: 9.8.0
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -1247,19 +1259,19 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'yarn'
-
-      - run: corepack prepare yarn@1.22
+      - run: corepack prepare 'yarn@1.22'
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -1293,19 +1305,19 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'yarn'
-
-      - run: corepack prepare yarn@1.22
+      - run: corepack prepare 'yarn@1.22'
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -1521,14 +1533,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -1537,6 +1544,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - run: npx cypress install
@@ -1572,14 +1585,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -1588,6 +1596,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - run: npx cypress install
@@ -2043,14 +2057,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -2059,6 +2068,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
@@ -2092,14 +2107,9 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+      ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+      ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
 
@@ -2108,6 +2118,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
       - uses: nrwl/nx-set-shas@v4
@@ -2328,19 +2344,23 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: corepack prepare pnpm@9.8
+          version: 9.8.0
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -2374,19 +2394,23 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - run: corepack prepare pnpm@9.8
+          version: 9.8.0
+          run_install: false
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: pnpm dlx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -2598,19 +2622,19 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'yarn'
-
-      - run: corepack prepare yarn@1.22
+      - run: corepack prepare 'yarn@1.22'
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
@@ -2644,19 +2668,19 @@ jobs:
           filter: tree:0
           fetch-depth: 0
 
-      # Cache node_modules
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'yarn'
-
-      - run: corepack prepare yarn@1.22
+      - run: corepack prepare 'yarn@1.22'
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+      # Cache node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4

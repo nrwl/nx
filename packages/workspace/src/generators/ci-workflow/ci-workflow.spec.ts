@@ -337,14 +337,9 @@ describe('CI Workflow generator', () => {
                   filter: tree:0
                   fetch-depth: 0
 
-              # Cache node_modules
-              - uses: actions/setup-node@v4
-                with:
-                  node-version: 20
-                  cache: 'npm'
-
-              ## NPM versions that are > v8 has an issue which has been solved in Node 22.5.1
+              ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
               ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
+              ## When we upgrade to node 22.5.1 this can be removed.
               - name: Downgrade npm to 8.x
                 run: npm install -g npm@8
 
@@ -353,6 +348,12 @@ describe('CI Workflow generator', () => {
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
               # Connect your workspace by running "nx connect" and uncomment this line to enable task distribution
               # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+
+              # Cache node_modules
+              - uses: actions/setup-node@v4
+                with:
+                  node-version: 20
+                  cache: 'npm'
 
               - run: npm ci --legacy-peer-deps
               - uses: nrwl/nx-set-shas@v4
