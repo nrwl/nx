@@ -46,7 +46,7 @@ nx add @nx/angular
 This will install the correct version of `@nx/angular`.
 
 {% callout type="note" title="Angular Tutorial" %}
-For a full tutorial experience, follow the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+For a full tutorial experience, follow the [Angular Monorepo Tutorial](/tutorials/3-angular-monorepo/1a-introduction/1-welcome)
 {% /callout %}
 
 ## Using the Angular Plugin
@@ -113,7 +113,7 @@ nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 
 ## More Documentation
 
-- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+- [Angular Monorepo Tutorial](/tutorials/3-angular-monorepo/1a-introduction/1-welcome)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
 - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)

@@ -41,7 +41,7 @@ Then we can add the `ProductsComponent` component to our `app.routes.ts` and ren
 
 ```
 
-Serving your app (`npx nx serve angular-store`) and then navigating to `/products` should give you the following result:
+Serving your app (`nx serve angular-store`) and then navigating to `/products` should give you the following result:
 
 ![products route](/documentation/shared/tutorials/app-products-route.png)
 
@@ -72,6 +72,6 @@ Let's also show products in the `inventory` app.
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```shell
-npx nx test angular-store # runs the tests for angular-store
-npx nx lint inventory # runs the linter on inventory
+nx test angular-store # runs the tests for angular-store
+nx lint inventory # runs the linter on inventory
 ```

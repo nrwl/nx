@@ -39,7 +39,7 @@ export function Hero(): ReactElement {
 
         <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row">
           <ButtonLink
-            href="/getting-started/tutorials/react-monorepo-tutorial"
+            href="/tutorials/2-react-monorepo/1r-introduction/1-welcome"
             variant="primary"
             size="default"
             title="Get Started"
