@@ -39,6 +39,7 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
+import { addIgnoresToLintConfig } from '@nx/eslint/src/generators/utils/eslint-file';
 
 export function configurationGenerator(
   tree: Tree,
@@ -186,7 +187,7 @@ export async function configurationGeneratorInternal(
       writeJson(tree, packageJsonPath, packageJson);
     }
 
-    ignoreTestOutput(tree);
+    ignoreTestOutput(tree, options);
   }
 
   const hasPlugin = readNxJson(tree).plugins?.some((p) =>
@@ -388,7 +389,16 @@ Rename or remove the existing e2e target.`);
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
-function ignoreTestOutput(tree: Tree): void {
+function ignoreTestOutput(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+): void {
+  // Make sure playwright outputs are not linted.
+  if (options.linter === 'eslint') {
+    addIgnoresToLintConfig(tree, '', ['**/test-output']);
+  }
+
+  // Handle gitignore
   if (!tree.exists('.gitignore')) {
     logger.warn(`Couldn't find a root .gitignore file to update.`);
   }

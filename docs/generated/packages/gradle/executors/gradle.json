@@ -29,7 +29,7 @@
     "required": ["taskName"],
     "presets": []
   },
-  "description": "The Gradlew executor is used to run Gradle tasks.",
+  "description": "Runs gradle tasks via the Gradle Tooling API or by invoking gradlew.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/gradle/src/executors/gradle/schema.json",

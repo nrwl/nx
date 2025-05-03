@@ -31,7 +31,7 @@ describe('ChangePluginToV1', () => {
     `);
   });
 
-  it('should add change to @nx/gradle plugin with options', async () => {
+  it('should change @nx/gradle plugin name with options', async () => {
     tree.write(
       'nx.json',
       JSON.stringify({

@@ -30,7 +30,7 @@ describe('Gradle', () => {
         expect(projects).toContain('utilities');
         expect(projects).toContain(gradleProjectName);
 
-        const buildOutput = runCLI('build app', { verbose: true });
+        let buildOutput = runCLI('build app', { verbose: true });
         expect(buildOutput).toContain(':list:classes');
         expect(buildOutput).toContain(':utilities:classes');
 
@@ -39,6 +39,10 @@ describe('Gradle', () => {
           `list/build/libs/list.jar`,
           `utilities/build/libs/utilities.jar`
         );
+
+        buildOutput = runCLI('build app --batch', { verbose: true });
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
       });
 
       xit('should track dependencies for new app', () => {
@@ -86,6 +90,11 @@ dependencies {
         expect(buildOutput).toContain(':utilities:classes');
 
         checkFilesExist(`app2/build/libs/app2.jar`);
+
+        buildOutput = runCLI('build app2 --batch', { verbose: true });
+        expect(buildOutput).toContain(':app:classes');
+        expect(buildOutput).toContain(':list:classes');
+        expect(buildOutput).toContain(':utilities:classes');
       });
 
       it('should run atomized test target', () => {

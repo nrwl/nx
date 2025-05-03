@@ -1,5 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
+import { typescriptESLintVersion } from '@nx/eslint/src/utils/versions';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -67,11 +68,21 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
+    const devDependencies = {
+      ...extraEslintDependencies.devDependencies,
+    };
+    if (
+      isEslintConfigSupported(host, options.projectRoot) &&
+      useFlatConfig(host)
+    ) {
+      devDependencies['@typescript-eslint/parser'] = typescriptESLintVersion;
+    }
+
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        devDependencies
       );
       tasks.push(installTask);
     }

@@ -1494,6 +1494,17 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "terminal-ui",
+            "name": "Use the Terminal UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/terminal-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/terminal-ui",
+            "tags": ["run-tasks", "terminal-ui"]
+          },
+          {
             "id": "run-commands-executor",
             "name": "Run Custom Commands",
             "description": "",
@@ -3003,6 +3014,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "terminal-ui",
+        "name": "Use the Terminal UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/terminal-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/terminal-ui",
+        "tags": ["run-tasks", "terminal-ui"]
+      },
+      {
         "id": "run-commands-executor",
         "name": "Run Custom Commands",
         "description": "",
@@ -3149,6 +3171,17 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/terminal-ui": {
+    "id": "terminal-ui",
+    "name": "Use the Terminal UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/terminal-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/terminal-ui",
+    "tags": ["run-tasks", "terminal-ui"]
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",

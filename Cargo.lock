@@ -2033,6 +2033,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "537bc3c4a347b87fd52ac6c03a02ab1302962cfd93373c5d7a112cdc337854cc"
+dependencies = [
+ "bitflags 2.9.0",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2170,6 +2182,7 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
+ "nix 0.30.0",
  "nom",
  "once_cell",
  "parking_lot",

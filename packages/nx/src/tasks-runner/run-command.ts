@@ -255,29 +255,36 @@ async function getTerminalOutputLifeCycle(
       console.log = createPatchedConsoleMethod(originalConsoleLog);
       console.error = createPatchedConsoleMethod(originalConsoleError);
 
+      globalThis.tuiOnProcessExit = () => {
+        restoreTerminal();
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+        process.stdout.write('\n');
+        // Print the intercepted Nx Cloud logs
+        for (const log of interceptedNxCloudLogs) {
+          const logString = log.toString().trimStart();
+          process.stdout.write(logString);
+          if (logString) {
+            process.stdout.write('\n');
+          }
+        }
+      };
+
       renderIsDone = new Promise<void>((resolve) => {
         appLifeCycle.__init(() => {
           resolve();
         });
-      })
-        .then(() => {
-          restoreTerminal();
-        })
-        .finally(() => {
-          // Revert the patched methods
-          process.stdout.write = originalStdoutWrite;
-          process.stderr.write = originalStderrWrite;
-          console.log = originalConsoleLog;
-          console.error = originalConsoleError;
-          // Print the intercepted Nx Cloud logs
-          for (const log of interceptedNxCloudLogs) {
-            const logString = log.toString().trimStart();
-            process.stdout.write(logString);
-            if (logString) {
-              process.stdout.write('\n');
-            }
-          }
-        });
+      }).finally(() => {
+        restoreTerminal();
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+      });
     }
 
     return {
@@ -898,8 +905,7 @@ export async function invokeTasksRunner({
       lifeCycle: compositedLifeCycle,
     },
     {
-      initiatingProject:
-        nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+      initiatingProject,
       initiatingTasks,
       projectGraph,
       nxJson,
