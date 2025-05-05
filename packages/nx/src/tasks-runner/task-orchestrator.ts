@@ -87,6 +87,7 @@ export class TaskOrchestrator {
   private bailed = false;
 
   private runningContinuousTasks = new Map<string, RunningTask>();
+  private runningRunCommandsTasks = new Map<string, RunningTask>();
 
   // endregion internal state
 
@@ -555,6 +556,11 @@ export class TaskOrchestrator {
           root: workspaceRoot, // only root is needed in runCommands
         } as any);
 
+        this.runningRunCommandsTasks.set(task.id, runningTask);
+        runningTask.onExit(() => {
+          this.runningRunCommandsTasks.delete(task.id);
+        });
+
         if (this.tuiEnabled) {
           if (runningTask instanceof PseudoTtyProcess) {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
@@ -998,8 +1004,8 @@ export class TaskOrchestrator {
   // endregion utils
 
   private async cleanup() {
-    await Promise.all(
-      Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
+    await Promise.all([
+      ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {
           await t.kill();
           this.options.lifeCycle.setTaskStatus(
@@ -1011,8 +1017,15 @@ export class TaskOrchestrator {
         } finally {
           this.runningTasksService.removeRunningTask(taskId);
         }
-      })
-    );
+      }),
+      ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
+        try {
+          await t.kill();
+        } catch (e) {
+          console.error(`Unable to terminate ${taskId}\nError:`, e);
+        }
+      }),
+    ]);
   }
 
   private cleanUpUnneededContinuousTasks() {
