@@ -66,6 +66,7 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
+import { signalToCode } from '../utils/exit-codes';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -417,7 +418,7 @@ export async function runCommand(
         nxJsonConfiguration: nxJson,
       });
 
-      const taskResults = await runCommandForTasks(
+      const { taskResults, completed } = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
         { nxJson },
@@ -434,10 +435,12 @@ export async function runCommand(
         extraOptions
       );
 
-      const result = Object.values(taskResults).some(
-        (taskResult) =>
-          taskResult.status === 'failure' || taskResult.status === 'skipped'
-      )
+      const exitCode = !completed
+        ? signalToCode('SIGINT')
+        : Object.values(taskResults).some(
+            (taskResult) =>
+              taskResult.status === 'failure' || taskResult.status === 'skipped'
+          )
         ? 1
         : 0;
 
@@ -447,7 +450,7 @@ export async function runCommand(
         nxJsonConfiguration: nxJson,
       });
 
-      return result;
+      return exitCode;
     }
   );
 
@@ -463,7 +466,7 @@ export async function runCommandForTasks(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<TaskResults> {
+): Promise<{ taskResults: TaskResults; completed: boolean }> {
   const projectNames = projectsToRun.map((t) => t.name);
   const projectNameSet = new Set(projectNames);
 
@@ -517,13 +520,36 @@ export async function runCommandForTasks(
 
     await printNxKey();
 
-    return taskResults;
+    return { taskResults, completed: didCommandComplete(tasks, taskResults) };
   } catch (e) {
     if (restoreTerminal) {
       restoreTerminal();
     }
     throw e;
   }
+}
+
+function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
+  // If no tasks, then we can consider it complete
+  if (tasks.length === 0) {
+    return true;
+  }
+
+  let everyTaskIsContinuous = true;
+  for (const task of tasks) {
+    if (!task.continuous) {
+      everyTaskIsContinuous = false;
+
+      // If any discrete task does not have a result then it did not run
+      if (!taskResults[task.id]) {
+        return false;
+      }
+    }
+  }
+
+  // If every task is continuous, command cannot complete by definition
+  // Otherwise, we've looped through all the discrete tasks and they have results
+  return !everyTaskIsContinuous;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
