@@ -37,7 +37,7 @@ export async function getStylesConfig(
   // use includePaths from appConfig
   const includePaths =
     buildOptions.stylePreprocessorOptions?.includePaths?.map((p) =>
-      resolve(workspaceRoot, p)
+      resolve(buildOptions.root, p)
     ) ?? [];
 
   const assetNameTemplate = assetNameTemplateFactory(hashFormat);
@@ -355,7 +355,6 @@ function getSassResolutionImporter(
     conditionNames: ['sass', 'style'],
     mainFields: ['sass', 'style', 'main', '...'],
     extensions: ['.scss', '.sass', '.css'],
-    // TODO(leo): check if this is correct
     restrictions: [/\.((sa|sc|c)ss)$/i] as any,
     preferRelative: true,
     symlinks: !preserveSymlinks,
