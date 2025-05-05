@@ -53,10 +53,10 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tokio = { version = "1.32.0", features = ['sync','macros','io-util','rt','time'] }
 tokio-util = "0.7.9"
 tracing-appender = "0.2"
-tui-term = "0.2.0"
+tui-term = { git = "https://github.com/JamesHenry/tui-term", rev = "88e3b61425c97220c528ef76c188df10032a75dd" }
 walkdir = '2.3.3'
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
-vt100-ctt = { git = "https://github.com/JamesHenry/vt100-rust", rev = "1de895505fe9f697aadac585e4075b8fb45c880d" }
+vt100-ctt = { git = "https://github.com/JamesHenry/vt100-rust", rev = "b15dc3b0f7db94167a9c584f1d403899c0cc871d" }
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi", "psapi", "shellapi"] }

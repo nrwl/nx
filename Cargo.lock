@@ -2208,7 +2208,7 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
- "tui-term",
+ "tui-term 0.2.0 (git+https://github.com/JamesHenry/tui-term?rev=88e3b61425c97220c528ef76c188df10032a75dd)",
  "vt100-ctt",
  "walkdir",
  "watchexec",
@@ -3851,7 +3851,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72af159125ce32b02ceaced6cffae6394b0e6b6dfd4dc164a6c59a2db9b3c0b0"
 dependencies = [
  "ratatui",
- "vt100",
+]
+
+[[package]]
+name = "tui-term"
+version = "0.2.0"
+source = "git+https://github.com/JamesHenry/tui-term?rev=88e3b61425c97220c528ef76c188df10032a75dd#88e3b61425c97220c528ef76c188df10032a75dd"
+dependencies = [
+ "ratatui",
+ "vt100-ctt",
 ]
 
 [[package]]
@@ -3970,39 +3978,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
-name = "vt100"
-version = "0.15.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84cd863bf0db7e392ba3bd04994be3473491b31e66340672af5d11943c6274de"
-dependencies = [
- "itoa",
- "log",
- "unicode-width 0.1.11",
- "vte 0.11.1",
-]
-
-[[package]]
 name = "vt100-ctt"
 version = "0.16.0"
-source = "git+https://github.com/JamesHenry/vt100-rust?rev=1de895505fe9f697aadac585e4075b8fb45c880d#1de895505fe9f697aadac585e4075b8fb45c880d"
+source = "git+https://github.com/JamesHenry/vt100-rust?rev=b15dc3b0f7db94167a9c584f1d403899c0cc871d#b15dc3b0f7db94167a9c584f1d403899c0cc871d"
 dependencies = [
  "itoa",
  "log",
  "ratatui",
- "tui-term",
+ "tui-term 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-width 0.2.0",
- "vte 0.13.1",
-]
-
-[[package]]
-name = "vte"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5022b5fbf9407086c180e9557be968742d839e68346af7792b8592489732197"
-dependencies = [
- "arrayvec",
- "utf8parse",
- "vte_generate_state_changes",
+ "vte",
 ]
 
 [[package]]
