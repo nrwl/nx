@@ -1,8 +1,4 @@
-import {
-  type Configuration,
-  CssExtractRspackPlugin,
-  javascript,
-} from '@rspack/core';
+import { type Configuration, javascript } from '@rspack/core';
 import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
@@ -12,7 +8,7 @@ import {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
-import { getStyleLoaders } from './style-config-utils';
+import { getStylesConfig } from './style-config-utils';
 import { getCrossOriginLoading } from './helpers';
 import { configureSourceMap } from './sourcemap-utils';
 
@@ -26,6 +22,11 @@ export async function getCommonConfig(
   const isProduction = process.env['NODE_ENV'] === 'production';
   const crossOriginLoading = getCrossOriginLoading(normalizedOptions);
   const sourceMapOptions = configureSourceMap(normalizedOptions.sourceMap);
+  const stylesConfig = await getStylesConfig(
+    normalizedOptions,
+    hashFormat,
+    normalizedOptions.hasServer ? 'server' : 'browser'
+  );
 
   const defaultConfig: Configuration = {
     context: root,
@@ -84,7 +85,7 @@ export async function getCommonConfig(
           resourceQuery: /\?ngResource/,
           type: 'asset/source',
         },
-        ...(await getStyleLoaders(normalizedOptions)),
+        ...stylesConfig.loaderRules,
         ...sourceMapOptions.sourceMapRules,
         { test: /[/\\]rxjs[/\\]add[/\\].+\.js$/, sideEffects: true },
         {
@@ -129,9 +130,7 @@ export async function getCommonConfig(
             },
           ]
         : []),
-      new CssExtractRspackPlugin({
-        filename: `[name]${hashFormat.extract}.css`,
-      }),
+      ...stylesConfig.plugins,
     ],
   };
   return defaultConfig;

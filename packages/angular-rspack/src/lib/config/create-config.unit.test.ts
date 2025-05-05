@@ -1,8 +1,9 @@
-import { _createConfig, createConfig } from './create-config';
-import { handleConfigurations } from './config-utils/user-defined-config-helpers';
+import { join } from 'node:path';
 import { beforeEach, expect } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
-import { join } from 'node:path';
+import * as postcssConfiguration from '../utils/postcss-configuration';
+import { handleConfigurations } from './config-utils/user-defined-config-helpers';
+import { _createConfig, createConfig } from './create-config';
 
 describe('createConfig', () => {
   const configBase: AngularRspackPluginOptions = {
@@ -198,6 +199,10 @@ describe('createConfig', () => {
 
     it('should create config from options with a custom root', async () => {
       const customRoot = join(process.cwd(), 'custom-root');
+      vi.spyOn(
+        postcssConfiguration,
+        'generateSearchDirectories'
+      ).mockResolvedValue([]);
 
       await expect(
         createConfig({
