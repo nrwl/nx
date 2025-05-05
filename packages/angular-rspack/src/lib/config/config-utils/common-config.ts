@@ -13,7 +13,6 @@ import { getCrossOriginLoading } from './helpers';
 import { configureSourceMap } from './sourcemap-utils';
 
 export async function getCommonConfig(
-  root: string,
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
   i18nHash: string | (() => void),
@@ -29,7 +28,7 @@ export async function getCommonConfig(
   );
 
   const defaultConfig: Configuration = {
-    context: root,
+    context: normalizedOptions.root,
     mode: isProduction ? 'production' : 'development',
     devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : undefined,
     output: {

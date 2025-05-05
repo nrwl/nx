@@ -292,11 +292,6 @@ describe('createConfig', () => {
         expect.objectContaining({
           devServer: expect.objectContaining({
             port: 8080,
-            client: expect.objectContaining({
-              webSocketURL: expect.objectContaining({
-                port: 8080,
-              }),
-            }),
           }),
         }),
       ]);
@@ -315,9 +310,7 @@ describe('createConfig', () => {
           devServer: expect.objectContaining({
             host: '0.0.0.0',
             client: expect.objectContaining({
-              webSocketURL: expect.objectContaining({
-                hostname: '0.0.0.0',
-              }),
+              webSocketURL: 'auto://0.0.0.0:0/ng-cli-ws',
             }),
           }),
         }),

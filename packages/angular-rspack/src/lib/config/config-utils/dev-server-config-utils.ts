@@ -1,11 +1,174 @@
 import type { DevServer } from '@rspack/core';
 import assert from 'node:assert';
 import { existsSync, promises as fsPromises } from 'node:fs';
-import { extname, resolve } from 'node:path';
+import { extname, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import type { NormalizedAngularRspackPluginOptions } from '../../models';
+import { getIndexOutputFile } from '../../utils/index-file/get-index-output-file';
 import { loadEsmModule } from '../../utils/misc-helpers';
 
-export function getAllowedHostsConfig(
+export async function getDevServerConfig(
+  options: NormalizedAngularRspackPluginOptions,
+  platform: 'browser' | 'server'
+): Promise<DevServer> {
+  const { root } = options;
+
+  const servePath = buildServePath(options);
+
+  return {
+    host: options.devServer.host,
+    port: options.devServer.port,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      ...options.devServer.headers,
+    },
+    historyApiFallback: {
+      index: posix.join(servePath, getIndexOutputFile(options.index)),
+      disableDotRule: true,
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      rewrites: [
+        {
+          from: new RegExp(`^(?!${servePath})/.*`),
+          to: (context) => context.parsedUrl.href,
+        },
+      ],
+    },
+    compress: false,
+    static: false,
+    server: getServerConfig(options),
+    allowedHosts: getAllowedHostsConfig(
+      options.devServer.allowedHosts,
+      options.devServer.disableHostCheck
+    ),
+    devMiddleware: {
+      publicPath: servePath,
+      writeToDisk:
+        platform === 'browser' && options.hasServer
+          ? (file) => !file.includes('.hot-update.')
+          : undefined,
+    },
+    liveReload: options.devServer.liveReload,
+    hot: false,
+    proxy: await getProxyConfig(root, options.devServer.proxyConfig),
+    ...getWebSocketSettings(options, servePath),
+    watchFiles: ['./src/**/*.*', './public/**/*.*'],
+    onListening:
+      platform === 'browser'
+        ? (devServer) => {
+            if (!devServer) {
+              throw new Error('@rspack/dev-server is not defined');
+            }
+
+            const port =
+              (devServer.server?.address() as { port: number })?.port ??
+              options.devServer.port;
+            console.log('Listening on port:', port);
+          }
+        : undefined,
+  };
+}
+
+/**
+ * Resolve and build a URL _path_ that will be the root of the server. This resolves base href and
+ * deploy URL from the browser options and returns a path from the root.
+ */
+function buildServePath(options: NormalizedAngularRspackPluginOptions): string {
+  let servePath = options.devServer.servePath;
+
+  if (servePath === undefined) {
+    const defaultPath = findDefaultServePath(
+      options.baseHref,
+      options.deployUrl
+    );
+    if (defaultPath == null) {
+      console.warn(
+        `Warning: --deploy-url and/or --base-href contain unsupported values for ng serve. Default serve path of '/' used. Use --serve-path to override.`
+      );
+    }
+    servePath = defaultPath || '';
+  }
+
+  if (servePath.endsWith('/')) {
+    servePath = servePath.slice(0, -1);
+  }
+
+  if (!servePath.startsWith('/')) {
+    servePath = `/${servePath}`;
+  }
+
+  return servePath;
+}
+
+/**
+ * Find the default server path. We don't want to expose baseHref and deployUrl as arguments, only
+ * the browser options where needed.
+ */
+function findDefaultServePath(
+  baseHref?: string,
+  deployUrl?: string
+): string | null {
+  if (!baseHref && !deployUrl) {
+    return '';
+  }
+
+  if (
+    /^(\w+:)?\/\//.test(baseHref || '') ||
+    /^(\w+:)?\/\//.test(deployUrl || '')
+  ) {
+    // If baseHref or deployUrl is absolute, unsupported by ng serve
+    return null;
+  }
+
+  // normalize baseHref
+  // for ng serve the starting base is always `/` so a relative
+  // and root relative value are identical
+  const baseHrefParts = (baseHref || '')
+    .split('/')
+    .filter((part) => part !== '');
+  if (baseHref && !baseHref.endsWith('/')) {
+    baseHrefParts.pop();
+  }
+  const normalizedBaseHref =
+    baseHrefParts.length === 0 ? '/' : `/${baseHrefParts.join('/')}/`;
+
+  if (deployUrl && deployUrl[0] === '/') {
+    if (baseHref && baseHref[0] === '/' && normalizedBaseHref !== deployUrl) {
+      // If baseHref and deployUrl are root relative and not equivalent, unsupported by ng serve
+      return null;
+    }
+
+    return deployUrl;
+  }
+
+  // Join together baseHref and deployUrl
+  return `${normalizedBaseHref}${deployUrl || ''}`;
+}
+
+function getServerConfig(
+  options: NormalizedAngularRspackPluginOptions
+): DevServer['server'] {
+  const {
+    root,
+    devServer: { ssl, sslCert, sslKey },
+  } = options;
+
+  if (!ssl) {
+    return 'http';
+  }
+
+  return {
+    type: 'https',
+    options:
+      sslCert && sslKey
+        ? {
+            key: resolve(root, sslKey),
+            cert: resolve(root, sslCert),
+          }
+        : undefined,
+  };
+}
+
+function getAllowedHostsConfig(
   allowedHosts: string[] | boolean | undefined,
   disableHostCheck: boolean | undefined
 ) {
@@ -19,7 +182,7 @@ export function getAllowedHostsConfig(
   return undefined;
 }
 
-export async function getProxyConfig(
+async function getProxyConfig(
   root: string,
   proxyConfig: string | undefined
 ): Promise<DevServer['proxy'] | undefined> {
@@ -97,6 +260,52 @@ export async function getProxyConfig(
   }
 
   return normalizeProxyConfiguration(proxyConfiguration);
+}
+
+function getWebSocketSettings(
+  options: NormalizedAngularRspackPluginOptions,
+  servePath: string
+): {
+  webSocketServer?: DevServer['webSocketServer'];
+  client?: DevServer['client'];
+} {
+  const { hmr, liveReload } = options.devServer;
+  if (!hmr && !liveReload) {
+    return { client: undefined, webSocketServer: false };
+  }
+
+  const webSocketPath = posix.join(servePath, 'ng-cli-ws');
+
+  return {
+    webSocketServer: {
+      options: { path: webSocketPath },
+    },
+    client: {
+      logging: 'info',
+      webSocketURL: getPublicHostOptions(options, webSocketPath),
+      overlay: {
+        errors: true,
+        warnings: false,
+        runtimeErrors: false,
+      },
+    },
+  };
+}
+
+function getPublicHostOptions(
+  options: NormalizedAngularRspackPluginOptions,
+  webSocketPath: string
+): string {
+  let publicHost = options.devServer.publicHost;
+
+  if (publicHost) {
+    const hostWithProtocol = !/^\w+:\/\//.test(publicHost)
+      ? `https://${publicHost}`
+      : publicHost;
+    publicHost = new URL(hostWithProtocol).host;
+  }
+
+  return `auto://${publicHost || '0.0.0.0:0'}${webSocketPath}`;
 }
 
 function getJsonErrorLineColumn(offset: number, content: string) {
