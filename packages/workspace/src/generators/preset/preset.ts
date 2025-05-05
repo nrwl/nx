@@ -67,7 +67,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/react');
 
     return reactApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       style: options.style,
       linter: options.linter,
@@ -91,7 +91,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const bundler = options.bundler ?? 'vite';
 
     return reactApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: '.',
       style: options.style,
       linter: options.linter,
@@ -111,7 +111,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/vue');
 
     return vueApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       style: options.style,
       linter: options.linter,
@@ -128,7 +128,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/vue');
 
     return vueApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: '.',
       style: options.style,
       linter: options.linter,
@@ -302,7 +302,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
     return nodeApplicationGenerator(tree, {
       bundler,
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: '.',
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
@@ -319,7 +319,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const bundler = options.bundler === 'webpack' ? 'webpack' : 'esbuild';
     return nodeApplicationGenerator(tree, {
       bundler,
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       linter: options.linter,
       framework: options.framework,
