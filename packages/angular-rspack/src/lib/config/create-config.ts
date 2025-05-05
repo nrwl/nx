@@ -50,14 +50,15 @@ export async function _createConfig(
     options
   );
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);
-  const { root } = normalizedOptions;
 
   if (options.deleteOutputPath) {
-    await deleteOutputDir(root, normalizedOptions.outputPath.base);
+    await deleteOutputDir(
+      normalizedOptions.root,
+      normalizedOptions.outputPath.base
+    );
   }
 
   const defaultConfig = await getCommonConfig(
-    root,
     normalizedOptions,
     i18n,
     i18nHash,
@@ -67,7 +68,6 @@ export async function _createConfig(
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = await getServerConfig(
-      root,
       normalizedOptions,
       i18n,
       defaultConfig
@@ -80,7 +80,6 @@ export async function _createConfig(
   }
 
   const browserConfig: Configuration = await getBrowserConfig(
-    root,
     normalizedOptions,
     i18n,
     hashFormat,

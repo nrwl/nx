@@ -1,21 +1,16 @@
-import type { Configuration, DevServer } from '@rspack/core';
-import { resolve } from 'path';
-import { getPolyfillsEntry, toRspackEntries } from './entry-points';
-import {
-  getAllowedHostsConfig,
-  getProxyConfig,
-} from './dev-server-config-utils';
-import { getOptimization } from './optimization-config';
-import { NgRspackPlugin } from '../../plugins/ng-rspack';
-import {
+import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
+import type { Configuration } from '@rspack/core';
+import type {
   HashFormat,
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
-import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
+import { NgRspackPlugin } from '../../plugins/ng-rspack';
+import { getDevServerConfig } from './dev-server-config-utils';
+import { getPolyfillsEntry, toRspackEntries } from './entry-points';
+import { getOptimization } from './optimization-config';
 
 export async function getBrowserConfig(
-  root: string,
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
   hashFormat: HashFormat,
@@ -49,65 +44,7 @@ export async function getBrowserConfig(
         normalizedOptions.root
       ),
     },
-    devServer: {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
-      allowedHosts: getAllowedHostsConfig(
-        normalizedOptions.devServer.allowedHosts,
-        normalizedOptions.devServer.disableHostCheck
-      ),
-      client: {
-        webSocketURL: {
-          hostname: normalizedOptions.devServer.host,
-          port: normalizedOptions.devServer.port,
-        },
-        overlay: {
-          errors: true,
-          warnings: false,
-          runtimeErrors: true,
-        },
-        reconnect: true,
-      },
-      hot: false,
-      liveReload: true,
-      watchFiles: ['./src/**/*.*', './public/**/*.*'],
-      historyApiFallback: {
-        index: '/index.html',
-        rewrites: [{ from: /^\/$/, to: 'index.html' }],
-      },
-      devMiddleware: {
-        writeToDisk: (file) => !file.includes('.hot-update.'),
-      },
-      host: normalizedOptions.devServer.host,
-      port: normalizedOptions.devServer.port,
-      server: {
-        options:
-          normalizedOptions.devServer.sslKey &&
-          normalizedOptions.devServer.sslCert
-            ? {
-                key: resolve(root, normalizedOptions.devServer.sslKey),
-                cert: resolve(root, normalizedOptions.devServer.sslCert),
-              }
-            : {},
-        type: normalizedOptions.devServer.ssl ? 'https' : 'http',
-      },
-      proxy: await getProxyConfig(
-        root,
-        normalizedOptions.devServer.proxyConfig
-      ),
-      onListening: (devServer) => {
-        if (!devServer) {
-          throw new Error('@rspack/dev-server is not defined');
-        }
-
-        const port =
-          (devServer.server?.address() as { port: number })?.port ??
-          normalizedOptions.devServer.port;
-        console.log('Listening on port:', port);
-      },
-    } as DevServer,
-
+    devServer: await getDevServerConfig(normalizedOptions, 'browser'),
     output: {
       ...defaultConfig.output,
       hashFunction: isProduction ? 'xxhash64' : undefined,

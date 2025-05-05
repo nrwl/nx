@@ -18,10 +18,7 @@ export type BudgetEntry = {
 };
 
 export interface DevServerUnsupportedOptions {
-  headers?: Record<string, string>;
   open?: boolean;
-  liveReload?: boolean;
-  servePath?: string;
   hmr?: boolean;
   inspect?: string | boolean;
   prebundle?:
@@ -66,10 +63,7 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
 ];
 
 export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = [
-  'headers',
   'open',
-  'liveReload',
-  'servePath',
   'hmr',
   'inspect',
   'prebundle',

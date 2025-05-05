@@ -181,82 +181,78 @@ export async function normalizeOptions(
     options.index = join(root, 'src/index.html');
   }
 
-  let index: NormalizedIndexElement | undefined;
   // index can never have a value of `true` but in the schema it's of type `boolean`.
-  if (typeof options.index !== 'boolean') {
-    let indexOutput: string;
-    // The output file will be created within the configured output path
-    if (typeof options.index === 'string') {
-      indexOutput = options.index;
-    } else {
-      if (options.index.preloadInitial) {
-        console.warn(`The "index.preloadInitial" option is not yet supported.`);
-      }
-      if (options.index.output) {
-        console.warn(`The "index.output" option is not yet supported.`);
-      }
-
-      indexOutput = options.index.output || 'index.html';
+  let indexOutput: string;
+  // The output file will be created within the configured output path
+  if (typeof options.index === 'string') {
+    indexOutput = options.index;
+  } else {
+    if (options.index.preloadInitial) {
+      console.warn(`The "index.preloadInitial" option is not yet supported.`);
+    }
+    if (options.index.output) {
+      console.warn(`The "index.output" option is not yet supported.`);
     }
 
-    /**
-     * If SSR is activated, create a distinct entry file for the `index.html`.
-     * This is necessary because numerous server/cloud providers automatically serve the `index.html` as a static file
-     * if it exists (handling SSG).
-     *
-     * For instance, accessing `foo.com/` would lead to `foo.com/index.html` being served instead of hitting the server.
-     *
-     * This approach can also be applied to service workers, where the `index.csr.html` is served instead of the prerendered `index.html`.
-     */
-    const indexBaseName = basename(indexOutput);
-    // @TODO: use this once we properly support SSR/SSG options
-    // (normalizedSsr || prerenderOptions) && indexBaseName === 'index.html'
-    //   ? INDEX_HTML_CSR
-    //   : indexBaseName;
-    indexOutput = indexBaseName;
-
-    const entryPoints: [name: string, isEsm: boolean][] = [
-      // TODO: this should be true when !!devServer?.hot (HMR is supported)
-      ['runtime', false],
-      ['polyfills', true],
-      ...(globalStyles.filter((s) => s.initial).map((s) => [s.name, false]) as [
-        string,
-        boolean
-      ][]),
-      ...(globalScripts
-        .filter((s) => s.initial)
-        .map((s) => [s.name, false]) as [string, boolean][]),
-      ['vendor', true],
-      ['main', true],
-    ];
-
-    const duplicates = entryPoints.filter(
-      ([name]) =>
-        entryPoints[0].indexOf(name) !== entryPoints[0].lastIndexOf(name)
-    );
-
-    if (duplicates.length > 0) {
-      throw new Error(
-        `Multiple bundles have been named the same: '${duplicates.join(
-          `', '`
-        )}'.`
-      );
-    }
-
-    index = {
-      input: resolve(
-        root,
-        typeof options.index === 'string' ? options.index : options.index.input
-      ),
-      output: indexOutput,
-      // @TODO: Add support for transformer
-      transformer: undefined,
-      // Preload initial defaults to true
-      preloadInitial:
-        typeof options.index !== 'object' ||
-        (options.index.preloadInitial ?? true),
-    };
+    indexOutput = options.index.output || 'index.html';
   }
+
+  /**
+   * If SSR is activated, create a distinct entry file for the `index.html`.
+   * This is necessary because numerous server/cloud providers automatically serve the `index.html` as a static file
+   * if it exists (handling SSG).
+   *
+   * For instance, accessing `foo.com/` would lead to `foo.com/index.html` being served instead of hitting the server.
+   *
+   * This approach can also be applied to service workers, where the `index.csr.html` is served instead of the prerendered `index.html`.
+   */
+  const indexBaseName = basename(indexOutput);
+  // @TODO: use this once we properly support SSR/SSG options
+  // (normalizedSsr || prerenderOptions) && indexBaseName === 'index.html'
+  //   ? INDEX_HTML_CSR
+  //   : indexBaseName;
+  indexOutput = indexBaseName;
+
+  const entryPoints: [name: string, isEsm: boolean][] = [
+    // TODO: this should be true when !!devServer?.hot (HMR is supported)
+    ['runtime', false],
+    ['polyfills', true],
+    ...(globalStyles.filter((s) => s.initial).map((s) => [s.name, false]) as [
+      string,
+      boolean
+    ][]),
+    ...(globalScripts.filter((s) => s.initial).map((s) => [s.name, false]) as [
+      string,
+      boolean
+    ][]),
+    ['vendor', true],
+    ['main', true],
+  ];
+
+  const duplicates = entryPoints.filter(
+    ([name]) =>
+      entryPoints[0].indexOf(name) !== entryPoints[0].lastIndexOf(name)
+  );
+
+  if (duplicates.length > 0) {
+    throw new Error(
+      `Multiple bundles have been named the same: '${duplicates.join(`', '`)}'.`
+    );
+  }
+
+  const index: NormalizedIndexElement = {
+    input: resolve(
+      root,
+      typeof options.index === 'string' ? options.index : options.index.input
+    ),
+    output: indexOutput,
+    // @TODO: Add support for transformer
+    transformer: undefined,
+    // Preload initial defaults to true
+    preloadInitial:
+      typeof options.index !== 'object' ||
+      (options.index.preloadInitial ?? true),
+  };
 
   return {
     advancedOptimizations,
@@ -339,6 +335,7 @@ function normalizeDevServer(
     return {
       allowedHosts: [],
       host: defaultHost,
+      liveReload: true,
       port: defaultPort,
     };
   }
@@ -347,6 +344,7 @@ function normalizeDevServer(
     ...devServer,
     allowedHosts: devServer.allowedHosts ?? [],
     host: devServer.host ?? defaultHost,
+    liveReload: devServer.liveReload ?? true,
     port: devServer.port ?? defaultPort,
   };
 }

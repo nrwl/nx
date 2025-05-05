@@ -18,9 +18,28 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
    * Don't verify connected clients are part of allowed hosts.
    */
   disableHostCheck?: boolean;
+  /**
+   * Custom HTTP headers to be added to all responses.
+   */
+  headers?: Record<string, string>;
   host?: string;
+  /**
+   * Whether to reload the page on change, using live-reload.
+   * @default true
+   */
+  liveReload?: boolean;
   port?: number;
   proxyConfig?: string;
+  /**
+   * The URL that the browser client (or live-reload client, if enabled) should
+   * use to connect to the development server. Use for a complex dev server setup,
+   * such as one with reverse proxies.
+   */
+  publicHost?: string;
+  /**
+   * The pathname where the application will be served.
+   */
+  servePath?: string;
   ssl?: boolean;
   sslCert?: string;
   sslKey?: string;
@@ -29,6 +48,7 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
 export interface NormalizedDevServerOptions extends DevServerOptions {
   allowedHosts: string[] | boolean;
   host: string;
+  liveReload: boolean;
   port: number;
 }
 
@@ -83,10 +103,9 @@ export type IndexExpandedDefinition = {
 export type IndexElement = IndexExpandedDefinition | string | false;
 export type IndexHtmlTransform = (content: string) => Promise<string>;
 export type NormalizedIndexElement =
-  | (IndexExpandedDefinition & {
+  | IndexExpandedDefinition & {
       transformer: IndexHtmlTransform | undefined;
-    })
-  | false;
+    };
 
 export interface SourceMap {
   scripts: boolean;
@@ -233,9 +252,9 @@ export interface NormalizedAngularRspackPluginOptions
   fileReplacements: FileReplacement[];
   globalScripts: GlobalEntry[];
   globalStyles: GlobalEntry[];
-  index: NormalizedIndexElement | undefined;
-  inlineStyleLanguage: InlineStyleLanguage;
   hasServer: boolean;
+  index: NormalizedIndexElement;
+  inlineStyleLanguage: InlineStyleLanguage;
   namedChunks: boolean;
   optimization: boolean | OptimizationOptions;
   outputHashing: OutputHashing;
