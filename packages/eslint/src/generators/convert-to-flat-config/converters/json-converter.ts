@@ -12,6 +12,7 @@ import {
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
 import { mapFilePath } from '../../utils/flat-config/path-utils';
+import { EOL } from 'node:os';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -185,7 +186,7 @@ export function convertEslintJsonToFlatConfig(
     if (tree.exists(ignorePath)) {
       const patterns = tree
         .read(ignorePath, 'utf-8')
-        .split('\n')
+        .split(EOL)
         .filter((line) => line.length > 0 && line !== 'node_modules')
         .map((path) => mapFilePath(path));
       if (patterns.length > 0) {
