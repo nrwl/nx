@@ -24,18 +24,18 @@ jobs:
         with:
           bun-version: latest
       <% } else if (packageManager == 'npm'){ %>
-      ## NPM versions that are > v8 has a npm error `Exit handler never called` which has been solved in Node 22.5.1 
+      ## NPM versions that are > v8 has a npm error `Exit handler never called` which has been solved in Node 22.5.1
       ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
       ## When we upgrade to node 22.5.1 this can be removed.
       - name: Downgrade npm to 8.x
         run: npm install -g npm@8
-      <% } else if(packageManager === 'yarn'){ %>
-      - run: <%- packageManagerVersion ? 'corepack enable' : "corepack prepare 'yarn@1.22'" %>
+      <% } else if (packageManager === 'yarn' && packageManagerVersion) { %>
+      - run: corepack enable
       <% } else if(packageManager ==='pnpm'){ %>
       - uses: pnpm/action-setup@v4
         name: Install pnpm
-        with:
-          version: <%- packageManagerVersion ? packageManagerVersion : '9.8.0' %>
+        with:<% if (!packageManagerVersion) { %>
+          version: 9.8.0<% } %>
           run_install: false
       <% } %>
       # This enables task distribution via Nx Cloud
