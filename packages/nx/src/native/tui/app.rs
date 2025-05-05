@@ -391,10 +391,31 @@ impl App {
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
-                    // Handle Q to trigger countdown
+                    // Handle Q to trigger countdown or immediate exit, depending on the tasks
                     if !tasks_list.filter_mode && key.code == KeyCode::Char('q') {
-                        self.is_forced_shutdown = true;
-                        self.begin_exit_countdown();
+                        // Check if all tasks are in a completed state
+                        let all_tasks_completed = tasks_list.tasks.iter().all(|t| {
+                            matches!(
+                                t.status,
+                                TaskStatus::Success
+                                    | TaskStatus::Failure
+                                    | TaskStatus::Skipped
+                                    | TaskStatus::LocalCache
+                                    | TaskStatus::LocalCacheKeptExisting
+                                    | TaskStatus::RemoteCache
+                                    | TaskStatus::Stopped // Consider stopped continuous tasks as completed for exit purposes
+                            )
+                        });
+
+                        if all_tasks_completed {
+                            // If all tasks are done, quit immediately like Ctrl+C
+                            self.is_forced_shutdown = true;
+                            self.quit_at = Some(std::time::Instant::now());
+                        } else {
+                            // Otherwise, start the exit countdown to give the user the chance to change their mind in case of an accidental keypress
+                            self.is_forced_shutdown = true;
+                            self.begin_exit_countdown();
+                        }
                         return Ok(false);
                     }
                 }

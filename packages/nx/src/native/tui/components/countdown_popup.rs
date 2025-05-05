@@ -146,9 +146,11 @@ impl CountdownPopup {
         let content = vec![
             Line::from(vec![
                 Span::styled("• Press ", Style::default().fg(Color::DarkGray)),
-                Span::styled("any key", Style::default().fg(Color::Cyan)),
+                Span::styled("q to exit immediately ", Style::default().fg(Color::Cyan)),
+                Span::styled("or ", Style::default().fg(Color::DarkGray)),
+                Span::styled("any other key ", Style::default().fg(Color::Cyan)),
                 Span::styled(
-                    " to keep the TUI running and interactively explore the results.",
+                    "to keep the TUI running and interactively explore the results.",
                     Style::default().fg(Color::DarkGray),
                 ),
             ]),
