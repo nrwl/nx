@@ -35,6 +35,10 @@ module.exports = [
             '@code-pushup/utils',
             'jsonc-eslint-parser',
             'vitest',
+            // it's only a type import, so it won't be required at runtime
+            'sass',
+            // shown as unused because it's required using `createRequire`
+            'tailwindcss',
           ],
         },
       ],
