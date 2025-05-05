@@ -1,6 +1,6 @@
 import { EOL } from 'node:os';
 import { TaskStatus as NativeTaskStatus } from '../../native';
-import { Task } from '../../config/task-graph';
+import { Task, TaskGraph } from '../../config/task-graph';
 import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
@@ -9,6 +9,7 @@ import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
 import figures = require('figures');
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
+import { getLeafTasks } from '../task-graph-utils';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -17,6 +18,7 @@ const EXTENDED_LEFT_PAD = `      `;
 export function getTuiTerminalSummaryLifeCycle({
   projectNames,
   tasks,
+  taskGraph,
   args,
   overrides,
   initiatingProject,
@@ -25,6 +27,7 @@ export function getTuiTerminalSummaryLifeCycle({
 }: {
   projectNames: string[];
   tasks: Task[];
+  taskGraph: TaskGraph;
   args: { targets?: string[]; configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
   initiatingProject: string;
@@ -110,17 +113,39 @@ export function getTuiTerminalSummaryLifeCycle({
       return;
     }
 
+    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
+    const cancelled =
+      // Some tasks were in progress...
+      inProgressTasks.size > 0 ||
+      // or some tasks had not started yet
+      totalTasks !== tasks.length ||
+      // the run had a continous task as a leaf...
+      // this is needed because continous tasks get marked as stopped when the process is interrupted
+      [...getLeafTasks(taskGraph)].filter((t) => taskGraph.tasks[t].continuous)
+        .length > 0;
+
     if (isRunOne) {
-      printRunOneSummary();
+      printRunOneSummary({
+        failure,
+        cancelled,
+      });
     } else {
-      printRunManySummary();
+      printRunManySummary({
+        failure,
+        cancelled,
+      });
     }
     getTasksHistoryLifeCycle()?.printFlakyTasksMessage();
   };
 
-  const printRunOneSummary = () => {
+  const printRunOneSummary = ({
+    failure,
+    cancelled,
+  }: {
+    failure: boolean;
+    cancelled: boolean;
+  }) => {
     let lines: string[] = [];
-    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
 
     // Prints task outputs in the order they were completed
     // above the summary, since run-one should print all task results.
@@ -131,7 +156,7 @@ export function getTuiTerminalSummaryLifeCycle({
 
     lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
 
-    if (!failure) {
+    if (!failure && !cancelled) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         [initiatingProject],
         targets,
@@ -167,7 +192,7 @@ export function getTuiTerminalSummaryLifeCycle({
         );
       }
       lines = [output.colors.green(lines.join(EOL))];
-    } else if (inProgressTasks.size === 0) {
+    } else if (!cancelled) {
       let text = `Ran target ${output.bold(
         targets[0]
       )} for project ${output.bold(initiatingProject)}`;
@@ -230,11 +255,16 @@ export function getTuiTerminalSummaryLifeCycle({
     console.log(lines.join(EOL));
   };
 
-  const printRunManySummary = () => {
+  const printRunManySummary = ({
+    failure,
+    cancelled,
+  }: {
+    failure: boolean;
+    cancelled: boolean;
+  }) => {
     console.log('');
 
     const lines: string[] = [''];
-    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
 
     for (const taskId of taskIdsInOrderOfCompletion) {
       const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
@@ -296,7 +326,7 @@ export function getTuiTerminalSummaryLifeCycle({
       lines.push(successSummaryRows.join(EOL));
     } else {
       const text = `${
-        inProgressTasks.size ? 'Cancelled while running' : 'Ran'
+        cancelled ? 'Cancelled while running' : 'Ran'
       } ${formatTargetsAndProjects(projectNames, targets, tasks)}`;
       const taskOverridesRows: string[] = [];
       if (Object.keys(overrides).length > 0) {
