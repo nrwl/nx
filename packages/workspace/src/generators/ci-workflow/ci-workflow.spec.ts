@@ -388,12 +388,6 @@ describe('CI Workflow generator', () => {
                   filter: tree:0
                   fetch-depth: 0
 
-              ## NPM versions that are > v8 has a npm error \`Exit handler never called\` which has been solved in Node 22.5.1
-              ## Since we are still on node 20 pin the npm version so that we can install ref: https://github.com/npm/cli/issues/7639
-              ## When we upgrade to node 22.5.1 this can be removed.
-              - name: Downgrade npm to 8.x
-                run: npm install -g npm@8
-
               # This enables task distribution via Nx Cloud
               # Run this command as early as possible, before dependencies are installed
               # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
