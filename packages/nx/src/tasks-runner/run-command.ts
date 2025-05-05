@@ -60,6 +60,7 @@ import { getTuiTerminalSummaryLifeCycle } from './life-cycles/tui-summary-life-c
 import {
   assertTaskGraphDoesNotContainInvalidTargets,
   findCycle,
+  getLeafTasks,
   makeAcyclic,
   validateNoAtomizedTasks,
 } from './task-graph-utils';
@@ -170,6 +171,7 @@ async function getTerminalOutputLifeCycle(
       getTuiTerminalSummaryLifeCycle({
         projectNames,
         tasks,
+        taskGraph,
         args: nxArgs,
         overrides: overridesWithoutHidden,
         initiatingProject,
@@ -520,7 +522,10 @@ export async function runCommandForTasks(
 
     await printNxKey();
 
-    return { taskResults, completed: didCommandComplete(tasks, taskResults) };
+    return {
+      taskResults,
+      completed: didCommandComplete(tasks, taskGraph, taskResults),
+    };
   } catch (e) {
     if (restoreTerminal) {
       restoreTerminal();
@@ -529,27 +534,34 @@ export async function runCommandForTasks(
   }
 }
 
-function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
+function didCommandComplete(
+  tasks: Task[],
+  taskGraph: TaskGraph,
+  taskResults: TaskResults
+): boolean {
   // If no tasks, then we can consider it complete
   if (tasks.length === 0) {
     return true;
   }
 
-  let everyTaskIsContinuous = true;
+  let continousLeafTasks = false;
+  const leafTasks = getLeafTasks(taskGraph);
   for (const task of tasks) {
     if (!task.continuous) {
-      everyTaskIsContinuous = false;
-
       // If any discrete task does not have a result then it did not run
       if (!taskResults[task.id]) {
         return false;
       }
+    } else {
+      if (leafTasks.has(task.id)) {
+        continousLeafTasks = true;
+      }
     }
   }
 
-  // If every task is continuous, command cannot complete by definition
+  // If a leaf task is continous, we must have cancelled it.
   // Otherwise, we've looped through all the discrete tasks and they have results
-  return !everyTaskIsContinuous;
+  return !continousLeafTasks;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(

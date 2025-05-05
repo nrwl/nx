@@ -1,7 +1,9 @@
-import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
-import { Task } from '../../config/task-graph';
 import { stripVTControlCharacters } from 'util';
 import { EOL } from 'os';
+
+import { getTuiTerminalSummaryLifeCycle } from './tui-summary-life-cycle';
+import { Task } from '../../config/task-graph';
+import { TaskStatus as NativeTaskStatus } from '../../native';
 
 let originalHrTime;
 let originalColumns;
@@ -42,6 +44,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
         args: {
           targets: ['test'],
+        },
+        taskGraph: {
+          tasks: { dep },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
         },
         initiatingProject: 'test',
         initiatingTasks: [],
@@ -95,6 +103,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         args: {
           targets: ['test'],
         },
+        taskGraph: {
+          tasks: { dep, target },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
         initiatingProject: 'test',
         initiatingTasks: [],
         overrides: {},
@@ -147,6 +161,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         },
         initiatingProject: 'test',
         initiatingTasks: [],
+        taskGraph: {
+          tasks: { dep, target },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
         overrides: {},
         projectNames: ['test'],
         tasks: [target, dep],
@@ -184,6 +204,60 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         "
       `);
     });
+
+    it('should display cancelled for single continuous task', async () => {
+      const target = {
+        id: 'test:dev',
+        continuous: true,
+        target: {
+          target: 'dev',
+          project: 'test',
+        },
+      } as Partial<Task> as Task;
+
+      const { lifeCycle, printSummary } = getTuiTerminalSummaryLifeCycle({
+        args: {
+          targets: ['dev'],
+        },
+        initiatingProject: 'test',
+        initiatingTasks: [],
+        taskGraph: {
+          tasks: { [target.id]: target },
+          dependencies: {
+            [target.id]: [],
+          },
+          continuousDependencies: {},
+          roots: [],
+        },
+        overrides: {},
+        projectNames: ['test'],
+        tasks: [target],
+        resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
+      });
+
+      lifeCycle.startTasks([target], null);
+      lifeCycle.setTaskStatus(target.id, NativeTaskStatus.Stopped);
+      lifeCycle.printTaskTerminalOutput(
+        target,
+        'success',
+        'I was a happy dev server'
+      );
+      lifeCycle.endCommand();
+      // Continuous tasks are marked as stopped when the command is stopped
+
+      const lines = getOutputLines(printSummary);
+
+      expect(lines.join('\n')).toMatchInlineSnapshot(`
+        "
+        > nx run test:dev
+
+        I was a happy dev server
+        ———————————————————————————————————————————————————————————————————————————————
+
+         NX   Cancelled running target dev for project test (37w)
+        "
+      `);
+    });
   });
 
   describe('runMany', () => {
@@ -209,6 +283,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         },
         initiatingProject: null,
         initiatingTasks: [],
+        taskGraph: {
+          tasks: { foo, bar },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
         overrides: {},
         projectNames: ['foo', 'bar'],
         tasks: [foo, bar],
@@ -285,6 +365,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         },
         initiatingProject: null,
         initiatingTasks: [],
+        taskGraph: {
+          tasks: { foo, bar },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
         overrides: {},
         projectNames: ['foo', 'bar'],
         tasks: [foo, bar],
@@ -349,6 +435,12 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         initiatingProject: null,
         initiatingTasks: [],
         overrides: {},
+        taskGraph: {
+          tasks: { foo, bar },
+          dependencies: {},
+          continuousDependencies: {},
+          roots: [],
+        },
         projectNames: ['foo', 'bar'],
         tasks: [foo, bar],
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
