@@ -724,7 +724,9 @@ impl TasksList {
             .lock()
             .unwrap()
             .get_current_page_entries();
-        let selected_style = Style::default().add_modifier(Modifier::BOLD);
+        let selected_style = Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD);
         let normal_style = Style::default();
 
         // Determine if all tasks are completed
