@@ -66,6 +66,7 @@ import {
 import { TasksRunner, TaskStatus } from './tasks-runner';
 import { shouldStreamOutput } from './utils';
 import chalk = require('chalk');
+import { signalToCode } from '../utils/exit-codes';
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -255,29 +256,36 @@ async function getTerminalOutputLifeCycle(
       console.log = createPatchedConsoleMethod(originalConsoleLog);
       console.error = createPatchedConsoleMethod(originalConsoleError);
 
+      globalThis.tuiOnProcessExit = () => {
+        restoreTerminal();
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+        process.stdout.write('\n');
+        // Print the intercepted Nx Cloud logs
+        for (const log of interceptedNxCloudLogs) {
+          const logString = log.toString().trimStart();
+          process.stdout.write(logString);
+          if (logString) {
+            process.stdout.write('\n');
+          }
+        }
+      };
+
       renderIsDone = new Promise<void>((resolve) => {
         appLifeCycle.__init(() => {
           resolve();
         });
-      })
-        .then(() => {
-          restoreTerminal();
-        })
-        .finally(() => {
-          // Revert the patched methods
-          process.stdout.write = originalStdoutWrite;
-          process.stderr.write = originalStderrWrite;
-          console.log = originalConsoleLog;
-          console.error = originalConsoleError;
-          // Print the intercepted Nx Cloud logs
-          for (const log of interceptedNxCloudLogs) {
-            const logString = log.toString().trimStart();
-            process.stdout.write(logString);
-            if (logString) {
-              process.stdout.write('\n');
-            }
-          }
-        });
+      }).finally(() => {
+        restoreTerminal();
+        // Revert the patched methods
+        process.stdout.write = originalStdoutWrite;
+        process.stderr.write = originalStderrWrite;
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+      });
     }
 
     return {
@@ -410,7 +418,7 @@ export async function runCommand(
         nxJsonConfiguration: nxJson,
       });
 
-      const taskResults = await runCommandForTasks(
+      const { taskResults, completed } = await runCommandForTasks(
         projectsToRun,
         currentProjectGraph,
         { nxJson },
@@ -427,10 +435,12 @@ export async function runCommand(
         extraOptions
       );
 
-      const result = Object.values(taskResults).some(
-        (taskResult) =>
-          taskResult.status === 'failure' || taskResult.status === 'skipped'
-      )
+      const exitCode = !completed
+        ? signalToCode('SIGINT')
+        : Object.values(taskResults).some(
+            (taskResult) =>
+              taskResult.status === 'failure' || taskResult.status === 'skipped'
+          )
         ? 1
         : 0;
 
@@ -440,7 +450,7 @@ export async function runCommand(
         nxJsonConfiguration: nxJson,
       });
 
-      return result;
+      return exitCode;
     }
   );
 
@@ -456,7 +466,7 @@ export async function runCommandForTasks(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-): Promise<TaskResults> {
+): Promise<{ taskResults: TaskResults; completed: boolean }> {
   const projectNames = projectsToRun.map((t) => t.name);
   const projectNameSet = new Set(projectNames);
 
@@ -510,13 +520,36 @@ export async function runCommandForTasks(
 
     await printNxKey();
 
-    return taskResults;
+    return { taskResults, completed: didCommandComplete(tasks, taskResults) };
   } catch (e) {
     if (restoreTerminal) {
       restoreTerminal();
     }
     throw e;
   }
+}
+
+function didCommandComplete(tasks: Task[], taskResults: TaskResults): boolean {
+  // If no tasks, then we can consider it complete
+  if (tasks.length === 0) {
+    return true;
+  }
+
+  let everyTaskIsContinuous = true;
+  for (const task of tasks) {
+    if (!task.continuous) {
+      everyTaskIsContinuous = false;
+
+      // If any discrete task does not have a result then it did not run
+      if (!taskResults[task.id]) {
+        return false;
+      }
+    }
+  }
+
+  // If every task is continuous, command cannot complete by definition
+  // Otherwise, we've looped through all the discrete tasks and they have results
+  return !everyTaskIsContinuous;
 }
 
 async function ensureWorkspaceIsInSyncAndGetGraphs(
@@ -898,8 +931,7 @@ export async function invokeTasksRunner({
       lifeCycle: compositedLifeCycle,
     },
     {
-      initiatingProject:
-        nxArgs.outputStyle === 'compact' ? null : initiatingProject,
+      initiatingProject,
       initiatingTasks,
       projectGraph,
       nxJson,

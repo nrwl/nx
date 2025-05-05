@@ -1,0 +1,13 @@
+diff --git a/dist/store/tutorial-runner.js b/dist/store/tutorial-runner.js
+index e25390633cf7e196cf4a21622458caa23fe2182d..77a8b3fd6ba60e37837b8e6f052b11d9ad3e0835 100644
+--- a/dist/store/tutorial-runner.js
++++ b/dist/store/tutorial-runner.js
+@@ -539,7 +539,7 @@ function commandsToList(commands) {
+ async function updateFiles(webcontainer, previousFiles, newFiles) {
+     const { removed, addedOrModified } = diffFiles(previousFiles, newFiles);
+     for (const filePath of removed) {
+-        await webcontainer.fs.rm(filePath, { force: true });
++        await webcontainer.fs.rm(filePath, { force: true, recursive: true });
+     }
+     await webcontainer.mount(toFileTree(addedOrModified));
+ }

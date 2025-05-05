@@ -39,26 +39,35 @@
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Get started with basic information, concepts and tutorials.",
+              "path": "/tutorials",
               "itemList": [
                 {
                   "name": "TypeScript Monorepo",
                   "id": "typescript-packages-tutorial",
-                  "file": "shared/tutorials/typescript-packages"
+                  "file": "",
+                  "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
+                  "isExternal": true
                 },
                 {
                   "name": "React Monorepo",
                   "id": "react-monorepo-tutorial",
-                  "file": "shared/tutorials/react-monorepo"
+                  "file": "",
+                  "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
+                  "isExternal": true
                 },
                 {
                   "name": "Angular Monorepo",
                   "id": "angular-monorepo-tutorial",
-                  "file": "shared/tutorials/angular-monorepo"
+                  "file": "",
+                  "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
+                  "isExternal": true
                 },
                 {
                   "name": "Gradle Monorepo",
                   "id": "gradle-tutorial",
-                  "file": "shared/tutorials/gradle"
+                  "file": "",
+                  "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
+                  "isExternal": true
                 }
               ]
             }

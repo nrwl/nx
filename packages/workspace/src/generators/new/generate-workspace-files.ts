@@ -50,7 +50,7 @@ const presetToPluginMap: { [key in Preset]: PresetInfo } = {
     generateAppCmd: '@nx/angular',
     generateLibCmd: '@nx/angular',
     learnMoreLink:
-      'https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+      'https://nx.dev/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
   },
   [Preset.AngularStandalone]: {
     generateAppCmd: '@nx/angular',
@@ -62,7 +62,7 @@ const presetToPluginMap: { [key in Preset]: PresetInfo } = {
     generateAppCmd: '@nx/react',
     generateLibCmd: '@nx/react',
     learnMoreLink:
-      'https://nx.dev/getting-started/tutorials/react-monorepo-tutorial?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
+      'https://nx.dev/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects',
   },
   [Preset.ReactStandalone]: {
     generateAppCmd: '@nx/react',
