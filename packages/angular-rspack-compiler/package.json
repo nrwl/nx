@@ -21,7 +21,7 @@
     "rsbuild",
     "compiler"
   ],
-  "version": "20.8.2",
+  "version": "20.9.0",
   "scripts": {
     "postinstall": "node ./patch/patch-angular-build.js"
   },
