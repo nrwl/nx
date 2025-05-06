@@ -6,24 +6,17 @@ use ratatui::{
     Frame,
 };
 
-use crate::native::tui::colors::ThemeColors;
+use crate::native::tui::theme::THEME;
 
 pub struct HelpText {
     collapsed_mode: bool,
     is_dimmed: bool,
     align_left: bool,
-    theme_colors: ThemeColors,
 }
 
 impl HelpText {
-    pub fn new(
-        theme_colors: ThemeColors,
-        collapsed_mode: bool,
-        is_dimmed: bool,
-        align_left: bool,
-    ) -> Self {
+    pub fn new(collapsed_mode: bool, is_dimmed: bool, align_left: bool) -> Self {
         Self {
-            theme_colors,
             collapsed_mode,
             is_dimmed,
             align_left,
@@ -57,8 +50,8 @@ impl HelpText {
         } else {
             Style::default()
         };
-        let key_style = base_style.fg(self.theme_colors.info);
-        let label_style = base_style.fg(self.theme_colors.secondary_fg);
+        let key_style = base_style.fg(THEME.info);
+        let label_style = base_style.fg(THEME.secondary_fg);
 
         if self.collapsed_mode {
             // Show minimal hint

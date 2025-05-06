@@ -23,7 +23,6 @@ use crate::native::{
 };
 
 use super::action::Action;
-use super::colors::ThemeColors;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
@@ -36,11 +35,11 @@ use super::components::Component;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
+use super::theme::THEME;
 use super::tui;
 use super::utils::normalize_newlines;
 
 pub struct App {
-    theme_colors: ThemeColors,
     pub components: Vec<Box<dyn Component>>,
     pub quit_at: Option<std::time::Instant>,
     focus: Focus,
@@ -85,15 +84,12 @@ impl App {
         pinned_tasks: Vec<String>,
         tui_config: TuiConfig,
         title_text: String,
-        is_dark_mode: bool,
     ) -> Result<Self> {
         let task_count = tasks.len();
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
-        let theme_colors = ThemeColors::new(is_dark_mode);
 
         let initial_focus = Focus::TaskList;
         let tasks_list = TasksList::new(
-            theme_colors,
             tasks.clone(),
             initiating_tasks,
             run_mode,
@@ -101,8 +97,8 @@ impl App {
             title_text,
             selection_manager.clone(),
         );
-        let help_popup = HelpPopup::new(theme_colors);
-        let countdown_popup = CountdownPopup::new(theme_colors);
+        let help_popup = HelpPopup::new();
+        let countdown_popup = CountdownPopup::new();
 
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
@@ -113,7 +109,6 @@ impl App {
         let main_terminal_pane_data = TerminalPaneData::new();
 
         Ok(Self {
-            theme_colors,
             components,
             pinned_tasks,
             quit_at: None,
@@ -783,8 +778,8 @@ impl App {
                                 " NX ",
                                 Style::reset()
                                     .add_modifier(Modifier::BOLD)
-                                    .bg(self.theme_colors.error)
-                                    .fg(self.theme_colors.primary_fg),
+                                    .bg(THEME.error)
+                                    .fg(THEME.primary_fg),
                             ),
                             Span::raw(" Terminal too small "),
                         ]);
@@ -885,11 +880,9 @@ impl App {
                                     Block::default()
                                         .title(format!("  Output {}  ", pane_idx + 1))
                                         .borders(Borders::ALL)
-                                        .border_style(
-                                            Style::default().fg(self.theme_colors.secondary_fg),
-                                        ),
+                                        .border_style(Style::default().fg(THEME.secondary_fg)),
                                 )
-                                .style(Style::default().fg(self.theme_colors.secondary_fg))
+                                .style(Style::default().fg(THEME.secondary_fg))
                                 .alignment(Alignment::Center);
 
                                 f.render_widget(placeholder, *pane_area);
@@ -942,7 +935,7 @@ impl App {
                                     is_next_tab_target,
                                 );
 
-                                let terminal_pane = TerminalPane::new(&self.theme_colors)
+                                let terminal_pane = TerminalPane::new()
                                     .pty_data(terminal_pane_data)
                                     .continuous(task.continuous);
 

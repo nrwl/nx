@@ -12,12 +12,11 @@ use ratatui::{
 use std::any::Any;
 use std::time::{Duration, Instant};
 
-use crate::native::tui::colors::ThemeColors;
+use crate::native::tui::theme::THEME;
 
 use super::Component;
 
 pub struct CountdownPopup {
-    theme_colors: ThemeColors,
     visible: bool,
     start_time: Option<Instant>,
     duration: Duration,
@@ -28,9 +27,8 @@ pub struct CountdownPopup {
 }
 
 impl CountdownPopup {
-    pub fn new(theme_colors: ThemeColors) -> Self {
+    pub fn new() -> Self {
         Self {
-            theme_colors,
             visible: false,
             start_time: None,
             duration: Duration::from_secs(3),
@@ -149,34 +147,25 @@ impl CountdownPopup {
 
         let content = [
             Line::from(vec![
-                Span::styled(
-                    "• Press ",
-                    Style::default().fg(self.theme_colors.secondary_fg),
-                ),
-                Span::styled(
-                    "q to exit immediately ",
-                    Style::default().fg(self.theme_colors.info),
-                ),
-                Span::styled("or ", Style::default().fg(self.theme_colors.secondary_fg)),
-                Span::styled(
-                    "any other key ",
-                    Style::default().fg(self.theme_colors.info),
-                ),
+                Span::styled("• Press ", Style::default().fg(THEME.secondary_fg)),
+                Span::styled("q to exit immediately ", Style::default().fg(THEME.info)),
+                Span::styled("or ", Style::default().fg(THEME.secondary_fg)),
+                Span::styled("any other key ", Style::default().fg(THEME.info)),
                 Span::styled(
                     "to keep the TUI running and interactively explore the results.",
-                    Style::default().fg(self.theme_colors.secondary_fg),
+                    Style::default().fg(THEME.secondary_fg),
                 ),
             ]),
             Line::from(""),
             Line::from(vec![
                 Span::styled(
                     "• Learn how to configure auto-exit and more in the docs: ",
-                    Style::default().fg(self.theme_colors.secondary_fg),
+                    Style::default().fg(THEME.secondary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://nx.dev/terminal-ui",
-                    Style::default().fg(self.theme_colors.info),
+                    Style::default().fg(THEME.info),
                 ),
             ]),
         ];
@@ -188,23 +177,20 @@ impl CountdownPopup {
                     " NX ",
                     Style::default()
                         .add_modifier(Modifier::BOLD)
-                        .bg(self.theme_colors.info)
-                        .fg(self.theme_colors.primary_fg),
+                        .bg(THEME.info)
+                        .fg(THEME.primary_fg),
                 ),
-                Span::styled(
-                    "  Exiting in ",
-                    Style::default().fg(self.theme_colors.primary_fg),
-                ),
+                Span::styled("  Exiting in ", Style::default().fg(THEME.primary_fg)),
                 Span::styled(
                     format!("{}", time_remaining),
-                    Style::default().fg(self.theme_colors.info),
+                    Style::default().fg(THEME.info),
                 ),
-                Span::styled("...  ", Style::default().fg(self.theme_colors.primary_fg)),
+                Span::styled("...  ", Style::default().fg(THEME.primary_fg)),
             ]))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
-            .border_style(Style::default().fg(self.theme_colors.info))
+            .border_style(Style::default().fg(THEME.info))
             .padding(Padding::proportional(1));
 
         // Get the inner area
@@ -280,14 +266,14 @@ impl CountdownPopup {
             f.render_widget(
                 Paragraph::new(top_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(self.theme_colors.info)),
+                    .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
                 Paragraph::new(bottom_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(self.theme_colors.info)),
+                    .style(Style::default().fg(THEME.info)),
                 bottom_right_area,
             );
 
@@ -295,7 +281,7 @@ impl CountdownPopup {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
-                .style(Style::default().fg(self.theme_colors.info));
+                .style(Style::default().fg(THEME.info));
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
         }

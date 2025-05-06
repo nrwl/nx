@@ -11,12 +11,11 @@ use ratatui::{
 use std::any::Any;
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::native::tui::{action::Action, colors::ThemeColors};
-
 use super::{Component, Frame};
+use crate::native::tui::action::Action;
+use crate::native::tui::theme::THEME;
 
 pub struct HelpPopup {
-    theme_colors: ThemeColors,
     scroll_offset: usize,
     scrollbar_state: ScrollbarState,
     content_height: usize,
@@ -26,9 +25,8 @@ pub struct HelpPopup {
 }
 
 impl HelpPopup {
-    pub fn new(theme_colors: ThemeColors) -> Self {
+    pub fn new() -> Self {
         Self {
-            theme_colors,
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
             content_height: 0,
@@ -156,29 +154,29 @@ impl HelpPopup {
             Line::from(vec![
                 Span::styled(
                     "Thanks for using Nx! To get the most out of this terminal UI, please check out the docs: ",
-                    Style::default().fg(self.theme_colors.primary_fg),
+                    Style::default().fg(THEME.primary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://nx.dev/terminal-ui",
-                    Style::default().fg(self.theme_colors.info),
+                    Style::default().fg(THEME.info),
                 ),
             ]),
             Line::from(vec![
                 Span::styled(
                     "If you are finding Nx useful, please consider giving it a star on GitHub, it means a lot: ",
-                    Style::default().fg(self.theme_colors.primary_fg),
+                    Style::default().fg(THEME.primary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://github.com/nrwl/nx",
-                    Style::default().fg(self.theme_colors.info),
+                    Style::default().fg(THEME.info),
                 ),
             ]),
             Line::from(""), // Empty line for spacing
             Line::from(vec![Span::styled(
                 "Available keyboard shortcuts:",
-                Style::default().fg(self.theme_colors.secondary_fg),
+                Style::default().fg(THEME.secondary_fg),
             )]),
             Line::from(""), // Empty line for spacing
         ];
@@ -203,12 +201,12 @@ impl HelpPopup {
                             if i > 0 {
                                 spans.push(Span::styled(
                                     " or ",
-                                    Style::default().fg(self.theme_colors.secondary_fg),
+                                    Style::default().fg(THEME.secondary_fg),
                                 ));
                             }
                             spans.push(Span::styled(
                                 part.to_string(),
-                                Style::default().fg(self.theme_colors.info),
+                                Style::default().fg(THEME.info),
                             ));
                         }
 
@@ -219,12 +217,9 @@ impl HelpPopup {
                         // Add the separator and description
                         spans.push(Span::styled(
                             "=   ",
-                            Style::default().fg(self.theme_colors.secondary_fg),
+                            Style::default().fg(THEME.secondary_fg),
                         ));
-                        spans.push(Span::styled(
-                            desc,
-                            Style::default().fg(self.theme_colors.primary_fg),
-                        ));
+                        spans.push(Span::styled(desc, Style::default().fg(THEME.primary_fg)));
 
                         Line::from(spans)
                     }
@@ -240,18 +235,15 @@ impl HelpPopup {
                     " NX ",
                     Style::default()
                         .add_modifier(Modifier::BOLD)
-                        .bg(self.theme_colors.info)
-                        .fg(self.theme_colors.primary_fg),
+                        .bg(THEME.info)
+                        .fg(THEME.primary_fg),
                 ),
-                Span::styled(
-                    "  Help  ",
-                    Style::default().fg(self.theme_colors.primary_fg),
-                ),
+                Span::styled("  Help  ", Style::default().fg(THEME.primary_fg)),
             ]))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
-            .border_style(Style::default().fg(self.theme_colors.info))
+            .border_style(Style::default().fg(THEME.info))
             .padding(Padding::proportional(1));
 
         let inner_area = block.inner(popup_area);
@@ -329,14 +321,14 @@ impl HelpPopup {
             f.render_widget(
                 Paragraph::new(top_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(self.theme_colors.info)),
+                    .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
                 Paragraph::new(bottom_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(self.theme_colors.info)),
+                    .style(Style::default().fg(THEME.info)),
                 bottom_right_area,
             );
 
@@ -344,7 +336,7 @@ impl HelpPopup {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
-                .style(Style::default().fg(self.theme_colors.info));
+                .style(Style::default().fg(THEME.info));
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
         }

@@ -4,15 +4,13 @@ use napi::JsObject;
 use std::sync::{Arc, Mutex};
 use tracing::debug;
 
-use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
-use crate::native::tasks::types::{Task, TaskResult};
-
 use super::app::App;
-use super::colors::is_dark_mode;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::tui::Tui;
+use crate::native::logger::enable_logger;
+use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::tasks::types::{Task, TaskResult};
 
 #[napi(object)]
 #[derive(Clone)]
@@ -86,9 +84,6 @@ impl AppLifeCycle {
 
         let initiating_tasks = initiating_tasks.into_iter().collect();
 
-        // Figure out if the current terminal uses a dark theme (requires raw mode)
-        let is_dark_mode = is_dark_mode();
-
         Self {
             app: Arc::new(std::sync::Mutex::new(
                 App::new(
@@ -98,7 +93,6 @@ impl AppLifeCycle {
                     pinned_tasks,
                     rust_tui_config,
                     title_text,
-                    is_dark_mode,
                 )
                 .unwrap(),
             )),
@@ -167,8 +161,8 @@ impl AppLifeCycle {
         &self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
-        debug!("Initializing Terminal UI");
         enable_logger();
+        debug!("Initializing Terminal UI");
 
         let app_mutex = self.app.clone();
 

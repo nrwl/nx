@@ -13,21 +13,20 @@ use std::{
 };
 use tokio::sync::mpsc::UnboundedSender;
 
+use super::help_text::HelpText;
+use super::pagination::Pagination;
+use super::task_selection_manager::{SelectionMode, TaskSelectionManager};
+use crate::native::tui::theme::THEME;
 use crate::native::{
     tasks::types::{Task, TaskResult},
     tui::{
         action::Action,
         app::Focus,
-        colors::ThemeColors,
         components::Component,
         lifecycle::RunMode,
         utils::{format_duration_since, sort_task_items},
     },
 };
-
-use super::help_text::HelpText;
-use super::pagination::Pagination;
-use super::task_selection_manager::{SelectionMode, TaskSelectionManager};
 
 const CACHE_STATUS_LOCAL_KEPT_EXISTING: &str = "Kept Existing";
 const CACHE_STATUS_LOCAL: &str = "Local";
@@ -170,7 +169,6 @@ pub fn parse_task_status(string_status: String) -> napi::Result<TaskStatus> {
 /// A list component that displays and manages tasks in a terminal UI.
 /// Provides filtering, sorting, and output display capabilities.
 pub struct TasksList {
-    theme_colors: ThemeColors,
     selection_manager: Arc<Mutex<TaskSelectionManager>>,
     pub tasks: Vec<TaskItem>,    // Source of truth - all tasks
     filtered_names: Vec<String>, // Names of tasks that match the filter
@@ -193,7 +191,6 @@ impl TasksList {
     /// Creates a new TasksList with the given tasks.
     /// Converts the input tasks into TaskItems and initializes the UI state.
     pub fn new(
-        theme_colors: ThemeColors,
         tasks: Vec<Task>,
         initiating_tasks: HashSet<String>,
         run_mode: RunMode,
@@ -210,7 +207,6 @@ impl TasksList {
         let filtered_names = Vec::new();
 
         let mut s = Self {
-            theme_colors,
             selection_manager,
             filtered_names,
             tasks: task_items,
@@ -490,9 +486,9 @@ impl TasksList {
     /// Returns a dimmed style when focus is not on the task list.
     fn get_table_style(&self) -> Style {
         if self.is_task_list_focused() {
-            Style::default().fg(self.theme_colors.secondary_fg)
+            Style::default().fg(THEME.secondary_fg)
         } else {
-            Style::default().dim().fg(self.theme_colors.secondary_fg)
+            Style::default().dim().fg(THEME.secondary_fg)
         }
     }
 
@@ -561,9 +557,9 @@ impl TasksList {
     /// Shows either filter input or task status based on current state.
     fn get_header_cells(&self, has_narrow_area_width: bool) -> Vec<Cell> {
         let status_style = if !self.is_task_list_focused() {
-            Style::default().fg(self.theme_colors.secondary_fg).dim()
+            Style::default().fg(THEME.secondary_fg).dim()
         } else {
-            Style::default().fg(self.theme_colors.secondary_fg)
+            Style::default().fg(THEME.secondary_fg)
         };
 
         // Determine if all tasks are completed and the status color to use
@@ -586,12 +582,12 @@ impl TasksList {
                 .iter()
                 .any(|t| matches!(t.status, TaskStatus::Failure));
             if has_failures {
-                self.theme_colors.error
+                THEME.error
             } else {
-                self.theme_colors.success
+                THEME.success
             }
         } else {
-            self.theme_colors.info
+            THEME.info
         };
 
         // Leave first cell empty for the logo
@@ -692,9 +688,9 @@ impl TasksList {
         let should_dim = !self.is_task_list_focused();
 
         let filter_style = if should_dim {
-            Style::default().fg(self.theme_colors.warning).dim()
+            Style::default().fg(THEME.warning).dim()
         } else {
-            Style::default().fg(self.theme_colors.warning)
+            Style::default().fg(THEME.warning)
         };
 
         let instruction_text = if hidden_tasks > 0 {
@@ -732,7 +728,7 @@ impl TasksList {
             .unwrap()
             .get_current_page_entries();
         let selected_style = Style::default()
-            .fg(self.theme_colors.primary_fg)
+            .fg(THEME.primary_fg)
             .add_modifier(Modifier::BOLD);
         let normal_style = Style::default();
 
@@ -754,7 +750,7 @@ impl TasksList {
         // Determine the color of the NX logo based on task status
         let logo_color = if self.tasks.is_empty() {
             // No tasks
-            self.theme_colors.info
+            THEME.info
         } else if all_tasks_completed {
             // All tasks are completed, check if any failed
             let has_failures = self
@@ -762,13 +758,13 @@ impl TasksList {
                 .iter()
                 .any(|t| matches!(t.status, TaskStatus::Failure));
             if has_failures {
-                self.theme_colors.error
+                THEME.error
             } else {
-                self.theme_colors.success
+                THEME.success
             }
         } else {
             // Tasks are still running
-            self.theme_colors.info
+            THEME.info
         };
 
         // Get header cells using the existing method but add NX logo to first cell
@@ -779,7 +775,7 @@ impl TasksList {
             // Use the logo color for the title text as well
             logo_color
         } else {
-            self.theme_colors.primary_fg
+            THEME.primary_fg
         };
 
         // Apply modifiers based on focus state
@@ -810,10 +806,7 @@ impl TasksList {
             // First cell: Just the NX logo and box corner if needed
             let mut first_cell_spans = vec![Span::styled(
                 " NX ",
-                Style::reset()
-                    .bold()
-                    .bg(logo_color)
-                    .fg(self.theme_colors.primary_fg),
+                Style::reset().bold().bg(logo_color).fg(THEME.primary_fg),
             )];
 
             // Add box corner if needed
@@ -882,7 +875,7 @@ impl TasksList {
                         Span::raw(" "),
                         // Add vertical line for visual continuity, only on first page
                         if is_first_page && self.max_parallel > 0 {
-                            Span::styled("│", Style::default().fg(self.theme_colors.info))
+                            Span::styled("│", Style::default().fg(THEME.info))
                         } else {
                             Span::raw(" ")
                         },
@@ -898,7 +891,7 @@ impl TasksList {
                         Span::raw(" "),
                         // Add vertical line for visual continuity, only on first page
                         if is_first_page && self.max_parallel > 0 {
-                            Span::styled("│", Style::default().fg(self.theme_colors.info))
+                            Span::styled("│", Style::default().fg(THEME.info))
                         } else {
                             Span::raw(" ")
                         },
@@ -943,19 +936,19 @@ impl TasksList {
                         | TaskStatus::RemoteCache => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("✔", Style::default().fg(self.theme_colors.success)),
+                            Span::styled("✔", Style::default().fg(THEME.success)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::Failure => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("✖", Style::default().fg(self.theme_colors.error)),
+                            Span::styled("✖", Style::default().fg(THEME.error)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::Skipped => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("⏭", Style::default().fg(self.theme_colors.warning)),
+                            Span::styled("⏭", Style::default().fg(THEME.warning)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::InProgress | TaskStatus::Shared => {
@@ -969,10 +962,7 @@ impl TasksList {
                             if is_in_parallel_section
                                 && self.selection_manager.lock().unwrap().get_current_page() == 0
                             {
-                                spans.push(Span::styled(
-                                    "│",
-                                    Style::default().fg(self.theme_colors.info),
-                                ));
+                                spans.push(Span::styled("│", Style::default().fg(THEME.info)));
                             } else {
                                 spans.push(Span::raw(" "));
                             }
@@ -980,7 +970,7 @@ impl TasksList {
                             // Add the spinner with consistent spacing
                             spans.push(Span::styled(
                                 throbber_char.to_string(),
-                                Style::default().fg(self.theme_colors.info_light),
+                                Style::default().fg(THEME.info_light),
                             ));
 
                             // Add trailing space to maintain consistent width
@@ -991,14 +981,14 @@ impl TasksList {
                         TaskStatus::Stopped => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("◼", Style::default().fg(self.theme_colors.secondary_fg)),
+                            Span::styled("◼", Style::default().fg(THEME.secondary_fg)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::NotStarted => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             // No need for parallel section check for pending tasks
                             Span::raw(" "),
-                            Span::styled("·", Style::default().fg(self.theme_colors.secondary_fg)),
+                            Span::styled("·", Style::default().fg(THEME.secondary_fg)),
                             Span::raw(" "),
                         ])),
                     };
@@ -1149,7 +1139,7 @@ impl TasksList {
                                 Span::raw(" "),
                                 // Add space and vertical line for parallel section (fixed position)
                                 if is_first_page && self.max_parallel > 0 {
-                                    Span::styled("│", Style::default().fg(self.theme_colors.info))
+                                    Span::styled("│", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw("  ")
                                 },
@@ -1165,7 +1155,7 @@ impl TasksList {
                                 Span::raw(" "),
                                 // Add space and vertical line for parallel section (fixed position)
                                 if is_first_page && self.max_parallel > 0 {
-                                    Span::styled("│", Style::default().fg(self.theme_colors.info))
+                                    Span::styled("│", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw("  ")
                                 },
@@ -1189,7 +1179,7 @@ impl TasksList {
                                 Span::raw(" "),
                                 // Add bottom corner for the box, or just spaces if not on first page
                                 if is_first_page {
-                                    Span::styled("└", Style::default().fg(self.theme_colors.info))
+                                    Span::styled("└", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw(" ")
                                 },
@@ -1205,7 +1195,7 @@ impl TasksList {
                                 Span::raw(" "),
                                 // Add bottom corner for the box, or just spaces if not on first page
                                 if is_first_page {
-                                    Span::styled("└", Style::default().fg(self.theme_colors.info))
+                                    Span::styled("└", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw(" ")
                                 },
@@ -1269,7 +1259,7 @@ impl TasksList {
     fn render_pagination(&self, f: &mut Frame<'_>, pagination_area: Rect, is_dimmed: bool) {
         let total_pages = self.selection_manager.lock().unwrap().total_pages();
         let current_page = self.selection_manager.lock().unwrap().get_current_page();
-        let pagination = Pagination::new(self.theme_colors, current_page, total_pages);
+        let pagination = Pagination::new(current_page, total_pages);
 
         let padded_area = Layout::default()
             .direction(Direction::Horizontal)
@@ -1291,7 +1281,7 @@ impl TasksList {
         is_collapsed: bool,
         is_dimmed: bool,
     ) {
-        let help_text = HelpText::new(self.theme_colors, is_collapsed, is_dimmed, false);
+        let help_text = HelpText::new(is_collapsed, is_dimmed, false);
         help_text.render(f, help_text_area);
     }
 
@@ -1305,9 +1295,9 @@ impl TasksList {
             }
 
             let message_style = if is_dimmed {
-                Style::default().fg(self.theme_colors.secondary_fg).dim()
+                Style::default().fg(THEME.secondary_fg).dim()
             } else {
-                Style::default().fg(self.theme_colors.secondary_fg)
+                Style::default().fg(THEME.secondary_fg)
             };
 
             // No URL present in the message, render the message as is if it fits, otherwise truncate
@@ -1343,12 +1333,9 @@ impl TasksList {
             let mut spans = vec![];
 
             let url_style = if is_dimmed {
-                Style::default()
-                    .fg(self.theme_colors.info)
-                    .underlined()
-                    .dim()
+                Style::default().fg(THEME.info).underlined().dim()
             } else {
-                Style::default().fg(self.theme_colors.info).underlined()
+                Style::default().fg(THEME.info).underlined()
             };
 
             // Determine what fits, prioritizing the URL
@@ -1904,7 +1891,6 @@ mod tests {
         let title_text = "Test Tasks".to_string();
 
         let tasks_list = TasksList::new(
-            ThemeColors::new(true),
             test_tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
@@ -2369,7 +2355,6 @@ mod tests {
         }
 
         let mut tasks_list = TasksList::new(
-            ThemeColors::new(true),
             tasks.clone(),
             HashSet::new(),
             RunMode::RunMany,
@@ -2435,7 +2420,6 @@ mod tests {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
 
         let mut tasks_list = TasksList::new(
-            ThemeColors::new(true),
             test_tasks,
             initiating_tasks,
             RunMode::RunOne,
@@ -2633,7 +2617,6 @@ mod tests {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
 
         let mut tasks_list = TasksList::new(
-            ThemeColors::new(true),
             tasks,
             HashSet::new(),
             RunMode::RunMany,
@@ -2678,7 +2661,6 @@ mod tests {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
 
         let mut tasks_list = TasksList::new(
-            ThemeColors::new(true),
             tasks,
             HashSet::new(),
             RunMode::RunMany,
@@ -2730,7 +2712,6 @@ mod tests {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
 
         let mut tasks_list = TasksList::new(
-            ThemeColors::new(true),
             tasks,
             HashSet::new(),
             RunMode::RunMany,
@@ -2775,7 +2756,6 @@ mod tests {
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
 
         let mut tasks_list = TasksList::new(
-            ThemeColors::new(true),
             tasks,
             HashSet::new(),
             RunMode::RunMany,

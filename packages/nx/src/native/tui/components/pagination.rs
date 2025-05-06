@@ -1,3 +1,4 @@
+use crate::native::tui::theme::THEME;
 use ratatui::{
     layout::Rect,
     style::{Modifier, Style},
@@ -6,18 +7,14 @@ use ratatui::{
     Frame,
 };
 
-use crate::native::tui::colors::ThemeColors;
-
 pub struct Pagination {
-    theme_colors: ThemeColors,
     current_page: usize,
     total_pages: usize,
 }
 
 impl Pagination {
-    pub fn new(theme_colors: ThemeColors, current_page: usize, total_pages: usize) -> Self {
+    pub fn new(current_page: usize, total_pages: usize) -> Self {
         Self {
-            theme_colors,
             current_page,
             total_pages,
         }
@@ -56,14 +53,9 @@ impl Pagination {
 
         // Left arrow - dim if we're on the first page
         let left_arrow = if current_page == 0 {
-            Span::styled(
-                "←",
-                base_style
-                    .fg(self.theme_colors.info)
-                    .add_modifier(Modifier::DIM),
-            )
+            Span::styled("←", base_style.fg(THEME.info).add_modifier(Modifier::DIM))
         } else {
-            Span::styled("←", base_style.fg(self.theme_colors.info))
+            Span::styled("←", base_style.fg(THEME.info))
         };
         spans.push(left_arrow);
 
@@ -71,20 +63,15 @@ impl Pagination {
         spans.push(Span::raw(" "));
         spans.push(Span::styled(
             format!("{}/{}", current_page + 1, total_pages),
-            base_style.fg(self.theme_colors.secondary_fg),
+            base_style.fg(THEME.secondary_fg),
         ));
         spans.push(Span::raw(" "));
 
         // Right arrow - dim if we're on the last page
         let right_arrow = if current_page >= total_pages.saturating_sub(1) {
-            Span::styled(
-                "→",
-                base_style
-                    .fg(self.theme_colors.info)
-                    .add_modifier(Modifier::DIM),
-            )
+            Span::styled("→", base_style.fg(THEME.info).add_modifier(Modifier::DIM))
         } else {
-            Span::styled("→", base_style.fg(self.theme_colors.info))
+            Span::styled("→", base_style.fg(THEME.info))
         };
         spans.push(right_arrow);
 

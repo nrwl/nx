@@ -13,9 +13,9 @@ use ratatui::{
 use std::{io, sync::Arc};
 use tui_term::widget::PseudoTerminal;
 
-use crate::native::tui::{colors::ThemeColors, pty::PtyInstance};
-
 use super::tasks_list::TaskStatus;
+use crate::native::tui::pty::PtyInstance;
+use crate::native::tui::theme::THEME;
 
 pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
@@ -169,15 +169,13 @@ impl TerminalPaneState {
 }
 
 pub struct TerminalPane<'a> {
-    theme_colors: &'a ThemeColors,
     pty_data: Option<&'a mut TerminalPaneData>,
     is_continuous: bool,
 }
 
 impl<'a> TerminalPane<'a> {
-    pub fn new(theme_colors: &'a ThemeColors) -> Self {
+    pub fn new() -> Self {
         Self {
-            theme_colors,
             pty_data: None,
             is_continuous: false,
         }
@@ -201,37 +199,35 @@ impl<'a> TerminalPane<'a> {
             | TaskStatus::RemoteCache => Span::styled(
                 "  ✔  ",
                 Style::default()
-                    .fg(self.theme_colors.success)
+                    .fg(THEME.success)
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::Failure => Span::styled(
                 "  ✖  ",
                 Style::default()
-                    .fg(self.theme_colors.error)
+                    .fg(THEME.error)
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::Skipped => Span::styled(
                 "  ⏭  ",
                 Style::default()
-                    .fg(self.theme_colors.warning)
+                    .fg(THEME.warning)
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::InProgress | TaskStatus::Shared => Span::styled(
                 "  ●  ",
-                Style::default()
-                    .fg(self.theme_colors.info)
-                    .add_modifier(Modifier::BOLD),
+                Style::default().fg(THEME.info).add_modifier(Modifier::BOLD),
             ),
             TaskStatus::Stopped => Span::styled(
                 "  ◼  ",
                 Style::default()
-                    .fg(self.theme_colors.secondary_fg)
+                    .fg(THEME.secondary_fg)
                     .add_modifier(Modifier::BOLD),
             ),
             TaskStatus::NotStarted => Span::styled(
                 "  ·  ",
                 Style::default()
-                    .fg(self.theme_colors.secondary_fg)
+                    .fg(THEME.secondary_fg)
                     .add_modifier(Modifier::BOLD),
             ),
         }
@@ -242,11 +238,11 @@ impl<'a> TerminalPane<'a> {
             TaskStatus::Success
             | TaskStatus::LocalCacheKeptExisting
             | TaskStatus::LocalCache
-            | TaskStatus::RemoteCache => self.theme_colors.success,
-            TaskStatus::Failure => self.theme_colors.error,
-            TaskStatus::Skipped => self.theme_colors.warning,
-            TaskStatus::InProgress | TaskStatus::Shared => self.theme_colors.info,
-            TaskStatus::NotStarted | TaskStatus::Stopped => self.theme_colors.secondary_fg,
+            | TaskStatus::RemoteCache => THEME.success,
+            TaskStatus::Failure => THEME.error,
+            TaskStatus::Skipped => THEME.warning,
+            TaskStatus::InProgress | TaskStatus::Shared => THEME.info,
+            TaskStatus::NotStarted | TaskStatus::Stopped => THEME.secondary_fg,
         })
     }
 
@@ -300,7 +296,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 // Only attempt to render if we have a valid area
                 let text = "...";
                 let paragraph = Paragraph::new(text)
-                    .style(Style::default().fg(self.theme_colors.secondary_fg))
+                    .style(Style::default().fg(THEME.secondary_fg))
                     .alignment(Alignment::Center);
                 Widget::render(paragraph, safe_area, buf);
             }
@@ -329,19 +325,19 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 vec![
                     status_icon.clone(),
                     Span::raw(format!("{}  ", state.task_name))
-                        .style(Style::default().fg(self.theme_colors.primary_fg)),
+                        .style(Style::default().fg(THEME.primary_fg)),
                 ]
             } else {
                 vec![
                     status_icon.clone(),
                     Span::raw(format!("{}  ", state.task_name))
-                        .style(Style::default().fg(self.theme_colors.secondary_fg)),
+                        .style(Style::default().fg(THEME.secondary_fg)),
                     if state.is_next_tab_target {
                         let tab_target_text = Span::raw("Press <tab> to focus output ")
                             .remove_modifier(Modifier::DIM);
                         // In light themes, use the primary fg color for the tab target text to make sure it's clearly visible
-                        if !self.theme_colors.is_dark_mode {
-                            tab_target_text.fg(self.theme_colors.primary_fg)
+                        if !THEME.is_dark_mode {
+                            tab_target_text.fg(THEME.primary_fg)
                         } else {
                             tab_target_text
                         }
@@ -363,10 +359,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
         // If task hasn't started yet, show pending message
         if matches!(state.task_status, TaskStatus::NotStarted) {
             let message_style = if state.is_focused {
-                Style::default().fg(self.theme_colors.secondary_fg)
+                Style::default().fg(THEME.secondary_fg)
             } else {
                 Style::default()
-                    .fg(self.theme_colors.secondary_fg)
+                    .fg(THEME.secondary_fg)
                     .add_modifier(Modifier::DIM)
             };
             let message = vec![Line::from(vec![Span::styled(
@@ -495,22 +491,19 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
                                 Span::raw("  "),
-                                Span::styled(
-                                    "<ctrl>+z",
-                                    Style::default().fg(self.theme_colors.info),
-                                ),
+                                Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
                                 Span::styled(
                                     " to exit interactive  ",
-                                    Style::default().fg(self.theme_colors.primary_fg),
+                                    Style::default().fg(THEME.primary_fg),
                                 ),
                             ])
                         } else {
                             Line::from(vec![
                                 Span::raw("  "),
-                                Span::styled("i", Style::default().fg(self.theme_colors.info)),
+                                Span::styled("i", Style::default().fg(THEME.info)),
                                 Span::styled(
                                     " to make interactive  ",
-                                    Style::default().fg(self.theme_colors.secondary_fg),
+                                    Style::default().fg(THEME.secondary_fg),
                                 ),
                             ])
                         };
@@ -540,12 +533,12 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         let top_text = if self.is_currently_interactive() {
                             Line::from(vec![Span::styled(
                                 "  INTERACTIVE  ",
-                                Style::default().fg(self.theme_colors.primary_fg),
+                                Style::default().fg(THEME.primary_fg),
                             )])
                         } else {
                             Line::from(vec![Span::styled(
                                 "  NON-INTERACTIVE  ",
-                                Style::default().fg(self.theme_colors.secondary_fg),
+                                Style::default().fg(THEME.secondary_fg),
                             )])
                         };
 
