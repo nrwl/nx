@@ -554,7 +554,7 @@ function MigrationStateCircle({
 }: MigrationStateCircleProps) {
   let bgColor = '';
   let textColor = '';
-  let Icon = ClockIcon;
+  let Icon = null;
 
   // Check if this migration is in the completed migrations
   const completedMigration =
@@ -584,22 +584,22 @@ function MigrationStateCircle({
     // Future migration (none of the states above)
     bgColor = 'bg-slate-300';
     textColor = 'text-slate-700';
-    Icon = ClockIcon;
   }
 
   return (
     <div
       className={twMerge(
-        `absolute left-0 top-0 flex h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
+        !!Icon ? ' h-8 w-8' : 'mt-1 h-6 w-6',
+        `absolute left-0 top-0 flex -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
         needsAttention ? 'animate-pulse' : ''
       )}
       onClick={onClick}
     >
       {isRunning ? (
         <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-      ) : (
+      ) : Icon ? (
         <Icon className="h-6 w-6" />
-      )}
+      ) : null}
     </div>
   );
 }

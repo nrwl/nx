@@ -1,6 +1,7 @@
 import { fork, Serializable } from 'child_process';
 import { join } from 'path';
 import { PseudoIPCClient } from './pseudo-ipc';
+import { signalToCode } from '../utils/exit-codes';
 
 const pseudoIPCPath = process.argv[2];
 const forkId = process.argv[3];
@@ -34,4 +35,19 @@ process.on('message', (message: Serializable) => {
 childProcess.on('exit', (code) => {
   pseudoIPC.close();
   process.exit(code);
+});
+
+// Terminate the child process when exiting
+process.on('exit', () => {
+  childProcess.kill();
+});
+process.on('SIGINT', () => {
+  childProcess.kill('SIGTERM');
+  process.exit(signalToCode('SIGINT'));
+});
+process.on('SIGTERM', () => {
+  childProcess.kill('SIGTERM');
+});
+process.on('SIGHUP', () => {
+  childProcess.kill('SIGTERM');
 });

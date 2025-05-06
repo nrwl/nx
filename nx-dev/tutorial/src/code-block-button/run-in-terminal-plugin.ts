@@ -17,7 +17,8 @@ export function runInTerminalPlugin(): ExpressiveCodePlugin {
     'runInTerminal',
     svg,
     runInTerminalTexts,
-    (_, isTerminal) => isTerminal,
+    (codeBlock, isTerminal) =>
+      isTerminal && !codeBlock.metaOptions.getBoolean('no-run'),
     (codeBlock, _) => {
       // remove comment lines starting with `#` from terminal frames
       let code = codeBlock.code.replace(/(?<=^|\n)\s*#.*($|\n+)/g, '').trim();

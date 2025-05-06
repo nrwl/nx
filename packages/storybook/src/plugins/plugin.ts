@@ -313,6 +313,7 @@ function serveStaticTarget(
   projectRoot: string
 ) {
   const targetConfig: TargetConfiguration = {
+    dependsOn: [`${options.buildStorybookTargetName}`],
     continuous: true,
     executor: '@nx/web:file-server',
     options: {

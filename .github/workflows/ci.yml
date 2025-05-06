@@ -137,7 +137,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /opt/Homebrew
+            /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 
@@ -152,7 +152,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /opt/Homebrew
+            /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 

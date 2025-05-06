@@ -3,6 +3,7 @@
   "implementation": "/packages/react-native/src/executors/run-android/run-android.impl.ts",
   "schema": {
     "version": 2,
+    "continuous": true,
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeRunAndroid",

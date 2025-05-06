@@ -11,11 +11,14 @@ const currentVersion = process.env.GITHUB_REF_NAME || '';
 console.log(`Comparing ${currentVersion} to npm versions`);
 
 const majorVersion = major(currentVersion);
-const releasedVersions: string[] = JSON.parse(
+let releasedVersions: string[] = JSON.parse(
   execSync(`npm show nx@^${majorVersion} version --json`, {
     windowsHide: false,
   }).toString()
 );
+if (typeof releasedVersions === 'string') {
+  releasedVersions = [releasedVersions];
+}
 
 const latestVersion = maxSatisfying(releasedVersions, `^${majorVersion}`);
 

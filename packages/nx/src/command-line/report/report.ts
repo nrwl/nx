@@ -453,39 +453,11 @@ export function findRegisteredPluginsBeingUsed(nxJson: NxJsonConfiguration) {
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
   // TODO (v20): Remove workaround for hiding @nrwl packages when matching @nx package is found.
-  const packageChangeMap: Record<string, string> = {
-    '@nrwl/nx-plugin': '@nx/plugin',
-    '@nx/plugin': '@nrwl/nx-plugin',
-    '@nrwl/eslint-plugin-nx': '@nx/eslint-plugin',
-    '@nx/eslint-plugin': '@nrwl/eslint-plugin-nx',
-    '@nrwl/nx-cloud': 'nx-cloud',
-  };
 
   for (const pkg of packagesWeCareAbout) {
     const v = readPackageVersion(pkg);
     if (v) {
-      // If its a @nrwl scoped package, keep the version if there is no
-      // corresponding @nx scoped package, or it has a different version.
-      if (pkg.startsWith('@nrwl/')) {
-        const otherPackage =
-          packageChangeMap[pkg] ?? pkg.replace('@nrwl/', '@nx/');
-        const otherVersion = packagesWeMayCareAbout[otherPackage];
-        if (!otherVersion || v !== otherVersion) {
-          packagesWeMayCareAbout[pkg] = v;
-        }
-        // If its a @nx scoped package, always keep the version, and
-        // remove the corresponding @nrwl scoped package if it exists.
-      } else if (pkg.startsWith('@nx/')) {
-        const otherPackage =
-          packageChangeMap[pkg] ?? pkg.replace('@nx/', '@nrwl/');
-        const otherVersion = packagesWeMayCareAbout[otherPackage];
-        if (otherVersion && v === otherVersion) {
-          delete packagesWeMayCareAbout[otherPackage];
-        }
-        packagesWeMayCareAbout[pkg] = v;
-      } else {
-        packagesWeMayCareAbout[pkg] = v;
-      }
+      packagesWeMayCareAbout[pkg] = v;
     }
   }
 

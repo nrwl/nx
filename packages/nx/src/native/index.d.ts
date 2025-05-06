@@ -26,7 +26,7 @@ export declare class AppLifeCycle {
 
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
-  kill(): void
+  kill(signal?: NodeJS.Signals): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
   cleanup(): void
@@ -89,12 +89,12 @@ export declare class RunningTasksService {
 
 export declare class RustPseudoTerminal {
   constructor()
-  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null): ChildProcess
+  runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, execArgv?: Array<string> | undefined | null, quiet?: boolean | undefined | null, tty?: boolean | undefined | null, commandLabel?: string | undefined | null): ChildProcess
   /**
    * This allows us to run a pseudoterminal with a fake node ipc channel
    * this makes it possible to be backwards compatible with the old implementation
    */
-  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean): ChildProcess
+  fork(id: string, forkScript: string, pseudoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, execArgv: Array<string> | undefined | null, quiet: boolean, commandLabel?: string | undefined | null): ChildProcess
 }
 
 export declare class TaskDetails {

@@ -27,7 +27,7 @@ interface RustRunningTask extends RunningTask {
 
   onExit(cb: (code: number, terminalOutput: string) => void): void;
 
-  kill(signal?: NodeJS.Signals | number): Promise<void> | void;
+  kill(signal?: NodeJS.Signals): Promise<void> | void;
 }
 
 export interface LifeCycle {

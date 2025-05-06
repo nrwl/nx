@@ -134,7 +134,7 @@ impl HelpPopup {
             ("b", "Toggle task list visibility"),
             (
                 "m",
-                "Cycle through layout modes: auto, vertical, horizontal",
+                "Toggle between vertical and horizontal layouts (auto by default)",
             ),
             ("1", "Pin task to be shown in output pane 1"),
             ("2", "Pin task to be shown in output pane 2"),

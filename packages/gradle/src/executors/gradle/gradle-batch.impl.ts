@@ -1,4 +1,4 @@
-import { ExecutorContext, output, TaskGraph } from '@nx/devkit';
+import { ExecutorContext, output, TaskGraph, workspaceRoot } from '@nx/devkit';
 import {
   LARGE_BUFFER,
   RunCommandsOptions,
@@ -8,6 +8,10 @@ import { gradleExecutorSchema } from './schema';
 import { findGradlewFile } from '../../utils/exec-gradle';
 import { dirname, join } from 'path';
 import { execSync } from 'child_process';
+import {
+  createPseudoTerminal,
+  PseudoTerminal,
+} from 'nx/src/tasks-runner/pseudo-terminal';
 
 export const batchRunnerPath = join(
   __dirname,
@@ -56,20 +60,42 @@ export default async function gradleBatch(
       return gradlewTasksToRun;
     }, {});
     const gradlewBatchStart = performance.mark(`gradlew-batch:start`);
-    const batchResults = execSync(
-      `java -jar ${batchRunnerPath} --tasks='${JSON.stringify(
-        gradlewTasksToRun
-      )}' --workspaceRoot=${root} --args='${args
-        .join(' ')
-        .replaceAll("'", '"')}' ${
-        process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
-      }`,
-      {
+
+    const usePseudoTerminal =
+      process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+      PseudoTerminal.isSupported();
+    const command = `java -jar ${batchRunnerPath} --tasks='${JSON.stringify(
+      gradlewTasksToRun
+    )}' --workspaceRoot=${root} --args='${args
+      .join(' ')
+      .replaceAll("'", '"')}' ${
+      process.env.NX_VERBOSE_LOGGING === 'true' ? '' : '--quiet'
+    }`;
+    let batchResults;
+    if (usePseudoTerminal) {
+      const terminal = createPseudoTerminal();
+      await terminal.init();
+
+      const cp = terminal.runCommand(command, {
+        cwd: workspaceRoot,
+        jsEnv: process.env,
+        quiet: process.env.NX_VERBOSE_LOGGING !== 'true',
+      });
+      const results = await cp.getResults();
+      batchResults = results.terminalOutput;
+
+      batchResults = batchResults.replace(command, '');
+      const startIndex = batchResults.indexOf('{');
+      const endIndex = batchResults.lastIndexOf('}');
+      batchResults = batchResults.substring(startIndex, endIndex + 1);
+    } else {
+      batchResults = execSync(command, {
+        cwd: workspaceRoot,
         windowsHide: true,
         env: process.env,
         maxBuffer: LARGE_BUFFER,
-      }
-    );
+      }).toString();
+    }
     const gradlewBatchEnd = performance.mark(`gradlew-batch:end`);
     performance.measure(
       `gradlew-batch`,

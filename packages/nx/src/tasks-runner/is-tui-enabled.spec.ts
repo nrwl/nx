@@ -112,4 +112,30 @@ describe('shouldUseTui', () => {
       }
     )
   );
+
+  describe('priority', () => {
+    it('should prioritize the CLI args over the env var', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: 'false',
+          CI: 'false',
+        },
+        () => {
+          expect(shouldUseTui({}, { outputStyle: 'dynamic' }, true)).toBe(true);
+        }
+      ));
+
+    it('should prioritize the env var over the nx.json config', () =>
+      withEnvironmentVariables(
+        {
+          NX_TUI: 'false',
+          CI: 'false',
+        },
+        () => {
+          expect(shouldUseTui({ tui: { enabled: true } }, {}, true)).toBe(
+            false
+          );
+        }
+      ));
+  });
 });

@@ -1,23 +1,11 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import { dirname, relative } from 'path';
-import { getFullOsSocketPath } from '../socket-utils';
+import { relative } from 'path';
 import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
 import { normalizePath } from '../../utils/path';
-import {
-  getAlwaysIgnore,
-  getIgnoredGlobs,
-  getIgnoreObject,
-} from '../../utils/ignore';
-import { platform } from 'os';
 import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
 import type { WatchEvent } from '../../native';
 import { openSockets } from './server';
-
-const ALWAYS_IGNORE = [
-  ...getAlwaysIgnore(workspaceRoot),
-  getFullOsSocketPath(),
-];
 
 export type FileWatcherCallback = (
   err: Error | string | null,

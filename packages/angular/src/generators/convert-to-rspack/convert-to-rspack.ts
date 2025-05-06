@@ -111,6 +111,10 @@ const PATH_NORMALIZER = {
   polyfills: (tree: Tree, paths: string | string[], root: string) => {
     const normalizedPaths: string[] = [];
     const normalizeFn = (path: string) => {
+      if (path.startsWith('zone.js')) {
+        normalizedPaths.push(path);
+        return;
+      }
       try {
         const resolvedPath = require.resolve(path, {
           paths: [join(workspaceRoot, 'node_modules')],

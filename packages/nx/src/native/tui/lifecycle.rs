@@ -1,4 +1,3 @@
-use hashbrown::HashSet;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use napi::JsObject;

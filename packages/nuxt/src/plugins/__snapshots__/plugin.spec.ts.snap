@@ -31,6 +31,9 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
         },
         "acme-serve-static": {
           "continuous": true,
+          "dependsOn": [
+            "acme-build-static",
+          ],
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "acme-build-static",
@@ -153,6 +156,9 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
         },
         "serve-static": {
           "continuous": true,
+          "dependsOn": [
+            "build-static",
+          ],
           "executor": "@nx/web:file-server",
           "options": {
             "buildTarget": "build-static",

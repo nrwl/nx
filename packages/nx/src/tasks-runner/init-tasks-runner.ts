@@ -157,7 +157,7 @@ async function createOrchestrator(
 
   await orchestrator.init();
 
-  orchestrator.processTasks(tasks.map((task) => task.id));
+  orchestrator.processAllScheduledTasks();
 
   return orchestrator;
 }
@@ -168,7 +168,7 @@ export async function runDiscreteTasks(
   taskGraphForHashing: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle
-) {
+): Promise<Array<Promise<TaskResult[]>>> {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
@@ -176,9 +176,36 @@ export async function runDiscreteTasks(
     nxJson,
     lifeCycle
   );
-  return tasks.map((task, index) =>
-    orchestrator.applyFromCacheOrRunTask(true, task, index)
-  );
+
+  let groupId = 0;
+  let nextBatch = orchestrator.nextBatch();
+  let batchResults: Array<Promise<TaskResult[]>> = [];
+  /**
+   * Set of task ids that were part of batches
+   */
+  const batchTasks = new Set<string>();
+
+  while (nextBatch) {
+    for (const task in nextBatch.taskGraph.tasks) {
+      batchTasks.add(task);
+    }
+
+    batchResults.push(
+      orchestrator.applyFromCacheOrRunBatch(true, nextBatch, groupId++)
+    );
+    nextBatch = orchestrator.nextBatch();
+  }
+
+  const taskResults = tasks
+    // Filter out tasks which were not part of batches
+    .filter((task) => !batchTasks.has(task.id))
+    .map((task) =>
+      orchestrator
+        .applyFromCacheOrRunTask(true, task, groupId++)
+        .then((r) => [r])
+    );
+
+  return [...batchResults, ...taskResults];
 }
 
 export async function runContinuousTasks(

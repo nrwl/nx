@@ -190,6 +190,7 @@ function serveTarget(projectRoot: string) {
 
 function serveStaticTarget(options: NuxtPluginOptions) {
   const targetConfig: TargetConfiguration = {
+    dependsOn: [`${options.buildStaticTargetName}`],
     continuous: true,
     executor: '@nx/web:file-server',
     options: {

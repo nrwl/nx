@@ -104,6 +104,9 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "static-storybook": {
                     "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",
@@ -187,6 +190,9 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "static-storybook": {
                     "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",
@@ -268,6 +274,9 @@ describe('@nx/storybook/plugin', () => {
                   },
                   "static-storybook": {
                     "continuous": true,
+                    "dependsOn": [
+                      "build-storybook",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build-storybook",

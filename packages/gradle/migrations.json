@@ -23,6 +23,12 @@
       "cli": "nx",
       "description": "Change @nx/gradle plugin to version 1",
       "factory": "./src/migrations/21-0-0/change-plugin-to-v1"
+    },
+    "change-ciTargetName-to-ciTestTargetName": {
+      "version": "21.0.0-beta.13",
+      "cli": "nx",
+      "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
+      "factory": "./src/migrations/21-0-0/change-ciTargetName-to-ciTestTargetName"
     }
   },
   "packageJsonUpdates": {}

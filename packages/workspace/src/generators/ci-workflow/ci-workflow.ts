@@ -52,6 +52,7 @@ interface Substitutes {
   hasPlaywright: boolean;
   tmpl: '';
   connectedToCloud: boolean;
+  packageManagerVersion: string;
 }
 
 function normalizeOptions(options: Schema, tree: Tree): Substitutes {
@@ -92,6 +93,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManagerPrefix,
     packageManagerPreInstallPrefix,
     mainBranch: deduceDefaultBase(),
+    packageManagerVersion: packageJson?.packageManager?.split('@')[1],
     hasCypress,
     hasE2E,
     hasPlaywright,
