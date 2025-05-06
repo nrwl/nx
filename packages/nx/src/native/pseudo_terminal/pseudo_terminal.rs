@@ -130,7 +130,7 @@ impl PseudoTerminal {
                         let write_buf = content.as_bytes();
                         debug!("Escaped Stdout: {:?}", write_buf.escape_ascii().to_string());
 
-                        while let Err(e) = stdout.write_all(&write_buf) {
+                        while let Err(e) = stdout.write_all(write_buf) {
                             match e.kind() {
                                 std::io::ErrorKind::Interrupted => {
                                     if !logged_interrupted_error {
@@ -170,10 +170,6 @@ impl PseudoTerminal {
             printing_rx,
             is_within_nx_tui,
         })
-    }
-
-    pub fn default() -> Result<PseudoTerminal> {
-        Self::new(PseudoTerminalOptions::default())
     }
 
     pub fn run_command(

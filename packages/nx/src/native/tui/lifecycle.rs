@@ -9,6 +9,7 @@ use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskResult};
 
 use super::app::App;
+use super::colors::is_dark_mode;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::tui::Tui;
@@ -49,7 +50,7 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
             Either::B(int_value) => AutoExit::Integer(int_value),
         });
         // Pass the converted JSON config value(s) and cli_args to instantiate the config with
-        RustTuiConfig::new(js_auto_exit, &rust_tui_cli_args)
+        RustTuiConfig::new(js_auto_exit, rust_tui_cli_args)
     }
 }
 
@@ -85,15 +86,19 @@ impl AppLifeCycle {
 
         let initiating_tasks = initiating_tasks.into_iter().collect();
 
+        // Figure out if the current terminal uses a dark theme (requires raw mode)
+        let is_dark_mode = is_dark_mode();
+
         Self {
             app: Arc::new(std::sync::Mutex::new(
                 App::new(
-                    tasks.into_iter().map(|t| t.into()).collect(),
+                    tasks.into_iter().collect(),
                     initiating_tasks,
                     run_mode,
                     pinned_tasks,
                     rust_tui_config,
                     title_text,
+                    is_dark_mode,
                 )
                 .unwrap(),
             )),
@@ -287,7 +292,7 @@ impl AppLifeCycle {
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
         if let Ok(mut app) = self.app.lock() {
-            let _ = app.set_cloud_message(Some(message));
+            app.set_cloud_message(Some(message));
         }
         Ok(())
     }
