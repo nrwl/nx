@@ -42,31 +42,23 @@ export function FailingCompliance(): ReactElement {
             </SectionDescription>
 
             <SectionDescription as="p" className="mt-6">
-              These community-built cache solutions all too often miss essential
-              safeguards—no integrity validation, no fine-grained access
-              controls, and no real-time token revocation:
+              Community-built cache solutions reading and writing directly from
+              the file storage are vulnerable to the Cache Poisoning by
+              Construction attack resulting in any contributor with pull request
+              privileges being able to potentially inject compromised artifacts
+              into production environments without detection.{' '}
+              <Strong>
+                This vulnerability completely circumvents conventional security
+                protections like encryption, access control and key management
+              </Strong>
+              .
             </SectionDescription>
 
-            <ul className="mt-4 list-disc space-y-1 pl-6 text-base leading-7">
-              <li className="">nx-remotecache-azure</li>
-              <li className="">turborepo-remote-cache</li>
-              <li className="">nx-cache-server</li>
-              <li className="">turborepo-remote-cache-cloudflare</li>
-              <li className="">and others like them</li>
-            </ul>
             <SectionDescription as="p" className="mt-6">
-              Our{' '}
-              <Link
-                href="/remote-cache"
-                title="official Nx self-hosted plugin"
-                className="font-semibold underline"
-              >
-                official Nx self-hosted plugin
-              </Link>{' '}
-              adds enhanced security but follows a similar architecture to the
-              packages above. It is unable to make guarantees about how cache
-              artifacts are secured or accessed and cannot meet the security
-              demands of regulated industries.
+              Even our official Nx self-hosted plugins adds enhanced security
+              but follows a similar architecture. They are unable to make
+              guarantees about how cache artifacts are secured or accessed and
+              cannot meet the security demands of regulated industries.
             </SectionDescription>
           </div>
           <div>
