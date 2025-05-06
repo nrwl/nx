@@ -8,6 +8,7 @@
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
+    "check-format:quick": "pretty-quick --check",
     "check-imports": "node ./scripts/check-imports.js",
     "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
@@ -407,6 +408,7 @@
       "echo",
       "check-commit",
       "check-format",
+      "check-format:quick",
       "check-imports",
       "check-lock-files",
       "check-codeowners"
