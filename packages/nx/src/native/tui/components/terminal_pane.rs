@@ -38,22 +38,14 @@ impl TerminalPaneData {
         if let Some(pty) = &mut self.pty {
             let mut pty_mut = pty.as_ref().clone();
             match key.code {
-                // Handle arrow key based scrolling regardless of interactive mode
-                KeyCode::Up => {
+                // Scrolling keybindings (up/down arrow keys or 'k'/'j') are only handled if we're not in interactive mode.
+                // If interactive, the event falls through to be forwarded to the PTY so that we can support things like interactive prompts within tasks.
+                KeyCode::Up | KeyCode::Char('k') if !self.is_interactive => {
                     pty_mut.scroll_up();
                     return Ok(());
                 }
-                KeyCode::Down => {
+                KeyCode::Down | KeyCode::Char('j') if !self.is_interactive => {
                     pty_mut.scroll_down();
-                    return Ok(());
-                }
-                // Handle j/k for scrolling when not in interactive mode
-                KeyCode::Char('k') | KeyCode::Char('j') if !self.is_interactive => {
-                    match key.code {
-                        KeyCode::Char('k') => pty_mut.scroll_up(),
-                        KeyCode::Char('j') => pty_mut.scroll_down(),
-                        _ => {}
-                    }
                     return Ok(());
                 }
                 // Handle ctrl+u and ctrl+d for scrolling when not in interactive mode
@@ -104,6 +96,12 @@ impl TerminalPaneData {
                     }
                     KeyCode::Char(c) => {
                         pty_mut.write_input(c.to_string().as_bytes())?;
+                    }
+                    KeyCode::Up => {
+                        pty_mut.write_input(b"\x1b[A")?;
+                    }
+                    KeyCode::Down => {
+                        pty_mut.write_input(b"\x1b[B")?;
                     }
                     KeyCode::Enter => {
                         pty_mut.write_input(b"\r")?;
