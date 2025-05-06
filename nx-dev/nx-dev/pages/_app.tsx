@@ -16,6 +16,7 @@ export default function CustomApp({
 }: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
+  const gtmMeasurementId = 'GTM-KW8423B6';
 
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
@@ -116,14 +117,14 @@ export default function CustomApp({
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','${gaMeasurementId}');
+          })(window,document,'script','dataLayer','${gtmMeasurementId}');
           `,
         }}
       />
       {/* Google Tag Manager - NoScript */}
       <noscript>
         <iframe
-          src={`https://www.googletagmanager.com/ns.html?id=${gaMeasurementId}`}
+          src={`https://www.googletagmanager.com/ns.html?id=${gtmMeasurementId}`}
           height="0"
           width="0"
           style={{ display: 'none', visibility: 'hidden' }}
