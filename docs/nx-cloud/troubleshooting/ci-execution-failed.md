@@ -20,6 +20,8 @@ Nx Cloud provides two commands to forcibly stop agents, [stop-all-agents and com
 
 Once these commands are invoked, the current CI Pipeline Execution is closed and can no longer receive new work.
 
+If this error occurs at the beginning of a CI Pipeline Execution it could be caused by a non-unique [NX_CI_EXECUTION_ID](/ci/reference/env-vars#nxbranch-and-nxciexecutionid) that is causing Nx Cloud to associate this CIPE with a CIPE that has already concluded.
+
 ### Nx Cloud agents were stopped due to an error
 
 Nx Cloud detected a failed task in the current CI Pipeline Execution and has halted further execution.
