@@ -4751,6 +4751,16 @@
       }
     },
     "migrations": {
+      "/nx-api/rspack/migrations/21.0.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
+        "hidden": false,
+        "name": "21.0.1-package-updates",
+        "version": "21.0.1-beta.0",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/21.0.1-package-updates",
+        "type": "migration"
+      },
       "/nx-api/rspack/migrations/20.5.0-package-updates": {
         "description": "",
         "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
