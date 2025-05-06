@@ -16,10 +16,12 @@ export async function getServerConfig(
   i18n: I18nOptions,
   defaultConfig: Configuration
 ): Promise<Configuration> {
+  const isDevServer = !!process.env['WEBPACK_SERVE'];
   const { root } = normalizedOptions;
 
   return {
     ...defaultConfig,
+    dependencies: ['browser'],
     name: 'server',
     target: 'node',
     entry: {
@@ -86,7 +88,7 @@ export async function getServerConfig(
         i18nOptions: i18n,
         platform: 'server',
       }),
-      ...(normalizedOptions.prerender
+      ...(normalizedOptions.prerender && !isDevServer
         ? [new PrerenderPlugin(normalizedOptions, i18n)]
         : []),
     ],
