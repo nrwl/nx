@@ -91,7 +91,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const bundler = options.bundler ?? 'vite';
 
     return reactApplicationGenerator(tree, {
-      name: options.workspaces ? undefined : options.name,
+      name: options.name,
       directory: '.',
       style: options.style,
       linter: options.linter,
@@ -128,7 +128,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/vue');
 
     return vueApplicationGenerator(tree, {
-      name: options.workspaces ? undefined : options.name,
+      name: options.name,
       directory: '.',
       style: options.style,
       linter: options.linter,
@@ -143,7 +143,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/nuxt');
 
     return nuxtApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       style: options.style,
       linter: options.linter,
@@ -175,7 +175,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/next');
 
     return nextApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       style: options.style,
       linter: options.linter,
@@ -209,7 +209,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/web');
 
     return webApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       style: options.style,
       linter: options.linter,
@@ -223,7 +223,7 @@ async function createPreset(tree: Tree, options: Schema) {
       '/nest');
 
     return nestApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
@@ -238,7 +238,7 @@ async function createPreset(tree: Tree, options: Schema) {
       applicationGenerator: expressApplicationGenerator,
     } = require('@nx' + '/express');
     return expressApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
@@ -252,7 +252,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const { reactNativeApplicationGenerator } = require('@nx' +
       '/react-native');
     return reactNativeApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
@@ -267,7 +267,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === Preset.Expo) {
     const { expoApplicationGenerator } = require('@nx' + '/expo');
     return expoApplicationGenerator(tree, {
-      name: options.name,
+      name: options.workspaces ? undefined : options.name,
       directory: join('apps', options.name),
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
