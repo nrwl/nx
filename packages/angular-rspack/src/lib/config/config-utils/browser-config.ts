@@ -17,14 +17,10 @@ export async function getBrowserConfig(
   defaultConfig: Configuration
 ): Promise<Configuration> {
   const isProduction = process.env['NODE_ENV'] === 'production';
-  const isDevServer = !!process.env['WEBPACK_SERVE'];
 
   return {
     ...defaultConfig,
     name: 'browser',
-    ...(normalizedOptions.hasServer && isDevServer
-      ? { dependencies: ['server'] }
-      : {}),
     target: 'web',
     entry: {
       main: {

@@ -10,7 +10,6 @@ import { getEntryPoints } from '../config/config-utils/entry-points';
 import type {
   I18nOptions,
   NormalizedAngularRspackPluginOptions,
-  OutputPath,
 } from '../models';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
@@ -39,15 +38,13 @@ export class NgRspackPlugin implements RspackPluginInstance {
     const root = this.pluginOptions.root;
     const isDevServer = process.env['WEBPACK_SERVE'];
 
-    if (!this.isPlatformServer && isDevServer) {
+    if (this.isPlatformServer && isDevServer) {
       if (
         this.pluginOptions.ssr &&
         typeof this.pluginOptions.ssr === 'object' &&
         this.pluginOptions.ssr.entry !== undefined
       ) {
-        new AngularSsrDevServer(
-          this.pluginOptions.outputPath as OutputPath
-        ).apply(compiler);
+        new AngularSsrDevServer(this.pluginOptions).apply(compiler);
       }
     }
     if (!isDevServer) {
