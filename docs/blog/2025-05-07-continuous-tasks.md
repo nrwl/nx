@@ -14,12 +14,14 @@ This article is part of the Nx 21 Launch Week series:
 
 - [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
 - **Continuous tasks are a huge DX improvement**
-- Terminal UI
+- [A New UI For The Humble Terminal](/blog/nx-21-terminal-ui)
 - Migrate UI
 
 {% /callout %}
 
 Continuous tasks are one of the most exciting features we’ve launched that radically improve the developer experience (DX) of your monorepo.
+
+{% toc /%}
 
 ## What are continuous tasks?
 
