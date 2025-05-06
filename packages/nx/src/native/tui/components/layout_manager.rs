@@ -739,7 +739,6 @@ mod tests {
     #[cfg(test)]
     mod visual_tests {
         use super::*;
-        use ratatui::style::{Color, Style};
         use ratatui::widgets::{Block, Borders};
         use ratatui::{backend::TestBackend, Terminal};
 
@@ -758,10 +757,8 @@ mod tests {
 
                     // Render task list if visible
                     if let Some(task_list_area) = areas.task_list {
-                        let task_list_block = Block::default()
-                            .title("Task List")
-                            .borders(Borders::ALL)
-                            .border_style(Style::default().fg(Color::Green));
+                        let task_list_block =
+                            Block::default().title("Task List").borders(Borders::ALL);
 
                         frame.render_widget(task_list_block, task_list_area);
                     }
@@ -770,8 +767,7 @@ mod tests {
                     for (i, pane_area) in areas.terminal_panes.iter().enumerate() {
                         let pane_block = Block::default()
                             .title(format!("Terminal Pane {}", i + 1))
-                            .borders(Borders::ALL)
-                            .border_style(Style::default().fg(Color::Yellow));
+                            .borders(Borders::ALL);
 
                         frame.render_widget(pane_block, *pane_area);
                     }

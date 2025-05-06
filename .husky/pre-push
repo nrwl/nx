@@ -1,5 +1,6 @@
 pnpm check-lock-files
+pnpm pretty-quick --check
+NX_TUI=false pnpm nx format-native nx
+NX_TUI=false pnpm nx lint-native nx
 pnpm check-commit
 pnpm documentation
-pnpm pretty-quick --check
-pnpm nx format-native nx

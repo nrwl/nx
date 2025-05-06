@@ -1,20 +1,29 @@
 use ratatui::{
     layout::{Alignment, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
     Frame,
 };
 
+use crate::native::tui::colors::ThemeColors;
+
 pub struct HelpText {
     collapsed_mode: bool,
     is_dimmed: bool,
     align_left: bool,
+    theme_colors: ThemeColors,
 }
 
 impl HelpText {
-    pub fn new(collapsed_mode: bool, is_dimmed: bool, align_left: bool) -> Self {
+    pub fn new(
+        theme_colors: ThemeColors,
+        collapsed_mode: bool,
+        is_dimmed: bool,
+        align_left: bool,
+    ) -> Self {
         Self {
+            theme_colors,
             collapsed_mode,
             is_dimmed,
             align_left,
@@ -48,15 +57,17 @@ impl HelpText {
         } else {
             Style::default()
         };
+        let key_style = base_style.fg(self.theme_colors.info);
+        let label_style = base_style.fg(self.theme_colors.secondary_fg);
 
         if self.collapsed_mode {
             // Show minimal hint
             let hint = vec![
-                Span::styled("quit: ", base_style.fg(Color::DarkGray)),
-                Span::styled("q", base_style.fg(Color::Cyan)),
-                Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("help: ", base_style.fg(Color::DarkGray)),
-                Span::styled("?", base_style.fg(Color::Cyan)),
+                Span::styled("quit: ", label_style),
+                Span::styled("q", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("help: ", label_style),
+                Span::styled("?", key_style),
             ];
             f.render_widget(
                 Paragraph::new(Line::from(hint)).alignment(if self.align_left {
@@ -69,26 +80,26 @@ impl HelpText {
         } else {
             // Show full shortcuts
             let shortcuts = vec![
-                Span::styled("quit: ", base_style.fg(Color::DarkGray)),
-                Span::styled("q", base_style.fg(Color::Cyan)),
-                Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("help: ", base_style.fg(Color::DarkGray)),
-                Span::styled("?", base_style.fg(Color::Cyan)),
-                Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("navigate: ", base_style.fg(Color::DarkGray)),
-                Span::styled("↑ ↓", base_style.fg(Color::Cyan)),
-                Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("filter: ", base_style.fg(Color::DarkGray)),
-                Span::styled("/", base_style.fg(Color::Cyan)),
-                Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("pin output: ", base_style.fg(Color::DarkGray)),
-                Span::styled("", base_style.fg(Color::DarkGray)),
-                Span::styled("1", base_style.fg(Color::Cyan)),
-                Span::styled(" or ", base_style.fg(Color::DarkGray)),
-                Span::styled("2", base_style.fg(Color::Cyan)),
-                Span::styled("  ", base_style.fg(Color::DarkGray)),
-                Span::styled("show output: ", base_style.fg(Color::DarkGray)),
-                Span::styled("<enter>", base_style.fg(Color::Cyan)),
+                Span::styled("quit: ", label_style),
+                Span::styled("q", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("help: ", label_style),
+                Span::styled("?", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("navigate: ", label_style),
+                Span::styled("↑ ↓", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("filter: ", label_style),
+                Span::styled("/", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("pin output: ", label_style),
+                Span::styled("", label_style),
+                Span::styled("1", key_style),
+                Span::styled(" or ", label_style),
+                Span::styled("2", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("show output: ", label_style),
+                Span::styled("<enter>", key_style),
             ];
 
             f.render_widget(

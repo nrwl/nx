@@ -5,7 +5,7 @@ use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
-use ratatui::style::{Color, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::collections::HashMap;
@@ -23,6 +23,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::colors::ThemeColors;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
@@ -39,6 +40,7 @@ use super::tui;
 use super::utils::normalize_newlines;
 
 pub struct App {
+    theme_colors: ThemeColors,
     pub components: Vec<Box<dyn Component>>,
     pub quit_at: Option<std::time::Instant>,
     focus: Focus,
@@ -83,12 +85,15 @@ impl App {
         pinned_tasks: Vec<String>,
         tui_config: TuiConfig,
         title_text: String,
+        is_dark_mode: bool,
     ) -> Result<Self> {
         let task_count = tasks.len();
         let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5)));
+        let theme_colors = ThemeColors::new(is_dark_mode);
 
         let initial_focus = Focus::TaskList;
         let tasks_list = TasksList::new(
+            theme_colors,
             tasks.clone(),
             initiating_tasks,
             run_mode,
@@ -96,8 +101,8 @@ impl App {
             title_text,
             selection_manager.clone(),
         );
-        let help_popup = HelpPopup::new();
-        let countdown_popup = CountdownPopup::new();
+        let help_popup = HelpPopup::new(theme_colors);
+        let countdown_popup = CountdownPopup::new(theme_colors);
 
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
@@ -108,6 +113,7 @@ impl App {
         let main_terminal_pane_data = TerminalPaneData::new();
 
         Ok(Self {
+            theme_colors,
             components,
             pinned_tasks,
             quit_at: None,
@@ -121,7 +127,7 @@ impl App {
             layout_manager: LayoutManager::new(task_count),
             frame_area: None,
             layout_areas: None,
-            terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::default()],
+            terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             spacebar_mode: false,
             pane_tasks: [None, None],
             task_list_hidden: false,
@@ -255,7 +261,7 @@ impl App {
         let pty = self
             .pty_instances
             .get_mut(&task_id)
-            .expect(&format!("{} has not been registered yet.", task_id));
+            .unwrap_or_else(|| panic!("{} has not been registered yet.", task_id));
         pty.process_output(output.as_bytes());
     }
 
@@ -752,11 +758,11 @@ impl App {
                 tui.draw(|f| {
                     let area = f.area();
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
-                    if !self.frame_area.is_some() {
+                    if self.frame_area.is_none() {
                         self.frame_area = Some(area);
                     }
                     // Determine the required layout areas for the tasks list and terminal panes using the LayoutManager
-                    if !self.layout_areas.is_some() {
+                    if self.layout_areas.is_none() {
                         self.recalculate_layout_areas();
                     }
 
@@ -777,8 +783,8 @@ impl App {
                                 " NX ",
                                 Style::reset()
                                     .add_modifier(Modifier::BOLD)
-                                    .bg(Color::Red)
-                                    .fg(Color::Black),
+                                    .bg(self.theme_colors.error)
+                                    .fg(self.theme_colors.primary_fg),
                             ),
                             Span::raw(" Terminal too small "),
                         ]);
@@ -879,9 +885,11 @@ impl App {
                                     Block::default()
                                         .title(format!("  Output {}  ", pane_idx + 1))
                                         .borders(Borders::ALL)
-                                        .border_style(Style::default().fg(Color::DarkGray)),
+                                        .border_style(
+                                            Style::default().fg(self.theme_colors.secondary_fg),
+                                        ),
                                 )
-                                .style(Style::default().fg(Color::DarkGray))
+                                .style(Style::default().fg(self.theme_colors.secondary_fg))
                                 .alignment(Alignment::Center);
 
                                 f.render_widget(placeholder, *pane_area);
@@ -934,7 +942,7 @@ impl App {
                                     is_next_tab_target,
                                 );
 
-                                let terminal_pane = TerminalPane::new()
+                                let terminal_pane = TerminalPane::new(&self.theme_colors)
                                     .pty_data(terminal_pane_data)
                                     .continuous(task.continuous);
 
@@ -1348,7 +1356,7 @@ impl App {
 
     /// Actually processes the resize event by updating PTY dimensions.
     fn handle_pty_resize(&mut self) -> io::Result<()> {
-        if !self.layout_areas.is_some() {
+        if self.layout_areas.is_none() {
             return Ok(());
         }
 

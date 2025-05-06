@@ -2202,6 +2202,7 @@ dependencies = [
  "sysinfo",
  "tar",
  "tempfile",
+ "terminal-colorsaurus",
  "thiserror",
  "tokio",
  "tokio-util",
@@ -3551,6 +3552,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "terminal-colorsaurus"
+version = "0.4.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7afe4c174a3cbfb52ebcb11b28965daf74fe9111d4e07e40689d05af06e26e8"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "memchr",
+ "mio 1.0.3",
+ "terminal-trx",
+ "windows-sys 0.59.0",
+ "xterm-color",
+]
+
+[[package]]
+name = "terminal-trx"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "975b4233aefa1b02456d5e53b22c61653c743e308c51cf4181191d8ce41753ab"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "termios"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4635,6 +4662,12 @@ dependencies = [
  "libc",
  "rustix 1.0.5",
 ]
+
+[[package]]
+name = "xterm-color"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4de5f056fb9dc8b7908754867544e26145767187aaac5a98495e88ad7cb8a80f"
 
 [[package]]
 name = "xxhash-rust"

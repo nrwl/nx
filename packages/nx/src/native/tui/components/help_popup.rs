@@ -1,7 +1,7 @@
 use color_eyre::eyre::Result;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
         Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
@@ -11,11 +11,12 @@ use ratatui::{
 use std::any::Any;
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::native::tui::action::Action;
+use crate::native::tui::{action::Action, colors::ThemeColors};
 
 use super::{Component, Frame};
 
 pub struct HelpPopup {
+    theme_colors: ThemeColors,
     scroll_offset: usize,
     scrollbar_state: ScrollbarState,
     content_height: usize,
@@ -25,8 +26,9 @@ pub struct HelpPopup {
 }
 
 impl HelpPopup {
-    pub fn new() -> Self {
+    pub fn new(theme_colors: ThemeColors) -> Self {
         Self {
+            theme_colors,
             scroll_offset: 0,
             scrollbar_state: ScrollbarState::default(),
             content_height: 0,
@@ -154,29 +156,29 @@ impl HelpPopup {
             Line::from(vec![
                 Span::styled(
                     "Thanks for using Nx! To get the most out of this terminal UI, please check out the docs: ",
-                    Style::default().fg(Color::White),
+                    Style::default().fg(self.theme_colors.primary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://nx.dev/terminal-ui",
-                    Style::default().fg(Color::Cyan),
+                    Style::default().fg(self.theme_colors.info),
                 ),
             ]),
             Line::from(vec![
                 Span::styled(
                     "If you are finding Nx useful, please consider giving it a star on GitHub, it means a lot: ",
-                    Style::default().fg(Color::White),
+                    Style::default().fg(self.theme_colors.primary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://github.com/nrwl/nx",
-                    Style::default().fg(Color::Cyan),
+                    Style::default().fg(self.theme_colors.info),
                 ),
             ]),
             Line::from(""), // Empty line for spacing
             Line::from(vec![Span::styled(
                 "Available keyboard shortcuts:",
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(self.theme_colors.secondary_fg),
             )]),
             Line::from(""), // Empty line for spacing
         ];
@@ -201,12 +203,12 @@ impl HelpPopup {
                             if i > 0 {
                                 spans.push(Span::styled(
                                     " or ",
-                                    Style::default().fg(Color::DarkGray),
+                                    Style::default().fg(self.theme_colors.secondary_fg),
                                 ));
                             }
                             spans.push(Span::styled(
                                 part.to_string(),
-                                Style::default().fg(Color::Cyan),
+                                Style::default().fg(self.theme_colors.info),
                             ));
                         }
 
@@ -215,8 +217,14 @@ impl HelpPopup {
                         spans.push(Span::raw(padding));
 
                         // Add the separator and description
-                        spans.push(Span::styled("=   ", Style::default().fg(Color::DarkGray)));
-                        spans.push(Span::styled(desc, Style::default().fg(Color::White)));
+                        spans.push(Span::styled(
+                            "=   ",
+                            Style::default().fg(self.theme_colors.secondary_fg),
+                        ));
+                        spans.push(Span::styled(
+                            desc,
+                            Style::default().fg(self.theme_colors.primary_fg),
+                        ));
 
                         Line::from(spans)
                     }
@@ -232,15 +240,18 @@ impl HelpPopup {
                     " NX ",
                     Style::default()
                         .add_modifier(Modifier::BOLD)
-                        .bg(Color::Cyan)
-                        .fg(Color::Black),
+                        .bg(self.theme_colors.info)
+                        .fg(self.theme_colors.primary_fg),
                 ),
-                Span::styled("  Help  ", Style::default().fg(Color::White)),
+                Span::styled(
+                    "  Help  ",
+                    Style::default().fg(self.theme_colors.primary_fg),
+                ),
             ]))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
-            .border_style(Style::default().fg(Color::Cyan))
+            .border_style(Style::default().fg(self.theme_colors.info))
             .padding(Padding::proportional(1));
 
         let inner_area = block.inner(popup_area);
@@ -318,14 +329,14 @@ impl HelpPopup {
             f.render_widget(
                 Paragraph::new(top_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(Color::Cyan)),
+                    .style(Style::default().fg(self.theme_colors.info)),
                 top_right_area,
             );
 
             f.render_widget(
                 Paragraph::new(bottom_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(Color::Cyan)),
+                    .style(Style::default().fg(self.theme_colors.info)),
                 bottom_right_area,
             );
 
@@ -333,22 +344,9 @@ impl HelpPopup {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
-                .style(Style::default().fg(Color::Cyan));
+                .style(Style::default().fg(self.theme_colors.info));
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
-        }
-    }
-}
-
-impl Clone for HelpPopup {
-    fn clone(&self) -> Self {
-        Self {
-            scroll_offset: self.scroll_offset,
-            scrollbar_state: self.scrollbar_state,
-            content_height: self.content_height,
-            viewport_height: self.viewport_height,
-            visible: self.visible,
-            action_tx: self.action_tx.clone(),
         }
     }
 }
@@ -367,11 +365,8 @@ impl Component for HelpPopup {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        match action {
-            Action::Resize(w, h) => {
-                self.handle_resize(w, h);
-            }
-            _ => {}
+        if let Action::Resize(w, h) = action {
+            self.handle_resize(w, h);
         }
         Ok(None)
     }
