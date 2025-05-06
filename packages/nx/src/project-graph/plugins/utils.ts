@@ -12,7 +12,7 @@ export async function createNodesFromFiles<T = unknown>(
     idx: number
   ) => CreateNodesResult | Promise<CreateNodesResult>,
   configFiles: readonly string[],
-  options: T,
+  options: T | undefined,
   context: CreateNodesContextV2
 ) {
   const results: Array<[file: string, value: CreateNodesResult]> = [];
