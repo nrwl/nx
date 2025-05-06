@@ -1,6 +1,6 @@
 {
   "name": "@nx/angular-rspack",
-  "version": "20.8.2",
+  "version": "20.9.0",
   "private": false,
   "publishConfig": {
     "access": "public"
