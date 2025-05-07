@@ -9,7 +9,6 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
-import { Linter } from '@nx/eslint';
 import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
 import { Schema } from './schema';
 
@@ -18,7 +17,7 @@ describe('lib', () => {
 
   const defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'jest',
@@ -459,6 +458,7 @@ describe('lib', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(appTree, 'tsconfig.json', {
@@ -597,6 +597,58 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(appTree.read('my-lib/package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/my-lib",
+          "version": "0.0.1",
+          "main": "./dist/index.cjs.js",
+          "module": "./dist/index.esm.js",
+          "types": "./dist/index.esm.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.esm.d.ts",
+              "import": "./dist/index.esm.js",
+              "default": "./dist/index.cjs.js"
+            }
+          },
+          "peerDependencies": {
+            "react": "~18.3.1",
+            "react-native": "~0.76.3"
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(appTree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(appTree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {

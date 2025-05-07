@@ -1,0 +1,110 @@
+---
+type: lesson
+title: Create Local Libraries
+previews:
+  - {
+      port: 4211,
+      title: 'Project Details View',
+      pathname: '/project-details/angular-store',
+    }
+---
+
+## Local Libraries
+
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=232"></VideoLink> */}
+
+When you develop your Angular application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, however, the app becomes more and more monolithic and the code is unable to be shared with other applications.
+
+```
+└─ angular-monorepo
+   ├─ ...
+   ├─ apps
+   │  └─ angular-store
+   │     ├─ ...
+   │     ├─ src
+   │     │  ├─ app
+   │     │  │  ├─ products
+   │     │  │  ├─ cart
+   │     │  │  ├─ ui
+   │     │  │  ├─ ...
+   │     │  │  └─ app.tsx
+   │     │  ├─ ...
+   │     │  └─ main.tsx
+   │     ├─ ...
+   │     └─ project.json
+   ├─ nx.json
+   ├─ ...
+```
+
+Nx allows you to separate this logic into "local libraries". The main benefits include
+
+- better separation of concerns
+- better reusability
+- more explicit "APIs" between your "domain areas"
+- better scalability in CI by enabling independent test/lint/build commands for each library
+- better scalability in your teams by allowing different teams to work on separate libraries
+
+### Creating Local Libraries
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=254"></VideoLink> */}
+
+Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
+
+```shell
+nx g @nx/angular:library libs/products --unitTestRunner=jest
+```
+
+```shell
+nx g @nx/angular:library libs/orders --unitTestRunner=jest
+```
+
+```shell
+nx g @nx/angular:library libs/shared/ui --unitTestRunner=jest
+```
+
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
+
+Running the above commands should lead to the following directory structure:
+
+```
+└─ angular-monorepo
+   ├─ ...
+   ├─ apps
+   ├─ libs
+   │  ├─ products
+   │  │  ├─ ...
+   │  │  ├─ project.json
+   │  │  ├─ src
+   │  │  │  ├─ index.ts
+   │  │  │  ├─ test-setup.ts
+   │  │  │  └─ lib
+   │  │  │     └─ products
+   │  │  ├─ tsconfig.json
+   │  │  ├─ tsconfig.lib.json
+   │  │  └─ tsconfig.spec.json
+   │  ├─ orders
+   │  │  ├─ ...
+   │  │  ├─ project.json
+   │  │  ├─ src
+   │  │  │  ├─ index.ts
+   │  │  │  └─ ...
+   │  │  └─ ...
+   │  └─ shared
+   │     └─ ui
+   │        ├─ ...
+   │        ├─ project.json
+   │        ├─ src
+   │        │  ├─ index.ts
+   │        │  └─ ...
+   │        └─ ...
+   ├─ ...
+```
+
+Each of these libraries
+
+- has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
+- has the name you specified in the generate command; you can find the name in the corresponding `project.json` file
+- has a dedicated `index.ts` file which is the "public API" of the library
+- is mapped in the `tsconfig.base.json` at the root of the workspace

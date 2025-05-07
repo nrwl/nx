@@ -84,7 +84,8 @@ For example, if we migrated the `@nx/vite` plugin for a single app (i.e. `nx g @
         "serve": {
           "executor": "nx:run-commands",
           "options": {
-            "command": "vite dev"
+            "command": "vite dev",
+            "continuous": true
           }
         },
         "build": {

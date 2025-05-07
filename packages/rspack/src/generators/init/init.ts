@@ -15,7 +15,6 @@ import {
   reactRefreshVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
-  rspackPluginMinifyVersion,
   rspackPluginReactRefreshVersion,
   sassEmbeddedVersion,
   sassLoaderVersion,
@@ -88,7 +87,6 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
     '@rspack/cli': rspackCoreVersion,
-    '@rspack/plugin-minify': rspackPluginMinifyVersion,
     '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
     'react-refresh': reactRefreshVersion,
   };

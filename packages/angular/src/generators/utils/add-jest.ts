@@ -11,6 +11,7 @@ export type AddJestOptions = {
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  addPlugin?: boolean;
 };
 
 export async function addJest(
@@ -40,8 +41,8 @@ export async function addJest(
     skipSerializers: false,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addPlugin: false,
-    addExplicitTargets: true,
+    addPlugin: options.addPlugin ?? false,
+    addExplicitTargets: !options.addPlugin,
   });
 
   const setupFile = joinPathFragments(

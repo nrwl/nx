@@ -23,26 +23,11 @@ Make sure to install the `@nx/web` version that matches the version of `nx` in y
 
 In any Nx workspace, you can install `@nx/web` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/web
 ```
 
 This will install the correct version of `@nx/web`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/web` package with your package manager.
-
-```shell
-npm add -D @nx/web
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using the @nx/web Plugin
 

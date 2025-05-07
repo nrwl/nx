@@ -2,7 +2,7 @@
 title: 'Taming Code Organization with Module Boundaries in Nx'
 slug: 'mastering-the-project-boundaries-in-nx'
 authors: ['Miroslav Jonaš']
-cover_image: '/blog/images/2021-12-17/PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2021-12-17/PIUl1QGk7mOpSFdEwFQ8OA.avif'
 tags: [nx]
 description: Learn how to organize growing Nx repositories using module boundaries and ESLint rules to enforce clean architecture and prevent unwanted dependencies between domains.
 ---

@@ -47,6 +47,9 @@ describe('Nx Plugin (TS solution)', () => {
     expect(runCLI(`lint @proj/${plugin}`)).toContain(
       `Successfully ran target lint for project @proj/${plugin}`
     );
+    expect(runCLI(`typecheck @proj/${plugin}`)).toContain(
+      `Successfully ran target typecheck for project @proj/${plugin}`
+    );
     expect(runCLI(`build @proj/${plugin}`)).toContain(
       `Successfully ran target build for project @proj/${plugin}`
     );

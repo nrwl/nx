@@ -21,26 +21,6 @@ export function applyReactConfig(
     const svgrOptions =
       typeof options.svgr === 'object' ? options.svgr : defaultSvgrOptions;
 
-    // TODO(v21): Remove file-loader and use `?react` querystring to differentiate between asset and SVGR.
-    // It should be:
-    // use: [{
-    //   test: /\.svg$/i,
-    //   type: 'asset',
-    //   resourceQuery: /react/, // *.svg?react
-    // },
-    // {
-    //   test: /\.svg$/i,
-    //   issuer: /\.[jt]sx?$/,
-    //   resourceQuery: { not: [/react/] }, // exclude react component if *.svg?react
-    //   use: ['@svgr/webpack'],
-    // }],
-    // See:
-    // - SVGR: https://react-svgr.com/docs/webpack/#use-svgr-and-asset-svg-in-the-same-project
-    // - Vite: https://www.npmjs.com/package/vite-plugin-svgr
-    // - Rsbuild: https://github.com/web-infra-dev/rsbuild/pull/1783
-    // Note: We also need a migration for any projects that are using SVGR to convert
-    //       `import { ReactComponent as X } from './x.svg` to
-    //       `import X from './x.svg?react';
     config.module.rules.push({
       test: /\.svg$/,
       issuer: /\.(js|ts|md)x?$/,
@@ -69,7 +49,11 @@ export function applyReactConfig(
 function addHotReload(
   config: Partial<WebpackOptionsNormalized | Configuration>
 ) {
-  if (config.mode === 'development' && config['devServer']?.hot) {
+  if (
+    config.mode === 'development' &&
+    typeof config['devServer'] === 'object' &&
+    config['devServer']?.hot
+  ) {
     // add `react-refresh/babel` to babel loader plugin
     const babelLoader = config.module.rules.find(
       (rule) =>

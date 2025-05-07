@@ -1,9 +1,14 @@
 import type { Tree } from '@nx/devkit';
-import { addProjectConfiguration, joinPathFragments } from '@nx/devkit';
-import type { AngularProjectConfiguration } from '../../../utils/types';
-import type { NormalizedSchema } from './normalized-schema';
+import {
+  addProjectConfiguration,
+  joinPathFragments,
+  readJson,
+} from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { addReleaseConfigForNonTsSolution } from '@nx/js/src/generators/library/utils/add-release-config';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import type { NormalizedSchema } from './normalized-schema';
 
 export async function addProject(
   tree: Tree,
@@ -44,7 +49,9 @@ export async function addProject(
     };
 
     if (libraryOptions.publishable) {
+      const nxJson = readJson(tree, 'nx.json');
       await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
         tree,
         libraryOptions.name,
         project

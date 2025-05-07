@@ -29,7 +29,8 @@
         "serve": {
           "options": {
             "cwd": "apps/myreactapp",
-            "command": "vite serve"
+            "command": "vite serve",
+            "continuous": true
           },
           "executor": "nx:run-commands",
           "configurations": {},
@@ -51,7 +52,8 @@
         "serve-static": {
           "executor": "@nx/web:file-server",
           "options": {
-            "buildTarget": "build"
+            "buildTarget": "build",
+            "continuous": true
           },
           "configurations": {}
         },

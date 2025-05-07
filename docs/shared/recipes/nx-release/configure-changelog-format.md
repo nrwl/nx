@@ -32,7 +32,7 @@ There are a few options available to modify the default changelog renderer outpu
       "projectChangelogs": {
         "renderOptions": {
           "authors": true,
-          "mapAuthorsToGitHubUsernames": true,
+          "applyUsernameToAuthors": true,
           "commitReferences": true,
           "versionTitleDate": true
         }
@@ -46,11 +46,13 @@ There are a few options available to modify the default changelog renderer outpu
 
 Whether the commit authors should be added to the bottom of the changelog in a "Thank You" section. Defaults to `true`.
 
-#### `mapAuthorsToGitHubUsernames`
+#### `applyUsernameToAuthors`
 
 If authors is enabled, controls whether or not to try to map the authors to their GitHub usernames using https://ungh.cc (from https://github.com/unjs/ungh) and the email addresses found in the commits. Defaults to `true`.
 
 You should disable this option if you don't want to make any external requests to https://ungh.cc
+
+NOTE: Prior to Nx v21, this option was named `mapAuthorsToGitHubUsernames`.
 
 #### `commitReferences`
 
@@ -71,7 +73,7 @@ If you prefer a more minimalist changelog, you can set all the options to false,
       "projectChangelogs": {
         "renderOptions": {
           "authors": false,
-          "mapAuthorsToGitHubUsernames": false,
+          "applyUsernameToAuthors": false,
           "commitReferences": false,
           "versionTitleDate": false
         }

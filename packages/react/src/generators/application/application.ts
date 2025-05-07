@@ -75,33 +75,34 @@ export async function applicationGeneratorInternal(
 
   const options = await normalizeOptions(tree, schema);
 
-  options.useReactRouter = options.routing
-    ? options.useReactRouter ??
-      (await promptWhenInteractive<{
-        response: 'Yes' | 'No';
-      }>(
-        {
-          name: 'response',
-          message:
-            'Would you like to use react-router for server-side rendering?',
-          type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              message:
-                'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
-            },
-            {
-              name: 'No',
-              message:
-                'I do not want to use react-router for server-side rendering',
-            },
-          ],
-          initial: 0,
-        },
-        { response: 'No' }
-      ).then((r) => r.response === 'Yes'))
-    : false;
+  options.useReactRouter =
+    options.routing && options.bundler === 'vite'
+      ? options.useReactRouter ??
+        (await promptWhenInteractive<{
+          response: 'Yes' | 'No';
+        }>(
+          {
+            name: 'response',
+            message:
+              'Would you like to use react-router for server-side rendering?',
+            type: 'autocomplete',
+            choices: [
+              {
+                name: 'Yes',
+                message:
+                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
+              },
+              {
+                name: 'No',
+                message:
+                  'I do not want to use react-router for server-side rendering',
+              },
+            ],
+            initial: 0,
+          },
+          { response: 'No' }
+        ).then((r) => r.response === 'Yes'))
+      : false;
 
   showPossibleWarnings(tree, options);
 
@@ -234,7 +235,8 @@ export async function applicationGeneratorInternal(
     },
     options.linter === 'eslint'
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-      : undefined
+      : undefined,
+    options.useReactRouter ? 'app' : 'src'
   );
 
   sortPackageJsonFields(tree, options.appProjectRoot);

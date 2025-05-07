@@ -117,7 +117,7 @@ export function GetStarted(): ReactElement {
                 </p>
                 <div className="mt-4 text-left">
                   <TerminalOutput
-                    command="nx activate-powerpack {YOUR_LICENSE_KEY}"
+                    command="nx activate-key {YOUR_ACTIVATION_KEY}"
                     path="~/my-workspace"
                     title=""
                     content=""
@@ -138,13 +138,6 @@ export function GetStarted(): ReactElement {
                 </h4>
                 <p className="mt-2">
                   Install Powerpack plugins such as{' '}
-                  <TextLink
-                    href="/nx-enterprise/powerpack/custom-caching"
-                    title="Self-hosted cache storage"
-                  >
-                    Self-hosted cache storage
-                  </TextLink>
-                  ,{' '}
                   <TextLink
                     href="/nx-enterprise/powerpack/conformance"
                     title="Workspace conformance"

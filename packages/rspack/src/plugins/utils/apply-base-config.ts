@@ -19,6 +19,7 @@ import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isBuildableLibrary } from './is-lib-buildable';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -65,11 +66,11 @@ function applyNxIndependentConfig(
     process.env.NODE_ENV === 'production' || options.mode === 'production';
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
-  config.target ??= options.target as 'node' | 'web';
+  config.target ??= options.target as 'async-node' | 'node' | 'web';
   config.node = false;
   config.mode =
     // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
-    config.target === 'node'
+    config.target === 'node' || config.target === 'async-node'
       ? 'none'
       : // Otherwise, make sure it matches `process.env.NODE_ENV`.
         // When mode is development or production, rspack will automatically
@@ -86,7 +87,11 @@ function applyNxIndependentConfig(
           : 'none');
   // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
   // So to mitigate this we enable in memory caching when target is Node and in watch mode.
-  config.cache = options.target === 'node' && options.watch ? true : undefined;
+  config.cache =
+    (options.target === 'node' || options.target === 'async-node') &&
+    options.watch
+      ? true
+      : undefined;
 
   config.devtool =
     options.sourceMap === true ? 'source-map' : options.sourceMap;
@@ -94,8 +99,11 @@ function applyNxIndependentConfig(
   config.output = {
     ...(config.output ?? {}),
     libraryTarget:
-      (config as Configuration).output?.libraryTarget ??
-      (options.target === 'node' ? 'commonjs' : undefined),
+      options.target === 'node'
+        ? 'commonjs'
+        : options.target === 'async-node'
+        ? 'commonjs-module'
+        : undefined,
     path:
       config.output?.path ??
       (options.outputPath
@@ -114,7 +122,7 @@ function applyNxIndependentConfig(
     hashFunction: config.output?.hashFunction ?? 'xxhash64',
     // Disabled for performance
     pathinfo: config.output?.pathinfo ?? false,
-    clean: options.deleteOutputPath,
+    clean: config.output?.clean ?? options.deleteOutputPath,
   };
 
   config.watch = options.watch;
@@ -169,7 +177,6 @@ function applyNxIndependentConfig(
             },
           }),
         ],
-        runtimeChunk: false,
         concatenateModules: true,
       };
 
@@ -233,8 +240,13 @@ function applyNxDependentConfig(
     plugins.push(new NxTsconfigPathsRspackPlugin({ ...options, tsConfig }));
   }
 
-  // New TS Solution already has a typecheck target
-  if (!options?.skipTypeChecking && !isUsingTsSolution) {
+  // New TS Solution already has a typecheck target but allow it to run during serve
+  if (
+    (!options?.skipTypeChecking && !isUsingTsSolution) ||
+    (isUsingTsSolution &&
+      options?.skipTypeChecking === false &&
+      process.env['WEBPACK_SERVE'])
+  ) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
     plugins.push(
       new TsCheckerRspackPlugin({
@@ -333,9 +345,45 @@ function applyNxDependentConfig(
   }
 
   const externals = [];
-  if (options.target === 'node' && options.externalDependencies === 'all') {
+  if (
+    (options.target === 'node' || options.target === 'async-node') &&
+    options.externalDependencies === 'all'
+  ) {
     const modulesDir = `${options.root}/node_modules`;
-    externals.push(nodeExternals({ modulesDir }));
+    const graph = options.projectGraph;
+    const projectName = options.projectName;
+
+    const deps = graph?.dependencies?.[projectName] ?? [];
+
+    // Collect non-buildable TS project references so that they are bundled
+    // in the final output. This is needed for projects that are not buildable
+    // but are referenced by buildable projects. This is needed for the new TS
+    // solution setup.
+    const nonBuildableWorkspaceLibs = isUsingTsSolution
+      ? deps
+          .filter((dep) => {
+            const node = graph.nodes?.[dep.target];
+            if (!node || node.type !== 'lib') return false;
+
+            const hasBuildTarget = 'build' in (node.data?.targets ?? {});
+
+            if (hasBuildTarget) {
+              return false;
+            }
+
+            // If there is no build target we check the package exports to see if they reference
+            // source files
+            return !isBuildableLibrary(node);
+          })
+          .map(
+            (dep) => graph.nodes?.[dep.target]?.data?.metadata?.js?.packageName
+          )
+          .filter((name): name is string => !!name)
+      : [];
+
+    externals.push(
+      nodeExternals({ modulesDir, allowlist: nonBuildableWorkspaceLibs })
+    );
   } else if (Array.isArray(options.externalDependencies)) {
     externals.push(function (ctx, callback: Function) {
       if (options.externalDependencies.includes(ctx.request)) {
@@ -409,6 +457,8 @@ function applyNxDependentConfig(
               tsx: true,
             },
             transform: {
+              legacyDecorator: true,
+              decoratorMetadata: true,
               react: {
                 runtime: 'automatic',
                 pragma: 'React.createElement',

@@ -2,7 +2,6 @@ import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../../library/library';
 import { createComponentStories } from './component-story';
-import { Linter } from '@nx/eslint';
 
 describe('vue:component-story', () => {
   let appTree: Tree;
@@ -112,7 +111,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   let appTree = createTreeWithEmptyWorkspace();
   await libraryGenerator(appTree, {
     directory: libName,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     component: true,
     skipFormat: true,
     skipTsConfig: false,

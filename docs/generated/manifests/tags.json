@@ -41,6 +41,13 @@
       "id": "console-nx-cloud",
       "name": "Nx Cloud Integration",
       "path": "/recipes/nx-console/console-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-migrate-ui",
+      "id": "console-migrate-ui",
+      "name": "Migrate UI",
+      "path": "/recipes/nx-console/console-migrate-ui"
     }
   ],
   "run-tasks": [
@@ -92,6 +99,13 @@
       "id": "defining-task-pipeline",
       "name": "Define a Task Pipeline",
       "path": "/recipes/running-tasks/defining-task-pipeline"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
     },
     {
       "description": "",
@@ -675,6 +689,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/automate-gitlab-releases",
+      "id": "automate-gitlab-releases",
+      "name": "Automate GitLab Releases",
+      "path": "/recipes/nx-release/automate-gitlab-releases"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/publish-rust-crates",
       "id": "publish-rust-crates",
       "name": "Publish Rust Crates",
@@ -883,6 +904,13 @@
     },
     {
       "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
@@ -956,6 +984,15 @@
       "path": "/nx-api/nx/documents/create-nx-workspace"
     }
   ],
+  "terminal-ui": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
+    }
+  ],
   "exec": [
     {
       "description": "",
@@ -986,6 +1023,15 @@
       "id": "watch",
       "name": "watch",
       "path": "/nx-api/nx/documents/watch"
+    }
+  ],
+  "self-hosted-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/recipes/running-tasks/self-hosted-caching",
+      "id": "self-hosted-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/recipes/running-tasks/self-hosted-caching"
     }
   ],
   "init": [
@@ -1080,6 +1126,33 @@
       "path": "/recipes/angular/rspack/introduction"
     }
   ],
+  "getting-started": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "rspack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "setup": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
   "migrate-from-webpack": [
     {
       "description": "",
@@ -1105,6 +1178,24 @@
       "id": "handling-configurations",
       "name": "Handling Configurations",
       "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "internationalization": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
+    }
+  ],
+  "i18n": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
     }
   ],
   "deployment": [
@@ -1356,15 +1447,6 @@
       "path": "/nx-enterprise/powerpack/owners"
     }
   ],
-  "custom-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/features/powerpack/custom-caching",
-      "id": "custom-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/nx-enterprise/powerpack/custom-caching"
-    }
-  ],
   "database": [
     {
       "description": "",
@@ -1439,6 +1521,15 @@
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
+    }
+  ],
+  "running-tasks": [
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/task-running-lifecycle",
+      "id": "task-running-lifecycle",
+      "name": "Hook into the Task Running Lifecycle",
+      "path": "/extending-nx/recipes/task-running-lifecycle"
     }
   ],
   "remote-cache": [

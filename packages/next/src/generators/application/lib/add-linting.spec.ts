@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addLinting } from './add-linting';
-import { Linter } from '@nx/eslint';
 import { NormalizedSchema } from './normalize-options';
 
 describe('updateEslint', () => {
@@ -20,7 +19,7 @@ describe('updateEslint', () => {
       appProjectRoot: 'my-app',
       directory: 'my-app',
       importPath: '@proj/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',

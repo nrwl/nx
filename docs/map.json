@@ -39,26 +39,35 @@
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Get started with basic information, concepts and tutorials.",
+              "path": "/tutorials",
               "itemList": [
                 {
                   "name": "TypeScript Monorepo",
                   "id": "typescript-packages-tutorial",
-                  "file": "shared/tutorials/typescript-packages"
+                  "file": "",
+                  "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
+                  "isExternal": true
                 },
                 {
                   "name": "React Monorepo",
                   "id": "react-monorepo-tutorial",
-                  "file": "shared/tutorials/react-monorepo"
+                  "file": "",
+                  "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
+                  "isExternal": true
                 },
                 {
                   "name": "Angular Monorepo",
                   "id": "angular-monorepo-tutorial",
-                  "file": "shared/tutorials/angular-monorepo"
+                  "file": "",
+                  "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
+                  "isExternal": true
                 },
                 {
                   "name": "Gradle Monorepo",
                   "id": "gradle-tutorial",
-                  "file": "shared/tutorials/gradle"
+                  "file": "",
+                  "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
+                  "isExternal": true
                 }
               ]
             }
@@ -392,6 +401,12 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Use the Terminal UI",
+                  "id": "terminal-ui",
+                  "tags": ["run-tasks", "terminal-ui"],
+                  "file": "shared/recipes/running-tasks/terminal-ui"
+                },
+                {
                   "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
@@ -442,6 +457,13 @@
                   "id": "convert-to-inferred",
                   "tags": ["inferred-tasks", "automate-updating-dependencies"],
                   "file": "shared/recipes/running-tasks/convert-to-inferred"
+                },
+                {
+                  "name": "Self-Host the Remote Cache",
+                  "description": "Host the remote cache without using Nx Cloud",
+                  "id": "self-hosted-caching",
+                  "tags": ["self-hosted-caching"],
+                  "file": "shared/recipes/running-tasks/self-hosted-caching"
                 }
               ]
             },
@@ -545,6 +567,12 @@
                   "file": "shared/recipes/nx-release/automate-github-releases"
                 },
                 {
+                  "name": "Automate GitLab Releases",
+                  "id": "automate-gitlab-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-gitlab-releases"
+                },
+                {
                   "name": "Publish Rust Crates",
                   "id": "publish-rust-crates",
                   "tags": ["nx-release"],
@@ -637,6 +665,12 @@
                   "file": "shared/recipes/console-nx-cloud"
                 },
                 {
+                  "name": "Migrate UI",
+                  "id": "console-migrate-ui",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-migrate-ui"
+                },
+                {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
                   "tags": ["editor-setup"],
@@ -714,6 +748,12 @@
                       "file": "shared/guides/angular-rspack/introduction"
                     },
                     {
+                      "name": "Getting Started",
+                      "id": "getting-started",
+                      "tags": ["getting-started", "angular", "rspack", "setup"],
+                      "file": "shared/guides/angular-rspack/getting-started"
+                    },
+                    {
                       "name": "Migrate from Angular Webpack",
                       "id": "migrate-from-webpack",
                       "tags": ["migrate-from-webpack"],
@@ -724,6 +764,12 @@
                       "id": "handling-configurations",
                       "tags": ["handling-configurations", "configurations"],
                       "file": "shared/guides/angular-rspack/handling-configurations"
+                    },
+                    {
+                      "name": "Internationalization (i18n)",
+                      "id": "internationalization",
+                      "tags": ["internationalization", "i18n"],
+                      "file": "shared/guides/angular-rspack/internationalization"
                     }
                   ]
                 },
@@ -1146,8 +1192,8 @@
               "itemList": [
                 {
                   "name": "Free Licenses & Trials",
-                  "id": "free-licenses-and-trials",
-                  "file": "shared/features/powerpack/free-licenses-and-trials"
+                  "id": "licenses-and-trials",
+                  "file": "shared/features/powerpack/licenses-and-trials"
                 },
                 {
                   "name": "Run Language-Agnostic Conformance Rules",
@@ -1162,13 +1208,6 @@
                   "id": "owners",
                   "tags": ["owners"],
                   "file": "shared/features/powerpack/owners"
-                },
-                {
-                  "name": "Self-Host the Remote Cache",
-                  "description": "Host the remote cache without using Nx Cloud",
-                  "id": "custom-caching",
-                  "tags": ["custom-caching"],
-                  "file": "shared/features/powerpack/custom-caching"
                 }
               ]
             }
@@ -1685,6 +1724,12 @@
               "id": "publish-plugin",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/publish-plugin"
+            },
+            {
+              "name": "Hook into the Task Running Lifecycle",
+              "id": "task-running-lifecycle",
+              "tags": ["running-tasks"],
+              "file": "shared/recipes/plugins/task-running-lifecycle"
             }
           ]
         }
@@ -2732,86 +2777,86 @@
           ]
         },
         {
-          "name": "powerpack-owners",
-          "id": "powerpack-owners",
+          "name": "owners",
+          "id": "owners",
           "description": "powerpack-owners package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-owners",
-              "file": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+              "path": "/nx-api/owners",
+              "file": "shared/packages/owners/owners-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-conformance",
-          "id": "powerpack-conformance",
+          "name": "conformance",
+          "id": "conformance",
           "description": "powerpack-conformance package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-conformance",
-              "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+              "path": "/nx-api/conformance",
+              "file": "shared/packages/conformance/conformance-plugin"
             },
             {
               "name": "Create a Conformance Rule",
               "id": "create-conformance-rule",
-              "path": "/nx-api/powerpack-conformance",
-              "file": "shared/packages/powerpack-conformance/create-conformance-rule"
+              "path": "/nx-api/conformance",
+              "file": "shared/packages/conformance/create-conformance-rule"
             }
           ]
         },
         {
-          "name": "powerpack-azure-cache",
-          "id": "powerpack-azure-cache",
+          "name": "azure-cache",
+          "id": "azure-cache",
           "description": "powerpack-azure-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-azure-cache",
-              "file": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+              "path": "/nx-api/azure-cache",
+              "file": "shared/packages/azure-cache/azure-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-gcs-cache",
-          "id": "powerpack-gcs-cache",
+          "name": "gcs-cache",
+          "id": "gcs-cache",
           "description": "powerpack-gcs-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-gcs-cache",
-              "file": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+              "path": "/nx-api/gcs-cache",
+              "file": "shared/packages/gcs-cache/gcs-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-s3-cache",
-          "id": "powerpack-s3-cache",
+          "name": "s3-cache",
+          "id": "s3-cache",
           "description": "powerpack-s3-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-s3-cache",
-              "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+              "path": "/nx-api/s3-cache",
+              "file": "shared/packages/s3-cache/s3-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-shared-fs-cache",
-          "id": "powerpack-shared-fs-cache",
+          "name": "shared-fs-cache",
+          "id": "shared-fs-cache",
           "description": "powerpack-shared-fs-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-shared-fs-cache",
-              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+              "path": "/nx-api/shared-fs-cache",
+              "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
             }
           ]
         },
@@ -2825,6 +2870,25 @@
               "name": "Overview",
               "path": "/nx-api/gradle",
               "file": "shared/packages/gradle/gradle-plugin"
+            }
+          ]
+        },
+        {
+          "name": "Module Federation",
+          "id": "module-federation",
+          "description": "Module Federation package.",
+          "itemList": [
+            {
+              "name": "NxModuleFederationPlugin",
+              "id": "nx-module-federation-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-plugin"
+            },
+            {
+              "name": "NxModuleFederationDevServerPlugin",
+              "id": "nx-module-federation-dev-server-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
             }
           ]
         }

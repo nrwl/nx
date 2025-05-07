@@ -306,9 +306,30 @@ function getDependencies(
           (section) => {
             if (section) {
               Object.entries(section).forEach(([name, versionRange]) => {
-                const target =
+                let target =
                   keyMap.get(`${name}@npm:${versionRange}`) ||
                   keyMap.get(`${name}@${versionRange}`);
+                if (!target) {
+                  const shortRange = versionRange.replace(/^npm:/, '');
+                  // for range like 'npm:*' the above will not be a match
+                  if (shortRange === '*') {
+                    const foundKey = Array.from(keyMap.keys()).find((k) =>
+                      k.startsWith(`${name}@`)
+                    );
+                    if (foundKey) {
+                      target = keyMap.get(foundKey);
+                    }
+                  } else if (shortRange.includes('||')) {
+                    // when range is a union of ranges, we need to treat it as an array
+                    const ranges = shortRange.split('||').map((r) => r.trim());
+                    target = Object.values(keyMap).find((n) => {
+                      return (
+                        n.data.packageName === name &&
+                        ranges.some((r) => satisfies(n.data.version, r))
+                      );
+                    })?.[1];
+                  }
+                }
                 if (target) {
                   const dep: RawProjectGraphDependency = {
                     source: node.name,
@@ -400,13 +421,13 @@ function addPackageVersion(
     collection.set(packageName, new Set());
   }
   collection.get(packageName).add(`${packageName}@${version}`);
-  if (isBerry && !version.startsWith('npm:')) {
+  if (isBerry && !version.startsWith('npm:') && !version.startsWith('patch:')) {
     collection.get(packageName).add(`${packageName}@npm:${version}`);
   }
 }
 
 function mapSnapshots(
-  dependencies: Record<string, YarnDependency>,
+  rootDependencies: Record<string, YarnDependency>,
   nodes: Record<string, ProjectGraphExternalNode>,
   packageJson: NormalizedPackageJson,
   isBerry: boolean
@@ -421,9 +442,12 @@ function mapSnapshots(
     ...packageJson.optionalDependencies,
     ...packageJson.peerDependencies,
   };
+  const resolutions = {
+    ...packageJson.resolutions,
+  };
 
   // yarn classic splits keys when parsing so we need to stich them back together
-  const groupedDependencies = groupDependencies(dependencies, isBerry);
+  const groupedDependencies = groupDependencies(rootDependencies, isBerry);
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
@@ -461,10 +485,32 @@ function mapSnapshots(
         snapshotMap.get(snapshot).add(requestedKey);
       }
     }
+    const requestedResolutionsVersion = getPackageJsonVersion(
+      resolutions,
+      node
+    );
+    if (requestedResolutionsVersion) {
+      addPackageVersion(
+        node.data.packageName,
+        requestedResolutionsVersion,
+        existingKeys,
+        isBerry
+      );
+      const requestedKey = isBerry
+        ? reverseMapBerryKey(node, requestedResolutionsVersion, snapshot)
+        : `${node.data.packageName}@${requestedResolutionsVersion}`;
+      if (!snapshotMap.get(snapshot).has(requestedKey)) {
+        snapshotMap.get(snapshot).add(requestedKey);
+      }
+    }
 
     if (isBerry) {
       // look for patched versions
-      const patch = findPatchedKeys(groupedDependencies, node);
+      const patch = findPatchedKeys(
+        groupedDependencies,
+        node,
+        resolutions[node.data.packageName]
+      );
       if (patch) {
         const [matchedKeys, snapshot] = patch;
         snapshotMap.set(snapshot, new Set(matchedKeys));
@@ -473,7 +519,7 @@ function mapSnapshots(
   });
 
   // remove keys that match version ranges that have been pruned away
-  snapshotMap.forEach((snapshotValue, snapshotKey) => {
+  snapshotMap.forEach((snapshotValue, snapshot) => {
     for (const key of snapshotValue.values()) {
       const packageName = key.slice(0, key.indexOf('@', 1));
       let normalizedKey = key;
@@ -513,8 +559,8 @@ function reverseMapBerryKey(
   snapshot: YarnDependency
 ): string {
   // alias packages already have version
-  if (version.startsWith('npm:')) {
-    `${node.data.packageName}@${version}`;
+  if (version.startsWith('npm:') || version.startsWith('patch:')) {
+    return `${node.data.packageName}@${version}`;
   }
   // check for berry tarball packages
   if (
@@ -528,19 +574,39 @@ function reverseMapBerryKey(
 }
 
 function getPackageJsonVersion(
-  combinedDependencies: Record<string, string>,
+  dependencies: Record<string, string>,
   node: ProjectGraphExternalNode
 ): string {
   const { packageName, version } = node.data;
 
-  if (combinedDependencies[packageName]) {
-    if (
-      combinedDependencies[packageName] === version ||
-      satisfies(version, combinedDependencies[packageName])
-    ) {
-      return combinedDependencies[packageName];
+  if (dependencies[packageName]) {
+    const patchRegex = new RegExp(`^patch:${packageName}@(.*)|#.*$`);
+    // extract the version from the patch or use the full version
+    const versionRange =
+      dependencies[packageName].match(patchRegex)?.[1] ||
+      dependencies[packageName];
+    if (versionRange === version || satisfies(version, versionRange)) {
+      return dependencies[packageName];
     }
   }
+}
+
+function isStandardPackage(snapshot: YarnDependency, version: string): boolean {
+  return snapshot.version === version;
+}
+
+function isBerryAlias(snapshot: YarnDependency, version: string): boolean {
+  return snapshot.resolution && `npm:${snapshot.resolution}` === version;
+}
+
+function isClassicAlias(
+  node: ProjectGraphExternalNode,
+  keys: string[]
+): boolean {
+  return (
+    node.data.version.startsWith('npm:') &&
+    keys.some((k) => k === `${node.data.packageName}@${node.data.version}`)
+  );
 }
 
 function findOriginalKeys(
@@ -553,21 +619,10 @@ function findOriginalKeys(
     if (!keys.some((k) => k.startsWith(`${node.data.packageName}@`))) {
       continue;
     }
-    // standard package
-    if (snapshot.version === node.data.version) {
-      return [keys, snapshot];
-    }
-    // berry alias package
     if (
-      snapshot.resolution &&
-      `npm:${snapshot.resolution}` === node.data.version
-    ) {
-      return [keys, snapshot];
-    }
-    // classic alias
-    if (
-      node.data.version.startsWith('npm:') &&
-      keys.some((k) => k === `${node.data.packageName}@${node.data.version}`)
+      isStandardPackage(snapshot, node.data.version) ||
+      isBerryAlias(snapshot, node.data.version) ||
+      isClassicAlias(node, keys)
     ) {
       return [keys, snapshot];
     }
@@ -583,7 +638,8 @@ function findOriginalKeys(
 
 function findPatchedKeys(
   dependencies: Record<string, YarnDependency>,
-  node: ProjectGraphExternalNode
+  node: ProjectGraphExternalNode,
+  resolutionVersion: string
 ): [string[], YarnDependency] | void {
   for (const keyExpr of Object.keys(dependencies)) {
     const snapshot = dependencies[keyExpr];
@@ -591,9 +647,19 @@ function findPatchedKeys(
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
       continue;
     }
-    // local patches are currently not supported
-    if (keys[0].includes('.yarn/patches')) {
-      continue;
+    if (keyExpr.includes('.yarn/patches')) {
+      if (!resolutionVersion) {
+        continue;
+      }
+      const key = `${node.data.packageName}@${resolutionVersion}`;
+      // local patches can have different location from than the root lock file
+      // use the one from local package.json as the source of truth as long as the rest of the patch matches
+      // this obviously doesn't cover the case of patch over a patch, but that's a super rare case and one can argue one can just join those two patches
+      if (key.split('::locator')[0] !== keyExpr.split('::locator')[0]) {
+        continue;
+      } else {
+        return [[key], { ...snapshot, resolution: key }];
+      }
     }
     if (snapshot.version === node.data.version) {
       return [keys, snapshot];

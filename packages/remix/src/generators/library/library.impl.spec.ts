@@ -149,6 +149,7 @@ describe('Remix Library Generator', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -194,6 +195,59 @@ describe('Remix Library Generator', () => {
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/foo',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('packages/foo/package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/foo",
+          "version": "0.0.1",
+          "type": "module",
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "types": "./dist/index.esm.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.esm.d.ts",
+              "import": "./dist/index.esm.js",
+              "default": "./dist/index.esm.js"
+            }
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        directory: 'packages/foo',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'packages/foo/package.json').exports['.']
+      ).not.toHaveProperty('development');
     });
 
     it('should generate server entrypoint', async () => {

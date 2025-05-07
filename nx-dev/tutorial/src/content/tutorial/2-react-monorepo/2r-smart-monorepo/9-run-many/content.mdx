@@ -1,0 +1,48 @@
+---
+type: lesson
+title: Run Multiple Tasks
+---
+
+## Testing and Linting - Running Multiple Tasks
+
+{/* {import { VideoLink } from '@nx/nx-dev/ui-markdoc';} */}
+
+{/* <VideoLink link="https://youtu.be/gc4N7kxiA50?t=589"></VideoLink> */}
+
+Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
+
+```bash
+nx test react-store # runs the tests for react-store
+nx lint inventory # runs the linter on inventory
+```
+
+More conveniently, we can also run tasks in parallel using the following syntax:
+
+```shell
+nx run-many -t test
+```
+
+### Cache Tasks
+
+One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
+
+Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
+
+```shell
+nx run-many -t test lint
+```
+
+```
+✔  nx run @react-monorepo/ui:lint  [existing outputs match the cache, left as is]
+✔  nx run inventory-e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run react-store-e2e:lint  [existing outputs match the cache, left as is]
+✔  nx run @react-monorepo/ui:test  [existing outputs match the cache, left as is]
+
+——————————————————————————————————————————————————————
+
+NX   Successfully ran targets test, lint for 7 projects (54ms)
+
+Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+```
+
+Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).

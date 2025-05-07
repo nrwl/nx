@@ -1,0 +1,112 @@
+---
+type: lesson
+title: Create Local Libraries
+previews:
+  - {
+      port: 4211,
+      title: 'Project Details View',
+      pathname: '/project-details/react-store',
+    }
+---
+
+## Local Libraries
+
+{/* {import { VideoLink } from '@nx/nx-dev/ui-markdoc';} */}
+
+{/* <VideoLink link="https://youtu.be/gc4N7kxiA50?t=324"></VideoLink> */}
+
+When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, however, the app becomes more and more monolithic and the code is unable to be shared with other applications.
+
+```
+└─ react-monorepo
+   ├─ ...
+   ├─ apps
+   │  └─ react-store
+   │     ├─ ...
+   │     ├─ src
+   │     │  ├─ app
+   │     │  │  ├─ products
+   │     │  │  ├─ cart
+   │     │  │  ├─ ui
+   │     │  │  ├─ ...
+   │     │  │  └─ app.tsx
+   │     │  ├─ ...
+   │     │  └─ main.tsx
+   │     ├─ ...
+   │     └─ package.json
+   ├─ nx.json
+   ├─ ...
+```
+
+Nx allows you to separate this logic into "local libraries". The main benefits include
+
+- better separation of concerns
+- better reusability
+- more explicit "APIs" between your "domain areas"
+- better scalability in CI by enabling independent test/lint/build commands for each library
+- better scalability in your teams by allowing different teams to work on separate libraries
+
+### Create Local Libraries
+
+{/* <VideoLink link="https://youtu.be/gc4N7kxiA50?t=366"></VideoLink> */}
+
+Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
+
+```shell
+nx g @nx/react:library libs/products --unitTestRunner=vitest --bundler=none
+```
+
+```shell
+nx g @nx/react:library libs/orders --unitTestRunner=vitest --bundler=none
+```
+
+```shell
+nx g @nx/react:library libs/shared/ui --unitTestRunner=vitest --bundler=none
+```
+
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
+
+Running the above commands should lead to the following directory structure:
+
+```
+└─ react-monorepo
+   ├─ ...
+   ├─ apps
+   ├─ libs
+   │  ├─ products
+   │  │  ├─ ...
+   │  │  ├─ package.json
+   │  │  ├─ src
+   │  │  │  ├─ index.ts
+   │  │  │  └─ lib
+   │  │  │     ├─ products.spec.ts
+   │  │  │     └─ products.ts
+   │  │  ├─ tsconfig.json
+   │  │  ├─ tsconfig.lib.json
+   │  │  ├─ tsconfig.spec.json
+   │  │  └─ vite.config.ts
+   │  ├─ orders
+   │  │  ├─ ...
+   │  │  ├─ package.json
+   │  │  ├─ src
+   │  │  │  ├─ index.ts
+   │  │  │  └─ ...
+   │  │  └─ ...
+   │  └─ shared
+   │     └─ ui
+   │        ├─ ...
+   │        ├─ package.json
+   │        ├─ src
+   │        │  ├─ index.ts
+   │        │  └─ ...
+   │        └─ ...
+   ├─ ...
+```
+
+Each of these libraries
+
+- has a project details view where you can see the available tasks (e.g. running tests for just orders: `nx test orders`)
+- has its own `package.json` file where you can customize targets
+- has the name you specified in the generate command; you can find the name in the corresponding `package.json` file
+- has a dedicated `index.ts` file which is the "public API" of the library
+- is included in the `workspaces` property of the `package.json` file at the root of the workspace

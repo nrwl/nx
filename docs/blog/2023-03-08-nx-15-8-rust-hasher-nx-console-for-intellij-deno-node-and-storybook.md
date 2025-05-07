@@ -2,7 +2,7 @@
 title: 'Nx 15.8 — Rust Hasher, Nx Console for IntelliJ, Deno, Node and Storybook'
 slug: 'nx-15-8-rust-hasher-nx-console-for-intellij-deno-node-and-storybook'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-03-08/2gKrC6_Yx3hVkQaHxnw5xw.png'
+cover_image: '/blog/images/2023-03-08/2gKrC6_Yx3hVkQaHxnw5xw.avif'
 tags: [nx, release]
 description: Nx 15.8 brings Rust-based hasher, IntelliJ IDE support, Deno integration, enhanced Node.js features, and Storybook CSF3 support for improved performance.
 ---

@@ -62,10 +62,10 @@
             "name": "TypeScript Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/typescript-packages",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/typescript-packages-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
             "tags": []
           },
           {
@@ -73,10 +73,10 @@
             "name": "React Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/react-monorepo",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
             "tags": []
           },
           {
@@ -84,10 +84,10 @@
             "name": "Angular Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/angular-monorepo",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
             "tags": []
           },
           {
@@ -95,15 +95,15 @@
             "name": "Gradle Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/gradle",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/gradle-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/getting-started/tutorials",
+        "path": "/tutorials",
         "tags": []
       }
     ],
@@ -155,7 +155,7 @@
     "path": "/getting-started/editor-setup",
     "tags": ["editor-setup"]
   },
-  "/getting-started/tutorials": {
+  "/tutorials": {
     "id": "tutorials",
     "name": "Tutorials",
     "description": "Get started with basic information, concepts and tutorials.",
@@ -167,10 +167,10 @@
         "name": "TypeScript Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/typescript-packages",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/typescript-packages-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
         "tags": []
       },
       {
@@ -178,10 +178,10 @@
         "name": "React Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/react-monorepo",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
         "tags": []
       },
       {
@@ -189,10 +189,10 @@
         "name": "Angular Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/angular-monorepo",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
         "tags": []
       },
       {
@@ -200,59 +200,59 @@
         "name": "Gradle Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/gradle",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/gradle-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/getting-started/tutorials",
+    "path": "/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/typescript-packages-tutorial": {
+  "/tutorials/1-ts-packages/1t-introduction/1-welcome": {
     "id": "typescript-packages-tutorial",
     "name": "TypeScript Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/typescript-packages",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/typescript-packages-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
     "tags": []
   },
-  "/getting-started/tutorials/react-monorepo-tutorial": {
+  "/tutorials/2-react-monorepo/1r-introduction/1-welcome": {
     "id": "react-monorepo-tutorial",
     "name": "React Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/react-monorepo",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/react-monorepo-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
     "tags": []
   },
-  "/getting-started/tutorials/angular-monorepo-tutorial": {
+  "/tutorials/3-angular-monorepo/1a-introduction/1-welcome": {
     "id": "angular-monorepo-tutorial",
     "name": "Angular Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/angular-monorepo",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
     "tags": []
   },
-  "/getting-started/tutorials/gradle-tutorial": {
+  "/tutorials/4-gradle/1g-introduction/1-welcome": {
     "id": "gradle-tutorial",
     "name": "Gradle Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/gradle",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/gradle-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
     "tags": []
   },
   "/features": {
@@ -1494,6 +1494,17 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "terminal-ui",
+            "name": "Use the Terminal UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/terminal-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/terminal-ui",
+            "tags": ["run-tasks", "terminal-ui"]
+          },
+          {
             "id": "run-commands-executor",
             "name": "Run Custom Commands",
             "description": "",
@@ -1591,6 +1602,17 @@
             "isExternal": false,
             "path": "/recipes/running-tasks/convert-to-inferred",
             "tags": ["inferred-tasks", "automate-updating-dependencies"]
+          },
+          {
+            "id": "self-hosted-caching",
+            "name": "Self-Host the Remote Cache",
+            "description": "Host the remote cache without using Nx Cloud",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/self-hosted-caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/self-hosted-caching",
+            "tags": ["self-hosted-caching"]
           }
         ],
         "isExternal": false,
@@ -1782,6 +1804,17 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "automate-gitlab-releases",
+            "name": "Automate GitLab Releases",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automate-gitlab-releases",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automate-gitlab-releases",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "publish-rust-crates",
             "name": "Publish Rust Crates",
             "description": "",
@@ -1949,6 +1982,17 @@
             "tags": ["editor-setup"]
           },
           {
+            "id": "console-migrate-ui",
+            "name": "Migrate UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-migrate-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-migrate-ui",
+            "tags": ["editor-setup"]
+          },
+          {
             "id": "console-troubleshooting",
             "name": "Troubleshooting",
             "description": "",
@@ -2101,6 +2145,17 @@
                 "tags": ["introduction"]
               },
               {
+                "id": "getting-started",
+                "name": "Getting Started",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/getting-started",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/getting-started",
+                "tags": ["getting-started", "angular", "rspack", "setup"]
+              },
+              {
                 "id": "migrate-from-webpack",
                 "name": "Migrate from Angular Webpack",
                 "description": "",
@@ -2121,6 +2176,17 @@
                 "isExternal": false,
                 "path": "/recipes/angular/rspack/handling-configurations",
                 "tags": ["handling-configurations", "configurations"]
+              },
+              {
+                "id": "internationalization",
+                "name": "Internationalization (i18n)",
+                "description": "",
+                "mediaImage": "",
+                "file": "shared/guides/angular-rspack/internationalization",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/rspack/internationalization",
+                "tags": ["internationalization", "i18n"]
               }
             ],
             "isExternal": false,
@@ -2948,6 +3014,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "terminal-ui",
+        "name": "Use the Terminal UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/terminal-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/terminal-ui",
+        "tags": ["run-tasks", "terminal-ui"]
+      },
+      {
         "id": "run-commands-executor",
         "name": "Run Custom Commands",
         "description": "",
@@ -3045,6 +3122,17 @@
         "isExternal": false,
         "path": "/recipes/running-tasks/convert-to-inferred",
         "tags": ["inferred-tasks", "automate-updating-dependencies"]
+      },
+      {
+        "id": "self-hosted-caching",
+        "name": "Self-Host the Remote Cache",
+        "description": "Host the remote cache without using Nx Cloud",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/self-hosted-caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/self-hosted-caching",
+        "tags": ["self-hosted-caching"]
       }
     ],
     "isExternal": false,
@@ -3083,6 +3171,17 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/terminal-ui": {
+    "id": "terminal-ui",
+    "name": "Use the Terminal UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/terminal-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/terminal-ui",
+    "tags": ["run-tasks", "terminal-ui"]
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
@@ -3182,6 +3281,17 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/convert-to-inferred",
     "tags": ["inferred-tasks", "automate-updating-dependencies"]
+  },
+  "/recipes/running-tasks/self-hosted-caching": {
+    "id": "self-hosted-caching",
+    "name": "Self-Host the Remote Cache",
+    "description": "Host the remote cache without using Nx Cloud",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/self-hosted-caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/self-hosted-caching",
+    "tags": ["self-hosted-caching"]
   },
   "/recipes/adopting-nx": {
     "id": "adopting-nx",
@@ -3434,6 +3544,17 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "automate-gitlab-releases",
+        "name": "Automate GitLab Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automate-gitlab-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automate-gitlab-releases",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "publish-rust-crates",
         "name": "Publish Rust Crates",
         "description": "",
@@ -3590,6 +3711,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/automate-github-releases",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automate-gitlab-releases": {
+    "id": "automate-gitlab-releases",
+    "name": "Automate GitLab Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automate-gitlab-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automate-gitlab-releases",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/publish-rust-crates": {
@@ -3788,6 +3920,17 @@
         "tags": ["editor-setup"]
       },
       {
+        "id": "console-migrate-ui",
+        "name": "Migrate UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-migrate-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-migrate-ui",
+        "tags": ["editor-setup"]
+      },
+      {
         "id": "console-troubleshooting",
         "name": "Troubleshooting",
         "description": "",
@@ -3856,6 +3999,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-nx-cloud",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-migrate-ui": {
+    "id": "console-migrate-ui",
+    "name": "Migrate UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-migrate-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-migrate-ui",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {
@@ -4105,6 +4259,17 @@
             "tags": ["introduction"]
           },
           {
+            "id": "getting-started",
+            "name": "Getting Started",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/getting-started",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/getting-started",
+            "tags": ["getting-started", "angular", "rspack", "setup"]
+          },
+          {
             "id": "migrate-from-webpack",
             "name": "Migrate from Angular Webpack",
             "description": "",
@@ -4125,6 +4290,17 @@
             "isExternal": false,
             "path": "/recipes/angular/rspack/handling-configurations",
             "tags": ["handling-configurations", "configurations"]
+          },
+          {
+            "id": "internationalization",
+            "name": "Internationalization (i18n)",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/guides/angular-rspack/internationalization",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/rspack/internationalization",
+            "tags": ["internationalization", "i18n"]
           }
         ],
         "isExternal": false,
@@ -4244,6 +4420,17 @@
         "tags": ["introduction"]
       },
       {
+        "id": "getting-started",
+        "name": "Getting Started",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/getting-started",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/getting-started",
+        "tags": ["getting-started", "angular", "rspack", "setup"]
+      },
+      {
         "id": "migrate-from-webpack",
         "name": "Migrate from Angular Webpack",
         "description": "",
@@ -4264,6 +4451,17 @@
         "isExternal": false,
         "path": "/recipes/angular/rspack/handling-configurations",
         "tags": ["handling-configurations", "configurations"]
+      },
+      {
+        "id": "internationalization",
+        "name": "Internationalization (i18n)",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/guides/angular-rspack/internationalization",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/rspack/internationalization",
+        "tags": ["internationalization", "i18n"]
       }
     ],
     "isExternal": false,
@@ -4280,6 +4478,17 @@
     "isExternal": false,
     "path": "/recipes/angular/rspack/introduction",
     "tags": ["introduction"]
+  },
+  "/recipes/angular/rspack/getting-started": {
+    "id": "getting-started",
+    "name": "Getting Started",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/getting-started",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/getting-started",
+    "tags": ["getting-started", "angular", "rspack", "setup"]
   },
   "/recipes/angular/rspack/migrate-from-webpack": {
     "id": "migrate-from-webpack",
@@ -4302,6 +4511,17 @@
     "isExternal": false,
     "path": "/recipes/angular/rspack/handling-configurations",
     "tags": ["handling-configurations", "configurations"]
+  },
+  "/recipes/angular/rspack/internationalization": {
+    "id": "internationalization",
+    "name": "Internationalization (i18n)",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/guides/angular-rspack/internationalization",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/rspack/internationalization",
+    "tags": ["internationalization", "i18n"]
   },
   "/recipes/angular/migration": {
     "id": "migration",
@@ -5582,14 +5802,14 @@
         "file": "shared/features/powerpack/index",
         "itemList": [
           {
-            "id": "free-licenses-and-trials",
+            "id": "licenses-and-trials",
             "name": "Free Licenses & Trials",
             "description": "",
             "mediaImage": "",
-            "file": "shared/features/powerpack/free-licenses-and-trials",
+            "file": "shared/features/powerpack/licenses-and-trials",
             "itemList": [],
             "isExternal": false,
-            "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+            "path": "/nx-enterprise/powerpack/licenses-and-trials",
             "tags": []
           },
           {
@@ -5613,17 +5833,6 @@
             "isExternal": false,
             "path": "/nx-enterprise/powerpack/owners",
             "tags": ["owners"]
-          },
-          {
-            "id": "custom-caching",
-            "name": "Self-Host the Remote Cache",
-            "description": "Host the remote cache without using Nx Cloud",
-            "mediaImage": "",
-            "file": "shared/features/powerpack/custom-caching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/nx-enterprise/powerpack/custom-caching",
-            "tags": ["custom-caching"]
           }
         ],
         "isExternal": false,
@@ -5654,14 +5863,14 @@
     "file": "shared/features/powerpack/index",
     "itemList": [
       {
-        "id": "free-licenses-and-trials",
+        "id": "licenses-and-trials",
         "name": "Free Licenses & Trials",
         "description": "",
         "mediaImage": "",
-        "file": "shared/features/powerpack/free-licenses-and-trials",
+        "file": "shared/features/powerpack/licenses-and-trials",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+        "path": "/nx-enterprise/powerpack/licenses-and-trials",
         "tags": []
       },
       {
@@ -5685,32 +5894,21 @@
         "isExternal": false,
         "path": "/nx-enterprise/powerpack/owners",
         "tags": ["owners"]
-      },
-      {
-        "id": "custom-caching",
-        "name": "Self-Host the Remote Cache",
-        "description": "Host the remote cache without using Nx Cloud",
-        "mediaImage": "",
-        "file": "shared/features/powerpack/custom-caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-enterprise/powerpack/custom-caching",
-        "tags": ["custom-caching"]
       }
     ],
     "isExternal": false,
     "path": "/nx-enterprise/powerpack",
     "tags": []
   },
-  "/nx-enterprise/powerpack/free-licenses-and-trials": {
-    "id": "free-licenses-and-trials",
+  "/nx-enterprise/powerpack/licenses-and-trials": {
+    "id": "licenses-and-trials",
     "name": "Free Licenses & Trials",
     "description": "",
     "mediaImage": "",
-    "file": "shared/features/powerpack/free-licenses-and-trials",
+    "file": "shared/features/powerpack/licenses-and-trials",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-enterprise/powerpack/free-licenses-and-trials",
+    "path": "/nx-enterprise/powerpack/licenses-and-trials",
     "tags": []
   },
   "/nx-enterprise/powerpack/conformance": {
@@ -5734,17 +5932,6 @@
     "isExternal": false,
     "path": "/nx-enterprise/powerpack/owners",
     "tags": ["owners"]
-  },
-  "/nx-enterprise/powerpack/custom-caching": {
-    "id": "custom-caching",
-    "name": "Self-Host the Remote Cache",
-    "description": "Host the remote cache without using Nx Cloud",
-    "mediaImage": "",
-    "file": "shared/features/powerpack/custom-caching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-enterprise/powerpack/custom-caching",
-    "tags": ["custom-caching"]
   },
   "/showcase": {
     "id": "showcase",

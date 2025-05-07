@@ -232,6 +232,7 @@ class CLIOutput {
       message,
       taskStatus
     );
+
     if (
       process.env.NX_SKIP_LOG_GROUPING !== 'true' &&
       process.env.GITHUB_ACTIONS

@@ -6,6 +6,7 @@ export type AddVitestOptions = {
   projectRoot: string;
   skipPackageJson: boolean;
   strict: boolean;
+  addPlugin?: boolean;
 };
 
 export async function addVitest(
@@ -22,6 +23,6 @@ export async function addVitest(
     uiFramework: 'angular',
     testEnvironment: 'jsdom',
     coverageProvider: 'v8',
-    addPlugin: false,
+    addPlugin: options.addPlugin ?? false,
   });
 }

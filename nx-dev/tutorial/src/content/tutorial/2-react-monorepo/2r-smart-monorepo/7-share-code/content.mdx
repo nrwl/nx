@@ -1,0 +1,84 @@
+---
+type: lesson
+title: Share Code
+previews:
+  - { port: 4200, title: 'ReactStore', pathname: '/products' }
+---
+
+### Import Libraries into the React Applications
+
+{/* {import { VideoLink } from '@nx/nx-dev/ui-markdoc';} */}
+
+{/* <VideoLink link="https://youtu.be/gc4N7kxiA50?t=456"></VideoLink> */}
+
+All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
+
+```file:/package.json title="/package.json" collapse={3-53} no-apply
+
+```
+
+Hence we can easily import them into other libraries and our React application. As an example, let's use the pre-generated `ProductsComponent` component from our `libs/products` library.
+
+You can see that the `Products` component is exported via the `index.ts` file of our `products` library so that other projects in the repository can use it. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+
+```file:/libs/products/src/index.ts title="/libs/products/src/index.ts"
+
+```
+
+We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
+
+```shell
+npm add react-router-dom
+```
+
+Configure it in the `main.tsx`.
+
+```solution:/apps/react-store/src/main.tsx title="/apps/react-store/src/main.tsx"
+
+```
+
+Then we can import the `Products` component into our `app.tsx` and render it via the routing mechanism whenever a user hits the `/products` route.
+
+```tsx title="apps/react-store/src/app/app.tsx"
+import { Route, Routes } from 'react-router-dom';
+
+// importing the component from the library
+import { Products } from '@react-monorepo/products';
+
+function Home() {
+  return <h1>Home</h1>;
+}
+
+export function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />}></Route>
+      <Route path="/products" element={<Products />}></Route>
+    </Routes>
+  );
+}
+
+export default App;
+```
+
+Serving your app (`nx serve react-store`) and then navigating to `/products` should give you the following result:
+
+```shell
+nx serve react-store
+```
+
+![products route](/documentation/shared/tutorials/react-tutorial-products-route.png)
+
+Let's apply the same for our `orders` library. Import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route.
+
+In the end, your `app.tsx` should look similar to this:
+
+```solution:/apps/react-store/src/app/app.tsx title="/apps/react-store/src/app/app.tsx"
+
+```
+
+Let's also show products in the `inventory` app.
+
+```solution:/apps/inventory/src/app/app.tsx title="/apps/inventory/src/app/app.tsx"
+
+```

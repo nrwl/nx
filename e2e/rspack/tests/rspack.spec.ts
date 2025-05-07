@@ -57,6 +57,8 @@ describe('rspack e2e', () => {
           module.exports = {
             output: {
               path: join(__dirname, '../../dist/${appName}'),
+              // do not remove dist, so files between builds will remain
+              clean: false,
             },
             devServer: {
               port: 4200,
@@ -91,6 +93,11 @@ describe('rspack e2e', () => {
       expect(result).toContain(
         `Successfully ran target build for project ${appName}`
       );
+
+      // Ensure dist is not removed between builds since output.clean === false
+      createFile(`dist/apps/${appName}/extra.js`);
+      runCLI(`build ${appName} --skip-nx-cache`);
+      checkFilesExist(`dist/apps/${appName}/extra.js`);
     });
 
     it('should support a standard function that returns a config object', () => {

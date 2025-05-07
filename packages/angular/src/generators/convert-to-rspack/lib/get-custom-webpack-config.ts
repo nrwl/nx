@@ -56,7 +56,7 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
     newWebpackConfigContents = `${webpackConfigContents.slice(
       0,
       withModuleFederationImportNode.getStart()
-    )}import { NxModuleFederationPlugin } from '@nx/module-federation/rspack';${webpackConfigContents.slice(
+    )}import { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } from '@nx/module-federation/rspack';${webpackConfigContents.slice(
       withModuleFederationImportNode.getEnd()
     )}`;
 
@@ -76,9 +76,10 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
       )}
     export default {
       plugins: [
-        new NxModuleFederationPlugin(config, {
+        new NxModuleFederationPlugin({ config }, {
           dts: false,
         }),
+        new NxModuleFederationDevServerPlugin({ config }),
       ]
     }
     `;
@@ -98,7 +99,7 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
     newWebpackConfigContents = `${webpackConfigContents.slice(
       0,
       withModuleFederationRequireNode.getStart()
-    )}const { NxModuleFederationPlugin } = require('@nx/module-federation/rspack');${webpackConfigContents.slice(
+    )}const { NxModuleFederationPlugin, NxModuleFederationDevServerPlugin } = require('@nx/module-federation/rspack');${webpackConfigContents.slice(
       withModuleFederationRequireNode.getEnd()
     )}`;
 
@@ -121,6 +122,7 @@ export function convertWebpackConfigToUseNxModuleFederationPlugin(
         new NxModuleFederationPlugin({ config }, {
           dts: false,
         }),
+        new NxModuleFederationDevServerPlugin({ config }),
       ]
     }
     `;

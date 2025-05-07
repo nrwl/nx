@@ -16,7 +16,9 @@ import {
   MicrophoneIcon,
   VideoCameraIcon,
   CheckBadgeIcon,
+  LifebuoyIcon,
   BookOpenIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { FC, SVGProps } from 'react';
 import { DiscordIcon } from '../discord-icon';
@@ -146,35 +148,6 @@ export const ossProducts: MenuItem[] = [
   },
 ];
 
-export const enterpriseProducts: MenuItem[] = [
-  {
-    name: 'Nx Cloud',
-    description:
-      'Nx Cloud is the end-to-end solution for smart, efficient and maintainable CI',
-    href: '/nx-cloud',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Nx Powerpack',
-    description:
-      'A suite of paid extensions for the Nx CLI specifically designed for enterprises.',
-    href: '/powerpack',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-  {
-    name: 'Nx Enterprise',
-    description:
-      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed…lots of speed.",
-    href: '/enterprise',
-    icon: null,
-    isNew: false,
-    isHighlight: false,
-  },
-];
 export const learnItems: MenuItem[] = [
   {
     name: 'Step by step tutorials',
@@ -274,6 +247,34 @@ export const companyItems: MenuItem[] = [
     description: null,
     icon: BuildingOfficeIcon,
     href: '/customers',
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Partners',
+    description: null,
+    icon: LifebuoyIcon,
+    href: '/partners',
+    isNew: false,
+    isHighlight: false,
+  },
+];
+export const enterpriseItems: MenuItem[] = [
+  {
+    name: 'Solutions',
+    description:
+      "Accelerate your organization's journey to tighter collaboration, better developer experience, and speed.",
+    href: '/enterprise',
+    icon: BuildingOfficeIcon,
+    isNew: false,
+    isHighlight: false,
+  },
+  {
+    name: 'Security',
+    description:
+      'Protect your codebase from artifact poisoning with infrastructure-first security.',
+    icon: ShieldCheckIcon,
+    href: '/enterprise/security',
     isNew: false,
     isHighlight: false,
   },

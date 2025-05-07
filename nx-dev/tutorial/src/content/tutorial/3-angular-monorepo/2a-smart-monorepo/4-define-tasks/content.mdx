@@ -1,0 +1,65 @@
+---
+type: lesson
+title: Manually Defined Tasks
+previews:
+  - { port: 4200, title: 'AngularStore', pathname: '/' }
+---
+
+### Manually Defined Tasks
+
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=160"></VideoLink> */}
+
+The project tasks are defined in the `project.json` file.
+
+```json title="apps/angular-store/project.json"
+{
+  "name": "angular-store",
+  ...
+  "targets": {
+    "build": { ... },
+    "serve": { ... },
+    "extract-i18n": { ... },
+    "lint": { ... },
+    "test": { ... },
+    "serve-static": { ... },
+  },
+}
+```
+
+Each target contains a configuration object that tells Nx how to run that target.
+
+```json title="project.json"
+{
+  "name": "angular-store",
+  ...
+  "targets": {
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "angular-store:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "angular-store:build:development",
+          "hmr": true
+        },
+        "production": {
+          "buildTarget": "angular-store:build:production",
+          "hmr": false
+        }
+      }
+     },
+     ...
+  },
+}
+```
+
+The most critical parts are:
+
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task.
+- `options` - these are additional properties and flags passed to the executor function to customize it
+
+Learn more about how to [run tasks with Nx](/features/run-tasks). We'll [revisit running tasks](#testing-and-linting) later in this tutorial.

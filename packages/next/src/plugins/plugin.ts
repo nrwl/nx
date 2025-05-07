@@ -219,6 +219,7 @@ async function getBuildTargetConfig(
 
 function getDevTargetConfig(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `next dev`,
     options: {
       cwd: projectRoot,
@@ -230,26 +231,12 @@ function getDevTargetConfig(projectRoot: string) {
 
 function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `next start`,
     options: {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
-  };
-
-  return targetConfig;
-}
-
-function getStaticServeTargetConfig(options: NextPluginOptions) {
-  const targetConfig: TargetConfiguration = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: options.buildTargetName,
-      staticFilePath: '{projectRoot}/out',
-      port: 3000,
-      // Routes are found correctly with serve-static
-      spa: false,
-    },
   };
 
   return targetConfig;

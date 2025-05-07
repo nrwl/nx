@@ -1,0 +1,64 @@
+---
+type: lesson
+title: Starting Repository
+focus: /package.json
+custom:
+  first: true
+---
+
+# TypeScript Monorepo Tutorial
+
+In this tutorial, you'll learn how to add Nx to a repository with an existing [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) setup.
+
+What will you learn?
+
+- how to add Nx to the repository with a single command
+- how to configure caching for your tasks
+- how to configure a task pipeline
+- how to configure projects automatically with Nx Plugins
+- how to manage your releases with `nx release`
+- [how to speed up CI with Nx Cloud ⚡](/tutorials/1-ts-packages/4-fast-ci/1-welcome)
+
+## Starting Repository
+
+This tutorial uses the [nrwl/tuskydesign](https://github.com/nrwl/tuskydesign) GitHub repository as a starting point. If you want to follow the tutorial on your own machine instead of in the browser, you can clone the repository.
+
+import { GithubRepository } from '@nx/nx-dev/ui-markdoc';
+
+<GithubRepository url="https://github.com/nrwl/tuskydesign"></GithubRepository>
+
+The repository has three TypeScript packages under `packages/animals`, `packages/names` and `packages/zoo`. The `zoo` package uses `animals` and `names` to generate a random message. The root `package.json` has a `workspaces` property that tells NPM how to find the projects in the repository.
+
+```json title="package.json"
+{
+  "workspaces": ["packages/*"]
+}
+```
+
+Because of this setting, when the install command is run at the root, the correct packages are installed for each project. NPM will create dedicated `node_modules` folders inside of each project folder where necessary. The `npm install` command has already been run for you.
+
+Now let's try running some tasks. To build the `animals` package, use the `build` npm script:
+
+```shell
+npm run build -w @tuskdesign/animals
+```
+
+The repository is set up using [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html) so building the `zoo` package will automatically build all its dependencies.
+
+```shell
+npm run build -w @tuskdesign/zoo
+```
+
+To run the `zoo` package use the `serve` script:
+
+```shell
+npm run serve -w @tuskdesign/zoo
+```
+
+You should see a message like this:
+
+```
+Bo the pig says oink!
+```
+
+Now that you have a basic understanding of the repository we're working with, let's see how Nx can help us.

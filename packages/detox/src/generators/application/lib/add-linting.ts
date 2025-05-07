@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -17,7 +17,7 @@ import {
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
 
