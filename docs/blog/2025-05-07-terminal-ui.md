@@ -29,11 +29,11 @@ Great question! Why spend time on a terminal? Well, the terminal is the starting
 
 ## The Status Quo
 
-Let's first look at how the terminal behaves in Nx 20 and below. In a project with multiple packages, if you run `nx run-many`, what you'll first notice is that you get all the output from any continuous tasks get mixed together in one giant stream. This is very typical in most terminal programs, but with monorepos it's not ideal. For instance, let's say we have a build error in one of our projects:
+Let's first look at how the terminal behaves in Nx 20 and below. In a project with multiple packages, if you run `nx run-many`, what you'll first notice is that you get all the output from any continuous tasks mixed together in one giant stream. This is very typical in most terminal programs, but with monorepos it's not ideal. For instance, let's say we have a build error in one of our projects:
 
 {% video-player src="/documentation/blog/media/2025-05-07/old-tui.mp4" alt="Showing the previous terminal experience for Nx" autoPlay=true loop=true  /%}
 
-It might be hard to notice that we had the error if we have multiple tasks being run, so unless we scroll up, we could miss it. This might sound trivial, but it's an annoyance that doesn't have to happen. It’s also difficult to separate tasks that are continuous and those that have an ending.
+It might be hard to notice that we had the error if we have multiple tasks being run, so unless we scroll up, we could miss it. This might sound trivial, but it's an annoyance that doesn't have to happen. It's also difficult to separate tasks that are continuous and those that have an ending.
 
 ## Rust To The Rescue
 
@@ -59,7 +59,7 @@ One of the things you may notice is that instead of a stream of output, you're p
 
 To inspect a task and its output, you can press `Space` to open a new window with all of the output from that given task. If that output has a lot of content and you'd like to see something further up, you can hit `Tab` and then use the arrow keys to scroll up and down in the output.
 
-![Screenshot of Nx Terminal UI showing how multiple running tasks appear in the sidear](/blog/images/2025-05-07/multiple-tasks.avif)
+![Screenshot of Nx Terminal UI showing how multiple running tasks appear in the sidebar](/blog/images/2025-05-07/multiple-tasks.avif)
 
 If you have a lot of projects being run, and you'd like to filter the list of tasks, you can press `/` and type the project you're looking for.
 
@@ -75,7 +75,7 @@ Now there are more key bindings in this new TUI, and to see them all, you can us
 
 ## Parting Thoughts
 
-Now while the new TUI is awesome, it currently is not available on Windows due to various issues with pseudo-terminals. While not ideal, we hope to resolve these issues as soon as possible, so keep an eye out! For macOS and Linux, you can upgrade to Nx 21 today to take advantage of the new TUI:
+Now, while the new TUI is awesome, it currently is not available on Windows due to various issues with pseudo-terminals. While not ideal, we hope to resolve these issues as soon as possible, so keep an eye out! For macOS and Linux, you can upgrade to Nx 21 today to take advantage of the new TUI:
 
 ```shell
 nx migrate latest
