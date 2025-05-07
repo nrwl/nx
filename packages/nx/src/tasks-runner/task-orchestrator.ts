@@ -568,10 +568,13 @@ export class TaskOrchestrator {
               task.id,
               runningTask.getParserAndWriter()
             );
+            runningTask.onOutput((output) => {
+              this.options.lifeCycle.appendTaskOutput(task.id, output, true);
+            });
           } else {
             this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
             runningTask.onOutput((output) => {
-              this.options.lifeCycle.appendTaskOutput(task.id, output);
+              this.options.lifeCycle.appendTaskOutput(task.id, output, false);
             });
           }
         }
@@ -640,10 +643,13 @@ export class TaskOrchestrator {
             task.id,
             runningTask.getParserAndWriter()
           );
+          runningTask.onOutput((output) => {
+            this.options.lifeCycle.appendTaskOutput(task.id, output, true);
+          });
         } else if ('onOutput' in runningTask) {
           this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
           runningTask.onOutput((output) => {
-            this.options.lifeCycle.appendTaskOutput(task.id, output);
+            this.options.lifeCycle.appendTaskOutput(task.id, output, false);
           });
         }
       }

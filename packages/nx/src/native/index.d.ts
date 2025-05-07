@@ -18,7 +18,7 @@ export declare class AppLifeCycle {
   __init(doneCallback: () => any): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
-  appendTaskOutput(taskId: string, output: string): void
+  appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
   registerForcedShutdownCallback(forcedShutdownCallback: () => any): void
   __setCloudMessage(message: string): Promise<void>
