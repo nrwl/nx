@@ -74,8 +74,9 @@ export function shouldUseTui(
     return Boolean(nxJson.tui?.enabled);
   }
 
-  // Default to enabling the TUI if the system is capable of displaying it
-  return true;
+  // Temporarilfy default to disabling the TUI by default while we investigate compatibility issues
+  // TODO: Enable the TUI by default
+  return false;
 }
 
 // Credit to https://github.com/sindresorhus/is-unicode-supported/blob/e0373335038856c63034c8eef6ac43ee3827a601/index.js

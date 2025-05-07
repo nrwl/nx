@@ -10,7 +10,7 @@ describe('shouldUseTui', () => {
       },
       () => {
         // default  is false  in nx.json
-        expect(shouldUseTui({}, {}, true)).toBe(true);
+        expect(shouldUseTui({}, {}, true)).toBe(false);
       }
     ));
 
