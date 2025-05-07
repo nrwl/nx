@@ -7,28 +7,37 @@ cover_image: /blog/images/2025-05-08/module-federation.avif
 description: 'Nx 21 introduces native support for Module Federation with Inferred Tasks and Continuous Tasks, enabling streamlined Rspack configs and seamless multi-app serving for improved developer experience.'
 ---
 
+{% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}
+
+- [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
+- [Introducing Migrate UI in Nx Console](/blog/migrate-ui)
+- **New and Improved Module Federation Experience**
+- Continuous tasks are a huge DX improvement
+- A New UI For The Humble Terminal
+
+{% /callout %}
+
 Nx 21 saw the introduction of many new and exciting features. [Continuous Tasks](/reference/project-configuration#continuous) was one such feature that I found particularly exciting because of what it could mean for the Developer Experience (DX) with Module Federation.
 
-However, before even being able to contemplate that, a different feature needed to be completed. The ability to use Module Federation with Nx’s [Inferred Tasks](/concepts/inferred-tasks).
+However, before even being able to contemplate that, a different feature needed to be completed first: the ability to use Module Federation with Nx’s [Inferred Tasks](/concepts/inferred-tasks).
+
+{% toc /%}
 
 ## Inferred Tasks with Module Federation
 
 We have introduced three new [Rspack](https://rspack.dev) Plugins for Module Federation that can be used with Nx.
 
-- [NxModuleFederationPlugin](/nx-api/module-federation/documents/nx-module-federation-plugin)
-  - Gathers information from the Nx Workspace to correctly configure `rspack.ModuleFederationPlugin`
-- [NxModuleFederationDevServerPlugin](/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin)
-  - Used to handle the static-serving of non-dev remotes for CSR applications
-- [NxModuleFederationSSRDevServerPlugin](/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin#server-side-rendering)
-  - Used to handle the static-serving of non-dev remotes for SSR applications
+- [NxModuleFederationPlugin](/nx-api/module-federation/documents/nx-module-federation-plugin): Gathers information from the Nx Workspace to correctly configure `rspack.ModuleFederationPlugin`
+- [NxModuleFederationDevServerPlugin](/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin): Used to handle the static-serving of non-dev remotes for CSR applications
+- [NxModuleFederationSSRDevServerPlugin](/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin#server-side-rendering): Used to handle the static-serving of non-dev remotes for SSR applications
 
 These are true Rspack Plugins that should be added to the `plugins: []` of an `rspack.config` file.
 
 Their intention is to replace `withModuleFederation` helpers and `module-federation-dev-server` executors we used to provide the Nx Module Federation Experience previously.
 
-With these plugins, we can now set up a very standard `rspack.config` file that can be used with the `@nx/rspack/plugin` Inference Plugin - or you could even just run `rspack build` or `rspack serve`
+With these plugins, we can now set up a very standard `rspack.config` file that can be used with the `@nx/rspack/plugin` Inference Plugin - or you could even just run `rspack build` or `rspack serve`.
 
-Not only does this mean that the config files that we create for your Module Federation projects are now compliant with the underlying tooling, but it enabled us to take full advantage of Continuous Tasks
+Not only does this mean that the config files that we create for your Module Federation projects are now compliant with the underlying tooling, but it has enabled us to take full advantage of Continuous Tasks.
 
 ## Continuous Tasks with Module Federation
 
@@ -36,15 +45,15 @@ This is where things get interesting. Continuous Tasks in Nx allows for tasks to
 
 Previously, you would run `nx serve shell --devRemotes=remote1` where `shell` is your host application and `remote1` is the remote application that you or a feature team would be currently working on to allow for HMR with `remote1`.
 
-Under the hood this would start up the `webpack-dev-server` for both `shell` and `remote1` .
+Under the hood this would start up the `webpack-dev-server` for both `shell` and `remote1`.
 
-However, it always felt _slightly_ strange for individual contributors on feature teams to be told they cannot not run “their” application by simply running `nx serve remote1` .
+However, it always felt _slightly_ strange for individual contributors on feature teams to be told they cannot run “their" application by simply running `nx serve remote1` .
 
 Well, now they can!
 
-With Continuous Tasks and the new `NxModuleFederationDevServer` plugins, we can generate remote applications that `dependsOn["shell:serve"]` .
+With Continuous Tasks and the new `NxModuleFederationDevServer` plugins, we can generate remote applications that `dependsOn["shell:serve"]`.
 
-Running `nx serve remote1` will serve **both** `remote1` and `shell` !
+Running `nx serve remote1` will serve **both** `remote1` and `shell`!
 
 The `NxModuleFederationDevServer` plugin for the `shell` application will check which remotes are already running and simply ignore them - serving only the remotes that are not already served.
 
@@ -52,7 +61,7 @@ The `NxModuleFederationDevServer` plugin for the `shell` application will check 
 
 ### 1. Create a new Nx Workspace
 
-```{% command=”npx create-nx-workspace@latest myorg” path=”~/” %}
+```plaintext {% command="npx create-nx-workspace@latest myorg" path="~/" %}
 
 NX   Let's create a new workspace [[https://nx.dev/getting-started/intro](/getting-started/intro)]
 
@@ -76,7 +85,7 @@ NX   Welcome to the Nx community! 👋
 
 ### 2. Add the `@nx/react` Plugin
 
-```{% command=”npx nx add @nx/react” path=”~/myorg” %}
+```plaintext {% command="npx nx add @nx/react" path="~/myorg" %}
 
 ✔ Installing @nx/react@21.0.0
 
@@ -97,7 +106,7 @@ NX   Package @nx/react added successfully.
 
 ### 3. Generate Host and Remote Applications
 
-```{% command=”npx nx g @nx/react:host apps/shell --remotes=remote1,remote2 --bundler=rspack” path=”~/myorg” %}
+```plaintext {% command="npx nx g @nx/react:host apps/shell --remotes=remote1,remote2 --bundler=rspack" path="~/myorg" %}
 
 NX  Generating @nx/react:host
 
