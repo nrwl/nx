@@ -1,7 +1,7 @@
 use super::process_killer::ProcessKiller;
 use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
 use crossbeam_channel::Sender;
-use crossbeam_channel::{bounded, Receiver};
+use crossbeam_channel::{bounded, select, Receiver};
 use napi::bindgen_prelude::External;
 use napi::{
     threadsafe_function::{
@@ -92,17 +92,25 @@ impl ChildProcess {
 
         std::thread::spawn(move || {
             loop {
-                if kill_rx.try_recv().is_ok() {
-                    break;
-                }
-
-                if let Ok(content) = rx.try_recv() {
-                    // windows will add `ESC[6n` to the beginning of the output,
-                    // we dont want to store this ANSI code in cache, because replays will cause issues
-                    // remove it before sending it to js
-                    #[cfg(windows)]
-                    let content = content.replace("\x1B[6n", "");
-                    callback_tsfn.call(content, NonBlocking);
+                select! {
+                    recv(kill_rx) -> _ => {
+                        break;
+                    },
+                    recv(rx) -> msg => {
+                        match msg {
+                            Ok(content) => {
+                                // windows will add `ESC[6n` to the beginning of the output,
+                                // we dont want to store this ANSI code in cache, because replays will cause issues
+                                // remove it before sending it to js
+                                #[cfg(windows)]
+                                let content = content.replace("\x1B[6n", "");
+                                callback_tsfn.call(content, NonBlocking);
+                            },
+                            Err(_) => {
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         });
