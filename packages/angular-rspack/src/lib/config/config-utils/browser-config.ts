@@ -9,6 +9,8 @@ import { NgRspackPlugin } from '../../plugins/ng-rspack';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getPolyfillsEntry, toRspackEntries } from './entry-points';
 import { getOptimization } from './optimization-config';
+import { resolve } from 'path';
+import { HmrLoader } from '../../plugins/loaders/hmr-accept-loader';
 
 export async function getBrowserConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -17,6 +19,7 @@ export async function getBrowserConfig(
   defaultConfig: Configuration
 ): Promise<Configuration> {
   const isProduction = process.env['NODE_ENV'] === 'production';
+  const { root } = normalizedOptions;
 
   return {
     ...defaultConfig,
@@ -71,6 +74,14 @@ export async function getBrowserConfig(
             },
           ],
         },
+        ...(normalizedOptions.devServer?.hmr
+          ? [
+              {
+                loader: HmrLoader,
+                include: [resolve(root, normalizedOptions.browser)],
+              },
+            ]
+          : []),
         ...(defaultConfig.module?.rules ?? []),
       ],
     },

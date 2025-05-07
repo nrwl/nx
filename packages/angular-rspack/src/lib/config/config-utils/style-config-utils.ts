@@ -138,13 +138,6 @@ export async function getStylesConfig(
     new CssExtractRspackPlugin({ filename: `[name]${hashFormat.extract}.css` })
   );
 
-  // TODO: add this once we support hmr
-  // if (!buildOptions.hmr) {
-  //   // don't remove `.js` files for `.css` when we are using HMR these contain HMR accept codes.
-  //   // suppress empty .js files in css only entry points.
-  //   extraPlugins.push(new SuppressExtractedTextChunksWebpackPlugin());
-  // }
-
   const postCss = require('postcss');
   const postCssLoaderPath = require.resolve('postcss-loader');
 

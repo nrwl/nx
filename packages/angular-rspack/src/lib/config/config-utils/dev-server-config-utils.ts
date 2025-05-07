@@ -48,7 +48,10 @@ export async function getDevServerConfig(
           : undefined,
     },
     liveReload: options.devServer.liveReload,
-    hot: false,
+    hot:
+      options.devServer.hmr && !options.devServer.liveReload
+        ? 'only'
+        : options.devServer.hmr,
     proxy: await getProxyConfig(root, options.devServer.proxyConfig),
     ...getWebSocketSettings(options, servePath),
     watchFiles: ['./src/**/*.*', './public/**/*.*'],
