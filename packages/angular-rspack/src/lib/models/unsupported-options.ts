@@ -19,7 +19,6 @@ export type BudgetEntry = {
 
 export interface DevServerUnsupportedOptions {
   open?: boolean;
-  hmr?: boolean;
   inspect?: string | boolean;
   prebundle?:
     | boolean
@@ -64,7 +63,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
 
 export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = [
   'open',
-  'hmr',
   'inspect',
   'prebundle',
 ];

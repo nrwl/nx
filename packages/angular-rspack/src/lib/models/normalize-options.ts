@@ -214,8 +214,7 @@ export async function normalizeOptions(
   indexOutput = indexBaseName;
 
   const entryPoints: [name: string, isEsm: boolean][] = [
-    // TODO: this should be true when !!devServer?.hot (HMR is supported)
-    ['runtime', false],
+    ['runtime', !options.devServer?.hmr],
     ['polyfills', true],
     ...(globalStyles.filter((s) => s.initial).map((s) => [s.name, false]) as [
       string,

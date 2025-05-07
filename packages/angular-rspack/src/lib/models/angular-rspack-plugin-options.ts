@@ -22,6 +22,10 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
    * Custom HTTP headers to be added to all responses.
    */
   headers?: Record<string, string>;
+  /**
+   * Enable hot module replacement.
+   */
+  hmr?: boolean;
   host?: string;
   /**
    * Whether to reload the page on change, using live-reload.
