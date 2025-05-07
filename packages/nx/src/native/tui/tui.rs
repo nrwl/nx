@@ -16,7 +16,7 @@ use tokio::{
     task::JoinHandle,
 };
 use tokio_util::sync::CancellationToken;
-use tracing::debug;
+use tracing::{debug, trace};
 
 pub type Frame<'a> = ratatui::Frame<'a>;
 
@@ -100,13 +100,13 @@ impl Tui {
                       _event_tx.send(Event::Render).expect("cannot send event");
                   },
                   maybe_event = crossterm_event => {
-                    debug!("Maybe Crossterm Event: {:?}", maybe_event);
+                    trace!("Maybe Crossterm Event: {:?}", maybe_event);
                     match maybe_event {
                       Some(Ok(evt)) => {
-                        debug!("Crossterm Event: {:?}", evt);
+                        trace!("Crossterm Event: {:?}", evt);
                         match evt {
                           CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => {
-                            debug!("Key: {:?}", key);
+                            trace!("Key: {:?}", key);
                             _event_tx.send(Event::Key(key)).unwrap();
                           },
                           CrosstermEvent::Mouse(mouse) => {
