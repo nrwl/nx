@@ -1,16 +1,17 @@
 import { describe, expect } from 'vitest';
 import * as setupModule from './setup-compilation.ts';
 import ts, { type SourceFile } from 'typescript';
-import { setupCompilationWithParallelCompilation } from './setup-with-paralell-compilation.ts';
+import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation.ts';
 import { type RsbuildConfig } from '@rsbuild/core';
-import * as parallelCompilation from '@angular/build/src/tools/angular/compilation/parallel-compilation';
+import * as aotCompilation from '@angular/build/src/tools/angular/compilation/aot-compilation';
+import * as jitCompilation from '@angular/build/src/tools/angular/compilation/jit-compilation';
 import { type AngularHostOptions } from '@angular/build/src/tools/angular/angular-host';
 import { type CompilerOptions } from '@angular/compiler-cli';
 import { SetupCompilationOptions } from './setup-compilation.ts';
 
-vi.mock('@angular/build/src/tools/angular/compilation/parallel-compilation');
+vi.mock('@angular/build/src/tools/angular/compilation/aot-compilation');
 
-describe('setupCompilationWithParallelCompilation', () => {
+describe('setupCompilationWithAngularCompilation', () => {
   const rsBuildConfig: RsbuildConfig = {
     mode: 'none',
     source: {
@@ -32,17 +33,24 @@ describe('setupCompilationWithParallelCompilation', () => {
   };
 
   const initializeSpy = vi
-
-    .fn((..._: unknown[]) => Promise.resolve(void 0))
-    .mockResolvedValue(void 0) as unknown as I;
-  const parallelCompilationSpy = vi
-    .spyOn(parallelCompilation, 'ParallelCompilation')
+    .fn((..._: unknown[]) => Promise.resolve({ referencedFiles: [] }))
+    .mockResolvedValue({ referencedFiles: [] }) as unknown as I;
+  const angularCompilationSpy = vi
+    .spyOn(aotCompilation, 'AotCompilation')
     .mockImplementation(
       vi
         .fn()
-        .mockImplementation(function (
-          this: parallelCompilation.ParallelCompilation
-        ) {
+        .mockImplementation(function (this: aotCompilation.AotCompilation) {
+          this.initialize = initializeSpy;
+          return this;
+        })
+    );
+  const jitCompilationSpy = vi
+    .spyOn(jitCompilation, 'JitCompilation')
+    .mockImplementation(
+      vi
+        .fn()
+        .mockImplementation(function (this: jitCompilation.JitCompilation) {
           this.initialize = initializeSpy;
           return this;
         })
@@ -71,9 +79,9 @@ describe('setupCompilationWithParallelCompilation', () => {
     vi.clearAllMocks();
   });
 
-  it('should return the parallel compilation class', async () => {
+  it('should return the angular compilation class', async () => {
     await expect(
-      setupCompilationWithParallelCompilation(
+      setupCompilationWithAngularCompilation(
         rsBuildConfig,
         pluginAngularOptions
       )
@@ -86,7 +94,7 @@ describe('setupCompilationWithParallelCompilation', () => {
 
   it('should call setupCompilation to retrieve the config', async () => {
     await expect(() =>
-      setupCompilationWithParallelCompilation(
+      setupCompilationWithAngularCompilation(
         rsBuildConfig,
         pluginAngularOptions
       )
@@ -99,34 +107,34 @@ describe('setupCompilationWithParallelCompilation', () => {
     );
   });
 
-  it('should instantiate ParallelCompilation based on jit option', async () => {
+  it('should instantiate AngularCompilation based on jit option', async () => {
     await expect(() =>
-      setupCompilationWithParallelCompilation(rsBuildConfig, {
+      setupCompilationWithAngularCompilation(rsBuildConfig, {
         ...pluginAngularOptions,
         aot: false,
         hasServer: false,
       })
     ).not.toThrow();
 
-    expect(parallelCompilationSpy).toHaveBeenCalledTimes(1);
-    expect(parallelCompilationSpy).toHaveBeenCalledWith(true, true);
+    expect(jitCompilationSpy).toHaveBeenCalledTimes(1);
+    expect(jitCompilationSpy).toHaveBeenCalledWith(true);
   });
 
-  it('should instantiate ParallelCompilation based on server option', async () => {
+  it('should instantiate AotCompilation based on server option', async () => {
     await expect(() =>
-      setupCompilationWithParallelCompilation(rsBuildConfig, {
+      setupCompilationWithAngularCompilation(rsBuildConfig, {
         ...pluginAngularOptions,
         aot: false,
         hasServer: true,
       })
     ).not.toThrow();
 
-    expect(parallelCompilationSpy).toHaveBeenCalledTimes(1);
-    expect(parallelCompilationSpy).toHaveBeenCalledWith(true, false);
+    expect(jitCompilationSpy).toHaveBeenCalledTimes(1);
+    expect(jitCompilationSpy).toHaveBeenCalledWith(false);
   });
 
-  it('should initialize parallel compilation', async () => {
-    const paralell = await setupCompilationWithParallelCompilation(
+  it('should initialize aot compilation', async () => {
+    const paralell = await setupCompilationWithAngularCompilation(
       rsBuildConfig,
       pluginAngularOptions
     );
@@ -144,23 +152,21 @@ describe('setupCompilationWithParallelCompilation', () => {
   });
 
   it.todo(
-    'should handle initialize errors of the parallel compilation',
+    'should handle initialize errors of the aot compilation',
     async () => {
       const initializeSpy = vi
         .fn()
         .mockRejectedValue(new Error('Failed to init'));
-      parallelCompilationSpy.mockImplementation(
+      angularCompilationSpy.mockImplementation(
         vi
           .fn()
-          .mockImplementation(function (
-            this: parallelCompilation.ParallelCompilation
-          ) {
+          .mockImplementation(function (this: aotCompilation.AotCompilation) {
             throw (this.initialize = initializeSpy);
           })
       );
 
       await expect(
-        setupCompilationWithParallelCompilation(
+        setupCompilationWithAngularCompilation(
           rsBuildConfig,
           pluginAngularOptions
         )
