@@ -260,9 +260,12 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn append_task_output(&mut self, task_id: String, output: String) {
-        let mut app = self.app.lock().unwrap();
-        app.append_task_output(task_id, output)
+    pub fn append_task_output(&mut self, task_id: String, output: String, is_pty_output: bool) {
+        // If its from a pty, we already have it in the parser, so we don't need to append it again
+        if !is_pty_output {
+            let mut app = self.app.lock().unwrap();
+            app.append_task_output(task_id, output)
+        }
     }
 
     #[napi]
