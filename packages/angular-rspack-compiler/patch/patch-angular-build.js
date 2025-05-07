@@ -16,6 +16,13 @@ function main() {
     './src/tools/angular/compilation/parallel-compilation'
   ] = './src/tools/angular/compilation/parallel-compilation.js';
   fileContentsJson.exports[
+    './src/tools/angular/compilation/angular-compilation'
+  ] = './src/tools/angular/compilation/angular-compilation.js';
+  fileContentsJson.exports['./src/tools/angular/compilation/jit-compilation'] =
+    './src/tools/angular/compilation/jit-compilation.js';
+  fileContentsJson.exports['./src/tools/angular/compilation/aot-compilation'] =
+    './src/tools/angular/compilation/aot-compilation.js';
+  fileContentsJson.exports[
     './src/tools/esbuild/angular/component-stylesheets'
   ] = './src/tools/esbuild/angular/component-stylesheets.js';
 

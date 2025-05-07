@@ -1,21 +1,30 @@
 import type { RsbuildConfig } from '@rsbuild/core';
-import { ParallelCompilation } from '@angular/build/src/tools/angular/compilation/parallel-compilation';
+import {
+  AotCompilation,
+  JitCompilation,
+  AngularCompilation,
+  SourceFileCache,
+} from '../models';
 import {
   setupCompilation,
   styleTransform,
   SetupCompilationOptions,
 } from './setup-compilation';
 
-export async function setupCompilationWithParallelCompilation(
+export async function setupCompilationWithAngularCompilation(
   config: Pick<RsbuildConfig, 'source'>,
-  options: SetupCompilationOptions
+  options: SetupCompilationOptions,
+  sourceFileCache?: SourceFileCache,
+  angularCompilation?: AngularCompilation,
+  modifiedFiles?: Set<string>
 ) {
   const { rootNames, compilerOptions, componentStylesheetBundler } =
     await setupCompilation(config, options);
-  const parallelCompilation = new ParallelCompilation(
-    !options.aot,
-    options.hasServer === false
-  );
+  angularCompilation ??= options.aot
+    ? new AotCompilation(options.hasServer === false)
+    : new JitCompilation(options.hasServer === false);
+  modifiedFiles ??= new Set(rootNames);
+
   const fileReplacements: Record<string, string> =
     options.fileReplacements.reduce((r, f) => {
       r[f.replace] = f.with;
@@ -23,12 +32,12 @@ export async function setupCompilationWithParallelCompilation(
     }, {});
 
   try {
-    await parallelCompilation.initialize(
+    const { referencedFiles } = await angularCompilation.initialize(
       config.source?.tsconfigPath ?? options.tsConfig,
       {
-        ...compilerOptions,
+        sourceFileCache,
         fileReplacements,
-        modifiedFiles: new Set(rootNames),
+        modifiedFiles,
         transformStylesheet: styleTransform(componentStylesheetBundler),
         processWebWorker(workerFile: string) {
           return workerFile;
@@ -36,8 +45,11 @@ export async function setupCompilationWithParallelCompilation(
       },
       () => compilerOptions
     );
+    if (sourceFileCache) {
+      sourceFileCache.referencedFiles = referencedFiles;
+    }
   } catch (e) {
     console.error('Failed to initialize Angular Compilation', e);
   }
-  return parallelCompilation;
+  return angularCompilation;
 }

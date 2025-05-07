@@ -1,6 +1,18 @@
 import { JavaScriptTransformer } from '@angular/build/src/tools/esbuild/javascript-transformer';
 import { ParallelCompilation } from '@angular/build/src/tools/angular/compilation/parallel-compilation';
-export { ParallelCompilation, JavaScriptTransformer };
+import { AotCompilation } from '@angular/build/src/tools/angular/compilation/aot-compilation';
+import { JitCompilation } from '@angular/build/src/tools/angular/compilation/jit-compilation';
+import { AngularCompilation } from '@angular/build/src/tools/angular/compilation/angular-compilation';
+import { SourceFileCache } from '@angular/build/private';
+
+export {
+  ParallelCompilation,
+  JavaScriptTransformer,
+  SourceFileCache,
+  AotCompilation,
+  JitCompilation,
+  AngularCompilation,
+};
 
 export * from './inline-style-language';
 export * from './file-replacement';
@@ -13,6 +25,7 @@ export enum DiagnosticModes {
   Semantic = 1 << 2,
   All = Option | Syntactic | Semantic,
 }
+
 export interface Location {
   file: string;
   namespace: string;
@@ -22,10 +35,12 @@ export interface Location {
   lineText: string;
   suggestion: string;
 }
+
 export interface PartialNote {
   text?: string;
   location?: Partial<Location> | null;
 }
+
 export interface PartialMessage {
   id?: string;
   pluginName?: string;

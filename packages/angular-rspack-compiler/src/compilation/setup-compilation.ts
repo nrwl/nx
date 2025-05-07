@@ -1,7 +1,5 @@
 import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
-import { compileString } from 'sass-embedded';
-import { augmentHostWithResources } from './augments';
 import { InlineStyleLanguage, FileReplacement } from '../models';
 import { loadCompilerCli } from '../utils';
 import { ComponentStylesheetBundler } from '@angular/build/src/tools/esbuild/angular/component-stylesheets';
@@ -38,8 +36,6 @@ export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
 ) {
-  const isProd = config.mode === 'production';
-
   const { readConfiguration } = await loadCompilerCli();
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
     config.source?.tsconfigPath ?? options.tsConfig,
@@ -56,7 +52,6 @@ export async function setupCompilation(
   );
 
   const compilerOptions = tsCompilerOptions;
-  const host = ts.createIncrementalCompilerHost(compilerOptions);
 
   const componentStylesheetBundler = new ComponentStylesheetBundler(
     {
@@ -81,17 +76,9 @@ export async function setupCompilation(
     false
   );
 
-  if (options.aot) {
-    augmentHostWithResources(host, (code) => compileString(code).css, {
-      inlineStylesExtension: options.inlineStyleLanguage,
-      isProd,
-    });
-  }
-
   return {
     rootNames,
     compilerOptions,
-    host,
     componentStylesheetBundler,
   };
 }
