@@ -15,7 +15,7 @@ export async function loadConfigFile<T extends object = any>(
   {
     let module: any;
 
-    if (extname(configFilePath) === '.ts') {
+    if (extname(configFilePath) === '.ts' || extname(configFilePath) === '.cts') {
       const siblingFiles = readdirSync(dirname(configFilePath));
       const tsConfigPath = siblingFiles.includes('tsconfig.json')
         ? join(dirname(configFilePath), 'tsconfig.json')
