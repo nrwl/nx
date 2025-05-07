@@ -4,8 +4,10 @@ import type { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createPseudoTerminal,
   PseudoTerminal,
+  PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
 import { getPackageManagerCommand } from '../../utils/package-manager';
+import { signalToCode } from '../../utils/exit-codes';
 
 export interface RunScriptOptions {
   script: string;
@@ -58,6 +60,8 @@ function nodeProcess(
   });
 }
 
+let cp: PseudoTtyProcess | undefined;
+
 async function ptyProcess(
   command: string,
   cwd: string,
@@ -67,7 +71,7 @@ async function ptyProcess(
   await terminal.init();
 
   return new Promise<void>((res, rej) => {
-    const cp = terminal.runCommand(command, { cwd, jsEnv: env });
+    cp = terminal.runCommand(command, { cwd, jsEnv: env });
     cp.onExit((code) => {
       if (code === 0) {
         res();
@@ -79,3 +83,17 @@ async function ptyProcess(
     });
   });
 }
+
+// TODO: This only works because pseudo terminal registers signal handlers first but we need a service to handle this
+process.on('SIGHUP', () => {
+  cp.kill('SIGHUP');
+  process.exit(signalToCode('SIGHUP'));
+});
+process.on('SIGTERM', () => {
+  cp.kill('SIGTERM');
+  process.exit(signalToCode('SIGTERM'));
+});
+process.on('SIGINT', () => {
+  cp.kill('SIGINT');
+  process.exit(signalToCode('SIGINT'));
+});
