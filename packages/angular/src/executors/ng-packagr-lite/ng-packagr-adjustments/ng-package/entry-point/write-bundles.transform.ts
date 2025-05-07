@@ -10,10 +10,10 @@
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
 import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
-import { createNgEntryPoint } from './entry-point';
+import { createNgEntryPoint, type NgEntryPointType } from './entry-point';
 
 export const writeBundlesTransform = (_options: NgPackagrOptions) => {
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
@@ -41,9 +41,13 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
         entry.data.destinationFiles = entryPoint.destinationFiles;
 
         for (const [path, outputCache] of entry.cache.outputCache.entries()) {
+          const normalizedPath = normalizeEsm2022Path(path, entryPoint);
           // write the outputs to the file system
-          await mkdir(dirname(path), { recursive: true });
-          await writeFile(path, outputCache.content);
+          await mkdir(dirname(normalizedPath), { recursive: true });
+          await writeFile(normalizedPath, outputCache.content);
+        }
+        if (!entry.cache.outputCache.size && entryPoint.isSecondaryEntryPoint) {
+          await mkdir(entryPoint.destinationPath, { recursive: true });
         }
       } else if (isPackage(entry)) {
         entry.data = new NgPackage(
@@ -61,7 +65,26 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
   });
 };
 
-function toCustomNgEntryPoint(entryPoint: NgEntryPoint): NgEntryPoint {
+function normalizeEsm2022Path(
+  path: string,
+  entryPoint: NgEntryPointType
+): string {
+  if (!entryPoint.primaryDestinationPath) {
+    return path;
+  }
+
+  if (path.startsWith(join(entryPoint.primaryDestinationPath, 'tmp-esm2022'))) {
+    return path.replace('tmp-esm2022', 'esm2022');
+  }
+
+  if (path.startsWith(join(entryPoint.primaryDestinationPath, 'tmp-typings'))) {
+    return path.replace('tmp-typings', 'esm2022');
+  }
+
+  return path;
+}
+
+function toCustomNgEntryPoint(entryPoint: NgEntryPoint): NgEntryPointType {
   return createNgEntryPoint(
     entryPoint.packageJson,
     entryPoint.ngPackageJson,
