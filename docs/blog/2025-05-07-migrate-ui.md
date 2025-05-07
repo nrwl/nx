@@ -14,7 +14,7 @@ This article is part of the Nx 21 Launch Week series:
 
 - [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
 - **Introducing Migrate UI in Nx Console**
-- Continuous tasks are a huge DX improvemen
+- Continuous tasks are a huge DX improvement
 - A New UI For The Humble Terminal
 
 {% /callout %}
@@ -94,6 +94,6 @@ You'll be prompted for a final git commit message. Once entered, the migration p
 
 ## Getting Started with Migrate UI
 
-The Migrate UI is available now in the latest version of Nx Console for VSCode and Cursor editors. To use it make sure you have the latest version of [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) installed.
+The Migrate UI is available now in the latest version of Nx Console for VSCode and Cursor editors. To use it, make sure you have the latest version of [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) installed.
 
 We'd love to hear your feedback on the Migrate UI! Try it out and let us know what you think through [GitHub issues](https://github.com/nrwl/nx-console/issues) or our [community channels](/community).
