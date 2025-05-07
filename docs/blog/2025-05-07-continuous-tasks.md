@@ -19,33 +19,35 @@ This article is part of the Nx 21 Launch Week series:
 
 {% /callout %}
 
-Continuous tasks are one of the most exciting features we’ve launched that radically improve the developer experience (DX) of your monorepo.
+Continuous tasks are one of the most exciting features we've launched that radically improve the developer experience (DX) of your monorepo.
 
 {% toc /%}
 
 ## What are continuous tasks?
 
-Many of the tasks in your workspace are finite: they run, produce an output, and shut down on their own. **Continuous tasks** are long-lived tasks: they run until interrupted by an outside input. These are tasks like serving your application or running tests in watch mode. While Nx has always supported running these tasks, you couldn't configure other tasks to depend on them. For example, you could serve your backend and frontend separately, but you couldn't easily configure your backend to be served whenever your frontend is served. There are always options like opening two separate terminals to run the tasks or setting up a specific script or task for running these in parallel. But the DX has always been lacking.
+Many of the tasks in your workspace are finite: they run, produce an output, and shut down on their own. **Continuous tasks** are long-lived tasks: they run until interrupted by an outside input. These are tasks like serving your application or running tests in watch mode. While Nx has always supported running these tasks, you couldn't configure other tasks to depend on them.
 
-Now, tasks can be marked as continuous, and other tasks can depend on them. Nx will no longer wait for these tasks to shut down before invoking the tasks that depend on them. These continuous tasks can be configured as part of a task pipeline like any other task. Let’s walk through some examples of how to use these in your task pipelines.
+For example, you could serve your backend and frontend separately, but you couldn't easily configure your backend to be served whenever your frontend is served. There are always options like opening two separate terminals to run the tasks or setting up a specific script or task for running these in parallel. But the DX has always been lacking.
+
+Now, tasks can be marked as continuous, and other tasks can depend on them. Nx will no longer wait for these tasks to shut down before invoking the tasks that depend on them. These continuous tasks can be configured as part of a task pipeline like any other task. Let's walk through some examples of how to use these in your task pipelines.
 
 ## What is a task pipeline?
 
-A [task pipeline](/concepts/task-pipeline-configuration#what-is-a-task-pipeline) is a series of definitions determining how tasks depend on one another. In a monorepo, you’re rarely running a single task. That task may rely on the output of another task. For example, if your application depends on a buildable design system library, the design system must be built before the application. The application’s `build` task depends on the design system’s `build` task.
+A [task pipeline](/concepts/task-pipeline-configuration) is a series of definitions determining how tasks depend on one another. In a monorepo, you're rarely running a single task. That task may rely on the output of another task. For example, if your application depends on a buildable design system library, the design system must be built before the application. The application's `build` task depends on the design system's `build` task.
 
-This is such a common pipeline that we include it by default when Nx workspaces are created. It’s defined in your `nx.json` in `targetDefaults`:
+This is such a common pipeline that we include it by default when Nx workspaces are created. It's defined in your `nx.json` in `targetDefaults`:
 
 ```json {% fileName="nx.json" %}
 {
-  "targetDefaults":
-    {
-      "build": {
-        "dependsOn": ["^build"]
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
     }
+  }
 }
 ```
 
-This task pipeline says that all `build` tasks depend on the `build` task of any project it depends on, also known as “descendants.” The `^` indicates descendants.
+This task pipeline says that all `build` tasks depend on the `build` task of any project it depends on, also known as "descendants." The `^` indicates descendants.
 
 `targetDefaults` is where you can define task pipelines for all tasks with that name, but you can also define them at the task level. This same task pipeline could be defined on an individual project:
 
@@ -86,12 +88,13 @@ Assuming we run a `dev` target from our `frontend` project, and a `serve` target
 }
 ```
 
-The `frontend:dev` task now depends on `api:serve`. We must also ensure the `api:serve` target is flagged as continuous. We've already flagged tasks as continuous if you're using [inferred tasks](/concepts/inferred-tasks). If your target uses an executor, you must flag those targets as continuous yourself. This is as easy as adding `continuous: true` to the target configuration like so:
+The `frontend:dev` task now depends on `api:serve`. We must also ensure the `api:serve` target is flagged as continuous. Tasks are already flagged as continuous if you're using [inferred tasks](/concepts/inferred-tasks). If your target uses an executor, you must flag those targets as continuous yourself. This is as easy as adding `continuous: true` to the target configuration like so:
 
 ```json {% fileName="apps/api/package.json" %}
 {
+  "name": "api",
+  ...
   "nx": {
-    "name": "api",
     "targets": {
       "serve": {
         "continuous": true
@@ -101,24 +104,25 @@ The `frontend:dev` task now depends on `api:serve`. We must also ensure the `api
 }
 ```
 
-Now running `frontend:serve` will also result in the `backend:serve` starting in parallel. If we look at the task graph using Nx Console or `nx graph`, we'll see the new task pipeline:
+Now running `frontend:dev` will also result in the `api:serve` starting in parallel. If we look at the task graph using Nx Console or `nx graph`, we'll see the new task pipeline:
 
 ![Graph showing connections between frontend and backend serve tasks](/blog/images/2025-05-07/frontend-to-backend.avif)
 
 ## e2e depends on frontend serve
 
-e2e tests often already trigger the application server when they run, but if they don’t, continuous tasks can help with that. If the e2e project is separate from the application, you can add the dependency there:
+e2e tests often already trigger the application server when they run, but if they don't, continuous tasks can help with that. If the e2e project is separate from the application, you can add the dependency there:
 
 ```json {% fileName="apps/frontend-e2e/package.json" %}
 {
-	"nx": {
-      "name": "frontend-e2e",
-		"targets": {
-			"e2e": {
-        		"dependsOn": ["projects": ["frontend"], "target": "serve"}]
-      		},
-		}
-	}
+  "name": "frontend-e2e",
+  ...
+  "nx": {
+    "targets": {
+      "e2e": {
+        "dependsOn": [{ "projects": ["frontend"], "target": "serve" }]
+      }
+    }
+  }
 }
 ```
 
@@ -142,7 +146,7 @@ If the frontend has different ways of serving the project, such as `dev`, `serve
 
 ## Configuring custom commands as continuous
 
-So far, we’ve talked about tasks from Nx plugins, but what about the custom targets you’ve added to your project? Continuous tasks work the same way. Let’s say our project has a `codegen` target that uses graphql-codegen. The configuration for this target looks like this:
+So far, we've talked about tasks from Nx plugins, but what about the custom targets you've added to your project? Continuous tasks work the same way. Let's say our project has a `codegen` target that uses graphql-codegen. The configuration for this target looks like this:
 
 ```json {% fileName="packages/models-graphql/package.json" %}
 {
@@ -191,7 +195,7 @@ First, we create a continuous version of our `codegen` target so that now our co
 }
 ```
 
-We have a new target called `watch-codegen `that is marked as continuous. We added the `--watch` flag to the command. Now, when we run `watch-codegen` on a project, it will watch for changes to the GraphQL schema and re-generate models. We can apply this to any project that needs it.
+We have a new target called `watch-codegen` that is marked as continuous. We added the `--watch` flag to the command. Now, when we run `watch-codegen` on a project, it will watch for changes to the GraphQL schema and re-generate models. We can apply this to any project that needs it.
 
 Now we can add dependencies from our `serve` targets to depend on `watch-codegen`:
 
@@ -243,11 +247,11 @@ Since our backend project has its own codegen target, it needs to depend on both
 
 ## What can continuous tasks do for you?
 
-We’ve covered a few different scenarios here, and the [video shows them all working inside an actual workspace](https://youtu.be/y1Q1QSBEsuA). We can visualize the task graph that we’ve just created to see how much we’ve accomplished:
+We've covered a few different scenarios here, and the [video shows them all working inside an actual workspace](https://youtu.be/y1Q1QSBEsuA). We can visualize the task graph that we've just created to see how much we've accomplished:
 
 ![Graph showing connections between frontend and backend serve tasks as well as watch-codegen tasks](/blog/images/2025-05-07/watch-codegen.avif)
 
-Now, developers can run `npx nx serve frontend` and have the `backend:serve` and `watch-codegen` tasks run. One command, one terminal, and they are ready to work immediately. No more fumbling through multiple terminals or creating your own solution to the problem. Nx provides the tools to improve your developer experience.
+Now, developers can run `npx nx dev frontend` and have the `api:serve` and `watch-codegen` tasks run. One command, one terminal, and they are ready to work immediately. No more fumbling through multiple terminals or creating your own solution to the problem. Nx provides the tools to improve your developer experience.
 
 What processes could you improve using continuous tasks?
 
