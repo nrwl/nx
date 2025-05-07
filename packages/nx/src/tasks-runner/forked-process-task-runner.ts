@@ -367,6 +367,13 @@ export class ForkedProcessTaskRunner {
     writeFileSync(outputPath, content);
   }
 
+  cleanup(signal?: NodeJS.Signals) {
+    this.processes.forEach((p) => {
+      p.kill(signal);
+    });
+    this.cleanUpBatchProcesses();
+  }
+
   private setupProcessEventListeners() {
     const messageHandler = (message: Serializable) => {
       this.pseudoTerminals.forEach((p) => {
@@ -383,30 +390,26 @@ export class ForkedProcessTaskRunner {
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', messageHandler);
 
-    const cleanUp = (signal?: NodeJS.Signals) => {
-      this.processes.forEach((p) => {
-        p.kill(signal);
-      });
-      process.off('message', messageHandler);
-      this.cleanUpBatchProcesses();
-    };
-
     // Terminate any task processes on exit
     process.once('exit', () => {
-      cleanUp();
+      this.cleanup();
+      process.off('message', messageHandler);
     });
     process.once('SIGINT', () => {
-      cleanUp('SIGTERM');
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
       // we exit here because we don't need to write anything to cache.
       process.exit(signalToCode('SIGINT'));
     });
     process.once('SIGTERM', () => {
-      cleanUp('SIGTERM');
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
     process.once('SIGHUP', () => {
-      cleanUp('SIGTERM');
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });

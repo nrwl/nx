@@ -1004,6 +1004,7 @@ export class TaskOrchestrator {
   // endregion utils
 
   private async cleanup() {
+    this.forkedProcessTaskRunner.cleanup();
     await Promise.all([
       ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {

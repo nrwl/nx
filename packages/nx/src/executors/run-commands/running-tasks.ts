@@ -359,7 +359,7 @@ class RunningNodeProcess implements RunningTask {
 
   kill(signal?: NodeJS.Signals): Promise<void> {
     return new Promise<void>((res, rej) => {
-      if (process.platform === 'win32' || process.platform === 'darwin') {
+      if (process.platform === 'win32') {
         if (this.childProcess.kill(signal)) {
           res();
         } else {
