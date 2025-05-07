@@ -3,8 +3,9 @@ title: 'A New UI for Nx Migration'
 slug: migrate-ui
 authors: ['Jack Hsu']
 tags: ['nx', 'nx-console']
-cover_image: /blog/images/2025-05-08/migrate-ui-header.avif
+cover_image: /blog/images/2025-05-07/migrate-ui-header.avif
 description: 'Introducing the new Migrate UI in Nx Console, a visual interface that simplifies the migration process.'
+youtubeUrl: 'https://youtu.be/5xe9ziAV3zg'
 ---
 
 {% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}
@@ -12,9 +13,9 @@ description: 'Introducing the new Migrate UI in Nx Console, a visual interface t
 This article is part of the Nx 21 Launch Week series:
 
 - [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
-- [Continuous tasks](#)
-- [Terminal UI](#)
-- **Migrate UI**
+- **Introducing Migrate UI in Nx Console**
+- Continuous tasks are a huge DX improvemen
+- A New UI For The Humble Terminal
 
 {% /callout %}
 
@@ -26,7 +27,7 @@ We're excited to introduce the [**Migrate UI**](/recipes/nx-console/console-migr
 
 Automated migrations have always been a core strength of Nx. Migrations help you update packages, configuration files, and even your source code to match new versions. However, running them from the command line is not always straightforward. The simplest way to update your workspace is to run the following commands:
 
-```
+```plaintext
 # Check the latest version of Nx and update package.json
 # Nx creates the `migrations.json` that contains pending migrations
 nx migrate latest
@@ -52,7 +53,7 @@ The Migrate UI makes this process easier by:
 
 When an update to Nx is available, a badge appears on the Nx Console icon in your Activity Bar. From the Nx Console view, you'll see a "Nx Migrate" section in the sidebar. Clicking "Start Migration" begins the process.
 
-![](/blog/images/2025-05-08/migrate-ui-start.avif)
+![Screenshot of Migrate UI in Nx Console showing a dropdown with different versions.](/blog/images/2025-05-07/migrate-ui-start.avif)
 
 By default, the migration upgrades to the recommended Nx version (the latest version of the next major release). This method ensures you upgrade one major version at a time to avoid potential breakages. You can also customize the target version by clicking the pencil icon and providing a specific version.
 
@@ -60,7 +61,7 @@ By default, the migration upgrades to the recommended Nx version (the latest ver
 
 The first step in any migration is updating your `package.json`. Once you start the migration, Nx Console runs the `nx migrate` command to update your dependency versions and generate a `migrations.json` file. Before proceeding, the Migrate UI shows you exactly what changes will be made to your dependencies.
 
-![](/blog/images/2025-05-08/migrate-ui-confirm.avif)
+![Screenshot of Migrate UI in Nx Console showing a diff of the changes made to package.json.](/blog/images/2025-05-07/migrate-ui-confirm.avif)
 
 This review step gives you a chance to inspect and confirm these changes before anything is installed, ensuring there are no surprises. You can see which packages will be updated and to what versions, helping you make an informed decision about proceeding with the migration.
 
@@ -68,7 +69,7 @@ This review step gives you a chance to inspect and confirm these changes before 
 
 After confirming the `package.json` changes, the Migrate UI opens and guides you through each migration action. Each migration will be executed in the order they appear in the `migrations.json` file.
 
-![](/blog/images/2025-05-08/migrate-ui-approve.avif)
+![Screenshot of Migrate UI in Nx Console showing a list of migrations with details.](/blog/images/2025-05-07/migrate-ui-approve.avif)
 
 For each migration step:
 
@@ -85,7 +86,7 @@ The step-by-step approach also allows you to check that projects continue to fun
 
 When all migrations are complete, you can finish the process with a single click. The Migrate UI provides options for how to finalize your migration.
 
-![](/blog/images/2025-05-08/migrate-ui-finalize.avif)
+![Screenshot of Migrate UI in Nx Console showing finalizing the migration with a commit message.](/blog/images/2025-05-07/migrate-ui-finalize.avif)
 
 By default, all commits created during the migration are squashed together into a single commit, which keeps your git history clean. However, you can also opt to preserve the individual commits if you prefer a more detailed history of the changes made.
 
