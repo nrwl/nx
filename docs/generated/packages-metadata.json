@@ -4721,6 +4721,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
+        "hidden": false,
+        "name": "21.0.1-package-updates",
+        "version": "21.0.1-beta.0",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/21.0.1-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
         "hidden": false,
         "name": "20.5.0-package-updates",

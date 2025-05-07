@@ -364,7 +364,14 @@ export function createAPI(overrideReleaseConfig: NxReleaseConfiguration) {
     }
 
     if (shouldPublish) {
-      await releasePublish(args);
+      const publishResults = await releasePublish(args);
+      const allExitOk = Object.values(publishResults).every(
+        (result) => result.code === 0
+      );
+      if (!allExitOk) {
+        // When a publish target fails, we want to fail the nx release CLI
+        process.exit(1);
+      }
     } else {
       output.logSingleLine('Skipped publishing packages.');
     }

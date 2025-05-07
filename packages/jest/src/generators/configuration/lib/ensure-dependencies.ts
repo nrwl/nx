@@ -44,5 +44,11 @@ export function ensureDependencies(
     devDeps['@swc/jest'] = swcJestVersion;
   }
 
-  return addDependenciesToPackageJson(tree, dependencies, devDeps);
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDeps,
+    undefined,
+    options.keepExistingVersions
+  );
 }

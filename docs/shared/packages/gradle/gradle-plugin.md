@@ -170,7 +170,7 @@ The `@nx/gradle` plugin will automatically split your testing tasks by test clas
 
 ### Continuous Tasks
 
-Gradle doesn't have a standard way to identify tasks which are [continuous](https://nx-dev-git-docs-gradle-publish-nrwl.vercel.app/reference/project-configuration#continuous), like `bootRun` for serving a Spring Boot project. To ensure Nx handles these continuous tasks correctly, you can explicitly mark them as continuous.
+Gradle doesn't have a standard way to identify tasks which are [continuous](/reference/project-configuration#continuous), like `bootRun` for serving a Spring Boot project. To ensure Nx handles these continuous tasks correctly, you can explicitly mark them as continuous.
 
 {% tabs %}
 {% tab label="nx.json" %}

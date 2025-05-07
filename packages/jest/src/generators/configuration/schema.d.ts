@@ -30,6 +30,7 @@ export interface JestProjectSchema {
    * @deprecated Use the `setupFile` option instead. It will be removed in Nx v22.
    */
   skipSetupFile?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {

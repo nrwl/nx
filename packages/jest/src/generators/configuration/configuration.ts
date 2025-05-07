@@ -71,6 +71,7 @@ function normalizeOptions(
   return {
     ...schemaDefaults,
     ...options,
+    keepExistingVersions: options.keepExistingVersions ?? true,
     rootProject: project.root === '.' || project.root === '',
     isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };

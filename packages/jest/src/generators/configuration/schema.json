@@ -78,6 +78,12 @@
     "runtimeTsconfigFileName": {
       "type": "string",
       "description": "The name of the project's tsconfig file that includes the runtime source files. If not provided, it will default to `tsconfig.lib.json` for libraries and `tsconfig.app.json` for applications."
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": true
     }
   },
   "required": []

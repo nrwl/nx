@@ -13,6 +13,7 @@ const navigation = {
     { name: 'App', href: 'https://cloud.nx.app' },
     { name: 'Docs', href: '/ci/intro/ci-with-nx' },
     { name: 'Pricing', href: '/pricing' },
+    { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
   solutions: [
     { name: 'Nx', href: 'https://nx.dev' },
