@@ -28,7 +28,11 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
 
     const existingTransform = typescriptFileCache.get(request);
     if (existingTransform) {
-      callback(null, existingTransform);
+      const existingContents =
+        typeof existingTransform === 'string'
+          ? existingTransform
+          : Buffer.from(existingTransform).toString('utf8');
+      callback(null, existingContents);
       return;
     }
 

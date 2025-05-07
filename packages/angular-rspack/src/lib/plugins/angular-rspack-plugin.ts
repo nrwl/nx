@@ -1,10 +1,12 @@
 import { augmentAppWithServiceWorker } from '@angular/build/private';
 import {
-  buildAndAnalyzeWithParallelCompilation,
+  buildAndAnalyze,
   DiagnosticModes,
   JavaScriptTransformer,
+  SourceFileCache,
   maxWorkers,
-  setupCompilationWithParallelCompilation,
+  setupCompilationWithAngularCompilation,
+  AngularCompilation,
 } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
 import {
@@ -23,22 +25,17 @@ import {
 import { getLocaleBaseHref } from '../utils/get-locale-base-href';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
-type Awaited<T> = T extends Promise<infer U> ? U : T;
-type ResolvedJavascriptTransformer = Parameters<
-  typeof buildAndAnalyzeWithParallelCompilation
->[2];
+type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
 
 export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
-  #typescriptFileCache: Map<string, string>;
+  #sourceFileCache: SourceFileCache;
   #javascriptTransformer: ResolvedJavascriptTransformer;
   // This will be defined in the apply method correctly
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  #angularCompilation: Awaited<
-    ReturnType<typeof setupCompilationWithParallelCompilation>
-  >;
+  #angularCompilation: AngularCompilation;
 
   constructor(
     options: NormalizedAngularRspackPluginOptions,
@@ -46,7 +43,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    this.#typescriptFileCache = new Map<string, string>();
+    this.#sourceFileCache = new SourceFileCache();
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
         /**
@@ -77,9 +74,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         compiler.hooks.beforeCompile.tapAsync(
           PLUGIN_NAME,
           async (params, callback) => {
-            await buildAndAnalyzeWithParallelCompilation(
+            await buildAndAnalyze(
               this.#angularCompilation,
-              this.#typescriptFileCache,
+              this.#sourceFileCache.typeScriptFileCache,
               this.#javascriptTransformer
             );
             callback();
@@ -105,15 +102,21 @@ export class AngularRspackPlugin implements RspackPluginInstance {
                 ?.modifiedFiles
                 ? new Set(compiler.watching.compiler.modifiedFiles)
                 : new Set<string>();
+
+              if (this.#angularCompilation) {
+                this.#sourceFileCache.invalidate(watchingModifiedFiles);
+              }
               await this.setupCompilation(
                 root,
-                compiler.options.resolve.tsConfig
+                compiler.options.resolve.tsConfig,
+                watchingModifiedFiles.size > 0
+                  ? watchingModifiedFiles
+                  : undefined
               );
-              await this.#angularCompilation.update(watchingModifiedFiles);
 
-              await buildAndAnalyzeWithParallelCompilation(
+              await buildAndAnalyze(
                 this.#angularCompilation,
-                this.#typescriptFileCache,
+                this.#sourceFileCache.typeScriptFileCache,
                 this.#javascriptTransformer
               );
               compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
@@ -197,7 +200,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           });
         }
       }
-      await this.#angularCompilation.close();
+
       await this.#javascriptTransformer.close();
       callback();
     });
@@ -220,7 +223,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
         javascriptTransformer: this
           .#javascriptTransformer as unknown as JavaScriptTransformer,
-        typescriptFileCache: this.#typescriptFileCache,
+        typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
         i18n: this.#i18n,
       });
     });
@@ -272,14 +275,15 @@ export class AngularRspackPlugin implements RspackPluginInstance {
 
   private async setupCompilation(
     root: string,
-    tsConfig: RspackOptionsNormalized['resolve']['tsConfig']
+    tsConfig: RspackOptionsNormalized['resolve']['tsConfig'],
+    modifiedFiles?: Set<string>
   ) {
     const tsconfigPath = tsConfig
       ? typeof tsConfig === 'string'
         ? tsConfig
         : tsConfig.configFile
       : this.#_options.tsConfig;
-    this.#angularCompilation = await setupCompilationWithParallelCompilation(
+    this.#angularCompilation = await setupCompilationWithAngularCompilation(
       {
         source: {
           tsconfigPath: tsconfigPath,
@@ -293,7 +297,10 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         fileReplacements: this.#_options.fileReplacements,
         useTsProjectReferences: this.#_options.useTsProjectReferences,
         hasServer: this.#_options.hasServer,
-      }
+      },
+      this.#sourceFileCache,
+      this.#angularCompilation,
+      modifiedFiles
     );
   }
 }
