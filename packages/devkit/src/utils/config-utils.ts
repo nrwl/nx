@@ -1,8 +1,8 @@
-import { dirname, extname, join, sep } from 'path';
 import { existsSync, readdirSync } from 'fs';
 import { pathToFileURL } from 'node:url';
 import { workspaceRoot } from 'nx/src/devkit-exports';
 import { registerTsProject } from 'nx/src/devkit-internals';
+import { dirname, extname, join, sep } from 'path';
 
 export let dynamicImport = new Function(
   'modulePath',
@@ -15,7 +15,10 @@ export async function loadConfigFile<T extends object = any>(
   {
     let module: any;
 
-    if (extname(configFilePath) === '.ts' || extname(configFilePath) === '.cts') {
+    if (
+      extname(configFilePath) === '.ts' ||
+      extname(configFilePath) === '.cts'
+    ) {
       const siblingFiles = readdirSync(dirname(configFilePath));
       const tsConfigPath = siblingFiles.includes('tsconfig.json')
         ? join(dirname(configFilePath), 'tsconfig.json')
