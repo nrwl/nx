@@ -70,7 +70,6 @@ export function nxViteBuildCoordinationPlugin(
         if (daemonClient.enabled()) {
           unregisterFileWatcher = await createFileWatcher();
           process.on('exit', () => unregisterFileWatcher());
-          process.on('SIGINT', () => process.exit());
         } else {
           output.warn({
             title:

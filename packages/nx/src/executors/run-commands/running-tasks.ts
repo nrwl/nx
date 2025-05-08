@@ -14,12 +14,12 @@ import {
   loadAndExpandDotEnvFile,
   unloadDotEnvFile,
 } from '../../tasks-runner/task-env';
-import { signalToCode } from '../../utils/exit-codes';
 import {
   LARGE_BUFFER,
   NormalizedRunCommandsOptions,
   RunCommandsCommandOptions,
 } from './run-commands.impl';
+import { registerExitHandler } from '../../utils/signals';
 
 export class ParallelRunningTasks implements RunningTask {
   private readonly childProcesses: RunningNodeProcess[];
@@ -594,23 +594,8 @@ function registerProcessListener(
     }
   });
 
-  // Terminate any task processes on exit
-  process.on('exit', () => {
-    runningTask.kill();
-  });
-  process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
-    // we exit here because we don't need to write anything to cache.
-    process.exit(signalToCode('SIGINT'));
-  });
-  process.on('SIGTERM', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-  process.on('SIGHUP', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
+  registerExitHandler('exit', () => runningTask.kill());
+  registerExitHandler('SIGINT', () => runningTask.kill('SIGINT'));
+  registerExitHandler('SIGTERM', () => runningTask.kill('SIGTERM'));
+  registerExitHandler('SIGHUP', () => runningTask.kill('SIGHUP'));
 }

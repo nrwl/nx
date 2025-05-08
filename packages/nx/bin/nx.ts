@@ -21,7 +21,7 @@ import { performance } from 'perf_hooks';
 import { setupWorkspaceContext } from '../src/utils/workspace-context';
 import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
-import { signalToCode } from '../src/utils/exit-codes';
+import { registerExitHandler } from '../src/utils/signals';
 
 // In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
 process.on('exit', (...args) => {
@@ -283,26 +283,13 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
 
-function nxCleanup(signal?: NodeJS.Signals) {
+function nxCleanup() {
   removeDbConnections();
-  if (signal) {
-    process.exit(signalToCode(signal));
-  } else {
-    process.exit();
-  }
 }
 
-process.on('exit', () => {
-  nxCleanup();
-});
-process.on('SIGINT', () => {
-  nxCleanup('SIGINT');
-});
-process.on('SIGTERM', () => {
-  nxCleanup('SIGTERM');
-});
-process.on('SIGHUP', () => {
-  nxCleanup('SIGHUP');
-});
+registerExitHandler('SIGINT', nxCleanup);
+registerExitHandler('SIGTERM', nxCleanup);
+registerExitHandler('SIGHUP', nxCleanup);
+registerExitHandler('exit', nxCleanup);
 
 main();

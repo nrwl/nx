@@ -229,8 +229,6 @@ export async function* compileSwcWatch(
       swcWatcher.stdout.on('data', stdoutOnData);
       swcWatcher.stderr.on('data', stderrOnData);
 
-      process.on('SIGINT', processOnExit);
-      process.on('SIGTERM', processOnExit);
       process.on('exit', processOnExit);
 
       swcWatcher.on('exit', watcherOnExit);

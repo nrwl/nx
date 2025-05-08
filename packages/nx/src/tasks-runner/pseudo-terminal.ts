@@ -4,19 +4,21 @@ import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
+import { registerExitHandler } from '../utils/signals';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s?: NodeJS.Signals) => void> = [];
-process.on('SIGINT', () => {
+
+registerExitHandler('SIGINT', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGINT'));
 });
-process.on('SIGTERM', () => {
+registerExitHandler('SIGTERM', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGTERM'));
 });
-process.on('SIGHUP', () => {
+registerExitHandler('SIGHUP', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGHUP'));
 });
-process.on('exit', () => {
+registerExitHandler('exit', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
 });
 

@@ -129,8 +129,6 @@ function registerCleanupCallback(callback: () => void) {
     process.off('exit', wrapped);
   };
 
-  process.on('SIGINT', wrapped);
-  process.on('SIGTERM', wrapped);
   process.on('exit', wrapped);
 }
 

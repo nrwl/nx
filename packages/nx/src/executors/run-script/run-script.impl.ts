@@ -7,7 +7,7 @@ import {
   PseudoTtyProcess,
 } from '../../tasks-runner/pseudo-terminal';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-import { signalToCode } from '../../utils/exit-codes';
+import { registerExitHandler } from '../../utils/signals';
 
 export interface RunScriptOptions {
   script: string;
@@ -84,16 +84,6 @@ async function ptyProcess(
   });
 }
 
-// TODO: This only works because pseudo terminal registers signal handlers first but we need a service to handle this
-process.on('SIGHUP', () => {
-  cp.kill('SIGHUP');
-  process.exit(signalToCode('SIGHUP'));
-});
-process.on('SIGTERM', () => {
-  cp.kill('SIGTERM');
-  process.exit(signalToCode('SIGTERM'));
-});
-process.on('SIGINT', () => {
-  cp.kill('SIGINT');
-  process.exit(signalToCode('SIGINT'));
-});
+registerExitHandler('SIGINT', () => cp.kill('SIGINT'));
+registerExitHandler('SIGTERM', () => cp.kill('SIGTERM'));
+registerExitHandler('SIGHUP', () => cp.kill('SIGHUP'));

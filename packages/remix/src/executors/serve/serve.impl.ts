@@ -81,9 +81,6 @@ export default async function* serveExecutor(
         }
       };
       process.on('exit', () => killServer());
-      process.on('SIGINT', () => killServer());
-      process.on('SIGTERM', () => killServer());
-      process.on('SIGHUP', () => killServer());
 
       await waitForPortOpen(options.port);
 

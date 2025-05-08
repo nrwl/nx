@@ -250,7 +250,6 @@ export default async function* fileServerExecutor(
     }
   };
   process.on('exit', processExitListener);
-  process.on('SIGTERM', processExitListener);
 
   serve.stdout.on('data', (chunk) => {
     if (chunk.toString().indexOf('GET') === -1) {

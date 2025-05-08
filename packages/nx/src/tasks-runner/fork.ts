@@ -1,7 +1,7 @@
 import { fork, Serializable } from 'child_process';
 import { join } from 'path';
 import { PseudoIPCClient } from './pseudo-ipc';
-import { signalToCode } from '../utils/exit-codes';
+import { registerExitHandler } from '../utils/signals';
 
 const pseudoIPCPath = process.argv[2];
 const forkId = process.argv[3];
@@ -37,17 +37,8 @@ childProcess.on('exit', (code) => {
   process.exit(code);
 });
 
-// Terminate the child process when exiting
-process.on('exit', () => {
-  childProcess.kill();
-});
-process.on('SIGINT', () => {
-  childProcess.kill('SIGTERM');
-  process.exit(signalToCode('SIGINT'));
-});
-process.on('SIGTERM', () => {
-  childProcess.kill('SIGTERM');
-});
-process.on('SIGHUP', () => {
-  childProcess.kill('SIGTERM');
-});
+registerExitHandler('exit', () => childProcess.kill());
+
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
+  registerExitHandler(signal, () => childProcess.kill(signal));
+}

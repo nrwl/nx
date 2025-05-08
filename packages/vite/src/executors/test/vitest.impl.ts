@@ -52,8 +52,6 @@ export async function* vitestExecutor(
   };
 
   if (watch) {
-    process.on('SIGINT', processExit);
-    process.on('SIGTERM', processExit);
     process.on('exit', processExit);
   }
 

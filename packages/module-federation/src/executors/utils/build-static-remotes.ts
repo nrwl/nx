@@ -87,7 +87,6 @@ export async function buildStaticRemotes(
         res();
       }
     });
-    process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
   });
 

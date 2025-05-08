@@ -58,6 +58,5 @@ export function startStaticRemotesFileServer(
       },
     }
   );
-  process.on('SIGTERM', () => httpServerProcess.kill('SIGTERM'));
   process.on('exit', () => httpServerProcess.kill('SIGTERM'));
 }

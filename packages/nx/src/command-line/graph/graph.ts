@@ -57,6 +57,7 @@ import { ConfigurationSourceMaps } from '../../project-graph/utils/project-confi
 import { createTaskHasher } from '../../hasher/create-task-hasher';
 import { ProjectGraphError } from '../../project-graph/error-types';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { registerExitHandler } from '../../utils/signals';
 
 export interface GraphError {
   message: string;
@@ -667,14 +668,18 @@ async function startServer(
     }
   });
 
-  const handleTermination = async (exitCode: number) => {
+  const handleTermination = async () => {
     if (unregisterFileWatcher) {
       unregisterFileWatcher();
     }
-    process.exit(exitCode);
   };
-  process.on('SIGINT', () => handleTermination(128 + 2));
-  process.on('SIGTERM', () => handleTermination(128 + 15));
+
+  registerExitHandler('SIGINT', () => {
+    handleTermination();
+  });
+  registerExitHandler('SIGTERM', () => {
+    handleTermination();
+  });
 
   return new Promise<{ app: Server; url: URL }>((res) => {
     app.listen(port, host, () => {

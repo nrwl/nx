@@ -58,7 +58,6 @@ export function startSsrRemoteProxies(
     const proxyServer = (sslCert ? https : http)
       .createServer({ cert: sslCert, key: sslKey }, expressProxy)
       .listen(staticRemotesConfig.config[app].port);
-    process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
   }
   logger.info(`Nx SSR Static remotes proxies started successfully`);

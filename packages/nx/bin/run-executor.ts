@@ -1,6 +1,9 @@
 import { appendFileSync, openSync, writeFileSync } from 'fs';
-import { Target, run } from '../src/command-line/run/run';
 import { TaskGraph } from '../src/config/task-graph';
+
+import { Target, run } from '../src/command-line/run/run';
+
+import '../src/utils/signals';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
