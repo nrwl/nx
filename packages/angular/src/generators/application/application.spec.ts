@@ -11,7 +11,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
@@ -573,7 +572,7 @@ describe('app', () => {
   describe('--linter', () => {
     describe('eslint', () => {
       it('should add lint target to application', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: 'eslint' });
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
           {
@@ -583,7 +582,7 @@ describe('app', () => {
       });
 
       it('should add eslint plugin and no lint target to e2e project', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const nxJson = readNxJson(appTree);
         expect(nxJson.plugins).toMatchInlineSnapshot(`
@@ -612,7 +611,7 @@ describe('app', () => {
 
       it('should not add eslint plugin when no e2e test runner', async () => {
         await generateApp(appTree, 'my-app', {
-          linter: Linter.EsLint,
+          linter: 'eslint',
           e2eTestRunner: E2eTestRunner.None,
         });
 
@@ -620,7 +619,7 @@ describe('app', () => {
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
@@ -676,7 +675,7 @@ describe('app', () => {
 
     describe('none', () => {
       it('should add no lint target', async () => {
-        await generateApp(appTree, 'my-app', { linter: Linter.None });
+        await generateApp(appTree, 'my-app', { linter: 'none' });
         expect(
           readProjectConfiguration(appTree, 'my-app').targets.lint
         ).toBeUndefined();
@@ -1426,7 +1425,7 @@ async function generateApp(
     skipFormat: true,
     e2eTestRunner: E2eTestRunner.Cypress,
     unitTestRunner: UnitTestRunner.Jest,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     standalone: false,
     ...options,
   });

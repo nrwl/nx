@@ -66,13 +66,13 @@ Also, here are some recipes that give you more details based on the technology s
 
 {% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
-{% link-card title="TypeScript Monorepo" type="tutorial" url="/getting-started/tutorials/typescript-packages-tutorial" icon="jsMono" /%}
+{% link-card title="TypeScript Monorepo" type="tutorial" isExternal="true" url="/tutorials/1-ts-packages/1t-introduction/1-welcome" icon="jsMono" /%}
 
-{% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-monorepo-tutorial" icon="reactMono" /%}
+{% link-card title="React Monorepo" type="tutorial" isExternal="true" url="/tutorials/2-react-monorepo/1r-introduction/1-welcome" icon="reactMono" /%}
 
-{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-monorepo-tutorial" icon="angularMono" /%}
+{% link-card title="Angular Monorepo" type="tutorial" isExternal="true" url="/tutorials/3-angular-monorepo/1a-introduction/1-welcome" icon="angularMono" /%}
 
-{% link-card title="Gradle Monorepo" type="tutorial" url="/getting-started/tutorials/gradle-tutorial" icon="gradle" /%}
+{% link-card title="Gradle Monorepo" type="tutorial" isExternal="true" url="/tutorials/4-gradle/1g-introduction/1-welcome" icon="gradle" /%}
 
 {% /cards %}
 

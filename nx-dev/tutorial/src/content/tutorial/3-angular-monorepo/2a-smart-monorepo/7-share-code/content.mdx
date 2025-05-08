@@ -31,84 +31,36 @@ export * from './lib/products/products.component';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Remove the `app-nx-welcome` component from `app.component.html`:
 
-```ts title="/apps/angular-store/src/app/app.component.html"
-<router-outlet></router-outlet>
+```solution:/apps/angular-store/src/app/app.component.html title="/apps/angular-store/src/app/app.component.html"
+
 ```
 
 Then we can add the `ProductsComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
-```ts title="/apps/angular-store/src/app/app.routes.ts" {10-14}
-import { Route } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+```solution:/apps/angular-store/src/app/app.routes.ts title="/apps/angular-store/src/app/app.routes.ts" {10-14} collapse={15-19}
 
-export const appRoutes: Route[] = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    pathMatch: 'full',
-  },
-  {
-    path: 'products',
-    loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductsComponent),
-  },
-];
 ```
 
-Serving your app (`npx nx serve angular-store`) and then navigating to `/products` should give you the following result:
+Serving your app (`nx serve angular-store`) and then navigating to `/products` should give you the following result:
 
 ![products route](/documentation/shared/tutorials/app-products-route.png)
 
-Let's apply the same for our `orders` library.
-
-- import the `OrdersComponent` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` rout
-
-  e
+Let's apply the same for our `orders` library. Import the `OrdersComponent` from `libs/orders` into the `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/orders` route
 
 In the end, your `app.routes.ts` should look similar to this:
 
-```ts title="apps/angular-store/src/app/app.routes.ts" {15-19}
-import { Route } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
+```solution:/apps/angular-store/src/app/app.routes.ts title="apps/angular-store/src/app/app.routes.ts" {15-19}
 
-export const appRoutes: Route[] = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    pathMatch: 'full',
-  },
-  {
-    path: 'products',
-    loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductsComponent),
-  },
-  {
-    path: 'orders',
-    loadComponent: () =>
-      import('@angular-monorepo/orders').then((m) => m.OrdersComponent),
-  },
-];
 ```
 
 Let's also show products in the `inventory` app.
 
-```ts title="apps/inventory/src/app/app.component.ts" {2,5}
-import { Component } from '@angular/core';
-import { ProductsComponent } from '@angular-monorepo/products';
+```solution:/apps/inventory/src/app/app.component.ts title="/apps/inventory/src/app/app.component.ts" {2,5}
 
-@Component({
-  imports: [ProductsComponent],
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
-})
-export class AppComponent {
-  title = 'inventory';
-}
 ```
 
-```ts title="apps/inventory/src/app/app.component.html"
-<lib-products></lib-products>
+```solution:/apps/inventory/src/app/app.component.html title="/apps/inventory/src/app/app.component.html"
+
 ```
 
 ## Testing and Linting
@@ -120,6 +72,6 @@ export class AppComponent {
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing and linting. The `test` and `lint` targets are defined in the application `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```shell
-npx nx test angular-store # runs the tests for angular-store
-npx nx lint inventory # runs the linter on inventory
+nx test angular-store # runs the tests for angular-store
+nx lint inventory # runs the linter on inventory
 ```

@@ -23,6 +23,13 @@ import { daemonClient } from '../src/daemon/client/client';
 import { removeDbConnections } from '../src/utils/db-connection';
 import { signalToCode } from '../src/utils/exit-codes';
 
+// In case Nx Cloud forcibly exits while the TUI is running, ensure the terminal is restored etc.
+process.on('exit', (...args) => {
+  if (typeof globalThis.tuiOnProcessExit === 'function') {
+    globalThis.tuiOnProcessExit(...args);
+  }
+});
+
 function main() {
   if (
     process.argv[2] !== 'report' &&

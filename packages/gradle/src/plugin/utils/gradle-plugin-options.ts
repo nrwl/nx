@@ -1,6 +1,7 @@
 export interface GradlePluginOptions {
   testTargetName?: string;
-  ciTargetName?: string;
+  ciTestTargetName?: string;
+  ciIntTestTargetName?: string;
   [taskTargetName: string]: string | undefined | boolean;
 }
 

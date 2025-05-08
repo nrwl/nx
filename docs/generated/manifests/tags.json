@@ -30,13 +30,6 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/console-migrate-ui",
-      "id": "console-migrate-ui",
-      "name": "Migrate UI",
-      "path": "/recipes/nx-console/console-migrate-ui"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/console-run-command",
       "id": "console-run-command",
       "name": "Run Command",
@@ -48,6 +41,13 @@
       "id": "console-nx-cloud",
       "name": "Nx Cloud Integration",
       "path": "/recipes/nx-console/console-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-migrate-ui",
+      "id": "console-migrate-ui",
+      "name": "Migrate UI",
+      "path": "/recipes/nx-console/console-migrate-ui"
     }
   ],
   "run-tasks": [
@@ -99,6 +99,13 @@
       "id": "defining-task-pipeline",
       "name": "Define a Task Pipeline",
       "path": "/recipes/running-tasks/defining-task-pipeline"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
     },
     {
       "description": "",
@@ -682,6 +689,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/automate-gitlab-releases",
+      "id": "automate-gitlab-releases",
+      "name": "Automate GitLab Releases",
+      "path": "/recipes/nx-release/automate-gitlab-releases"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/publish-rust-crates",
       "id": "publish-rust-crates",
       "name": "Publish Rust Crates",
@@ -968,6 +982,15 @@
       "id": "create-nx-workspace",
       "name": "create-nx-workspace",
       "path": "/nx-api/nx/documents/create-nx-workspace"
+    }
+  ],
+  "terminal-ui": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
     }
   ],
   "exec": [

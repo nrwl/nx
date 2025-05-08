@@ -65,16 +65,6 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should create 
                 "cwd": "my-app",
               },
             },
-            "static-serve": {
-              "command": "remix-serve build/index.js",
-              "continuous": true,
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
             "tsc": {
               "cache": true,
               "command": "tsc --noEmit",
@@ -176,16 +166,6 @@ exports[`@nx/remix/plugin Remix Classic Compiler non-root project should infer w
               },
             },
             "start": {
-              "command": "remix-serve build/index.js",
-              "continuous": true,
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "static-serve": {
               "command": "remix-serve build/index.js",
               "continuous": true,
               "dependsOn": [
@@ -300,16 +280,6 @@ exports[`@nx/remix/plugin Remix Classic Compiler root project should create node
                 "cwd": ".",
               },
             },
-            "static-serve": {
-              "command": "remix-serve build/index.js",
-              "continuous": true,
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": ".",
-              },
-            },
             "typecheck": {
               "cache": true,
               "command": "tsc --noEmit",
@@ -403,16 +373,6 @@ exports[`@nx/remix/plugin Remix Vite Compiler non-root project should create nod
               },
             },
             "start": {
-              "command": "remix-serve build/server/index.js",
-              "continuous": true,
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": "my-app",
-              },
-            },
-            "static-serve": {
               "command": "remix-serve build/server/index.js",
               "continuous": true,
               "dependsOn": [
@@ -517,16 +477,6 @@ exports[`@nx/remix/plugin Remix Vite Compiler root project should create nodes 1
               },
             },
             "start": {
-              "command": "remix-serve build/server/index.js",
-              "continuous": true,
-              "dependsOn": [
-                "build",
-              ],
-              "options": {
-                "cwd": ".",
-              },
-            },
-            "static-serve": {
               "command": "remix-serve build/server/index.js",
               "continuous": true,
               "dependsOn": [

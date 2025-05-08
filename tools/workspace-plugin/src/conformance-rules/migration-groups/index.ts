@@ -2,7 +2,7 @@ import { readJsonFile, workspaceRoot } from '@nx/devkit';
 import {
   createConformanceRule,
   type ProjectFilesViolation,
-} from '@nx/powerpack-conformance';
+} from '@nx/conformance';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { satisfies } from 'semver';

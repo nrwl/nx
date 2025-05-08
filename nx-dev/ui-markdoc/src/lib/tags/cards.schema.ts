@@ -45,6 +45,10 @@ export const linkCard: Schema = {
       type: 'String',
       default: '',
     },
+    isExternal: {
+      type: 'Boolean',
+      default: false,
+    },
     appearance: {
       type: 'String',
       default: 'default',
@@ -70,6 +74,10 @@ export const card: Schema = {
     url: {
       type: 'String',
       default: '',
+    },
+    isExternal: {
+      type: 'Boolean',
+      default: false,
     },
   },
 };

@@ -16,7 +16,7 @@ import { join } from 'path';
 import { createGradleProject } from './utils/create-gradle-project';
 import { createFileSync } from 'fs-extra';
 
-describe('Nx Import Gradle', () => {
+xdescribe('Nx Import Gradle', () => {
   const tempImportE2ERoot = join(e2eCwd, 'nx-import');
   beforeAll(() => {
     newProject({

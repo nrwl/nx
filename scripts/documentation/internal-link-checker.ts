@@ -15,7 +15,12 @@ function readFileContents(path: string): string {
 }
 
 function isLinkInternal(linkPath: string): boolean {
-  return linkPath.startsWith('/') || linkPath.startsWith('https://nx.dev');
+  return (
+    (linkPath.startsWith('/') ||
+      linkPath.startsWith('https://nx.dev') ||
+      linkPath.startsWith('https://nx-dev')) &&
+    !linkPath.startsWith('/tutorials')
+  );
 }
 
 function isNotAsset(linkPath: string): boolean {
@@ -175,7 +180,10 @@ for (let file in documentLinks) {
     ) {
       continue;
     }
-    if (link.startsWith('https://nx.dev')) {
+    if (
+      link.startsWith('https://nx.dev') ||
+      link.startsWith('https://nx-dev')
+    ) {
       localLinkErrors.push({ file, link });
     } else if (
       link.includes('#') &&

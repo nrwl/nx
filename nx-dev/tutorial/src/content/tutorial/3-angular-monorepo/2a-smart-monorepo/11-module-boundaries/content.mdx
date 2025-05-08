@@ -22,29 +22,20 @@ When building these kinds of constraints you usually have two dimensions:
 
 Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
 
-```json title="libs/orders/project.json"
-{
-  ...
-  "tags": ["type:feature", "scope:orders"]
-}
+```solution:/libs/orders/project.json title="/libs/orders/project.json" collapse={2-5,7-19}
+
 ```
 
 Then go to the `project.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
 
-```json title="libs/products/project.json"
-{
-  ...
-  "tags": ["type:feature", "scope:products"]
-}
+```solution:/libs/products/project.json title="/libs/products/project.json" collapse={2-5,7-19}
+
 ```
 
 Finally, go to the `project.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
 
-```json title="libs/shared/ui/project.json"
-{
-  ...
-  "tags": ["type:ui", "scope:shared"]
-}
+```solution:/libs/shared/ui/project.json title="/libs/shared/ui/project.json" collapse={2-5,7-19}
+
 ```
 
 Notice how we assign `scope:shared` to our UI library because it is intended to be used throughout the workspace.
@@ -58,75 +49,20 @@ Next, let's come up with a set of rules based on these tags:
 
 To enforce the rules, Nx ships with a custom ESLint rule. Open the `eslint.config.mjs` at the root of the workspace and add the following `depConstraints` in the `@nx/enforce-module-boundaries` rule configuration:
 
-```js title="eslint.config.mjs"
-export default [
-  // ...
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
-          depConstraints: [
-            {
-              sourceTag: 'type:feature',
-              onlyDependOnLibsWithTags: ['type:feature', 'type:ui'],
-            },
-            {
-              sourceTag: 'type:ui',
-              onlyDependOnLibsWithTags: ['type:ui'],
-            },
-            {
-              sourceTag: 'scope:orders',
-              onlyDependOnLibsWithTags: [
-                'scope:orders',
-                'scope:products',
-                'scope:shared',
-              ],
-            },
-            {
-              sourceTag: 'scope:products',
-              onlyDependOnLibsWithTags: ['scope:products', 'scope:shared'],
-            },
-            {
-              sourceTag: 'scope:shared',
-              onlyDependOnLibsWithTags: ['scope:shared'],
-            },
-          ],
-        },
-      ],
-    },
-  },
-  // ...
-];
+```solution:/eslint.config.mjs title="/eslint.config.mjs" collapse={1-2,4-9,52-65}
+
 ```
 
-To test it, go to your `libs/products/src/lib/products.tsx` file and import the `Orders` component from the `orders` project:
+To test it, go to your `/libs/products/src/lib/products/products.component.ts` file and import the `Orders` component from the `orders` project:
 
-```tsx title="libs/products/src/lib/products.tsx"
-import styles from './products.module.css';
+```solution:/libs/products/src/lib/products/products.component.ts title="/libs/products/src/lib/products/products.component.ts" {3-4}
 
-// This import is not allowed 👇
-import { Orders } from '@angular-monorepo/orders';
-
-export function Products() {
-  return (
-    <div className={styles['container']}>
-      <h1>Welcome to Products!</h1>
-      <p>This is a change. 👋</p>
-    </div>
-  );
-}
-
-export default Products;
 ```
 
 If you lint your workspace you'll get an error now:
 
 ```shell
-npx nx run-many -t lint
+nx run-many -t lint
 ```
 
 ```
@@ -134,9 +70,9 @@ npx nx run-many -t lint
 ✖  nx run products:lint
    Linting "products"...
 
-   /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/products.tsx
-     4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-     4:10  warning  'Orders' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   /home/tutorial/libs/products/src/lib/products/products.component.ts
+     5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+     5:10  warning  'OrdersComponent' is defined but never used                                                                        @typescript-eslint/no-unused-vars
 
    ✖ 2 problems (1 error, 1 warning)
 

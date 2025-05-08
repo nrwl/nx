@@ -16,3 +16,4 @@ pluginManagement {
 
 rootProject.name = "nx"
 includeBuild("./packages/gradle/project-graph")
+includeBuild("./packages/gradle/batch-runner")

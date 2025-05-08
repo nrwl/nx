@@ -3,7 +3,6 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { type NxRemixGeneratorSchema } from '../schema';
 
@@ -49,7 +48,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     projectName: appProjectName,
     projectRoot,
     importPath,

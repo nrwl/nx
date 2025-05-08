@@ -12,20 +12,16 @@ import { Fragment, JSX, useState } from 'react';
 
 const versionOptions = [
   {
-    label: 'v20',
+    label: 'v21',
     value: '',
+  },
+  {
+    label: 'v20',
+    value: '20',
   },
   {
     label: 'v19',
     value: '19',
-  },
-  {
-    label: 'v18',
-    value: '18',
-  },
-  {
-    label: 'v17',
-    value: '17',
   },
 ];
 
@@ -43,7 +39,7 @@ export function VersionPicker(): JSX.Element {
                     'relative w-full cursor-pointer rounded-lg border-slate-200 py-2 pr-6 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm dark:border-slate-700'
                   }
                 >
-                  <span className="block truncate">{selected.label}</span>
+                  <span className="block">{selected.label}</span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center">
                     <ChevronUpDownIcon
                       className="h-5 w-5 text-slate-500"
@@ -80,7 +76,7 @@ export function VersionPicker(): JSX.Element {
                                 ? `https://${item.value}.nx.dev/docs`
                                 : '#'
                             }
-                            className={'block truncate px-3 py-2 font-medium'}
+                            className={'block px-3 py-2 font-medium'}
                           >
                             {item.label}
                           </Link>

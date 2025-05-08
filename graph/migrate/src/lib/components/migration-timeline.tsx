@@ -33,6 +33,7 @@ export interface MigrationTimelineProps {
   isInit: boolean;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onUndoMigration: (migration: MigrationDetailsWithId) => void;
   onFileClick: (
     migration: MigrationDetailsWithId,
     file: Omit<FileChange, 'content'>
@@ -53,6 +54,7 @@ export function MigrationTimeline({
   currentMigrationHasChanges,
   onRunMigration,
   onSkipMigration,
+  onUndoMigration,
   onFileClick,
   onViewImplementation,
   onViewDocumentation,
@@ -335,17 +337,30 @@ export function MigrationTimeline({
                       )}
 
                       {currentMigrationHasChanges && (
-                        <button
-                          onClick={() => {
-                            toggleMigrationExpanded(currentMigration.id);
-                            onReviewMigration(currentMigration.id);
-                          }}
-                          type="button"
-                          className="flex items-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-600 dark:bg-blue-600 hover:dark:bg-blue-700"
-                        >
-                          <CheckIcon className="h-5 w-5" aria-hidden="true" />{' '}
-                          Approve Changes
-                        </button>
+                        <>
+                          <button
+                            onClick={() => {
+                              toggleMigrationExpanded(currentMigration.id);
+                              onUndoMigration(currentMigration);
+                            }}
+                            type="button"
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          >
+                            <XMarkIcon className="h-5 w-5" aria-hidden="true" />{' '}
+                            Undo and Skip
+                          </button>
+                          <button
+                            onClick={() => {
+                              toggleMigrationExpanded(currentMigration.id);
+                              onReviewMigration(currentMigration.id);
+                            }}
+                            type="button"
+                            className="flex items-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-600 dark:bg-blue-600 hover:dark:bg-blue-700"
+                          >
+                            <CheckIcon className="h-5 w-5" aria-hidden="true" />{' '}
+                            Approve Changes
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
@@ -539,7 +554,7 @@ function MigrationStateCircle({
 }: MigrationStateCircleProps) {
   let bgColor = '';
   let textColor = '';
-  let Icon = ClockIcon;
+  let Icon = null;
 
   // Check if this migration is in the completed migrations
   const completedMigration =
@@ -569,22 +584,22 @@ function MigrationStateCircle({
     // Future migration (none of the states above)
     bgColor = 'bg-slate-300';
     textColor = 'text-slate-700';
-    Icon = ClockIcon;
   }
 
   return (
     <div
       className={twMerge(
-        `absolute left-0 top-0 flex h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
+        !!Icon ? ' h-8 w-8' : 'mt-1 h-6 w-6',
+        `absolute left-0 top-0 flex -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
         needsAttention ? 'animate-pulse' : ''
       )}
       onClick={onClick}
     >
       {isRunning ? (
         <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-      ) : (
+      ) : Icon ? (
         <Icon className="h-6 w-6" />
-      )}
+      ) : null}
     </div>
   );
 }

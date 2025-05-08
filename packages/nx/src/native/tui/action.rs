@@ -1,3 +1,7 @@
+use crate::native::tasks::types::{Task, TaskResult};
+
+use super::{app::Focus, components::tasks_list::TaskStatus};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
     Tick,
@@ -13,13 +17,21 @@ pub enum Action {
     RemoveFilterChar,
     ScrollUp,
     ScrollDown,
-    NextTask,
-    PreviousTask,
+    PinTask(String, usize),
+    UnpinTask(String, usize),
+    UnpinAllTasks,
+    SortTasks,
     NextPage,
     PreviousPage,
-    ToggleOutput,
-    FocusNext,
-    FocusPrevious,
+    NextTask,
+    PreviousTask,
+    SetSpacebarMode(bool),
     ScrollPaneUp(usize),
     ScrollPaneDown(usize),
+    UpdateTaskStatus(String, TaskStatus),
+    UpdateCloudMessage(String),
+    UpdateFocus(Focus),
+    StartCommand(Option<u32>),
+    StartTasks(Vec<Task>),
+    EndTasks(Vec<TaskResult>),
 }

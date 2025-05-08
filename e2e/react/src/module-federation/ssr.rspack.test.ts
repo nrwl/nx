@@ -13,7 +13,8 @@ import {
 import { readPort, runCLI } from './utils';
 
 describe('React Rspack SSR Module Federation', () => {
-  describe('ssr', () => {
+  // TODO: @columferry please investigate why this test cauess agents to run out of memory
+  xdescribe('ssr', () => {
     beforeEach(() => {
       newProject({ packages: ['@nx/react'] });
     });

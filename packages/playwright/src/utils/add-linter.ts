@@ -37,7 +37,7 @@ export async function addLinterToPlaywrightProject(
   tree: Tree,
   options: PlaywrightLinterOptions
 ): Promise<GeneratorCallback> {
-  if (options.linter === Linter.None) {
+  if (options.linter === 'none') {
     return () => {};
   }
 
@@ -60,7 +60,7 @@ export async function addLinterToPlaywrightProject(
     );
   }
 
-  if (!options.linter || options.linter !== Linter.EsLint) {
+  if (!options.linter || options.linter !== 'eslint') {
     return runTasksInSerial(...tasks);
   }
 

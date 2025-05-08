@@ -1,6 +1,6 @@
 {
   "name": "release-version-config-changes",
-  "version": "21.0.0-beta.1",
+  "version": "21.0.0-beta.11",
   "description": "Updates release version config based on the breaking changes in Nx v21",
   "implementation": "/packages/nx/src/migrations/update-21-0-0/release-version-config-changes.ts",
   "aliases": [],

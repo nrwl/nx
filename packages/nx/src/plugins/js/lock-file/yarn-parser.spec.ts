@@ -11,7 +11,7 @@ import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
-jest.mock('fs', () => {
+jest.mock('node:fs', () => {
   const memFs = require('memfs').fs;
   return {
     ...memFs,

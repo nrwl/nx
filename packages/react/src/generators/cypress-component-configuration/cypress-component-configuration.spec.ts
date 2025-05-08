@@ -7,7 +7,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from '../component/component';
 import { libraryGenerator } from '../library/library';
@@ -63,7 +62,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should generate cypress config with vite', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -71,7 +70,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -117,7 +116,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should generate cypress component test config with --build-target', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -125,7 +124,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -183,7 +182,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should generate cypress component test config with project graph', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -191,7 +190,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -248,7 +247,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should generate cypress component test config with webpack', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -256,7 +255,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'webpack',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -312,7 +311,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should generate tests for existing tsx components', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -320,7 +319,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -356,7 +355,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should generate tests for existing js components', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -364,7 +363,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -410,7 +409,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should throw error when an invalid --build-target is provided', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -421,7 +420,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       directory: 'some-lib',
       style: 'scss',
       unitTestRunner: 'none',
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: false,
       skipTsConfig: false,
     });
@@ -464,7 +463,7 @@ describe('React:CypressComponentTestConfiguration', () => {
   it('should setup cypress config files correctly', async () => {
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -472,7 +471,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,
@@ -563,7 +562,7 @@ describe('React:CypressComponentTestConfiguration', () => {
 
     await applicationGenerator(tree, {
       e2eTestRunner: 'none',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       style: 'scss',
       unitTestRunner: 'none',
@@ -571,7 +570,7 @@ describe('React:CypressComponentTestConfiguration', () => {
       bundler: 'vite',
     });
     await libraryGenerator(tree, {
-      linter: Linter.EsLint,
+      linter: 'eslint',
       directory: 'some-lib',
       skipFormat: true,
       skipTsConfig: false,

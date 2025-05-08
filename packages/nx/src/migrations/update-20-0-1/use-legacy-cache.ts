@@ -14,7 +14,9 @@ export default async function update(tree: Tree) {
   if ((nxJson as any).enableDbCache) {
     delete (nxJson as any).enableDbCache;
   } else {
-    nxJson.useLegacyCache = true;
+    (
+      nxJson as NxJsonConfiguration & { useLegacyCache: boolean }
+    ).useLegacyCache = true;
   }
 
   updateNxJson(tree, nxJson);

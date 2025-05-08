@@ -3,14 +3,14 @@ plugins {
   `maven-publish`
   signing
   id("com.ncorti.ktfmt.gradle") version "+"
-  id("dev.nx.gradle.project-graph") version "0.0.2"
+  id("dev.nx.gradle.project-graph") version "0.1.0"
   id("org.jetbrains.kotlin.jvm") version "2.1.10"
   id("com.gradle.plugin-publish") version "1.2.1"
 }
 
 group = "dev.nx.gradle"
 
-version = "0.0.2"
+version = "0.1.0"
 
 repositories { mavenCentral() }
 
@@ -118,3 +118,5 @@ signing {
 }
 
 tasks.test { useJUnitPlatform() }
+
+java { toolchain.languageVersion.set(JavaLanguageVersion.of(17)) }

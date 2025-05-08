@@ -536,15 +536,13 @@ function setPropertyDefault(
   schema: any,
   definitions: Properties
 ) {
+  let defaultValueToSet: any | undefined;
+
   if (schema.$ref) {
     schema = resolveDefinition(schema.$ref, definitions);
   }
 
-  if (schema.type !== 'object' && schema.type !== 'array') {
-    if (opts[propName] === undefined && schema.default !== undefined) {
-      opts[propName] = schema.default;
-    }
-  } else if (schema.type === 'array') {
+  if (schema.type === 'array') {
     const items = schema.items || {};
     if (
       opts[propName] &&
@@ -555,20 +553,33 @@ function setPropertyDefault(
         setDefaultsInObject(valueInArray, items.properties || {}, definitions)
       );
     } else if (!opts[propName] && schema.default) {
-      opts[propName] = schema.default;
+      defaultValueToSet = schema.default;
     }
   } else {
-    const wasUndefined = opts[propName] === undefined;
-    if (wasUndefined) {
-      // We need an object to set values onto
-      opts[propName] = {};
+    if (opts[propName] === undefined && schema.default !== undefined) {
+      defaultValueToSet = schema.default;
     }
 
-    setDefaultsInObject(opts[propName], schema.properties || {}, definitions);
+    if (schema.type === 'object') {
+      const wasUndefined = opts[propName] === undefined;
+      if (!wasUndefined) {
+        setDefaultsInObject(
+          opts[propName],
+          schema.properties || {},
+          definitions
+        );
+      }
+    }
+  }
 
-    // If the property was initially undefined but no properties were added, we remove it again instead of having an {}
-    if (wasUndefined && Object.keys(opts[propName]).length === 0) {
-      delete opts[propName];
+  if (defaultValueToSet !== undefined) {
+    try {
+      validateProperty(propName, defaultValueToSet, schema, definitions);
+      opts[propName] = defaultValueToSet;
+    } catch (e) {
+      // If the default value is invalid, we don't set it...
+      // this should honestly never be needed... but some notable
+      // 3rd party schema's are invalid.
     }
   }
 }

@@ -107,7 +107,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <div className="grid grid-cols-12 gap-8">
               <Card>
                 <Link
-                  href="/getting-started/tutorials/gradle-tutorial?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/4-gradle/1g-introduction/1-welcome?utm_source=homepage?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Gradle"
                   className="h-full w-full p-2 sm:p-4"
@@ -135,7 +135,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/1-ts-packages/1t-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-2 sm:p-4"
@@ -306,7 +306,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                 <div className="grid grid-cols-1 gap-8">
                   <Card>
                     <Link
-                      href="/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/tutorials/4-gradle/1g-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Java"
                       className="h-full w-full p-2 sm:p-4"
@@ -334,7 +334,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
                   </Card>
                   <Card>
                     <Link
-                      href="/getting-started/tutorials/angular-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                      href="/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                       prefetch={false}
                       title="Nx with Angular"
                       className="h-full w-full p-2 sm:p-4"
@@ -475,7 +475,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/react-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with React"
                   className="h-full w-full p-2 sm:p-4"
@@ -633,7 +633,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
             <div className="grid grid-cols-6 gap-4 sm:grid-cols-8 md:grid-cols-12">
               <Card>
                 <Link
-                  href="/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/4-gradle/1g-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Gradle"
                   className="h-full w-full p-2 sm:p-4"
@@ -661,7 +661,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/typescript-packages-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/1-ts-packages/1t-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Typescript"
                   className="h-full w-full p-2 sm:p-4"
@@ -801,7 +801,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/gradle-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/4-gradle/1g-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Java"
                   className="h-full w-full p-2 sm:p-4"
@@ -829,7 +829,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/angular-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/3-angular-monorepo/1a-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with Angular"
                   className="h-full w-full p-2 sm:p-4"
@@ -913,7 +913,7 @@ export function SmarterToolsForMonorepos(): JSX.Element {
               </Card>
               <Card>
                 <Link
-                  href="/getting-started/tutorials/react-monorepo-tutorial?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
+                  href="/tutorials/2-react-monorepo/1r-introduction/1-welcome?utm_medium=website&utm_campaign=homepage_links&utm_content=cta_smarter_tools_techlink"
                   prefetch={false}
                   title="Nx with React"
                   className="h-full w-full p-2 sm:p-4"

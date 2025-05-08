@@ -1,0 +1,116 @@
+---
+type: lesson
+title: Run Tasks
+---
+
+## Run Tasks
+
+Nx is a task runner built for monorepos. It can run a single task for a single project, a task for all projects, and
+even intelligently run a subset of tasks based on the changes you've made in your repository. Nx also has sophisticated
+computation caching to reuse the results of tasks. We will explore how Nx adds to the task running Gradle provides.
+
+Before we start running tasks, let's explore the tasks available for the `application` project. The `@nx/gradle` plugin
+that we've installed reflects Gradle's tasks to Nx, which allows it to run any of the Gradle tasks defined for that project. You can view the available tasks either through [Nx Console](/getting-started/editor-setup) or from the terminal:
+
+```shell no-run
+./nx show project application --web
+```
+
+import { ProjectDetails } from '@nx/nx-dev/ui-markdoc';
+
+<div class="my-5">
+  <ProjectDetails
+    client:load
+    title="Project Details View"
+    jsonFile="shared/tutorials/gradle-pdv.json"
+    expandedTargets={['build']}
+    height="520px"
+  />
+</div>
+
+The Nx command to run the `build` task for the `application` project is:
+
+```shell no-run
+./nx run application:build
+```
+
+When Nx runs a Gradle task, it hands off the execution of that task to Gradle, so all task dependencies and
+configuration settings in the Gradle configuration are still respected.
+
+By running the task via Nx, however, the task computation was cached for reuse. Now, running `./nx run application:build`
+again, will complete almost instantly as the result from the previous execution will be used.
+
+```shell no-run
+./nx run application:build
+```
+
+```
+
+   ✔  1/1 dependent project tasks succeeded [1 read from cache]
+
+   Hint: you can run the command with --verbose to see the full dependent project outputs
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+
+> nx run application:classes  [existing outputs match the cache, left as is]
+
+> ./gradlew :application:classes
+
+> Task :library:compileJava UP-TO-DATE
+> Task :library:processResources NO-SOURCE
+> Task :library:classes UP-TO-DATE
+> Task :library:jar UP-TO-DATE
+> Task :application:compileJava UP-TO-DATE
+> Task :application:processResources UP-TO-DATE
+> Task :application:classes UP-TO-DATE
+
+BUILD SUCCESSFUL in 647ms
+4 actionable tasks: 4 up-to-date
+
+> nx run application:build  [existing outputs match the cache, left as is]
+
+> ./gradlew :application:build
+
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.5/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 768ms
+9 actionable tasks: 1 executed, 8 up-to-date
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ NX   Successfully ran target build for project application and 3 tasks it depends on (30ms)
+
+Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
+```
+
+Now that we've run one task, let's run all the `build` tasks in the repository with the Nx `run-many` command. This is similar to Gradle's `./gradlew build` command.
+
+```shell no-run
+./nx run-many -t build
+```
+
+```
+
+   ✔  nx run library:classes  [existing outputs match the cache, left as is]
+   ✔  nx run library:build  [existing outputs match the cache, left as is]
+   ✔  nx run application:classes  [existing outputs match the cache, left as is]
+   ✔  nx run application:build  [existing outputs match the cache, left as is]
+   ✔  nx run gradle-tutorial:classes (1s)
+   ✔  nx run gradle-tutorial:build (1s)
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ NX   Successfully ran target build for 3 projects and 3 tasks they depend on (2s)
+
+Nx read the output from the cache instead of running the command for 4 out of 6 tasks.
+```
+
+Again, because Nx cached the tasks when the application was built, most of the tasks here were near instant. The only
+ones which needed to be done is the root project's build. Running the command one more time, will be near instant as
+then all the tasks will be restored from the cache.

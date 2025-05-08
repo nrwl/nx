@@ -2,7 +2,7 @@
 title: 'Create Your Own create-react-app CLI'
 slug: 'create-your-own-create-react-app-cli'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.png'
+cover_image: '/blog/images/2023-08-10/j2QU-hjxt-1krFST8CGFiA.avif'
 tags: [nx]
 description: Build a custom create-react-app CLI with Nx plugins, including workspace setup, Verdaccio testing, and project template customization for a branded React app scaffolding experience.
 ---
@@ -636,7 +636,7 @@ This should give you a good insight into how to get started. But there's more to
 - We could also include "[executors](/extending-nx/recipes/local-executors)", which are wrappers around tasks to abstract the lower-level details of it
 - etc.
 
-Now clearly this was a simple example of how you could build your own CRA using Nx. If you want to see a real-world React setup powered by Nx, check out our React Tutorial: [/getting-started/tutorials/react-monorepo-tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+Now clearly this was a simple example of how you could build your own CRA using Nx. If you want to see a real-world React setup powered by Nx, check out our React Tutorial: [/tutorials/2-react-monorepo/1r-introduction/1-welcome](/tutorials/2-react-monorepo/1r-introduction/1-welcome)
 
 ## Learn more
 

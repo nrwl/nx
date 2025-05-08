@@ -6,15 +6,15 @@ import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 
 // Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<() => void> = [];
+const pseudoTerminalShutdownCallbacks: Array<(s?: NodeJS.Signals) => void> = [];
 process.on('SIGINT', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGINT'));
 });
 process.on('SIGTERM', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGTERM'));
 });
 process.on('SIGHUP', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGHUP'));
 });
 process.on('exit', () => {
   pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
@@ -40,6 +40,8 @@ export class PseudoTerminal {
 
   private initialized: boolean = false;
 
+  private childProcesses = new Set<PseudoTtyProcess>();
+
   static isSupported() {
     return process.stdout.isTTY && supportedPtyPlatform();
   }
@@ -54,7 +56,12 @@ export class PseudoTerminal {
     this.initialized = true;
   }
 
-  shutdown() {
+  shutdown(s?: NodeJS.Signals) {
+    for (const cp of this.childProcesses) {
+      try {
+        cp.kill(s);
+      } catch {}
+    }
     if (this.initialized) {
       this.pseudoIPC.close();
     }
@@ -76,7 +83,7 @@ export class PseudoTerminal {
       tty?: boolean;
     } = {}
   ) {
-    return new PseudoTtyProcess(
+    const cp = new PseudoTtyProcess(
       this.rustPseudoTerminal,
       this.rustPseudoTerminal.runCommand(
         command,
@@ -87,6 +94,8 @@ export class PseudoTerminal {
         tty
       )
     );
+    this.childProcesses.add(cp);
+    return cp;
   }
 
   async fork(
@@ -97,11 +106,13 @@ export class PseudoTerminal {
       execArgv,
       jsEnv,
       quiet,
+      commandLabel,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
+      commandLabel?: string;
     }
   ) {
     if (!this.initialized) {
@@ -116,11 +127,13 @@ export class PseudoTerminal {
         cwd,
         jsEnv,
         execArgv,
-        quiet
+        quiet,
+        commandLabel
       ),
       id,
       this.pseudoIPC
     );
+    this.childProcesses.add(cp);
 
     await this.pseudoIPC.waitForChildReady(id);
 
@@ -179,10 +192,10 @@ export class PseudoTtyProcess implements RunningTask {
     this.outputCallbacks.push(callback);
   }
 
-  kill(): void {
+  kill(s?: NodeJS.Signals): void {
     if (this.isAlive) {
       try {
-        this.childProcess.kill();
+        this.childProcess.kill(s);
       } catch {
         // when the child process completes before we explicitly call kill, this will throw
         // do nothing

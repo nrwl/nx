@@ -5,7 +5,7 @@ date: 2025-04-16
 slug: 'are-monorepos-the-answer-to-better-aiassisted-development'
 authors: ['Victor Savkin', 'Max Kless']
 tags: [webinar]
-cover_image: /blog/images/2025-04-30/April-2025-Webinar-Card.png
+cover_image: /blog/images/2025-04-30/April-2025-Webinar-Card.avif
 time: 10:30am ET/2:30pm UTC
 status: Upcoming
 registrationUrl: https://go.nx.dev/april2025-webinar

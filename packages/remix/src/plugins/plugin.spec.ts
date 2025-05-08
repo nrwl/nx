@@ -96,7 +96,6 @@ module.exports = {
             devTargetName: 'dev',
             startTargetName: 'start',
             typecheckTargetName: 'typecheck',
-            staticServeTargetName: 'static-serve',
           },
           context
         );
@@ -160,7 +159,6 @@ module.exports = {
             devTargetName: 'dev',
             startTargetName: 'start',
             typecheckTargetName: 'tsc',
-            staticServeTargetName: 'static-serve',
           },
           context
         );
@@ -182,7 +180,6 @@ module.exports = {
             devTargetName: 'dev',
             startTargetName: 'start',
             typecheckTargetName: 'tsc',
-            staticServeTargetName: 'static-serve',
           },
           context
         );
@@ -347,7 +344,6 @@ module.exports = {
             devTargetName: 'dev',
             startTargetName: 'start',
             typecheckTargetName: 'typecheck',
-            staticServeTargetName: 'static-serve',
           },
           context
         );
@@ -419,7 +415,6 @@ module.exports = {
             devTargetName: 'dev',
             startTargetName: 'start',
             typecheckTargetName: 'tsc',
-            staticServeTargetName: 'static-serve',
           },
           context
         );

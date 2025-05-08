@@ -2,7 +2,7 @@
 title: 'Nx v14 is out — Here is all you need to know!'
 slug: 'nx-v14-is-out-here-is-all-you-need-to-know'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-02/UAN1p_RMt38_IvB3CRpYTA.png'
+cover_image: '/blog/images/2022-05-02/UAN1p_RMt38_IvB3CRpYTA.avif'
 tags: [nx, release]
 description: Nx v14 delivers enhanced performance, simplified core structure, improved terminal output, local plugins, automated CI, module federation, and React 18 support.
 ---
