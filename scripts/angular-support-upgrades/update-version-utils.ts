@@ -43,7 +43,7 @@ function updateWorkspaceAngularVersionUtils(
   const angularDevkitVersion = packageVersionMap.get('@angular/cli')!;
 
   versionUtilContents = versionUtilContents.replace(
-    /export const angularCliVersion = '~.+';/,
+    /export const angularCliVersion = '.+';/,
     `export const angularCliVersion = '${
       isPrerelease ? angularDevkitVersion : `~${angularDevkitVersion}`
     }';`
