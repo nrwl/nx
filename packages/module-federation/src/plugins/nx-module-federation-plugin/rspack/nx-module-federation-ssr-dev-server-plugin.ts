@@ -130,9 +130,6 @@ export class NxModuleFederationSSRDevServerPlugin
       process.on('exit', () => {
         this.devServerProcess?.kill('SIGKILL');
       });
-      process.on('SIGINT', () => {
-        this.devServerProcess?.kill('SIGKILL');
-      });
       callback();
     });
   }

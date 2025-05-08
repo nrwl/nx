@@ -28,6 +28,7 @@ import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
 import { generateTmpSwcrc } from '../../utils/swc/inline';
 import { isUsingTsSolutionSetup } from '../../utils/typescript/ts-solution-setup';
+import { registerExitHandler } from 'nx/src/utils/signals';
 
 function normalizeOptions(
   options: SwcExecutorOptions,
@@ -186,8 +187,8 @@ export async function* swcExecutor(
 
   if (options.watch) {
     let disposeFn: () => void;
-    process.on('SIGINT', () => disposeFn());
-    process.on('SIGTERM', () => disposeFn());
+    registerExitHandler('SIGINT', (s) => disposeFn());
+    registerExitHandler('SIGTERM', (s) => disposeFn());
 
     return yield* compileSwcWatch(context, options, async () => {
       const assetResult = await copyAssets(options, context);

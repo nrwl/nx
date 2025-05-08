@@ -55,7 +55,6 @@ export function startRemoteProxies(
     const proxyServer = (sslCert ? https : http)
       .createServer({ cert: sslCert, key: sslKey }, expressProxy)
       .listen(appConfig.port);
-    process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
   }
   console.info(`NX Static remotes proxies started successfully`);

@@ -57,9 +57,6 @@ export async function verdaccioExecutor(
     }
   };
   process.on('exit', processExitListener);
-  process.on('SIGTERM', processExitListener);
-  process.on('SIGINT', processExitListener);
-  process.on('SIGHUP', processExitListener);
 
   try {
     await startVerdaccio(options, context.root);

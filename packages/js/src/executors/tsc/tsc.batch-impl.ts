@@ -27,6 +27,7 @@ import {
   watchTaskProjectsPackageJsonFileChanges,
 } from './lib/batch';
 import { createEntryPoints } from '../../utils/package-json/create-entry-points';
+import { registerExitHandler } from 'nx/src/utils/signals';
 
 export async function* tscBatchExecutor(
   taskGraph: TaskGraph,
@@ -150,13 +151,12 @@ export async function* tscBatchExecutor(
         }
       );
 
-    const handleTermination = async (exitCode: number) => {
+    const handleTermination = async () => {
       watchAssetsChangesDisposer();
       watchProjectsChangesDisposer();
-      process.exit(exitCode);
     };
-    process.on('SIGINT', () => handleTermination(128 + 2));
-    process.on('SIGTERM', () => handleTermination(128 + 15));
+    registerExitHandler('SIGINT', (s) => handleTermination());
+    registerExitHandler('SIGTERM', (s) => handleTermination());
 
     return yield* mapAsyncIterable(typescriptCompilation, async (iterator) => {
       // drain the iterator, we don't use the results

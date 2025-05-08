@@ -127,7 +127,6 @@ async function buildHost(
       }
     });
 
-    process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
     process.on('exit', () => staticProcess.kill('SIGTERM'));
   });
 }
@@ -160,9 +159,6 @@ function moveToTmpDirectory(
   const cleanup = () => {
     rmSync(commonOutputDirectory, { force: true, recursive: true });
   };
-  process.on('SIGTERM', () => {
-    cleanup();
-  });
   process.on('exit', () => {
     cleanup();
   });
@@ -210,7 +206,6 @@ export function startProxies(
     const proxyServer = (sslCert ? https : http)
       .createServer({ cert: sslCert, key: sslKey }, expressProxy)
       .listen(staticRemotesConfig.config[app].port);
-    process.on('SIGTERM', () => proxyServer.close());
     process.on('exit', () => proxyServer.close());
   }
   logger.info(`NX Static Producers (remotes) proxies started successfully`);
@@ -236,7 +231,6 @@ export function startProxies(
   const proxyServer = (sslCert ? https : http)
     .createServer({ cert: sslCert, key: sslKey }, expressProxy)
     .listen(hostServeOptions.port);
-  process.on('SIGTERM', () => proxyServer.close());
   process.on('exit', () => proxyServer.close());
   logger.info('NX Static Consumer (host) proxy started successfully');
 }

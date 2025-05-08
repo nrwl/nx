@@ -173,7 +173,7 @@ export async function* esbuildExecutor(
           })
         );
 
-        registerCleanupCallback(() => {
+        process.once('exit', () => {
           assetsResult?.stop();
           packageJsonResult?.stop();
           disposeFns.forEach((fn) => fn());
@@ -267,19 +267,6 @@ async function runTypeCheck(
   }
 
   return { errors, warnings };
-}
-
-function registerCleanupCallback(callback: () => void) {
-  const wrapped = () => {
-    callback();
-    process.off('SIGINT', wrapped);
-    process.off('SIGTERM', wrapped);
-    process.off('exit', wrapped);
-  };
-
-  process.on('SIGINT', wrapped);
-  process.on('SIGTERM', wrapped);
-  process.on('exit', wrapped);
 }
 
 export default esbuildExecutor;

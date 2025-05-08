@@ -70,7 +70,6 @@ function runCliRun(
 
     // Ensure the child process is killed when the parent exits
     process.on('exit', () => childProcess.kill());
-    process.on('SIGTERM', () => childProcess.kill());
 
     childProcess.on('error', (err) => {
       reject(err);

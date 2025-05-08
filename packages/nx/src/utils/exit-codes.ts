@@ -14,3 +14,16 @@ export function signalToCode(signal: NodeJS.Signals): number {
       return 128;
   }
 }
+
+export function codeToSignal(code: number): NodeJS.Signals {
+  switch (code) {
+    case 128 + 1:
+      return 'SIGHUP';
+    case 128 + 2:
+      return 'SIGINT';
+    case 128 + 15:
+      return 'SIGTERM';
+    default:
+      return 'SIGKILL';
+  }
+}

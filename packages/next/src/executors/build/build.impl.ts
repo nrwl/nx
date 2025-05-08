@@ -20,6 +20,7 @@ import { NextBuildBuilderOptions } from '../../utils/types';
 import { ChildProcess, fork } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
 import { signalToCode } from 'nx/src/utils/exit-codes';
+import { registerExitHandler } from 'nx/src/utils/signals';
 
 let childProcess: ChildProcess;
 
@@ -157,12 +158,11 @@ function runCliBuild(
     // Ensure the child process is killed when the parent exits
     process.on('exit', () => childProcess.kill());
 
-    process.on('SIGTERM', (signal) => {
-      reject({ code: signalToCode(signal), signal });
-    });
-    process.on('SIGINT', (signal) => {
-      reject({ code: signalToCode(signal), signal });
-    });
+    for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+      registerExitHandler(signal, () => {
+        reject({ code: signalToCode(signal), signal });
+      });
+    }
 
     childProcess.on('error', (err) => {
       reject({ error: err });

@@ -8,6 +8,7 @@ import { prettyTime } from './pretty-time';
 import { Task } from '../../config/task-graph';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { viewLogsFooterRows } from './view-logs-utils';
+import { registerExitHandler } from '../../utils/signals';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -65,10 +66,7 @@ export async function createRunOneDynamicOutputRenderer({
     }
   }
 
-  process.on('exit', () => clearRenderInterval());
-  process.on('SIGINT', () => clearRenderInterval());
-  process.on('SIGTERM', () => clearRenderInterval());
-  process.on('SIGHUP', () => clearRenderInterval());
+  registerExitHandler('exit', () => clearRenderInterval());
 
   const lifeCycle = {} as Partial<LifeCycle>;
 

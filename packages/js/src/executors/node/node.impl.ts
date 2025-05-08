@@ -22,6 +22,7 @@ import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 import { interpolate } from 'nx/src/tasks-runner/utils';
+import { registerExitHandler } from 'nx/src/utils/signals';
 
 interface ActiveTask {
   id: string;
@@ -233,18 +234,11 @@ export async function* nodeExecutor(
       }
     };
 
-    process.on('SIGTERM', async () => {
-      await stopAllTasks('SIGTERM');
-      process.exit(128 + 15);
-    });
-    process.on('SIGINT', async () => {
-      await stopAllTasks('SIGINT');
-      process.exit(128 + 2);
-    });
-    process.on('SIGHUP', async () => {
-      await stopAllTasks('SIGHUP');
-      process.exit(128 + 1);
-    });
+    for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP'] as const) {
+      registerExitHandler('SIGTERM', async () => {
+        await stopAllTasks(signal);
+      });
+    }
 
     registerCleanup(async () => {
       await stopAllTasks('SIGTERM');
