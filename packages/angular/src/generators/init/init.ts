@@ -62,6 +62,7 @@ function installAngularDevkitCoreIfMissing(
     const pkgVersions = versions(tree);
     const devkitVersion =
       getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
+      getInstalledPackageVersion(tree, '@angular/build') ??
       pkgVersions.angularDevkitVersion;
 
     try {
