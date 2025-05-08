@@ -5,19 +5,8 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "dependsOn": [
-        {
-          "target": "build-base"
-        }
-      ],
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
-        ],
-        "parallel": false
-      },
+      "dependsOn": ["sitemap"],
+      "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts",
       "inputs": [
         "production",
         "^production",
@@ -27,11 +16,9 @@
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
     "sitemap": {
-      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
-      "options": {
-        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
-      }
+      "dependsOn": ["build-base"],
+      "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
     },
     "generate-og-images": {
       "executor": "nx:run-commands",
@@ -43,7 +30,7 @@
     "build-base": {
       "parallelism": false,
       "executor": "@nx/next:build",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "copy-tutorial"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -73,23 +60,21 @@
         "cwd": "nx-dev/nx-dev"
       }
     },
-    "serve-docs": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": [
-          "nx watch --projects=docs,tutorial -- nx run-many -t=copy-docs,copy-tutorial -p nx-dev",
-          "nx run nx-dev:serve"
-        ],
-        "parallel": true
-      }
+    "watch-docs": {
+      "continuous": true,
+      "command": "nx watch --projects=docs,tutorial -- nx run-many -t=copy-docs,copy-tutorial -p nx-dev"
     },
     "start": {
-      "dependsOn": ["build-base"],
+      "continuous": true,
       "command": "nx run nx-dev:serve:production"
+    },
+    "serve-docs": {
+      "continuous": true,
+      "command": "nx run nx-dev:serve"
     },
     "serve": {
       "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs", "copy-tutorial"],
+      "dependsOn": ["copy-docs", "copy-tutorial", "watch-docs"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
