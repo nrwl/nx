@@ -4,20 +4,12 @@ import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
+import { codeToSignal } from '../utils/exit-codes';
 
 // Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<(s?: NodeJS.Signals) => void> = [];
-process.on('SIGINT', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGINT'));
-});
-process.on('SIGTERM', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGTERM'));
-});
-process.on('SIGHUP', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGHUP'));
-});
-process.on('exit', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
+process.on('exit', (code) => {
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb(code));
 });
 
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
@@ -56,10 +48,10 @@ export class PseudoTerminal {
     this.initialized = true;
   }
 
-  shutdown(s?: NodeJS.Signals) {
+  shutdown(code: number) {
     for (const cp of this.childProcesses) {
       try {
-        cp.kill(s);
+        cp.kill(codeToSignal(code));
       } catch {}
     }
     if (this.initialized) {
