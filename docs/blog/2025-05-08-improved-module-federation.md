@@ -5,6 +5,7 @@ authors: ['Colum Ferry']
 tags: ['nx', 'module-federation']
 cover_image: /blog/images/2025-05-08/module-federation.avif
 description: 'Nx 21 introduces native support for Module Federation with Inferred Tasks and Continuous Tasks, enabling streamlined Rspack configs and seamless multi-app serving for improved developer experience.'
+pinned: true
 ---
 
 {% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}
