@@ -3,9 +3,9 @@ title: 'Continuous tasks are a huge DX improvement'
 slug: nx-21-continuous-tasks
 authors: ['Philip Fulcher']
 tags: ['nx']
-cover_image: /blog/images/2025-05-07/continuous-tasks.avif
+cover_image: /blog/images/2025-05-09/continuous-tasks.avif
 description: 'Learn how to use continuous tasks in Nx 21 to improve your developer experience.'
-youtubeUrl: https://youtu.be/y1Q1QSBEsuA
+youtubeUrl: https://youtu.be/AD51BKJtDBk
 ---
 
 {% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}
@@ -13,9 +13,10 @@ youtubeUrl: https://youtu.be/y1Q1QSBEsuA
 This article is part of the Nx 21 Launch Week series:
 
 - [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
+- [Introducing Migrate UI in Nx Console](/blog/migrate-ui)
+- [New and Improved Module Federation Experience](/blog/improved-module-federation)
 - **Continuous tasks are a huge DX improvement**
 - [A New UI For The Humble Terminal](/blog/nx-21-terminal-ui)
-- Migrate UI
 
 {% /callout %}
 
@@ -106,43 +107,9 @@ The `frontend:dev` task now depends on `api:serve`. We must also ensure the `api
 
 Now running `frontend:dev` will also result in the `api:serve` starting in parallel. If we look at the task graph using Nx Console or `nx graph`, we'll see the new task pipeline:
 
-![Graph showing connections between frontend and backend serve tasks](/blog/images/2025-05-07/frontend-to-backend.avif)
+![Graph showing connections between frontend and backend serve tasks](/blog/images/2025-05-09/frontend-to-backend.avif)
 
-## e2e depends on frontend serve
-
-e2e tests often already trigger the application server when they run, but if they don't, continuous tasks can help with that. If the e2e project is separate from the application, you can add the dependency there:
-
-```json {% fileName="apps/frontend-e2e/package.json" %}
-{
-  "name": "frontend-e2e",
-  ...
-  "nx": {
-    "targets": {
-      "e2e": {
-        "dependsOn": [{ "projects": ["frontend"], "target": "serve" }]
-      }
-    }
-  }
-}
-```
-
-If the frontend has different ways of serving the project, such as `dev`, `serve`, or `serve-static`, be sure to add those dependencies as well. Since our e2e relies on `serve` rather than `dev`, add a dependency from `frontend:dev` to `api:serve` to ensure that the `api` is also served during e2e tests.
-
-```json {% fileName="apps/frontend/package.json" %}
-{
-  "nx": {
-    "name": "frontend",
-    "targets": {
-      "dev": {
-        "dependsOn": [{ "projects": ["api"], "target": "serve" }]
-      },
-      "serve": {
-        "dependsOn": [{ "projects": ["api"], "target": "serve" }]
-      }
-    }
-  }
-}
-```
+In addition to making for a great local development experience, e2e test suites that also run `frontend:dev` will have the same experience. The frontend and backend will be served at the same time, making e2e tests easier to run locally.
 
 ## Configuring custom commands as continuous
 
@@ -249,7 +216,7 @@ Since our backend project has its own codegen target, it needs to depend on both
 
 We've covered a few different scenarios here, and the [video shows them all working inside an actual workspace](https://youtu.be/y1Q1QSBEsuA). We can visualize the task graph that we've just created to see how much we've accomplished:
 
-![Graph showing connections between frontend and backend serve tasks as well as watch-codegen tasks](/blog/images/2025-05-07/watch-codegen.avif)
+![Graph showing connections between frontend and backend serve tasks as well as watch-codegen tasks](/blog/images/2025-05-09/watch-codegen.avif)
 
 Now, developers can run `npx nx dev frontend` and have the `api:serve` and `watch-codegen` tasks run. One command, one terminal, and they are ready to work immediately. No more fumbling through multiple terminals or creating your own solution to the problem. Nx provides the tools to improve your developer experience.
 

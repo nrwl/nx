@@ -3,7 +3,7 @@ title: 'A New UI For The Humble Terminal'
 slug: nx-21-terminal-ui
 authors: ['Mike Hartington']
 tags: ['nx']
-cover_image: /blog/images/2025-05-07/terminal-ui.avif
+cover_image: /blog/images/2025-05-09/terminal-ui.avif
 description: 'Nx 21 introduces the new Terminal UI, an elegant way of viewing log output from multiple running tasks.'
 youtubeUrl: https://youtu.be/ykaMAh83fPM
 ---
@@ -13,9 +13,10 @@ youtubeUrl: https://youtu.be/ykaMAh83fPM
 This article is part of the Nx 21 Launch Week series:
 
 - [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
+- [Introducing Migrate UI in Nx Console](/blog/migrate-ui)
+- [New and Improved Module Federation Experience](/blog/improved-module-federation)
 - [Continuous tasks are a huge DX improvement](/blog/nx-21-continuous-tasks)
 - **A New UI For The Humble Terminal**
-- Migrate UI
 
 {% /callout %}
 
@@ -31,7 +32,7 @@ Great question! Why spend time on a terminal? Well, the terminal is the starting
 
 Let's first look at how the terminal behaves in Nx 20 and below. In a project with multiple packages, if you run `nx run-many`, what you'll first notice is that you get all the output from any continuous tasks mixed together in one giant stream. This is very typical in most terminal programs, but with monorepos it's not ideal. For instance, let's say we have a build error in one of our projects:
 
-{% video-player src="/documentation/blog/media/2025-05-07/old-tui.mp4" alt="Showing the previous terminal experience for Nx" autoPlay=true loop=true  /%}
+{% video-player src="/documentation/blog/media/2025-05-09/old-tui.mp4" alt="Showing the previous terminal experience for Nx" autoPlay=true loop=true  /%}
 
 It might be hard to notice that we had the error if we have multiple tasks being run, so unless we scroll up, we could miss it. This might sound trivial, but it's an annoyance that doesn't have to happen. It's also difficult to separate tasks that are continuous and those that have an ending.
 
@@ -39,7 +40,7 @@ It might be hard to notice that we had the error if we have multiple tasks being
 
 With the Rust migration, we've been looking at the Rust ecosystem and noticed how many terminal-based programs seem to provide a great TUI. For example, if we wanted a resource monitor that was written in Rust, there is `btop`, and it looks awesome:
 
-![Screenshot showing the resource monitor btop](/blog/images/2025-05-07/btop.avif)
+![Screenshot showing the resource monitor btop](/blog/images/2025-05-09/btop.avif)
 
 This led us to the Rust package [`ratatui`](https://ratatui.rs/), a Rust library for building TUIs. Ratatui provides common building blocks and hooks for working with terminal programs. With Ratatui, we went ahead and rebuilt our TUI with the following goals:
 
@@ -49,7 +50,7 @@ This led us to the Rust package [`ratatui`](https://ratatui.rs/), a Rust library
 
 So let's see what we've built:
 
-![Screenshot of the Terminal UI for Nx](/blog/images/2025-05-07/tui.avif)
+![Screenshot of the Terminal UI for Nx](/blog/images/2025-05-09/tui.avif)
 
 There are a few things going on here, so let's walk you through it.
 
@@ -59,19 +60,19 @@ One of the things you may notice is that instead of a stream of output, you're p
 
 To inspect a task and its output, you can press `Space` to open a new window with all of the output from that given task. If that output has a lot of content and you'd like to see something further up, you can hit `Tab` and then use the arrow keys to scroll up and down in the output.
 
-![Screenshot of Nx Terminal UI showing how multiple running tasks appear in the sidebar](/blog/images/2025-05-07/multiple-tasks.avif)
+![Screenshot of Nx Terminal UI showing how multiple running tasks appear in the sidebar](/blog/images/2025-05-09/multiple-tasks.avif)
 
 If you have a lot of projects being run, and you'd like to filter the list of tasks, you can press `/` and type the project you're looking for.
 
-![Screenshot of Nx Terminal UI showing how filters reduce the number of tasks visible](/blog/images/2025-05-07/filter.avif)
+![Screenshot of Nx Terminal UI showing how filters reduce the number of tasks visible](/blog/images/2025-05-09/filter.avif)
 
 And finally, if there's a particular project that you'd like to constantly see the output for, you can pin the output by pressing `1` or `2`.
 
-![Screenshot of Nx Terminal UI showing how pinning tabs results in their logs being visible](/blog/images/2025-05-07/pins.avif)
+![Screenshot of Nx Terminal UI showing how pinning tabs results in their logs being visible](/blog/images/2025-05-09/pins.avif)
 
 Now there are more key bindings in this new TUI, and to see them all, you can use the `?` key.
 
-![Screenshot of Nx Terminal UI's help screen](/blog/images/2025-05-07/help.avif)
+![Screenshot of Nx Terminal UI's help screen](/blog/images/2025-05-09/help.avif)
 
 ## Parting Thoughts
 
