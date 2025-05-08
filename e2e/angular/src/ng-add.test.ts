@@ -180,7 +180,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(projectConfig.targets.build).toStrictEqual({
       executor: '@angular/build:application',
       options: {
-        index: `apps/${project}/src/index.html`,
         browser: `apps/${project}/src/main.ts`,
         polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
