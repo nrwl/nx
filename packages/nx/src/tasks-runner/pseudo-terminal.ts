@@ -7,23 +7,38 @@ import { RunningTask } from './running-tasks/running-task';
 
 // Register single event listeners for all pseudo-terminal instances
 const pseudoTerminalShutdownCallbacks: Array<(s?: NodeJS.Signals) => void> = [];
-process.on('SIGINT', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGINT'));
-});
-process.on('SIGTERM', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGTERM'));
-});
-process.on('SIGHUP', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGHUP'));
-});
-process.on('exit', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
-});
+let pseudoTerminalEventListenersRegistered = false;
+
+/**
+ * These event listeners are required to be in a function to ensure they are only registered once
+ * Otherwise, they will be registered multiple times across multiple processes
+ * If they are the only event listeners registered for the signal, then they will prevent default
+ * signal handling from node and prevent processes from exiting correctly.
+ */
+function registerPseudoTerminalEventListeners() {
+  if (pseudoTerminalEventListenersRegistered) {
+    return;
+  }
+  process.on('SIGINT', () => {
+    pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGINT'));
+  });
+  process.on('SIGTERM', () => {
+    pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGTERM'));
+  });
+  process.on('SIGHUP', () => {
+    pseudoTerminalShutdownCallbacks.forEach((cb) => cb('SIGHUP'));
+  });
+  process.on('exit', () => {
+    pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+  });
+  pseudoTerminalEventListenersRegistered = true;
+}
 
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
   if (!skipSupportCheck && !PseudoTerminal.isSupported()) {
     throw new Error('Pseudo terminal is not supported on this platform.');
   }
+  registerPseudoTerminalEventListeners();
   const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal());
   pseudoTerminalShutdownCallbacks.push(
     pseudoTerminal.shutdown.bind(pseudoTerminal)
@@ -32,6 +47,7 @@ export function createPseudoTerminal(skipSupportCheck: boolean = false) {
 }
 
 let id = 0;
+
 export class PseudoTerminal {
   private pseudoIPCPath = getForkedProcessOsSocketPath(
     process.pid.toString() + '-' + id++
