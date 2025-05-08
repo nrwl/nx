@@ -17,6 +17,7 @@ export default async function* extractI18nExecutor(
     buildTargetProjectConfiguration.targets[parsedBuildTarget.target];
 
   const isUsingEsbuildBuilder = [
+    '@angular/build:application',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:application',

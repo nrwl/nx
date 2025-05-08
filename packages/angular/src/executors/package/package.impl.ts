@@ -55,6 +55,11 @@ export function createLibraryExecutor(
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
+    options.project ??= join(
+      context.projectsConfigurations.projects[context.projectName].root,
+      'ng-package.json'
+    );
+
     const { dependencies } = calculateProjectBuildableDependencies(
       context.taskGraph,
       context.projectGraph,

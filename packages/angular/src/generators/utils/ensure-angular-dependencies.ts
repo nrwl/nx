@@ -41,10 +41,9 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     dependencies['zone.js'] = zoneJsVersion;
   }
 
-  const installedAngularDevkitVersion = getInstalledPackageVersion(
-    tree,
-    '@angular-devkit/build-angular'
-  );
+  const installedAngularDevkitVersion =
+    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
+    getInstalledPackageVersion(tree, '@angular/build');
   if (!installedAngularDevkitVersion) {
     /**
      * If `@angular-devkit/build-angular` is already installed, we assume the workspace

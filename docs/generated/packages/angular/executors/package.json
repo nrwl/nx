@@ -39,10 +39,7 @@
         "description": "Enable and define the file watching poll time period in milliseconds."
       }
     },
-    "additionalProperties": false,
-    "required": [
-      "project"
-    ]
+    "additionalProperties": false
   },
   "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.",
   "aliases": [],
