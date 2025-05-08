@@ -93,7 +93,7 @@ fun getInputsForTask(
     val mappedInputsIncludeExternal: MutableList<Any> = mutableListOf()
     val inputs = task.inputs
     val externalDependencies = mutableListOf<String>()
-    inputs.sourceFiles.forEach { file ->
+    inputs.files.forEach { file ->
       val path: String = file.path
       // replace the absolute path to contain {projectRoot} or {workspaceRoot}
       val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
@@ -181,12 +181,7 @@ fun getDependsOnForTask(
 
       // Check if this task name needs to be overridden
       val taskName = targetNameOverrides.getOrDefault(depTask.name + "TargetName", depTask.name)
-      val overriddenTaskName =
-          if (depProject == taskProject) {
-            taskName
-          } else {
-            "${depProject.name}:${taskName}"
-          }
+      val overriddenTaskName = "${depProject.name}:${taskName}"
 
       overriddenTaskName
     }

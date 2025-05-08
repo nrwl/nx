@@ -53,7 +53,7 @@ export async function getNxProjectGraphLines(
           [
             gradlewFile,
             new Error(
-              `Could not run 'nxProjectGraph' task. Please run 'nx generate @nx/gradle:init' to generate the necessary tasks.\n\r${e.toString()}`
+              `Could not run 'nxProjectGraph' task. Please run 'nx generate @nx/gradle:init' to add the necessary plugin dev.nx.gradle.project-graph.\n\r${e.toString()}`
             ),
           ],
         ],
