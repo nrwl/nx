@@ -230,7 +230,6 @@ describe('release publishable libraries', () => {
       XXX.XXX kb fesm2022/proj-{project-name}.mjs
       XXX.XXX kb fesm2022/proj-{project-name}.mjs.map
       XXB index.d.ts
-      XXB lib/{project-name}/{project-name}.component.d.ts
       XXXB package.json
       === Tarball Details ===
       name:          @proj/{project-name}

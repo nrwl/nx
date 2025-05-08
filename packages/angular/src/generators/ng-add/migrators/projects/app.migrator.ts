@@ -34,6 +34,7 @@ type SupportedTargets =
 const supportedTargets: Record<SupportedTargets, Target> = {
   build: {
     builders: [
+      '@angular/build:application',
       '@angular-devkit/build-angular:application',
       '@angular-devkit/build-angular:browser',
       '@angular-devkit/build-angular:browser-esbuild',
@@ -46,14 +47,24 @@ const supportedTargets: Record<SupportedTargets, Target> = {
       '@cypress/schematic:cypress',
     ],
   },
-  i18n: { builders: ['@angular-devkit/build-angular:extract-i18n'] },
+  i18n: {
+    builders: [
+      '@angular/build:extract-i18n',
+      '@angular-devkit/build-angular:extract-i18n',
+    ],
+  },
   prerender: {
     builders: [
       '@nguniversal/builders:prerender',
       '@angular-devkit/build-angular:prerender',
     ],
   },
-  serve: { builders: ['@angular-devkit/build-angular:dev-server'] },
+  serve: {
+    builders: [
+      '@angular/build:dev-server',
+      '@angular-devkit/build-angular:dev-server',
+    ],
+  },
   server: { builders: ['@angular-devkit/build-angular:server'] },
   serveSsr: {
     builders: [

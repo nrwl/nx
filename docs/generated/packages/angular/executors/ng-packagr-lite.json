@@ -37,8 +37,7 @@
         "description": "Enable and define the file watching poll time period in milliseconds."
       }
     },
-    "additionalProperties": false,
-    "required": ["project"]
+    "additionalProperties": false
   },
   "description": "Builds an Angular library with support for incremental builds.\n\nThis executor is meant to be used with buildable libraries in an incremental build scenario. It is similar to the `@nx/angular:package` executor but it only produces ESM2022 bundles.",
   "aliases": [],
