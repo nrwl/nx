@@ -153,6 +153,7 @@ export function executeDevServerBuilder(
 
   const delegateBuilderOptions = getDelegateBuilderOptions(options);
   const isUsingWebpackBuilder = ![
+    '@angular/build:application',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:application',
