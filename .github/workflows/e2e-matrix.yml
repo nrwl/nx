@@ -67,10 +67,15 @@ jobs:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Ensure Python setuptools Installed on Macos
+      - name: Setup Python for MacOS
         if: ${{ matrix.os == 'macos-latest' }}
-        id: brew-install-python-setuptools
-        run: brew install python-setuptools
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install Python dependencies
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: pip install setuptools wheel
 
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true'
@@ -81,15 +86,20 @@ jobs:
         id: homebrew-cache-dir-path
         run: echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
 
+
       - name: Cache Homebrew
         if: ${{ matrix.os == 'macos-latest' }}
         uses: actions/cache@v4
         with:
-          lookup-only: true
-          path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
-          key: brew-${{ matrix.node_version }}
+          path: |
+            ${{ steps.homebrew-cache-dir-path.outputs.dir }}
+            /usr/local/Homebrew
+            /usr/local/Caskroom
+            /usr/local/Cellar
+            /opt/homebrew/Library/Taps/wix/homebrew-brew
+          key: ${{ runner.os }}-brew-${{ matrix.node_version }}-${{ hashFiles('**/package.json') }}
           restore-keys: |
-            brew-
+            ${{ runner.os }}-brew-
 
       - name: Cache Cypress
         id: cache-cypress
@@ -148,6 +158,12 @@ jobs:
           version: 9.8.0
           run_install: false
 
+      - name: Install bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v4
         with:
@@ -185,10 +201,15 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' }}
         uses: actions/cache@v4
         with:
-          path: ${{ steps.homebrew-cache-dir-path.outputs.dir }}
-          key: brew-${{ matrix.node_version }}
+          path: |
+            ${{ steps.homebrew-cache-dir-path.outputs.dir }}
+            /usr/local/Homebrew
+            /usr/local/Caskroom
+            /usr/local/Cellar
+            /opt/homebrew/Library/Taps/wix/homebrew-brew
+          key: ${{ runner.os }}-brew-${{ matrix.node_version }}-${{ hashFiles('**/package.json') }}
           restore-keys: |
-            brew-
+            ${{ runner.os }}-brew-
 
       - name: Cache Cypress
         id: cache-cypress
@@ -200,13 +221,51 @@ jobs:
       - name: Install Cypress
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
-
-      - name: Install applesimutils, reset ios simulators
+      
+      - name: Diagnostic Info (MacOS)
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-          xcrun simctl shutdown all && xcrun simctl erase all
+          echo "==== System Info ===="
+          sw_vers
+          echo "==== Disk Space ===="
+          df -h
+          echo "==== Node Info ===="
+          node -v
+          npm -v 
+          echo "==== Homebrew Info ===="
+          brew config
+          echo "==== Xcode Info ===="
+          xcodebuild -version
+          xcrun simctl list
+        
+      - name: Install AppleSimUtils
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          set -e
+          if ! command -v applesimutils >/dev/null; then
+            echo "Installing applesimutils..."
+            # Try using the tap first
+            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew || true
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install --quiet applesimutils || {
+              # Fallback to direct installation if tap fails
+              curl -L https://github.com/wix/AppleSimulatorUtils/releases/download/0.9.2/AppleSimulatorUtils-0.9.2.tar.gz -o AppleSimulatorUtils.tar.gz
+              tar -xzf AppleSimulatorUtils.tar.gz
+              cd AppleSimulatorUtils
+              ./buildForBrew.sh
+              HOMEBREW_NO_AUTO_UPDATE=1 brew install --quiet applesimutils
+            }
+          fi
+          applesimutils --version
+
+      - name: Reset iOS Simulators
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          set +e  # Don't fail if these commands error
+          echo "Shutting down and resetting iOS simulators..."
+          xcrun simctl list devices
+          xcrun simctl shutdown all 2>/dev/null || true
+          xcrun simctl erase all 2>/dev/null || true
+          echo "Simulator reset completed"
 
       - name: Configure git metadata (needed for lerna smoke tests)
         run: |
@@ -219,8 +278,9 @@ jobs:
         run: |
           echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
 
-      - name: Run e2e tests
-        id: e2e-run
+      - name: Run e2e tests with pnpm (Linux/Windows)
+        id: e2e-run-pnpm
+        if: ${{ matrix.os != 'macos-latest' }}
         run: pnpm nx run ${{ matrix.project }}:e2e-local
         shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
@@ -237,6 +297,31 @@ jobs:
           SELECTED_PM: ${{ matrix.package_manager }}
           npm_config_registry: http://localhost:4872
           YARN_REGISTRY: http://localhost:4872
+          CI: true
+      
+      - name: Run e2e tests with npm (macOS)
+        id: e2e-run-npm
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: npx nx run ${{ matrix.project }}:e2e-local
+        shell: bash
+        timeout-minutes: ${{ matrix.os_timeout }}
+        env:
+          NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-npm
+          NX_DAEMON: 'true'
+          NX_PERF_LOGGING: 'false'
+          NX_E2E_VERBOSE_LOGGING: 'true'
+          NX_NATIVE_LOGGING: 'false'
+          NX_E2E_RUN_E2E: 'true'
+          NX_CLOUD_NO_TIMEOUTS: 'true'
+          NX_E2E_SKIP_CLEANUP: 'true'
+          NODE_OPTIONS: --max_old_space_size=8192
+          SELECTED_PM: 'npm'
+          npm_config_registry: http://localhost:4872
+          YARN_REGISTRY: http://localhost:4872
+          DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
+          NSUnbufferedIO: 'YES'
+          CI: true
+        
 
       - name: Save matrix config in file
         if: ${{ always() }}
@@ -246,9 +331,13 @@ jobs:
           before=${{ steps.before-e2e.outputs.timestamp }}
           now=$(date +%s)
           delta=$(($now - $before))
+          
+          # Determine the outcome based on which step ran
+          outcome="${{ matrix.os == 'macos-latest' && steps.e2e-run-npm.outcome || steps.e2e-run-pnpm.outcome }}"
+          
           matrix=$((
             echo '${{ toJSON(matrix) }}'
-          ) | jq --argjson delta $delta -c '. + { "status": "${{ steps.e2e-run.outcome}}", "duration": $delta }')
+          ) | jq --argjson delta $delta -c '. + { "status": "'"$outcome"'", "duration": $delta }')
           echo "$matrix" > 'outputs/matrix.json'
 
       - name: Upload matrix config
