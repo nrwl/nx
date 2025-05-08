@@ -1590,5 +1590,14 @@
       "name": "Prepare applications for deployment via CI",
       "path": "/ci/recipes/other/ci-deployment"
     }
+  ],
+  "affected": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/nx-api/nx/documents/affected"
+    }
   ]
 }
