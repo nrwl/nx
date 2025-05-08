@@ -525,6 +525,11 @@
     "url": "https://github.com/juliangsibecas/nx-foundry"
   },
   {
+    "name": "@robby-rabbitman/nx-plus-web-test-runner",
+    "description": "Web Test Runner plugin for Nx workspaces.",
+    "url": "https://github.com/RobbyRabbitman/nx-plus/tree/main/libs/web-test-runner"
+  },
+  {
     "name": "@aws/nx-plugin",
     "description": "Nx Plugin for AWS: Accelerate building cloud-native applications with AWS",
     "url": "https://github.com/awslabs/nx-plugin-for-aws"

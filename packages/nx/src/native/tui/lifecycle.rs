@@ -4,14 +4,13 @@ use napi::JsObject;
 use std::sync::{Arc, Mutex};
 use tracing::debug;
 
-use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
-use crate::native::tasks::types::{Task, TaskResult};
-
 use super::app::App;
 use super::components::tasks_list::TaskStatus;
 use super::config::{AutoExit, TuiCliArgs as RustTuiCliArgs, TuiConfig as RustTuiConfig};
 use super::tui::Tui;
+use crate::native::logger::enable_logger;
+use crate::native::pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc};
+use crate::native::tasks::types::{Task, TaskResult};
 
 #[napi(object)]
 #[derive(Clone)]
@@ -49,7 +48,7 @@ impl From<(TuiConfig, &RustTuiCliArgs)> for RustTuiConfig {
             Either::B(int_value) => AutoExit::Integer(int_value),
         });
         // Pass the converted JSON config value(s) and cli_args to instantiate the config with
-        RustTuiConfig::new(js_auto_exit, &rust_tui_cli_args)
+        RustTuiConfig::new(js_auto_exit, rust_tui_cli_args)
     }
 }
 
@@ -88,7 +87,7 @@ impl AppLifeCycle {
         Self {
             app: Arc::new(std::sync::Mutex::new(
                 App::new(
-                    tasks.into_iter().map(|t| t.into()).collect(),
+                    tasks.into_iter().collect(),
                     initiating_tasks,
                     run_mode,
                     pinned_tasks,
@@ -162,8 +161,8 @@ impl AppLifeCycle {
         &self,
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
-        debug!("Initializing Terminal UI");
         enable_logger();
+        debug!("Initializing Terminal UI");
 
         let app_mutex = self.app.clone();
 
@@ -261,9 +260,12 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn append_task_output(&mut self, task_id: String, output: String) {
-        let mut app = self.app.lock().unwrap();
-        app.append_task_output(task_id, output)
+    pub fn append_task_output(&mut self, task_id: String, output: String, is_pty_output: bool) {
+        // If its from a pty, we already have it in the parser, so we don't need to append it again
+        if !is_pty_output {
+            let mut app = self.app.lock().unwrap();
+            app.append_task_output(task_id, output)
+        }
     }
 
     #[napi]
@@ -287,7 +289,7 @@ impl AppLifeCycle {
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
         if let Ok(mut app) = self.app.lock() {
-            let _ = app.set_cloud_message(Some(message));
+            app.set_cloud_message(Some(message));
         }
         Ok(())
     }

@@ -4,7 +4,7 @@ use tracing::trace;
 
 use super::child_process::ChildProcess;
 use super::os;
-use super::pseudo_terminal::PseudoTerminal;
+use super::pseudo_terminal::{PseudoTerminal, PseudoTerminalOptions};
 use crate::native::logger::enable_logger;
 
 #[napi]
@@ -18,7 +18,7 @@ impl RustPseudoTerminal {
     pub fn new() -> napi::Result<Self> {
         enable_logger();
 
-        let pseudo_terminal = PseudoTerminal::default()?;
+        let pseudo_terminal = PseudoTerminal::new(PseudoTerminalOptions::default())?;
 
         Ok(Self { pseudo_terminal })
     }

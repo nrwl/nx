@@ -220,7 +220,7 @@ export class ForkedProcessTaskRunner {
     });
 
     p.onExit((code) => {
-      if (code > 128) {
+      if (!this.tuiEnabled && code > 128) {
         process.exit(code);
       }
       this.pseudoTerminals.delete(pseudoTerminal);
