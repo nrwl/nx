@@ -19,12 +19,14 @@ describe('Init MF', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
       directory: 'app1',
+      bundler: 'webpack',
       routing: true,
       standalone: false,
       skipFormat: true,
     });
     await generateTestApplication(tree, {
       directory: 'remote1',
+      bundler: 'webpack',
       routing: true,
       standalone: false,
       skipFormat: true,
