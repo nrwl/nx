@@ -185,6 +185,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   outputPath?:
     | string
     | (Required<Pick<OutputPath, 'base'>> & Partial<OutputPath>);
+  /**
+   * Enable and define the file watching poll time period in milliseconds.
+   */
+  poll?: number;
   polyfills?: string[];
   /**
    * Prerender (SSG) pages of your application during build time.

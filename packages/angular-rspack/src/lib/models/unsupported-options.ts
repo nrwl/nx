@@ -39,7 +39,6 @@ export interface PluginUnsupportedOptions {
   verbose?: boolean;
   progress?: boolean;
   watch?: boolean;
-  poll?: number;
   budgets?: BudgetEntry[];
   allowedCommonJsDependencies?: string[];
   appShell?: boolean;
@@ -52,7 +51,6 @@ export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
   'verbose',
   'progress',
   'watch',
-  'poll',
   'budgets',
   'allowedCommonJsDependencies',
   'appShell',
