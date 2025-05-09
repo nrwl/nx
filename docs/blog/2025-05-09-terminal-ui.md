@@ -33,7 +33,7 @@ Great question! Why spend time on a terminal? Well, the terminal is the starting
 
 Let's first look at how the terminal behaves in Nx 20 and below. In a project with multiple packages, if you run `nx run-many`, what you'll first notice is that you get all the output from any continuous tasks mixed together in one giant stream. This is very typical in most terminal programs, but with monorepos it's not ideal. For instance, let's say we have a build error in one of our projects:
 
-{% video-player src="/documentation/blog/media/2025-05-09/old-tui.mp4" alt="Showing the previous terminal experience for Nx" autoPlay=true loop=true  /%}
+{% video-player src="/documentation/blog/media/2025-05-07/old-tui.mp4" alt="Showing the previous terminal experience for Nx" autoPlay=true loop=true  /%}
 
 It might be hard to notice that we had the error if we have multiple tasks being run, so unless we scroll up, we could miss it. This might sound trivial, but it's an annoyance that doesn't have to happen. It's also difficult to separate tasks that are continuous and those that have an ending.
 
