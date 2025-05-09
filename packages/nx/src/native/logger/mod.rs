@@ -1,3 +1,5 @@
+pub mod console;
+
 use colored::Colorize;
 use std::env;
 use std::fs::create_dir_all;
@@ -8,6 +10,7 @@ use tracing_subscriber::fmt::{format, FmtContext, FormatEvent, FormatFields, For
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::{EnvFilter, Layer};
+use tui_logger::TuiTracingSubscriberLayer;
 
 struct NxLogFormatter;
 impl<S, N> FormatEvent<S, N> for NxLogFormatter
@@ -103,7 +106,9 @@ pub(crate) fn enable_logger() {
                 .unwrap_or_else(|_| EnvFilter::new("ERROR")),
         );
 
-    let registry = tracing_subscriber::registry().with(stdout_layer);
+    let registry = tracing_subscriber::registry()
+        .with(stdout_layer)
+        .with(TuiTracingSubscriberLayer);
 
     if env::var("NX_NATIVE_FILE_LOGGING").is_err() {
         // File logging is not enabled
