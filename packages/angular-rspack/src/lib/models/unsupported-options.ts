@@ -18,7 +18,6 @@ export type BudgetEntry = {
 };
 
 export interface DevServerUnsupportedOptions {
-  open?: boolean;
   inspect?: string | boolean;
   prebundle?:
     | boolean
@@ -34,8 +33,4 @@ export interface PluginUnsupportedOptions {
 
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = ['budgets', 'appShell'];
 
-export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = [
-  'open',
-  'inspect',
-  'prebundle',
-];
+export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = ['inspect', 'prebundle'];

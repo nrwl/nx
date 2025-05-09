@@ -32,6 +32,10 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
    * @default true
    */
   liveReload?: boolean;
+  /**
+   * Opens the url in default browser.
+   */
+  open?: boolean;
   port?: number;
   proxyConfig?: string;
   /**
@@ -54,6 +58,7 @@ export interface NormalizedDevServerOptions extends DevServerOptions {
   host: string;
   liveReload: boolean;
   port: number;
+  open: boolean;
 }
 
 export interface OptimizationOptions {

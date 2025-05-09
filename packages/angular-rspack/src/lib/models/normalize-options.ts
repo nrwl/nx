@@ -342,11 +342,13 @@ function normalizeDevServer(
       host: defaultHost,
       liveReload: true,
       port: defaultPort,
+      open: false,
     };
   }
 
   return {
     ...devServer,
+    open: devServer.open ?? false,
     allowedHosts: devServer.allowedHosts ?? [],
     host: devServer.host ?? defaultHost,
     liveReload: devServer.liveReload ?? true,

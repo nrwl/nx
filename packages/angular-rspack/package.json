@@ -63,6 +63,7 @@
     "less-loader": "^12.2.0",
     "license-webpack-plugin": "^4.0.2",
     "loader-utils": "3.3.1",
+    "open": "10.1.0",
     "ora": "5.4.1",
     "parse5-html-rewriting-stream": "7.0.0",
     "piscina": "4.9.2",
