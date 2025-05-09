@@ -3148,7 +3148,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/affected",
-        "tags": ["run-tasks"],
+        "tags": ["run-tasks", "affected"],
         "originalFilePath": "generated/cli/affected"
       },
       "/nx-api/nx/documents/format-check": {

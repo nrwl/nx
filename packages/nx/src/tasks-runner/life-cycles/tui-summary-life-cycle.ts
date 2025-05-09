@@ -7,7 +7,7 @@ import type { TaskStatus } from '../tasks-runner';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
-import figures = require('figures');
+import * as figures from 'figures';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
 import { getLeafTasks } from '../task-graph-utils';
 
@@ -50,23 +50,27 @@ export function getTuiTerminalSummaryLifeCycle({
   const inProgressTasks = new Set<string>();
   const stoppedTasks = new Set<string>();
 
-  const tasksToTerminalOutputs: Record<
-    string,
-    { terminalOutput: string; taskStatus: TaskStatus }
-  > = {};
-  const taskIdsInOrderOfCompletion: string[] = [];
+  const tasksToTerminalOutputs: Record<string, string> = {};
+  const tasksToTaskStatus: Record<string, TaskStatus> = {};
+
+  const taskIdsInTheOrderTheyStart: string[] = [];
 
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
+      tasksToTerminalOutputs[t.id] ??= '';
+      taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
-  lifeCycle.printTaskTerminalOutput = (task, taskStatus, terminalOutput) => {
-    taskIdsInOrderOfCompletion.push(task.id);
-    tasksToTerminalOutputs[task.id] = { terminalOutput, taskStatus };
+  lifeCycle.appendTaskOutput = (taskId, output) => {
+    tasksToTerminalOutputs[taskId] += output;
   };
 
+  // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
+  lifeCycle.printTaskTerminalOutput = (task, taskStatus) => {
+    tasksToTaskStatus[task.id] = taskStatus;
+  };
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
       stoppedTasks.add(taskId);
@@ -149,8 +153,9 @@ export function getTuiTerminalSummaryLifeCycle({
 
     // Prints task outputs in the order they were completed
     // above the summary, since run-one should print all task results.
-    for (const taskId of taskIdsInOrderOfCompletion) {
-      const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
+    for (const taskId of taskIdsInTheOrderTheyStart) {
+      const taskStatus = tasksToTaskStatus[taskId];
+      const terminalOutput = tasksToTerminalOutputs[taskId];
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
@@ -266,9 +271,19 @@ export function getTuiTerminalSummaryLifeCycle({
 
     const lines: string[] = [''];
 
-    for (const taskId of taskIdsInOrderOfCompletion) {
-      const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
-      if (taskStatus === 'failure') {
+    for (const taskId of taskIdsInTheOrderTheyStart) {
+      const taskStatus = tasksToTaskStatus[taskId];
+      const terminalOutput = tasksToTerminalOutputs[taskId];
+      // Task Status is null?
+      if (!taskStatus) {
+        output.logCommandOutput(taskId, taskStatus, terminalOutput);
+        output.addNewline();
+        lines.push(
+          `${LEFT_PAD}${output.colors.cyan(
+            figures.squareSmallFilled
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
+        );
+      } else if (taskStatus === 'failure') {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
         output.addNewline();
         lines.push(

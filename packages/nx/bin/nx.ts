@@ -283,26 +283,8 @@ const getLatestVersionOfNx = ((fn: () => string) => {
   return () => cache || (cache = fn());
 })(_getLatestVersionOfNx);
 
-function nxCleanup(signal?: NodeJS.Signals) {
-  removeDbConnections();
-  if (signal) {
-    process.exit(signalToCode(signal));
-  } else {
-    process.exit();
-  }
-}
-
 process.on('exit', () => {
-  nxCleanup();
-});
-process.on('SIGINT', () => {
-  nxCleanup('SIGINT');
-});
-process.on('SIGTERM', () => {
-  nxCleanup('SIGTERM');
-});
-process.on('SIGHUP', () => {
-  nxCleanup('SIGHUP');
+  removeDbConnections();
 });
 
 main();

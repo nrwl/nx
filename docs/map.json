@@ -2216,7 +2216,7 @@
             },
             {
               "name": "affected",
-              "tags": ["run-tasks"],
+              "tags": ["run-tasks", "affected"],
               "id": "affected",
               "file": "generated/cli/affected"
             },

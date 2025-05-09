@@ -5,7 +5,7 @@ use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
-use ratatui::style::{Color, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::collections::HashMap;
@@ -35,6 +35,7 @@ use super::components::Component;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
+use super::theme::THEME;
 use super::tui;
 use super::utils::normalize_newlines;
 
@@ -121,7 +122,7 @@ impl App {
             layout_manager: LayoutManager::new(task_count),
             frame_area: None,
             layout_areas: None,
-            terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::default()],
+            terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             spacebar_mode: false,
             pane_tasks: [None, None],
             task_list_hidden: false,
@@ -255,7 +256,7 @@ impl App {
         let pty = self
             .pty_instances
             .get_mut(&task_id)
-            .expect(&format!("{} has not been registered yet.", task_id));
+            .unwrap_or_else(|| panic!("{} has not been registered yet.", task_id));
         pty.process_output(output.as_bytes());
     }
 
@@ -752,11 +753,11 @@ impl App {
                 tui.draw(|f| {
                     let area = f.area();
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
-                    if !self.frame_area.is_some() {
+                    if self.frame_area.is_none() {
                         self.frame_area = Some(area);
                     }
                     // Determine the required layout areas for the tasks list and terminal panes using the LayoutManager
-                    if !self.layout_areas.is_some() {
+                    if self.layout_areas.is_none() {
                         self.recalculate_layout_areas();
                     }
 
@@ -777,8 +778,8 @@ impl App {
                                 " NX ",
                                 Style::reset()
                                     .add_modifier(Modifier::BOLD)
-                                    .bg(Color::Red)
-                                    .fg(Color::Black),
+                                    .bg(THEME.error)
+                                    .fg(THEME.primary_fg),
                             ),
                             Span::raw(" Terminal too small "),
                         ]);
@@ -879,9 +880,9 @@ impl App {
                                     Block::default()
                                         .title(format!("  Output {}  ", pane_idx + 1))
                                         .borders(Borders::ALL)
-                                        .border_style(Style::default().fg(Color::DarkGray)),
+                                        .border_style(Style::default().fg(THEME.secondary_fg)),
                                 )
-                                .style(Style::default().fg(Color::DarkGray))
+                                .style(Style::default().fg(THEME.secondary_fg))
                                 .alignment(Alignment::Center);
 
                                 f.render_widget(placeholder, *pane_area);
@@ -1348,7 +1349,7 @@ impl App {
 
     /// Actually processes the resize event by updating PTY dimensions.
     fn handle_pty_resize(&mut self) -> io::Result<()> {
-        if !self.layout_areas.is_some() {
+        if self.layout_areas.is_none() {
             return Ok(());
         }
 

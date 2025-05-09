@@ -60,6 +60,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       });
 
       lifeCycle.startTasks([dep], null);
+      lifeCycle.appendTaskOutput(dep.id, 'boom', true);
       lifeCycle.endTasks(
         [
           {
@@ -118,6 +119,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       });
 
       lifeCycle.startTasks([dep], null);
+      lifeCycle.appendTaskOutput(dep.id, ':)', true);
       lifeCycle.endTasks(
         [
           {
@@ -131,6 +133,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       );
       lifeCycle.printTaskTerminalOutput(dep, 'success', ':)');
       lifeCycle.startTasks([target], null);
+      lifeCycle.appendTaskOutput(target.id, "Wait, I'm not done yet", true);
       lifeCycle.endCommand();
 
       const lines = getOutputLines(printSummary);
@@ -140,6 +143,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         > nx run test:pre-test
 
         :)
+        > nx run test:test
+
+        Wait, I'm not done yet
         ———————————————————————————————————————————————————————————————————————————————
 
          NX   Cancelled running target test for project test (37w)
@@ -174,6 +180,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       });
 
       lifeCycle.startTasks([dep], null);
+      lifeCycle.appendTaskOutput(dep.id, ':)', true);
       lifeCycle.endTasks(
         [
           {
@@ -236,6 +243,7 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       });
 
       lifeCycle.startTasks([target], null);
+      lifeCycle.appendTaskOutput(target.id, 'I was a happy dev server', true);
       lifeCycle.setTaskStatus(target.id, NativeTaskStatus.Stopped);
       lifeCycle.printTaskTerminalOutput(
         target,
@@ -295,7 +303,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([bar, foo], null);
+      lifeCycle.startTasks([foo, bar], null);
+      lifeCycle.appendTaskOutput(foo.id, ':)', true);
+      lifeCycle.appendTaskOutput(bar.id, 'boom', true);
       lifeCycle.endTasks(
         [
           {
@@ -378,6 +388,8 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       });
 
       lifeCycle.startTasks([bar, foo], null);
+      lifeCycle.appendTaskOutput(foo.id, 'Stop, in the name of', true);
+      lifeCycle.appendTaskOutput(bar.id, 'Love', true);
       lifeCycle.endTasks(
         [
           {
@@ -396,6 +408,11 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
       expect(lines.join('\n')).toMatchInlineSnapshot(`
         "
 
+        > nx run bar:test
+
+        Love
+
+           ◼  nx run bar:test
            ✔  nx run foo:test
 
         ———————————————————————————————————————————————————————————————————————————————
@@ -446,7 +463,9 @@ describe('getTuiTerminalSummaryLifeCycle', () => {
         resolveRenderIsDonePromise: jest.fn().mockResolvedValue(null),
       });
 
-      lifeCycle.startTasks([bar, foo], null);
+      lifeCycle.startTasks([foo, bar], null);
+      lifeCycle.appendTaskOutput(foo.id, ':)', true);
+      lifeCycle.appendTaskOutput(bar.id, ':)', true);
       lifeCycle.endTasks(
         [
           {

@@ -1,6 +1,7 @@
+use crate::native::tui::theme::THEME;
 use ratatui::{
     layout::Rect,
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
     Frame,
@@ -52,9 +53,9 @@ impl Pagination {
 
         // Left arrow - dim if we're on the first page
         let left_arrow = if current_page == 0 {
-            Span::styled("←", base_style.fg(Color::Cyan).add_modifier(Modifier::DIM))
+            Span::styled("←", base_style.fg(THEME.info).add_modifier(Modifier::DIM))
         } else {
-            Span::styled("←", base_style.fg(Color::Cyan))
+            Span::styled("←", base_style.fg(THEME.info))
         };
         spans.push(left_arrow);
 
@@ -62,15 +63,15 @@ impl Pagination {
         spans.push(Span::raw(" "));
         spans.push(Span::styled(
             format!("{}/{}", current_page + 1, total_pages),
-            base_style.fg(Color::DarkGray),
+            base_style.fg(THEME.secondary_fg),
         ));
         spans.push(Span::raw(" "));
 
         // Right arrow - dim if we're on the last page
         let right_arrow = if current_page >= total_pages.saturating_sub(1) {
-            Span::styled("→", base_style.fg(Color::Cyan).add_modifier(Modifier::DIM))
+            Span::styled("→", base_style.fg(THEME.info).add_modifier(Modifier::DIM))
         } else {
-            Span::styled("→", base_style.fg(Color::Cyan))
+            Span::styled("→", base_style.fg(THEME.info))
         };
         spans.push(right_arrow);
 

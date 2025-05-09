@@ -74,6 +74,9 @@
         "{workspaceRoot}/docs/generated"
       ]
     },
+    "check-format:quick": {
+      "parallelism": false
+    },
     "lint": {
       "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
       "cache": true,
@@ -82,6 +85,16 @@
     "lint-pnpm-lock": {
       "cache": true,
       "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "prepush": {
+      "dependsOn": [
+        "nx:format-native",
+        "nx:lint-native",
+        "documentation",
+        "check-commit",
+        "check-format:quick",
+        "check-lock-files"
+      ]
     }
   }
 }
