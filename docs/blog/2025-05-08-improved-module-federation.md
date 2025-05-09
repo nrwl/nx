@@ -13,8 +13,8 @@ pinned: true
 - [Nx 21 Release: Continuous tasks and Terminal UI lead the way](/blog/nx-21-release)
 - [Introducing Migrate UI in Nx Console](/blog/migrate-ui)
 - **New and Improved Module Federation Experience**
-- Continuous tasks are a huge DX improvement
-- A New UI For The Humble Terminal
+- [Continuous tasks are a huge DX improvement](/blog/nx-21-continuous-tasks)
+- [A New UI For The Humble Terminal](/blog/nx-21-terminal-ui)
 
 {% /callout %}
 
