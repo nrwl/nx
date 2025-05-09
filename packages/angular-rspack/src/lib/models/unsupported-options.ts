@@ -17,20 +17,9 @@ export type BudgetEntry = {
   error?: string;
 };
 
-export interface DevServerUnsupportedOptions {
-  inspect?: string | boolean;
-  prebundle?:
-    | boolean
-    | {
-        exclude: string[];
-      };
-}
-
 export interface PluginUnsupportedOptions {
   budgets?: BudgetEntry[];
   appShell?: boolean;
 }
 
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = ['budgets', 'appShell'];
-
-export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = ['inspect', 'prebundle'];
