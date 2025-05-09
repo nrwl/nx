@@ -641,7 +641,7 @@
     }
   },
   "additionalProperties": false,
-  "required": ["outputPath", "index", "tsConfig"],
+  "required": ["outputPath", "tsConfig"],
   "definitions": {
     "assetPattern": {
       "oneOf": [

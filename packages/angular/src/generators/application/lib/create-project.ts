@@ -1,7 +1,12 @@
-import { addProjectConfiguration, joinPathFragments, Tree } from '@nx/devkit';
-import type { AngularProjectConfiguration } from '../../../utils/types';
-import type { NormalizedSchema } from './normalized-schema';
+import {
+  addProjectConfiguration,
+  joinPathFragments,
+  type Tree,
+} from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema } from './normalized-schema';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
   const buildExecutor =
@@ -10,6 +15,13 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
       : '@angular-devkit/build-angular:application';
   const buildMainOptionName =
     options.bundler === 'esbuild' ? 'browser' : 'main';
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const index =
+    buildExecutor === '@angular-devkit/build-angular:application' &&
+    angularMajorVersion >= 20
+      ? undefined
+      : `${options.appProjectSourceRoot}/index.html`;
 
   addBuildTargetDefaults(tree, buildExecutor);
 
@@ -50,7 +62,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
         outputs: ['{options.outputPath}'],
         options: {
           outputPath: options.outputPath,
-          index: `${options.appProjectSourceRoot}/index.html`,
+          index,
           [buildMainOptionName]: `${options.appProjectSourceRoot}/main.ts`,
           polyfills: ['zone.js'],
           tsConfig: joinPathFragments(

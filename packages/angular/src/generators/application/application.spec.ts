@@ -1330,6 +1330,21 @@ describe('app', () => {
           .useDefineForClassFields
       ).toBe(false);
     });
+
+    it('should set the "index" option of the application builder for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.options.index).toBe('my-app/src/index.html');
+    });
   });
 });
 
