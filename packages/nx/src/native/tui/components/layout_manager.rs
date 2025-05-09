@@ -718,7 +718,7 @@ mod tests {
     mod visual_tests {
         use super::*;
         use ratatui::widgets::{Block, Borders};
-        use ratatui::{backend::TestBackend, Terminal};
+        use ratatui::{Terminal, backend::TestBackend};
 
         /// Render a layout configuration to a TestBackend for visualization
         fn render_layout(

@@ -122,8 +122,8 @@ impl FileLock {
 mod test {
     use super::*;
 
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     #[test]
     fn test_new_lock() {
