@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::native::glob::build_glob_set;
 
 use crate::native::logger::enable_logger;
-use crate::native::utils::{get_mod_time, Normalize};
+use crate::native::utils::{Normalize, get_mod_time};
 use walkdir::WalkDir;
 
 #[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
@@ -192,8 +192,8 @@ where
 mod test {
     use std::{assert_eq, vec};
 
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     use super::*;
 

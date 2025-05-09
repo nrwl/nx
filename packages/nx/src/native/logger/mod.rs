@@ -6,7 +6,7 @@ use std::fs::create_dir_all;
 use std::io::IsTerminal;
 use tracing::{Event, Level, Subscriber};
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
-use tracing_subscriber::fmt::{format, FmtContext, FormatEvent, FormatFields, FormattedFields};
+use tracing_subscriber::fmt::{FmtContext, FormatEvent, FormatFields, FormattedFields, format};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::{EnvFilter, Layer};

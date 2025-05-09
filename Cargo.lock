@@ -2203,7 +2203,7 @@ dependencies = [
  "insta",
  "itertools 0.10.5",
  "machine-uid",
- "mio 0.8.11",
+ "mio 1.0.3",
  "napi",
  "napi-build",
  "napi-derive",

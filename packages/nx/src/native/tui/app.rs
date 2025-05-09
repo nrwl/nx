@@ -24,6 +24,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::help_popup::HelpPopup;
 use super::components::layout_manager::{
@@ -32,7 +33,6 @@ use super::components::layout_manager::{
 use super::components::task_selection_manager::{SelectionMode, TaskSelectionManager};
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
-use super::components::Component;
 use super::config::TuiConfig;
 use super::lifecycle::RunMode;
 use super::pty::PtyInstance;
