@@ -243,6 +243,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
   useTsProjectReferences?: boolean;
   vendorChunk?: boolean;
   /**
+   * Adds more details to output logging.
+   */
+  verbose?: boolean;
+  /**
    * @deprecated This is a no-op and can be safely removed.
    * The tsconfig file for web workers.
    */
