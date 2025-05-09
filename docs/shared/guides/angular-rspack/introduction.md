@@ -31,7 +31,7 @@ This makes it a great solution for teams that want to migrate to a faster build 
 
 {% callout type="warning" title="Angular Rspack Status" %}
 
-Please not that Angular Rspack support is still experimental and is not yet considered production ready. We are actively working on improving the experience and stability of Angular Rspack, and we will continue to update this page as we make progress.
+Please note that Angular Rspack support is still experimental and is not yet considered production ready. We are actively working on improving the experience and stability of Angular Rspack, and we will continue to update this page as we make progress.
 
 {% /callout %}
 
