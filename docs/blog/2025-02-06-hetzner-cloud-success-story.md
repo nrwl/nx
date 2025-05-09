@@ -6,7 +6,6 @@ tags: ['customer story']
 description: Discover how Hetzner Cloud uses Nx Enterprise to ship new features to market faster and with more reliability.
 youtubeUrl: https://www.youtube.com/watch?v=2BLqiNnBPuU
 cover_image: /blog/images/articles/hetzner-cloud-story-bg.jpg
-pinned: true
 metrics:
   - value: '116+'
     label: 'projects in modular architecture'
