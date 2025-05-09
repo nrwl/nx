@@ -295,6 +295,7 @@ export async function normalizeOptions(
     tsConfig,
     useTsProjectReferences: options.useTsProjectReferences ?? false,
     vendorChunk: options.vendorChunk ?? false,
+    verbose: options.verbose ?? false,
   };
 }
 

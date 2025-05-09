@@ -28,7 +28,6 @@ export interface DevServerUnsupportedOptions {
 }
 
 export interface PluginUnsupportedOptions {
-  verbose?: boolean;
   progress?: boolean;
   watch?: boolean;
   budgets?: BudgetEntry[];
@@ -37,7 +36,6 @@ export interface PluginUnsupportedOptions {
 }
 
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
-  'verbose',
   'progress',
   'watch',
   'budgets',
