@@ -28,7 +28,6 @@ export interface DevServerUnsupportedOptions {
 }
 
 export interface PluginUnsupportedOptions {
-  progress?: boolean;
   watch?: boolean;
   budgets?: BudgetEntry[];
   allowedCommonJsDependencies?: string[];
@@ -36,7 +35,6 @@ export interface PluginUnsupportedOptions {
 }
 
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
-  'progress',
   'watch',
   'budgets',
   'allowedCommonJsDependencies',

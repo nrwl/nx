@@ -2,7 +2,6 @@ import {
   Compiler,
   CopyRspackPlugin,
   DefinePlugin,
-  ProgressPlugin,
   RspackPluginInstance,
 } from '@rspack/core';
 import { posix, relative, resolve } from 'node:path';
@@ -16,6 +15,7 @@ import { AngularSsrDevServer } from './angular-ssr-dev-server';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
 import { IndexHtmlPlugin } from './index-html-plugin';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
+import { ProgressPlugin } from './progress-plugin';
 
 export class NgRspackPlugin implements RspackPluginInstance {
   readonly pluginOptions: NormalizedAngularRspackPluginOptions;
@@ -47,8 +47,10 @@ export class NgRspackPlugin implements RspackPluginInstance {
         new AngularSsrDevServer(this.pluginOptions).apply(compiler);
       }
     }
-    if (!isDevServer) {
-      new ProgressPlugin().apply(compiler);
+    if (!isDevServer && this.pluginOptions.progress) {
+      new ProgressPlugin(this.isPlatformServer ? 'server' : 'browser').apply(
+        compiler
+      );
     }
     new DefinePlugin({
       // TODO: Replace with ...(this.pluginOptions.optimization.scripts ? { 'ngDevMode': 'false' } : undefined) when Optimization is implemented

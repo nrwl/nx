@@ -282,6 +282,7 @@ export async function normalizeOptions(
     polyfills: options.polyfills ?? [],
     prerender: options.prerender ?? false,
     projectName: project?.name ?? undefined,
+    progress: options.progress ?? true,
     root,
     serviceWorker: options.serviceWorker,
     server,
