@@ -108,7 +108,11 @@ impl LayoutManager {
             min_horizontal_width: 120, // Minimum width for horizontal layout to be viable
             min_vertical_height: 30,   // Minimum height for vertical layout to be viable
             pane_arrangement: PaneArrangement::None,
-            task_list_visibility: TaskListVisibility::Visible,
+            task_list_visibility: if task_count > 1 {
+                TaskListVisibility::Visible
+            } else {
+                TaskListVisibility::Hidden
+            },
             task_count,
             horizontal_padding: 2, // Default horizontal padding of 2 characters
             vertical_padding: 1,   // Default vertical padding of 1 character
@@ -163,6 +167,13 @@ impl LayoutManager {
     /// Gets the current task list visibility.
     pub fn get_task_list_visibility(&self) -> TaskListVisibility {
         self.task_list_visibility
+    }
+
+    pub fn toggle_task_list_visibility(&mut self) {
+        self.task_list_visibility = match self.task_list_visibility {
+            TaskListVisibility::Visible => TaskListVisibility::Hidden,
+            TaskListVisibility::Hidden => TaskListVisibility::Visible,
+        };
     }
 
     /// Sets the task count.
