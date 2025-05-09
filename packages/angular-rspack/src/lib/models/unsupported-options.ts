@@ -28,33 +28,21 @@ export interface DevServerUnsupportedOptions {
 }
 
 export interface PluginUnsupportedOptions {
-  security?: {
-    autoCsp?:
-      | boolean
-      | {
-          unsafeEval?: boolean;
-        };
-  };
-  clearScreen?: boolean;
   verbose?: boolean;
   progress?: boolean;
   watch?: boolean;
   budgets?: BudgetEntry[];
   allowedCommonJsDependencies?: string[];
   appShell?: boolean;
-  outputMode?: 'static' | 'server';
 }
 
 export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
-  'security',
-  'clearScreen',
   'verbose',
   'progress',
   'watch',
   'budgets',
   'allowedCommonJsDependencies',
   'appShell',
-  'outputMode',
 ];
 
 export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = [

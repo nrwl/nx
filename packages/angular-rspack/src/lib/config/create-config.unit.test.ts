@@ -178,13 +178,13 @@ describe('createConfig', () => {
         createConfig({
           options: {
             ...configBase,
-            clearScreen: true,
+            watch: true,
             devServer: { allowedHosts: ['localhost'] },
           },
         })
       ).resolves.not.toContain([
         expect.objectContaining({
-          clearScreen: true,
+          watch: true,
           devServer: expect.objectContaining({
             allowedHosts: ['localhost'],
           }),
@@ -192,7 +192,7 @@ describe('createConfig', () => {
       ]);
       expect(warnSpy).toHaveBeenCalledWith(
         `The following options are not yet supported:
-  "clearScreen"
+  "watch"
 `
       );
     });
