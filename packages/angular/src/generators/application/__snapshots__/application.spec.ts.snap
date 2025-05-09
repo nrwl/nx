@@ -841,7 +841,6 @@ exports[`app nested should create project configs 1`] = `
           },
         ],
         "browser": "my-dir/my-app/src/main.ts",
-        "index": "my-dir/my-app/src/index.html",
         "outputPath": "dist/my-dir/my-app",
         "polyfills": [
           "zone.js",
@@ -959,7 +958,6 @@ exports[`app not nested should create project configs 1`] = `
           },
         ],
         "browser": "my-app/src/main.ts",
-        "index": "my-app/src/index.html",
         "outputPath": "dist/my-app",
         "polyfills": [
           "zone.js",
