@@ -178,13 +178,13 @@ describe('createConfig', () => {
         createConfig({
           options: {
             ...configBase,
-            watch: true,
+            appShell: true,
             devServer: { allowedHosts: ['localhost'] },
           },
         })
       ).resolves.not.toContain([
         expect.objectContaining({
-          watch: true,
+          appShell: true,
           devServer: expect.objectContaining({
             allowedHosts: ['localhost'],
           }),
@@ -192,7 +192,7 @@ describe('createConfig', () => {
       ]);
       expect(warnSpy).toHaveBeenCalledWith(
         `The following options are not yet supported:
-  "watch"
+  "appShell"
 `
       );
     });
