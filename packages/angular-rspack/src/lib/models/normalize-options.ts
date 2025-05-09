@@ -287,6 +287,7 @@ export async function normalizeOptions(
     skipTypeChecking: options.skipTypeChecking ?? false,
     sourceMap: normalizeSourceMap(options.sourceMap),
     ssr: normalizedSsr,
+    statsJson: options.statsJson ?? false,
     stylePreprocessorOptions: options.stylePreprocessorOptions,
     subresourceIntegrity: options.subresourceIntegrity ?? false,
     supportedBrowsers: getSupportedBrowsers(root, { warn: console.warn }),
