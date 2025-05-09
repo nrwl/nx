@@ -213,6 +213,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    * Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set.
    */
   preserveSymlinks?: boolean;
+  /**
+   * Log progress to the console while building.
+   */
+  progress?: boolean;
   root?: string;
   scripts?: ScriptOrStyleEntry[];
   server?: string;
@@ -277,6 +281,7 @@ export interface NormalizedAngularRspackPluginOptions
   outputPath: OutputPath;
   polyfills: string[];
   projectName: string | undefined;
+  progress: boolean;
   root: string;
   sourceMap: SourceMap;
   subresourceIntegrity: boolean;
