@@ -119,6 +119,11 @@ export interface SourceMap {
 }
 
 export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
+  /**
+   * @deprecated This is a no-op and can be safely removed.
+   * A list of CommonJS or AMD packages that are allowed to be used without a build time warning. Use `'*'` to allow all.
+   */
+  allowedCommonJsDependencies?: string[];
   aot?: boolean;
   assets?: AssetElement[];
   /**
@@ -251,6 +256,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    */
   verbose?: boolean;
   /**
+   * Run build when files change.
+   */
+  watch?: boolean;
+  /**
    * @deprecated This is a no-op and can be safely removed.
    * The tsconfig file for web workers.
    */
@@ -288,4 +297,5 @@ export interface NormalizedAngularRspackPluginOptions
   supportedBrowsers: string[];
   tsConfig: string;
   vendorChunk: boolean;
+  watch: boolean;
 }

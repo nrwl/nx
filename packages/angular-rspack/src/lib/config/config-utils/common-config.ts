@@ -1,5 +1,5 @@
-import { type Configuration, javascript } from '@rspack/core';
-import { resolve } from 'node:path';
+import { type Compiler, type Configuration, javascript } from '@rspack/core';
+import { join, resolve } from 'node:path';
 import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
@@ -15,6 +15,7 @@ import { configureSourceMap } from './sourcemap-utils';
 import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 import { getStatsOptions } from './get-stats-options';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
+import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -30,6 +31,17 @@ export async function getCommonConfig(
     hashFormat,
     normalizedOptions.hasServer ? 'server' : 'browser'
   );
+  const indexInputFile = join(
+    normalizedOptions.root,
+    getIndexInputFile(normalizedOptions.index)
+  );
+  const indexInputWatchPlugin = {
+    apply: (compiler: Compiler) => {
+      compiler.hooks.thisCompilation.tap('build-angular', (compilation) => {
+        compilation.fileDependencies.add(indexInputFile);
+      });
+    },
+  };
 
   const defaultConfig: Configuration = {
     context: normalizedOptions.root,
@@ -68,6 +80,7 @@ export async function getCommonConfig(
     resolveLoader: {
       symlinks: !normalizedOptions.preserveSymlinks,
     },
+    watch: normalizedOptions.watch,
     watchOptions: {
       poll: normalizedOptions.poll,
       followSymlinks: normalizedOptions.preserveSymlinks,
@@ -125,6 +138,7 @@ export async function getCommonConfig(
     plugins: [
       ...sourceMapOptions.sourceMapPlugins,
       ...(normalizedOptions.verbose ? [new WatchFilesLogsPlugin()] : []),
+      ...(normalizedOptions.watch ? [indexInputWatchPlugin] : []),
       ...(normalizedOptions.statsJson
         ? [
             new StatsJsonPlugin(

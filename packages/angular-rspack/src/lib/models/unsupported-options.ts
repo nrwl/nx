@@ -28,18 +28,11 @@ export interface DevServerUnsupportedOptions {
 }
 
 export interface PluginUnsupportedOptions {
-  watch?: boolean;
   budgets?: BudgetEntry[];
-  allowedCommonJsDependencies?: string[];
   appShell?: boolean;
 }
 
-export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = [
-  'watch',
-  'budgets',
-  'allowedCommonJsDependencies',
-  'appShell',
-];
+export const TOP_LEVEL_OPTIONS_PENDING_SUPPORT = ['budgets', 'appShell'];
 
 export const DEV_SERVER_OPTIONS_PENDING_SUPPORT = [
   'open',
