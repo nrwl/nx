@@ -850,7 +850,7 @@ async function normalizeOptions(
   }
 
   if (options.publishable) {
-    if (!options.importPath) {
+    if (!isUsingTsSolutionConfig && !options.importPath) {
       throw new Error(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );

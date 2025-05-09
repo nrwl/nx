@@ -488,20 +488,38 @@ export function parseConventionalCommitsMessage(message: string): {
   };
 }
 
-function extractReferencesFromCommitMessage(
-  message: string,
-  shortHash: string
-): Reference[] {
+export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
   const references: Reference[] = [];
-  for (const m of message.matchAll(PullRequestRE)) {
+
+  // Extract GitHub style PR references from commit message
+  for (const m of commit.message.matchAll(PullRequestRE)) {
     references.push({ type: 'pull-request', value: m[1] });
   }
-  for (const m of message.matchAll(IssueRE)) {
+
+  // Extract GitLab style merge request references from commit body
+  for (const m of commit.body.matchAll(GitLabMergeRequestRE)) {
+    if (m[1]) {
+      references.push({ type: 'pull-request', value: m[1] });
+    }
+  }
+
+  // Extract issue references from commit message
+  for (const m of commit.message.matchAll(IssueRE)) {
     if (!references.some((i) => i.value === m[1])) {
       references.push({ type: 'issue', value: m[1] });
     }
   }
-  references.push({ value: shortHash, type: 'hash' });
+
+  // Extract issue references from commit body
+  for (const m of commit.body.matchAll(IssueRE)) {
+    if (!references.some((i) => i.value === m[1])) {
+      references.push({ type: 'issue', value: m[1] });
+    }
+  }
+
+  // Add commit hash reference
+  references.push({ value: commit.shortHash, type: 'hash' });
+
   return references;
 }
 
@@ -522,7 +540,10 @@ function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
 const ConventionalCommitRegex =
   /(?<type>[a-z]+)(\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)/i;
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
+// GitHub style PR references
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
+// GitLab style merge request references
+const GitLabMergeRequestRE = /See merge request (?:[a-z0-9/-]+)?(![\d]+)/gim;
 const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
@@ -538,10 +559,7 @@ export function parseGitCommit(
       description: commit.message,
       type: '',
       scope: '',
-      references: extractReferencesFromCommitMessage(
-        commit.message,
-        commit.shortHash
-      ),
+      references: extractReferencesFromCommit(commit),
       // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
       // TODO(v22): Make the current GitCommit interface more clearly tied to conventional commits
       isBreaking: false,
@@ -563,13 +581,10 @@ export function parseGitCommit(
     parsedMessage.breaking || commit.body.includes('BREAKING CHANGE:');
   let description = parsedMessage.description;
 
-  // Extract references from message
-  const references = extractReferencesFromCommitMessage(
-    description,
-    commit.shortHash
-  );
+  // Extract issue and PR references from the commit
+  const references = extractReferencesFromCommit(commit);
 
-  // Remove references and normalize
+  // Remove GitHub style references from description (NOTE: GitLab style references only seem to appear in the body, so we don't need to remove them here)
   description = description.replace(PullRequestRE, '').trim();
 
   let type = parsedMessage.type;

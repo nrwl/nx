@@ -2,7 +2,7 @@
 title: What's new in Nx 15?
 slug: 'whats-new-in-nx-15'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.png'
+cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.avif'
 tags: [nx, release]
 description: 'Explore the major features and improvements introduced in Nx version 15, including enhanced performance and developer experience.'
 ---
@@ -50,8 +50,8 @@ There will be more content around choosing which style and even how to mix the t
 
 We also updated our docs to have two super short tutorials that illustrate the two approaches:
 
-- [/getting-started/tutorials/typescript-packages-tutorial](/getting-started/tutorials/typescript-packages-tutorial)
-- [/getting-started/tutorials/react-monorepo-tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+- [/tutorials/1-ts-packages/1t-introduction/1-welcome](/tutorials/1-ts-packages/1t-introduction/1-welcome)
+- [/tutorials/2-react-monorepo/1r-introduction/1-welcome](/tutorials/2-react-monorepo/1r-introduction/1-welcome)
 
 You can also read more about the concept here: [/deprecated/integrated-vs-package-based](/deprecated/integrated-vs-package-based)
 
@@ -179,9 +179,9 @@ It is an ongoing process, and we have a lot of content to cover! We follow the [
 - you want to learn something new ("Tutorial" section) or
 - you want a solution to a specific problem ("Recipes" section).
 
-Besides the two new [package-based](/getting-started/tutorials/typescript-packages-tutorial) and [integrated style tutorials](/getting-started/tutorials/react-monorepo-tutorial) we also have two brand new reworked tutorials
+Besides the two new [package-based](/tutorials/1-ts-packages/1t-introduction/1-welcome) and [integrated style tutorials](/tutorials/2-react-monorepo/1r-introduction/1-welcome) we also have two brand new reworked tutorials
 
-- [/getting-started/tutorials](/getting-started/tutorials)
+- [/tutorials](/tutorials)
 
 Stay tuned for more updates to come.
 

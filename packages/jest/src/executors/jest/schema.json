@@ -59,15 +59,10 @@
         "index": 0
       }
     },
-    "tsConfig": {
-      "description": "The name of the Typescript configuration file.",
-      "type": "string",
-      "x-deprecated": "Use the ts-jest configuration options in the jest config file instead."
-    },
     "setupFile": {
       "description": "The name of a setup file used by Jest.",
       "type": "string",
-      "x-deprecated": "Use the setupFilesAfterEnv option in the jest config file. https://jestjs.io/docs/en/configuration#setupfilesafterenv-array"
+      "x-deprecated": "Use the `setupFilesAfterEnv` option in the Jest configuration file instead. See https://jestjs.io/docs/configuration#setupfilesafterenv-array. It will be removed in Nx v22."
     },
     "bail": {
       "alias": "b",

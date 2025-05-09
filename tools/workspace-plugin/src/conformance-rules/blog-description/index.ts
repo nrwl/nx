@@ -6,7 +6,7 @@ import { sync as globSync } from 'glob';
 import {
   createConformanceRule,
   type ProjectFilesViolation,
-} from '@nx/powerpack-conformance';
+} from '@nx/conformance';
 
 export default createConformanceRule<{ mdGlobPattern: string }>({
   name: 'blog-description',

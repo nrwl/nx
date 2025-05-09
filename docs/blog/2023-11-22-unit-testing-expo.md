@@ -2,7 +2,7 @@
 title: Unit Testing Expo Apps With Jest
 slug: 'unit-testing-expo-apps-with-jest'
 authors: [Emily Xiong]
-cover_image: '/blog/images/2023-11-22/featured_img.webp'
+cover_image: '/blog/images/2023-11-22/featured_img.avif'
 tags: [nx, tutorial]
 description: Learn how to unit test Expo apps using Jest and React Native Testing Library, with solutions for mocking AsyncStorage, Redux, and React Navigation.
 ---

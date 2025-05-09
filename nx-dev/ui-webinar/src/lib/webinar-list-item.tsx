@@ -7,11 +7,14 @@ export interface WebinarListItemProps {
   episode: number;
 }
 export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
-  const formattedDate = new Date(webinar.date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  });
+  const formattedDate = new Date(webinar.eventDate || '').toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }
+  );
   const authorsList = (
     webinar.authors.length > 1
       ? webinar.authors.map((a, i) =>

@@ -64,7 +64,11 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   const options = await normalizeOptions(host, schema);
 
-  if (options.publishable === true && !schema.importPath) {
+  if (
+    options.publishable === true &&
+    !options.isUsingTsSolutionConfig &&
+    !schema.importPath
+  ) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );

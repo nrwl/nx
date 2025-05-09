@@ -54,11 +54,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/storybook"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js storybook"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/storybook/README.md"],
+      "command": "node ./scripts/copy-readme.js storybook"
     }
   }
 }

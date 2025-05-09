@@ -13,6 +13,7 @@ description: 'Explore how Nx monorepos amplify AI benefits by providing complete
 - [Making Cursor Smarter with an MCP Server For Nx Monorepos](/blog/nx-made-cursor-smarter)
 - [Nx MCP Now Available for VS Code Copilot](/blog/nx-mcp-vscode-copilot)
 - **Nx and AI: Why They Work so Well Together**
+- [Save Time: Connecting Your Editor, CI and LLMs](/blog/nx-editor-ci-llm-integration)
 
 {% /callout %}
 

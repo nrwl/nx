@@ -9,7 +9,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { reactNativeApplicationGenerator } from './application';
 
 describe('app', () => {
@@ -24,7 +23,7 @@ describe('app', () => {
     await reactNativeApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'none',
@@ -40,7 +39,7 @@ describe('app', () => {
       directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'none',
@@ -57,7 +56,7 @@ describe('app', () => {
     await reactNativeApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'jest',
@@ -102,7 +101,7 @@ describe('app', () => {
     await reactNativeApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'jest',
@@ -118,7 +117,7 @@ describe('app', () => {
     await reactNativeApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'none',
@@ -134,7 +133,7 @@ describe('app', () => {
       await reactNativeApplicationGenerator(appTree, {
         name: 'my-app',
         directory: 'my-dir',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         install: false,
         bundler: 'vite',
@@ -185,7 +184,7 @@ describe('app', () => {
     it('should create e2e app without directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
         directory: 'my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         install: false,
         bundler: 'vite',
@@ -240,7 +239,7 @@ describe('app', () => {
       await reactNativeApplicationGenerator(appTree, {
         directory: 'my-app',
         displayName: 'myApp',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'none',
         install: false,
         skipPackageJson: true,
@@ -280,7 +279,7 @@ describe('app', () => {
         directory: 'my-app',
         displayName: 'myApp',
         tags: 'one,two',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'none',
         install: false,
         unitTestRunner: 'jest',
@@ -417,7 +416,7 @@ describe('app', () => {
         name: 'my-app',
         displayName: 'myApp',
         tags: 'one,two',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'none',
         install: false,
         unitTestRunner: 'jest',
@@ -443,7 +442,7 @@ describe('app', () => {
     it('should generate project.json if useProjectJson is true', async () => {
       await reactNativeApplicationGenerator(tree, {
         directory: 'my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'cypress',
         install: false,
         unitTestRunner: 'jest',

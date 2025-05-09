@@ -7,7 +7,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
-import { Linter } from '@nx/eslint';
 import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';
@@ -73,7 +72,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
 
     const e2eTask = await configurationGenerator(host, {
       ...options,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       project: options.e2eProjectName,
       directory: 'src',
       skipFormat: true,

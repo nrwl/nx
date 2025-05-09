@@ -1,11 +1,11 @@
-import { NgPackagr, ngPackagr } from 'ng-packagr';
+import { type NgPackagr, ngPackagr } from 'ng-packagr';
 
 export async function getNgPackagrInstance(): Promise<NgPackagr> {
-  const { STYLESHEET_PROCESSOR } = await import(
+  const { getStylesheetProcessorFactoryProvider } = await import(
     '../../utilities/ng-packagr/stylesheet-processor.di.js'
   );
 
   const packagr = ngPackagr();
-  packagr.withProviders([STYLESHEET_PROCESSOR]);
+  packagr.withProviders([getStylesheetProcessorFactoryProvider()]);
   return packagr;
 }

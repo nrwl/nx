@@ -39,29 +39,14 @@ Make sure to install the `@nx/angular` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/angular` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/angular
 ```
 
 This will install the correct version of `@nx/angular`.
 
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/angular` package with your package manager.
-
-```shell
-npm add -D @nx/angular
-```
-
-{% /tab %}
-{% /tabs %}
-
 {% callout type="note" title="Angular Tutorial" %}
-For a full tutorial experience, follow the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+For a full tutorial experience, follow the [Angular Monorepo Tutorial](/tutorials/3-angular-monorepo/1a-introduction/1-welcome)
 {% /callout %}
 
 ## Using the Angular Plugin
@@ -128,7 +113,7 @@ nx g @nx/angular:service apps/appName/src/lib/my-service/my-service
 
 ## More Documentation
 
-- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+- [Angular Monorepo Tutorial](/tutorials/3-angular-monorepo/1a-introduction/1-welcome)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
 - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)

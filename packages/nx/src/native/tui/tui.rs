@@ -1,3 +1,4 @@
+use crate::native::tui::theme::THEME;
 use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
@@ -165,6 +166,8 @@ impl Tui {
     }
 
     pub fn enter(&mut self) -> Result<()> {
+        // Ensure the theme is set before entering raw mode because it won't work properly once we're in raw mode
+        let _ = THEME.is_dark_mode;
         debug!("Enabling Raw Mode");
         crossterm::terminal::enable_raw_mode()?;
         crossterm::execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;

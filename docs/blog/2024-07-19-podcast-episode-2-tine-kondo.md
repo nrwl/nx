@@ -3,7 +3,7 @@ title: 'Nx Enterprise Podcast Episode 2: Tine Kondo'
 slug: 'tine-kondo-podcast-2'
 authors: ['Zack DeRose']
 tags: [podcast]
-cover_image: /blog/images/2024-07-19/ep-2-tine.png
+cover_image: /blog/images/2024-07-19/ep-2-tine.avif
 podcastYoutubeId: Nzf3BmymfEo
 podcastSpotifyId: 0CCQaWCln7rvwkkVvsyxsk
 podcastAmazonUrl: https://music.amazon.com/podcasts/a221fdad-36fd-4695-a5b4-038d7b99d284/episodes/53934cd9-c521-441e-8523-8b947ed207ca/the-enterprise-software-podcast-by-nx-the-enterprise-software-podcast-by-nx-2-tine-kondo

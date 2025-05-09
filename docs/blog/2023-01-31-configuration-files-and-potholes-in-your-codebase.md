@@ -2,7 +2,7 @@
 title: 'Configuration Files and Potholes in Your Codebase'
 slug: 'configuration-files-and-potholes-in-your-codebase'
 authors: ['Isaac Mann']
-cover_image: '/blog/images/2023-01-31/T-xiDccBOxMQpDrG.png'
+cover_image: '/blog/images/2023-01-31/T-xiDccBOxMQpDrG.avif'
 tags: [nx]
 description: A guide to managing configuration files effectively in modern development, exploring Nx's approach to infrastructure code maintenance through generators and migrations.
 ---

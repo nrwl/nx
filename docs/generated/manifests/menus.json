@@ -42,39 +42,39 @@
           },
           {
             "name": "Tutorials",
-            "path": "/getting-started/tutorials",
+            "path": "/tutorials",
             "id": "tutorials",
             "isExternal": false,
             "children": [
               {
                 "name": "TypeScript Monorepo",
-                "path": "/getting-started/tutorials/typescript-packages-tutorial",
+                "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
                 "id": "typescript-packages-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
                 "name": "React Monorepo",
-                "path": "/getting-started/tutorials/react-monorepo-tutorial",
+                "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
                 "id": "react-monorepo-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
                 "name": "Angular Monorepo",
-                "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+                "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
                 "id": "angular-monorepo-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
                 "name": "Gradle Monorepo",
-                "path": "/getting-started/tutorials/gradle-tutorial",
+                "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
                 "id": "gradle-tutorial",
-                "isExternal": false,
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               }
@@ -118,39 +118,39 @@
       },
       {
         "name": "Tutorials",
-        "path": "/getting-started/tutorials",
+        "path": "/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
             "name": "TypeScript Monorepo",
-            "path": "/getting-started/tutorials/typescript-packages-tutorial",
+            "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
             "id": "typescript-packages-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "React Monorepo",
-            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
             "id": "react-monorepo-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "Angular Monorepo",
-            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
             "id": "angular-monorepo-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "Gradle Monorepo",
-            "path": "/getting-started/tutorials/gradle-tutorial",
+            "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
             "id": "gradle-tutorial",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           }
@@ -159,33 +159,33 @@
       },
       {
         "name": "TypeScript Monorepo",
-        "path": "/getting-started/tutorials/typescript-packages-tutorial",
+        "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
         "id": "typescript-packages-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "React Monorepo",
-        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
         "id": "react-monorepo-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Angular Monorepo",
-        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
         "id": "angular-monorepo-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Gradle Monorepo",
-        "path": "/getting-started/tutorials/gradle-tutorial",
+        "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
         "id": "gradle-tutorial",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
@@ -1091,6 +1091,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Use the Terminal UI",
+                "path": "/recipes/running-tasks/terminal-ui",
+                "id": "terminal-ui",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
@@ -1309,6 +1317,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Automate GitLab Releases",
+                "path": "/recipes/nx-release/automate-gitlab-releases",
+                "id": "automate-gitlab-releases",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Publish Rust Crates",
                 "path": "/recipes/nx-release/publish-rust-crates",
                 "id": "publish-rust-crates",
@@ -1415,14 +1431,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Migrate UI",
-                "path": "/recipes/nx-console/console-migrate-ui",
-                "id": "console-migrate-ui",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Run Command",
                 "path": "/recipes/nx-console/console-run-command",
                 "id": "console-run-command",
@@ -1434,6 +1442,14 @@
                 "name": "Nx Cloud Integration",
                 "path": "/recipes/nx-console/console-nx-cloud",
                 "id": "console-nx-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Migrate UI",
+                "path": "/recipes/nx-console/console-migrate-ui",
+                "id": "console-migrate-ui",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2185,6 +2201,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Use the Terminal UI",
+            "path": "/recipes/running-tasks/terminal-ui",
+            "id": "terminal-ui",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
@@ -2287,6 +2311,14 @@
         "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use the Terminal UI",
+        "path": "/recipes/running-tasks/terminal-ui",
+        "id": "terminal-ui",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2555,6 +2587,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Automate GitLab Releases",
+            "path": "/recipes/nx-release/automate-gitlab-releases",
+            "id": "automate-gitlab-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Publish Rust Crates",
             "path": "/recipes/nx-release/publish-rust-crates",
             "id": "publish-rust-crates",
@@ -2665,6 +2705,14 @@
         "name": "Automate GitHub Releases",
         "path": "/recipes/nx-release/automate-github-releases",
         "id": "automate-github-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automate GitLab Releases",
+        "path": "/recipes/nx-release/automate-gitlab-releases",
+        "id": "automate-gitlab-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2797,14 +2845,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Migrate UI",
-            "path": "/recipes/nx-console/console-migrate-ui",
-            "id": "console-migrate-ui",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Command",
             "path": "/recipes/nx-console/console-run-command",
             "id": "console-run-command",
@@ -2816,6 +2856,14 @@
             "name": "Nx Cloud Integration",
             "path": "/recipes/nx-console/console-nx-cloud",
             "id": "console-nx-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Migrate UI",
+            "path": "/recipes/nx-console/console-migrate-ui",
+            "id": "console-migrate-ui",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2856,14 +2904,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Migrate UI",
-        "path": "/recipes/nx-console/console-migrate-ui",
-        "id": "console-migrate-ui",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Run Command",
         "path": "/recipes/nx-console/console-run-command",
         "id": "console-run-command",
@@ -2875,6 +2915,14 @@
         "name": "Nx Cloud Integration",
         "path": "/recipes/nx-console/console-nx-cloud",
         "id": "console-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate UI",
+        "path": "/recipes/nx-console/console-migrate-ui",
+        "id": "console-migrate-ui",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8388,6 +8436,23 @@
             "disableCollapsible": false
           },
           {
+            "id": "executors",
+            "path": "/nx-api/gradle/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "gradle",
+                "path": "/nx-api/gradle/executors/gradle",
+                "name": "gradle",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "generators",
             "path": "/nx-api/gradle/generators",
             "name": "generators",
@@ -10935,14 +11000,6 @@
                 "disableCollapsible": false
               }
             ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "migrations",
-            "path": "/nx-api/web/migrations",
-            "name": "migrations",
-            "children": [],
             "isExternal": false,
             "disableCollapsible": false
           }

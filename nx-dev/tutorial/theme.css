@@ -13,3 +13,9 @@
   max-width: 56rem;
   margin: 0 auto;
 }
+
+.markdown-content :is(h1, h2, h3, h4, h5, h6) {
+  font-size: revert;
+  line-height: revert;
+  margin: revert;
+}

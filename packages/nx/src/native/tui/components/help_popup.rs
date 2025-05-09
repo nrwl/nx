@@ -1,7 +1,7 @@
 use color_eyre::eyre::Result;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
         Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
@@ -9,8 +9,11 @@ use ratatui::{
     },
 };
 use std::any::Any;
+use tokio::sync::mpsc::UnboundedSender;
 
 use super::{Component, Frame};
+use crate::native::tui::action::Action;
+use crate::native::tui::theme::THEME;
 
 pub struct HelpPopup {
     scroll_offset: usize,
@@ -18,6 +21,7 @@ pub struct HelpPopup {
     content_height: usize,
     viewport_height: usize,
     visible: bool,
+    action_tx: Option<UnboundedSender<Action>>,
 }
 
 impl HelpPopup {
@@ -28,6 +32,7 @@ impl HelpPopup {
             content_height: 0,
             viewport_height: 0,
             visible: false,
+            action_tx: None,
         }
     }
 
@@ -67,6 +72,23 @@ impl HelpPopup {
     }
 
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
+        // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
+        if area.height == 0
+            || area.width == 0
+            || area.x >= f.area().width
+            || area.y >= f.area().height
+        {
+            return; // Area is out of bounds, don't try to render
+        }
+
+        // Ensure area is entirely within frame bounds
+        let safe_area = Rect {
+            x: area.x,
+            y: area.y,
+            width: area.width.min(f.area().width.saturating_sub(area.x)),
+            height: area.height.min(f.area().height.saturating_sub(area.y)),
+        };
+
         let percent_y = 85;
         let percent_x = 70;
 
@@ -77,7 +99,7 @@ impl HelpPopup {
                 Constraint::Percentage(percent_y),
                 Constraint::Percentage((100 - percent_y) / 2),
             ])
-            .split(area);
+            .split(safe_area);
 
         let popup_area = Layout::default()
             .direction(Direction::Horizontal)
@@ -91,7 +113,7 @@ impl HelpPopup {
         let keybindings = vec![
             // Misc
             ("?", "Toggle this popup"),
-            ("<ctrl>+c", "Quit the TUI"),
+            ("q or <ctrl>+c", "Quit the TUI"),
             ("", ""),
             // Navigation
             ("↑ or k", "Navigate/scroll task output up"),
@@ -106,8 +128,14 @@ impl HelpPopup {
             ("<esc>", "Clear filter"),
             ("", ""),
             // Output Controls
+            ("<enter>", "Open and focus terminal for task"),
+            ("<esc>", "Set focus back to task list"),
             ("<space>", "Quick toggle a single output pane"),
             ("b", "Toggle task list visibility"),
+            (
+                "m",
+                "Toggle between vertical and horizontal layouts (auto by default)",
+            ),
             ("1", "Pin task to be shown in output pane 1"),
             ("2", "Pin task to be shown in output pane 2"),
             (
@@ -126,29 +154,29 @@ impl HelpPopup {
             Line::from(vec![
                 Span::styled(
                     "Thanks for using Nx! To get the most out of this terminal UI, please check out the docs: ",
-                    Style::default().fg(Color::White),
+                    Style::default().fg(THEME.primary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://nx.dev/terminal-ui",
-                    Style::default().fg(Color::Cyan),
+                    Style::default().fg(THEME.info),
                 ),
             ]),
             Line::from(vec![
                 Span::styled(
                     "If you are finding Nx useful, please consider giving it a star on GitHub, it means a lot: ",
-                    Style::default().fg(Color::White),
+                    Style::default().fg(THEME.primary_fg),
                 ),
                 Span::styled(
                     // NOTE: I tried OSC 8 sequences here but they broke the layout, see: https://github.com/ratatui/ratatui/issues/1028
                     "https://github.com/nrwl/nx",
-                    Style::default().fg(Color::Cyan),
+                    Style::default().fg(THEME.info),
                 ),
             ]),
             Line::from(""), // Empty line for spacing
             Line::from(vec![Span::styled(
                 "Available keyboard shortcuts:",
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(THEME.secondary_fg),
             )]),
             Line::from(""), // Empty line for spacing
         ];
@@ -166,34 +194,32 @@ impl HelpPopup {
                         let mut spans = Vec::new();
 
                         // Calculate the total visible length (excluding color codes)
-                        let visible_length = if key_parts.len() > 1 {
-                            key_parts.iter().map(|s| s.len()).sum::<usize>() + 2
-                        // for alignment
-                        } else {
-                            key.len()
-                        };
+                        let visible_length = key.chars().count();
 
                         // Add each key part with the appropriate styling
                         for (i, part) in key_parts.iter().enumerate() {
                             if i > 0 {
                                 spans.push(Span::styled(
                                     " or ",
-                                    Style::default().fg(Color::DarkGray),
+                                    Style::default().fg(THEME.secondary_fg),
                                 ));
                             }
                             spans.push(Span::styled(
                                 part.to_string(),
-                                Style::default().fg(Color::Cyan),
+                                Style::default().fg(THEME.info),
                             ));
                         }
 
                         // Add padding to align all descriptions
-                        let padding = " ".repeat(11usize.saturating_sub(visible_length));
+                        let padding = " ".repeat(14usize.saturating_sub(visible_length));
                         spans.push(Span::raw(padding));
 
                         // Add the separator and description
-                        spans.push(Span::styled("=   ", Style::default().fg(Color::DarkGray)));
-                        spans.push(Span::styled(desc, Style::default().fg(Color::White)));
+                        spans.push(Span::styled(
+                            "=   ",
+                            Style::default().fg(THEME.secondary_fg),
+                        ));
+                        spans.push(Span::styled(desc, Style::default().fg(THEME.primary_fg)));
 
                         Line::from(spans)
                     }
@@ -209,15 +235,15 @@ impl HelpPopup {
                     " NX ",
                     Style::default()
                         .add_modifier(Modifier::BOLD)
-                        .bg(Color::Cyan)
-                        .fg(Color::Black),
+                        .bg(THEME.info)
+                        .fg(THEME.primary_fg),
                 ),
-                Span::styled("  Help  ", Style::default().fg(Color::White)),
+                Span::styled("  Help  ", Style::default().fg(THEME.primary_fg)),
             ]))
             .title_alignment(Alignment::Left)
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
-            .border_style(Style::default().fg(Color::Cyan))
+            .border_style(Style::default().fg(THEME.info))
             .padding(Padding::proportional(1));
 
         let inner_area = block.inner(popup_area);
@@ -295,14 +321,14 @@ impl HelpPopup {
             f.render_widget(
                 Paragraph::new(top_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(Color::Cyan)),
+                    .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
                 Paragraph::new(bottom_text)
                     .alignment(Alignment::Right)
-                    .style(Style::default().fg(Color::Cyan)),
+                    .style(Style::default().fg(THEME.info)),
                 bottom_right_area,
             );
 
@@ -310,31 +336,31 @@ impl HelpPopup {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓"))
-                .style(Style::default().fg(Color::Cyan));
+                .style(Style::default().fg(THEME.info));
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
         }
     }
 }
 
-impl Clone for HelpPopup {
-    fn clone(&self) -> Self {
-        Self {
-            scroll_offset: self.scroll_offset,
-            scrollbar_state: self.scrollbar_state,
-            content_height: self.content_height,
-            viewport_height: self.viewport_height,
-            visible: self.visible,
-        }
-    }
-}
-
 impl Component for HelpPopup {
+    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+        self.action_tx = Some(tx);
+        Ok(())
+    }
+
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
         }
         Ok(())
+    }
+
+    fn update(&mut self, action: Action) -> Result<Option<Action>> {
+        if let Action::Resize(w, h) = action {
+            self.handle_resize(w, h);
+        }
+        Ok(None)
     }
 
     fn as_any(&self) -> &dyn Any {

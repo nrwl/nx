@@ -8,7 +8,7 @@ title: Run Multiple Tasks
 In addition to running individual tasks, you can also run multiple tasks in parallel using the following syntax:
 
 ```shell
-npx nx run-many -t test lint build
+nx run-many -t test lint build
 ```
 
 ### Caching
@@ -18,7 +18,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/features
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
 ```shell
-npx nx run-many -t test lint build
+nx run-many -t test lint build
 ```
 
 ```

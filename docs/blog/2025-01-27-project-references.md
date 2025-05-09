@@ -3,7 +3,7 @@ title: Everything You Need to Know About TypeScript Project References
 slug: typescript-project-references
 authors: [Zack DeRose]
 tags: [typescript, monorepo, nx]
-cover_image: /blog/images/articles/ts-islands.png
+cover_image: /blog/images/articles/ts-islands.avif
 youtubeUrl: https://youtu.be/SDE3cIq28s8
 description: Learn how TypeScript Project References create efficient boundaries in your codebase, improving build performance and type checking in large-scale projects.
 ---

@@ -6,6 +6,26 @@ use vt100_ctt::Parser;
 
 use super::utils::normalize_newlines;
 
+/// A wrapper that provides access to the terminal screen without cloning
+///
+/// This struct uses a read lock guard internally to maintain the lock on the parser while
+/// allowing access to just the screen through deref coercion. This approach avoids the need to
+/// clone the entire screen while still providing safe access to it. The guard is kept private
+/// to ensure the lock is held for the lifetime of this reference.
+///
+/// Using Deref allows callers to treat this as if it were a direct reference to Screen.
+pub struct PtyScreenRef<'a> {
+    _guard: std::sync::RwLockReadGuard<'a, Parser>,
+}
+
+impl std::ops::Deref for PtyScreenRef<'_> {
+    type Target = vt100_ctt::Screen;
+
+    fn deref(&self) -> &Self::Target {
+        self._guard.screen()
+    }
+}
+
 #[derive(Clone)]
 pub struct PtyInstance {
     pub task_id: String,
@@ -73,8 +93,11 @@ impl PtyInstance {
         Ok(())
     }
 
-    pub fn get_screen(&self) -> Option<vt100_ctt::Screen> {
-        self.parser.read().ok().map(|p| p.screen().clone())
+    pub fn get_screen(&self) -> Option<PtyScreenRef> {
+        self.parser
+            .read()
+            .ok()
+            .map(|guard| PtyScreenRef { _guard: guard })
     }
 
     pub fn scroll_up(&mut self) {

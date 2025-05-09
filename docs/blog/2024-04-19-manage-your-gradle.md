@@ -2,7 +2,7 @@
 title: Manage Your Gradle Project using Nx
 slug: 'manage-your-gradle-project-using-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2024-04-19/featured_img.png'
+cover_image: '/blog/images/2024-04-19/featured_img.avif'
 tags: [nx, gradle, how-to]
 description: 'Learn how to manage Gradle projects in Nx workspaces using the new @nx/gradle plugin for better library visualization and multi-tech stack support.'
 ---

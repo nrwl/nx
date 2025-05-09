@@ -2,7 +2,7 @@
 title: 'Introducing Playwright Support for Nx'
 slug: 'introducing-playwright-support-for-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.png'
+cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.avif'
 tags: [nx, release, tutorial]
 description: 'Discover how to integrate Playwright, a powerful end-to-end testing tool, into your Nx workspaces with our new @nx/playwright plugin.'
 ---

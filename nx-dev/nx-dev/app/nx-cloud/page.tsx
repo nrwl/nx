@@ -1,6 +1,7 @@
 import {
   AgentNumberOverTime,
   AutomatedAgentsManagement,
+  EnhancedSecurity,
   EnhancedWithAi,
   FasterAndCheaper,
   Hero,
@@ -60,6 +61,9 @@ export default function NxCloudPage(): ReactElement {
 
       <div className="mt-32 lg:mt-56">
         <FasterAndCheaper />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <EnhancedSecurity />
       </div>
       <div className="mt-32 lg:mt-56">
         <UnderstandWorkspace />

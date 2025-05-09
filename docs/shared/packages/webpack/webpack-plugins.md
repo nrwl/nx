@@ -347,6 +347,8 @@ Type: `boolean`
 
 Enables or disables [React SVGR](https://react-svgr.com/). Default is `true`.
 
+**Deprecated:** Add SVGR support in your Webpack configuration without relying on Nx. This option will be removed in Nx 22. See https://react-svgr.com/docs/webpack/
+
 #### Example
 
 ```js

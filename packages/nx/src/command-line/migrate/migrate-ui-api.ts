@@ -27,6 +27,7 @@ export type SuccessfulMigration = {
   name: string;
   changedFiles: Omit<FileChange, 'content'>[];
   ref: string;
+  nextSteps?: string[];
 };
 
 export type FailedMigration = {
@@ -135,15 +136,16 @@ export async function runSingleMigration(
     // 2. Bundled into Console, so the version is fixed to what we build Console with.
     const updatedMigrateModule = await import('./migrate.js');
 
-    const fileChanges = await updatedMigrateModule.runNxOrAngularMigration(
-      workspacePath,
-      migration,
-      false,
-      configuration.createCommits,
-      configuration.commitPrefix || 'chore: [nx migration] ',
-      undefined,
-      true
-    );
+    const { changes: fileChanges, nextSteps } =
+      await updatedMigrateModule.runNxOrAngularMigration(
+        workspacePath,
+        migration,
+        false,
+        configuration.createCommits,
+        configuration.commitPrefix || 'chore: [nx migration] ',
+        undefined,
+        true
+      );
 
     const gitRefAfter = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
@@ -158,7 +160,8 @@ export async function runSingleMigration(
           path: change.path,
           type: change.type,
         })),
-        gitRefAfter
+        gitRefAfter,
+        nextSteps
       )
     );
 
@@ -171,6 +174,16 @@ export async function runSingleMigration(
         cwd: workspacePath,
         encoding: 'utf-8',
       });
+      // The revision changes after the amend, so we need to update it
+      const amendedGitRef = execSync('git rev-parse HEAD', {
+        cwd: workspacePath,
+        encoding: 'utf-8',
+      }).trim();
+
+      modifyMigrationsJsonMetadata(
+        workspacePath,
+        updateRefForSuccessfulMigration(migration.id, amendedGitRef)
+      );
     }
   } catch (e) {
     modifyMigrationsJsonMetadata(
@@ -223,7 +236,8 @@ export function modifyMigrationsJsonMetadata(
 export function addSuccessfulMigration(
   id: string,
   fileChanges: Omit<FileChange, 'content'>[],
-  ref: string
+  ref: string,
+  nextSteps: string[]
 ) {
   return (
     migrationsJsonMetadata: MigrationsJsonMetadata
@@ -239,8 +253,27 @@ export function addSuccessfulMigration(
         name: id,
         changedFiles: fileChanges,
         ref,
+        nextSteps,
       },
     };
+    return copied;
+  };
+}
+
+export function updateRefForSuccessfulMigration(id: string, ref: string) {
+  return (
+    migrationsJsonMetadata: MigrationsJsonMetadata
+  ): MigrationsJsonMetadata => {
+    const copied = { ...migrationsJsonMetadata };
+    if (!copied.completedMigrations) {
+      copied.completedMigrations = {};
+    }
+    const existing = copied.completedMigrations[id];
+    if (existing && existing.type === 'successful') {
+      existing.ref = ref;
+    } else {
+      throw new Error(`Attempted to update ref for unsuccessful migration`);
+    }
     return copied;
   };
 }
@@ -306,4 +339,20 @@ export function readMigrationsJsonMetadata(
   const migrationsJsonPath = join(workspacePath, 'migrations.json');
   const migrationsJson = JSON.parse(readFileSync(migrationsJsonPath, 'utf-8'));
   return migrationsJson['nx-console'];
+}
+
+export function undoMigration(workspacePath: string, id: string) {
+  return (migrationsJsonMetadata: MigrationsJsonMetadata) => {
+    const existing = migrationsJsonMetadata.completedMigrations[id];
+    if (existing.type !== 'successful')
+      throw new Error(`undoMigration called on unsuccessful migration: ${id}`);
+    execSync(`git reset --hard ${existing.ref}^`, {
+      cwd: workspacePath,
+      encoding: 'utf-8',
+    });
+    migrationsJsonMetadata.completedMigrations[id] = {
+      type: 'skipped',
+    };
+    return migrationsJsonMetadata;
+  };
 }

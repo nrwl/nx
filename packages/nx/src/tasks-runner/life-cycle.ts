@@ -27,7 +27,7 @@ interface RustRunningTask extends RunningTask {
 
   onExit(cb: (code: number, terminalOutput: string) => void): void;
 
-  kill(signal?: NodeJS.Signals | number): Promise<void> | void;
+  kill(signal?: NodeJS.Signals): Promise<void> | void;
 }
 
 export interface LifeCycle {
@@ -71,7 +71,7 @@ export interface LifeCycle {
 
   registerRunningTaskWithEmptyParser?(taskId: string): void;
 
-  appendTaskOutput?(taskId: string, output: string): void;
+  appendTaskOutput?(taskId: string, output: string, isPtyTask: boolean): void;
 
   setTaskStatus?(taskId: string, status: NativeTaskStatus): void;
 
@@ -175,10 +175,10 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  appendTaskOutput(taskId: string, output: string): void {
+  appendTaskOutput(taskId: string, output: string, isPtyTask: boolean): void {
     for (let l of this.lifeCycles) {
       if (l.appendTaskOutput) {
-        l.appendTaskOutput(taskId, output);
+        l.appendTaskOutput(taskId, output, isPtyTask);
       }
     }
   }

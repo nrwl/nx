@@ -3,7 +3,6 @@ title: Introduction to Nx! | Nx Live
 slug: nx-live-intro-to-nx
 authors: ['Zack DeRose', 'Mike Hartington']
 tags: [livestream]
-cover_image: /blog/images/2024-09-05/thumbnail.png
 youtubeUrl: https://youtube.com/live/dgtZ6GHZ-tA
 description: Watch a live coding session where Zack guides Mike through building a full-stack app with Nx, showcasing key features and best practices.
 ---

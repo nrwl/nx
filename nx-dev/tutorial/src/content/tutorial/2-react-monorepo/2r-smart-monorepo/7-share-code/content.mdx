@@ -2,7 +2,7 @@
 type: lesson
 title: Share Code
 previews:
-  - { port: 4211, title: 'Project Graph', pathname: '/projects' }
+  - { port: 4200, title: 'ReactStore', pathname: '/products' }
 ---
 
 ### Import Libraries into the React Applications
@@ -13,7 +13,7 @@ previews:
 
 All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
 
-```file:/package.json title="/package.json" collapse={3-51}
+```file:/package.json title="/package.json" collapse={3-53} no-apply
 
 ```
 
@@ -61,15 +61,15 @@ export function App() {
 export default App;
 ```
 
-Serving your app (`npx nx serve react-store`) and then navigating to `/products` should give you the following result:
+Serving your app (`nx serve react-store`) and then navigating to `/products` should give you the following result:
+
+```shell
+nx serve react-store
+```
 
 ![products route](/documentation/shared/tutorials/react-tutorial-products-route.png)
 
-Let's apply the same for our `orders` library.
-
-- import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` rout
-
-  e
+Let's apply the same for our `orders` library. Import the `Orders` component from `libs/orders` into the `app.tsx` and render it via the routing mechanism whenever a user hits the `/orders` route.
 
 In the end, your `app.tsx` should look similar to this:
 

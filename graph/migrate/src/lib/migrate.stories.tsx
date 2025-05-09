@@ -242,7 +242,7 @@ export const PendingApproval: Story = {
       {
         id: 'migration-1',
         name: 'migration-1',
-        description: 'Migrate 1',
+        description: 'This is a test migration',
         version: '1.0.0',
         package: 'nx',
         implementation: './src/migrations/migration-1.ts',
@@ -250,7 +250,7 @@ export const PendingApproval: Story = {
       {
         id: 'migration-2',
         name: 'migration-2',
-        description: 'Migrate 2',
+        description: 'This is a test migration',
         version: '1.0.1',
         package: '@nx/react',
         implementation: './src/migrations/migration-2.ts',
@@ -271,12 +271,17 @@ export const PendingApproval: Story = {
           type: 'successful',
           changedFiles: [],
           ref: '123',
+          nextSteps: [],
         },
         'migration-2': {
           name: 'migration-2',
           type: 'successful',
           changedFiles: [{ path: 'foo.txt', type: 'CREATE' }],
           ref: '124',
+          nextSteps: [
+            'Check something: https://nx.dev/docs',
+            'Check another thing: https://nx.dev/docs',
+          ],
         },
       },
       targetVersion: '20.3.2',
@@ -289,6 +294,9 @@ export const PendingApproval: Story = {
     },
     onSkipMigration: (migration) => {
       console.log('skip migration', migration);
+    },
+    onUndoMigration: (migration) => {
+      console.log('undo migration', migration);
     },
     onFileClick: (migration, file) => {
       console.log('file click', migration, file);

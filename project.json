@@ -7,7 +7,8 @@
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
-        "storage": "build/local-registry/storage"
+        "storage": "build/local-registry/storage",
+        "clear": false
       }
     },
     "populate-local-registry-storage": {
@@ -16,9 +17,11 @@
         {
           "input": "production",
           "projects": ["tag:npm:public"]
-        }
+        },
+        "{workspaceRoot}/scripts/local-registry"
       ],
       "dependsOn": [
+        "local-registry",
         {
           "target": "build",
           "projects": ["tag:npm:public"]
@@ -69,6 +72,28 @@
       "outputs": [
         "{workspaceRoot}/docs/external-generated",
         "{workspaceRoot}/docs/generated"
+      ]
+    },
+    "check-format:quick": {
+      "parallelism": false
+    },
+    "lint": {
+      "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "lint-pnpm-lock": {
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "prepush": {
+      "dependsOn": [
+        "nx:format-native",
+        "nx:lint-native",
+        "documentation",
+        "check-commit",
+        "check-format:quick",
+        "check-lock-files"
       ]
     }
   }

@@ -49,7 +49,7 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js module-federation",
-      "outputs": ["{workspaceRoot}/build/packages/module-federation"]
+      "outputs": ["{workspaceRoot}/build/packages/module-federation/README.md"]
     }
   }
 }

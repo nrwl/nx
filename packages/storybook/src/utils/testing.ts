@@ -1,14 +1,13 @@
 import { Tree } from '@nx/devkit';
 
 import { libraryGenerator } from '@nx/js';
-import { Linter } from '@nx/eslint';
 
 export async function createTestUILibNoNgDevkit(
   appTree: Tree,
   libName: string
 ): Promise<Tree> {
   await libraryGenerator(appTree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'none',

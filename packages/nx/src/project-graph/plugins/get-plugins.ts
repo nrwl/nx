@@ -23,7 +23,7 @@ let loadedPlugins: LoadedNxPlugin[];
 let pendingPluginsPromise:
   | Promise<readonly [LoadedNxPlugin[], () => void]>
   | undefined;
-let cleanup: () => void | undefined;
+let cleanupSpecifiedPlugins: () => void | undefined;
 
 export async function getPlugins(
   root = workspaceRoot
@@ -40,10 +40,7 @@ export async function getPlugins(
   }
 
   // Cleanup current plugins before loading new ones
-  if (cleanup) {
-    pendingPluginsPromise = undefined;
-    cleanup();
-  }
+  cleanupSpecifiedPlugins?.();
 
   pendingPluginsPromise ??= loadSpecifiedNxPlugins(pluginsConfiguration, root);
 
@@ -52,8 +49,15 @@ export async function getPlugins(
     pendingPluginsPromise,
     getOnlyDefaultPlugins(root),
   ]);
-  cleanup = cleanupFn;
+
+  cleanupSpecifiedPlugins = () => {
+    loadedPlugins = undefined;
+    pendingPluginsPromise = undefined;
+    cleanupFn();
+  };
+
   loadedPlugins = result.concat(defaultPlugins);
+
   return loadedPlugins;
 }
 
@@ -62,35 +66,41 @@ export async function getPlugins(
  */
 
 let loadedDefaultPlugins: LoadedNxPlugin[];
+let loadedDefaultPluginsHash: string;
 let cleanupDefaultPlugins: () => void;
 let pendingDefaultPluginPromise:
   | Promise<readonly [LoadedNxPlugin[], () => void]>
   | undefined;
 
 export async function getOnlyDefaultPlugins(root = workspaceRoot) {
+  const hash = root;
   // If the plugins configuration has not changed, reuse the current plugins
-  if (loadedDefaultPlugins) {
-    return loadedPlugins;
+  if (loadedDefaultPlugins && hash === loadedDefaultPluginsHash) {
+    return loadedDefaultPlugins;
   }
 
   // Cleanup current plugins before loading new ones
   if (cleanupDefaultPlugins) {
-    pendingDefaultPluginPromise = undefined;
     cleanupDefaultPlugins();
   }
 
   pendingDefaultPluginPromise ??= loadDefaultNxPlugins(workspaceRoot);
 
   const [result, cleanupFn] = await pendingDefaultPluginPromise;
-  cleanupDefaultPlugins = cleanupFn;
-  loadedPlugins = result;
+
+  cleanupDefaultPlugins = () => {
+    loadedDefaultPlugins = undefined;
+    pendingDefaultPluginPromise = undefined;
+    cleanupFn();
+  };
+
+  loadedDefaultPlugins = result;
+  loadedDefaultPluginsHash = hash;
   return result;
 }
 
 export function cleanupPlugins() {
-  pendingPluginsPromise = undefined;
-  pendingDefaultPluginPromise = undefined;
-  cleanup?.();
+  cleanupSpecifiedPlugins?.();
   cleanupDefaultPlugins?.();
 }
 

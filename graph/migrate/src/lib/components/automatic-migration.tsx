@@ -21,6 +21,7 @@ export function AutomaticMigration(props: {
   nxConsoleMetadata: MigrationsJsonMetadata;
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
+  onUndoMigration: (migration: MigrationDetailsWithId) => void;
   onFileClick: (
     migration: MigrationDetailsWithId,
     file: Omit<FileChange, 'content'>
@@ -87,6 +88,7 @@ export function AutomaticMigration(props: {
       isInit={isInit}
       onRunMigration={props.onRunMigration}
       onSkipMigration={props.onSkipMigration}
+      onUndoMigration={props.onUndoMigration}
       onFileClick={props.onFileClick}
       onViewImplementation={props.onViewImplementation}
       onViewDocumentation={props.onViewDocumentation}

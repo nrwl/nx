@@ -76,7 +76,6 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { formatFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
-import { dirSync } from 'tmp';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1090,9 +1089,11 @@ async function getPackageMigrationsUsingInstall(
 
     result = { ...migrations, packageGroup, version: packageJson.version };
   } catch (e) {
-    logger.warn(
-      `Unable to fetch migrations for ${packageName}@${packageVersion}: ${e.message}`
-    );
+    output.warn({
+      title: `Failed to fetch migrations for ${packageName}@${packageVersion}`,
+      bodyLines: [e.message],
+    });
+    return {};
   } finally {
     await cleanup();
   }
@@ -1394,7 +1395,6 @@ function addSplitConfigurationMigrationIfAvailable(
         version: '15.7.0-beta.0',
         description:
           'Split global configuration files into individual project.json files. This migration has been added automatically to the beginning of your migration set to retroactively make them work with the new version of Nx.',
-        cli: 'nx',
         implementation:
           './src/migrations/update-15-7-0/split-configuration-into-project-json-files',
         package: '@nrwl/workspace',
@@ -1447,7 +1447,6 @@ export async function executeMigrations(
     name: string;
     description?: string;
     version: string;
-    cli?: 'nx' | 'angular';
   }[],
   isVerbose: boolean,
   shouldCreateCommits: boolean,
@@ -1475,11 +1474,11 @@ export async function executeMigrations(
     logger.info(`- ${m.package}: ${m.name} (${m.description})`)
   );
   logger.info(`---------------------------------------------------------\n`);
-
+  const allNextSteps: string[] = [];
   for (const m of sortedMigrations) {
     logger.info(`Running migration ${m.package}: ${m.name}`);
     try {
-      const changes = await runNxOrAngularMigration(
+      const { changes, nextSteps } = await runNxOrAngularMigration(
         root,
         m,
         isVerbose,
@@ -1487,6 +1486,7 @@ export async function executeMigrations(
         commitPrefix,
         () => changedDepInstaller.installDepsIfChanged()
       );
+      allNextSteps.push(...nextSteps);
       if (changes.length === 0) {
         migrationsWithNoChanges.push(m);
       }
@@ -1503,7 +1503,7 @@ export async function executeMigrations(
     changedDepInstaller.installDepsIfChanged();
   }
 
-  return migrationsWithNoChanges;
+  return { migrationsWithNoChanges, nextSteps: allNextSteps };
 }
 
 class ChangedDepInstaller {
@@ -1528,14 +1528,13 @@ export async function runNxOrAngularMigration(
     name: string;
     description?: string;
     version: string;
-    cli?: 'nx' | 'angular';
   },
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
   installDepsIfChanged?: () => void,
   handleInstallDeps = false
-): Promise<FileChange[]> {
+): Promise<{ changes: FileChange[]; nextSteps: string[] }> {
   if (!installDepsIfChanged) {
     const changedDepInstaller = new ChangedDepInstaller(root);
     installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
@@ -1545,19 +1544,20 @@ export async function runNxOrAngularMigration(
     root
   );
   let changes: FileChange[] = [];
-  if (!isAngularMigration(collection, collectionPath, migration.name)) {
-    changes = await runNxMigration(
+  let nextSteps: string[] = [];
+  if (!isAngularMigration(collection, migration.name)) {
+    ({ nextSteps, changes } = await runNxMigration(
       root,
       collectionPath,
       collection,
       migration.name
-    );
+    ));
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
     logger.info(`  ${migration.description}\n`);
     if (changes.length < 1) {
       logger.info(`No changes were made\n`);
-      return [];
+      return { changes, nextSteps };
     }
 
     logger.info('Changes:');
@@ -1578,7 +1578,7 @@ export async function runNxOrAngularMigration(
     logger.info(`  ${migration.description}\n`);
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return [];
+      return { changes, nextSteps };
     }
 
     logger.info('Changes:');
@@ -1610,7 +1610,7 @@ export async function runNxOrAngularMigration(
     installDepsIfChanged();
   }
 
-  return changes;
+  return { changes, nextSteps };
 }
 
 async function runMigrations(
@@ -1662,10 +1662,9 @@ async function runMigrations(
     package: string;
     name: string;
     version: string;
-    cli?: 'nx' | 'angular';
   }[] = readJsonFile(join(root, opts.runMigrations)).migrations;
 
-  const migrationsWithNoChanges = await executeMigrations(
+  const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
     root,
     migrations,
     isVerbose,
@@ -1680,6 +1679,12 @@ async function runMigrations(
   } else {
     output.success({
       title: `No changes were made from running '${opts.runMigrations}'. This workspace is up to date!`,
+    });
+  }
+  if (nextSteps.length > 0) {
+    output.log({
+      title: `Some migrations have additional information, see below.`,
+      bodyLines: nextSteps.map((line) => `- ${line}`),
     });
   }
 }
@@ -1715,11 +1720,18 @@ async function runNxMigration(
     process.env.NX_VERBOSE_LOGGING === 'true',
     `migration ${collection.name}:${name}`
   );
-  await fn(host, {});
+  let nextSteps = await fn(host, {});
+  // This accounts for migrations that mistakenly return a generator callback
+  // from a migration. We've never executed these, so its not a breaking change that
+  // we don't call them now... but currently shipping a migration with one wouldn't break
+  // the migrate flow, so we are being cautious.
+  if (!isStringArray(nextSteps)) {
+    nextSteps = [];
+  }
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return changes;
+  return { changes, nextSteps };
 }
 
 export async function migrate(
@@ -1894,29 +1906,8 @@ function addToNodePath(dir: string) {
   process.env.NODE_PATH = paths.join(delimiter);
 }
 
-// TODO (v21): Remove CLI determination of Angular Migration
-function isAngularMigration(
-  collection: MigrationsJson,
-  collectionPath: string,
-  name: string
-) {
-  const entry = collection.generators?.[name] || collection.schematics?.[name];
-  const shouldBeNx = !!collection.generators?.[name];
-  const shouldBeNg = !!collection.schematics?.[name];
-  if (entry.cli && entry.cli !== 'nx' && collection.generators?.[name]) {
-    output.warn({
-      title: `The migration '${collection.name}:${name}' appears to be an Angular CLI migration, but is located in the 'generators' section of migrations.json.`,
-      bodyLines: [
-        'In Nx 21, migrations inside `generators` will be treated as Nx Devkit migrations and therefore may not run correctly if they are using Angular Devkit.',
-        'If the migration should be run with Angular Devkit, please place the migration inside `schematics` instead.',
-        "Please open an issue on the plugin's repository if you believe this is an error.",
-      ],
-    });
-  }
-
-  // Currently, if the cli property exists we listen to it. If its nx, its not an ng cli migration.
-  // If the property is not set, we will fall back to our intuition.
-  return entry.cli ? entry.cli !== 'nx' : !shouldBeNx && shouldBeNg;
+function isAngularMigration(collection: MigrationsJson, name: string) {
+  return !collection.generators?.[name] && collection.schematics?.[name];
 }
 
 const getNgCompatLayer = (() => {
@@ -1929,3 +1920,10 @@ const getNgCompatLayer = (() => {
     return _ngCliAdapter;
   };
 })();
+
+function isStringArray(value: unknown): value is string[] {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every((v) => typeof v === 'string');
+}

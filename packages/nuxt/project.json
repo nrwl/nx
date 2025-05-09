@@ -54,7 +54,7 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js nuxt",
-      "outputs": ["{workspaceRoot}/build/packages/nuxt"]
+      "outputs": ["{workspaceRoot}/build/packages/nuxt/README.md"]
     }
   }
 }

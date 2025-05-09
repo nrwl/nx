@@ -32,17 +32,8 @@ Make sure to install the `@nx/vite` version that matches the version of `nx` in 
 
 In any Nx workspace, you can install `@nx/vite` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/vite
-```
-
-You can also pass the `--setupPathsPlugin` flag to add [`nxViteTsPaths` plugin](/recipes/vite/configure-vite#typescript-paths), so your projects can use workspace libraries.
-
-```shell {% skipRescope=true %}
-nx add @nx/vite --setupPathsPlugin
 ```
 
 This will install the correct version of `@nx/vite`.
@@ -90,18 +81,6 @@ The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 The `buildTargetName`, `previewTargetName`, `testTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `preview`, `test`, `serve` and `serve-static`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/vite` package with your package manager.
-
-```shell
-npm add -D @nx/vite
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using @nx/vite
 

@@ -17,7 +17,10 @@ import chalk = require('chalk');
 
 export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
   cwd: string,
-  opts: {
+  {
+    rootVersionActionsOptions,
+    ...opts
+  }: {
     dryRun?: boolean;
     verbose?: boolean;
     rootVersionActionsOptions?: Record<string, unknown>;
@@ -27,6 +30,7 @@ export const afterAllProjectsVersioned: AfterAllProjectsVersioned = async (
     changedFiles: await updateLockFile(cwd, {
       ...opts,
       useLegacyVersioning: false,
+      options: rootVersionActionsOptions,
     }),
     deletedFiles: [],
   };

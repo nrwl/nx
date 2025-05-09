@@ -1,6 +1,5 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { createFiles } from './create-files';
 
 describe('Create Files', () => {
@@ -22,7 +21,7 @@ describe('Create Files', () => {
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       framework: 'react-native',
     });
 

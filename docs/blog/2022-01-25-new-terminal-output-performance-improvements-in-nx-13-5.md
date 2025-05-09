@@ -2,7 +2,7 @@
 title: 'New Terminal Output & Performance Improvements in Nx 13.5'
 slug: 'new-terminal-output-performance-improvements-in-nx-13-5'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.avif'
 tags: [nx]
 description: Nx 13.5 brings a new dynamic terminal output, 2.3x faster operations, Chrome DevTools profiling support, and improved project graph visualization.
 ---

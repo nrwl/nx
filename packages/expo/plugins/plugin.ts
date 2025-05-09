@@ -155,17 +155,21 @@ function buildExpoTargets(
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
       executor: `@nx/expo:start`,
+      continuous: true,
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
+      continuous: true,
       options: { cwd: projectRoot, args: ['--clear'] },
     },
     [options.runIosTargetName]: {
       command: `expo run:ios`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
       command: `expo run:android`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.exportTargetName]: {

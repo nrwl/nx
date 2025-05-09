@@ -39,13 +39,11 @@ Please not that Angular Rspack support is still experimental and is not yet cons
 
 The following are known limitations and missing features of Angular Rspack:
 
-- Static Site Generation (SSG) is not supported.
 - Server Routing is not supported - still experimental in Angular currently.
 - App Engine APIs are not supported - still experimental in Angular currently.
 - Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made.
   - Styles optimization for `inline-critical` and `remove-special-comments` are not yet implemented.
   - Inlining of fonts is not yet implemented.
-- Web Workers are not fully supported.
 - Hot Module Replacement (HMR) is partially supported.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).

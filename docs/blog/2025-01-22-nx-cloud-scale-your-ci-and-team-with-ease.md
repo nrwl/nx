@@ -5,7 +5,7 @@ date: 2025-01-22
 slug: 'nx-cloud-scale-your-ci-and-team-with-ease'
 authors: ['Nicole Oliver', 'Rareș Matei', 'James Henry']
 tags: [webinar]
-cover_image: /blog/images/2025-01-22/Jan-webinar-image.png
+cover_image: /blog/images/2025-01-22/Jan-webinar-image.avif
 status: Past - Gated
 registrationUrl: https://go.nx.dev/jan2025-webinar
 ---

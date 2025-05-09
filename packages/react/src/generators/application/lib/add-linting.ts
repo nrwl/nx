@@ -5,7 +5,7 @@ import {
   ensurePackage,
   readJson,
 } from '@nx/devkit';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
@@ -21,7 +21,7 @@ import { nxVersion } from '../../../utils/versions';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,

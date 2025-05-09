@@ -75,7 +75,7 @@ async function runTasks(
     const results = await batchExecutor.batchImplementationFactory()(
       batchTaskGraph,
       input,
-      tasks[0].overrides,
+      tasks[tasks.length - 1].overrides,
       context
     );
 

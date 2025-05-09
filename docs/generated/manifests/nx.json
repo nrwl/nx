@@ -62,10 +62,10 @@
             "name": "TypeScript Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/typescript-packages",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/typescript-packages-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
             "tags": []
           },
           {
@@ -73,10 +73,10 @@
             "name": "React Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/react-monorepo",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
             "tags": []
           },
           {
@@ -84,10 +84,10 @@
             "name": "Angular Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/angular-monorepo",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
             "tags": []
           },
           {
@@ -95,15 +95,15 @@
             "name": "Gradle Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "shared/tutorials/gradle",
+            "file": "",
             "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/gradle-tutorial",
+            "isExternal": true,
+            "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/getting-started/tutorials",
+        "path": "/tutorials",
         "tags": []
       }
     ],
@@ -155,7 +155,7 @@
     "path": "/getting-started/editor-setup",
     "tags": ["editor-setup"]
   },
-  "/getting-started/tutorials": {
+  "/tutorials": {
     "id": "tutorials",
     "name": "Tutorials",
     "description": "Get started with basic information, concepts and tutorials.",
@@ -167,10 +167,10 @@
         "name": "TypeScript Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/typescript-packages",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/typescript-packages-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
         "tags": []
       },
       {
@@ -178,10 +178,10 @@
         "name": "React Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/react-monorepo",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
         "tags": []
       },
       {
@@ -189,10 +189,10 @@
         "name": "Angular Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/angular-monorepo",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
         "tags": []
       },
       {
@@ -200,59 +200,59 @@
         "name": "Gradle Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "shared/tutorials/gradle",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/gradle-tutorial",
+        "isExternal": true,
+        "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/getting-started/tutorials",
+    "path": "/tutorials",
     "tags": []
   },
-  "/getting-started/tutorials/typescript-packages-tutorial": {
+  "/tutorials/1-ts-packages/1t-introduction/1-welcome": {
     "id": "typescript-packages-tutorial",
     "name": "TypeScript Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/typescript-packages",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/typescript-packages-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
     "tags": []
   },
-  "/getting-started/tutorials/react-monorepo-tutorial": {
+  "/tutorials/2-react-monorepo/1r-introduction/1-welcome": {
     "id": "react-monorepo-tutorial",
     "name": "React Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/react-monorepo",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/react-monorepo-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
     "tags": []
   },
-  "/getting-started/tutorials/angular-monorepo-tutorial": {
+  "/tutorials/3-angular-monorepo/1a-introduction/1-welcome": {
     "id": "angular-monorepo-tutorial",
     "name": "Angular Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/angular-monorepo",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
     "tags": []
   },
-  "/getting-started/tutorials/gradle-tutorial": {
+  "/tutorials/4-gradle/1g-introduction/1-welcome": {
     "id": "gradle-tutorial",
     "name": "Gradle Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "shared/tutorials/gradle",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/gradle-tutorial",
+    "isExternal": true,
+    "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
     "tags": []
   },
   "/features": {
@@ -1494,6 +1494,17 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "terminal-ui",
+            "name": "Use the Terminal UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/terminal-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/terminal-ui",
+            "tags": ["run-tasks", "terminal-ui"]
+          },
+          {
             "id": "run-commands-executor",
             "name": "Run Custom Commands",
             "description": "",
@@ -1793,6 +1804,17 @@
             "tags": ["nx-release"]
           },
           {
+            "id": "automate-gitlab-releases",
+            "name": "Automate GitLab Releases",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automate-gitlab-releases",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automate-gitlab-releases",
+            "tags": ["nx-release"]
+          },
+          {
             "id": "publish-rust-crates",
             "name": "Publish Rust Crates",
             "description": "",
@@ -1938,17 +1960,6 @@
             "tags": ["editor-setup"]
           },
           {
-            "id": "console-migrate-ui",
-            "name": "Migrate UI",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/console-migrate-ui",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nx-console/console-migrate-ui",
-            "tags": ["editor-setup"]
-          },
-          {
             "id": "console-run-command",
             "name": "Run Command",
             "description": "",
@@ -1968,6 +1979,17 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-nx-cloud",
+            "tags": ["editor-setup"]
+          },
+          {
+            "id": "console-migrate-ui",
+            "name": "Migrate UI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-migrate-ui",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-migrate-ui",
             "tags": ["editor-setup"]
           },
           {
@@ -2992,6 +3014,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "terminal-ui",
+        "name": "Use the Terminal UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/terminal-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/terminal-ui",
+        "tags": ["run-tasks", "terminal-ui"]
+      },
+      {
         "id": "run-commands-executor",
         "name": "Run Custom Commands",
         "description": "",
@@ -3138,6 +3171,17 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/terminal-ui": {
+    "id": "terminal-ui",
+    "name": "Use the Terminal UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/terminal-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/terminal-ui",
+    "tags": ["run-tasks", "terminal-ui"]
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
@@ -3500,6 +3544,17 @@
         "tags": ["nx-release"]
       },
       {
+        "id": "automate-gitlab-releases",
+        "name": "Automate GitLab Releases",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automate-gitlab-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automate-gitlab-releases",
+        "tags": ["nx-release"]
+      },
+      {
         "id": "publish-rust-crates",
         "name": "Publish Rust Crates",
         "description": "",
@@ -3656,6 +3711,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/automate-github-releases",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automate-gitlab-releases": {
+    "id": "automate-gitlab-releases",
+    "name": "Automate GitLab Releases",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automate-gitlab-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automate-gitlab-releases",
     "tags": ["nx-release"]
   },
   "/recipes/nx-release/publish-rust-crates": {
@@ -3832,17 +3898,6 @@
         "tags": ["editor-setup"]
       },
       {
-        "id": "console-migrate-ui",
-        "name": "Migrate UI",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/console-migrate-ui",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nx-console/console-migrate-ui",
-        "tags": ["editor-setup"]
-      },
-      {
         "id": "console-run-command",
         "name": "Run Command",
         "description": "",
@@ -3862,6 +3917,17 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/nx-console/console-nx-cloud",
+        "tags": ["editor-setup"]
+      },
+      {
+        "id": "console-migrate-ui",
+        "name": "Migrate UI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-migrate-ui",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-migrate-ui",
         "tags": ["editor-setup"]
       },
       {
@@ -3913,17 +3979,6 @@
     "path": "/recipes/nx-console/console-generate-command",
     "tags": ["editor-setup"]
   },
-  "/recipes/nx-console/console-migrate-ui": {
-    "id": "console-migrate-ui",
-    "name": "Migrate UI",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/console-migrate-ui",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nx-console/console-migrate-ui",
-    "tags": ["editor-setup"]
-  },
   "/recipes/nx-console/console-run-command": {
     "id": "console-run-command",
     "name": "Run Command",
@@ -3944,6 +3999,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-nx-cloud",
+    "tags": ["editor-setup"]
+  },
+  "/recipes/nx-console/console-migrate-ui": {
+    "id": "console-migrate-ui",
+    "name": "Migrate UI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-migrate-ui",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-migrate-ui",
     "tags": ["editor-setup"]
   },
   "/recipes/nx-console/console-troubleshooting": {

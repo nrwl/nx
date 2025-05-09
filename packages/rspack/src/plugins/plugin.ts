@@ -238,6 +238,7 @@ async function createRspackTargets(
   };
 
   targets[options.serveStaticTargetName] = {
+    dependsOn: [`${options.buildTargetName}`],
     continuous: true,
     executor: '@nx/web:file-server',
     options: {

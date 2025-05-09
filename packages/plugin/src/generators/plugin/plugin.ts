@@ -11,7 +11,6 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import {
   addSwcDependencies,
@@ -161,7 +160,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
     );
   }
 
-  if (options.linter === Linter.EsLint && !options.skipLintChecks) {
+  if (options.linter === 'eslint' && !options.skipLintChecks) {
     await pluginLintCheckGenerator(host, { projectName: options.projectName });
   }
 

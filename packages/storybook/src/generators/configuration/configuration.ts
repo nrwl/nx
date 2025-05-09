@@ -31,7 +31,7 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   pleaseUpgrade,
@@ -250,7 +250,7 @@ function normalizeSchema(
 
   const defaults = {
     interactionTests: true,
-    linter: Linter.EsLint,
+    linter: 'eslint' as LinterType,
     js: false,
     tsConfiguration: true,
     addPlugin,

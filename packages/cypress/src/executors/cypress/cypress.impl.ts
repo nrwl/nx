@@ -15,7 +15,8 @@ export interface CypressExecutorOptions extends Json {
   devServerTarget?: string;
   headed?: boolean;
   /**
-   * @deprecated use watch instead
+   * @deprecated Cypress runs headless by default. Use the --watch flag to
+   * control head/headless behavior instead. It will be removed in Nx v22.
    **/
   headless?: boolean;
   exit?: boolean;
@@ -26,10 +27,6 @@ export interface CypressExecutorOptions extends Json {
   browser?: string;
   env?: Record<string, string>;
   spec?: string;
-  /**
-   * @deprecated no longer used since cypress supports typescript out of the box
-   **/
-  copyFiles?: string;
   ciBuildId?: string | number;
   group?: string;
   ignoreTestFiles?: string | string[];

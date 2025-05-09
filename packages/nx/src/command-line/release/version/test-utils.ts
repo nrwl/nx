@@ -584,7 +584,8 @@ export async function mockResolveVersionActionsForProjectImplementation(
   tree: Tree,
   releaseGroup: any,
   projectGraphNode: any,
-  finalConfigForProject: FinalConfigForProject
+  finalConfigForProject: FinalConfigForProject,
+  isInProjectsToProcess: boolean
 ) {
   if (
     projectGraphNode.data.release?.versionActions ===
@@ -597,7 +598,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
       finalConfigForProject
     );
     // Initialize the versionActions with all the required manifest paths etc
-    await versionActions.init(tree);
+    await versionActions.init(tree, isInProjectsToProcess);
     return {
       versionActionsPath: exampleRustVersionActions,
       versionActions,
@@ -615,7 +616,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
       finalConfigForProject
     );
     // Initialize the versionActions with all the required manifest paths etc
-    await versionActions.init(tree);
+    await versionActions.init(tree, isInProjectsToProcess);
     return {
       versionActionsPath: exampleNonSemverVersionActions,
       versionActions,
@@ -632,7 +633,7 @@ export async function mockResolveVersionActionsForProjectImplementation(
     finalConfigForProject
   );
   // Initialize the versionActions with all the required manifest paths etc
-  await versionActions.init(tree);
+  await versionActions.init(tree, isInProjectsToProcess);
   return {
     versionActionsPath,
     versionActions: versionActions,

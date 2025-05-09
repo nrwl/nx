@@ -1,6 +1,5 @@
 import type { Tree } from '@nx/devkit';
 import { readJson, writeJson } from '@nx/devkit';
-import { Linter } from '@nx/eslint/src/generators/utils/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import {
@@ -64,7 +63,7 @@ describe('StorybookConfiguration generator', () => {
     await storybookConfigurationGenerator(tree, {
       project: libName,
       generateStories: false,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
@@ -192,7 +191,7 @@ describe('StorybookConfiguration generator', () => {
       project: 'test-app',
       generateStories: false,
       skipFormat: true,
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
 
     const tsConfig = readJson(tree, 'test-app/tsconfig.editor.json');

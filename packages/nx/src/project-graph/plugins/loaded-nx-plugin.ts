@@ -60,16 +60,9 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.createNodes && !plugin.createNodesV2) {
-      this.createNodes = [
-        plugin.createNodes[0],
-        (configFiles, context) =>
-          createNodesFromFiles(
-            plugin.createNodes[1],
-            configFiles,
-            this.options,
-            context
-          ).then((results) => results.map((r) => [this.name, r[0], r[1]])),
-      ];
+      throw new Error(
+        `Plugin ${plugin.name} only provides \`createNodes\` which was removed in Nx 21, it should provide a \`createNodesV2\` implementation.`
+      );
     }
 
     if (plugin.createNodesV2) {

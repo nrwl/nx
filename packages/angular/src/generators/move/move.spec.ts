@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import * as devkit from '@nx/devkit';
 import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestLibrary } from '../utils/testing';
@@ -36,7 +35,7 @@ describe('@nx/angular:move', () => {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       buildable: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       publishable: false,
       simpleName: true,
       skipFormat: true,
@@ -132,7 +131,7 @@ describe('@nx/angular:move', () => {
       await generateTestLibrary(tree, {
         directory: 'my-lib2',
         buildable: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         publishable: false,
         simpleName: true,
         skipFormat: true,
@@ -259,7 +258,7 @@ describe('@nx/angular:move', () => {
       await generateTestLibrary(tree, {
         directory: 'my-importer',
         buildable: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         publishable: false,
         simpleName: true,
         skipFormat: true,
@@ -342,7 +341,7 @@ describe('@nx/angular:move', () => {
       await generateTestLibrary(tree, {
         directory: 'my-lib-demo',
         buildable: false,
-        linter: Linter.EsLint,
+        linter: 'eslint',
         publishable: false,
         simpleName: true,
         skipFormat: true,

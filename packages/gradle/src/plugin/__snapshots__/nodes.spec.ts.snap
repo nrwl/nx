@@ -84,7 +84,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes based on gradle for nested 
 ]
 `;
 
-exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets based on gradle if ciTargetName is specified 1`] = `
+exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets based on gradle if ciTestTargetName is specified 1`] = `
 [
   [
     "proj/application/build.gradle",
@@ -466,7 +466,7 @@ exports[`@nx/gradle/plugin/nodes should create nodes with atomized tests targets
 ]
 `;
 
-exports[`@nx/gradle/plugin/nodes should not create nodes with atomized tests targets based on gradle if ciTargetName is not specified 1`] = `
+exports[`@nx/gradle/plugin/nodes should not create nodes with atomized tests targets based on gradle if ciTestTargetName is not specified 1`] = `
 [
   [
     "proj/application/build.gradle",

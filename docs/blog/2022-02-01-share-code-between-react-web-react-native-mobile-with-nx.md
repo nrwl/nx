@@ -2,7 +2,7 @@
 title: 'Share code between React Web & React Native Mobile with Nx'
 slug: 'share-code-between-react-web-react-native-mobile-with-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2022-02-01/lL-fGNaIGYBC_eOBwSvdBw.png'
+cover_image: '/blog/images/2022-02-01/lL-fGNaIGYBC_eOBwSvdBw.avif'
 tags: [nx, tutorial]
 description: Learn how to create and manage React web and React Native mobile apps in an Nx monorepo, with guidance on sharing code and handling platform differences.
 ---

@@ -21,7 +21,7 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 18
+  NODE_VERSION: 20.19.0
   PNPM_VERSION: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:

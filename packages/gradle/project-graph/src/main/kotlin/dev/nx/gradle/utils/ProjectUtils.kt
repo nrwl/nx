@@ -63,41 +63,41 @@ fun processTargetsForProject(
     workspaceRoot: String,
     cwd: String
 ): GradleTargets {
-  val targets: NxTargets = mutableMapOf<String, MutableMap<String, Any?>>()
-  val targetGroups: TargetGroups = mutableMapOf<String, MutableList<String>>()
+  val targets: NxTargets = mutableMapOf()
+  val targetGroups: TargetGroups = mutableMapOf()
   val externalNodes = mutableMapOf<String, ExternalNode>()
+
   val projectRoot = project.projectDir.path
-  project.logger.info("Using workspace root $workspaceRoot")
-
-  var projectBuildPath: String =
-      project
-          .buildTreePath // get the build path of project e.g. :app, :utils:number-utils, :buildSrc
-  if (projectBuildPath.endsWith(":")) { // root project is ":", manually remove last :
-    projectBuildPath = projectBuildPath.dropLast(1)
-  }
-
   val logger = project.logger
 
-  logger.info("${Date()} ${project}: process targets")
+  logger.info("Using workspace root: $workspaceRoot")
 
-  var gradleProject = project.buildTreePath
-  if (!gradleProject.endsWith(":")) {
-    gradleProject += ":"
-  }
+  val projectBuildPath = project.buildTreePath.trimEnd(':')
+
+  logger.info("${Date()} ${project}: Process targets")
+
+  val ciTestTargetName = targetNameOverrides["ciTestTargetName"]
+  val ciIntTestTargetName = targetNameOverrides["ciIntTestTargetName"]
+  val ciCheckTargetName = targetNameOverrides.getOrDefault("ciCheckTargetName", "check-ci")
+  val testTargetName = targetNameOverrides.getOrDefault("testTargetName", "test")
+  val intTestTargetName = targetNameOverrides.getOrDefault("intTestTargetName", "intTest")
+
+  val testTasks = project.getTasksByName("test", false)
+  val intTestTasks = project.getTasksByName("intTest", false)
+  val hasCiTestTarget = ciTestTargetName != null && testTasks.isNotEmpty()
+  val hasCiIntTestTarget = ciIntTestTargetName != null && intTestTasks.isNotEmpty()
 
   project.tasks.forEach { task ->
     try {
-      logger.info("${Date()} ${project.name}: Processing $task")
-      val taskName = targetNameOverrides.getOrDefault(task.name + "TargetName", task.name)
-      // add task to target groups
-      val group: String? = task.group
-      if (!group.isNullOrBlank()) {
-        if (targetGroups.contains(group)) {
-          targetGroups[group]?.add(task.name)
-        } else {
-          targetGroups[group] = mutableListOf(task.name)
-        }
-      }
+      val now = Date()
+      logger.info("$now ${project.name}: Processing task ${task.path}")
+
+      val taskName = targetNameOverrides.getOrDefault("${task.name}TargetName", task.name)
+
+      // Group task under its group if available
+      task.group
+          ?.takeIf { it.isNotBlank() }
+          ?.let { group -> targetGroups.getOrPut(group) { mutableListOf() }.add(taskName) }
 
       val target =
           processTask(
@@ -105,53 +105,63 @@ fun processTargetsForProject(
               projectBuildPath,
               projectRoot,
               workspaceRoot,
-              cwd,
               externalNodes,
               dependencies,
               targetNameOverrides)
+
       targets[taskName] = target
 
-      val ciTargetName = targetNameOverrides.getOrDefault("ciTargetName", null)
-      ciTargetName?.let {
-        if (task.name.startsWith("compileTest")) {
-          val testTask = project.getTasksByName("test", false)
-          if (testTask.isNotEmpty()) {
-            addTestCiTargets(
-                task.inputs.sourceFiles,
-                projectBuildPath,
-                testTask.first(),
-                targets,
-                targetGroups,
-                projectRoot,
-                workspaceRoot,
-                it)
-          }
-        }
-
-        // Add the `$ciTargetName-check` target when processing the "check" task
-        if (task.name == "check") {
-          val replacedDependencies =
-              (target["dependsOn"] as? List<*>)?.map { dep ->
-                if (dep.toString() == targetNameOverrides.getOrDefault("testTargetName", "test"))
-                    ciTargetName
-                else dep.toString()
-              } ?: emptyList()
-
-          // Copy the original target and override "dependsOn"
-          val newTarget = target.toMutableMap()
-          newTarget["dependsOn"] = replacedDependencies
-
-          val ciCheckTargetName = "$ciTargetName-check"
-          targets[ciCheckTargetName] = newTarget
-
-          ensureTargetGroupExists(targetGroups, testCiTargetGroup)
-          targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
-        }
+      if (hasCiTestTarget && task.name.startsWith("compileTest")) {
+        addTestCiTargets(
+            task.inputs.sourceFiles,
+            projectBuildPath,
+            testTasks.first(),
+            testTargetName,
+            targets,
+            targetGroups,
+            projectRoot,
+            workspaceRoot,
+            ciTestTargetName!!)
       }
-      logger.info("${Date()} ${project.name}: Processed $task")
+
+      if (hasCiIntTestTarget && task.name.startsWith("compileIntTest")) {
+        addTestCiTargets(
+            task.inputs.sourceFiles,
+            projectBuildPath,
+            intTestTasks.first(),
+            intTestTargetName,
+            targets,
+            targetGroups,
+            projectRoot,
+            workspaceRoot,
+            ciIntTestTargetName!!)
+      }
+
+      if (task.name == "check" && (hasCiTestTarget || hasCiIntTestTarget)) {
+        val replacedDependencies =
+            (target["dependsOn"] as? List<*>)?.map { dep ->
+              when (dep.toString()) {
+                testTargetName -> ciTestTargetName ?: dep
+                intTestTargetName -> ciIntTestTargetName ?: dep
+                else -> dep
+              }.toString()
+            } ?: emptyList()
+
+        val newTarget: MutableMap<String, Any?> =
+            mutableMapOf(
+                "dependsOn" to replacedDependencies,
+                "executor" to "nx:noop",
+                "cache" to true,
+                "metadata" to getMetadata("Runs Gradle Check in CI", projectBuildPath, "check"))
+
+        targets[ciCheckTargetName] = newTarget
+        ensureTargetGroupExists(targetGroups, testCiTargetGroup)
+        targetGroups[testCiTargetGroup]?.add(ciCheckTargetName)
+      }
+
+      logger.info("$now ${project.name}: Processed task ${task.path}")
     } catch (e: Exception) {
-      logger.info("${task}: process task error $e")
-      logger.debug("Stack trace:", e)
+      logger.error("Error processing task ${task.path}: ${e.message}", e)
     }
   }
 

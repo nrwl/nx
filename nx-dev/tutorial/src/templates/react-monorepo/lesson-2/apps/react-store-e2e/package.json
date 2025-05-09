@@ -3,10 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "nx": {
-    "projectType": "application",
-    "sourceRoot": "apps/react-store-e2e/src",
     "implicitDependencies": [
-      "@react-monorepo/react-store"
+      "react-store"
     ]
   }
 }

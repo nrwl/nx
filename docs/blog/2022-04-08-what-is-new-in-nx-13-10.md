@@ -2,7 +2,7 @@
 title: 'What is new in Nx 13.10?'
 slug: 'what-is-new-in-nx-13-10'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-04-08/PJ3SRAadq0DxGiC9mCIWsA.png'
+cover_image: '/blog/images/2022-04-08/PJ3SRAadq0DxGiC9mCIWsA.avif'
 tags: [nx, release]
 description: Nx 13.10 brings core package consolidation, Nx Daemon by default, local plugin development, enhanced visualization, new lint rules, and React 18 support.
 ---

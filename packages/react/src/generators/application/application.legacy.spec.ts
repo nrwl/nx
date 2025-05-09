@@ -3,7 +3,6 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
@@ -19,7 +18,7 @@ describe('react app generator (legacy)', () => {
     e2eTestRunner: 'cypress',
     skipFormat: false,
     directory: 'my-app',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     strict: true,
     addPlugin: false,

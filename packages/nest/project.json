@@ -44,11 +44,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/nest"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js nest"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/nest/README.md"],
+      "command": "node ./scripts/copy-readme.js nest"
     }
   },
   "implicitDependencies": ["node", "eslint"]

@@ -2,7 +2,7 @@
 title: "What's New With Lerna 6.5?"
 slug: 'whats-new-with-lerna-6-5'
 authors: ['Zack DeRose']
-cover_image: '/blog/images/2023-02-22/izlWzEYnkZ9myXi58Rmv8A.png'
+cover_image: '/blog/images/2023-02-22/izlWzEYnkZ9myXi58Rmv8A.avif'
 tags: [nx, release]
 description: Lerna 6.5 introduces idempotent publishing, multi-script execution, private package handling, and codebase improvements, with updates on Nx team maintenance.
 ---

@@ -1,4 +1,4 @@
-import { getLatestGitTagForPattern } from './git';
+import { extractReferencesFromCommit, getLatestGitTagForPattern } from './git';
 
 jest.mock('./exec-command', () => ({
   execCommand: jest.fn(() =>
@@ -20,104 +20,213 @@ my-lib-34.0.0-beta.1
   ),
 }));
 
-const releaseTagPatternTestCases = [
-  {
-    pattern: 'v{version}',
-    projectName: 'my-lib-1',
-    expectedTag: 'v4.0.1',
-    expectedVersion: '4.0.1',
-  },
-  {
-    pattern: 'x{version}',
-    projectName: 'my-lib-1',
-    expectedTag: 'x5.0.0',
-    expectedVersion: '5.0.0',
-  },
-  {
-    pattern: 'release/{version}',
-    projectName: 'my-lib-1',
-    expectedTag: 'release/4.2.1',
-    expectedVersion: '4.2.1',
-  },
-  {
-    pattern: 'release/{projectName}@v{version}',
-    projectName: 'my-lib-1',
-    expectedTag: 'release/my-lib-1@v4.2.1',
-    expectedVersion: '4.2.1',
-  },
-  {
-    pattern: '{version}',
-    projectName: 'my-lib-1',
-    expectedTag: '4.0.0-rc.1+build.1',
-    expectedVersion: '4.0.0-rc.1+build.1',
-  },
-  {
-    pattern: '{projectName}@v{version}',
-    projectName: 'my-lib-1',
-    expectedTag: 'my-lib-1@v4.0.0-beta.1',
-    expectedVersion: '4.0.0-beta.1',
-  },
-  {
-    pattern: '{projectName}v{version}',
-    projectName: 'my-lib-2',
-    expectedTag: 'my-lib-2v4.0.0-beta.1',
-    expectedVersion: '4.0.0-beta.1',
-  },
-  {
-    pattern: '{projectName}{version}',
-    projectName: 'my-lib-3',
-    expectedTag: 'my-lib-34.0.0-beta.1',
-    expectedVersion: '4.0.0-beta.1',
-  },
-  {
-    pattern: '{version}-{projectName}',
-    projectName: 'my-lib-1',
-    expectedTag: '4.0.0-beta.0-my-lib-1',
-    expectedVersion: '4.0.0-beta.0',
-  },
-  {
-    pattern: '{version}-{projectName}',
-    projectName: 'alpha',
-    expectedTag: '3.0.0-beta.0-alpha',
-    expectedVersion: '3.0.0-beta.0',
-  },
-];
+describe('git utils', () => {
+  describe('extractReferencesFromCommit', () => {
+    it('should include the given short commit hash even if no other references are found', () => {
+      const references = extractReferencesFromCommit({
+        message: 'test',
+        body: '',
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
 
-describe('getLatestGitTagForPattern', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+    it('should match GitHub style issue references', () => {
+      const references = extractReferencesFromCommit({
+        message: 'This fixed issue #789',
+        body: '',
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "issue",
+            "value": "#789",
+          },
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
+
+    it('should match GitHub style PR references', () => {
+      const references = extractReferencesFromCommit({
+        message: 'fix: all the things (#20607)',
+        body: '',
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "pull-request",
+            "value": "#20607",
+          },
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
+
+    it('should match GitLab style issue references', () => {
+      const references = extractReferencesFromCommit({
+        message: "Merge branch 'mr-to-fix-issue' into 'main'",
+        body: `fix: this should resolve the gitlab issue
+
+Closes #1`,
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "issue",
+            "value": "#1",
+          },
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
+
+    it('should match GitLab style merge request references', () => {
+      const references = extractReferencesFromCommit({
+        message: "Merge branch 'mr-to-fix-issue' into 'main'",
+        body: `fix: this should resolve the gitlab issue
+
+See merge request nx-release-test/nx-release-test!2`,
+        shortHash: 'abc123',
+        author: { name: 'Test Author', email: 'test@example.com' },
+      });
+      expect(references).toMatchInlineSnapshot(`
+        [
+          {
+            "type": "pull-request",
+            "value": "!2",
+          },
+          {
+            "type": "hash",
+            "value": "abc123",
+          },
+        ]
+      `);
+    });
   });
 
-  it.each(releaseTagPatternTestCases)(
-    'should return tag $expectedTag for pattern $pattern',
-    async ({ pattern, projectName, expectedTag, expectedVersion }) => {
-      const result = await getLatestGitTagForPattern(pattern, {
-        projectName,
-      });
+  const releaseTagPatternTestCases = [
+    {
+      pattern: 'v{version}',
+      projectName: 'my-lib-1',
+      expectedTag: 'v4.0.1',
+      expectedVersion: '4.0.1',
+    },
+    {
+      pattern: 'x{version}',
+      projectName: 'my-lib-1',
+      expectedTag: 'x5.0.0',
+      expectedVersion: '5.0.0',
+    },
+    {
+      pattern: 'release/{version}',
+      projectName: 'my-lib-1',
+      expectedTag: 'release/4.2.1',
+      expectedVersion: '4.2.1',
+    },
+    {
+      pattern: 'release/{projectName}@v{version}',
+      projectName: 'my-lib-1',
+      expectedTag: 'release/my-lib-1@v4.2.1',
+      expectedVersion: '4.2.1',
+    },
+    {
+      pattern: '{version}',
+      projectName: 'my-lib-1',
+      expectedTag: '4.0.0-rc.1+build.1',
+      expectedVersion: '4.0.0-rc.1+build.1',
+    },
+    {
+      pattern: '{projectName}@v{version}',
+      projectName: 'my-lib-1',
+      expectedTag: 'my-lib-1@v4.0.0-beta.1',
+      expectedVersion: '4.0.0-beta.1',
+    },
+    {
+      pattern: '{projectName}v{version}',
+      projectName: 'my-lib-2',
+      expectedTag: 'my-lib-2v4.0.0-beta.1',
+      expectedVersion: '4.0.0-beta.1',
+    },
+    {
+      pattern: '{projectName}{version}',
+      projectName: 'my-lib-3',
+      expectedTag: 'my-lib-34.0.0-beta.1',
+      expectedVersion: '4.0.0-beta.1',
+    },
+    {
+      pattern: '{version}-{projectName}',
+      projectName: 'my-lib-1',
+      expectedTag: '4.0.0-beta.0-my-lib-1',
+      expectedVersion: '4.0.0-beta.0',
+    },
+    {
+      pattern: '{version}-{projectName}',
+      projectName: 'alpha',
+      expectedTag: '3.0.0-beta.0-alpha',
+      expectedVersion: '3.0.0-beta.0',
+    },
+  ];
 
-      expect(result.tag).toEqual(expectedTag);
-      expect(result.extractedVersion).toEqual(expectedVersion);
-    }
-  );
+  describe('getLatestGitTagForPattern', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
-  it('should return null if execCommand throws an error', async () => {
-    // should return null if execCommand throws an error
-    (require('./exec-command').execCommand as jest.Mock).mockImplementationOnce(
-      () => {
-        throw new Error('error');
+    it.each(releaseTagPatternTestCases)(
+      'should return tag $expectedTag for pattern $pattern',
+      async ({ pattern, projectName, expectedTag, expectedVersion }) => {
+        const result = await getLatestGitTagForPattern(pattern, {
+          projectName,
+        });
+
+        expect(result.tag).toEqual(expectedTag);
+        expect(result.extractedVersion).toEqual(expectedVersion);
       }
     );
-    const result = await getLatestGitTagForPattern('#{version}', {
-      projectName: 'my-lib-1',
-    });
-    expect(result).toEqual(null);
-  });
 
-  it('should return null if no tags match the pattern', async () => {
-    const result = await getLatestGitTagForPattern('#{version}', {
-      projectName: 'my-lib-1',
+    it('should return null if execCommand throws an error', async () => {
+      // should return null if execCommand throws an error
+      (
+        require('./exec-command').execCommand as jest.Mock
+      ).mockImplementationOnce(() => {
+        throw new Error('error');
+      });
+      const result = await getLatestGitTagForPattern('#{version}', {
+        projectName: 'my-lib-1',
+      });
+      expect(result).toEqual(null);
     });
 
-    expect(result).toEqual(null);
+    it('should return null if no tags match the pattern', async () => {
+      const result = await getLatestGitTagForPattern('#{version}', {
+        projectName: 'my-lib-1',
+      });
+
+      expect(result).toEqual(null);
+    });
   });
 });

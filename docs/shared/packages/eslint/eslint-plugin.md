@@ -18,26 +18,11 @@ Make sure to install the `@nx/eslint-plugin` version that matches the version of
 
 In any Nx workspace, you can install `@nx/eslint-plugin` by running the following commands if the package is not already installed:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/eslint-plugin
 ```
 
 This will install the correct version of `@nx/eslint-plugin`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/eslint-plugin` package with your package manager.
-
-```shell
-npm add -D @nx/eslint-plugin
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Included plugins
 

@@ -1,31 +1,6 @@
 {
-  "generators": {
-    "update-17-2-7": {
-      "cli": "nx",
-      "version": "17.2.7",
-      "description": "Remove patched eslint rule for @next/next/no-html-link-for-pages",
-      "implementation": "./src/migrations/update-17-2-7/remove-eslint-rules-patch"
-    }
-  },
+  "generators": {},
   "packageJsonUpdates": {
-    "17.3.1-beta.0": {
-      "version": "17.3.1-beta.0",
-      "packages": {
-        "next": {
-          "version": "14.0.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "18.0.4": {
-      "version": "18.0.4-beta.0",
-      "packages": {
-        "@swc-node/register": {
-          "version": "~1.8.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.0.3": {
       "version": "19.0.3-beta.0",
       "packages": {

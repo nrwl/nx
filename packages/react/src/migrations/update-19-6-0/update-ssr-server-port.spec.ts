@@ -1,7 +1,6 @@
 import { readProjectConfiguration, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import hostGenerator from '../../generators/host/host';
-import { Linter } from '@nx/eslint';
 import updateSsrServerPort from './update-ssr-server-port';
 
 describe('update-19-6-0 update-ssr-server-port migration', () => {
@@ -17,7 +16,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: true,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       remotes: ['product'],
       bundler: 'webpack',
@@ -132,7 +131,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: true,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       bundler: 'webpack',
     });
@@ -183,7 +182,7 @@ describe('update-19-6-0 update-ssr-server-port migration', () => {
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
       ssr: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       bundler: 'webpack',
     });

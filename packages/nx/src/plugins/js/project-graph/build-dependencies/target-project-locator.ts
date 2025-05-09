@@ -397,7 +397,7 @@ export class TargetProjectLocator {
     normalizedImportExpr: string,
     filePath: string
   ) {
-    return posix.relative(
+    return relative(
       workspaceRoot,
       require.resolve(normalizedImportExpr, {
         paths: [dirname(filePath)],

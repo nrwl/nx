@@ -5,7 +5,7 @@ date: 2024-01-24
 slug: 'monorepos-the-benefits-challenges-and-importance-of-tooling-support'
 authors: ['Juri Strumpflohner']
 tags: [webinar]
-cover_image: /blog/images/2024-01-24/january-webinar-card.png
+cover_image: /blog/images/2024-01-24/january-webinar-card.avif
 status: Past - Gated
 registrationUrl: https://go.nx.dev/january-webinar
 ---

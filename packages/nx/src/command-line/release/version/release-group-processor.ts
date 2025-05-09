@@ -360,6 +360,15 @@ export class ReleaseGroupProcessor {
         );
         this.cachedCurrentVersions.set(projectName, currentVersion);
       }
+
+      // Ensure that there is an entry in versionData for each project being processed, even if they don't end up being bumped
+      for (const projectName of this.allProjectsToProcess) {
+        this.versionData.set(projectName, {
+          currentVersion: this.getCurrentCachedVersionForProject(projectName),
+          newVersion: null,
+          dependentProjects: this.getOriginalDependentProjects(projectName),
+        });
+      }
     }
 
     // Build the dependency relationships between groups
@@ -404,6 +413,8 @@ export class ReleaseGroupProcessor {
     // Track the projects being directly versioned
     let projectsToProcess = new Set<string>();
 
+    const resolveVersionActionsForProjectCallbacks = [];
+
     // Precompute all projects in nx release config
     for (const [groupName, group] of Object.entries(
       this.nxReleaseConfig.groups
@@ -444,23 +455,34 @@ export class ReleaseGroupProcessor {
         );
         this.finalConfigsByProject.set(project, finalConfigForProject);
 
-        const {
-          versionActionsPath,
-          versionActions,
-          afterAllProjectsVersioned,
-        } = await resolveVersionActionsForProject(
-          this.tree,
-          releaseGroup,
-          projectGraphNode,
-          finalConfigForProject
-        );
-        if (!this.uniqueAfterAllProjectsVersioned.has(versionActionsPath)) {
-          this.uniqueAfterAllProjectsVersioned.set(
+        /**
+         * For our versionActions validation to accurate, we need to wait until the full allProjectsToProcess
+         * set is populated so that all dependencies, including those across release groups, are included.
+         *
+         * In order to save us fully traversing the graph again to arrive at this project level, schedule a callback
+         * to resolve the versionActions for the project only once we have all the projects to process.
+         */
+        resolveVersionActionsForProjectCallbacks.push(async () => {
+          const {
             versionActionsPath,
-            afterAllProjectsVersioned
+            versionActions,
+            afterAllProjectsVersioned,
+          } = await resolveVersionActionsForProject(
+            this.tree,
+            releaseGroup,
+            projectGraphNode,
+            finalConfigForProject,
+            // Will be fully populated by the time this callback is executed
+            this.allProjectsToProcess.has(project)
           );
-        }
-        this.projectsToVersionActions.set(project, versionActions);
+          if (!this.uniqueAfterAllProjectsVersioned.has(versionActionsPath)) {
+            this.uniqueAfterAllProjectsVersioned.set(
+              versionActionsPath,
+              afterAllProjectsVersioned
+            );
+          }
+          this.projectsToVersionActions.set(project, versionActions);
+        });
       }
     }
 
@@ -480,6 +502,11 @@ export class ReleaseGroupProcessor {
     }
 
     this.allProjectsToProcess = new Set(projectsToProcess);
+
+    // Execute all the callbacks to resolve the version actions for the projects
+    for (const cb of resolveVersionActionsForProjectCallbacks) {
+      await cb();
+    }
   }
 
   /**

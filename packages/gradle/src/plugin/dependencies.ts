@@ -8,7 +8,7 @@ import {
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
-import { relative } from 'node:path';
+import { join, relative } from 'node:path';
 
 import {
   getCurrentProjectGraphReport,
@@ -17,6 +17,7 @@ import {
 import { GradlePluginOptions } from './utils/gradle-plugin-options';
 import { GRALDEW_FILES, splitConfigFiles } from '../utils/split-config-files';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { existsSync } from 'node:fs';
 
 export const createDependencies: CreateDependencies<
   GradlePluginOptions
@@ -29,7 +30,11 @@ export const createDependencies: CreateDependencies<
     Array.from(GRALDEW_FILES)
   );
   const { gradlewFiles } = splitConfigFiles(files);
-  await populateProjectGraph(context.workspaceRoot, gradlewFiles, options);
+  await populateProjectGraph(
+    context.workspaceRoot,
+    gradlewFiles.map((file) => join(workspaceRoot, file)),
+    options
+  );
   const { dependencies: dependenciesFromReport } =
     getCurrentProjectGraphReport();
 
@@ -48,7 +53,11 @@ export const createDependencies: CreateDependencies<
         Object.values(context.projects).find(
           (project) => target === project.root
         )?.name ?? dependencyFromPlugin.target;
-      if (!sourceProjectName || !targetProjectName) {
+      if (
+        !sourceProjectName ||
+        !targetProjectName ||
+        !existsSync(dependencyFromPlugin.sourceFile)
+      ) {
         return;
       }
       const dependency: StaticDependency = {
