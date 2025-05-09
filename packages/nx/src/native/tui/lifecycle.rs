@@ -1,7 +1,8 @@
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
 use napi::JsObject;
-use std::sync::{Arc, Mutex};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tracing::debug;
 
 use super::app::App;
@@ -85,7 +86,7 @@ impl AppLifeCycle {
         let initiating_tasks = initiating_tasks.into_iter().collect();
 
         Self {
-            app: Arc::new(std::sync::Mutex::new(
+            app: Arc::new(Mutex::new(
                 App::new(
                     tasks.into_iter().collect(),
                     initiating_tasks,
@@ -101,9 +102,8 @@ impl AppLifeCycle {
 
     #[napi]
     pub fn start_command(&mut self, thread_count: Option<u32>) -> napi::Result<()> {
-        if let Ok(mut app) = self.app.lock() {
-            app.start_command(thread_count);
-        }
+        self.app.lock().start_command(thread_count);
+
         Ok(())
     }
 
@@ -115,9 +115,7 @@ impl AppLifeCycle {
 
     #[napi]
     pub fn start_tasks(&mut self, tasks: Vec<Task>, _metadata: JsObject) -> napi::Result<()> {
-        if let Ok(mut app) = self.app.lock() {
-            app.start_tasks(tasks);
-        }
+        self.app.lock().start_tasks(tasks);
         Ok(())
     }
 
@@ -129,9 +127,7 @@ impl AppLifeCycle {
         output: String,
     ) -> napi::Result<()> {
         debug!("Received task terminal output for {}", task.id);
-        if let Ok(mut app) = self.app.lock() {
-            app.print_task_terminal_output(task.id, output);
-        }
+        self.app.lock().print_task_terminal_output(task.id, output);
         Ok(())
     }
 
@@ -141,17 +137,14 @@ impl AppLifeCycle {
         task_results: Vec<TaskResult>,
         _metadata: JsObject,
     ) -> napi::Result<()> {
-        if let Ok(mut app) = self.app.lock() {
-            app.end_tasks(task_results);
-        }
+        self.app.lock().end_tasks(task_results);
+
         Ok(())
     }
 
     #[napi]
     pub fn end_command(&self) -> napi::Result<()> {
-        if let Ok(mut app) = self.app.lock() {
-            app.end_command();
-        }
+        self.app.lock().end_command();
         Ok(())
     }
 
@@ -198,45 +191,43 @@ impl AppLifeCycle {
         debug!("Initialized Action Channel");
 
         // Initialize components
-        if let Ok(mut app) = app_mutex.lock() {
-            // Store callback for cleanup
-            app.set_done_callback(done_callback);
+        let mut app_guard = app_mutex.lock();
+        // Store callback for cleanup
+        app_guard.set_done_callback(done_callback);
 
-            app.register_action_handler(action_tx.clone()).ok();
-            for component in app.components.iter_mut() {
-                component.register_action_handler(action_tx.clone()).ok();
-            }
-
-            app.init(tui.size().unwrap()).ok();
-            for component in app.components.iter_mut() {
-                component.init(tui.size().unwrap()).ok();
-            }
+        app_guard.register_action_handler(action_tx.clone()).ok();
+        for component in app_guard.components.iter_mut() {
+            component.register_action_handler(action_tx.clone()).ok();
         }
+
+        app_guard.init(tui.size().unwrap()).ok();
+        for component in app_guard.components.iter_mut() {
+            component.init(tui.size().unwrap()).ok();
+        }
+        drop(app_guard);
+
         debug!("Initialized Components");
 
         napi::tokio::spawn(async move {
             loop {
                 // Handle events using our Tui abstraction
                 if let Some(event) = tui.next().await {
-                    if let Ok(mut app) = app_mutex.lock() {
-                        let _ = app.handle_event(event, &action_tx);
+                    let mut app = app_mutex.lock();
+                    let _ = app.handle_event(event, &action_tx);
 
-                        // Check if we should quit based on the timer
-                        if let Some(quit_time) = app.quit_at {
-                            if std::time::Instant::now() >= quit_time {
-                                tui.exit().ok();
-                                app.call_done_callback();
-                                break;
-                            }
+                    // Check if we should quit based on the timer
+                    if let Some(quit_time) = app.quit_at {
+                        if std::time::Instant::now() >= quit_time {
+                            tui.exit().ok();
+                            app.call_done_callback();
+                            break;
                         }
                     }
                 }
 
                 // Process actions
                 while let Ok(action) = action_rx.try_recv() {
-                    if let Ok(mut app) = app_mutex.lock() {
-                        app.handle_action(&mut tui, action, &action_tx);
-                    }
+                    app_mutex.lock().handle_action(&mut tui, action, &action_tx);
                 }
             }
         });
@@ -250,29 +241,29 @@ impl AppLifeCycle {
         task_id: String,
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
-        let mut app = self.app.lock().unwrap();
-        app.register_running_task(task_id, parser_and_writer)
+        self.app
+            .lock()
+            .register_running_task(task_id, parser_and_writer)
     }
 
     #[napi]
     pub fn register_running_task_with_empty_parser(&mut self, task_id: String) {
-        let mut app = self.app.lock().unwrap();
-        app.register_running_task_with_empty_parser(task_id)
+        self.app
+            .lock()
+            .register_running_task_with_empty_parser(task_id)
     }
 
     #[napi]
     pub fn append_task_output(&mut self, task_id: String, output: String, is_pty_output: bool) {
         // If its from a pty, we already have it in the parser, so we don't need to append it again
         if !is_pty_output {
-            let mut app = self.app.lock().unwrap();
-            app.append_task_output(task_id, output)
+            self.app.lock().append_task_output(task_id, output)
         }
     }
 
     #[napi]
     pub fn set_task_status(&mut self, task_id: String, status: TaskStatus) {
-        let mut app = self.app.lock().unwrap();
-        app.update_task_status(task_id, status)
+        self.app.lock().update_task_status(task_id, status)
     }
 
     #[napi]
@@ -280,18 +271,17 @@ impl AppLifeCycle {
         &self,
         forced_shutdown_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
-        if let Ok(mut app) = self.app.lock() {
-            app.set_forced_shutdown_callback(forced_shutdown_callback);
-        }
+        self.app
+            .lock()
+            .set_forced_shutdown_callback(forced_shutdown_callback);
+
         Ok(())
     }
 
     // Rust-only lifecycle method
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
-        if let Ok(mut app) = self.app.lock() {
-            app.set_cloud_message(Some(message));
-        }
+        self.app.lock().set_cloud_message(Some(message));
         Ok(())
     }
 }
