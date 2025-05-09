@@ -62,7 +62,10 @@ export async function getCommonConfig(
       symlinks: !normalizedOptions.preserveSymlinks,
     },
     watchOptions: {
+      poll: normalizedOptions.poll,
       followSymlinks: normalizedOptions.preserveSymlinks,
+      ignored:
+        normalizedOptions.poll === undefined ? undefined : '**/node_modules/**',
     },
     ignoreWarnings: [
       // https://github.com/webpack-contrib/source-map-loader/blob/b2de4249c7431dd8432da607e08f0f65e9d64219/src/index.js#L83

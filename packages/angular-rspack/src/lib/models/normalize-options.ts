@@ -278,6 +278,7 @@ export async function normalizeOptions(
     optimization: normalizedOptimization,
     outputHashing: options.outputHashing ?? 'none',
     outputPath: normalizeOutputPath(root, options.outputPath),
+    poll: options.poll ?? undefined,
     polyfills: options.polyfills ?? [],
     prerender: options.prerender ?? false,
     projectName: project?.name ?? undefined,
