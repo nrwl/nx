@@ -6,6 +6,7 @@ tags: ['nx', 'nx-console']
 cover_image: /blog/images/2025-05-07/migrate-ui-header.avif
 description: 'Introducing the new Migrate UI in Nx Console, a visual interface that simplifies the migration process.'
 youtubeUrl: 'https://youtu.be/5xe9ziAV3zg'
+pinned: true
 ---
 
 {% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}

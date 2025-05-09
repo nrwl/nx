@@ -6,7 +6,6 @@ tags: ['nx', 'nx-console', 'ai', 'ci']
 cover_image: /blog/images/articles/bg-nx-mcp-cloud-integration.jpg
 description: 'Learn how Nx Console integrates with CI to alert you of failing builds and uses the Nx MCP to automatically fix errors right from your editor.'
 youtubeUrl: https://youtu.be/fPqPh4h8RJg
-pinned: true
 ---
 
 {% callout type="deepdive" title="Series: Making your LLM smarter" expanded=true %}
