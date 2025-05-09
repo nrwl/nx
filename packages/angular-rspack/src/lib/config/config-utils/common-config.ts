@@ -1,4 +1,5 @@
 import { type Configuration, javascript } from '@rspack/core';
+import { resolve } from 'node:path';
 import {
   JS_ALL_EXT_REGEX,
   TS_ALL_EXT_REGEX,
@@ -11,6 +12,7 @@ import {
 import { getStylesConfig } from './style-config-utils';
 import { getCrossOriginLoading } from './helpers';
 import { configureSourceMap } from './sourcemap-utils';
+import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 
 export async function getCommonConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
@@ -29,6 +31,7 @@ export async function getCommonConfig(
 
   const defaultConfig: Configuration = {
     context: normalizedOptions.root,
+    profile: normalizedOptions.statsJson,
     mode: isProduction ? 'production' : 'development',
     devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : undefined,
     output: {
@@ -111,6 +114,17 @@ export async function getCommonConfig(
     },
     plugins: [
       ...sourceMapOptions.sourceMapPlugins,
+      ...(normalizedOptions.statsJson
+        ? [
+            new StatsJsonPlugin(
+              resolve(
+                normalizedOptions.root,
+                normalizedOptions.outputPath.base,
+                'stats.json'
+              )
+            ),
+          ]
+        : []),
       ...(i18n.shouldInline
         ? [
             {

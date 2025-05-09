@@ -224,6 +224,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
         entry: string;
         experimentalPlatform?: 'node' | 'neutral';
       };
+  /**
+   * Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.
+   */
+  statsJson?: boolean;
   stylePreprocessorOptions?: StylePreprocessorOptions;
   styles?: ScriptOrStyleEntry[];
   /**
