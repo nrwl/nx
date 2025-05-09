@@ -59,7 +59,6 @@ pub struct App {
     terminal_pane_data: [TerminalPaneData; 2],
     spacebar_mode: bool,
     pane_tasks: [Option<String>; 2], // Tasks assigned to panes 1 and 2 (0-indexed)
-    task_list_hidden: bool,
     action_tx: Option<UnboundedSender<Action>>,
     resize_debounce_timer: Option<u128>, // Timer for debouncing resize events
     // task id -> pty instance
@@ -128,7 +127,6 @@ impl App {
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             spacebar_mode: false,
             pane_tasks: [None, None],
-            task_list_hidden: false,
             action_tx: None,
             resize_debounce_timer: None,
             pty_instances: HashMap::new(),
@@ -155,7 +153,7 @@ impl App {
                     .select_task(task.clone());
 
                 if pinned_tasks.len() == 1 && idx == 0 {
-                    self.display_and_focus_current_task_in_terminal_pane(true);
+                    self.display_and_focus_current_task_in_terminal_pane(self.tasks.len() != 1);
                 } else {
                     self.assign_current_task_to_pane(idx);
                 }
@@ -174,6 +172,9 @@ impl App {
 
     pub fn update_task_status(&mut self, task_id: String, status: TaskStatus) {
         self.dispatch_action(Action::UpdateTaskStatus(task_id.clone(), status));
+        if status == TaskStatus::InProgress && self.tasks.len() == 1 {
+            self.terminal_pane_data[0].set_interactive(true);
+        }
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
@@ -299,8 +300,12 @@ impl App {
             tui::Event::Key(key) => {
                 trace!("Handling Key Event: {:?}", key);
 
-                // Record that the user has interacted with the app
-                self.user_has_interacted = true;
+                // If the app is in interactive mode, interactions are with
+                // the running task, not the app itself
+                if !self.is_interactive_mode() {
+                    // Record that the user has interacted with the app
+                    self.user_has_interacted = true;
+                }
 
                 // Handle Ctrl+C to quit, unless we're in interactive mode and the focus is on a terminal pane
                 if key.code == KeyCode::Char('c')
@@ -510,7 +515,7 @@ impl App {
                                         self.focus_previous();
                                     }
                                     KeyCode::Esc => {
-                                        if !self.task_list_hidden {
+                                        if !self.is_task_list_hidden() {
                                             self.update_focus(Focus::TaskList);
                                         }
                                     }
@@ -696,8 +701,12 @@ impl App {
                 }
             }
             tui::Event::Mouse(mouse) => {
-                // Record that the user has interacted with the app
-                self.user_has_interacted = true;
+                // If the app is in interactive mode, interactions are with
+                // the running task, not the app itself
+                if !self.is_interactive_mode() {
+                    // Record that the user has interacted with the app
+                    self.user_has_interacted = true;
+                }
 
                 match mouse.kind {
                     MouseEventKind::ScrollUp => {
@@ -1063,7 +1072,7 @@ impl App {
     /// Toggles the visibility of the output pane for the currently selected task.
     /// In spacebar mode, the output follows the task selection.
     fn toggle_output_visibility(&mut self) {
-        self.task_list_hidden = false;
+        // TODO: Not sure why we do this, this action only happens when the task list is visible
         self.layout_manager
             .set_task_list_visibility(TaskListVisibility::Visible);
 
@@ -1146,7 +1155,7 @@ impl App {
                     Some(pane) => Focus::MultipleOutput(pane),
                     None => {
                         // If the task list is hidden, try and go back to the previous pane if there is one, otherwise do nothing
-                        if self.task_list_hidden {
+                        if self.is_task_list_hidden() {
                             if current_pane > 0 {
                                 Focus::MultipleOutput(current_pane - 1)
                             } else {
@@ -1188,7 +1197,7 @@ impl App {
                         .find(|&idx| self.pane_tasks[idx].is_some())
                     {
                         Focus::MultipleOutput(prev_pane)
-                    } else if !self.task_list_hidden {
+                    } else if !self.is_task_list_hidden() {
                         // Go to task list if it's visible
                         Focus::TaskList
                     } else {
@@ -1204,7 +1213,7 @@ impl App {
                     }
                 } else {
                     // We're at leftmost pane (index 0)
-                    if !self.task_list_hidden {
+                    if !self.is_task_list_hidden() {
                         // Go to task list if it's visible
                         Focus::TaskList
                     } else if num_panes > 1 {
@@ -1235,13 +1244,7 @@ impl App {
         if !self.has_visible_panes() {
             return;
         }
-        self.task_list_hidden = !self.task_list_hidden;
-        self.layout_manager
-            .set_task_list_visibility(if self.task_list_hidden {
-                TaskListVisibility::Hidden
-            } else {
-                TaskListVisibility::Visible
-            });
+        self.layout_manager.toggle_task_list_visibility();
         self.recalculate_layout_areas();
         // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
         let _ = self.handle_pty_resize();
@@ -1416,6 +1419,10 @@ impl App {
         }
 
         Ok(())
+    }
+
+    fn is_task_list_hidden(&self) -> bool {
+        self.layout_manager.get_task_list_visibility() == TaskListVisibility::Hidden
     }
 
     fn create_and_register_pty_instance(
