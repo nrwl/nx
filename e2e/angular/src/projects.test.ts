@@ -331,6 +331,7 @@ describe('Angular Projects', () => {
       config.targets.build.options = {
         ...config.targets.build.options,
         outputPath: `dist/${esbuildApp}`,
+        index: `${esbuildApp}/src/index.html`,
         main: config.targets.build.options.browser,
         browser: undefined,
         buildLibsFromSource: false,
@@ -435,6 +436,7 @@ describe('Angular Projects', () => {
         ...config.targets.build.options,
         main: config.targets.build.options.browser,
         browser: undefined,
+        index: `${esbuildApp}/src/index.html`,
       };
       return config;
     });
