@@ -1034,10 +1034,11 @@ impl App {
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
     fn dispatch_action(&self, action: Action) {
-        let tx = self.action_tx.clone().unwrap();
-        tokio::spawn(async move {
-            let _ = tx.send(action);
-        });
+        if let Some(tx) = &self.action_tx {
+            tx.send(action).unwrap_or_else(|e| {
+                debug!("Failed to dispatch action: {}", e);
+            });
+        }
     }
 
     fn recalculate_layout_areas(&mut self) {
@@ -1423,15 +1424,17 @@ impl App {
         parser_and_writer: External<(ParserArc, WriterArc)>,
     ) {
         // Access the contents of the External
-        let parser_and_writer_clone = parser_and_writer.clone();
-        let (parser, writer) = &parser_and_writer_clone;
         let pty = Arc::new(
-            PtyInstance::new(task_id.to_string(), parser.clone(), writer.clone())
-                .map_err(|e| napi::Error::from_reason(format!("Failed to create PTY: {}", e)))
-                .unwrap(),
+            PtyInstance::new(
+                task_id.to_string(),
+                parser_and_writer.0.clone(),
+                parser_and_writer.1.clone(),
+            )
+            .map_err(|e| napi::Error::from_reason(format!("Failed to create PTY: {}", e)))
+            .unwrap(),
         );
 
-        self.pty_instances.insert(task_id.to_string(), pty.clone());
+        self.pty_instances.insert(task_id.to_string(), pty);
     }
 
     fn create_empty_parser_and_noop_writer() -> (ParserArc, External<(ParserArc, WriterArc)>) {
