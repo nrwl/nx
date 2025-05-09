@@ -16,6 +16,7 @@ import { I18nInlinePlugin } from './i18n-inline-plugin';
 import { IndexHtmlPlugin } from './index-html-plugin';
 import { RxjsEsmResolutionPlugin } from './rxjs-esm-resolution';
 import { ProgressPlugin } from './progress-plugin';
+import { loadEsmModule } from '../utils/misc-helpers';
 
 export class NgRspackPlugin implements RspackPluginInstance {
   readonly pluginOptions: NormalizedAngularRspackPluginOptions;
@@ -148,6 +149,41 @@ export class NgRspackPlugin implements RspackPluginInstance {
         crossOrigin: this.pluginOptions.crossOrigin,
         sri: this.pluginOptions.subresourceIntegrity,
       }).apply(compiler);
+    }
+    if (
+      this.pluginOptions.devServer.open &&
+      isDevServer &&
+      !this.isPlatformServer
+    ) {
+      compiler.hooks.afterEmit.tapAsync(
+        'AngularRspackPlugin',
+        async (_, callback) => {
+          const protocol = this.pluginOptions.devServer.ssl ? 'https' : 'http';
+          const hostname =
+            this.pluginOptions.devServer.host === '0.0.0.0'
+              ? 'localhost'
+              : this.pluginOptions.devServer.host;
+          const port = this.pluginOptions.devServer.port;
+          const pathname =
+            typeof compiler.options.devServer?.devMiddleware?.publicPath ===
+            'string'
+              ? compiler.options.devServer?.devMiddleware?.publicPath
+              : undefined;
+
+          const serverAddress = new URL(`${protocol}://${hostname}:${port}`);
+          if (pathname) {
+            // Ensure pathname starts with a slash
+            serverAddress.pathname = pathname.startsWith('/')
+              ? pathname
+              : `/${pathname}`;
+          }
+
+          const open = (await loadEsmModule<typeof import('open')>('open'))
+            .default;
+          await open(serverAddress.toString());
+          callback();
+        }
+      );
     }
   }
 }
