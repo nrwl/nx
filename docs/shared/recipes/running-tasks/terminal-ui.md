@@ -7,7 +7,9 @@ description: 'Learn how to leverage and configure the Nx Terminal UI when runnin
 
 In version 21, Nx provides an interactive UI in the terminal to help you view the results of multiple tasks that are running in parallel.
 
-![Terminal UI Example](/shared/recipes/running-tasks/tui-example.png)
+{% youtube
+src="https://youtu.be/ykaMAh83fPM"
+title="New Terminal UI for Nx" /%}
 
 {% callout type="note" title="Windows Compatibility" %}
 The initial Nx 21 release disables the Terminal UI on Windows. We are currently working on Windows support, so stay tuned.
