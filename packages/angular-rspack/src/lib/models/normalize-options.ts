@@ -31,10 +31,7 @@ import type {
   ScriptOrStyleEntry,
   SourceMap,
 } from './angular-rspack-plugin-options';
-import {
-  DEV_SERVER_OPTIONS_PENDING_SUPPORT,
-  TOP_LEVEL_OPTIONS_PENDING_SUPPORT,
-} from './unsupported-options';
+import { TOP_LEVEL_OPTIONS_PENDING_SUPPORT } from './unsupported-options';
 
 export const INDEX_HTML_CSR = 'index.csr.html';
 
@@ -108,13 +105,9 @@ function validateGeneralUnsupportedOptions(
   const topLevelUnsupportedOptions = TOP_LEVEL_OPTIONS_PENDING_SUPPORT.filter(
     (option) => options[option] !== undefined
   ).sort();
-  const devServerUnsupportedOptions = DEV_SERVER_OPTIONS_PENDING_SUPPORT.filter(
-    (option) => options.devServer?.[option] !== undefined
-  ).sort();
 
   const unsupportedOptions = [
     ...topLevelUnsupportedOptions.map((option) => `"${option}"`),
-    ...devServerUnsupportedOptions.map((option) => `"devServer.${option}"`),
   ];
 
   if (unsupportedOptions.length > 0) {

@@ -3,13 +3,10 @@ import type {
   InlineStyleLanguage,
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
-import type {
-  DevServerUnsupportedOptions,
-  PluginUnsupportedOptions,
-} from './unsupported-options';
+import type { PluginUnsupportedOptions } from './unsupported-options';
 import { I18nProjectMetadata } from './i18n';
 
-export interface DevServerOptions extends DevServerUnsupportedOptions {
+export interface DevServerOptions {
   /**
    * The hosts that the development server will respond to.
    */
@@ -26,7 +23,15 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
    * Enable hot module replacement.
    */
   hmr?: boolean;
+  /**
+   * Host to listen on.
+   */
   host?: string;
+  /**
+   * @deprecated This is a no-op and can be safely removed.
+   * The `inspect` option is no longer supported.
+   */
+  inspect?: string | boolean;
   /**
    * Whether to reload the page on change, using live-reload.
    * @default true
@@ -36,7 +41,22 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
    * Opens the url in default browser.
    */
   open?: boolean;
+  /**
+   * Port to listen on.
+   */
   port?: number;
+  /**
+   * @deprecated This is a no-op and can be safely removed.
+   * The `prebundle` option is no longer supported.
+   */
+  prebundle?:
+    | boolean
+    | {
+        exclude: string[];
+      };
+  /**
+   * Proxy configuration file. For more information, see https://angular.dev/tools/cli/serve#proxying-to-a-backend-server.
+   */
   proxyConfig?: string;
   /**
    * The URL that the browser client (or live-reload client, if enabled) should
@@ -48,8 +68,17 @@ export interface DevServerOptions extends DevServerUnsupportedOptions {
    * The pathname where the application will be served.
    */
   servePath?: string;
+  /**
+   * Serve using HTTPS.
+   */
   ssl?: boolean;
+  /**
+   * SSL certificate to use for serving HTTPS.
+   */
   sslCert?: string;
+  /**
+   * SSL key to use for serving HTTPS.
+   */
   sslKey?: string;
 }
 
