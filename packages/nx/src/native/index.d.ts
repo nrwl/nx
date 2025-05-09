@@ -237,6 +237,10 @@ export interface InputsInput {
 
 export const IS_WASM: boolean
 
+export declare export declare function logError(message: string): void
+
+export declare export declare function logInfo(message: string): void
+
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
   namedInputs?: Record<string, Array<JsInputs>>
