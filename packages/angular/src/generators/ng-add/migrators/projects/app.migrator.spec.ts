@@ -710,6 +710,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -785,6 +786,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:application',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -853,6 +855,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -910,6 +913,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.myCustomBuildTarget).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: 'dist/apps/app1',
           index: 'apps/app1/src/index.html',
@@ -954,6 +958,7 @@ describe('app migrator', () => {
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.build).toStrictEqual({
         executor: '@angular-devkit/build-angular:browser',
+        outputs: ['{options.outputPath}'],
         options: { outputPath: 'dist/apps/app1/browser' },
       });
     });
