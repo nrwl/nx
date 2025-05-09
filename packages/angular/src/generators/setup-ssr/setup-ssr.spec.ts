@@ -172,6 +172,46 @@ describe('setupSSR', () => {
       );
     });
 
+    it('should update "outputPath" to a string when "outputPath.browser" is an empty string and the only other property set is "outputPath.base"', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+    });
+
+    it('should update "outputPath" to a string when "outputPath.browser" is an empty string and the other properties match their default values', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+        server: 'server',
+        media: 'media',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+    });
+
     it('should remove "outputPath.browser" when it is an empty string', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
@@ -193,6 +233,33 @@ describe('setupSSR', () => {
         base: 'dist/app1',
         server: 'node-server',
       });
+    });
+
+    it('should update "outputs" when set to "{options.outputPath.base}" and "outputPath" is converted to a string', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.outputs = [
+        '{options.outputPath.base}',
+        '{projectRoot}/some-other-output-dir',
+      ];
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.outputs).toStrictEqual([
+        '{options.outputPath}',
+        '{projectRoot}/some-other-output-dir',
+      ]);
+      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
     });
 
     it('should setup server routing for NgModule apps when "serverRouting" is true', async () => {

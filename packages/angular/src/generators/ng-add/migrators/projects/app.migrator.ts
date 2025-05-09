@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit';
+import type { TargetConfiguration, Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
@@ -242,14 +242,48 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
     this.updateTsConfigFileUsedByServerTarget(projectOffsetFromRoot);
   }
 
-  private convertBuildOptions(buildOptions: any): void {
-    buildOptions.outputPath =
-      buildOptions.outputPath &&
-      joinPathFragments(
-        'dist',
-        this.project.newRoot,
-        this.targetNames.server ? 'browser' : ''
-      );
+  private convertBuildOptions(
+    buildOptions: any,
+    target: TargetConfiguration,
+    updateOutputs: boolean = true
+  ): void {
+    const { executor } = target;
+    const isApplicationBuilder =
+      executor === '@angular/build:application' ||
+      executor === '@angular-devkit/build-angular:application';
+
+    if (updateOutputs) {
+      if (buildOptions.outputPath) {
+        if (isApplicationBuilder) {
+          if (typeof buildOptions.outputPath === 'string') {
+            buildOptions.outputPath = joinPathFragments(
+              'dist',
+              this.project.newRoot
+            );
+          } else if (buildOptions.outputPath.base) {
+            buildOptions.outputPath.base = joinPathFragments(
+              'dist',
+              this.project.newRoot
+            );
+          }
+        } else {
+          buildOptions.outputPath = joinPathFragments(
+            'dist',
+            this.project.newRoot,
+            this.targetNames.server ? 'browser' : ''
+          );
+        }
+      } else if (isApplicationBuilder) {
+        buildOptions.outputPath = joinPathFragments('dist', this.projectName);
+      }
+
+      if (typeof buildOptions.outputPath === 'string') {
+        target.outputs = ['{options.outputPath}'];
+      } else if (buildOptions.outputPath?.base) {
+        target.outputs = ['{options.outputPath.base}'];
+      }
+    }
+
     if (buildOptions.index) {
       if (typeof buildOptions.index === 'string') {
         buildOptions.index = this.convertAsset(buildOptions.index);
@@ -366,9 +400,9 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
       }
     }
 
-    this.convertBuildOptions(buildTarget.options ?? {});
+    this.convertBuildOptions(buildTarget.options ?? {}, buildTarget);
     Object.values(buildTarget.configurations ?? {}).forEach((config) =>
-      this.convertBuildOptions(config)
+      this.convertBuildOptions(config, buildTarget, false)
     );
   }
 

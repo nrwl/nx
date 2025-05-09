@@ -48,7 +48,7 @@ export async function setupStandaloneWorkspace(
   // update its targets outputs and delete angular.json
   const projects = toNewFormat(angularJson).projects;
   for (const [projectName, project] of Object.entries(projects ?? {})) {
-    updateProjectOutputs(repoRoot, projectName, project);
+    updateProjectOutputs(repoRoot, projectName, project, cacheableOperations);
     writeJsonFile(join(project.root, 'project.json'), {
       $schema: normalizePath(
         relative(
@@ -144,13 +144,28 @@ function createNxJson(
 function updateProjectOutputs(
   repoRoot: string,
   projectName: string,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  cacheableOperations: string[]
 ): void {
-  Object.values(project.targets ?? {}).forEach((target) => {
+  Object.entries(project.targets ?? {}).forEach(([targetName, target]) => {
     if (
+      target.executor === '@angular/build:application' ||
+      target.executor === '@angular-devkit/build-angular:application'
+    ) {
+      if (target.options.outputPath) {
+        if (typeof target.options.outputPath === 'string') {
+          target.outputs = ['{options.outputPath}'];
+        } else if (target.options.outputPath.base) {
+          target.outputs = ['{options.outputPath.base}'];
+        } else if (cacheableOperations.includes(targetName)) {
+          target.cache = false;
+        }
+      } else {
+        target.options.outputPath = posix.join('dist', projectName);
+        target.outputs = ['{options.outputPath}'];
+      }
+    } else if (
       [
-        '@angular/build:application',
-        '@angular-devkit/build-angular:application',
         '@angular-devkit/build-angular:browser-esbuild',
         '@angular-devkit/build-angular:browser',
         '@angular-builders/custom-webpack:browser',
@@ -160,9 +175,10 @@ function updateProjectOutputs(
         'ngx-build-plus:server',
       ].includes(target.executor)
     ) {
-      target.outputs = ['{options.outputPath}'];
-      if (!target.options.outputPath) {
-        target.options.outputPath = posix.join('dist', projectName);
+      if (target.options.outputPath) {
+        target.outputs = ['{options.outputPath}'];
+      } else if (cacheableOperations.includes(targetName)) {
+        target.cache = false;
       }
     } else if (target.executor === '@angular-eslint/builder:lint') {
       target.outputs = ['{options.outputFile}'];
