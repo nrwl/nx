@@ -62,10 +62,15 @@ const originalLoad = Module._load;
 // Will only be called once because the require cache takes over afterwards.
 Module._load = function (request, parent, isMain) {
   const modulePath = request;
-  if (
+  // Check if we should use the native file cache (enabled by default)
+  const useNativeFileCache = process.env.NX_SKIP_NATIVE_FILE_CACHE !== 'true';
+  // Check if this is an Nx native module (either from npm or local file)
+  const isNxNativeModule =
     nxPackages.has(modulePath) ||
-    localNodeFiles.some((f) => modulePath.endsWith(f))
-  ) {
+    localNodeFiles.some((file) => modulePath.endsWith(file));
+
+  // Only use the file cache for Nx native modules when caching is enabled
+  if (useNativeFileCache && isNxNativeModule) {
     const nativeLocation = require.resolve(modulePath);
     const fileName = basename(nativeLocation);
 

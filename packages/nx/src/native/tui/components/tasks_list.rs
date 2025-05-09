@@ -7,6 +7,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Block, Cell, Paragraph, Row, Table},
 };
+use serde::{Deserialize, Serialize};
 use std::{
     any::Any,
     sync::{Arc, Mutex},
@@ -52,7 +53,7 @@ pub struct TaskItem {
     cache_status: String,
     // Public to aid with sorting utility and testing
     pub status: TaskStatus,
-    terminal_output: String,
+    pub terminal_output: String,
     pub continuous: bool,
     start_time: Option<i64>,
     // Public to aid with sorting utility and testing
@@ -115,7 +116,7 @@ impl TaskItem {
 }
 
 #[napi]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TaskStatus {
     // Explicit statuses that can come from the task runner
     Success,
