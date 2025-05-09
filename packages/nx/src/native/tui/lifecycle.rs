@@ -155,7 +155,6 @@ impl AppLifeCycle {
         done_callback: ThreadsafeFunction<(), ErrorStrategy::Fatal>,
     ) -> napi::Result<()> {
         enable_logger();
-        tui_logger::init_logger(tui_logger::LevelFilter::Debug).unwrap();
         debug!("Initializing Terminal UI");
 
         let app_mutex = self.app.clone();

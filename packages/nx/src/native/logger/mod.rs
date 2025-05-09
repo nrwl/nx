@@ -109,6 +109,7 @@ pub(crate) fn enable_logger() {
     let registry = tracing_subscriber::registry()
         .with(stdout_layer)
         .with(TuiTracingSubscriberLayer);
+    tui_logger::init_logger(tui_logger::LevelFilter::Trace).ok();
 
     if env::var("NX_NATIVE_FILE_LOGGING").is_err() {
         // File logging is not enabled

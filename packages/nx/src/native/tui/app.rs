@@ -3,7 +3,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use ratatui::layout::{Alignment, Position, Rect, Size};
+use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::{debug, trace};
-use tui_logger::{TuiLoggerSmartWidget, TuiLoggerWidget, TuiWidgetEvent, TuiWidgetState};
+use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetState};
 use vt100_ctt::Parser;
 
 use crate::native::tui::tui::Tui;
@@ -135,7 +135,7 @@ impl App {
             selection_manager,
             tasks,
             debug_mode: false,
-            debug_state: TuiWidgetState::default(),
+            debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
         })
     }
 
