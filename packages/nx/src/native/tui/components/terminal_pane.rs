@@ -1,5 +1,5 @@
 use arboard::Clipboard;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
@@ -97,11 +97,8 @@ impl TerminalPaneData {
                     KeyCode::Char(c) => {
                         pty_mut.write_input(c.to_string().as_bytes())?;
                     }
-                    KeyCode::Up => {
-                        pty_mut.write_input(b"\x1b[A")?;
-                    }
-                    KeyCode::Down => {
-                        pty_mut.write_input(b"\x1b[B")?;
+                    KeyCode::Up | KeyCode::Down => {
+                        pty_mut.handle_arrow_keys(key);
                     }
                     KeyCode::Enter => {
                         pty_mut.write_input(b"\r")?;
@@ -115,6 +112,26 @@ impl TerminalPaneData {
                     _ => {}
                 },
                 _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    pub fn handle_mouse_event(&mut self, event: MouseEvent) -> io::Result<()> {
+        if let Some(pty) = &mut self.pty {
+            let mut pty_mut = pty.as_ref().clone();
+            if self.is_interactive {
+                pty_mut.send_mouse_event(event);
+            } else {
+                match event.kind {
+                    MouseEventKind::ScrollUp => {
+                        pty_mut.scroll_up();
+                    }
+                    MouseEventKind::ScrollDown => {
+                        pty_mut.scroll_down();
+                    }
+                    _ => {}
+                }
             }
         }
         Ok(())
@@ -171,6 +188,7 @@ impl TerminalPaneState {
 pub struct TerminalPane<'a> {
     pty_data: Option<&'a mut TerminalPaneData>,
     is_continuous: bool,
+    minimal: bool,
 }
 
 impl<'a> TerminalPane<'a> {
@@ -178,6 +196,7 @@ impl<'a> TerminalPane<'a> {
         Self {
             pty_data: None,
             is_continuous: false,
+            minimal: false,
         }
     }
 
@@ -188,6 +207,11 @@ impl<'a> TerminalPane<'a> {
 
     pub fn continuous(mut self, continuous: bool) -> Self {
         self.is_continuous = continuous;
+        self
+    }
+
+    pub fn minimal(mut self, minimal: bool) -> Self {
+        self.minimal = minimal;
         self
     }
 
@@ -320,34 +344,45 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let status_icon = self.get_status_icon(state.task_status);
 
-        let block = Block::default()
-            .title(Line::from(if state.is_focused {
-                vec![
-                    status_icon.clone(),
-                    Span::raw(format!("{}  ", state.task_name))
-                        .style(Style::default().fg(THEME.primary_fg)),
-                ]
+        let mut title = vec![];
+
+        if self.minimal {
+            title.push(Span::styled(
+                " NX ",
+                Style::default().fg(THEME.primary_fg).bold().bg(base_style
+                    .fg
+                    .expect("Base style should have foreground color")),
+            ));
+        }
+        title.push(status_icon.clone());
+        title.push(Span::styled(
+            format!("{}  ", state.task_name),
+            Style::default().fg(if state.is_focused {
+                THEME.primary_fg
             } else {
-                vec![
-                    status_icon.clone(),
-                    Span::raw(format!("{}  ", state.task_name))
-                        .style(Style::default().fg(THEME.secondary_fg)),
-                    if state.is_next_tab_target {
-                        let tab_target_text = Span::raw("Press <tab> to focus output ")
-                            .remove_modifier(Modifier::DIM);
-                        // In light themes, use the primary fg color for the tab target text to make sure it's clearly visible
-                        if !THEME.is_dark_mode {
-                            tab_target_text.fg(THEME.primary_fg)
-                        } else {
-                            tab_target_text
-                        }
-                    } else {
-                        Span::raw("")
-                    },
-                ]
-            }))
+                THEME.secondary_fg
+            }),
+        ));
+
+        if state.is_next_tab_target {
+            let tab_target_text =
+                Span::raw("Press <tab> to focus output ").remove_modifier(Modifier::DIM);
+            // In light themes, use the primary fg color for the tab target text to make sure it's clearly visible
+            if !THEME.is_dark_mode {
+                title.push(tab_target_text.fg(THEME.primary_fg));
+            } else {
+                title.push(tab_target_text);
+            }
+        }
+
+        let block = Block::default()
+            .title(title)
             .title_alignment(Alignment::Left)
-            .borders(Borders::ALL)
+            .borders(if self.minimal {
+                Borders::NONE
+            } else {
+                Borders::ALL
+            })
             .border_type(if state.is_focused {
                 BorderType::Thick
             } else {
@@ -486,7 +521,11 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
 
                     // Show interactive/readonly status for focused, in progress tasks
-                    if state.task_status == TaskStatus::InProgress && state.is_focused {
+                    if state.task_status == TaskStatus::InProgress
+                        && state.is_focused
+                        && pty_data.can_be_interactive
+                        && !self.minimal
+                    {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![

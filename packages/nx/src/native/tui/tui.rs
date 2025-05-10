@@ -1,12 +1,15 @@
 use crate::native::tui::theme::THEME;
 use color_eyre::eyre::Result;
+use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::{
     cursor,
     event::{Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
+    execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
 use ratatui::backend::CrosstermBackend as Backend;
+use std::io::stdout;
 use std::{
     ops::{Deref, DerefMut},
     time::Duration,
@@ -170,7 +173,7 @@ impl Tui {
         let _ = THEME.is_dark_mode;
         debug!("Enabling Raw Mode");
         crossterm::terminal::enable_raw_mode()?;
-        crossterm::execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+        execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide, EnableMouseCapture)?;
         self.start();
         Ok(())
     }
@@ -179,7 +182,7 @@ impl Tui {
         self.stop()?;
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
-            crossterm::execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show)?;
+            execute!(std::io::stderr(), LeaveAlternateScreen, cursor::Show, DisableMouseCapture)?;
             crossterm::terminal::disable_raw_mode()?;
         }
         Ok(())

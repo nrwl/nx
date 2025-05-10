@@ -1,5 +1,5 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
@@ -214,14 +214,22 @@ impl App {
             return;
         }
 
-        self.begin_exit_countdown()
+        if self.tasks.len() > 1 {
+            self.begin_exit_countdown()
+        } else {
+            self.quit();
+        }
+    }
+
+    fn quit(&mut self) {
+        self.quit_at = Some(std::time::Instant::now());
     }
 
     fn begin_exit_countdown(&mut self) {
         let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
-            self.quit_at = Some(std::time::Instant::now());
+            self.quit();
             return;
         }
 
@@ -708,27 +716,32 @@ impl App {
                     self.user_has_interacted = true;
                 }
 
+                if matches!(self.focus, Focus::MultipleOutput(_)) {
+                    self.handle_mouse_event(mouse).ok();
+                    return Ok(false);
+                }
+
                 match mouse.kind {
                     MouseEventKind::ScrollUp => {
-                        if matches!(self.focus, Focus::MultipleOutput(_)) {
+                        if matches!(self.focus, Focus::TaskList) {
+                            self.dispatch_action(Action::PreviousTask);
+                        } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Up,
                                 KeyModifiers::empty(),
                             ))
                             .ok();
-                        } else if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::PreviousTask);
                         }
                     }
                     MouseEventKind::ScrollDown => {
-                        if matches!(self.focus, Focus::MultipleOutput(_)) {
+                        if matches!(self.focus, Focus::TaskList) {
+                            self.dispatch_action(Action::NextTask);
+                        } else {
                             self.handle_key_event(KeyEvent::new(
                                 KeyCode::Down,
                                 KeyModifiers::empty(),
                             ))
                             .ok();
-                        } else if matches!(self.focus, Focus::TaskList) {
-                            self.dispatch_action(Action::NextTask);
                         }
                     }
                     _ => {}
@@ -790,6 +803,7 @@ impl App {
                     }
 
                     let frame_area = self.frame_area.unwrap();
+                    let tasks_list_hidden = self.is_task_list_hidden();
                     let layout_areas = self.layout_areas.as_mut().unwrap();
 
                     if self.debug_mode {
@@ -970,6 +984,7 @@ impl App {
                                 );
 
                                 let terminal_pane = TerminalPane::new()
+                                    .minimal(tasks_list_hidden && self.tasks.len() <= 1)
                                     .pty_data(terminal_pane_data)
                                     .continuous(task.continuous);
 
@@ -1328,6 +1343,15 @@ impl App {
         self.recalculate_layout_areas();
         // Ensure the pty instances get resized appropriately (no debounce as this is based on an imperative user action)
         let _ = self.handle_pty_resize();
+    }
+
+    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> io::Result<()> {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
+            terminal_pane_data.handle_mouse_event(mouse_event)
+        } else {
+            Ok(())
+        }
     }
 
     /// Forward key events to the currently focused pane, if any.

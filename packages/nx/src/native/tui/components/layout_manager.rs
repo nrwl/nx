@@ -138,7 +138,7 @@ impl LayoutManager {
         self.mode = match self.mode {
             LayoutMode::Auto => {
                 // If we are in auto mode, we need to figure out our current orientation and set the mode to the opposite.
-                if self.is_vertical_layout_preferred(area.width, area.height, self.task_count) {
+                if self.is_vertical_layout_preferred(area.width, area.height) {
                     LayoutMode::Horizontal
                 } else {
                     LayoutMode::Vertical
@@ -250,7 +250,7 @@ impl LayoutManager {
         // Determine whether to use vertical or horizontal layout
         let use_vertical = match self.mode {
             LayoutMode::Auto => {
-                self.is_vertical_layout_preferred(area.width, area.height, self.task_count)
+                self.is_vertical_layout_preferred(area.width, area.height)
             }
             LayoutMode::Vertical => true,
             LayoutMode::Horizontal => false,
@@ -405,13 +405,7 @@ impl LayoutManager {
         &self,
         terminal_width: u16,
         terminal_height: u16,
-        task_count: usize,
     ) -> bool {
-        // If there's only a single task, prefer vertical layout
-        if task_count <= 1 {
-            return true;
-        }
-
         // Calculate aspect ratio (width/height)
         let aspect_ratio = terminal_width as f32 / terminal_height as f32;
 
