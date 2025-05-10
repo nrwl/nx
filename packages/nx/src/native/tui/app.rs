@@ -214,14 +214,22 @@ impl App {
             return;
         }
 
-        self.begin_exit_countdown()
+        if self.tasks.len() > 1 {
+            self.begin_exit_countdown()
+        } else {
+            self.quit();
+        }
+    }
+
+    fn quit(&mut self) {
+        self.quit_at = Some(std::time::Instant::now());
     }
 
     fn begin_exit_countdown(&mut self) {
         let countdown_duration = self.tui_config.auto_exit.countdown_seconds();
         // If countdown is disabled, exit immediately
         if countdown_duration.is_none() {
-            self.quit_at = Some(std::time::Instant::now());
+            self.quit();
             return;
         }
 
@@ -932,7 +940,8 @@ impl App {
                                 let terminal_pane_data = &mut self.terminal_pane_data[pane_idx];
                                 terminal_pane_data.is_continuous = task.continuous;
                                 let in_progress = task.status == TaskStatus::InProgress;
-                                terminal_pane_data.can_be_interactive = in_progress;
+                                terminal_pane_data.can_be_interactive =
+                                    in_progress && self.tasks.len() > 1;
                                 if !in_progress {
                                     terminal_pane_data.set_interactive(false);
                                 }
