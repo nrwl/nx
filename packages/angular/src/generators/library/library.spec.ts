@@ -1807,17 +1807,15 @@ describe('lib', () => {
   });
 
   describe('angular compat support', () => {
-    beforeEach(() => {
+    it('should disable modern class fields behavior in versions lower than v18.1', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~17.2.0',
+          '@angular/core': '~18.0.0',
         },
       }));
-    });
 
-    it('should disable modern class fields behavior', async () => {
       await runLibraryGeneratorWithOpts();
 
       expect(

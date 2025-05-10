@@ -22,7 +22,7 @@ export class AngularDevkitKarmaMigrator extends BuilderMigrator {
   ) {
     super(
       tree,
-      ['@angular-devkit/build-angular:karma'],
+      ['@angular/build:karma', '@angular-devkit/build-angular:karma'],
       'karma',
       project,
       projectConfig,

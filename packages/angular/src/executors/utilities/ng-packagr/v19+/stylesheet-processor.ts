@@ -7,7 +7,7 @@
 
 import { workspaceRoot } from '@nx/devkit';
 import browserslist from 'browserslist';
-import type { NgPackageEntryConfig } from 'ng-packagr/ng-entrypoint.schema';
+import type { NgPackageEntryConfig } from 'ng-packagr/src/ng-entrypoint.schema';
 import { getNgPackagrVersionInfo } from '../ng-packagr-version';
 import { importNgPackagrPath } from '../package-imports';
 
@@ -30,15 +30,15 @@ export function getStylesheetProcessor(): new (
   const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
 
   const { ComponentStylesheetBundler } = importNgPackagrPath<
-    typeof import('ng-packagr/lib/styles/component-stylesheets')
-  >('ng-packagr/lib/styles/component-stylesheets', ngPackagrMajorVersion);
+    typeof import('ng-packagr/src/lib/styles/component-stylesheets')
+  >('ng-packagr/src/lib/styles/component-stylesheets', ngPackagrMajorVersion);
   const {
     generateSearchDirectories,
     getTailwindConfig,
     loadPostcssConfiguration,
   } = importNgPackagrPath<
-    typeof import('ng-packagr/lib/styles/postcss-configuration')
-  >('ng-packagr/lib/styles/postcss-configuration', ngPackagrMajorVersion);
+    typeof import('ng-packagr/src/lib/styles/postcss-configuration')
+  >('ng-packagr/src/lib/styles/postcss-configuration', ngPackagrMajorVersion);
 
   class StylesheetProcessor extends ComponentStylesheetBundler {
     constructor(

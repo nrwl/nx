@@ -17,7 +17,6 @@ import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-gra
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import {
   loadIndexHtmlTransformer,
   loadMiddleware,
@@ -31,11 +30,7 @@ import {
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import { normalizeOptions, validateOptions } from './lib';
-import type {
-  NormalizedSchema,
-  Schema,
-  SchemaWithBrowserTarget,
-} from './schema';
+import type { NormalizedSchema, Schema } from './schema';
 import { readNxJson } from 'nx/src/config/configuration';
 
 type BuildTargetOptions = {
@@ -158,6 +153,7 @@ export function executeDevServerBuilder(
 
   const delegateBuilderOptions = getDelegateBuilderOptions(options);
   const isUsingWebpackBuilder = ![
+    '@angular/build:application',
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:application',
@@ -258,14 +254,6 @@ function getDelegateBuilderOptions(
   const delegateBuilderOptions: NormalizedSchema & DevServerBuilderOptions = {
     ...options,
   };
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
-  if (angularMajorVersion <= 17) {
-    (
-      delegateBuilderOptions as unknown as SchemaWithBrowserTarget
-    ).browserTarget = delegateBuilderOptions.buildTarget;
-    delete delegateBuilderOptions.buildTarget;
-  }
 
   // delete extra option not supported by the delegate builder
   delete delegateBuilderOptions.buildLibsFromSource;

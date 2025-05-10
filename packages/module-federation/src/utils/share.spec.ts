@@ -208,6 +208,11 @@ describe('MF Share Utils', () => {
           singleton: true,
           strictVersion: true,
         },
+        '@angular/core/primitives/di': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
         '@angular/core/primitives/event-dispatch': {
           requiredVersion: '~13.2.0',
           singleton: true,
@@ -313,6 +318,11 @@ describe('MF Share Utils', () => {
           strictVersion: true,
         },
         '@angular/core/event-dispatch-contract.min.js': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/di': {
           requiredVersion: '~13.2.0',
           singleton: true,
           strictVersion: true,
@@ -465,6 +475,11 @@ describe('MF Share Utils', () => {
           singleton: true,
           strictVersion: true,
         },
+        '@angular/core/primitives/di': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
         '@angular/core/primitives/event-dispatch': {
           requiredVersion: '~13.2.0',
           singleton: true,
@@ -562,6 +577,11 @@ describe('MF Share Utils', () => {
           requiredVersion: '~13.2.0',
         },
         '@angular/core/event-dispatch-contract.min.js': {
+          requiredVersion: '~13.2.0',
+          singleton: true,
+          strictVersion: true,
+        },
+        '@angular/core/primitives/di': {
           requiredVersion: '~13.2.0',
           singleton: true,
           strictVersion: true,

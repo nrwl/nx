@@ -172,6 +172,46 @@ describe('setupSSR', () => {
       );
     });
 
+    it('should update "outputPath" to a string when "outputPath.browser" is an empty string and the only other property set is "outputPath.base"', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+    });
+
+    it('should update "outputPath" to a string when "outputPath.browser" is an empty string and the other properties match their default values', async () => {
+      const tree = createTreeWithEmptyWorkspace();
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+        server: 'server',
+        media: 'media',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
+    });
+
     it('should remove "outputPath.browser" when it is an empty string', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
@@ -193,6 +233,33 @@ describe('setupSSR', () => {
         base: 'dist/app1',
         server: 'node-server',
       });
+    });
+
+    it('should update "outputs" when set to "{options.outputPath.base}" and "outputPath" is converted to a string', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        skipFormat: true,
+      });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.outputs = [
+        '{options.outputPath.base}',
+        '{projectRoot}/some-other-output-dir',
+      ];
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.outputs).toStrictEqual([
+        '{options.outputPath}',
+        '{projectRoot}/some-other-output-dir',
+      ]);
+      expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
     });
 
     it('should setup server routing for NgModule apps when "serverRouting" is true', async () => {
@@ -572,7 +639,7 @@ describe('setupSSR', () => {
       import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes) ]
+        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
       };
       "
     `);
@@ -652,7 +719,7 @@ describe('setupSSR', () => {
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
+        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation())]
       };
       "
     `);
@@ -665,7 +732,7 @@ describe('setupSSR', () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '17.2.0',
+          '@angular/core': '18.2.0',
         },
       }));
       await generateTestApplication(tree, {
@@ -680,22 +747,22 @@ describe('setupSSR', () => {
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/ssr']).toBe(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        backwardCompatibleVersions.angularV17.angularVersion
+        backwardCompatibleVersions.angularV18.angularVersion
       );
       expect(pkgJson.dependencies['@angular/ssr']).toEqual(
-        backwardCompatibleVersions.angularV17.angularDevkitVersion
+        backwardCompatibleVersions.angularV18.angularDevkitVersion
       );
       expect(pkgJson.dependencies['express']).toEqual(
-        backwardCompatibleVersions.angularV17.expressVersion
+        backwardCompatibleVersions.angularV18.expressVersion
       );
       expect(
         pkgJson.dependencies['@nguniversal/express-engine']
       ).toBeUndefined();
       expect(pkgJson.devDependencies['@types/express']).toBe(
-        backwardCompatibleVersions.angularV17.typesExpressVersion
+        backwardCompatibleVersions.angularV18.typesExpressVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toBeUndefined();
     });
@@ -704,7 +771,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { '@angular/core': '17.2.0' },
+        dependencies: { '@angular/core': '18.2.0' },
       }));
       await generateTestApplication(tree, {
         directory: 'app1',
@@ -745,7 +812,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'package.json', (json) => ({
         ...json,
-        dependencies: { '@angular/core': '17.2.0' },
+        dependencies: { '@angular/core': '18.2.0' },
       }));
       await generateTestApplication(tree, {
         directory: 'app1',
@@ -760,13 +827,13 @@ describe('setupSSR', () => {
 
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { ApplicationConfig } from '@angular/core';
+        "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
         import { provideRouter } from '@angular/router';
         import { appRoutes } from './app.routes';
         import { provideClientHydration } from '@angular/platform-browser';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideClientHydration(),provideRouter(appRoutes) ]
+          providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
         };
         "
       `);

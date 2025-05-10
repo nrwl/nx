@@ -1,4 +1,9 @@
-import { names, readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  joinPathFragments,
+  names,
+  readProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
 import {
   findNodes,
   getImport,
@@ -702,11 +707,20 @@ function getListOfRoutes(
 
 export function isNgStandaloneApp(tree: Tree, projectName: string) {
   const project = readProjectConfiguration(tree, projectName);
-  const mainFile =
+  let mainFile =
     project.targets?.build?.options?.main ??
     project.targets?.build?.options?.browser;
+  let hasMainFile = false;
+  if (mainFile) {
+    hasMainFile = true;
+  } else {
+    const sourceRoot =
+      project.sourceRoot ?? joinPathFragments(project.root, 'src');
+    mainFile = joinPathFragments(sourceRoot, 'main.ts');
+    hasMainFile = tree.exists(mainFile);
+  }
 
-  if (project.projectType !== 'application' || !mainFile) {
+  if (project.projectType !== 'application' || !hasMainFile) {
     return false;
   }
 
@@ -920,10 +934,16 @@ export function readBootstrapInfo(
   }
   const config = readProjectConfiguration(host, app);
 
-  let mainPath;
+  let mainPath: string;
   try {
     mainPath =
-      config.targets.build.options.main ?? config.targets.build.options.browser;
+      config.targets.build.options?.main ??
+      config.targets.build.options?.browser;
+    if (!mainPath) {
+      const sourceRoot =
+        config.sourceRoot ?? joinPathFragments(config.root, 'src');
+      mainPath = joinPathFragments(sourceRoot, 'main.ts');
+    }
   } catch (e) {
     throw new Error('Main file cannot be located');
   }

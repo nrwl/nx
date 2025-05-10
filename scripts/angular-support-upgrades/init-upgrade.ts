@@ -10,6 +10,7 @@
  *
  */
 import { execSync } from 'child_process';
+import { prerelease } from 'semver';
 import { buildMigrations } from './build-migrations';
 import { fetchVersionsFromRegistry } from './fetch-versions-from-registry';
 import { updatePackageJsonForAngular } from './update-package-jsons';
@@ -33,13 +34,17 @@ async function run() {
   const packageVersionMap = await fetchVersionsFromRegistry(
     argv.angularVersion
   );
-  await updatePackageJsonForAngular(packageVersionMap);
+
+  const isPrerelease =
+    prerelease(packageVersionMap.get('@angular/cli')!) !== null;
+  await updatePackageJsonForAngular(packageVersionMap, isPrerelease);
   await buildMigrations(
     packageVersionMap,
     argv.targetNxVersion,
-    argv.targetNxMigrationVersion
+    argv.targetNxMigrationVersion,
+    isPrerelease
   );
-  updateVersionUtils(packageVersionMap);
+  updateVersionUtils(packageVersionMap, isPrerelease);
 
   console.log('⏳ - Installing packages...');
   execSync('pnpm install', {

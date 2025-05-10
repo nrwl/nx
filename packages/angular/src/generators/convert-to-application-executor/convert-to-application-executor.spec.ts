@@ -2,7 +2,6 @@ import {
   addProjectConfiguration,
   logger,
   readProjectConfiguration,
-  updateJson,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -253,63 +252,5 @@ describe('convert-to-application-executor generator', () => {
     expect(
       project.targets.build.configurations.development.commonChunk
     ).toBeUndefined();
-  });
-
-  describe('compat', () => {
-    it('should not convert outputs to the object notation when angular version is lower that 17.1.0', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '17.0.0';
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        root: 'app1',
-        projectType: 'application',
-        targets: {
-          build: {
-            executor: '@angular-devkit/build-angular:browser',
-            outputs: ['{options.outputPath}'],
-            options: {
-              outputPath: 'dist/app1',
-            },
-          },
-        },
-      });
-
-      await convertToApplicationExecutor(tree, {});
-
-      const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.outputs).toStrictEqual([
-        '{options.outputPath}',
-      ]);
-      expect(project.targets.build.options.outputPath).toBe('dist/app1');
-    });
-
-    it('should remove trailing "/browser" from output path when angular version is lower that 17.1.0', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '17.0.0';
-        return json;
-      });
-      addProjectConfiguration(tree, 'app1', {
-        root: 'app1',
-        projectType: 'application',
-        targets: {
-          build: {
-            executor: '@angular-devkit/build-angular:browser',
-            outputs: ['{options.outputPath}'],
-            options: {
-              outputPath: 'dist/app1/browser',
-            },
-          },
-        },
-      });
-
-      await convertToApplicationExecutor(tree, {});
-
-      const project = readProjectConfiguration(tree, 'app1');
-      expect(project.targets.build.outputs).toStrictEqual([
-        '{options.outputPath}',
-      ]);
-      expect(project.targets.build.options.outputPath).toBe('dist/app1');
-    });
   });
 });

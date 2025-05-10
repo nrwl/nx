@@ -2,8 +2,6 @@ import type { buildApplication as buildApplicationFn } from '@angular-devkit/bui
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { gte } from 'semver';
-import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   loadIndexHtmlTransformer,
@@ -53,19 +51,9 @@ export default async function* applicationExecutor(
     context
   );
 
-  const { version: angularVersion } = getInstalledAngularVersionInfo();
-  if (gte(angularVersion, '17.1.0')) {
-    const { buildApplication } = await import('@angular-devkit/build-angular');
-    return yield* buildApplication(delegateExecutorOptions, builderContext, {
-      codePlugins: plugins,
-      indexHtmlTransformer,
-    });
-  }
-
-  const { buildApplication } = require('@angular-devkit/build-angular');
-  return yield* buildApplication(
-    delegateExecutorOptions,
-    builderContext,
-    plugins
-  );
+  const { buildApplication } = await import('@angular-devkit/build-angular');
+  return yield* buildApplication(delegateExecutorOptions, builderContext, {
+    codePlugins: plugins,
+    indexHtmlTransformer,
+  });
 }
