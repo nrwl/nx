@@ -347,7 +347,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 ]
             }))
             .title_alignment(Alignment::Left)
-            .borders(Borders::ALL)
+            .borders(Borders::NONE)
             .border_type(if state.is_focused {
                 BorderType::Thick
             } else {
@@ -486,7 +486,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     }
 
                     // Show interactive/readonly status for focused, in progress tasks
-                    if state.task_status == TaskStatus::InProgress && state.is_focused {
+                    if state.task_status == TaskStatus::InProgress
+                        && state.is_focused
+                        && pty_data.can_be_interactive
+                    {
                         // Bottom right status
                         let bottom_text = if self.is_currently_interactive() {
                             Line::from(vec![
