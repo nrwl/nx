@@ -1,6 +1,6 @@
 launch-templates:
-  linux-medium:
-    resource-class: 'docker_linux_amd64/medium+'
+  linux-large:
+    resource-class: 'docker_linux_amd64/large'
     image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
     env:
       GIT_AUTHOR_EMAIL: test@test.com
