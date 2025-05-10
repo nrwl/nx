@@ -37,7 +37,8 @@
     "@nx/js": "file:../js",
     "picomatch": "4.0.2",
     "tsconfig-paths": "^4.1.2",
-    "semver": "^7.6.3"
+    "semver": "^7.6.3",
+    "ajv": "^8.0.0"
   },
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0",
