@@ -1,10 +1,10 @@
 use crate::native::tui::theme::THEME;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::Paragraph,
-    Frame,
 };
 
 pub struct Pagination {

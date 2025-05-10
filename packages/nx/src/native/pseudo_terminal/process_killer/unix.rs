@@ -1,5 +1,5 @@
 use nix::{
-    sys::signal::{kill, Signal as NixSignal},
+    sys::signal::{Signal as NixSignal, kill},
     unistd::Pid,
 };
 

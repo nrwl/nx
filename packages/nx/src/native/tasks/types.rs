@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 use std::{collections::HashMap, fmt, ptr};
 
 use napi::{
-    bindgen_prelude::{check_status, ToNapiValue},
+    bindgen_prelude::{ToNapiValue, check_status},
     sys,
 };
 

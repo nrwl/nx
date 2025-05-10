@@ -419,14 +419,19 @@ mod tests {
                 match (a.end_time, b.end_time) {
                     (Some(time_a), Some(time_b)) => {
                         if time_a > time_b {
-                            panic!("Sort order violation: task with end_time {} should come before task with end_time {}", time_b, time_a);
+                            panic!(
+                                "Sort order violation: task with end_time {} should come before task with end_time {}",
+                                time_b, time_a
+                            );
                         } else if time_a < time_b {
                             continue;
                         }
                         // If end times are equal, fall through to name check
                     }
                     (Some(_), None) => continue, // Correct order
-                    (None, Some(_)) => panic!("Sort order violation: task with end_time should come before task without end_time"),
+                    (None, Some(_)) => panic!(
+                        "Sort order violation: task with end_time should come before task without end_time"
+                    ),
                     (None, None) => {} // Fall through to name check
                 }
             }

@@ -98,8 +98,8 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64>
 #[cfg(test)]
 mod test {
     use super::*;
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     #[test]
     fn should_copy_directories() {
@@ -115,9 +115,10 @@ mod test {
         let dest = temp.join("new-parent/child/grand-child/.config");
         copy(src.to_string_lossy().into(), dest.to_string_lossy().into()).unwrap();
 
-        assert!(temp
-            .child("new-parent/child/grand-child/.config/file.txt")
-            .exists());
+        assert!(
+            temp.child("new-parent/child/grand-child/.config/file.txt")
+                .exists()
+        );
     }
 
     #[test]

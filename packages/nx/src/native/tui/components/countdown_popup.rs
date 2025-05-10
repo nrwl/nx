@@ -1,5 +1,6 @@
 use color_eyre::eyre::Result;
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
@@ -7,7 +8,6 @@ use ratatui::{
         Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
         ScrollbarState,
     },
-    Frame,
 };
 use std::any::Any;
 use std::time::{Duration, Instant};

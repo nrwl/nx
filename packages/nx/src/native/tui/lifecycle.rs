@@ -1,6 +1,6 @@
+use napi::JsObject;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction};
-use napi::JsObject;
 use parking_lot::Mutex;
 use std::sync::Arc;
 use tracing::debug;

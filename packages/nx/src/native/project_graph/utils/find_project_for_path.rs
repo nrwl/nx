@@ -1,4 +1,4 @@
-use crate::native::project_graph::utils::{normalize_project_root, ProjectRootMappings};
+use crate::native::project_graph::utils::{ProjectRootMappings, normalize_project_root};
 use std::path::Path;
 
 pub fn find_project_for_path<P: AsRef<Path>>(
