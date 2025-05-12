@@ -3,6 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { relative } from 'node:path';
+import { minimatch } from 'minimatch';
 import { interpolate } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { execCommand } from './exec-command';
@@ -45,15 +46,59 @@ const SEMVER_REGEX =
 
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
-  additionalInterpolationData = {}
+  additionalInterpolationData = {},
+  checkAllBranchesWhen?: boolean | string[]
 ): Promise<{ tag: string; extractedVersion: string } | null> {
+  /**
+   * By default, we will try and resolve the latest match for the releaseTagPattern from the current branch,
+   * falling back to all branches if no match is found on the current branch.
+   *
+   * - If checkAllBranchesWhen is true it will cause us to ALWAYS check all branches for the latest match.
+   * - If checkAllBranchesWhen is explicitly set to false it will cause us to ONLY check the current branch for the latest match.
+   * - If checkAllBranchesWhen is an array of strings it will cause us to check all branches WHEN the current branch is one of the strings in the array.
+   */
+  let alwaysCheckAllBranches = false;
+  if (typeof checkAllBranchesWhen !== 'undefined') {
+    if (typeof checkAllBranchesWhen === 'boolean') {
+      alwaysCheckAllBranches = checkAllBranchesWhen;
+    } else if (Array.isArray(checkAllBranchesWhen)) {
+      /**
+       * Get the current git branch and determine whether to check all branches based on the checkAllBranchesWhen parameter
+       */
+      const currentBranch = await execCommand('git', [
+        'rev-parse',
+        '--abbrev-ref',
+        'HEAD',
+      ]).then((r) => r.trim());
+      // Check exact match first
+      alwaysCheckAllBranches = checkAllBranchesWhen.includes(currentBranch);
+      // Check if any glob pattern matches next
+      if (!alwaysCheckAllBranches) {
+        alwaysCheckAllBranches = checkAllBranchesWhen.some((pattern) => {
+          const r = minimatch.makeRe(pattern, { dot: true });
+          if (!r) {
+            return false;
+          }
+          return r.test(currentBranch);
+        });
+      }
+    }
+  }
+
+  const defaultGitArgs = [
+    // Apply git config to take version suffixes into account when sorting, e.g. 1.0.0 is newer than 1.0.0-beta.1
+    '-c',
+    'versionsort.suffix=-',
+    'tag',
+    '--sort',
+    '-v:refname',
+  ];
+
   try {
     let tags: string[];
     tags = await execCommand('git', [
-      'tag',
-      '--sort',
-      '-v:refname',
-      '--merged',
+      ...defaultGitArgs,
+      ...(alwaysCheckAllBranches ? [] : ['--merged']),
     ]).then((r) =>
       r
         .trim()
@@ -61,15 +106,21 @@ export async function getLatestGitTagForPattern(
         .map((t) => t.trim())
         .filter(Boolean)
     );
-    if (!tags.length) {
+
+    if (
+      // Do not run this fallback if the user explicitly set checkAllBranchesWhen to false
+      checkAllBranchesWhen !== false &&
+      !tags.length &&
+      // There is no point in running this fallback if we already checked against all branches
+      !alwaysCheckAllBranches
+    ) {
       // try again, but include all tags on the repo instead of just --merged ones
-      tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-        (r) =>
-          r
-            .trim()
-            .split('\n')
-            .map((t) => t.trim())
-            .filter(Boolean)
+      tags = await execCommand('git', defaultGitArgs).then((r) =>
+        r
+          .trim()
+          .split('\n')
+          .map((t) => t.trim())
+          .filter(Boolean)
       );
     }
 
@@ -365,10 +416,12 @@ export async function gitPush({
   gitRemote,
   dryRun,
   verbose,
+  additionalArgs,
 }: {
   gitRemote?: string;
   dryRun?: boolean;
   verbose?: boolean;
+  additionalArgs?: string | string[];
 }) {
   const commandArgs = [
     'push',
@@ -379,6 +432,13 @@ export async function gitPush({
     // Set custom git remote if provided
     ...(gitRemote ? [gitRemote] : []),
   ];
+  if (additionalArgs) {
+    if (Array.isArray(additionalArgs)) {
+      commandArgs.push(...additionalArgs);
+    } else {
+      commandArgs.push(...additionalArgs.split(' '));
+    }
+  }
 
   if (verbose) {
     console.log(
@@ -412,7 +472,12 @@ export function parseConventionalCommitsMessage(message: string): {
 } | null {
   const match = message.match(ConventionalCommitRegex);
   if (!match) {
-    return null;
+    return {
+      type: '__INVALID__',
+      scope: '',
+      description: message,
+      breaking: false,
+    };
   }
 
   return {
@@ -423,20 +488,38 @@ export function parseConventionalCommitsMessage(message: string): {
   };
 }
 
-function extractReferencesFromCommitMessage(
-  message: string,
-  shortHash: string
-): Reference[] {
+export function extractReferencesFromCommit(commit: RawGitCommit): Reference[] {
   const references: Reference[] = [];
-  for (const m of message.matchAll(PullRequestRE)) {
+
+  // Extract GitHub style PR references from commit message
+  for (const m of commit.message.matchAll(PullRequestRE)) {
     references.push({ type: 'pull-request', value: m[1] });
   }
-  for (const m of message.matchAll(IssueRE)) {
+
+  // Extract GitLab style merge request references from commit body
+  for (const m of commit.body.matchAll(GitLabMergeRequestRE)) {
+    if (m[1]) {
+      references.push({ type: 'pull-request', value: m[1] });
+    }
+  }
+
+  // Extract issue references from commit message
+  for (const m of commit.message.matchAll(IssueRE)) {
     if (!references.some((i) => i.value === m[1])) {
       references.push({ type: 'issue', value: m[1] });
     }
   }
-  references.push({ value: shortHash, type: 'hash' });
+
+  // Extract issue references from commit body
+  for (const m of commit.body.matchAll(IssueRE)) {
+    if (!references.some((i) => i.value === m[1])) {
+      references.push({ type: 'issue', value: m[1] });
+    }
+  }
+
+  // Add commit hash reference
+  references.push({ value: commit.shortHash, type: 'hash' });
+
   return references;
 }
 
@@ -457,7 +540,10 @@ function getAllAuthorsForCommit(commit: RawGitCommit): GitCommitAuthor[] {
 const ConventionalCommitRegex =
   /(?<type>[a-z]+)(\((?<scope>.+)\))?(?<breaking>!)?: (?<description>.+)/i;
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
+// GitHub style PR references
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
+// GitLab style merge request references
+const GitLabMergeRequestRE = /See merge request (?:[a-z0-9/-]+)?(![\d]+)/gim;
 const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
@@ -473,12 +559,9 @@ export function parseGitCommit(
       description: commit.message,
       type: '',
       scope: '',
-      references: extractReferencesFromCommitMessage(
-        commit.message,
-        commit.shortHash
-      ),
+      references: extractReferencesFromCommit(commit),
       // The commit message is not the source of truth for a breaking (major) change in version plans, so the value is not relevant
-      // TODO(v20): Make the current GitCommit interface more clearly tied to conventional commits
+      // TODO(v22): Make the current GitCommit interface more clearly tied to conventional commits
       isBreaking: false,
       authors: getAllAuthorsForCommit(commit),
       // Not applicable to version plans
@@ -498,13 +581,10 @@ export function parseGitCommit(
     parsedMessage.breaking || commit.body.includes('BREAKING CHANGE:');
   let description = parsedMessage.description;
 
-  // Extract references from message
-  const references = extractReferencesFromCommitMessage(
-    description,
-    commit.shortHash
-  );
+  // Extract issue and PR references from the commit
+  const references = extractReferencesFromCommit(commit);
 
-  // Remove references and normalize
+  // Remove GitHub style references from description (NOTE: GitLab style references only seem to appear in the body, so we don't need to remove them here)
   description = description.replace(PullRequestRE, '').trim();
 
   let type = parsedMessage.type;

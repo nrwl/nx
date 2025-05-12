@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'node:fs';
-import { dirname, join, parse, relative } from 'node:path';
+import { dirname, join, parse, relative, resolve } from 'node:path';
 
 import {
   CreateNodes,
@@ -44,7 +44,13 @@ type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 function readTargetsCache(
   cachePath: string
 ): Record<string, PlaywrightTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
+  try {
+    return process.env.NX_CACHE_PROJECT_GRAPH !== 'false'
+      ? readJsonFile(cachePath)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 function writeTargetsToCache(
@@ -113,7 +119,7 @@ async function createNodesInternal(
 
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    options,
+    normalizedOptions,
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -159,12 +165,12 @@ async function buildPlaywrightTargets(
 
   const testOutput = getTestOutput(playwrightConfig);
   const reporterOutputs = getReporterOutputs(playwrightConfig);
+  const webserverCommandTasks = getWebserverCommandTasks(playwrightConfig);
   const baseTargetConfig: TargetConfiguration = {
     command: 'playwright test',
     options: {
       cwd: '{projectRoot}',
     },
-    parallelism: false,
     metadata: {
       technologies: ['playwright'],
       description: 'Runs Playwright Tests',
@@ -179,6 +185,12 @@ async function buildPlaywrightTargets(
     },
   };
 
+  if (webserverCommandTasks.length) {
+    baseTargetConfig.dependsOn = getDependsOn(webserverCommandTasks);
+  } else {
+    baseTargetConfig.parallelism = false;
+  }
+
   targets[options.targetName] = {
     ...baseTargetConfig,
     cache: true,
@@ -188,7 +200,12 @@ async function buildPlaywrightTargets(
         : ['default', '^default']),
       { externalDependencies: ['@playwright/test'] },
     ],
-    outputs: getTargetOutputs(testOutput, reporterOutputs, projectRoot),
+    outputs: getTargetOutputs(
+      testOutput,
+      reporterOutputs,
+      context.workspaceRoot,
+      projectRoot
+    ),
   };
 
   if (options.ciTargetName) {
@@ -201,7 +218,12 @@ async function buildPlaywrightTargets(
           : ['default', '^default']),
         { externalDependencies: ['@playwright/test'] },
       ],
-      outputs: getTargetOutputs(testOutput, reporterOutputs, projectRoot),
+      outputs: getTargetOutputs(
+        testOutput,
+        reporterOutputs,
+        context.workspaceRoot,
+        projectRoot
+      ),
     };
 
     const groupName = 'E2E (CI)';
@@ -236,6 +258,7 @@ async function buildPlaywrightTargets(
           outputs: getTargetOutputs(
             testOutput,
             reporterOutputs,
+            context.workspaceRoot,
             projectRoot,
             outputSubfolder
           ),
@@ -279,7 +302,6 @@ async function buildPlaywrightTargets(
       inputs: ciBaseTargetConfig.inputs,
       outputs: ciBaseTargetConfig.outputs,
       dependsOn,
-      parallelism: false,
       metadata: {
         technologies: ['playwright'],
         description: 'Runs Playwright Tests in CI',
@@ -294,6 +316,11 @@ async function buildPlaywrightTargets(
         },
       },
     };
+
+    if (!webserverCommandTasks.length) {
+      targets[options.ciTargetName].parallelism = false;
+    }
+
     ciTargetGroup.push(options.ciTargetName);
   }
 
@@ -343,8 +370,8 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
 function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
   return {
     ...options,
-    targetName: options.targetName ?? 'e2e',
-    ciTargetName: options.ciTargetName ?? 'e2e-ci',
+    targetName: options?.targetName ?? 'e2e',
+    ciTargetName: options?.ciTargetName ?? 'e2e-ci',
   };
 }
 
@@ -394,27 +421,124 @@ function getReporterOutputs(
 function getTargetOutputs(
   testOutput: string,
   reporterOutputs: Array<[string, string]>,
+  workspaceRoot: string,
   projectRoot: string,
-  scope?: string
+  subFolder?: string
 ): string[] {
   const outputs = new Set<string>();
   outputs.add(
-    normalizeOutput(projectRoot, scope ? join(testOutput, scope) : testOutput)
+    normalizeOutput(
+      addSubfolderToOutput(testOutput, subFolder),
+      workspaceRoot,
+      projectRoot
+    )
   );
   for (const [, output] of reporterOutputs) {
     outputs.add(
-      normalizeOutput(projectRoot, scope ? join(output, scope) : output)
+      normalizeOutput(
+        addSubfolderToOutput(output, subFolder),
+        workspaceRoot,
+        projectRoot
+      )
     );
   }
   return Array.from(outputs);
 }
 
-function normalizeOutput(projectRoot: string, path: string): string {
-  if (path.startsWith('..')) {
-    return join('{workspaceRoot}', join(projectRoot, path));
-  } else {
-    return join('{projectRoot}', path);
+function addSubfolderToOutput(output: string, subfolder?: string): string {
+  if (!subfolder) return output;
+  const parts = parse(output);
+  if (parts.ext !== '') {
+    return join(parts.dir, subfolder, parts.base);
   }
+  return join(output, subfolder);
+}
+
+function getWebserverCommandTasks(
+  playwrightConfig: PlaywrightTestConfig
+): Array<{ project: string; target: string }> {
+  if (!playwrightConfig.webServer) {
+    return [];
+  }
+
+  const tasks: Array<{ project: string; target: string }> = [];
+
+  const webServer = Array.isArray(playwrightConfig.webServer)
+    ? playwrightConfig.webServer
+    : [playwrightConfig.webServer];
+
+  for (const server of webServer) {
+    if (!server.reuseExistingServer) {
+      continue;
+    }
+
+    const task = parseTaskFromCommand(server.command);
+    if (task) {
+      tasks.push(task);
+    }
+  }
+
+  return tasks;
+}
+
+function parseTaskFromCommand(command: string): {
+  project: string;
+  target: string;
+} | null {
+  const nxRunRegex =
+    /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx run (\S+:\S+)$/;
+  const infixRegex = /^(?:(?:npx|yarn|bun|pnpm|pnpm exec|pnpx) )?nx (\S+ \S+)$/;
+
+  const nxRunMatch = command.match(nxRunRegex);
+  if (nxRunMatch) {
+    const [project, target] = nxRunMatch[1].split(':');
+    return { project, target };
+  }
+
+  const infixMatch = command.match(infixRegex);
+  if (infixMatch) {
+    const [target, project] = infixMatch[1].split(' ');
+    return { project, target };
+  }
+
+  return null;
+}
+
+function getDependsOn(
+  tasks: Array<{ project: string; target: string }>
+): TargetConfiguration['dependsOn'] {
+  const projectsPerTask = new Map<string, string[]>();
+
+  for (const { project, target } of tasks) {
+    if (!projectsPerTask.has(target)) {
+      projectsPerTask.set(target, []);
+    }
+    projectsPerTask.get(target).push(project);
+  }
+
+  return Array.from(projectsPerTask.entries()).map(([target, projects]) => ({
+    projects,
+    target,
+  }));
+}
+
+function normalizeOutput(
+  path: string,
+  workspaceRoot: string,
+  projectRoot: string
+): string {
+  const fullProjectRoot = resolve(workspaceRoot, projectRoot);
+  const fullPath = resolve(fullProjectRoot, path);
+  const pathRelativeToProjectRoot = normalizePath(
+    relative(fullProjectRoot, fullPath)
+  );
+  if (pathRelativeToProjectRoot.startsWith('..')) {
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, fullPath)
+    );
+  }
+  return joinPathFragments('{projectRoot}', pathRelativeToProjectRoot);
 }
 
 function getOutputEnvVars(
@@ -428,7 +552,7 @@ function getOutputEnvVars(
       const envVarName = `PLAYWRIGHT_${reporter.toUpperCase()}_OUTPUT_${
         isFile ? 'FILE' : 'DIR'
       }`;
-      env[envVarName] = join(output, outputSubfolder);
+      env[envVarName] = addSubfolderToOutput(output, outputSubfolder);
       // Also set PLAYWRIGHT_HTML_REPORT for Playwright prior to 1.45.0.
       // HTML prior to this version did not follow the pattern of "PLAYWRIGHT_<REPORTER>_OUTPUT_<FILE|DIR>".
       if (reporter === 'html') {

@@ -5,6 +5,7 @@ authors: ['Philip Fulcher']
 tags: [nx-cloud]
 cover_image: /blog/images/2024-09-10/personal-access-tokens-header.avif
 youtubeUrl: https://youtu.be/i51LPtagb2s
+description: Introducing Personal Access Tokens in Nx Cloud, a major security upgrade that provides enhanced control over cached artifacts access.
 ---
 
 Today, Nx Cloud gets a huge upgrade to managing access to your cached artifacts

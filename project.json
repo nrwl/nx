@@ -7,7 +7,8 @@
       "options": {
         "port": 4873,
         "config": ".verdaccio/config.yml",
-        "storage": "build/local-registry/storage"
+        "storage": "build/local-registry/storage",
+        "clear": false
       }
     },
     "populate-local-registry-storage": {
@@ -16,9 +17,11 @@
         {
           "input": "production",
           "projects": ["tag:npm:public"]
-        }
+        },
+        "{workspaceRoot}/scripts/local-registry"
       ],
       "dependsOn": [
+        "local-registry",
         {
           "target": "build",
           "projects": ["tag:npm:public"]
@@ -35,6 +38,63 @@
         }
       ],
       "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release"
+    },
+    "documentation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
+          "pnpm check-documentation-map"
+        ],
+        "parallel": false
+      },
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/packages/**",
+        "{workspaceRoot}/docs/**",
+        "{workspaceRoot}/scripts/documentation/**",
+        "!{workspaceRoot}/docs/external-generated",
+        "!{workspaceRoot}/docs/generated",
+        "!{workspaceRoot}/packages/**/*.spec.ts",
+        "!{workspaceRoot}/packages/**/project.json",
+        "!{workspaceRoot}/packages/**/tsconfig.json",
+        "!{workspaceRoot}/packages/**/tsconfig.lib.json",
+        "!{workspaceRoot}/packages/**/tsconfig.spec.json",
+        "!{workspaceRoot}/packages/**/jest.config.{ts,js}",
+        "!{workspaceRoot}/packages/**/.eslintrc.json"
+      ],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": ["devkit", "typedoc-theme"]
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/docs/external-generated",
+        "{workspaceRoot}/docs/generated"
+      ]
+    },
+    "check-format:quick": {
+      "parallelism": false
+    },
+    "lint": {
+      "dependsOn": ["@nx/nx-source:lint-pnpm-lock"],
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "lint-pnpm-lock": {
+      "cache": true,
+      "inputs": ["{projectRoot}/pnpm-lock.yaml"]
+    },
+    "prepush": {
+      "dependsOn": [
+        "nx:format-native",
+        "nx:lint-native",
+        "documentation",
+        "check-commit",
+        "check-format:quick",
+        "check-lock-files"
+      ]
     }
   }
 }

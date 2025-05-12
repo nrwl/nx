@@ -45,6 +45,43 @@ describe('e2eProjectGenerator', () => {
     expect(tree.exists(`e2e/src/server/server.spec.ts`)).toBeTruthy();
   });
 
+  it('should generate jest test config with ts-jest for server app', async () => {
+    await applicationGenerator(tree, {
+      directory: 'api',
+      framework: 'none',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'server',
+      project: 'api',
+      addPlugin: true,
+    });
+
+    expect(tree.read('api-e2e/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "export default {
+        displayName: 'api-e2e',
+        preset: '../jest.preset.js',
+        globalSetup: '<rootDir>/src/support/global-setup.ts',
+        globalTeardown: '<rootDir>/src/support/global-teardown.ts',
+        setupFiles: ['<rootDir>/src/support/test-setup.ts'],
+        testEnvironment: 'node',
+        transform: {
+          '^.+\\\\.[tj]s$': [
+            'ts-jest',
+            {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            },
+          ],
+        },
+        moduleFileExtensions: ['ts', 'js', 'html'],
+        coverageDirectory: '../coverage/api-e2e',
+      };
+      "
+    `);
+    expect(tree.exists('api-e2e/.spec.swcrc')).toBeFalsy();
+  });
+
   it('should generate cli project', async () => {
     await applicationGenerator(tree, {
       directory: 'api',
@@ -75,6 +112,41 @@ describe('e2eProjectGenerator', () => {
     `);
   });
 
+  it('should generate jest test config with ts-jest for cli project', async () => {
+    await applicationGenerator(tree, {
+      directory: 'cli',
+      framework: 'none',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await e2eProjectGenerator(tree, {
+      projectType: 'cli',
+      project: 'cli',
+      addPlugin: true,
+    });
+
+    expect(tree.read('cli-e2e/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+      "export default {
+        displayName: 'cli-e2e',
+        preset: '../jest.preset.js',
+        setupFiles: ['<rootDir>/src/test-setup.ts'],
+        testEnvironment: 'node',
+        transform: {
+          '^.+\\\\.[tj]s$': [
+            'ts-jest',
+            {
+              tsconfig: '<rootDir>/tsconfig.spec.json',
+            },
+          ],
+        },
+        moduleFileExtensions: ['ts', 'js', 'html'],
+        coverageDirectory: '../coverage/cli-e2e',
+      };
+      "
+    `);
+    expect(tree.exists('cli-e2e/.spec.swcrc')).toBeFalsy();
+  });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -101,10 +173,11 @@ describe('e2eProjectGenerator', () => {
         framework: 'none',
         e2eTestRunner: 'none',
         addPlugin: true,
+        useProjectJson: false,
       });
       await e2eProjectGenerator(tree, {
         projectType: 'server',
-        project: 'api',
+        project: '@proj/api',
         addPlugin: true,
       });
 
@@ -117,28 +190,6 @@ describe('e2eProjectGenerator', () => {
             "path": "./api-e2e",
           },
         ]
-      `);
-      expect(tree.read('api-e2e/jest.config.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "export default {
-          displayName: 'api-e2e',
-          preset: '../jest.preset.js',
-          globalSetup: '<rootDir>/src/support/global-setup.ts',
-          globalTeardown: '<rootDir>/src/support/global-teardown.ts',
-          setupFiles: ['<rootDir>/src/support/test-setup.ts'],
-          testEnvironment: 'node',
-          transform: {
-            '^.+\\\\.[tj]s$': [
-              'ts-jest',
-              {
-                tsconfig: '<rootDir>/tsconfig.json',
-              },
-            ],
-          },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/api-e2e',
-        };
-        "
       `);
       expect(readJson(tree, 'api-e2e/tsconfig.json')).toMatchInlineSnapshot(`
         {
@@ -153,12 +204,145 @@ describe('e2eProjectGenerator', () => {
             "jest.config.ts",
             "src/**/*.ts",
           ],
-          "references": [
-            {
-              "path": "../api",
-            },
-          ],
+          "references": [],
         }
+      `);
+    });
+
+    it('should generate jest test config with @swc/jest for server app', async () => {
+      await applicationGenerator(tree, {
+        directory: 'api',
+        framework: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+      await e2eProjectGenerator(tree, {
+        projectType: 'server',
+        project: '@proj/api',
+        addPlugin: true,
+      });
+
+      expect(tree.read('api-e2e/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'api-e2e',
+          preset: '../jest.preset.js',
+          globalSetup: '<rootDir>/src/support/global-setup.ts',
+          globalTeardown: '<rootDir>/src/support/global-teardown.ts',
+          setupFiles: ['<rootDir>/src/support/test-setup.ts'],
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
+      expect(tree.read('api-e2e/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": []
+        }
+        "
+      `);
+    });
+
+    it('should generate jest test config with @swc/jest for cli project', async () => {
+      await applicationGenerator(tree, {
+        directory: 'cli',
+        framework: 'none',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+      await e2eProjectGenerator(tree, {
+        projectType: 'cli',
+        project: '@proj/cli',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      expect(tree.read('cli-e2e/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: 'cli-e2e',
+          preset: '../jest.preset.js',
+          setupFiles: ['<rootDir>/src/test-setup.ts'],
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: 'test-output/jest/coverage',
+        };
+        "
+      `);
+      expect(tree.read('cli-e2e/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "jsc": {
+            "target": "es2017",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true,
+              "dynamicImport": true
+            },
+            "transform": {
+              "decoratorMetadata": true,
+              "legacyDecorator": true
+            },
+            "keepClassNames": true,
+            "externalHelpers": true,
+            "loose": true
+          },
+          "module": {
+            "type": "es6"
+          },
+          "sourceMaps": true,
+          "exclude": []
+        }
+        "
       `);
     });
   });

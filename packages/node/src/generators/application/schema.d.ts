@@ -25,6 +25,7 @@ export interface Schema {
   isNest?: boolean;
   addPlugin?: boolean;
   useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
 export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

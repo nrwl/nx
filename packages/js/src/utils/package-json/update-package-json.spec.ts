@@ -157,6 +157,8 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            development: './src/index.ts',
+            default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },
@@ -189,6 +191,7 @@ describe('getUpdatedPackageJsonContent', () => {
         type: 'commonjs',
         exports: {
           '.': {
+            development: './src/index.ts',
             default: './src/index.cjs',
             types: './src/index.d.ts',
           },
@@ -227,15 +230,28 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            development: './src/index.ts',
             default: './src/index.js',
             types: './src/index.d.ts',
           },
-          './foo': './src/foo.js',
-          './bar': './src/bar.js',
+          './foo': {
+            development: './src/foo.ts',
+            default: './src/foo.js',
+          },
+          './bar': {
+            development: './src/bar.ts',
+            default: './src/bar.js',
+          },
           './package.json': './package.json',
           './migrations.json': './migrations.json',
-          './feature': './feature/index.js',
-          './feature/index': './feature/index.js',
+          './feature': {
+            development: './feature/index.ts',
+            default: './feature/index.js',
+          },
+          './feature/index': {
+            development: './feature/index.ts',
+            default: './feature/index.js',
+          },
         },
       });
 
@@ -268,14 +284,32 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            development: './src/index.ts',
+            default: './src/index.js',
             import: './src/index.js',
             types: './src/index.d.ts',
           },
-          './foo': './src/foo.js',
-          './bar': './src/bar.js',
+          './foo': {
+            development: './src/foo.ts',
+            import: './src/foo.js',
+            default: './src/foo.js',
+          },
+          './bar': {
+            development: './src/bar.ts',
+            import: './src/bar.js',
+            default: './src/bar.js',
+          },
           './package.json': './package.json',
-          './feature': './feature/index.js',
-          './feature/index': './feature/index.js',
+          './feature': {
+            development: './feature/index.ts',
+            import: './feature/index.js',
+            default: './feature/index.js',
+          },
+          './feature/index': {
+            development: './feature/index.ts',
+            import: './feature/index.js',
+            default: './feature/index.js',
+          },
         },
       });
 
@@ -308,23 +342,28 @@ describe('getUpdatedPackageJsonContent', () => {
         version: '0.0.1',
         exports: {
           '.': {
+            development: './src/index.ts',
             import: './src/index.js',
             default: './src/index.cjs',
             types: './src/index.d.ts',
           },
           './foo': {
+            development: './src/foo.ts',
             import: './src/foo.js',
             default: './src/foo.cjs',
           },
           './bar': {
+            development: './src/bar.ts',
             import: './src/bar.js',
             default: './src/bar.cjs',
           },
           './feature': {
+            development: './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
           './feature/index': {
+            development: './feature/index.ts',
             import: './feature/index.js',
             default: './feature/index.cjs',
           },
@@ -362,6 +401,7 @@ describe('getUpdatedPackageJsonContent', () => {
       version: '0.0.1',
       exports: {
         '.': {
+          development: './src/index.ts',
           import: './src/index.js',
           default: './src/index.cjs',
           types: './src/index.d.ts',
@@ -398,6 +438,7 @@ describe('getUpdatedPackageJsonContent', () => {
       type: 'module',
       exports: {
         '.': {
+          development: './src/index.ts',
           default: './src/index.cjs',
           types: './src/index.d.ts',
         },
@@ -430,6 +471,7 @@ describe('getUpdatedPackageJsonContent', () => {
       type: 'commonjs',
       exports: {
         '.': {
+          development: './src/index.ts',
           default: './src/index.js',
           types: './src/index.d.ts',
         },

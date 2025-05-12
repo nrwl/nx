@@ -102,16 +102,18 @@ export function updateImports(
       from: mainEntryPointImportPath,
       to: schema.importPath,
     },
-    ...secondaryEntryPointImportPaths.map((p) => ({
-      from: p,
-      // if the import path doesn't start with the main entry point import path,
-      // it's a custom import path we don't know how to update the name, we keep
-      // it as-is, but we'll update the path it points to
-      to:
-        schema.importPath && p.startsWith(mainEntryPointImportPath)
-          ? p.replace(mainEntryPointImportPath, schema.importPath)
-          : null,
-    })),
+    ...(secondaryEntryPointImportPaths
+      ? secondaryEntryPointImportPaths.map((p) => ({
+          from: p,
+          // if the import path doesn't start with the main entry point import path,
+          // it's a custom import path we don't know how to update the name, we keep
+          // it as-is, but we'll update the path it points to
+          to:
+            schema.importPath && p.startsWith(mainEntryPointImportPath)
+              ? p.replace(mainEntryPointImportPath, schema.importPath)
+              : null,
+        }))
+      : []),
   ];
 
   if (

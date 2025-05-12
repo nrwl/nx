@@ -40,7 +40,7 @@ export async function removeMigrationsGenerator(
 
       updateJson(tree, migrationsPath, (migrationsJson) => {
         const { generators, packageJsonUpdates } = migrationsJson;
-        for (const [migrationName, m] of Object.entries(generators)) {
+        for (const [migrationName, m] of Object.entries(generators ?? {})) {
           if (major(m['version']) < v) {
             const implFile = getImplFile(tree, migrationsPath, m);
             const dir = dirname(implFile);

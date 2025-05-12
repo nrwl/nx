@@ -5,3 +5,5 @@ export * from './lib/powerpack-features';
 export * from './lib/get-started';
 export * from './lib/powerpack-pricing';
 export * from './lib/call-to-action';
+export * from './lib/trial-nx-powerpack';
+export * from './lib/faq';

@@ -2,8 +2,9 @@
 title: 'Introducing Playwright Support for Nx'
 slug: 'introducing-playwright-support-for-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.png'
+cover_image: '/blog/images/2023-09-18/589bVpPTJ4D4IACBePXWQ.avif'
 tags: [nx, release, tutorial]
+description: 'Discover how to integrate Playwright, a powerful end-to-end testing tool, into your Nx workspaces with our new @nx/playwright plugin.'
 ---
 
 We are very excited to announce our support for Playwright with our new plugin `@nx/playwright`.
@@ -18,9 +19,9 @@ This blog will show you:
 
 ## What is Playwright?
 
-Before we start, let’s answer this question: what is Playwright and why should we use it?
+Before we start, let's answer this question: what is Playwright and why should we use it?
 
-From [playwright.dev](https://playwright.dev/), it says: “Playwright is end-to-end testing for modern web apps”. It sounds good, what does it do for us developers? What developer experience does it provide?
+From [playwright.dev](https://playwright.dev/), it says: "Playwright is end-to-end testing for modern web apps". It sounds good, what does it do for us developers? What developer experience does it provide?
 
 ### Multiple Browsers
 
@@ -52,12 +53,12 @@ export default defineConfig({
 
 ### Auto Waiting
 
-Playwright automatically waits for the relevant checks to pass, then performs the request action. What does it mean? For example, let’s say we have a sign-up form where:
+Playwright automatically waits for the relevant checks to pass, then performs the request action. What does it mean? For example, let's say we have a sign-up form where:
 
 - while the app checks that the user name is unique, the submit button is disabled.
 - after checking with the server, the submit button becomes enabled.
 
-How do we write tests in the Playwright? Playwright performs a range of actionability checks on the elements before making actions to ensure these actions behave as expected. So we don’t need to wait for the button to be enabled. Playwright will check it. We can simply write:
+How do we write tests in the Playwright? Playwright performs a range of actionability checks on the elements before making actions to ensure these actions behave as expected. So we don't need to wait for the button to be enabled. Playwright will check it. We can simply write:
 
 ```
 await page.getByTestId('submit-button').click();
@@ -77,7 +78,7 @@ _Test error_
 
 It also has other features like recording [screenshots](https://playwright.dev/docs/screenshots) and [videos](https://playwright.dev/docs/videos), [test generation](https://playwright.dev/docs/codegen), and [visual comparisons](https://playwright.dev/docs/test-snapshots). Read more about Playwright at [https://playwright.dev](https://playwright.dev/)
 
-Next, let’s write and run some Playwright tests.
+Next, let's write and run some Playwright tests.
 
 ## Create a new Nx Workspace with Playwright
 

@@ -222,6 +222,12 @@
         },
         "additionalProperties": false
       },
+      "sassImplementation": {
+        "type": "string",
+        "description": "The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.",
+        "enum": ["sass", "sass-embedded"],
+        "default": "sass"
+      },
       "optimization": {
         "description": "Enables optimization of the build output.",
         "oneOf": [
@@ -323,12 +329,6 @@
       "statsJson": {
         "type": "boolean",
         "description": "Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or `<https://webpack.github.io/analyse>`."
-      },
-      "isolatedConfig": {
-        "type": "boolean",
-        "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
-        "default": true,
-        "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 20. See https://nx.dev/recipes/webpack/webpack-config-setup."
       },
       "standardWebpackConfigFunction": {
         "type": "boolean",

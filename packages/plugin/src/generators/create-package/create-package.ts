@@ -13,10 +13,6 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { tsLibVersion } from '@nx/js/src/utils/versions';
@@ -61,27 +57,19 @@ export async function createPackageGeneratorInternal(
   );
   tasks.push(installTask);
 
-  await createCliPackage(host, options, pluginPackageName);
+  const cliPackageTask = await createCliPackage(
+    host,
+    options,
+    pluginPackageName
+  );
+  tasks.push(cliPackageTask);
+
   if (options.e2eProject) {
     addE2eProject(host, options);
   }
 
   if (!options.skipFormat) {
     await formatFiles(host);
-  }
-
-  if (options.isTsSolutionSetup) {
-    const projectPackageManagerWorkspaceState =
-      getProjectPackageManagerWorkspaceState(host, options.projectRoot);
-
-    if (projectPackageManagerWorkspaceState !== 'included') {
-      tasks.push(
-        getProjectPackageManagerWorkspaceStateWarningTask(
-          projectPackageManagerWorkspaceState,
-          host.root
-        )
-      );
-    }
   }
 
   return runTasksInSerial(...tasks);
@@ -116,7 +104,7 @@ async function createCliPackage(
   options: NormalizedSchema,
   pluginPackageName: string
 ) {
-  await jsLibraryGenerator(host, {
+  const jsLibraryTask = await jsLibraryGenerator(host, {
     ...options,
     directory: options.directory,
     rootProject: false,
@@ -127,7 +115,6 @@ async function createCliPackage(
     skipFormat: true,
     skipTsConfig: true,
     useTscExecutor: true,
-    skipWorkspacesWarning: true,
   });
 
   host.delete(joinPathFragments(options.projectRoot, 'src'));
@@ -203,6 +190,8 @@ async function createCliPackage(
       tmpl: '',
     }
   );
+
+  return jsLibraryTask;
 }
 
 /**

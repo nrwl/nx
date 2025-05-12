@@ -1,5 +1,5 @@
 import { join } from 'path';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import {
   ExecutorContext,
   ProjectGraph,
@@ -126,14 +126,14 @@ export function displayNewlyAddedDepsMessage(
   deps: string[]
 ) {
   if (deps.length > 0) {
-    logger.info(`${chalk.bold.cyan(
-      'info'
+    logger.info(`${pc.bold(
+      pc.cyan('info')
     )} Added entries to 'package.json' for '${projectName}' (for autolink):
-  ${deps.map((d) => chalk.bold.cyan(`"${d}": "*"`)).join('\n  ')}`);
+  ${deps.map((d) => pc.bold(pc.cyan(`"${d}": "*"`))).join('\n  ')}`);
   } else {
     logger.info(
-      `${chalk.bold.cyan(
-        'info'
+      `${pc.bold(
+        pc.cyan('info')
       )} Dependencies for '${projectName}' are up to date! No changes made.`
     );
   }

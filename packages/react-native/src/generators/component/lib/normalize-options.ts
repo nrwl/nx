@@ -4,6 +4,7 @@ import {
   type FileExtensionType,
 } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { Schema } from '../schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export interface NormalizedSchema extends Omit<Schema, 'js'> {
   directory: string;
@@ -14,6 +15,7 @@ export interface NormalizedSchema extends Omit<Schema, 'js'> {
   fileExtension: string;
   fileExtensionType: FileExtensionType;
   projectName: string;
+  projectRoot: string;
 }
 
 export async function normalizeOptions(
@@ -40,9 +42,12 @@ export async function normalizeOptions(
 
   const { className } = names(name);
 
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(host, root, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
@@ -61,5 +66,6 @@ export async function normalizeOptions(
     fileExtensionType,
     projectSourceRoot,
     projectName,
+    projectRoot: root,
   };
 }

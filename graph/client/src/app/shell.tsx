@@ -18,12 +18,13 @@ import {
   getProjectGraphDataService,
   useEnvironmentConfig,
   usePoll,
-} from '@nx/graph/shared';
-import { Dropdown, Spinner } from '@nx/graph/ui-components';
+} from '@nx/graph/legacy/shared';
+import { Dropdown, Spinner } from '@nx/graph/legacy/components';
+import { Tooltip } from '@nx/graph/legacy/tooltips';
+
 import { getSystemTheme, Theme, ThemePanel } from '@nx/graph-internal/ui-theme';
-import { Tooltip } from '@nx/graph/ui-tooltips';
 import classNames from 'classnames';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import {
   Outlet,
   useNavigate,
@@ -31,7 +32,6 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { useCurrentPath } from './hooks/use-current-path';
 import { getProjectGraphService } from './machines/get-services';
@@ -49,7 +49,7 @@ export function Shell(): JSX.Element {
     graphService.lastPerformanceReport
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     graphService.listen(() => {
       setLastPerfReport(graphService.lastPerformanceReport);
     });

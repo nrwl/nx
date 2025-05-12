@@ -2,13 +2,14 @@
 title: 'Use Storybook with Nx React Native'
 slug: 'use-storybook-with-nx-react-native'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2022-04-25/64nWVfUBihlYTLGWOvnc1g.png'
+cover_image: '/blog/images/2022-04-25/64nWVfUBihlYTLGWOvnc1g.avif'
 tags: [nx, release]
+description: Learn how to integrate and configure Storybook with Nx React Native apps, including solutions for common navigation and Redux store integration issues.
 ---
 
 In my previous [blogs](/blog/share-code-between-react-web-react-native-mobile-with-nx) _(see links at the end)_, I wrote about how to develop Nx React Native applications. However, as developers, we are constantly searching for ways to make the developer experience better.
 
-This blog will show how to add Storybook to Nx React Native applications. With Nx, you don’t need to go through [this long guideline](https://storybook.js.org/tutorials/intro-to-storybook/react-native/en/get-started/) to set up the Storybook, you can quickly get it running.
+This blog will show how to add Storybook to Nx React Native applications. With Nx, you don't need to go through [this long guideline](https://storybook.js.org/tutorials/intro-to-storybook/react-native/en/get-started/) to set up the Storybook, you can quickly get it running.
 
 Example Repo: [xiongemi/studio-ghibli-search-engine](https://github.com/xiongemi/studio-ghibli-search-engine)
 
@@ -104,7 +105,7 @@ module.exports = {
 };
 ```
 
-Also, notice that in your app’s main file, the import of the App changed to `storybook/toggle-storybook`:
+Also, notice that in your app's main file, the import of the App changed to `storybook/toggle-storybook`:
 
 ```typescript
 import App from './storybook/toggle-storybook';
@@ -148,12 +149,12 @@ Then just run the command to start your app, you should see the storybook for yo
 
 ## Troubleshooting
 
-### Error: Couldn’t find a navigation object
+### Error: Couldn't find a navigation object
 
 If you are using the library `@react-navigation/native` and you are using hooks like `useNavigtion` and `useRoute` inside your component, you are likely to get the below error:
 
 ![](/blog/images/2022-04-25/oKNqqay19gpvIRgW1QGbkA.avif)
-_Render Error for Couldn’t find a navigation object_
+_Render Error for Couldn't find a navigation object_
 
 The easiest way is just to mock this library and create a [decorator](https://storybook.js.org/docs/react/writing-stories/decorators) for it:
 
@@ -220,12 +221,12 @@ const NavigationDecorator = (story) => {
 };
 ```
 
-### Error: Could not find “store”
+### Error: Could not find "store"
 
 If you are using Redux store and your component is stateful and connected to the store, you are likely to get the below error:
 
 ![](/blog/images/2022-04-25/T-Lj4PjuAlb_TbpSU5_1PQ.avif)
-_Render Error for Could not find “store”_
+_Render Error for Could not find "store"_
 
 The simple solution is to mock the store. First, you need to install the library [redux-mock-store](https://github.com/reduxjs/redux-mock-store) and its typing:
 

@@ -232,6 +232,7 @@ function processProject(
   if (!tree.exists(packageJsonPath)) {
     return;
   }
+
   const packageJson = readJson<PackageJson>(tree, packageJsonPath);
   if (!packageJson.scripts || !Object.keys(packageJson.scripts).length) {
     return;
@@ -243,6 +244,9 @@ function processProject(
   }
 
   let hasChanges = false;
+  targetCommands.sort(
+    (a, b) => b.command.split(/\s/).length - a.command.split(/\s/).length
+  );
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
@@ -325,9 +329,8 @@ function processProject(
 
           if (!hasArgsWithDifferentValues && !scriptHasExtraArgs) {
             // they are the same, replace with the command removing the args
-            packageJson.scripts[scriptName] = packageJson.scripts[
-              scriptName
-            ].replace(
+            const script = packageJson.scripts[scriptName];
+            packageJson.scripts[scriptName] = script.replace(
               match,
               match.replace(
                 commandRegex,

@@ -1,6 +1,7 @@
 import { type CreateNodesContext } from '@nx/devkit';
-import { createNodesV2 } from './plugin';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { createNodesV2 } from './plugin';
 
 jest.mock('@rsbuild/core', () => ({
   ...jest.requireActual('@rsbuild/core'),
@@ -12,7 +13,7 @@ jest.mock('@rsbuild/core', () => ({
 
 jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
   ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
-  isUsingTsSolutionSetup: jest.fn().mockReturnValue(false),
+  isUsingTsSolutionSetup: jest.fn(),
 }));
 
 describe('@nx/rsbuild', () => {
@@ -21,6 +22,7 @@ describe('@nx/rsbuild', () => {
   let tempFs: TempFs;
 
   beforeEach(() => {
+    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
     tempFs = new TempFs('rsbuild-test');
     context = {
       configFiles: [],
@@ -68,6 +70,11 @@ describe('@nx/rsbuild', () => {
                 "metadata": {},
                 "root": "my-app",
                 "targets": {
+                  "build-deps": {
+                    "dependsOn": [
+                      "^build",
+                    ],
+                  },
                   "build-something": {
                     "cache": true,
                     "command": "rsbuild build",
@@ -109,6 +116,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "dev-serve": {
                     "command": "rsbuild dev",
+                    "continuous": true,
                     "options": {
                       "args": [
                         "--mode=development",
@@ -124,6 +132,7 @@ describe('@nx/rsbuild', () => {
                   },
                   "preview-serve": {
                     "command": "rsbuild preview",
+                    "continuous": true,
                     "dependsOn": [
                       "build-something",
                       "^build-something",
@@ -135,6 +144,13 @@ describe('@nx/rsbuild', () => {
                       "cwd": "my-app",
                     },
                   },
+                  "watch-deps": {
+                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "continuous": true,
+                    "dependsOn": [
+                      "build-deps",
+                    ],
+                  },
                 },
               },
             },
@@ -142,5 +158,80 @@ describe('@nx/rsbuild', () => {
         ],
       ]
     `);
+  });
+
+  it('should infer typecheck with -p flag when not using TS solution setup', async () => {
+    tempFs.createFileSync('my-app/tsconfig.json', `{}`);
+
+    const nodes = await createNodesFunction(
+      ['my-app/rsbuild.config.ts'],
+      { typecheckTargetName: 'typecheck' },
+      context
+    );
+
+    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
+      `tsc -p tsconfig.json --noEmit`
+    );
+    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
+      .toMatchInlineSnapshot(`
+      {
+        "description": "Runs type-checking for the project.",
+        "help": {
+          "command": "npx tsc -p tsconfig.json --help",
+          "example": {
+            "options": {
+              "noEmit": true,
+            },
+          },
+        },
+        "technologies": [
+          "typescript",
+        ],
+      }
+    `);
+    expect(
+      nodes[0][1].projects['my-app'].targets.typecheck.dependsOn
+    ).toBeUndefined();
+    expect(
+      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
+    ).toBeUndefined();
+  });
+
+  it('should infer typecheck with --build flag when using TS solution setup', async () => {
+    (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+    tempFs.createFileSync('my-app/tsconfig.json', `{}`);
+
+    const nodes = await createNodesFunction(
+      ['my-app/rsbuild.config.ts'],
+      { typecheckTargetName: 'typecheck' },
+      context
+    );
+
+    expect(nodes[0][1].projects['my-app'].targets.typecheck.command).toEqual(
+      `tsc --build --emitDeclarationOnly`
+    );
+    expect(nodes[0][1].projects['my-app'].targets.typecheck.metadata)
+      .toMatchInlineSnapshot(`
+        {
+          "description": "Runs type-checking for the project.",
+          "help": {
+            "command": "npx tsc --build --help",
+            "example": {
+              "args": [
+                "--force",
+              ],
+            },
+          },
+          "technologies": [
+            "typescript",
+          ],
+        }
+      `);
+    expect(nodes[0][1].projects['my-app'].targets.typecheck.dependsOn).toEqual([
+      `^typecheck`,
+    ]);
+    expect(
+      nodes[0][1].projects['my-app'].targets.typecheck.syncGenerators
+    ).toEqual(['@nx/js:typescript-sync']);
   });
 });

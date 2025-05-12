@@ -19,7 +19,7 @@ import type { AddOptions } from './command-object';
 import { normalizeVersionForNxJson } from '../init/implementation/dot-nx/add-nx-scripts';
 import { gte } from 'semver';
 import {
-  installPlugin,
+  runPluginInitGenerator,
   getFailedToInstallPluginErrorMessages,
 } from '../init/configure-plugins';
 
@@ -111,40 +111,26 @@ async function initializePlugin(
   options: AddOptions,
   nxJson: NxJsonConfiguration
 ): Promise<void> {
-  const parsedCommandArgs: { [key: string]: any } = yargsParser(
-    options.__overrides_unparsed__,
-    {
-      configuration: {
-        'parse-numbers': false,
-        'parse-positional-numbers': false,
-        'dot-notation': false,
-        'camel-case-expansion': false,
-      },
-    }
-  );
-
-  if (coreNxPluginVersions.has(pkgName)) {
-    parsedCommandArgs.keepExistingVersions = true;
-
-    if (
-      options.updatePackageScripts ||
+  let updatePackageScripts = false;
+  if (
+    coreNxPluginVersions.has(pkgName) &&
+    (options.updatePackageScripts ||
       (options.updatePackageScripts === undefined &&
         nxJson.useInferencePlugins !== false &&
-        process.env.NX_ADD_PLUGINS !== 'false')
-    ) {
-      parsedCommandArgs.updatePackageScripts = true;
-    }
+        process.env.NX_ADD_PLUGINS !== 'false'))
+  ) {
+    updatePackageScripts = true;
   }
 
   const spinner = ora(`Initializing ${pkgName}...`);
   spinner.start();
 
   try {
-    await installPlugin(
+    await runPluginInitGenerator(
       pkgName,
       workspaceRoot,
-      options.verbose,
-      parsedCommandArgs
+      updatePackageScripts,
+      options.verbose
     );
   } catch (e) {
     spinner.fail();

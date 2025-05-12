@@ -7,16 +7,20 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -51,9 +55,13 @@ export async function normalizeOptions(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+
   const normalized = {
     addPlugin,
     ...options,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     bundler,
     fileName,
     routePath: `/${projectNames.projectFileName}`,
@@ -61,7 +69,8 @@ export async function normalizeOptions(
     projectRoot,
     parsedTags,
     importPath,
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.
@@ -72,16 +81,27 @@ export async function normalizeOptions(
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
+    const appProjectType = getProjectType(
+      host,
+      appProjectConfig.root,
+      appProjectConfig.projectType
+    );
 
-    if (appProjectConfig.projectType !== 'application') {
+    if (appProjectType !== 'application') {
       throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
+        `appProject expected type of "application" but got "${appProjectType}"`
       );
     }
 
+    const appSourceRoot = getProjectSourceRoot(
+      host,
+      appProjectConfig.sourceRoot,
+      appProjectConfig.root
+    );
+
     try {
       normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
+      normalized.appSourceRoot = normalizePath(appSourceRoot);
     } catch (e) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`

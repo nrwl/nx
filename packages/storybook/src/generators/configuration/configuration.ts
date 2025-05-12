@@ -31,7 +31,7 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   pleaseUpgrade,
@@ -47,6 +47,7 @@ import {
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export function configurationGenerator(
   tree: Tree,
@@ -126,7 +127,8 @@ export async function configurationGeneratorInternal(
   );
 
   const mainDir =
-    !!nextConfigFilePath && projectType === 'application'
+    !!nextConfigFilePath &&
+    getProjectType(tree, root, projectType) === 'application'
       ? 'components'
       : 'src';
 
@@ -248,7 +250,7 @@ function normalizeSchema(
 
   const defaults = {
     interactionTests: true,
-    linter: Linter.EsLint,
+    linter: 'eslint' as LinterType,
     js: false,
     tsConfiguration: true,
     addPlugin,

@@ -1,3 +1,8 @@
+---
+title: 'What is a Task Pipeline'
+description: 'Learn how Nx manages task dependencies and execution order in monorepo workspaces, ensuring proper build sequences for interconnected projects.'
+---
+
 # What is a Task Pipeline
 
 If you have a monorepo workspace (or modularized app), you rarely just run one task. Almost certainly there are relationships among the projects in the workspace and hence tasks need to follow a certain order.

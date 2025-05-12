@@ -277,6 +277,7 @@ function serveTarget(
 ) {
   if (frameworkIsAngular) {
     return {
+      continuous: true,
       executor: '@storybook/angular:start-storybook',
       options: {
         configDir: `${dirname(configFilePath)}`,
@@ -286,6 +287,7 @@ function serveTarget(
     };
   } else {
     return {
+      continuous: true,
       command: `storybook dev`,
       options: { cwd: projectRoot },
     };
@@ -311,6 +313,8 @@ function serveStaticTarget(
   projectRoot: string
 ) {
   const targetConfig: TargetConfiguration = {
+    dependsOn: [`${options.buildStorybookTargetName}`],
+    continuous: true,
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStorybookTargetName}`,

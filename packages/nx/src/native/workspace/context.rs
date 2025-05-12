@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::mem;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -51,6 +52,7 @@ fn gather_and_hash_files(workspace_root: &Path, cache_dir: String) -> Vec<(PathB
     files
 }
 
+#[derive(Default)]
 struct FilesWorker(Option<Arc<(NxMutex<Files>, NxCondvar)>>);
 impl FilesWorker {
     #[cfg(not(target_arch = "wasm32"))]
@@ -231,6 +233,51 @@ impl WorkspaceContext {
         Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
+    /// Performs multiple glob pattern matches against workspace files in parallel
+    /// @returns An array of arrays, where each inner array contains the file paths
+    /// that matched the corresponding glob pattern in the input. The outer array maintains the same order
+    /// as the input globs.
+    #[napi]
+    pub fn multi_glob(
+        &self,
+        globs: Vec<String>,
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<Vec<Vec<String>>> {
+        let file_data = self.all_file_data();
+
+        globs
+            .into_iter()
+            .map(|glob| {
+                let globbed_files =
+                    config_files::glob_files(&file_data, vec![glob], exclude.clone())?;
+                Ok(globbed_files.map(|file| file.file.to_owned()).collect())
+            })
+            .collect()
+    }
+
+    #[napi]
+    pub fn hash_files_matching_globs(
+        &self,
+        glob_groups: Vec<Vec<String>>,
+    ) -> napi::Result<Vec<String>> {
+        let files = &self.all_file_data();
+        let hashes = glob_groups
+            .into_iter()
+            .map(|globs| {
+                let globbed_files =
+                    config_files::glob_files(files, globs, None)?.collect::<Vec<_>>();
+                let mut hasher = xxh3::Xxh3::new();
+                for file in globbed_files {
+                    hasher.update(file.file.as_bytes());
+                    hasher.update(file.hash.as_bytes());
+                }
+                Ok(hasher.digest().to_string())
+            })
+            .collect::<napi::Result<Vec<_>>>()?;
+
+        Ok(hashes)
+    }
+
     #[napi]
     pub fn hash_files_matching_glob(
         &self,
@@ -368,5 +415,12 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
         get_child_files(directory, self.files_worker.get_files())
+    }
+}
+
+impl Drop for WorkspaceContext {
+    fn drop(&mut self) {
+        let fw = mem::take(&mut self.files_worker);
+        drop(fw);
     }
 }

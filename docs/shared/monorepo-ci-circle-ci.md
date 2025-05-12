@@ -1,3 +1,8 @@
+---
+title: Configuring CI Using Circle CI and Nx
+description: Learn how to set up Circle CI for your Nx workspace using the Nx Orb to track successful builds, run affected commands, and optimize CI performance.
+---
+
 # Configuring CI Using Circle CI and Nx
 
 Below is an example of a Circle CI setup, building, and testing only what is affected.

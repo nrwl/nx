@@ -7,7 +7,8 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 import Link from 'next/link';
-import { LiveStreamNotifier, WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { WebinarNotifier } from '@nx/nx-dev/ui-common';
+import { FrontendObservability } from '../lib/components/frontend-observability';
 
 export default function CustomApp({
   Component,
@@ -15,30 +16,7 @@ export default function CustomApp({
 }: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
-  // RR2B ---------
-  const SCRIPT_ID = 'external-js-script';
-  const SCRIPT_BASE_URL = 'https://s3-us-west-2.amazonaws.com/b2bjsstore/b/';
-  const SCRIPT_KEY = '0NW1GH7YJ4O4'; //
-  const SCRIPT_URL = `${SCRIPT_BASE_URL}${SCRIPT_KEY}/${SCRIPT_KEY}.js.gz`;
-  useEffect(() => {
-    const handleRouteChange = () => {
-      const existingScript = document.getElementById(SCRIPT_ID);
-      if (existingScript) {
-        existingScript.remove();
-      }
-      const script = document.createElement('script');
-      script.id = SCRIPT_ID;
-      script.src = SCRIPT_URL;
-      script.async = true;
-      document.body.appendChild(script);
-    };
-    router.events.on('routeChangeComplete', handleRouteChange);
-    handleRouteChange();
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
-  }, [router.events, SCRIPT_URL]);
-  // ---------
+  const gtmMeasurementId = 'GTM-KW8423B6';
 
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
@@ -48,14 +26,15 @@ export default function CustomApp({
   }, [router.events, gaMeasurementId]);
   return (
     <>
+      <FrontendObservability />
       <DefaultSeo
         title="Nx: Smart Monorepos · Fast CI"
-        description="Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution."
+        description="Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
+            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
@@ -75,6 +54,7 @@ export default function CustomApp({
         dangerouslySetAllPagesToNoIndex={
           process.env.NEXT_PUBLIC_NO_INDEX === 'true'
         }
+        canonical={'https://nx.dev' + router.asPath.split('?')[0]}
       />
       <Head>
         <meta name="apple-mobile-web-app-title" content="Nx" />
@@ -128,6 +108,29 @@ export default function CustomApp({
           `,
         }}
       />
+      <Script
+        id="gtm-script"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','${gtmMeasurementId}');
+          `,
+        }}
+      />
+      {/* Google Tag Manager - NoScript */}
+      <noscript>
+        <iframe
+          src={`https://www.googletagmanager.com/ns.html?id=${gtmMeasurementId}`}
+          height="0"
+          width="0"
+          style={{ display: 'none', visibility: 'hidden' }}
+        />
+      </noscript>
+
       {/* Apollo.io Embed Code */}
       <Script
         type="text/javascript"

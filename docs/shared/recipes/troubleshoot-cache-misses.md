@@ -1,3 +1,8 @@
+---
+title: Troubleshoot Cache Misses
+description: Learn how to diagnose and fix issues when Nx tasks are not being replayed from cache as expected, using project configuration checks and Nx Cloud tools.
+---
+
 # Troubleshoot Cache Misses
 
 Problem: A task is being executed when you expect it to be replayed from the cache.
@@ -21,9 +26,8 @@ Problem: A task is being executed when you expect it to be replayed from the cac
 
 - Make sure your repo is [connected to Nx Cloud](/ci/features/remote-cache)
 - Click on the run details link that is printed in the terminal after you run a task
-- Expand a task that had a cache miss
-- Click "Check For Near Misses" to see other similar tasks
-- Copy one of those similar tasks' run details links (or a run details link from another local run)
-- Click the "Compare to Similar Tasks" link in the task details on the run details page
-- Paste the other run details link you copied into the form to see exactly why the two tasks were different.
-- Note: Nx Cloud does not have access to your actual source code, so it can only tell you which projects were different, not the exact git diff of the source code.
+- Click on the task with cache miss that you want to investigate
+- Click the "Compare to similar tasks" link in the top right corner of the task details
+- Select one of the similar tasks from the list in the "Compare to" section (or paste a URL of another run)
+- Nx Cloud will compare the input details of both tasks and will highlight all the differences
+- Note: Nx Cloud cannot access your source code, so it can only tell you which inputs are different based on their saved content hash, but not the exact git diff of the source code.

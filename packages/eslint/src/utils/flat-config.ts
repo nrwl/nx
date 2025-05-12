@@ -1,10 +1,17 @@
 import { Tree } from '@nx/devkit';
 import { gte } from 'semver';
 
-// todo: add support for eslint.config.mjs,
 export const eslintFlatConfigFilenames = [
   'eslint.config.cjs',
   'eslint.config.js',
+  'eslint.config.mjs',
+];
+
+export const baseEslintConfigFilenames = [
+  'eslint.base.js',
+  'eslint.base.config.cjs',
+  'eslint.base.config.js',
+  'eslint.base.config.mjs',
 ];
 
 export function getRootESLintFlatConfigFilename(tree: Tree): string {

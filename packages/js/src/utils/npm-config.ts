@@ -110,10 +110,7 @@ async function execAsync(command: string, cwd: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(command, { cwd, windowsHide: false }, (error, stdout, stderr) => {
       if (error) {
-        return reject(error);
-      }
-      if (stderr) {
-        return reject(stderr);
+        return reject((stderr ? `${stderr}\n` : '') + error);
       }
       return resolve(stdout.trim());
     });

@@ -10,13 +10,20 @@ export interface WithWebOptions {
   generateIndexHtml?: boolean;
   index?: string;
   postcssConfig?: string;
+  sassImplementation?: 'sass' | 'sass-embedded';
   scripts?: Array<ExtraEntryPointClass | string>;
   styles?: Array<ExtraEntryPointClass | string>;
   stylePreprocessorOptions?: {
     includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
   };
   cssModules?: boolean;
   ssr?: boolean;
+  /**
+   * Use the legacy WriteIndexHtmlPlugin instead of the built-in HtmlRspackPlugin.
+   */
+  useLegacyHtmlPlugin?: boolean;
 }
 
 const processed = new Set();
@@ -39,6 +46,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}) {
         targetName: context.targetName,
         configurationName: context.configurationName,
         projectGraph: context.projectGraph,
+        useLegacyHtmlPlugin: pluginOptions.useLegacyHtmlPlugin ?? false,
       },
       config
     );

@@ -1,4 +1,4 @@
-import { ComponentProps, Fragment, ReactElement, useState } from 'react';
+import { ComponentProps, ReactElement, useState } from 'react';
 import { Button, SectionHeading } from '@nx/nx-dev/ui-common';
 import { HetznerCloudIcon } from '@nx/nx-dev/ui-icons';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { VideoModal } from './video-modal';
+import { VideoModal } from '@nx/nx-dev/ui-common';
 
 function PlayButton({
   className,
@@ -210,7 +210,7 @@ export function HetznerCloudTestimonial(): ReactElement {
                 <p className="text-xl font-medium italic text-slate-800 md:text-2xl md:leading-normal xl:text-3xl xl:leading-normal dark:text-neutral-200">
                   Nx is speed and scalability. Before we only had a few features
                   and CI was slow and now it’s fast with way more features.
-                  That’s a huge win for us.”.
+                  That’s a huge win for us.
                 </p>
               </div>
 

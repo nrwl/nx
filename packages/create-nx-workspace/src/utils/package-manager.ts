@@ -1,6 +1,6 @@
-import { execSync } from 'child_process';
-import { existsSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { execSync } from 'node:child_process';
+import { existsSync, writeFileSync } from 'node:fs';
+import { join, sep } from 'node:path';
 
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
@@ -12,7 +12,7 @@ export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
 export type PackageManager = (typeof packageManagerList)[number];
 
 export function detectPackageManager(dir: string = ''): PackageManager {
-  return existsSync(join(dir, 'bun.lockb'))
+  return existsSync(join(dir, 'bun.lockb')) || existsSync(join(dir, 'bun.lock'))
     ? 'bun'
     : existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
@@ -83,7 +83,7 @@ export function getPackageManagerCommand(
         getRegistryUrl: 'npm config get registry',
       };
     case 'bun':
-      // bun doesn't current support programatically reading config https://github.com/oven-sh/bun/issues/7140
+      // bun doesn't current support programmatically reading config https://github.com/oven-sh/bun/issues/7140
       return {
         install: 'bun install --silent --ignore-scripts',
         exec: 'bunx',
@@ -135,24 +135,25 @@ export function getPackageManagerVersion(
  * - npx returns 'npm'
  * - pnpx returns 'pnpm'
  * - yarn create returns 'yarn'
+ * - bunx returns 'bun'
  *
  * Default to 'npm'
  */
 export function detectInvokedPackageManager(): PackageManager {
-  let detectedPackageManager: PackageManager = 'npm';
-  // mainModule is deprecated since Node 14, fallback for older versions
-  const invoker = require.main || process['mainModule'];
-
-  // default to `npm`
-  if (!invoker) {
-    return detectedPackageManager;
-  }
-  for (const pkgManager of packageManagerList) {
-    if (invoker.path.includes(pkgManager)) {
-      detectedPackageManager = pkgManager;
-      break;
+  if (process.env.npm_config_user_agent) {
+    for (const pm of packageManagerList) {
+      if (process.env.npm_config_user_agent.startsWith(`${pm}/`)) {
+        return pm;
+      }
     }
   }
 
-  return detectedPackageManager;
+  if (process.env.npm_execpath) {
+    for (const pm of packageManagerList) {
+      if (process.env.npm_execpath.split(sep).includes(pm)) {
+        return pm;
+      }
+    }
+  }
+  return 'npm';
 }

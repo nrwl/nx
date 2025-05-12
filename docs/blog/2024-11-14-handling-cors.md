@@ -3,7 +3,8 @@ title: Handling CORS In Your Workspace
 slug: handling-cors
 authors: [Mike Hartington]
 tags: [nx]
-cover_image: '/blog/images/2024-11-14/cors.png'
+cover_image: '/blog/images/2024-11-14/cors.avif'
+description: Learn to handle CORS issues in web development, with practical examples and solutions for common challenges.
 ---
 
 ## CORS - The Great Initiation For Web Developers
@@ -26,7 +27,7 @@ Now CORS-related issues can be addressed in multiple ways, and it can be as simp
 
 > But wait, I thought Nx would do this for me?
 
-In past releases, Nx would provide options in our executors to configure a proxy connection between backend and frontend applications. This still exists for example in our Angular plugin where we are still using executors. However, with our decision to move to a more “optionally opinionated” approach, we now recommend that you use native CLI tools (like vite or webpack) instead of our executors. In this approach, you’d configure the proxy exactly according to how the tool prescribes. Nx doesn’t get in your way!
+In past releases, Nx would provide options in our executors to configure a proxy connection between backend and frontend applications. This still exists for example in our Angular plugin where we are still using executors. However, with our decision to move to a more "optionally opinionated" approach, we now recommend that you use native CLI tools (like vite or webpack) instead of our executors. In this approach, you'd configure the proxy exactly according to how the tool prescribes. Nx doesn't get in your way!
 
 To address this, our two possible solutions could be at the API level, or the framework level.
 
@@ -91,7 +92,7 @@ app.use(
 );
 ```
 
-Now, why would you use the `cors` middleware when you could just set the `Access-Control-Allow-Origin` header yourself? The middleware handles a lot of edge cases that you would need to write yourself, and at sub 250 lines of code, it doesn’t add too much to your codebase.
+Now, why would you use the `cors` middleware when you could just set the `Access-Control-Allow-Origin` header yourself? The middleware handles a lot of edge cases that you would need to write yourself, and at sub 250 lines of code, it doesn't add too much to your codebase.
 
 ### Leave It To The Framework Tools
 

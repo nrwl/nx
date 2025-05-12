@@ -9,7 +9,10 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
+import {
+  testingLibraryDomVersion,
+  testingLibraryReactVersion,
+} from '@nx/react/src/utils/versions';
 
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';
@@ -20,10 +23,12 @@ import {
   addProjectToTsSolutionWorkspace,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...rawOptions,
   });
 }
@@ -47,7 +52,6 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 
   const libTask = await reactLibraryGenerator(host, {
     ...options,
-    bundler: 'none',
     skipFormat: true,
   });
   tasks.push(libTask);
@@ -56,10 +60,12 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
     const devDependencies: Record<string, string> = {};
     if (options.linter === 'eslint') {
       devDependencies['eslint-config-next'] = eslintConfigNextVersion;
+      devDependencies['@next/eslint-plugin-next'] = eslintConfigNextVersion;
     }
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+      devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
     }
 
     tasks.push(
@@ -163,8 +169,10 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
   );
 
   if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
+
+  sortPackageJsonFields(host, options.projectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

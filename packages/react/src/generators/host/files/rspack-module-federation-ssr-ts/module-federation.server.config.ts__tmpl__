@@ -8,6 +8,12 @@ const config: ModuleFederationConfig = {
     "<%= r.fileName %>", 
       <%_ }); } _%>
   ],
+  shared: (libraryName, libraryConfig) => {
+    return {
+      ...libraryConfig,
+      eager: true
+    }
+  },
 };
 
 /**

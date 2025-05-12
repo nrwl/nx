@@ -66,6 +66,7 @@ function postTargetTransformer(
           '{workspaceRoot}/.eslintrc.json',
           '{workspaceRoot}/.eslintignore',
           '{workspaceRoot}/eslint.config.cjs',
+          '{workspaceRoot}/eslint.config.mjs',
         ].includes(input)
     );
     if (inputs.length === 0) {

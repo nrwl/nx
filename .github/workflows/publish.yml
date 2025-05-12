@@ -21,7 +21,7 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 18
+  NODE_VERSION: 20.19.0
   PNPM_VERSION: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
@@ -294,14 +294,12 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         with:
           repository: ${{ needs.resolve-required-data.outputs.repo }}
           ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - name: Build
         id: build
-        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         uses: cross-platform-actions/action@v0.25.0
         env:
           DEBUG: napi:*
@@ -343,7 +341,6 @@ jobs:
             echo "COMPLETE"
 
       - name: Upload artifact
-        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         uses: actions/upload-artifact@v4
         with:
           name: bindings-freebsd
@@ -406,6 +403,7 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
+          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch

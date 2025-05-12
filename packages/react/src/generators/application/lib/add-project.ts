@@ -5,12 +5,13 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
+  updateJson,
   writeJson,
 } from '@nx/devkit';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -38,24 +39,50 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  if (options.isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(host, options.name),
-      version: '0.0.1',
-      private: true,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: `${options.appProjectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
-  }
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
 
-  if (!options.isUsingTsSolutionConfig || options.alwaysGenerateProjectJson) {
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (Object.keys(project.targets).length) {
+      packageJson.nx ??= {};
+      packageJson.nx.targets = project.targets;
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
+  } else {
     addProjectConfiguration(host, options.projectName, {
       ...project,
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    // React Router already adds a package.json to the project root
+    if (options.useReactRouter) {
+      updateJson(
+        host,
+        joinPathFragments(options.appProjectRoot, 'package.json'),
+        (json) => {
+          return {
+            name: packageJson.name,
+            ...json,
+          };
+        }
+      );
+    } else {
+      writeJson(
+        host,
+        joinPathFragments(options.appProjectRoot, 'package.json'),
+        packageJson
+      );
+    }
   }
 }
 
@@ -67,7 +94,14 @@ function createRspackBuildTarget(
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
-      outputPath: joinPathFragments('dist', options.appProjectRoot),
+      outputPath: options.isUsingTsSolutionConfig
+        ? joinPathFragments(options.appProjectRoot, 'dist')
+        : joinPathFragments(
+            'dist',
+            options.appProjectRoot !== '.'
+              ? options.appProjectRoot
+              : options.projectName
+          ),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',
       main: joinPathFragments(
@@ -140,12 +174,14 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
     defaultConfiguration: 'production',
     options: {
       compiler: options.compiler ?? 'babel',
-      outputPath: joinPathFragments(
-        'dist',
-        options.appProjectRoot != '.'
-          ? options.appProjectRoot
-          : options.projectName
-      ),
+      outputPath: options.isUsingTsSolutionConfig
+        ? joinPathFragments(options.appProjectRoot, 'dist')
+        : joinPathFragments(
+            'dist',
+            options.appProjectRoot !== '.'
+              ? options.appProjectRoot
+              : options.projectName
+          ),
       index: joinPathFragments(options.appProjectRoot, 'src/index.html'),
       baseHref: '/',
       main: joinPathFragments(

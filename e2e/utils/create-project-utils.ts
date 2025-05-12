@@ -1,4 +1,5 @@
 import { copySync, ensureDirSync, moveSync, removeSync } from 'fs-extra';
+import * as isCI from 'is-ci';
 import {
   createFile,
   directoryExists,
@@ -15,24 +16,22 @@ import {
   isVerbose,
   isVerboseE2ERun,
 } from './get-env-info';
-import * as isCI from 'is-ci';
 
+import { output, readJsonFile } from '@nx/devkit';
 import { angularCliVersion as defaultAngularCliVersion } from '@nx/workspace/src/utils/versions';
 import { dump } from '@zkochan/js-yaml';
-import { execSync, ExecSyncOptions } from 'child_process';
-
-import { performance, PerformanceMeasure } from 'perf_hooks';
-import { logError, logInfo } from './log-utils';
+import { execSync, ExecSyncOptions } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { performance, PerformanceMeasure } from 'node:perf_hooks';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   getPackageManagerCommand,
   runCLI,
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output, readJsonFile } from '@nx/devkit';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { logError, logInfo } from './log-utils';
 
 let projName: string;
 
@@ -90,7 +89,10 @@ export function newProject({
     let createNxWorkspaceMeasure: PerformanceMeasure;
     let packageInstallMeasure: PerformanceMeasure;
 
-    if (!directoryExists(tmpBackupProjPath())) {
+    // Namespace by package manager to avoid conflicts in test suites which include multiple package managers
+    const backupPath = tmpBackupProjPath(packageManager);
+
+    if (!directoryExists(backupPath)) {
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
@@ -132,12 +134,12 @@ export function newProject({
         stdio: isVerbose() ? 'inherit' : 'pipe',
       });
 
-      moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
+      moveSync(`${e2eCwd}/proj`, backupPath);
     }
     projName = name;
 
     const projectDirectory = tmpProjPath();
-    copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
+    copySync(backupPath, projectDirectory);
 
     const dependencies = readJsonFile(
       `${projectDirectory}/package.json`
@@ -220,6 +222,7 @@ export function runCreateWorkspace(
     cwd = e2eCwd,
     bundler,
     routing,
+    useReactRouter,
     standaloneApi,
     docker,
     nextAppDir,
@@ -242,6 +245,7 @@ export function runCreateWorkspace(
     bundler?: 'webpack' | 'vite';
     standaloneApi?: boolean;
     routing?: boolean;
+    useReactRouter?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
     nextSrcDir?: boolean;
@@ -256,6 +260,9 @@ export function runCreateWorkspace(
   projName = name;
 
   const pm = getPackageManagerCommand({ packageManager });
+
+  // Needed for bun workarounds, see below
+  const registry = execSync('npm config get registry').toString().trim();
 
   let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
 
@@ -288,6 +295,10 @@ export function runCreateWorkspace(
 
   if (routing !== undefined) {
     command += ` --routing=${routing}`;
+  }
+
+  if (useReactRouter !== undefined) {
+    command += ` --useReactRouter=${useReactRouter}`;
   }
 
   if (base) {
@@ -486,6 +497,29 @@ export function runNgNew(
     env: process.env,
     encoding: 'utf-8',
   });
+
+  // ensure angular packages are installed with ~ instead of ^ to prevent
+  // potential failures when new minor versions are released
+  function updateAngularDependencies(dependencies: any): void {
+    Object.keys(dependencies).forEach((key) => {
+      if (key.startsWith('@angular/') || key.startsWith('@angular-devkit/')) {
+        dependencies[key] = dependencies[key].replace(/^\^/, '~');
+      }
+    });
+  }
+  updateJson('package.json', (json) => {
+    updateAngularDependencies(json.dependencies ?? {});
+    updateAngularDependencies(json.devDependencies ?? {});
+    return json;
+  });
+
+  execSync(pmc.install, {
+    cwd: join(e2eCwd, projName),
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    env: process.env,
+    encoding: 'utf-8',
+  });
+
   copySync(tmpProjPath(), tmpBackupNgCliProjPath());
 
   if (isVerboseE2ERun()) {

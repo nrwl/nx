@@ -8,11 +8,15 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   host: Tree,
@@ -20,7 +24,7 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
-  await ensureProjectName(host, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -70,10 +74,11 @@ export async function normalizeOptions(
     bundler,
     fileName,
     routePath: `/${projectNames.projectSimpleName}`,
-    name: projectName,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.
@@ -85,17 +90,28 @@ export async function normalizeOptions(
 
   if (options.appProject) {
     const appProjectConfig = getProjects(host).get(options.appProject);
+    const appProjectType = getProjectType(
+      host,
+      appProjectConfig.root,
+      appProjectConfig.projectType
+    );
 
-    if (appProjectConfig.projectType !== 'application') {
+    if (appProjectType !== 'application') {
       throw new Error(
-        `appProject expected type of "application" but got "${appProjectConfig.projectType}"`
+        `appProject expected type of "application" but got "${appProjectType}"`
       );
     }
+
+    const appSourceRoot = getProjectSourceRoot(
+      host,
+      appProjectConfig.sourceRoot,
+      appProjectConfig.root
+    );
 
     normalized.appMain =
       appProjectConfig.targets.build?.options?.main ??
       findMainEntry(host, appProjectConfig.root);
-    normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
+    normalized.appSourceRoot = normalizePath(appSourceRoot);
 
     // TODO(jack): We should use appEntryFile instead of appProject so users can directly set it rather than us inferring it.
     if (!normalized.appMain) {

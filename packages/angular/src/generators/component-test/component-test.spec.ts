@@ -1,15 +1,15 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/versions';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
 import { componentTestGenerator } from './component-test';
+import { EOL } from 'node:os';
 
-jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/versions');
 
 describe('Angular Cypress Component Test Generator', () => {
   let tree: Tree;
@@ -27,7 +27,7 @@ describe('Angular Cypress Component Test Generator', () => {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -51,7 +51,7 @@ describe('Angular Cypress Component Test Generator', () => {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -105,7 +105,7 @@ export class MyLibComponent implements OnInit {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
     await componentGenerator(tree, {
@@ -158,7 +158,7 @@ export class MyLibComponent implements OnInit {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
@@ -189,7 +189,7 @@ export class MyLibComponent implements OnInit {
     await generateTestLibrary(tree, {
       directory: 'my-lib',
       unitTestRunner: UnitTestRunner.None,
-      linter: Linter.None,
+      linter: 'none',
       skipFormat: true,
     });
 
@@ -226,7 +226,9 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree
+        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .replaceAll(EOL, '\n')
     ).toEqual(expected);
 
     await componentTestGenerator(tree, {
@@ -237,7 +239,9 @@ describe(MyLibComponent.name, () => {
       skipFormat: true,
     });
     expect(
-      tree.read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+      tree
+        .read('my-lib/src/lib/my-lib/my-lib.component.cy.ts', 'utf-8')
+        .replaceAll(EOL, '\n')
     ).toEqual(expected);
   });
 });

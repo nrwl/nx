@@ -523,11 +523,9 @@ describe('app', () => {
        * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
        **/
       const nextConfig = {
-        nx: {
-          // Set this to true if you would like to use SVGR
-          // See: https://github.com/gregberge/svgr
-          svgr: false,
-        },
+        // Use this to set Nx-specific options
+        // See: https://nx.dev/recipes/next/next-config-setup
+        nx: {},
       };
 
       const plugins = [
@@ -566,48 +564,6 @@ describe('app', () => {
     });
   });
 
-  describe('--e2e-test-runner cypress', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'cypress',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('--e2e-test-runner playwright', () => {
-    it('should generate e2e-ci targetDefaults', async () => {
-      const name = uniq();
-
-      await applicationGenerator(tree, {
-        directory: name,
-        style: 'css',
-        e2eTestRunner: 'playwright',
-        addPlugin: true,
-      });
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^build",
-          ],
-        }
-      `);
-    });
-  });
-
   it('should generate functional components by default', async () => {
     const name = uniq();
 
@@ -623,7 +579,41 @@ describe('app', () => {
 
   describe('--linter', () => {
     describe('default (eslint)', () => {
-      it('should add flat config as needed', async () => {
+      it('should add flat config as needed MJS', async () => {
+        tree.write('eslint.config.mjs', 'export default {};');
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          directory: name,
+          style: 'css',
+        });
+
+        expect(tree.read(`${name}/eslint.config.mjs`, 'utf-8'))
+          .toMatchInlineSnapshot(`
+          "import { FlatCompat } from '@eslint/eslintrc';
+          import { dirname } from 'path';
+          import { fileURLToPath } from 'url';
+          import js from '@eslint/js';
+          import nx from '@nx/eslint-plugin';
+          import baseConfig from '../eslint.config.mjs';
+          const compat = new FlatCompat({
+            baseDirectory: dirname(fileURLToPath(import.meta.url)),
+            recommendedConfig: js.configs.recommended,
+          });
+
+          export default [
+            ...compat.extends('next', 'next/core-web-vitals'),
+            ...baseConfig,
+            ...nx.configs['flat/react-typescript'],
+            {
+              ignores: ['.next/**/*'],
+            },
+          ];
+          "
+        `);
+      });
+
+      it('should add flat config as needed CJS', async () => {
         tree.write('eslint.config.cjs', '');
         const name = uniq();
 
@@ -838,6 +828,259 @@ describe('app', () => {
       expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
     });
   });
+
+  describe('TS solution setup', () => {
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => {
+        json.workspaces = ['packages/*', 'apps/*'];
+        return json;
+      });
+      writeJson(tree, 'tsconfig.base.json', {
+        compilerOptions: {
+          composite: true,
+          declaration: true,
+        },
+      });
+      writeJson(tree, 'tsconfig.json', {
+        extends: './tsconfig.base.json',
+        files: [],
+        references: [],
+      });
+    });
+
+    it('should add project references when using TS solution', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'cypress',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
+          [
+            {
+              "path": "./myapp-e2e",
+            },
+            {
+              "path": "./myapp",
+            },
+          ]
+        `);
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+          [
+            "name",
+            "version",
+            "private",
+            "dependencies",
+          ]
+        `);
+      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
+          {
+            "compilerOptions": {
+              "allowJs": true,
+              "allowSyntheticDefaultImports": true,
+              "emitDeclarationOnly": false,
+              "esModuleInterop": true,
+              "forceConsistentCasingInFileNames": true,
+              "incremental": true,
+              "isolatedModules": true,
+              "jsx": "preserve",
+              "lib": [
+                "dom",
+                "dom.iterable",
+                "esnext",
+              ],
+              "module": "esnext",
+              "moduleResolution": "bundler",
+              "noEmit": true,
+              "outDir": "dist",
+              "paths": {
+                "@/*": [
+                  "./src/*",
+                ],
+              },
+              "plugins": [
+                {
+                  "name": "next",
+                },
+              ],
+              "resolveJsonModule": true,
+              "rootDir": "src",
+              "strict": true,
+              "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+              "types": [
+                "jest",
+                "node",
+              ],
+            },
+            "exclude": [
+              "out-tsc",
+              "dist",
+              "node_modules",
+              "jest.config.ts",
+              "src/**/*.spec.ts",
+              "src/**/*.test.ts",
+              ".next",
+              "eslint.config.js",
+              "eslint.config.cjs",
+              "eslint.config.mjs",
+            ],
+            "extends": "../tsconfig.base.json",
+            "include": [
+              "src/**/*.ts",
+              "src/**/*.tsx",
+              "src/**/*.js",
+              "src/**/*.jsx",
+              "../myapp/.next/types/**/*.ts",
+              "../dist/myapp/.next/types/**/*.ts",
+              "next-env.d.ts",
+            ],
+          }
+        `);
+      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
+          {
+            "compilerOptions": {
+              "jsx": "preserve",
+              "module": "esnext",
+              "moduleResolution": "bundler",
+              "outDir": "./out-tsc/jest",
+              "types": [
+                "jest",
+                "node",
+              ],
+            },
+            "extends": "../tsconfig.base.json",
+            "include": [
+              "jest.config.ts",
+              "src/**/*.test.ts",
+              "src/**/*.spec.ts",
+              "src/**/*.test.tsx",
+              "src/**/*.spec.tsx",
+              "src/**/*.test.js",
+              "src/**/*.spec.js",
+              "src/**/*.test.jsx",
+              "src/**/*.spec.jsx",
+              "src/**/*.d.ts",
+            ],
+            "references": [
+              {
+                "path": "./tsconfig.json",
+              },
+            ],
+          }
+        `);
+      expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
+          {
+            "compilerOptions": {
+              "allowJs": true,
+              "outDir": "out-tsc/cypress",
+              "sourceMap": false,
+              "types": [
+                "cypress",
+                "node",
+              ],
+            },
+            "exclude": [
+              "out-tsc",
+              "test-output",
+            ],
+            "extends": "../tsconfig.base.json",
+            "include": [
+              "**/*.ts",
+              "**/*.js",
+              "cypress.config.ts",
+              "**/*.cy.ts",
+              "**/*.cy.tsx",
+              "**/*.cy.js",
+              "**/*.cy.jsx",
+              "**/*.d.ts",
+            ],
+          }
+        `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'cypress',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+          [
+            "name",
+            "version",
+            "private",
+            "nx",
+            "dependencies",
+          ]
+        `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'cypress',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
+    });
+  });
 });
 
 describe('app (legacy)', () => {
@@ -877,175 +1120,6 @@ describe('app (legacy)', () => {
     const projectConfiguration = readProjectConfiguration(tree, name);
     expect(projectConfiguration.targets.build).toBeDefined();
     expect(projectConfiguration.targets.serve).toBeDefined();
-  });
-
-  describe('TS solution setup', () => {
-    beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.workspaces = ['packages/*', 'apps/*'];
-        return json;
-      });
-      writeJson(tree, 'tsconfig.base.json', {
-        compilerOptions: {
-          composite: true,
-          declaration: true,
-        },
-      });
-      writeJson(tree, 'tsconfig.json', {
-        extends: './tsconfig.base.json',
-        files: [],
-        references: [],
-      });
-    });
-
-    it('should add project references when using TS solution', async () => {
-      await applicationGenerator(tree, {
-        ...schema,
-        addPlugin: true,
-        directory: 'myapp',
-        name: 'myapp',
-      });
-
-      expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
-        [
-          {
-            "path": "./myapp-e2e",
-          },
-          {
-            "path": "./myapp",
-          },
-        ]
-      `);
-      expect(readJson(tree, 'myapp/tsconfig.json')).toMatchInlineSnapshot(`
-        {
-          "compilerOptions": {
-            "allowJs": true,
-            "allowSyntheticDefaultImports": true,
-            "emitDeclarationOnly": false,
-            "esModuleInterop": true,
-            "forceConsistentCasingInFileNames": true,
-            "incremental": true,
-            "isolatedModules": true,
-            "jsx": "preserve",
-            "lib": [
-              "dom",
-              "dom.iterable",
-              "esnext",
-            ],
-            "module": "esnext",
-            "moduleResolution": "bundler",
-            "noEmit": true,
-            "outDir": "out-tsc/myapp",
-            "paths": {
-              "@/*": [
-                "./src/*",
-              ],
-            },
-            "plugins": [
-              {
-                "name": "next",
-              },
-            ],
-            "resolveJsonModule": true,
-            "rootDir": "src",
-            "strict": true,
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.tsbuildinfo",
-            "types": [
-              "jest",
-              "node",
-            ],
-          },
-          "exclude": [
-            "out-tsc",
-            "dist",
-            "node_modules",
-            "jest.config.ts",
-            "src/**/*.spec.ts",
-            "src/**/*.test.ts",
-            ".next",
-            "eslint.config.js",
-            "eslint.config.cjs",
-            "eslint.config.mjs",
-          ],
-          "extends": "../tsconfig.base.json",
-          "include": [
-            "src/**/*.ts",
-            "src/**/*.tsx",
-            "src/**/*.js",
-            "src/**/*.jsx",
-            "../myapp/.next/types/**/*.ts",
-            "../dist/myapp/.next/types/**/*.ts",
-            "next-env.d.ts",
-          ],
-        }
-      `);
-      expect(readJson(tree, 'myapp/tsconfig.spec.json')).toMatchInlineSnapshot(`
-        {
-          "compilerOptions": {
-            "jsx": "preserve",
-            "module": "esnext",
-            "moduleResolution": "bundler",
-            "outDir": "./out-tsc/jest",
-            "types": [
-              "jest",
-              "node",
-            ],
-          },
-          "extends": "../tsconfig.base.json",
-          "include": [
-            "jest.config.ts",
-            "src/**/*.test.ts",
-            "src/**/*.spec.ts",
-            "src/**/*.test.tsx",
-            "src/**/*.spec.tsx",
-            "src/**/*.test.js",
-            "src/**/*.spec.js",
-            "src/**/*.test.jsx",
-            "src/**/*.spec.jsx",
-            "src/**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "./tsconfig.json",
-            },
-          ],
-        }
-      `);
-      expect(readJson(tree, 'myapp-e2e/tsconfig.json')).toMatchInlineSnapshot(`
-        {
-          "compilerOptions": {
-            "allowJs": true,
-            "outDir": "out-tsc/cypress",
-            "sourceMap": false,
-            "types": [
-              "cypress",
-              "node",
-            ],
-          },
-          "exclude": [
-            "out-tsc",
-            "test-output",
-          ],
-          "extends": "../tsconfig.base.json",
-          "include": [
-            "**/*.ts",
-            "**/*.js",
-            "cypress.config.ts",
-            "**/*.cy.ts",
-            "**/*.cy.tsx",
-            "**/*.cy.js",
-            "**/*.cy.jsx",
-            "**/*.d.ts",
-          ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
-          ],
-        }
-      `);
-    });
   });
 });
 

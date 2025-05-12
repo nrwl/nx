@@ -11,7 +11,10 @@ import {
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectSourceRoot,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -78,10 +81,11 @@ function addBuildTarget(
   };
 
   if (isTsSolutionSetup) {
-    buildOptions.declarationRootDir =
-      project.sourceRoot ?? tree.exists(`${project.root}/src`)
-        ? `${project.root}/src`
-        : project.root;
+    buildOptions.declarationRootDir = getProjectSourceRoot(
+      tree,
+      project.sourceRoot,
+      project.root
+    );
   } else {
     buildOptions.assets = [];
 
@@ -163,6 +167,9 @@ function updatePackageJson(
       esbuildOptions,
     } = mergedTarget.options;
 
+    // the file must exist in the TS solution setup
+    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
     // can't use the declarationRootDir as rootDir because it only affects the typings,
     // not the runtime entry point
     packageJson = getUpdatedPackageJsonContent(packageJson, {
@@ -182,6 +189,10 @@ function updatePackageJson(
       outputFileExtensionForEsm: getOutExtension('esm', {
         userDefinedBuildOptions: esbuildOptions,
       }),
+      skipDevelopmentExports:
+        !tsconfigBase.compilerOptions?.customConditions?.includes(
+          'development'
+        ),
     });
 
     if (declarationRootDir !== dirname(main)) {

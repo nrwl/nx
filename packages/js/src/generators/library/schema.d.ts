@@ -33,7 +33,6 @@ export interface LibraryGeneratorSchema {
   simpleName?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
-  skipWorkspacesWarning?: boolean;
   useTscExecutor?: boolean;
 }
 
@@ -47,5 +46,5 @@ export interface NormalizedLibraryGeneratorOptions
   importPath?: string;
   hasPlugin: boolean;
   isUsingTsSolutionConfig: boolean;
-  projectPackageManagerWorkspaceState: ProjectPackageManagerWorkspaceState;
+  shouldUseSwcJest: boolean;
 }

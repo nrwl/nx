@@ -10,6 +10,7 @@ import {
   writeJsonFile,
   createNodesFromFiles,
   logger,
+  getPackageManagerCommand,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 
@@ -21,13 +22,21 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { getLockFileName } from '@nx/js';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 import { hashObject } from 'nx/src/devkit-internals';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface NextPluginOptions {
   buildTargetName?: string;
   devTargetName?: string;
   startTargetName?: string;
+  /**
+   * @deprecated Use `startTargetName` instead.
+   */
   serveStaticTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
+
+const pmc = getPackageManagerCommand();
 
 const nextConfigBlob = '**/next.config.{ts,js,cjs,mjs}';
 
@@ -166,9 +175,19 @@ async function buildNextTargets(
 
   targets[options.devTargetName] = getDevTargetConfig(projectRoot);
 
-  targets[options.startTargetName] = getStartTargetConfig(options, projectRoot);
+  const startTarget = getStartTargetConfig(options, projectRoot);
 
-  targets[options.serveStaticTargetName] = getStaticServeTargetConfig(options);
+  targets[options.startTargetName] = startTarget;
+
+  targets[options.serveStaticTargetName] = startTarget;
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return targets;
 }
@@ -188,7 +207,7 @@ async function getBuildTargetConfig(
     dependsOn: ['^build'],
     cache: true,
     inputs: getInputs(namedInputs),
-    outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
+    outputs: [`${nextOutputPath}/!(cache)/**/*`, `${nextOutputPath}/!(cache)`],
   };
 
   // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
@@ -200,6 +219,7 @@ async function getBuildTargetConfig(
 
 function getDevTargetConfig(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `next dev`,
     options: {
       cwd: projectRoot,
@@ -211,26 +231,12 @@ function getDevTargetConfig(projectRoot: string) {
 
 function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
   const targetConfig: TargetConfiguration = {
+    continuous: true,
     command: `next start`,
     options: {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
-  };
-
-  return targetConfig;
-}
-
-function getStaticServeTargetConfig(options: NextPluginOptions) {
-  const targetConfig: TargetConfiguration = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: options.buildTargetName,
-      staticFilePath: '{projectRoot}/out',
-      port: 3000,
-      // Routes are found correctly with serve-static
-      spa: false,
-    },
   };
 
   return targetConfig;

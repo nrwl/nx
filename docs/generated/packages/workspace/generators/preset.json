@@ -25,6 +25,11 @@
         "type": "boolean",
         "default": true
       },
+      "useReactRouter": {
+        "description": "Use React Router for routing.",
+        "type": "boolean",
+        "default": false
+      },
       "style": {
         "description": "The file extension to be used for style files.",
         "type": "string",
@@ -69,7 +74,7 @@
       "bundler": {
         "description": "The bundler to use for building the application.",
         "type": "string",
-        "enum": ["webpack", "vite", "rspack", "esbuild"],
+        "enum": ["vite", "rspack", "rsbuild", "esbuild", "webpack"],
         "default": "vite"
       },
       "docker": {
@@ -86,6 +91,11 @@
         "description": "Generate a `src` directory for this project.",
         "type": "boolean",
         "default": true
+      },
+      "unitTestRunner": {
+        "description": "The tool to use for running unit tests.",
+        "type": "string",
+        "enum": ["jest", "vitest", "none"]
       },
       "e2eTestRunner": {
         "description": "The tool to use for running e2e tests.",
@@ -114,7 +124,11 @@
       "workspaces": {
         "description": "Whether to use package manager workspaces.",
         "type": "boolean",
-        "default": false
+        "default": true
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["preset", "name"],

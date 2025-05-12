@@ -29,7 +29,7 @@ export function VmwareTestimonial(): ReactElement {
               </SectionHeading>
               <ButtonLink
                 href="https://go.nx.dev/ci-ebook"
-                title="Download the ebook"
+                title="Download the guide"
                 variant="secondary"
                 size="small"
               >
@@ -37,7 +37,7 @@ export function VmwareTestimonial(): ReactElement {
                   aria-hidden="true"
                   className="size-5 shrink-0"
                 />
-                <span>Download the ebook</span>
+                <span>Download the guide</span>
               </ButtonLink>
             </div>
           </footer>

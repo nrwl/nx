@@ -88,6 +88,12 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
         : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
       opts.routing !== undefined ? `--routing=${opts.routing}` : null,
+      opts.useReactRouter !== undefined
+        ? `--useReactRouter=${opts.useReactRouter}`
+        : null,
+      opts.unitTestRunner !== undefined
+        ? `--unitTestRunner=${opts.unitTestRunner}`
+        : null,
       opts.e2eTestRunner !== undefined
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
@@ -96,7 +102,8 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.prefix !== undefined ? `--prefix=${opts.prefix}` : null,
       opts.nxCloudToken ? `--nxCloudToken=${opts.nxCloudToken}` : null,
       opts.formatter ? `--formatter=${opts.formatter}` : null,
-      opts.workspaces ? `--workspaces` : null,
+      opts.workspaces !== false ? `--workspaces` : `--no-workspaces`,
+      opts.useProjectJson ? `--useProjectJson` : null,
     ].filter((e) => !!e);
   }
 }
@@ -137,10 +144,6 @@ function getPresetDependencies({
     case Preset.NextJs:
     case Preset.NextJsStandalone:
       return { dependencies: { '@nx/next': nxVersion }, dev: {} };
-
-    case Preset.RemixStandalone:
-    case Preset.RemixMonorepo:
-      return { dependencies: { '@nx/remix': nxVersion }, dev: {} };
 
     case Preset.VueMonorepo:
     case Preset.VueStandalone:

@@ -12,6 +12,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 
 import { NormalizedSchema, ComponentGeneratorSchema } from '../schema';
 import { addImport } from '../../../utils/ast-utils';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 let tsModule: typeof import('typescript');
 
@@ -33,9 +34,12 @@ export async function normalizeOptions(
   let { className } = names(fileName);
   const componentFileName = fileName;
   const project = getProjects(host).get(projectName);
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const { root, sourceRoot: projectSourceRoot, projectType } = project;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(host, root, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
@@ -60,12 +64,13 @@ export function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
   const workspace = getProjects(host);
+  const proj = workspace.get(options.projectName);
   const isApp =
-    workspace.get(options.projectName).projectType === 'application';
+    getProjectType(host, proj.root, proj.projectType) === 'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
-      options.projectSourceRoot,
+      options.projectSourceRoot ?? 'src',
       options.js ? 'index.js' : 'index.ts'
     );
     const indexSource = host.read(indexFilePath, 'utf-8');

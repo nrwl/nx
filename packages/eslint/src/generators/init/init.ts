@@ -11,31 +11,37 @@ import {
 } from '@nx/devkit';
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { eslintVersion, nxVersion } from '../../utils/versions';
-import { findEslintFile } from '../utils/eslint-file';
+import {
+  determineEslintConfigFormat,
+  findEslintFile,
+} from '../utils/eslint-file';
 import { createNodesV2 } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
+import { extname } from 'path';
 
 export interface LinterInitOptions {
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
   addPlugin?: boolean;
+  // Internal option
+  eslintConfigFormat?: 'mjs' | 'cjs';
 }
 
-function updateProductionFileset(tree: Tree) {
+function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
-    productionFileSet.push('!{projectRoot}/eslint.config.cjs');
+    productionFileSet.push(`!{projectRoot}/eslint.config.${format}`);
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
   updateNxJson(tree, nxJson);
 }
 
-function addTargetDefaults(tree: Tree) {
+function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
@@ -45,7 +51,7 @@ function addTargetDefaults(tree: Tree) {
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
-    `{workspaceRoot}/eslint.config.cjs`,
+    `{workspaceRoot}/eslint.config.${format}`,
   ];
   updateNxJson(tree, nxJson);
 }
@@ -74,8 +80,20 @@ export async function initEsLint(
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
   options.addPlugin ??= addPluginDefault;
+  options.eslintConfigFormat ??= 'mjs';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
+
+  if (rootEslintFile) {
+    const fileExtension = extname(rootEslintFile);
+    if (fileExtension === '.mjs' || fileExtension === '.cjs') {
+      options.eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
+    } else {
+      options.eslintConfigFormat = determineEslintConfigFormat(
+        tree.read(rootEslintFile, 'utf-8')
+      );
+    }
+  }
 
   const graph = await createProjectGraphAsync();
 
@@ -107,7 +125,7 @@ export async function initEsLint(
     return () => {};
   }
 
-  updateProductionFileset(tree);
+  updateProductionFileset(tree, options.eslintConfigFormat);
 
   updateVsCodeRecommendedExtensions(tree);
 
@@ -123,7 +141,7 @@ export async function initEsLint(
       options.updatePackageScripts
     );
   } else {
-    addTargetDefaults(tree);
+    addTargetDefaults(tree, options.eslintConfigFormat);
   }
 
   const tasks: GeneratorCallback[] = [];

@@ -15,22 +15,23 @@ export interface Globals {
 export interface RollupExecutorOptions {
   outputPath: string;
   tsConfig: string;
-  allowJs?: boolean;
-  project: string;
   main: string;
-  outputFileName?: string;
-  extractCss?: boolean | string;
-  external?: string[] | 'all' | 'none';
-  rollupConfig?: string | string[];
-  watch?: boolean;
-  assets?: any[];
-  deleteOutputPath?: boolean;
-  format?: ('cjs' | 'esm')[];
-  compiler?: 'babel' | 'tsc' | 'swc';
-  javascriptEnabled?: boolean;
-  generateExportsField?: boolean;
   additionalEntryPoints?: string[];
-  skipTypeCheck?: boolean;
+  allowJs?: boolean;
+  assets?: any[];
   babelUpwardRootMode?: boolean;
+  buildLibsFromSource?: boolean;
+  compiler?: 'babel' | 'tsc' | 'swc';
+  deleteOutputPath?: boolean;
+  external?: string[] | 'all' | 'none';
+  extractCss?: boolean | string;
+  format?: ('cjs' | 'esm')[];
+  generateExportsField?: boolean;
+  javascriptEnabled?: boolean;
+  project?: string;
+  outputFileName?: string;
+  rollupConfig?: string | string[];
+  skipTypeCheck?: boolean;
   skipTypeField?: boolean;
+  watch?: boolean;
 }

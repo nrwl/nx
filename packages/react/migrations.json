@@ -1,17 +1,5 @@
 {
   "generators": {
-    "add-module-federation-env-var-to-target-defaults": {
-      "cli": "nx",
-      "version": "18.0.0-beta.0",
-      "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/webpack:webpack' is used for Module Federation.",
-      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
-    },
-    "fix-target-defaults-for-webpack": {
-      "cli": "nx",
-      "version": "18.1.1-beta.0",
-      "description": "Ensure targetDefaults inputs for task hashing when '@nx/webpack:webpack' is used are correct for Module Federation.",
-      "factory": "./src/migrations/update-18-1-1/fix-target-defaults-inputs"
-    },
     "update-19-6-0-turn-module-federation-dts-off": {
       "cli": "nx",
       "version": "19.6.0-beta.4",
@@ -47,35 +35,21 @@
       "version": "20.3.0-beta.2",
       "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
       "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+    },
+    "add-mf-env-var-to-target-defaults": {
+      "cli": "nx",
+      "version": "20.4.0-beta.0",
+      "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+    },
+    "update-21-0-0-update-babel-loose": {
+      "cli": "nx",
+      "version": "21.0.0-beta.11",
+      "description": "Replaces `classProperties.loose` option with `loose`.",
+      "factory": "./src/migrations/update-21-0-0/update-babel-loose"
     }
   },
   "packageJsonUpdates": {
-    "17.0.0-beta.0": {
-      "version": "17.0.0-beta.0",
-      "packages": {
-        "@types/react": {
-          "version": "18.2.24",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-dom": {
-          "version": "18.2.9",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-is": {
-          "version": "18.2.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "17.3.0": {
-      "version": "17.3.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "18.16.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "19.0.0": {
       "version": "19.0.0-beta.12",
       "packages": {
@@ -188,6 +162,15 @@
         },
         "@module-federation/node": {
           "version": "2.6.11",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.3.0": {
+      "version": "20.3.0-beta.0",
+      "packages": {
+        "@testing-library/react": {
+          "version": "16.1.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -7,7 +7,7 @@ import {
   parseTargetString,
 } from '@nx/devkit';
 import { addE2eCiTargetDefaults as _addE2eCiTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/internal-api';
+import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/loaded-nx-plugin';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 import {
   ProjectConfigurationsError,

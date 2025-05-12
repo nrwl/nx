@@ -1,6 +1,5 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { Schema } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
@@ -14,7 +13,7 @@ describe('Normalize Options', () => {
   it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
       directory: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       install: false,
       unitTestRunner: 'none',
@@ -25,6 +24,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      importPath: '@proj/my-app',
       fileName: 'my-app',
       className: 'MyApp',
       directory: 'my-app',
@@ -34,7 +34,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'none',
@@ -44,6 +44,7 @@ describe('Normalize Options', () => {
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -52,7 +53,7 @@ describe('Normalize Options', () => {
       directory: 'myApp',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -61,6 +62,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'myApp/android',
       appProjectRoot: 'myApp',
+      importPath: '@proj/myApp',
       className: 'MyApp',
       fileName: 'my-app',
       directory: 'myApp',
@@ -75,11 +77,12 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'myApp-e2e',
       e2eProjectRoot: 'myApp-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -89,7 +92,7 @@ describe('Normalize Options', () => {
       directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -98,6 +101,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       fileName: 'my-app',
       directory: 'directory/my-app',
@@ -112,11 +116,12 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -125,7 +130,7 @@ describe('Normalize Options', () => {
       directory: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -134,6 +139,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       directory: 'directory/my-app',
       fileName: 'my-app',
@@ -148,11 +154,12 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'directory/my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 
@@ -162,7 +169,7 @@ describe('Normalize Options', () => {
       displayName: 'My App',
       e2eTestRunner: 'none',
       install: false,
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       bundler: 'vite',
     };
@@ -171,6 +178,7 @@ describe('Normalize Options', () => {
       addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      importPath: '@proj/my-app',
       className: 'MyApp',
       fileName: 'my-app',
       directory: 'my-app',
@@ -185,11 +193,12 @@ describe('Normalize Options', () => {
       unitTestRunner: 'none',
       install: false,
       bundler: 'vite',
-      linter: Linter.None,
+      linter: 'none',
       rootProject: false,
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'my-app-e2e',
       isTsSolutionSetup: false,
+      useProjectJson: true,
     });
   });
 });

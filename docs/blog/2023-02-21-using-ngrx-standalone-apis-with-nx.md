@@ -2,17 +2,18 @@
 title: 'Using NgRx Standalone APIs with Nx'
 slug: 'using-ngrx-standalone-apis-with-nx'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-02-21/pJHhA04d6jIjOb5vpCDjyw.png'
+cover_image: '/blog/images/2023-02-21/pJHhA04d6jIjOb5vpCDjyw.avif'
 tags: [nx, tutorial]
+description: A practical guide to integrating NgRx Standalone APIs in Angular applications using Nx, with automated setup for state management.
 ---
 
 Version 15 of [NgRx](https://ngrx.io/) introduced Standalone APIs to the package, enabling usage of the NgRx with Standalone Component-based [Angular](https://angular.io/) applications. This allows for a simpler integration of NgRx to your application.
 
 Nx has added support for using these Standalone APIs from NgRx when generating NgRx stores with our `@nrwl/angular:ngrx` generator when you give it a path to a `Routes` definition file. _(Usually denoted by_ `_*.routes.ts_`_)_
 
-In this article, we’ll walk through using Nx to create a new Standalone Component-based Angular application and add NgRx to it, using _ONLY_ Nx Generators!
+In this article, we'll walk through using Nx to create a new Standalone Component-based Angular application and add NgRx to it, using _ONLY_ Nx Generators!
 
-**Prefer a video version? We’ve got you covered!**
+**Prefer a video version? We've got you covered!**
 
 {% youtube src="https://www.youtube.com/watch?v=fp9E5G9C61Q" /%}
 
@@ -60,7 +61,7 @@ Nx will aid this also!
 
 `nx g @nrwl/angular:ngrx --root --parent=src/main.ts`
 
-You’ll be asked for a name for the feature state, but you can ignore this and simply press enter in your terminal, it is not necessary at this stage.
+You'll be asked for a name for the feature state, but you can ignore this and simply press enter in your terminal, it is not necessary at this stage.
 
 Say false to Facades also.
 
@@ -96,7 +97,7 @@ Notice the addition of `provideEffects()` and `provideStore()` to the `providers
 
 NgRx works better when you split your store based on the features you have within your application. This is a pretty common use case. Nx allows you to do this very easily and in a very structured way.
 
-First, let’s generate a new feature library, called `feature-users`, in Nx that will house everything related to our feature including the NgRx State.
+First, let's generate a new feature library, called `feature-users`, in Nx that will house everything related to our feature including the NgRx State.
 
 `nx g @nrwl/angular:lib feature-users --standalone --routing --lazy --parent=src/app/app.routes.ts`
 
@@ -105,7 +106,7 @@ This command does a few things:
 - It creates a new library in our Nx Workspace
 - It uses an Angular Standalone Component as the entrypoint
 - It adds a routing configuration to the library and adds the component as the default route.
-- It will add a lazy-loaded route to the application’s `app.routes.ts` file, wiring up the application to the library!
+- It will add a lazy-loaded route to the application's `app.routes.ts` file, wiring up the application to the library!
 
 Some files you may want to explore in your own time are:
 
@@ -114,11 +115,11 @@ Some files you may want to explore in your own time are:
 
 ## Add feature state to the feature library
 
-Now that we have a feature library for our users feature, let’s generate the feature state! It’s as simple as one command.
+Now that we have a feature library for our users feature, let's generate the feature state! It's as simple as one command.
 
 `nx g @nrwl/angular:ngrx users --parent=feature-users/src/lib/lib.routes.ts --route=''`
 
-You’ll be asked if this is the root state of the application, enter `N`. Then say no to Facades (unless you really want them).
+You'll be asked if this is the root state of the application, enter `N`. Then say no to Facades (unless you really want them).
 
 The `--route` option here is used to dictate what `route` within our routes definition file (`lib.routes.ts`) should have the state attached to it. This is to allow the NgRx Standalone APIs to be attached to that route.
 
@@ -153,7 +154,7 @@ The command will also have generated our
 
 And with that, we now have NgRx installed and integrated into our application!
 
-If you’d like to confirm the integration, you can run the following commands and see successful outputs!
+If you'd like to confirm the integration, you can run the following commands and see successful outputs!
 
 `nx build`
 

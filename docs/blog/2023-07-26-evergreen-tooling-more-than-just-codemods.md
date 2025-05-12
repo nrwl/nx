@@ -2,17 +2,18 @@
 title: 'Evergreen Tooling — More than Just CodeMods'
 slug: 'evergreen-tooling-more-than-just-codemods'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-07-26/CPiI60mSguYXJzPfAHMbEQ.png'
+cover_image: '/blog/images/2023-07-26/CPiI60mSguYXJzPfAHMbEQ.avif'
 tags: [nx]
+description: Nx's evergreen tooling approach automates migrations, updates code like a database, and uses plugins for seamless JavaScript ecosystem upgrades with backward compatibility and reduced maintenance.
 ---
 
-As developers we always want to use the latest shiny tools. There’s a new bundler? Let’s try! A new code editor, I’m in! For your side-project: for sure! At work: nah, not really. Keeping your tooling up to date with the rather fast moving JS ecosystem can be a major challenge. Nx provides a mechanism that can help mitigate that, by providing a command to upgrade your tooling automatically:
+As developers we always want to use the latest shiny tools. There's a new bundler? Let's try! A new code editor, I'm in! For your side-project: for sure! At work: nah, not really. Keeping your tooling up to date with the rather fast moving JS ecosystem can be a major challenge. Nx provides a mechanism that can help mitigate that, by providing a command to upgrade your tooling automatically:
 
 ```shell
 npx nx migrate latest
 ```
 
-**Prefer a video? I’ve got you covered!**
+**Prefer a video? I've got you covered!**
 
 {% youtube src="https://www.youtube.com/watch?v=Ss6MfcXi0jE" /%}
 

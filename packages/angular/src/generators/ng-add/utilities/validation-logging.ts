@@ -1,4 +1,4 @@
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 import type { ValidationError } from './types';
 
 export function arrayToString(array: string[]): string {
@@ -18,7 +18,7 @@ export function arrayToString(array: string[]): string {
 export function getProjectValidationResultMessage(
   validationResult: ValidationError[]
 ): string {
-  return `${chalk.bold('Validation results')}:
+  return `${pc.bold('Validation results')}:
 
   ${validationResult
     .map((error) => getValidationErrorText(error))
@@ -31,12 +31,12 @@ function getValidationErrorText({
   hint,
 }: ValidationError): string {
   let lines = message
-    ? [`- ${message}`, ...(hint ? [chalk.dim(chalk.italic(`  ${hint}`))] : [])]
+    ? [`- ${message}`, ...(hint ? [pc.dim(pc.italic(`  ${hint}`))] : [])]
     : [
         `- ${messageGroup.title}:`,
         '  - Errors:',
         ...messageGroup.messages.map((message) => `    - ${message}`),
-        ...(hint ? [chalk.dim(chalk.italic(`  - ${hint}`))] : []),
+        ...(hint ? [pc.dim(pc.italic(`  - ${hint}`))] : []),
       ];
 
   return lines.join('\n  ');

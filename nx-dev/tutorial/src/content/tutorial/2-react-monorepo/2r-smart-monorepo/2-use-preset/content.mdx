@@ -1,0 +1,88 @@
+---
+type: lesson
+title: Generate a Starter Repository
+filesystem:
+  watch: ['/react-monorepo/*', '/react-monorepo/apps/**']
+prepareCommands:
+  - ['chmod +x git', 'Stubbing git']
+---
+
+## Creating a new React Monorepo
+
+:::info
+
+##### In-Browser Editing Tips
+
+Instructions for each step will appear in this left-hand panel. You can edit files in the editor in the top right and execute terminal commands in the bottom right.
+
+The file system and terminal will be reset at each step of the tutorial, so don't worry about breaking the workspace while experimenting. If you are stuck on a step, click the `Solve` button in the top right to set the file system to the solved state.
+
+If you experience technical issues with the in-browser tutorial, try refreshing the page or use the download button in the top right to download the files for the current step to your local machine.
+
+:::
+
+{/* {import { VideoLink } from '@nx/nx-dev/ui-markdoc';} */}
+
+{/* <VideoLink link="https://youtu.be/gc4N7kxiA50?t=66"></VideoLink> */}
+
+Create a new React monorepo with the following command:
+
+```shell
+npx create-nx-workspace@latest react-monorepo --preset=react-monorepo
+```
+
+```
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Application name · react-store
+✔ Which bundler would you like to use? · vite
+✔ Which unit test runner would you like to use? · vitest
+✔ Test runner to use for end to end (E2E) tests · cypress
+✔ Default stylesheet format · css
+✔ Would you like to use ESLint? · Yes
+✔ Would you like to use Prettier for code formatting? · Yes
+✔ Which CI provider would you like to use? · github
+```
+
+Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. We'll talk more about how Nx integrates with GitHub Actions later in the tutorial. The above command generates the following structure:
+
+```
+└─ react-monorepo
+   ├─ ...
+   ├─ apps
+   │  ├─ react-store
+   │  │  ├─ public
+   │  │  │  └─ ...
+   │  │  ├─ src
+   │  │  │  ├─ app
+   │  │  │  │  ├─ app.module.css
+   │  │  │  │  ├─ app.spec.tsx
+   │  │  │  │  ├─ app.tsx
+   │  │  │  │  └─ nx-welcome.tsx
+   │  │  │  ├─ assets
+   │  │  │  ├─ main.tsx
+   │  │  │  └─ styles.css
+   │  │  ├─ index.html
+   │  │  ├─ package.json
+   │  │  ├─ tsconfig.app.json
+   │  │  ├─ tsconfig.json
+   │  │  ├─ tsconfig.spec.json
+   │  │  └─ vite.config.ts
+   │  └─ react-store-e2e
+   │     └─ ...
+   ├─ nx.json
+   ├─ tsconfig.base.json
+   └─ package.json
+```
+
+The setup includes..
+
+- a new React application (`apps/react-store/`)
+- a Playwright based set of e2e tests (`apps/react-store-e2e/`)
+- Prettier preconfigured
+- ESLint preconfigured
+- Jest preconfigured
+
+One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+
+The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit.

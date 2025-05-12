@@ -16,7 +16,11 @@ import {
 } from '@nx/nx-dev/ui-common';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { AnimatedCurvedBeam } from '@nx/nx-dev/ui-animations';
-import { CircleStackIcon, ServerIcon } from '@heroicons/react/24/outline';
+import {
+  CircleStackIcon,
+  ServerIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import {
   AmazonS3Icon,
   AzureDevOpsIcon,
@@ -31,8 +35,33 @@ export function PowerpackFeatures(): ReactElement {
   return (
     <section className="relative isolate">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="relative flex justify-center">
+          <div className="pointer-events-auto w-fit justify-between gap-x-6 bg-slate-950 px-6 py-2.5 sm:rounded-xl sm:py-3 sm:pl-4 sm:pr-3.5 dark:bg-white">
+            <p className="text-sm/6 text-white dark:text-slate-950">
+              <strong className="font-semibold">
+                Looking for self-hosted caching?
+              </strong>
+              <svg
+                viewBox="0 0 2 2"
+                aria-hidden="true"
+                className="mx-2 inline size-0.5 fill-current"
+              >
+                <circle r={1} cx={1} cy={1} />
+              </svg>
+              It is now free for everyone&nbsp;
+              <Link
+                href="/remote-cache"
+                title="Self-hosted cache storage"
+                className="text-white dark:text-slate-950"
+              >
+                <span className="absolute inset-0" />
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </p>
+          </div>
+        </div>
         <div className="mt-32 grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
+          {/*<div className="flex max-w-full flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 md:col-span-full lg:mx-0 lg:max-w-full lg:flex-row lg:items-center lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="xl:max-w-xl">
               <SectionHeading
                 as="h2"
@@ -43,12 +72,13 @@ export function PowerpackFeatures(): ReactElement {
                 Self-hosted cache storage
               </SectionHeading>
               <p className="mt-6 text-pretty text-lg">
-                Use <Strong>Amazon S3</Strong> or a{' '}
+                Use <Strong>Amazon S3</Strong>, <Strong>MinIO</Strong>,{' '}
+                <Strong>GCP</Strong>, <Strong>Azure</Strong> or a{' '}
                 <Strong>shared network drive</Strong> as your remote cache
                 storage, offering a flexible, self-managed solution for faster
                 builds. Nx Powerpack self-hosted cache storage is{' '}
                 <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
+                  href="/nx-enterprise/powerpack/free-licenses-and-trials"
                   title="Get a Powerpack license"
                 >
                   free for small teams
@@ -69,7 +99,7 @@ export function PowerpackFeatures(): ReactElement {
             <div className="hidden w-full xl:block">
               <CustomRemoteCacheAnimation />
             </div>
-          </div>
+          </div>*/}
 
           <div className="flex flex-col gap-16 bg-white/50 px-6 py-16 ring-1 ring-slate-200 sm:rounded-3xl sm:p-8 lg:mx-0 lg:max-w-none lg:justify-between lg:py-16 xl:px-16 dark:bg-white/5 dark:ring-white/10">
             <div className="max-w-2xl">
@@ -206,14 +236,7 @@ export function PowerpackFeatures(): ReactElement {
                   procurement processes
                 </Strong>
                 . Your teams can get started quickly without lengthy
-                negotiations, ensuring a faster go-to-market.{' '}
-                <TextLink
-                  href="https://cloud.nx.app/powerpack/purchase?licenseBusinessType=small&utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
-                  title="Get a Powerpack license"
-                >
-                  Free trial available for Enterprises
-                </TextLink>
-                .
+                negotiations, ensuring a faster go-to-market.
               </p>
             </div>
           </div>
@@ -233,7 +256,11 @@ export function PowerpackFeatures(): ReactElement {
                   customers
                 </Strong>
                 , unlocking additional capabilities without needing to manage
-                more tools or onboard a new vendor.
+                more tools or onboard a new vendor.{' '}
+                <TextLink href="/enterprise/trial" title="Nx Enterprise trial">
+                  Request a free trial of Nx Enterprise
+                </TextLink>
+                .
               </p>
             </div>
           </div>

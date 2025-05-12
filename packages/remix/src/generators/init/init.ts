@@ -57,8 +57,18 @@ export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
         ],
         serveStaticTargetName: [
           'serve-static',
-          'vite:serve-static',
-          'vite-serve-static',
+          'remix:serve-static',
+          'remix-serve-static',
+        ],
+        buildDepsTargetName: [
+          'build-deps',
+          'remix:build-deps',
+          'remix-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'remix:watch-deps',
+          'remix-watch-deps',
         ],
       },
       options.updatePackageScripts

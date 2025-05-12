@@ -175,7 +175,7 @@ export function LessonPlayer({ course, lesson }: LessonPlayerProps) {
             </div>
             {isExpanded && (
               <div className="border-t border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-                <LessonsList />
+                <LessonsList course={course} lesson={lesson} />
               </div>
             )}
           </div>

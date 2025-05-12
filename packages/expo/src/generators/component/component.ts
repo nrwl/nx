@@ -11,6 +11,7 @@ import {
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 import { dirname, join, parse, relative } from 'path';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function expoComponentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
@@ -46,12 +47,15 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   const workspace = getProjects(host);
+  const proj = workspace.get(options.projectName);
   const isApp =
-    workspace.get(options.projectName).projectType === 'application';
+    getProjectType(host, proj.root, proj.projectType) === 'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
-      options.projectSourceRoot,
+      ...(options.projectSourceRoot
+        ? [options.projectSourceRoot]
+        : [options.projectRoot, 'src']),
       options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
     );
 

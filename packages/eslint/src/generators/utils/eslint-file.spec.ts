@@ -2,11 +2,12 @@ import { readJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as devkitInternals from 'nx/src/devkit-internals';
 import {
+  BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_CONFIG_FILENAMES,
-  baseEsLintConfigFile,
 } from '../../utils/config-file';
 import {
   addExtendsToLintConfig,
+  addIgnoresToLintConfig,
   findEslintFile,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
@@ -32,12 +33,11 @@ describe('@nx/eslint:lint-file', () => {
       }
     );
 
-    test.each(ESLINT_CONFIG_FILENAMES)(
-      'should return base file instead %p when calling findEslintFile',
+    test.each(BASE_ESLINT_CONFIG_FILENAMES)(
+      'should return base file %p when calling findEslintFile',
       (eslintFileName) => {
-        tree.write(baseEsLintConfigFile, '{}');
         tree.write(eslintFileName, '{}');
-        expect(findEslintFile(tree)).toBe(baseEsLintConfigFile);
+        expect(findEslintFile(tree)).toBe(eslintFileName);
       }
     );
   });
@@ -119,6 +119,45 @@ describe('@nx/eslint:lint-file', () => {
         'plugin:playwright/recommend',
         '../../.eslintrc',
       ]);
+    });
+
+    it('should install necessary dependencies', () => {
+      // mock eslint version
+      jest.spyOn(devkitInternals, 'readModulePackageJson').mockReturnValue({
+        packageJson: { name: 'eslint', version: '9.0.0' },
+        path: '',
+      });
+      tree.write('eslint.config.cjs', 'module.exports = {};');
+      tree.write(
+        'apps/demo/eslint.config.cjs',
+        `const baseConfig = require("../../eslint.config.cjs");
+
+module.exports = [
+  ...baseConfig,
+  {
+    files: [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx"
+    ],
+    rules: {}
+  },
+];`
+      );
+
+      addExtendsToLintConfig(tree, 'apps/demo', {
+        name: 'plugin:playwright/recommend',
+        needCompatFixup: true,
+      });
+
+      expect(readJson(tree, 'package.json').devDependencies)
+        .toMatchInlineSnapshot(`
+        {
+          "@eslint/compat": "^1.1.1",
+          "@eslint/eslintrc": "^2.1.1",
+        }
+      `);
     });
 
     it('should add extends to flat config', () => {
@@ -485,6 +524,199 @@ module.exports = [
                 }
             })),
         ];"
+      `);
+    });
+  });
+
+  describe('addIgnoresToLintConfig', () => {
+    it('should add a new block with ignores to esm flat config when there is none', () => {
+      tree.write('eslint.config.mjs', 'export default [];');
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
+        "
+        export default [
+            {
+                ignores: [
+                    "**/some-dir/**/*"
+                ]
+            }
+        ];
+        "
+      `);
+    });
+
+    it('should update existing block with ignores in esm flat config', () => {
+      tree.write(
+        'eslint.config.mjs',
+        `export default [
+  {
+    ignores: ["dist"],
+  }
+];
+`
+      );
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
+        "export default [
+          {
+              "ignores": [
+                "dist",
+                "**/some-dir/**/*"
+              ]
+          }
+        ];
+        "
+      `);
+    });
+
+    it('should not duplicate existing patterns in a block with ignores in esm flat config', () => {
+      tree.write(
+        'eslint.config.mjs',
+        `export default [
+  {
+    ignores: ["dist"],
+  }
+];
+`
+      );
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*', 'dist']);
+
+      expect(tree.read('eslint.config.mjs', 'utf-8')).toMatchInlineSnapshot(`
+        "export default [
+          {
+              "ignores": [
+                "dist",
+                "**/some-dir/**/*"
+              ]
+          }
+        ];
+        "
+      `);
+    });
+
+    it('should add a new block with ignores to cjs flat config when there is none', () => {
+      tree.write('eslint.config.cjs', 'module.exports = [];');
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
+
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
+        "module.exports = [,
+            {
+                ignores: [
+                    "**/some-dir/**/*"
+                ]
+            }];"
+      `);
+    });
+
+    it('should update existing block with ignores in cjs flat config', () => {
+      tree.write(
+        'eslint.config.cjs',
+        `module.exports = [
+  {
+    ignores: ["dist"],
+  }
+];
+`
+      );
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
+
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
+        "module.exports = [
+          {
+              "ignores": [
+                "dist",
+                "**/some-dir/**/*"
+              ]
+          }
+        ];
+        "
+      `);
+    });
+
+    it('should not duplicate existing patterns in a block with ignores in cjs flat config', () => {
+      tree.write(
+        'eslint.config.cjs',
+        `module.exports = [
+  {
+    ignores: ["dist"],
+  }
+];
+`
+      );
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*', 'dist']);
+
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
+        "module.exports = [
+          {
+              "ignores": [
+                "dist",
+                "**/some-dir/**/*"
+              ]
+          }
+        ];
+        "
+      `);
+    });
+
+    it('should add ignore patterns to eslintrc config when there is none', () => {
+      tree.write('.eslintrc.json', '{}');
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "ignorePatterns": [
+            "**/some-dir/**/*",
+          ],
+        }
+      `);
+    });
+
+    it('should update existing ignore patterns in eslintrc config', () => {
+      tree.write(
+        '.eslintrc.json',
+        `{
+          "ignorePatterns": ["dist"]
+        }`
+      );
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*']);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "ignorePatterns": [
+            "dist",
+            "**/some-dir/**/*",
+          ],
+        }
+      `);
+    });
+
+    it('should not duplicate existing ignore patterns in eslintrc config', () => {
+      tree.write(
+        '.eslintrc.json',
+        `{
+          "ignorePatterns": ["dist"]
+        }`
+      );
+
+      addIgnoresToLintConfig(tree, '', ['**/some-dir/**/*', 'dist']);
+
+      expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
+        {
+          "ignorePatterns": [
+            "dist",
+            "**/some-dir/**/*",
+          ],
+        }
       `);
     });
   });

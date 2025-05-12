@@ -6,14 +6,16 @@ import {
   sassVersion,
   swcLoaderVersion,
   testingLibraryReactVersion,
+  testingLibraryDomVersion,
   tsLibVersion,
   typesNodeVersion,
-  typesReactDomVersion,
-  typesReactVersion,
+  reactRouterVersion,
+  reactRouterIsBotVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
+import { getReactDependenciesVersionsToInstall } from '../../../utils/version-utils';
 
-export function installCommonDependencies(
+export async function installCommonDependencies(
   host: Tree,
   options: NormalizedSchema
 ) {
@@ -21,15 +23,29 @@ export function installCommonDependencies(
     return () => {};
   }
 
+  const reactDeps = await getReactDependenciesVersionsToInstall(host);
+
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {
+    '@types/react': reactDeps['@types/react'],
+    '@types/react-dom': reactDeps['@types/react-dom'],
     '@types/node': typesNodeVersion,
-    '@types/react': typesReactVersion,
-    '@types/react-dom': typesReactDomVersion,
+    ...(options.useReactRouter
+      ? {
+          '@react-router/dev': reactRouterVersion,
+        }
+      : {}),
   };
 
   if (options.bundler !== 'vite') {
     dependencies['tslib'] = tsLibVersion;
+  }
+
+  if (options.useReactRouter) {
+    dependencies['react-router'] = reactRouterVersion;
+    dependencies['@react-router/node'] = reactRouterVersion;
+    dependencies['@react-router/serve'] = reactRouterVersion;
+    dependencies['isbot'] = reactRouterIsBotVersion;
   }
 
   // Vite requires style preprocessors to be installed manually.
@@ -58,7 +74,8 @@ export function installCommonDependencies(
 
   if (options.unitTestRunner && options.unitTestRunner !== 'none') {
     devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+    devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(host, dependencies, devDependencies);
 }

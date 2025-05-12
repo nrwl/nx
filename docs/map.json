@@ -41,14 +41,9 @@
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
                 {
-                  "name": "NPM Workspaces Monorepo",
-                  "id": "npm-workspaces-tutorial",
-                  "file": "shared/tutorials/npm-workspaces"
-                },
-                {
-                  "name": "React Standalone",
-                  "id": "react-standalone-tutorial",
-                  "file": "shared/tutorials/react-standalone"
+                  "name": "TypeScript Monorepo",
+                  "id": "typescript-packages-tutorial",
+                  "file": "shared/tutorials/typescript-packages"
                 },
                 {
                   "name": "React Monorepo",
@@ -56,19 +51,9 @@
                   "file": "shared/tutorials/react-monorepo"
                 },
                 {
-                  "name": "Angular Standalone",
-                  "id": "angular-standalone-tutorial",
-                  "file": "shared/tutorials/angular-standalone"
-                },
-                {
                   "name": "Angular Monorepo",
                   "id": "angular-monorepo-tutorial",
                   "file": "shared/tutorials/angular-monorepo"
-                },
-                {
-                  "name": "Vue Standalone",
-                  "id": "vue-standalone-tutorial",
-                  "file": "shared/tutorials/vue-standalone"
                 },
                 {
                   "name": "Gradle Monorepo",
@@ -99,6 +84,12 @@
               "file": "shared/features/cache-task-results"
             },
             {
+              "name": "Enhance Your LLM",
+              "id": "enhance-AI",
+              "tags": ["AI"],
+              "file": "shared/features/enhance-AI"
+            },
+            {
               "name": "Explore Your Workspace",
               "id": "explore-graph",
               "tags": ["explore-graph"],
@@ -109,6 +100,12 @@
               "id": "generate-code",
               "tags": ["generate-code"],
               "file": "shared/features/generate-code"
+            },
+            {
+              "name": "Maintain TypeScript Monorepos",
+              "id": "maintain-ts-monorepos",
+              "tags": ["inferred-tasks", "project-linking", "sync"],
+              "file": "shared/features/maintain-typescript-monorepos"
             },
             {
               "name": "Automate Updating Dependencies",
@@ -255,10 +252,10 @@
               "file": "shared/concepts/sync-generators"
             },
             {
-              "name": "Nx and Turborepo",
-              "id": "turbo-and-nx",
-              "mediaImage": "./shared/concepts/nx-media-monorepo.jpg",
-              "file": "shared/concepts/turbo-and-nx"
+              "name": "TypeScript Project Linking",
+              "id": "typescript-project-linking",
+              "tags": ["project-linking"],
+              "file": "shared/concepts/typescript-project-linking"
             },
             {
               "name": "Buildable and Publishable Libraries",
@@ -395,6 +392,12 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Use the Terminal UI",
+                  "id": "terminal-ui",
+                  "tags": ["run-tasks", "terminal-ui"],
+                  "file": "shared/recipes/running-tasks/terminal-ui"
+                },
+                {
                   "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
@@ -445,6 +448,13 @@
                   "id": "convert-to-inferred",
                   "tags": ["inferred-tasks", "automate-updating-dependencies"],
                   "file": "shared/recipes/running-tasks/convert-to-inferred"
+                },
+                {
+                  "name": "Self-Host the Remote Cache",
+                  "description": "Host the remote cache without using Nx Cloud",
+                  "id": "self-hosted-caching",
+                  "tags": ["self-hosted-caching"],
+                  "file": "shared/recipes/running-tasks/self-hosted-caching"
                 }
               ]
             },
@@ -548,6 +558,12 @@
                   "file": "shared/recipes/nx-release/automate-github-releases"
                 },
                 {
+                  "name": "Automate GitLab Releases",
+                  "id": "automate-gitlab-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automate-gitlab-releases"
+                },
+                {
                   "name": "Publish Rust Crates",
                   "id": "publish-rust-crates",
                   "tags": ["nx-release"],
@@ -640,6 +656,12 @@
                   "file": "shared/recipes/console-nx-cloud"
                 },
                 {
+                  "name": "Migrate UI",
+                  "id": "console-migrate-ui",
+                  "tags": ["editor-setup"],
+                  "file": "shared/recipes/console-migrate-ui"
+                },
+                {
                   "name": "Troubleshooting",
                   "id": "console-troubleshooting",
                   "tags": ["editor-setup"],
@@ -661,6 +683,11 @@
                   "name": "Remix with Nx",
                   "id": "remix",
                   "file": "shared/guides/remix"
+                },
+                {
+                  "name": "React Router with Nx",
+                  "id": "react-router",
+                  "file": "shared/guides/react-router"
                 },
                 {
                   "name": "Use Environment Variables in React",
@@ -701,6 +728,42 @@
               "id": "angular",
               "description": "Advanced guides to adopt Nx in Angular.",
               "itemList": [
+                {
+                  "name": "Angular Rspack",
+                  "id": "rspack",
+                  "itemList": [
+                    {
+                      "name": "Introduction",
+                      "id": "introduction",
+                      "tags": ["introduction"],
+                      "file": "shared/guides/angular-rspack/introduction"
+                    },
+                    {
+                      "name": "Getting Started",
+                      "id": "getting-started",
+                      "tags": ["getting-started", "angular", "rspack", "setup"],
+                      "file": "shared/guides/angular-rspack/getting-started"
+                    },
+                    {
+                      "name": "Migrate from Angular Webpack",
+                      "id": "migrate-from-webpack",
+                      "tags": ["migrate-from-webpack"],
+                      "file": "shared/guides/angular-rspack/migrate-from-webpack"
+                    },
+                    {
+                      "name": "Handling Configurations",
+                      "id": "handling-configurations",
+                      "tags": ["handling-configurations", "configurations"],
+                      "file": "shared/guides/angular-rspack/handling-configurations"
+                    },
+                    {
+                      "name": "Internationalization (i18n)",
+                      "id": "internationalization",
+                      "tags": ["internationalization", "i18n"],
+                      "file": "shared/guides/angular-rspack/internationalization"
+                    }
+                  ]
+                },
                 {
                   "name": "Migration",
                   "id": "migration",
@@ -1013,6 +1076,12 @@
                   "file": "shared/eslint"
                 },
                 {
+                  "name": "Switch to Workspaces and TS Project References",
+                  "id": "switch-to-workspaces-project-references",
+                  "tags": ["project-linking"],
+                  "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+                },
+                {
                   "name": "Enable Typescript Batch Mode",
                   "id": "enable-tsc-batch-mode",
                   "file": "shared/recipes/enable-tsc-batch-mode"
@@ -1113,6 +1182,11 @@
               "file": "shared/features/powerpack/index",
               "itemList": [
                 {
+                  "name": "Free Licenses & Trials",
+                  "id": "licenses-and-trials",
+                  "file": "shared/features/powerpack/licenses-and-trials"
+                },
+                {
                   "name": "Run Language-Agnostic Conformance Rules",
                   "description": "Write and apply rules for your Nx workspace",
                   "id": "conformance",
@@ -1125,13 +1199,6 @@
                   "id": "owners",
                   "tags": ["owners"],
                   "file": "shared/features/powerpack/owners"
-                },
-                {
-                  "name": "Self-Host the Remote Cache",
-                  "description": "Host the remote cache without using Nx Cloud",
-                  "id": "custom-caching",
-                  "tags": ["custom-caching"],
-                  "file": "shared/features/powerpack/custom-caching"
                 }
               ]
             }
@@ -1260,9 +1327,9 @@
                   "file": "shared/examples/caching"
                 },
                 {
-                  "name": "Large Repo and DTE",
-                  "id": "dte",
-                  "file": "shared/examples/dte"
+                  "name": "Large Repo and Nx Agents",
+                  "id": "nx-agents",
+                  "file": "shared/examples/nx-agents"
                 }
               ]
             }
@@ -1403,6 +1470,11 @@
               "name": "Legacy Cache",
               "id": "legacy-cache",
               "file": "shared/deprecated/legacy-cache"
+            },
+            {
+              "name": "Custom Tasks Runner",
+              "id": "custom-tasks-runner",
+              "file": "shared/deprecated/custom-tasks-runner"
             },
             {
               "name": "Workspace Executors",
@@ -1643,6 +1715,12 @@
               "id": "publish-plugin",
               "tags": ["create-your-own-plugin"],
               "file": "shared/recipes/plugins/publish-plugin"
+            },
+            {
+              "name": "Hook into the Task Running Lifecycle",
+              "id": "task-running-lifecycle",
+              "tags": ["running-tasks"],
+              "file": "shared/recipes/plugins/task-running-lifecycle"
             }
           ]
         }
@@ -1882,6 +1960,43 @@
               ]
             },
             {
+              "name": "Manual Distributed Task Execution",
+              "id": "dte",
+              "description": "Manual DTE on your own CI provider",
+              "itemList": [
+                {
+                  "name": "GitHub Actions Manual DTE",
+                  "id": "github-dte",
+                  "file": "nx-cloud/enterprise/dte/github-dte"
+                },
+                {
+                  "name": "Circle CI Manual DTE",
+                  "id": "circle-ci-dte",
+                  "file": "nx-cloud/enterprise/dte/circle-ci-dte"
+                },
+                {
+                  "name": "Azure Pipelines Manual DTE",
+                  "id": "azure-dte",
+                  "file": "nx-cloud/enterprise/dte/azure-dte"
+                },
+                {
+                  "name": "Bitbucket Pipelines Manual DTE",
+                  "id": "bitbucket-dte",
+                  "file": "nx-cloud/enterprise/dte/bitbucket-dte"
+                },
+                {
+                  "name": "GitLab Manual DTE",
+                  "id": "gitlab-dte",
+                  "file": "nx-cloud/enterprise/dte/gitlab-dte"
+                },
+                {
+                  "name": "Jenkins Manual DTE",
+                  "id": "jenkins-dte",
+                  "file": "nx-cloud/enterprise/dte/jenkins-dte"
+                }
+              ]
+            },
+            {
               "name": "Enterprise",
               "id": "enterprise",
               "description": "Recipes for enterprise accounts",
@@ -1926,43 +2041,6 @@
                       "name": "Custom GitHub App",
                       "id": "custom-github-app",
                       "file": "nx-cloud/enterprise/single-tenant/custom-github-app"
-                    }
-                  ]
-                },
-                {
-                  "name": "Custom Distributed Task Execution",
-                  "id": "dte",
-                  "description": "Custom DTE on your own CI provider",
-                  "itemList": [
-                    {
-                      "name": "GitHub Actions Custom DTE",
-                      "id": "github-dte",
-                      "file": "nx-cloud/enterprise/dte/github-dte"
-                    },
-                    {
-                      "name": "Circle CI Custom DTE",
-                      "id": "circle-ci-dte",
-                      "file": "nx-cloud/enterprise/dte/circle-ci-dte"
-                    },
-                    {
-                      "name": "Azure Pipelines Custom DTE",
-                      "id": "azure-dte",
-                      "file": "nx-cloud/enterprise/dte/azure-dte"
-                    },
-                    {
-                      "name": "Bitbucket Pipelines Custom DTE",
-                      "id": "bitbucket-dte",
-                      "file": "nx-cloud/enterprise/dte/bitbucket-dte"
-                    },
-                    {
-                      "name": "GitLab Custom DTE",
-                      "id": "gitlab-dte",
-                      "file": "nx-cloud/enterprise/dte/gitlab-dte"
-                    },
-                    {
-                      "name": "Jenkins Custom DTE",
-                      "id": "jenkins-dte",
-                      "file": "nx-cloud/enterprise/dte/jenkins-dte"
                     }
                   ]
                 },
@@ -2129,7 +2207,7 @@
             },
             {
               "name": "affected",
-              "tags": ["run-tasks"],
+              "tags": ["run-tasks", "affected"],
               "id": "affected",
               "file": "generated/cli/affected"
             },
@@ -2303,12 +2381,6 @@
               "id": "overview",
               "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
-            },
-            {
-              "name": "Configure TypeScript Project References in an Nx Workspace",
-              "id": "typescript-project-references",
-              "path": "/nx-api/js/typescript-project-references",
-              "file": "shared/packages/js/typescript-project-references"
             }
           ]
         },
@@ -2421,6 +2493,44 @@
               "id": "angular-nx-version-matrix",
               "file": "shared/packages/angular/angular-nx-version-matrix",
               "path": "/angular-nx-version-matrix"
+            }
+          ]
+        },
+        {
+          "name": "angular-rspack",
+          "id": "angular-rspack",
+          "description": "angular-rspack package.",
+          "itemList": [
+            {
+              "name": "createConfig",
+              "id": "create-config",
+              "path": "/nx-api/angular-rspack/documents/create-config",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-config"
+            },
+            {
+              "name": "createServer",
+              "id": "create-server",
+              "path": "/nx-api/angular-rspack/documents/create-server",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rspack/create-server"
+            }
+          ]
+        },
+        {
+          "name": "angular-rsbuild",
+          "id": "angular-rsbuild",
+          "description": "angular-rsbuild package.",
+          "itemList": [
+            {
+              "name": "createConfig",
+              "id": "create-config",
+              "path": "/nx-api/angular-rsbuild/documents/create-config",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-config"
+            },
+            {
+              "name": "createServer",
+              "id": "create-server",
+              "path": "/nx-api/angular-rsbuild/documents/create-server",
+              "file": "shared/guides/angular-rspack/api/nx-angular-rsbuild/create-server"
             }
           ]
         },
@@ -2658,80 +2768,86 @@
           ]
         },
         {
-          "name": "powerpack-owners",
-          "id": "powerpack-owners",
+          "name": "owners",
+          "id": "owners",
           "description": "powerpack-owners package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-owners",
-              "file": "shared/packages/powerpack-owners/powerpack-owners-plugin"
+              "path": "/nx-api/owners",
+              "file": "shared/packages/owners/owners-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-conformance",
-          "id": "powerpack-conformance",
+          "name": "conformance",
+          "id": "conformance",
           "description": "powerpack-conformance package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-conformance",
-              "file": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+              "path": "/nx-api/conformance",
+              "file": "shared/packages/conformance/conformance-plugin"
+            },
+            {
+              "name": "Create a Conformance Rule",
+              "id": "create-conformance-rule",
+              "path": "/nx-api/conformance",
+              "file": "shared/packages/conformance/create-conformance-rule"
             }
           ]
         },
         {
-          "name": "powerpack-azure-cache",
-          "id": "powerpack-azure-cache",
+          "name": "azure-cache",
+          "id": "azure-cache",
           "description": "powerpack-azure-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-azure-cache",
-              "file": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+              "path": "/nx-api/azure-cache",
+              "file": "shared/packages/azure-cache/azure-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-gcs-cache",
-          "id": "powerpack-gcs-cache",
+          "name": "gcs-cache",
+          "id": "gcs-cache",
           "description": "powerpack-gcs-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-gcs-cache",
-              "file": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+              "path": "/nx-api/gcs-cache",
+              "file": "shared/packages/gcs-cache/gcs-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-s3-cache",
-          "id": "powerpack-s3-cache",
+          "name": "s3-cache",
+          "id": "s3-cache",
           "description": "powerpack-s3-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-s3-cache",
-              "file": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+              "path": "/nx-api/s3-cache",
+              "file": "shared/packages/s3-cache/s3-cache-plugin"
             }
           ]
         },
         {
-          "name": "powerpack-shared-fs-cache",
-          "id": "powerpack-shared-fs-cache",
+          "name": "shared-fs-cache",
+          "id": "shared-fs-cache",
           "description": "powerpack-shared-fs-cache package.",
           "itemList": [
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/nx-api/powerpack-shared-fs-cache",
-              "file": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+              "path": "/nx-api/shared-fs-cache",
+              "file": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
             }
           ]
         },
@@ -2745,6 +2861,25 @@
               "name": "Overview",
               "path": "/nx-api/gradle",
               "file": "shared/packages/gradle/gradle-plugin"
+            }
+          ]
+        },
+        {
+          "name": "Module Federation",
+          "id": "module-federation",
+          "description": "Module Federation package.",
+          "itemList": [
+            {
+              "name": "NxModuleFederationPlugin",
+              "id": "nx-module-federation-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-plugin"
+            },
+            {
+              "name": "NxModuleFederationDevServerPlugin",
+              "id": "nx-module-federation-dev-server-plugin",
+              "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+              "file": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
             }
           ]
         }

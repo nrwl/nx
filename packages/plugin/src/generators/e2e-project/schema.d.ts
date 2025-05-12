@@ -11,5 +11,4 @@ export interface Schema {
   rootProject?: boolean;
   useProjectJson?: boolean;
   addPlugin?: boolean;
-  skipWorkspacesWarning?: boolean;
 }

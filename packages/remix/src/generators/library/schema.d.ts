@@ -14,4 +14,5 @@ export interface NxRemixGeneratorSchema {
   js?: boolean;
   skipFormat?: boolean;
   addPlugin?: boolean;
+  useProjectJson?: boolean;
 }

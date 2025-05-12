@@ -3,7 +3,7 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   joinPathFragments,
   readJson,
-  readNxJson,
+  readProjectConfiguration,
   type Tree,
   updateJson,
   writeJson,
@@ -45,6 +45,66 @@ describe('Remix Application', () => {
       ).toMatchSnapshot();
       expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should ignore vite temp files', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      await applicationGenerator(tree, {
+        name: 'test',
+        directory: '.',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+        "null
+        .cache
+        build
+        public/build
+        .env
+
+        vite.config.*.timestamp*
+        vitest.config.*.timestamp*"
+      `);
+      expect(tree.read('.eslintrc.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "root": true,
+          "ignorePatterns": [
+            "!**/*",
+            "build",
+            "public/build",
+            "**/vite.config.*.timestamp*",
+            "**/vitest.config.*.timestamp*"
+          ],
+          "plugins": [
+            "@nx"
+          ],
+          "overrides": [
+            {
+              "files": [
+                "*.ts",
+                "*.tsx"
+              ],
+              "extends": [
+                "plugin:@nx/typescript"
+              ],
+              "rules": {}
+            },
+            {
+              "files": [
+                "*.js",
+                "*.jsx"
+              ],
+              "extends": [
+                "plugin:@nx/javascript"
+              ],
+              "rules": {}
+            }
+          ]
+        }
+        "
+      `);
     });
 
     describe('--unitTestRunner', () => {
@@ -117,14 +177,6 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.read('e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
-        expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-          .toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
       });
     });
 
@@ -145,14 +197,6 @@ describe('Remix Application', () => {
       expectTargetsToBeCorrect(tree, '.');
 
       expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
-      expect(readNxJson(tree).targetDefaults['e2e-ci--**/*'])
-        .toMatchInlineSnapshot(`
-          {
-            "dependsOn": [
-              "^build",
-            ],
-          }
-        `);
     });
   });
 
@@ -175,6 +219,62 @@ describe('Remix Application', () => {
       expect(
         tree.read(`${appDir}/app/routes/_index.tsx`, 'utf-8')
       ).toMatchSnapshot();
+    });
+
+    it('should ignore vite temp files', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      await applicationGenerator(tree, {
+        directory: 'test',
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('.gitignore', 'utf-8')).toMatchInlineSnapshot(`
+        "vite.config.*.timestamp*
+        vitest.config.*.timestamp*"
+      `);
+      expect(tree.read(`${appDir}/.eslintrc.json`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": [
+            "../.eslintrc.json"
+          ],
+          "ignorePatterns": [
+            "!**/*",
+            "build",
+            "public/build",
+            "**/vite.config.*.timestamp*",
+            "**/vitest.config.*.timestamp*"
+          ],
+          "overrides": [
+            {
+              "files": [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx"
+              ],
+              "rules": {}
+            },
+            {
+              "files": [
+                "*.ts",
+                "*.tsx"
+              ],
+              "rules": {}
+            },
+            {
+              "files": [
+                "*.js",
+                "*.jsx"
+              ],
+              "rules": {}
+            }
+          ]
+        }
+        "
+      `);
     });
 
     describe('--directory', () => {
@@ -344,30 +444,44 @@ describe('Remix Application', () => {
         unitTestRunner: 'jest',
         addPlugin: true,
         tags: 'foo',
+        useProjectJson: false,
       });
 
-      expect(readJson(tree, 'myapp/package.json')).toMatchInlineSnapshot(`
+      const packageJson = readJson(tree, 'myapp/package.json');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "private",
+          "type",
+          "scripts",
+          "engines",
+          "sideEffects",
+          "nx",
+          "dependencies",
+          "devDependencies",
+        ]
+      `);
+      expect(packageJson).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "@remix-run/node": "^2.14.0",
-            "@remix-run/react": "^2.14.0",
-            "@remix-run/serve": "^2.14.0",
+            "@remix-run/node": "^2.15.0",
+            "@remix-run/react": "^2.15.0",
+            "@remix-run/serve": "^2.15.0",
             "isbot": "^4.4.0",
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
           },
           "devDependencies": {
-            "@remix-run/dev": "^2.14.0",
+            "@remix-run/dev": "^2.15.0",
             "@types/react": "^18.2.0",
             "@types/react-dom": "^18.2.0",
           },
           "engines": {
             "node": ">=20",
           },
-          "name": "myapp",
+          "name": "@proj/myapp",
           "nx": {
-            "projectType": "application",
-            "sourceRoot": "myapp",
             "tags": [
               "foo",
             ],
@@ -419,7 +533,7 @@ describe('Remix Application', () => {
             ],
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": ".",
             "skipLibCheck": true,
@@ -522,11 +636,72 @@ describe('Remix Application', () => {
             "src/**/*.test.js",
             "src/**/*.d.ts",
           ],
-          "references": [
-            {
-              "path": "../myapp",
-            },
-          ],
+        }
+      `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        tags: 'foo',
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "private",
+          "type",
+          "scripts",
+          "engines",
+          "sideEffects",
+          "nx",
+          "dependencies",
+          "devDependencies",
+        ]
+      `);
+    });
+
+    it('should skip nx property in package.json when no tags are provided', async () => {
+      await applicationGenerator(tree, {
+        directory: 'apps/myapp',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      expect(readJson(tree, 'apps/myapp/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "@remix-run/node": "^2.15.0",
+            "@remix-run/react": "^2.15.0",
+            "@remix-run/serve": "^2.15.0",
+            "isbot": "^4.4.0",
+            "react": "^18.2.0",
+            "react-dom": "^18.2.0",
+          },
+          "devDependencies": {
+            "@remix-run/dev": "^2.15.0",
+            "@types/react": "^18.2.0",
+            "@types/react-dom": "^18.2.0",
+          },
+          "engines": {
+            "node": ">=20",
+          },
+          "name": "@proj/myapp",
+          "private": true,
+          "scripts": {},
+          "sideEffects": false,
+          "type": "module",
         }
       `);
     });
@@ -537,12 +712,121 @@ describe('Remix Application', () => {
         e2eTestRunner: 'playwright',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
       expect(() =>
         JSON.parse(tree.read('myapp/package.json', 'utf-8'))
       ).not.toThrow();
+    });
+
+    it('should generate jest test config with @swc/jest', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/tsconfig.spec.json')).toBeTruthy();
+      expect(tree.exists('myapp/tests/routes/_index.spec.tsx')).toBeTruthy();
+      expect(tree.exists('myapp/jest.config.ts')).toBeTruthy();
+      expect(tree.read('myapp/jest.config.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        import { readFileSync } from 'fs';
+
+        // Reading the SWC compilation config for the spec files
+        const swcJestConfig = JSON.parse(
+          readFileSync(\`\${__dirname}/.spec.swcrc\`, 'utf-8')
+        );
+
+        // Disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves
+        swcJestConfig.swcrc = false;
+
+        export default {
+          displayName: '@proj/myapp',
+          preset: '../jest.preset.js',
+          transform: {
+            '^.+\\\\.[tj]sx?$': ['@swc/jest', swcJestConfig]
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: 'test-output/jest/coverage'
+        };
+        "
+      `);
+      expect(tree.read('myapp/.spec.swcrc', 'utf-8')).toMatchInlineSnapshot(`
+          "{
+            "jsc": {
+              "target": "es2017",
+              "parser": {
+                "syntax": "typescript",
+                "decorators": true,
+                "dynamicImport": true,
+                "tsx": true
+              },
+              "transform": {
+                "decoratorMetadata": true,
+                "legacyDecorator": true,
+                "react": {
+                  "runtime": "automatic"
+                }
+              },
+              "keepClassNames": true,
+              "externalHelpers": true,
+              "loose": true
+            },
+            "module": {
+              "type": "es6"
+            },
+            "sourceMaps": true,
+            "exclude": []
+          }
+          "
+        `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        e2eTestRunner: 'playwright',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "sourceRoot": "myapp-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

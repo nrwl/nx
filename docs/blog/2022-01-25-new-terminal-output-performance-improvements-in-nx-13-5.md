@@ -2,15 +2,16 @@
 title: 'New Terminal Output & Performance Improvements in Nx 13.5'
 slug: 'new-terminal-output-performance-improvements-in-nx-13-5'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2022-01-25/PIUl1QGk7mOpSFdEwFQ8OA.avif'
 tags: [nx]
+description: Nx 13.5 brings a new dynamic terminal output, 2.3x faster operations, Chrome DevTools profiling support, and improved project graph visualization.
 ---
 
 Nx is a smart, extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and libraries while providing a robust CLI, computation caching, dependency management, and more.
 
 ### New Terminal Output 💅
 
-Folks that have been following along in our journey for quite some time know already that at Nx we strive for the best possible DX. The current terminal output was always something we haven’t been super happy with, especially if you run some of the commands that trigger the execution of multiple tasks (e.g. affected commands, run-many etc). This is why we’re even more excited about this feature: the new dynamic Nx terminal output is now the default for everyone.
+Folks that have been following along in our journey for quite some time know already that at Nx we strive for the best possible DX. The current terminal output was always something we haven't been super happy with, especially if you run some of the commands that trigger the execution of multiple tasks (e.g. affected commands, run-many etc). This is why we're even more excited about this feature: the new dynamic Nx terminal output is now the default for everyone.
 
 ![](/blog/images/2022-01-25/81krRElSXV5w2T54DiCBAA.avif)
 _New dynamic terminal output in Nx 13.5_
@@ -19,14 +20,14 @@ It clearly separates the terminal output into an upper part where all the comple
 
 There are a few things to note here (and which kinda emphasize our love with details & dev ergonomics 😉)
 
-- **Off in CI —** On CI you’ll still see the full output.
+- **Off in CI —** On CI you'll still see the full output.
 - **The full terminal output is still cached —** this is purely UI cosmetic. We still cache the entire terminal output. Hence, if you run the build of a single project that has previously been cached as part of a run-many command, you will see still the full output.
 
 Thanks to [James Henry](https://twitter.com/mrjameshenry) for working on this feature!
 
 ### Nx keeps getting faster and faster 🚀
 
-Performance is a feature, and we take it seriously with Nx. We landed a number of different performance improvements over the last couple of minor versions, ranging from optimizing how we store & restore our cache to improving the Nx workspace analysis and boot time. With v13.5 we’ve seen some Nx operations being
+Performance is a feature, and we take it seriously with Nx. We landed a number of different performance improvements over the last couple of minor versions, ranging from optimizing how we store & restore our cache to improving the Nx workspace analysis and boot time. With v13.5 we've seen some Nx operations being
 
 - 1.8x — 2.3x faster in the [Interstellar repo](https://github.com/vsavkin/interstellar)
 - about 2x faster on some large client repositories
@@ -37,7 +38,7 @@ And we will not rest 😉.
 
 When running an Nx command there might potentially be many tasks running at different times, in parallel, and using different processes. Optimizing those runs or better understanding where things go wrong might be a hard and cumbersome process. Being able to visualize things usually helps.
 
-That’s why we introduced the ability to profile and visualize Nx commands in the Chrome Devtools.
+That's why we introduced the ability to profile and visualize Nx commands in the Chrome Devtools.
 
 ![](/blog/images/2022-01-25/7vk8AUWRGkDI0vcVX4Ql-g.avif)
 
@@ -47,7 +48,7 @@ Use the `NX_PROFILE=<filename>` environment variable attached to your Nx CLI com
 NX_PROFILE=profile.json nx build cart
 ```
 
-It’ll produce a JSON file which you can then open with Chrome’s devtools. [Read more about it on the Nx Docs](/troubleshooting/performance-profiling).
+It'll produce a JSON file which you can then open with Chrome's devtools. [Read more about it on the Nx Docs](/troubleshooting/performance-profiling).
 
 Thanks [Jason](https://twitter.com/FrozenPandaz) for working on this feature!
 
@@ -67,11 +68,11 @@ In v13.5 we now also store the current filter status in the URL. That makes it e
 ![](/blog/images/2022-01-25/RM9hDFIsgLn1X4EX5qsgGg.avif)
 _Nx dep graph now stores filters in the URL_
 
-Here’s our deployed live example of the above screenshot: [https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page)
+Here's our deployed live example of the above screenshot: [https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=products-home-page)
 
 Thanks [Philip Fulcher](https://twitter.com/PhilipJFulcher) for adding this feature!
 
-There’s one more thing: As developers, we like to be as efficient as possible. We wanted to help by saving you some keystrokes. The project graph visualization can now be launched with
+There's one more thing: As developers, we like to be as efficient as possible. We wanted to help by saving you some keystrokes. The project graph visualization can now be launched with
 
 ```shell
 nx graph
@@ -85,7 +86,7 @@ There have been a number of improvements to our Angular plugin ( `@nrwl/angular`
 
 - Option to skip the Angular Module creation when generating new libraries by passing `--skipModule`
 - Support for multiple state slices when using the Nx Angular Data Persistence utilities. Thanks [David](https://medium.com/u/6e7f9350fcdf?source=post_page-----c407bb1c963a--------------------------------) for this community contribution !([#8216](https://github.com/nrwl/nx/pull/8216))
-- New Angular Nx workspaces now use v2 of the workspace configuration (Nx’s format of the `angular.json` )
+- New Angular Nx workspaces now use v2 of the workspace configuration (Nx's format of the `angular.json` )
 - Lots of improvements to the Angular SCAM generator
 
 ## How to Update Nx

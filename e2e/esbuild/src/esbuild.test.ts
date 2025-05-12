@@ -48,7 +48,7 @@ describe('EsBuild Plugin', () => {
       private: true,
       type: 'commonjs',
       main: './index.cjs',
-      typings: './index.d.ts',
+      types: './index.d.ts',
       dependencies: {},
     });
 
@@ -169,7 +169,6 @@ describe('EsBuild Plugin', () => {
     expect(
       readJson(`dist/libs/${parentLib}/package.json`).dependencies
     ).toEqual({
-      'jsonc-eslint-parser': expect.any(String),
       // Don't care about the versions, just that they exist
       rambda: expect.any(String),
       lodash: expect.any(String),

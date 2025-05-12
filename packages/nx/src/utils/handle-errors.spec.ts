@@ -25,9 +25,11 @@ describe('handleErrors', () => {
     const body = bodyLines.join('\n');
     expect(body).toContain('cause message');
     expect(body).toContain('test-plugin');
+    // --verbose is active, so we should see the stack trace
+    expect(body).toMatch(/\s+at.*handle-errors.spec.ts/);
   });
 
-  it('should only display wrapper error if not verbose', async () => {
+  it('should not display stack trace if not verbose', async () => {
     const spy = jest.spyOn(output, 'error').mockImplementation(() => {});
     await handleErrors(false, async () => {
       const cause = new Error('cause message');
@@ -41,7 +43,8 @@ describe('handleErrors', () => {
 
     const { bodyLines, title } = spy.mock.calls[0][0];
     const body = bodyLines.join('\n');
-    expect(body).not.toContain('cause message');
+    expect(body).toContain('cause message');
+    expect(body).not.toMatch(/\s+at.*handle-errors.spec.ts/);
   });
 
   it('should display misc errors that do not have a cause', async () => {

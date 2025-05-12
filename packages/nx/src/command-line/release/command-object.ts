@@ -34,6 +34,7 @@ interface GitOptions {
   gitTagMessage?: string;
   gitTagArgs?: string | string[];
   gitPush?: boolean;
+  gitPushArgs?: string | string[];
   gitRemote?: string;
 }
 
@@ -44,7 +45,13 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
+    /**
+     * @deprecated Use versionActionsOptionsOverrides instead.
+     *
+     * Using generatorOptionsOverrides is only valid when release.version.useLegacyVersioning is set to true.
+     */
     generatorOptionsOverrides?: Record<string, unknown>;
+    versionActionsOptionsOverrides?: Record<string, unknown>;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -57,7 +64,7 @@ export type ChangelogOptions = NxReleaseArgs &
     to?: string;
     from?: string;
     interactive?: string;
-    createRelease?: false | 'github';
+    createRelease?: false | 'github' | 'gitlab';
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -86,6 +93,7 @@ export type ReleaseOptions = NxReleaseArgs &
   FirstReleaseArgs & {
     specifier?: string;
     yes?: boolean;
+    preid?: VersionOptions['preid'];
     skipPublish?: boolean;
   };
 
@@ -185,6 +193,12 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         type: 'string',
         describe:
           'Exact version or semver keyword to apply to the selected release group.',
+      })
+      .option('preid', {
+        type: 'string',
+        describe:
+          'The optional prerelease identifier to apply to the version. This will only be applied in the case that the specifier argument has been set to `prerelease` OR when conventional commits are enabled, in which case it will modify the resolved specifier from conventional commits to be its prerelease equivalent. E.g. minor -> preminor.',
+        default: '',
       })
       .option('yes', {
         type: 'boolean',
@@ -451,6 +465,11 @@ function withGitOptions<T>(yargs: Argv<T>): Argv<T & GitOptions> {
       describe:
         'Whether or not to automatically push the changes made by this command to the remote git repository.',
       type: 'boolean',
+    })
+    .option('git-push-args', {
+      describe:
+        'Additional arguments to pass to the `git push` command invoked behind the scenes.',
+      type: 'string',
     })
     .option('git-remote', {
       type: 'string',

@@ -62,6 +62,18 @@ export async function globWithWorkspaceContext(
   }
 }
 
+export async function multiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.multiGlob(globs, exclude);
+  }
+  return daemonClient.multiGlob(globs, exclude);
+}
+
 export async function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
@@ -72,6 +84,17 @@ export async function hashWithWorkspaceContext(
     return workspaceContext.hashFilesMatchingGlob(globs, exclude);
   }
   return daemonClient.hashGlob(globs, exclude);
+}
+
+export async function hashMultiGlobWithWorkspaceContext(
+  workspaceRoot: string,
+  globGroups: string[][]
+) {
+  if (isOnDaemon() || !daemonClient.enabled()) {
+    ensureContextAvailable(workspaceRoot);
+    return workspaceContext.hashFilesMatchingGlobs(globGroups);
+  }
+  return daemonClient.hashMultiGlob(globGroups);
 }
 
 export async function updateContextWithChangedFiles(

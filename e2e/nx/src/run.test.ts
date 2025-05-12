@@ -46,6 +46,39 @@ describe('Nx Running Tests', () => {
         });
       });
 
+      it('should support running with simple names (i.e. matching on full segments)', () => {
+        const foo = uniq('foo');
+        const bar = uniq('bar');
+        const nested = uniq('nested');
+        runCLI(`generate @nx/js:lib libs/${foo}`);
+        runCLI(`generate @nx/js:lib libs/${bar}`);
+        runCLI(`generate @nx/js:lib libs/nested/${nested}`);
+        updateJson(`libs/${foo}/project.json`, (c) => {
+          c.name = `@acme/${foo}`;
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+        updateJson(`libs/${bar}/project.json`, (c) => {
+          c.name = `@acme/${bar}`;
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+        updateJson(`libs/nested/${nested}/project.json`, (c) => {
+          c.name = `@acme/nested/${bar}`; // The last segment is a duplicate
+          c.targets['echo'] = { command: 'echo TEST' };
+          return c;
+        });
+
+        // Full segments should match
+        expect(() => runCLI(`echo ${foo}`)).not.toThrow();
+
+        // Multiple matches should fail
+        expect(() => runCLI(`echo ${bar}`)).toThrow();
+
+        // Partial segments should not match (Note: project foo has numbers in the end that aren't matched fully)
+        expect(() => runCLI(`echo foo`)).toThrow();
+      });
+
       it.each([
         '--watch false',
         '--watch=false',
@@ -695,8 +728,12 @@ describe('Nx Running Tests', () => {
     it('should run multiple targets', () => {
       const myapp1 = uniq('myapp');
       const myapp2 = uniq('myapp');
-      runCLI(`generate @nx/web:app ${myapp1} --directory=apps/${myapp1}`);
-      runCLI(`generate @nx/web:app ${myapp2} --directory=apps/${myapp2}`);
+      runCLI(
+        `generate @nx/web:app ${myapp1} --directory=apps/${myapp1} --unitTestRunner=vitest`
+      );
+      runCLI(
+        `generate @nx/web:app ${myapp2} --directory=apps/${myapp2} --unitTestRunner=vitest`
+      );
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).

@@ -14,8 +14,8 @@ while allowing tracking of the full tree of different nested versions
 ### Properties
 
 - [data](../../devkit/documents/ProjectGraphExternalNode#data): Object
-- [name](../../devkit/documents/ProjectGraphExternalNode#name): `npm:${string}`
-- [type](../../devkit/documents/ProjectGraphExternalNode#type): "npm"
+- [name](../../devkit/documents/ProjectGraphExternalNode#name): string
+- [type](../../devkit/documents/ProjectGraphExternalNode#type): string
 
 ## Properties
 
@@ -35,10 +35,10 @@ while allowing tracking of the full tree of different nested versions
 
 ### name
 
-• **name**: \`npm:$\{string}\`
+• **name**: `string`
 
 ---
 
 ### type
 
-• **type**: `"npm"`
+• **type**: `string`

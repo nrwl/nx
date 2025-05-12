@@ -2,13 +2,14 @@
 title: Launch Nx Week Recap
 slug: 'launch-nx-week-recap'
 authors: [Zack DeRose]
-cover_image: '/blog/images/2024-02-15/featured_img.png'
+cover_image: '/blog/images/2024-02-15/featured_img.avif'
 tags: [nx, nx-cloud, releases, changelog]
+description: 'Explore the major announcements from Launch Nx Week, including Nx 18.0, Project Crystal, Nuxt plugin, Nx Agents, and Tusky AI integration.'
 ---
 
 We just finished wrapping up [Launch Nx Week](/launch-nx), which ran from February 5–9, including a full conference on Thursday!
 
-In this article, we’re going to recap all the things launched during Launch Nx Conf, as well as all the talks given during the conference! Here’s a set of links so you can fast-forward to the stuff you’re most interested in if you want!
+In this article, we're going to recap all the things launched during Launch Nx Conf, as well as all the talks given during the conference! Here's a set of links so you can fast-forward to the stuff you're most interested in if you want!
 
 **Prefer a video?**
 
@@ -29,7 +30,7 @@ In this article, we’re going to recap all the things launched during Launch Nx
 
 ## Nx 18.0 && Project Crystal
 
-Exciting news!! We’ve broken our standard release cadence of publishing a new major version every 6 months to release Nx 18, just 3 months after releasing Nx 17 in December 2024.
+Exciting news!! We've broken our standard release cadence of publishing a new major version every 6 months to release Nx 18, just 3 months after releasing Nx 17 in December 2024.
 
 Juri announced launched Project Crystal with this video:
 
@@ -39,7 +40,7 @@ The short version is: Nx project crystal means Nx plugins make your codebases wo
 
 For the long version, checkout this blog post by Juri where he describes [how Nx plugins are now more like VsCode Extentions](/blog/what-if-nx-plugins-were-more-like-vscode-extensions)!
 
-And don’t miss our two conference talks on this subject:
+And don't miss our two conference talks on this subject:
 
 ### Conference Talk: Project Crystal
 
@@ -55,7 +56,7 @@ And don’t miss our two conference talks on this subject:
 
 ## New Plugin: @nx/nuxt
 
-On Tuesday we launched our newest plugin, and our first plugin to be :gem:crystalized:gem: from it’s very beginning: @nx/nuxt!
+On Tuesday we launched our newest plugin, and our first plugin to be :gem:crystalized:gem: from it's very beginning: @nx/nuxt!
 
 Zack explains Nuxt and how to use the new plugin in this video:
 
@@ -77,7 +78,7 @@ Zack, Katerina, and Daniel got together to live code a working tic-tac-toe app u
 
 Nx Agents are here!! We launched Nx Agents on Wednesday, and it climbed into the top 20 on [Product Hunt](https://www.producthunt.com/products/nx-cloud#nx-agents)!
 
-We’re very excited about Nx Agents because we think that in its current state, Continuous Integration/Deployment is broken, and we think that Nx paired with Nx Agents fixes Continuous Integration. Zack explains more in this video:
+We're very excited about Nx Agents because we think that in its current state, Continuous Integration/Deployment is broken, and we think that Nx paired with Nx Agents fixes Continuous Integration. Zack explains more in this video:
 
 {% youtube src="https://www.youtube.com/embed/_FSHQIwITic?si=jDpwTVXLYFXiHEm0" title="Nx Agents" /%}
 
@@ -111,15 +112,15 @@ In the teaser video, you can see some ways Tusky will be integrated into Nx Clou
 
 The more exciting features of Tusky though includes the ability to perfectly optimize the number of agents used per PR — even spinning up and tearing down agents mid-pipeline! This is a huge optimization for task distribution, and will help optimize both walltime of your CI, as well as compute costs!
 
-Tusky will also be able to provide organizational-level insights to your codebase, including automatically detecting development groups (like lines of business) inside your codebase based on commit history, and providing statistical insights on their commit patterns. We’re also excited about Tusky being able to make suggestions on things you can do to further optimize your codebase — like generating a PR to introduce [Codeowners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) to the repo!
+Tusky will also be able to provide organizational-level insights to your codebase, including automatically detecting development groups (like lines of business) inside your codebase based on commit history, and providing statistical insights on their commit patterns. We're also excited about Tusky being able to make suggestions on things you can do to further optimize your codebase — like generating a PR to introduce [Codeowners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) to the repo!
 
 ## Nx Release Is Stable
 
 Versioning and publishing packages is always a bit tricky. Mix in the added complexity of having multiple packages — sometimes with different versioning or publishing strategies — inside the same codebase, and things can get weird quick!
 
-For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](/blog/lerna-is-dead-long-live-lerna) (the OG Javascript monorepo tool), we’ve been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
+For a long time, Nx has been purposefully versioning and publishing agnostic, but given our time spent as [stewards of Lerna](/blog/lerna-is-dead-long-live-lerna) (the OG Javascript monorepo tool), we've been able to take alot of that experience and finally feel confident creating our own versioning and publishing implementation.
 
-Therefore, we’ve been working on a new command to the Nx CLI: [nx release](/recipes/nx-release/get-started-with-nx-release#get-started-with-nx-release). We launched this on Friday of our Launch Nx week!
+Therefore, we've been working on a new command to the Nx CLI: [nx release](/recipes/nx-release/get-started-with-nx-release#get-started-with-nx-release). We launched this on Friday of our Launch Nx week!
 
 Juri goes into [full details in this blog post](/blog/versioning-and-releasing-packages-in-a-monorepo), and James Henry — our Director of Engineering and the primary engineer responsible for both maintaining Lerna and creating Nx Release — expands further in his conference talk:
 
@@ -135,7 +136,7 @@ Juri, Zack, and Victor wrapped up the week with a livestream recapping the launc
 
 {% youtube src="https://www.youtube.com/embed/xjLrFvEcxZw?si=O70JD4NgseP0lknA" title="Launch Nx Week Wrap Up" /%}
 
-That’s all for now folks! We’re just starting up a new iteration of development on Nx, so be sure to subscribe to [our YouTube channel](https://www.youtube.com/@nxdevtools) to get updates when new features land! Until next time, KEEP WORKING HARD!
+That's all for now folks! We're just starting up a new iteration of development on Nx, so be sure to subscribe to [our YouTube channel](https://www.youtube.com/@nxdevtools) to get updates when new features land! Until next time, KEEP WORKING HARD!
 
 ---
 

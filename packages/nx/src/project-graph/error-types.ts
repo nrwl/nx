@@ -6,42 +6,72 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { ProjectGraph } from '../config/project-graph';
 import { CreateNodesFunctionV2 } from './plugins/public-api';
 
+export type ProjectGraphErrorTypes =
+  | AggregateCreateNodesError
+  | MergeNodesError
+  | CreateMetadataError
+  | ProjectsWithNoNameError
+  | MultipleProjectsWithSameNameError
+  | ProcessDependenciesError
+  | WorkspaceValidityError;
+
+export class StaleProjectGraphCacheError extends Error {
+  constructor() {
+    super(
+      'The project graph cache was stale. Ensure that it has been recently created before using `readCachedProjectGraph`.'
+    );
+  }
+}
+
 export class ProjectGraphError extends Error {
-  readonly #errors: Array<
-    | AggregateCreateNodesError
-    | MergeNodesError
-    | CreateMetadataError
-    | ProjectsWithNoNameError
-    | MultipleProjectsWithSameNameError
-    | ProcessDependenciesError
-    | WorkspaceValidityError
-  >;
   readonly #partialProjectGraph: ProjectGraph;
   readonly #partialSourceMaps: ConfigurationSourceMaps;
 
   constructor(
-    errors: Array<
-      | AggregateCreateNodesError
-      | MergeNodesError
-      | ProjectsWithNoNameError
-      | MultipleProjectsWithSameNameError
-      | ProcessDependenciesError
-      | CreateMetadataError
-      | WorkspaceValidityError
-    >,
+    private readonly errors: Array<ProjectGraphErrorTypes>,
     partialProjectGraph: ProjectGraph,
-    partialSourceMaps: ConfigurationSourceMaps
+    partialSourceMaps: ConfigurationSourceMaps | null
   ) {
-    super(
-      `Failed to process project graph. Run "nx reset" to fix this. Please report the issue if you keep seeing it.`
-    );
+    const messageFragments = ['Failed to process project graph.'];
+    const mergeNodesErrors = [];
+    const unknownErrors = [];
+    for (const e of errors) {
+      if (
+        // Known errors that are self-explanatory
+        isAggregateCreateNodesError(e) ||
+        isCreateMetadataError(e) ||
+        isProcessDependenciesError(e) ||
+        isProjectsWithNoNameError(e) ||
+        isMultipleProjectsWithSameNameError(e) ||
+        isWorkspaceValidityError(e)
+      ) {
+      } else if (
+        // Known error type, but unlikely to be caused by the user
+        isMergeNodesError(e)
+      ) {
+        mergeNodesErrors.push(e);
+      } else {
+        unknownErrors.push(e);
+      }
+    }
+    if (mergeNodesErrors.length > 0) {
+      messageFragments.push(
+        `This type of error most likely points to an issue within Nx. Please report it.`
+      );
+    }
+    if (unknownErrors.length > 0) {
+      messageFragments.push(
+        `If the error cause is not obvious from the below error messages, running "nx reset" may fix it. Please report the issue if you keep seeing it.`
+      );
+    }
+    super(messageFragments.join(' '));
     this.name = this.constructor.name;
-    this.#errors = errors;
+    this.errors = errors;
     this.#partialProjectGraph = partialProjectGraph;
     this.#partialSourceMaps = partialSourceMaps;
-    this.stack = `${this.message}\n  ${errors
+    this.stack = errors
       .map((error) => indentString(formatErrorStackAndCause(error), 2))
-      .join('\n')}`;
+      .join('\n');
   }
 
   /**
@@ -67,7 +97,7 @@ export class ProjectGraphError extends Error {
   }
 
   getErrors() {
-    return this.#errors;
+    return this.errors;
   }
 }
 
@@ -172,8 +202,40 @@ export class ProjectConfigurationsError extends Error {
     >,
     public readonly partialProjectConfigurationsResult: ConfigurationResult
   ) {
-    super('Failed to create project configurations');
+    const messageFragments = ['Failed to create project configurations.'];
+    const mergeNodesErrors = [];
+    const unknownErrors = [];
+    for (const e of errors) {
+      if (
+        // Known error type, but unlikely to be caused by the user
+        isMergeNodesError(e)
+      ) {
+        mergeNodesErrors.push(e);
+      } else if (
+        // Known errors that are self-explanatory
+        !isAggregateCreateNodesError(e) &&
+        !isProjectsWithNoNameError(e) &&
+        !isMultipleProjectsWithSameNameError(e)
+      ) {
+        unknownErrors.push(e);
+      }
+    }
+    if (mergeNodesErrors.length > 0) {
+      messageFragments.push(
+        `This type of error most likely points to an issue within Nx. Please report it.`
+      );
+    }
+    if (unknownErrors.length > 0) {
+      messageFragments.push(
+        `If the error cause is not obvious from the below error messages, running "nx reset" may fix it. Please report the issue if you keep seeing it.`
+      );
+    }
+    super(messageFragments.join(' '));
     this.name = this.constructor.name;
+    this.errors = errors;
+    this.stack = errors
+      .map((error) => indentString(formatErrorStackAndCause(error), 2))
+      .join('\n');
   }
 }
 
@@ -193,6 +255,7 @@ export function isProjectConfigurationsError(
  * It allows Nx to recieve partial results and continue processing for better UX.
  */
 export class AggregateCreateNodesError extends Error {
+  public pluginIndex: number | undefined;
   /**
    * Throwing this error from a `createNodesV2` function will allow Nx to continue processing and recieve partial results from your plugin.
    * @example
@@ -242,25 +305,68 @@ export class AggregateCreateNodesError extends Error {
   }
 }
 
+export function formatAggregateCreateNodesError(
+  error: AggregateCreateNodesError,
+  pluginName: string
+) {
+  const errorBodyLines = [
+    `${
+      error.errors.length > 1 ? `${error.errors.length} errors` : 'An error'
+    } occurred while processing files for the ${pluginName} plugin${
+      error.pluginIndex
+        ? ` (Defined at nx.json#plugins[${error.pluginIndex}])`
+        : ''
+    }`,
+    `.`,
+  ];
+  const errorStackLines = [];
+
+  const innerErrors = error.errors;
+  for (const [file, e] of innerErrors) {
+    if (file) {
+      errorBodyLines.push(`  - ${file}: ${e.message}`);
+      errorStackLines.push(` - ${file}: ${e.stack}`);
+    } else {
+      errorBodyLines.push(`  - ${e.message}`);
+      errorStackLines.push(` - ${e.stack}`);
+    }
+    if (e.stack && process.env.NX_VERBOSE_LOGGING === 'true') {
+      const innerStackTrace = '    ' + e.stack.split('\n')?.join('\n    ');
+      errorStackLines.push(innerStackTrace);
+    }
+  }
+
+  error.stack = errorStackLines.join('\n');
+  error.message = errorBodyLines.join('\n');
+}
+
 export class MergeNodesError extends Error {
   file: string;
   pluginName: string;
+  pluginIndex: number;
 
   constructor({
     file,
     pluginName,
     error,
+    pluginIndex,
   }: {
     file: string;
     pluginName: string;
     error: Error;
+    pluginIndex?: number;
   }) {
-    const msg = `The nodes created from ${file} by the "${pluginName}" could not be merged into the project graph:`;
+    const msg = `The nodes created from ${file} by the "${pluginName}" ${
+      pluginIndex === undefined
+        ? ''
+        : `at index ${pluginIndex} in nx.json#plugins `
+    }could not be merged into the project graph.`;
 
     super(msg, { cause: error });
     this.name = this.constructor.name;
     this.file = file;
     this.pluginName = pluginName;
+    this.pluginIndex = pluginIndex;
     this.stack = `${this.message}\n${indentString(
       formatErrorStackAndCause(error),
       2
@@ -292,6 +398,16 @@ export class ProcessDependenciesError extends Error {
     this.stack = `${this.message}\n  ${cause.stack.split('\n').join('\n  ')}`;
   }
 }
+
+function isProcessDependenciesError(e: unknown): e is ProcessDependenciesError {
+  return (
+    e instanceof ProcessDependenciesError ||
+    (typeof e === 'object' &&
+      'name' in e &&
+      e?.name === ProcessDependenciesError.name)
+  );
+}
+
 export class WorkspaceValidityError extends Error {
   constructor(public message: string) {
     message = `Configuration Error\n${message}`;

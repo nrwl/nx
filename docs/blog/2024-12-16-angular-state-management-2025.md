@@ -3,7 +3,8 @@ title: Angular State Management for 2025
 slug: angular-state-management-2025
 authors: ['Mike Hartington']
 tags: [angular]
-cover_image: /blog/images/2024-12-16/thumbnail.png
+cover_image: /blog/images/2024-12-16/thumbnail.avif
+description: Discover how Angular Signals and modern state management approaches simplify application development in 2025.
 ---
 
 ## Revisiting State Management

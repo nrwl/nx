@@ -64,7 +64,7 @@ export interface NxAppRspackPluginOptions {
   /**
    * Set <base href> for the resulting index.html.
    */
-  baseHref?: string;
+  baseHref?: string | false;
   /**
    * Build the libraries from source. Default is `true`.
    */
@@ -74,7 +74,9 @@ export interface NxAppRspackPluginOptions {
 
   /**
    * Delete the output path before building.
+   * @deprecated Use the `output.clean` option in Rspack. https://rspack.dev/config/output#outputclean
    */
+  // TODO(v22): Add migration to remove this option and remove it.
   deleteOutputPath?: boolean;
   /**
    * The deploy path for the application. e.g. `/my-app/`
@@ -159,6 +161,12 @@ export interface NxAppRspackPluginOptions {
    * Add an additional chunk for the rspack runtime. Defaults to `true` when `target === 'web'`.
    */
   runtimeChunk?: boolean;
+  // TODO(v22): Remove in version 22.
+  /**
+   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
+   * @deprecated Sass option will be removed in Nx 22. This option will also be removed in Nx 22 as it is no longer needed.
+   */
+  sassImplementation?: 'sass' | 'sass-embedded';
   /**
    * External scripts that will be included before the main application entry.
    */
@@ -194,11 +202,19 @@ export interface NxAppRspackPluginOptions {
   /**
    * Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
    */
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   /**
    * External stylesheets that will be included with the application.
    */
   styles?: Array<ExtraEntryPointClass | string>;
+  /**
+   * Enables the use of subresource integrity validation.
+   */
+  subresourceIntegrity?: boolean;
   /**
    * Override the `target` option in rspack configuration. This setting is not recommended and exists for backwards compatibility.
    */
@@ -231,6 +247,10 @@ export interface NxAppRspackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Use the legacy WriteIndexHtmlPlugin instead of the built-in HtmlRspackPlugin.
+   */
+  useLegacyHtmlPlugin?: boolean;
 }
 
 export interface NormalizedNxAppRspackPluginOptions
@@ -244,4 +264,5 @@ export interface NormalizedNxAppRspackPluginOptions
   projectGraph: ProjectGraph;
   outputFileName: string;
   assets: AssetGlobPattern[];
+  useLegacyHtmlPlugin: boolean;
 }

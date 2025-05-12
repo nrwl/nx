@@ -21,7 +21,8 @@ export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
   config: ESLint.ConfigData,
-  ignorePaths: string[]
+  ignorePaths: string[],
+  format: 'cjs' | 'mjs'
 ): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
@@ -38,7 +39,12 @@ export function convertEslintJsonToFlatConfig(
   );
 
   if (config.extends) {
-    const extendsResult = addExtends(importsMap, exportElements, config);
+    const extendsResult = addExtends(
+      importsMap,
+      exportElements,
+      config,
+      format
+    );
     isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
     isESLintJSNeeded = extendsResult.isESLintJSNeeded;
   }
@@ -156,7 +162,7 @@ export function convertEslintJsonToFlatConfig(
       ) {
         isFlatCompatNeeded = true;
       }
-      exportElements.push(generateFlatOverride(override));
+      exportElements.push(generateFlatOverride(override, format));
     });
   }
 
@@ -189,7 +195,7 @@ export function convertEslintJsonToFlatConfig(
   }
 
   // create the node list and print it to new file
-  const nodeList = createNodeList(importsMap, exportElements);
+  const nodeList = createNodeList(importsMap, exportElements, format);
   let content = stringifyNodeList(nodeList);
   if (isFlatCompatNeeded) {
     content = addFlatCompatToFlatConfig(content);
@@ -206,7 +212,8 @@ export function convertEslintJsonToFlatConfig(
 function addExtends(
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
-  config: ESLint.ConfigData
+  config: ESLint.ConfigData,
+  format: 'mjs' | 'cjs'
 ): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
   let isESLintJSNeeded = false;
@@ -225,7 +232,7 @@ function addExtends(
         configBlocks.push(generateSpreadElement(localName));
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
-          '$1eslint$2.config.cjs'
+          `$1eslint$2.config.${format}`
         );
         importsMap.set(newImport, localName);
       } else {

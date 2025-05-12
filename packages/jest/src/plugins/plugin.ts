@@ -1,6 +1,7 @@
 import {
   CreateNodes,
   CreateNodesContext,
+  CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesV2,
   getPackageManagerCommand,
@@ -13,7 +14,10 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import {
+  calculateHashesForCreateNodes,
+  calculateHashForCreateNodes,
+} from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import {
   clearRequireCache,
   loadConfigFile,
@@ -27,19 +31,22 @@ import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { getInstalledJestMajorVersion } from '../utils/version-utils';
-import {
-  getFilesInDirectoryUsingContext,
-  globWithWorkspaceContext,
-} from 'nx/src/utils/workspace-context';
-import { normalize } from 'node:path';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { normalize, sep } from 'node:path';
+import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
 
 const pmc = getPackageManagerCommand();
 
 export interface JestPluginOptions {
   targetName?: string;
   ciTargetName?: string;
+
   /**
-   *  Whether to use jest-config and jest-runtime to load Jest configuration and context.
+   * The name that should be used to group atomized tasks on CI
+   */
+  ciGroupName?: string;
+  /**
+   *  Whether to use jest-config and jest-runtime are used to load Jest configuration and context.
    *  Disabling this is much faster but could be less correct since we are using our own config loader
    *  and test matcher instead of Jest's.
    */
@@ -70,17 +77,70 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
 
+    const packageManagerWorkspacesGlob = combineGlobPatterns(
+      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    );
+    options = normalizeOptions(options);
+
+    const { roots: projectRoots, configFiles: validConfigFiles } =
+      configFiles.reduce(
+        (acc, configFile) => {
+          const potentialRoot = dirname(configFile);
+          if (
+            checkIfConfigFileShouldBeProject(
+              configFile,
+              potentialRoot,
+              packageManagerWorkspacesGlob,
+              context
+            )
+          ) {
+            acc.roots.push(potentialRoot);
+            acc.configFiles.push(configFile);
+          }
+          return acc;
+        },
+        {
+          roots: [],
+          configFiles: [],
+        } as {
+          roots: string[];
+          configFiles: string[];
+        }
+      );
+
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      options,
+      context
+    );
+
     try {
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
+        async (configFilePath, options, context, idx) => {
+          const projectRoot = projectRoots[idx];
+          const hash = hashes[idx];
+
+          targetsCache[hash] ??= await buildJestTargets(
+            configFilePath,
+            projectRoot,
             options,
             context,
-            targetsCache,
             presetCache
-          ),
-        configFiles,
+          );
+
+          const { targets, metadata } = targetsCache[hash];
+
+          return {
+            projects: {
+              [projectRoot]: {
+                root: projectRoot,
+                targets,
+                metadata,
+              },
+            },
+          };
+        },
+        validConfigFiles,
         options,
         context
       );
@@ -96,35 +156,63 @@ export const createNodesV2: CreateNodesV2<JestPluginOptions> = [
  */
 export const createNodes: CreateNodes<JestPluginOptions> = [
   jestConfigGlob,
-  (...args) => {
+  async (configFilePath, options, context) => {
     logger.warn(
       '`createNodes` is deprecated. Update your plugin to utilize createNodesV2 instead. In Nx 20, this will change to the createNodesV2 API.'
     );
 
-    return createNodesInternal(...args, {}, {});
+    const projectRoot = dirname(configFilePath);
+
+    const packageManagerWorkspacesGlob = combineGlobPatterns(
+      getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
+    );
+
+    if (
+      !checkIfConfigFileShouldBeProject(
+        configFilePath,
+        projectRoot,
+        packageManagerWorkspacesGlob,
+        context
+      )
+    ) {
+      return {};
+    }
+
+    options = normalizeOptions(options);
+
+    const { targets, metadata } = await buildJestTargets(
+      configFilePath,
+      projectRoot,
+      options,
+      context,
+      {}
+    );
+
+    return {
+      projects: {
+        [projectRoot]: {
+          root: projectRoot,
+          targets,
+          metadata,
+        },
+      },
+    };
   },
 ];
 
-async function createNodesInternal(
+function checkIfConfigFileShouldBeProject(
   configFilePath: string,
-  options: JestPluginOptions,
-  context: CreateNodesContext,
-  targetsCache: Record<string, JestTargets>,
-  presetCache: Record<string, unknown>
-) {
-  const projectRoot = dirname(configFilePath);
-
-  const packageManagerWorkspacesGlob = combineGlobPatterns(
-    getGlobPatternsFromPackageManagerWorkspaces(context.workspaceRoot)
-  );
-
+  projectRoot: string,
+  packageManagerWorkspacesGlob: string,
+  context: CreateNodesContext | CreateNodesContextV2
+): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
   if (
     !siblingFiles.includes('package.json') &&
     !siblingFiles.includes('project.json')
   ) {
-    return {};
+    return false;
   } else if (
     !siblingFiles.includes('project.json') &&
     siblingFiles.includes('package.json')
@@ -134,7 +222,7 @@ async function createNodesInternal(
     const isPackageJsonProject = minimatch(path, packageManagerWorkspacesGlob);
 
     if (!isPackageJsonProject) {
-      return {};
+      return false;
     }
   }
 
@@ -146,31 +234,9 @@ async function createNodesInternal(
     // The `getJestProjectsAsync` function uses the project graph, which leads to a
     // circular dependency. We can skip this since it's no intended to be used for
     // an Nx project.
-    return {};
+    return false;
   }
-
-  options = normalizeOptions(options);
-
-  const hash = await calculateHashForCreateNodes(projectRoot, options, context);
-  targetsCache[hash] ??= await buildJestTargets(
-    configFilePath,
-    projectRoot,
-    options,
-    context,
-    presetCache
-  );
-
-  const { targets, metadata } = targetsCache[hash];
-
-  return {
-    projects: {
-      [projectRoot]: {
-        root: projectRoot,
-        targets,
-        metadata,
-      },
-    },
-  };
+  return true;
 }
 
 async function buildJestTargets(
@@ -188,13 +254,18 @@ async function buildJestTargets(
   const targets: Record<string, TargetConfiguration> = {};
   const namedInputs = getNamedInputs(projectRoot, context);
 
+  const tsNodeCompilerOptions = JSON.stringify({
+    moduleResolution: 'node10',
+    module: 'commonjs',
+    customConditions: null,
+  });
   const target: TargetConfiguration = (targets[options.targetName] = {
     command: 'jest',
     options: {
       cwd: projectRoot,
       // Jest registers ts-node with module CJS https://github.com/SimenB/jest/blob/v29.6.4/packages/jest-config/src/readConfigFileAndSetRootDir.ts#L117-L119
       // We want to support of ESM via 'module':'nodenext', we need to override the resolution until Jest supports it.
-      env: { TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}' },
+      env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
     },
     metadata: {
       technologies: ['jest'],
@@ -210,20 +281,24 @@ async function buildJestTargets(
     },
   });
 
+  // Not normalizing it here since also affects options for convert-to-inferred.
+  const disableJestRuntime = options.disableJestRuntime !== false;
+
   const cache = (target.cache = true);
   const inputs = (target.inputs = getInputs(
     namedInputs,
     rawConfig.preset,
     projectRoot,
     context.workspaceRoot,
-    options.disableJestRuntime
+    disableJestRuntime
   ));
 
   let metadata: ProjectConfiguration['metadata'];
 
-  const groupName = 'E2E (CI)';
+  const groupName =
+    options?.ciGroupName ?? deductGroupNameFromTarget(options?.ciTargetName);
 
-  if (options.disableJestRuntime) {
+  if (disableJestRuntime) {
     const outputs = (target.outputs = getOutputs(
       projectRoot,
       rawConfig.coverageDirectory
@@ -272,7 +347,7 @@ async function buildJestTargets(
           outputs,
           options: {
             cwd: projectRoot,
-            env: { TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}' },
+            env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
           },
           metadata: {
             technologies: ['jest'],
@@ -320,15 +395,21 @@ async function buildJestTargets(
       projectRoot,
       context.workspaceRoot
     );
-    const config = await readConfig(
-      {
-        _: [],
-        $0: undefined,
-      },
-      rawConfig,
-      undefined,
-      dirname(absConfigFilePath)
-    );
+    let config;
+    try {
+      config = await readConfig(
+        {
+          _: [],
+          $0: undefined,
+        },
+        rawConfig,
+        undefined,
+        dirname(absConfigFilePath)
+      );
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
 
     const outputs = (target.outputs = getOutputs(
       projectRoot,
@@ -357,8 +438,7 @@ async function buildJestTargets(
       const jestVersion = getInstalledJestMajorVersion()!;
       const specs =
         jestVersion >= 30
-          ? // @ts-expect-error Jest 30+ expects the project config as the second argument
-            await source.getTestPaths(config.globalConfig, config.projectConfig)
+          ? await source.getTestPaths(config.globalConfig, config.projectConfig)
           : await source.getTestPaths(config.globalConfig);
 
       const testPaths = new Set(specs.tests.map(({ path }) => path));
@@ -407,9 +487,7 @@ async function buildJestTargets(
             outputs,
             options: {
               cwd: projectRoot,
-              env: {
-                TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10"}',
-              },
+              env: { TS_NODE_COMPILER_OPTIONS: tsNodeCompilerOptions },
             },
             metadata: {
               technologies: ['jest'],
@@ -577,7 +655,7 @@ function resolveJestPath(projectRoot: string, workspaceRoot: string): string {
   }
 
   resolvedJestPaths[projectRoot] = require.resolve('jest', {
-    paths: [projectRoot, workspaceRoot, __dirname],
+    paths: [projectRoot, ...getNxRequirePaths(workspaceRoot), __dirname],
   });
 
   return resolvedJestPaths[projectRoot];
@@ -621,45 +699,35 @@ async function getTestPaths(
     'testMatch',
     presetCache
   );
-  if (testMatch) {
-    return await globWithWorkspaceContext(
-      context.workspaceRoot,
-      testMatch.map((pattern) => join(projectRoot, pattern)),
-      []
-    );
-  } else {
-    const testRegex = await getJestOption<string[]>(
-      rawConfig,
-      absConfigFilePath,
-      'testRegex',
-      presetCache
-    );
-    if (testRegex) {
-      const files: string[] = [];
-      const testRegexes = Array.isArray(rawConfig.testRegex)
-        ? rawConfig.testRegex.map((r: string) => new RegExp(r))
-        : [new RegExp(rawConfig.testRegex)];
-      const projectFiles = await getFilesInDirectoryUsingContext(
-        context.workspaceRoot,
-        projectRoot
-      );
-      for (const file of projectFiles) {
-        if (testRegexes.some((r: RegExp) => r.test(file))) files.push(file);
-      }
-      return files;
-    } else {
-      // Default copied from https://github.com/jestjs/jest/blob/d1a2ed7/packages/jest-config/src/Defaults.ts#L84
-      const defaultTestMatch = [
+
+  let paths = await globWithWorkspaceContext(
+    context.workspaceRoot,
+    (
+      testMatch || [
+        // Default copied from https://github.com/jestjs/jest/blob/d1a2ed7/packages/jest-config/src/Defaults.ts#L84
         '**/__tests__/**/*.?([mc])[jt]s?(x)',
         '**/?(*.)+(spec|test).?([mc])[jt]s?(x)',
-      ];
-      return await globWithWorkspaceContext(
-        context.workspaceRoot,
-        defaultTestMatch.map((pattern) => join(projectRoot, pattern)),
-        []
-      );
-    }
+      ]
+    ).map((pattern) => join(projectRoot, pattern)),
+    []
+  );
+
+  const testRegex = await getJestOption<string[]>(
+    rawConfig,
+    absConfigFilePath,
+    'testRegex',
+    presetCache
+  );
+  if (testRegex) {
+    const testRegexes = Array.isArray(rawConfig.testRegex)
+      ? rawConfig.testRegex.map((r: string) => new RegExp(r))
+      : [new RegExp(rawConfig.testRegex)];
+    paths = paths.filter((path: string) =>
+      testRegexes.some((r: RegExp) => r.test(path))
+    );
   }
+
+  return paths;
 }
 
 async function getJestOption<T = any>(
@@ -689,4 +757,29 @@ async function getJestOption<T = any>(
   }
 
   return undefined;
+}
+
+/**
+ * Helper that tries to deduct the name of the CI group, based on the related target name.
+ *
+ * This will work well, when the CI target name follows the documented naming convention or similar (for e.g `test-ci`, `e2e-ci`, `ny-e2e-ci`, etc).
+ *
+ * For example, `test-ci` => `TEST (CI)`,  `e2e-ci` => `E2E (CI)`,  `my-e2e-ci` => `MY E2E (CI)`
+ *
+ *
+ * @param ciTargetName name of the CI target
+ * @returns the deducted group name or `${ciTargetName.toUpperCase()} (CI)` if cannot be deducted automatically
+ */
+function deductGroupNameFromTarget(ciTargetName: string | undefined) {
+  if (!ciTargetName) {
+    return null;
+  }
+
+  const parts = ciTargetName.split('-').map((v) => v.toUpperCase());
+
+  if (parts.length > 1) {
+    return `${parts.slice(0, -1).join(' ')} (${parts[parts.length - 1]})`;
+  }
+
+  return `${parts[0]} (CI)`; // default group name when there is a single segment
 }

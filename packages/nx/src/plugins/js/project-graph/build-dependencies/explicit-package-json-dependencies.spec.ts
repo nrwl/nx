@@ -74,7 +74,11 @@ describe('explicit package json dependencies', () => {
         data: {
           root: 'libs/proj',
           metadata: {
-            js: { packageName: 'proj', packageExports: undefined },
+            js: {
+              packageName: 'proj',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
           },
         },
       },
@@ -84,7 +88,11 @@ describe('explicit package json dependencies', () => {
         data: {
           root: 'libs/proj2',
           metadata: {
-            js: { packageName: 'proj2', packageExports: undefined },
+            js: {
+              packageName: 'proj2',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
           },
         },
       },
@@ -94,7 +102,11 @@ describe('explicit package json dependencies', () => {
         data: {
           root: 'libs/proj4',
           metadata: {
-            js: { packageName: 'proj3', packageExports: undefined },
+            js: {
+              packageName: 'proj3',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
           },
         },
       },

@@ -18,6 +18,7 @@ export async function customServerGenerator(
   options: CustomServerSchema
 ) {
   const project = readProjectConfiguration(host, options.project);
+  const swcServerName = '.server.swcrc';
 
   const nxJson = readNxJson(host);
   const hasPlugin = nxJson.plugins?.some((p) =>
@@ -26,11 +27,7 @@ export async function customServerGenerator(
       : p.plugin === '@nx/next/plugin'
   );
 
-  if (
-    project.targets?.build?.executor !== '@nx/next:build' &&
-    project.targets?.build?.executor !== '@nrwl/next:build' &&
-    !hasPlugin
-  ) {
+  if (project.targets?.build?.executor !== '@nx/next:build' && !hasPlugin) {
     logger.error(
       `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`
     );
@@ -38,9 +35,7 @@ export async function customServerGenerator(
   }
 
   // In Nx 18 next artifacts are inside the project root .next/ & dist/ (for custom server)
-  const outputPath = hasPlugin
-    ? `dist/${project.root}`
-    : project.targets?.build?.options?.outputPath;
+  const outputPath = `dist/${project.root}-server`;
   const root = project.root;
 
   if (
@@ -68,9 +63,9 @@ export async function customServerGenerator(
 
   // In Nx 18 next artifacts are inside the project root .next/ & dist/ (for custom server)
   // So we need ensure the mapping is correct from dist to the project root
-  const projectPathFromDist = `../../${offsetFromRoot(project.root)}${
-    project.root
-  }`;
+  const projectPathFromDist = hasPlugin
+    ? `../../${offsetFromRoot(project.root)}${project.root}`
+    : `${offsetFromRoot(`dist/${project.root}`)}${project.root}`;
 
   const offset = offsetFromRoot(project.root);
   const isTsSolution = isUsingTsSolutionSetup(host);
@@ -107,6 +102,9 @@ export async function customServerGenerator(
       tsConfig: `${root}/tsconfig.server.json`,
       clean: false,
       assets: [],
+      ...(options.compiler === 'tsc'
+        ? {}
+        : { swcrc: `${root}/${swcServerName}` }),
     },
     configurations: {
       development: {},
@@ -150,6 +148,11 @@ export async function customServerGenerator(
   });
 
   if (options.compiler === 'swc') {
-    return configureForSwc(host, project.root);
+    // Update app swc to exlude server files
+    updateJson(host, join(project.root, '.swcrc'), (json) => {
+      json.exclude = [...(json.exclude ?? []), 'server/**'];
+      return json;
+    });
+    return configureForSwc(host, project.root, swcServerName, ['src/**/*']);
   }
 }

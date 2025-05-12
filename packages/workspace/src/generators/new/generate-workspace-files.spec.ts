@@ -85,6 +85,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               appName,
               isCustomPreset: false,
               nxCloud: nxCloud,
+              workspaces: true,
             });
             await formatFiles(tree);
             const dir = join(__dirname, 'tmp', `${preset}-${nxCloud}`);
@@ -230,7 +231,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         "scripts": {},
         "version": "0.0.0",
         "workspaces": [
-          "packages/**",
+          "packages/*",
         ],
       }
     `);
@@ -294,7 +295,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       defaultBase: 'main',
       packageManager: 'npm',
       isCustomPreset: false,
-      workspaceGlobs: ['apps/**', 'packages/**'],
+      workspaceGlobs: ['apps/*', 'packages/*'],
     });
 
     const packageJson = readJson(tree, '/proj/package.json');
@@ -310,8 +311,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         "scripts": {},
         "version": "0.0.0",
         "workspaces": [
-          "apps/**",
-          "packages/**",
+          "apps/*",
+          "packages/*",
         ],
       }
     `);
@@ -326,14 +327,14 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       defaultBase: 'main',
       packageManager: 'pnpm',
       isCustomPreset: false,
-      workspaceGlobs: ['apps/**', 'packages/**'],
+      workspaceGlobs: ['apps/*', 'packages/*'],
     });
 
     const packageJson = tree.read('/proj/pnpm-workspace.yaml', 'utf-8');
     expect(packageJson).toMatchInlineSnapshot(`
       "packages: 
-        - "apps/**"
-        - "packages/**"
+        - "apps/*"
+        - "packages/*"
       "
     `);
   });

@@ -24,6 +24,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export async function expoApplicationGenerator(
   host: Tree,
@@ -31,6 +32,7 @@ export async function expoApplicationGenerator(
 ): Promise<GeneratorCallback> {
   return await expoApplicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -45,6 +47,7 @@ export async function expoApplicationGeneratorInternal(
     skipFormat: true,
     addTsPlugin: schema.useTsSolution,
     formatter: schema.formatter,
+    platform: 'web',
   });
 
   const options = await normalizeOptions(host, schema);
@@ -59,6 +62,12 @@ export async function expoApplicationGeneratorInternal(
 
   await createApplicationFiles(host, options);
   addProject(host, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const lintTask = await addLinting(host, {
     ...options,
@@ -98,11 +107,7 @@ export async function expoApplicationGeneratorInternal(
       : undefined
   );
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.useTsSolution) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
-  }
+  sortPackageJsonFields(host, options.appProjectRoot);
 
   if (!options.skipFormat) {
     await formatFiles(host);

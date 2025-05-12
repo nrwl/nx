@@ -5,7 +5,6 @@ import { Schema } from './schema';
 import { Schema as remoteSchma } from '../remote/schema';
 import { federateModuleGenerator } from './federate-module';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { Linter } from '@nx/eslint';
 import remoteGenerator from '../remote/remote';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
@@ -57,7 +56,7 @@ describe('federate-module', () => {
       directory: 'myremote',
       e2eTestRunner: E2eTestRunner.Cypress,
       skipFormat: true,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       style: 'css',
       unitTestRunner: UnitTestRunner.Jest,
     };

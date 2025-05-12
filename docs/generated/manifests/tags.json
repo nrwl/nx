@@ -41,6 +41,13 @@
       "id": "console-nx-cloud",
       "name": "Nx Cloud Integration",
       "path": "/recipes/nx-console/console-nx-cloud"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-migrate-ui",
+      "id": "console-migrate-ui",
+      "name": "Migrate UI",
+      "path": "/recipes/nx-console/console-migrate-ui"
     }
   ],
   "run-tasks": [
@@ -92,6 +99,13 @@
       "id": "defining-task-pipeline",
       "name": "Define a Task Pipeline",
       "path": "/recipes/running-tasks/defining-task-pipeline"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
     },
     {
       "description": "",
@@ -257,6 +271,15 @@
       "path": "/nx-api/nx/documents/reset"
     }
   ],
+  "AI": [
+    {
+      "description": "",
+      "file": "shared/features/enhance-AI",
+      "id": "enhance-AI",
+      "name": "Enhance Your LLM",
+      "path": "/features/enhance-AI"
+    }
+  ],
   "explore-graph": [
     {
       "description": "",
@@ -371,6 +394,110 @@
       "id": "generate",
       "name": "generate",
       "path": "/nx-api/nx/documents/generate"
+    }
+  ],
+  "inferred-tasks": [
+    {
+      "description": "",
+      "file": "shared/features/maintain-typescript-monorepos",
+      "id": "maintain-ts-monorepos",
+      "name": "Maintain TypeScript Monorepos",
+      "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/mental-model",
+      "id": "mental-model",
+      "name": "Mental Model",
+      "path": "/concepts/mental-model"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/inferred-tasks",
+      "id": "inferred-tasks",
+      "name": "Inferred Tasks",
+      "path": "/concepts/inferred-tasks"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/convert-to-inferred",
+      "id": "convert-to-inferred",
+      "name": "Migrate to Inferred Tasks (Project Crystal)",
+      "path": "/recipes/running-tasks/convert-to-inferred"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Infer Tasks or Projects",
+      "path": "/extending-nx/recipes/project-graph-plugins"
+    }
+  ],
+  "project-linking": [
+    {
+      "description": "",
+      "file": "shared/features/maintain-typescript-monorepos",
+      "id": "maintain-ts-monorepos",
+      "name": "Maintain TypeScript Monorepos",
+      "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/typescript-project-linking",
+      "id": "typescript-project-linking",
+      "name": "TypeScript Project Linking",
+      "path": "/concepts/typescript-project-linking"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/switch-to-workspaces-project-references",
+      "id": "switch-to-workspaces-project-references",
+      "name": "Switch to Workspaces and TS Project References",
+      "path": "/recipes/tips-n-tricks/switch-to-workspaces-project-references"
+    }
+  ],
+  "sync": [
+    {
+      "description": "",
+      "file": "shared/features/maintain-typescript-monorepos",
+      "id": "maintain-ts-monorepos",
+      "name": "Maintain TypeScript Monorepos",
+      "path": "/features/maintain-ts-monorepos"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/sync-generators",
+      "id": "sync-generators",
+      "name": "Sync Generators",
+      "path": "/concepts/sync-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/create-sync-generator",
+      "id": "create-sync-generator",
+      "name": "Create a Sync Generator",
+      "path": "/extending-nx/recipes/create-sync-generator"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/sync",
+      "id": "sync",
+      "name": "sync",
+      "path": "/nx-api/nx/documents/sync"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/sync-check",
+      "id": "sync-check",
+      "name": "sync:check",
+      "path": "/nx-api/nx/documents/sync-check"
     }
   ],
   "automate-updating-dependencies": [
@@ -562,6 +689,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/automate-gitlab-releases",
+      "id": "automate-gitlab-releases",
+      "name": "Automate GitLab Releases",
+      "path": "/recipes/nx-release/automate-gitlab-releases"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/publish-rust-crates",
       "id": "publish-rust-crates",
       "name": "Publish Rust Crates",
@@ -610,43 +744,6 @@
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
-    }
-  ],
-  "inferred-tasks": [
-    {
-      "description": "",
-      "file": "shared/concepts/mental-model",
-      "id": "mental-model",
-      "name": "Mental Model",
-      "path": "/concepts/mental-model"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/nx-plugins",
-      "id": "nx-plugins",
-      "name": "What Are Nx Plugins",
-      "path": "/concepts/nx-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/inferred-tasks",
-      "id": "inferred-tasks",
-      "name": "Inferred Tasks",
-      "path": "/concepts/inferred-tasks"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/convert-to-inferred",
-      "id": "convert-to-inferred",
-      "name": "Migrate to Inferred Tasks (Project Crystal)",
-      "path": "/recipes/running-tasks/convert-to-inferred"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Infer Tasks or Projects",
-      "path": "/extending-nx/recipes/project-graph-plugins"
     }
   ],
   "add": [
@@ -739,36 +836,6 @@
       "path": "/nx-api/nx/documents/daemon"
     }
   ],
-  "sync": [
-    {
-      "description": "",
-      "file": "shared/concepts/sync-generators",
-      "id": "sync-generators",
-      "name": "Sync Generators",
-      "path": "/concepts/sync-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/create-sync-generator",
-      "id": "create-sync-generator",
-      "name": "Create a Sync Generator",
-      "path": "/extending-nx/recipes/create-sync-generator"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/sync",
-      "id": "sync",
-      "name": "sync",
-      "path": "/nx-api/nx/documents/sync"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/nx/documents/sync-check",
-      "id": "sync-check",
-      "name": "sync:check",
-      "path": "/nx-api/nx/documents/sync-check"
-    }
-  ],
   "module-federation": [
     {
       "description": "",
@@ -834,6 +901,13 @@
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
       "path": "/concepts/module-federation/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
     },
     {
       "description": "",
@@ -910,6 +984,15 @@
       "path": "/nx-api/nx/documents/create-nx-workspace"
     }
   ],
+  "terminal-ui": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
+    }
+  ],
   "exec": [
     {
       "description": "",
@@ -940,6 +1023,15 @@
       "id": "watch",
       "name": "watch",
       "path": "/nx-api/nx/documents/watch"
+    }
+  ],
+  "self-hosted-caching": [
+    {
+      "description": "Host the remote cache without using Nx Cloud",
+      "file": "shared/recipes/running-tasks/self-hosted-caching",
+      "id": "self-hosted-caching",
+      "name": "Self-Host the Remote Cache",
+      "path": "/recipes/running-tasks/self-hosted-caching"
     }
   ],
   "init": [
@@ -1023,6 +1115,87 @@
       "id": "performance-profiling",
       "name": "Profiling Build Performance",
       "path": "/troubleshooting/performance-profiling"
+    }
+  ],
+  "introduction": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/introduction",
+      "id": "introduction",
+      "name": "Introduction",
+      "path": "/recipes/angular/rspack/introduction"
+    }
+  ],
+  "getting-started": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "rspack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "setup": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/getting-started",
+      "id": "getting-started",
+      "name": "Getting Started",
+      "path": "/recipes/angular/rspack/getting-started"
+    }
+  ],
+  "migrate-from-webpack": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/migrate-from-webpack",
+      "id": "migrate-from-webpack",
+      "name": "Migrate from Angular Webpack",
+      "path": "/recipes/angular/rspack/migrate-from-webpack"
+    }
+  ],
+  "handling-configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "configurations": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/handling-configurations",
+      "id": "handling-configurations",
+      "name": "Handling Configurations",
+      "path": "/recipes/angular/rspack/handling-configurations"
+    }
+  ],
+  "internationalization": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
+    }
+  ],
+  "i18n": [
+    {
+      "description": "",
+      "file": "shared/guides/angular-rspack/internationalization",
+      "id": "internationalization",
+      "name": "Internationalization (i18n)",
+      "path": "/recipes/angular/rspack/internationalization"
     }
   ],
   "deployment": [
@@ -1274,15 +1447,6 @@
       "path": "/nx-enterprise/powerpack/owners"
     }
   ],
-  "custom-caching": [
-    {
-      "description": "Host the remote cache without using Nx Cloud",
-      "file": "shared/features/powerpack/custom-caching",
-      "id": "custom-caching",
-      "name": "Self-Host the Remote Cache",
-      "path": "/nx-enterprise/powerpack/custom-caching"
-    }
-  ],
   "database": [
     {
       "description": "",
@@ -1359,6 +1523,15 @@
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     }
   ],
+  "running-tasks": [
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/task-running-lifecycle",
+      "id": "task-running-lifecycle",
+      "name": "Hook into the Task Running Lifecycle",
+      "path": "/extending-nx/recipes/task-running-lifecycle"
+    }
+  ],
   "remote-cache": [
     {
       "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
@@ -1416,6 +1589,15 @@
       "id": "ci-deployment",
       "name": "Prepare applications for deployment via CI",
       "path": "/ci/recipes/other/ci-deployment"
+    }
+  ],
+  "affected": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/nx-api/nx/documents/affected"
     }
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "name": "20.5.0-package-updates",
+  "version": "20.5.0-beta.4",
+  "packages": {
+    "sass-loader": { "version": "^16.0.4", "alwaysAddToPackageJson": false },
+    "@rspack/core": { "version": "^1.2.2", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/rspack",
+  "schema": null,
+  "type": "migration"
+}

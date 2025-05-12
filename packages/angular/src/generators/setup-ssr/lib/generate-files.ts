@@ -5,8 +5,12 @@ import {
   readProjectConfiguration,
 } from '@nx/devkit';
 import { join } from 'path';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import {
+  getInstalledAngularVersionInfo,
+  getInstalledPackageVersion,
+} from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions } from '../schema';
+import { clean, coerce, gte } from 'semver';
 
 export function generateSSRFiles(
   tree: Tree,
@@ -46,7 +50,19 @@ export function generateSSRFiles(
   const sourceRoot =
     project.sourceRoot ?? joinPathFragments(project.root, 'src');
 
-  generateFiles(tree, pathToFiles, sourceRoot, { ...options, tpl: '' });
+  const ssrVersion = getInstalledPackageVersion(tree, '@angular/ssr');
+  const cleanedSsrVersion = ssrVersion
+    ? clean(ssrVersion) ?? coerce(ssrVersion).version
+    : null;
+
+  generateFiles(tree, pathToFiles, sourceRoot, {
+    ...options,
+    provideServerRoutingFn:
+      !cleanedSsrVersion || gte(cleanedSsrVersion, '19.2.0')
+        ? 'provideServerRouting'
+        : 'provideServerRoutesConfig',
+    tpl: '',
+  });
 
   if (angularMajorVersion >= 19 && !options.serverRouting) {
     tree.delete(joinPathFragments(sourceRoot, 'app/app.routes.server.ts'));

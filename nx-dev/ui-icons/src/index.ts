@@ -1,3 +1,8 @@
+// AI
+export * from './lib/ai/cursor';
+export * from './lib/ai/github-copilot';
+export * from './lib/ai/intellij-ai';
+
 // CI PROVIDERS
 export * from './lib/ci-providers/azure-devops';
 export * from './lib/ci-providers/bitbucket';
@@ -48,6 +53,7 @@ export * from './lib/customers/paramount';
 export * from './lib/customers/payfit';
 export * from './lib/customers/paylocity';
 export * from './lib/customers/philips';
+export * from './lib/customers/plex';
 export * from './lib/customers/react-query';
 export * from './lib/customers/red-bull';
 export * from './lib/customers/redwood-js';
@@ -82,6 +88,14 @@ export * from './lib/others/amazon-s3';
 export * from './lib/others/linux';
 export * from './lib/others/min-io';
 export * from './lib/others/windows';
+
+// PARTNERS
+export * from './lib/partners/bitovi';
+export * from './lib/partners/callstack';
+export * from './lib/partners/hero-devs';
+export * from './lib/partners/push-based';
+export * from './lib/partners/e-square';
+export * from './lib/partners/briebug';
 
 // PODCASTS
 export * from './lib/podcasts/amazon-music';

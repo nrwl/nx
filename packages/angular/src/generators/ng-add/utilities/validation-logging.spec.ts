@@ -1,4 +1,4 @@
-import chalk = require('chalk');
+import * as pc from 'picocolors';
 import {
   arrayToString,
   getProjectValidationResultMessage,
@@ -48,10 +48,10 @@ describe('getProjectValidationResultMessage', () => {
       },
     ]);
 
-    expect(message).toBe(`${chalk.bold(`Validation results`)}:
+    expect(message).toBe(`${pc.bold(`Validation results`)}:
 
   - Simple error message with hint
-  ${chalk.dim(chalk.italic(`  Some hint message`))}
+  ${pc.dim(pc.italic(`  Some hint message`))}
 
   - Simple error message without hint
 
@@ -60,7 +60,7 @@ describe('getProjectValidationResultMessage', () => {
       - First error message
       - Second error message
       - Third error message
-  ${chalk.dim(chalk.italic(`  - Some hint message`))}
+  ${pc.dim(pc.italic(`  - Some hint message`))}
 
   - Message group without hint:
     - Errors:

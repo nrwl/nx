@@ -31,7 +31,9 @@ interface Schema {
   bundler?: 'vite' | 'webpack';
   standaloneApi?: boolean;
   routing?: boolean;
+  useReactRouter?: boolean;
   packageManager?: PackageManager;
+  unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
   serverRouting?: boolean;
@@ -41,6 +43,7 @@ interface Schema {
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

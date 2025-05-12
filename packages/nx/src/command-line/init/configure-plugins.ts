@@ -1,30 +1,30 @@
 import * as createSpinner from 'ora';
 import { bold } from 'chalk';
+import { execSync } from 'child_process';
 
 import {
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../../utils/package-manager';
-import { GitRepository } from '../../utils/git-utils';
 import { output } from '../../utils/output';
-import { flushChanges, FsTree } from '../../generators/tree';
-import {
-  Generator as NxGenerator,
-  GeneratorCallback,
-  GeneratorsJsonEntry,
-} from '../../config/misc-interfaces';
-import { getGeneratorInformation } from '../generate/generator-utils';
+import { GeneratorsJsonEntry } from '../../config/misc-interfaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { addDepsToPackageJson, runInstall } from './implementation/utils';
-import { getPluginCapabilities } from '../../utils/plugins';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import {
   isAggregateCreateNodesError,
   isProjectConfigurationsError,
   isProjectsWithNoNameError,
 } from '../../project-graph/error-types';
+import { getGeneratorInformation } from '../generate/generator-utils';
+import { join } from 'path';
+import { existsSync } from 'fs';
+import { readNxJson } from '../../config/configuration';
+import { nxVersion } from '../../utils/versions';
+import { runNxSync } from '../../utils/child-process';
+import { writeJsonFile } from '../../utils/fileutils';
 
-export function runPackageManagerInstallPlugins(
+export function installPluginPackages(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand(),
   plugins: string[]
@@ -32,51 +32,68 @@ export function runPackageManagerInstallPlugins(
   if (plugins.length === 0) {
     return;
   }
-  addDepsToPackageJson(repoRoot, plugins);
-  runInstall(repoRoot, pmc);
+  if (existsSync(join(repoRoot, 'package.json'))) {
+    addDepsToPackageJson(repoRoot, plugins);
+    runInstall(repoRoot, pmc);
+  } else {
+    const nxJson = readNxJson(repoRoot);
+    nxJson.installation.plugins ??= {};
+    for (const plugin of plugins) {
+      nxJson.installation.plugins[plugin] = nxVersion;
+    }
+    writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
+    // Invoking nx wrapper to install plugins.
+    runNxSync('--version', { stdio: 'ignore' });
+  }
 }
 
 /**
  * Installs a plugin by running its init generator. It will change the file system tree passed in.
  * @param plugin The name of the plugin to install
  * @param repoRoot repo root
- * @param verbose verbose
- * @param options options passed to init generator
+ * @param pmc package manager commands
+ * @param updatePackageScripts whether to update package scripts
+ * @param verbose whether to run in verbose mode
  * @returns void
  */
-export async function installPlugin(
+export async function runPluginInitGenerator(
   plugin: string,
   repoRoot: string = workspaceRoot,
+  updatePackageScripts: boolean = false,
   verbose: boolean = false,
-  options: { [k: string]: any }
+  pmc: PackageManagerCommands = getPackageManagerCommand()
 ): Promise<void> {
-  const host = new FsTree(repoRoot, verbose, `install ${plugin}`);
-  const capabilities = await getPluginCapabilities(repoRoot, plugin, {});
-  const generators = capabilities?.generators;
-  if (!generators) {
-    throw new Error(`No generators found in ${plugin}.`);
-  }
+  let command = `g ${plugin}:init ${verbose ? '--verbose' : ''}`;
 
-  const initGenerator = findInitGenerator(generators);
-  if (!initGenerator) {
-    output.log({
-      title: `No "init" generator found in ${plugin}. Skipping initialization.`,
-    });
+  try {
+    const { schema } = getGeneratorInformation(
+      plugin,
+      'init',
+      workspaceRoot,
+      {}
+    );
+
+    if (!!schema.properties['keepExistingVersions']) {
+      command += ` --keepExistingVersions`;
+    }
+    if (updatePackageScripts && !!schema.properties['updatePackageScripts']) {
+      command += ` --updatePackageScripts`;
+    }
+  } catch {
+    // init generator does not exist, so this function should noop
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      output.log({
+        title: `No "init" generator found in ${plugin}. Skipping initialization.`,
+      });
+    }
     return;
   }
-  const { implementationFactory } = getGeneratorInformation(
-    plugin,
-    initGenerator,
-    repoRoot,
-    {}
-  );
-
-  const implementation: NxGenerator = implementationFactory();
-  const task: GeneratorCallback | void = await implementation(host, options);
-  flushChanges(repoRoot, host.listChanges());
-  if (task) {
-    await task();
-  }
+  runNxSync(command, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+    windowsHide: false,
+    packageManagerCommand: pmc,
+  });
 }
 
 /**
@@ -84,9 +101,10 @@ export async function installPlugin(
  * Get the implementation of the plugin's init generator and run it
  * @returns a list of succeeded plugins and a map of failed plugins to errors
  */
-export async function installPlugins(
+export async function runPluginInitGenerators(
   plugins: string[],
   updatePackageScripts: boolean,
+  pmc: PackageManagerCommands,
   repoRoot: string = workspaceRoot,
   verbose: boolean = false
 ): Promise<{
@@ -108,13 +126,13 @@ export async function installPlugins(
   for (const plugin of plugins) {
     try {
       spinner.start('Installing plugin ' + plugin);
-      await installPlugin(plugin, repoRoot, verbose, {
-        keepExistingVersions: true,
+      await runPluginInitGenerator(
+        plugin,
+        repoRoot,
         updatePackageScripts,
-        addPlugin: true,
-        skipFormat: false,
-        skipPackageJson: false,
-      });
+        verbose,
+        pmc
+      );
       succeededPlugins.push(plugin);
       spinner.succeed('Installed plugin ' + plugin);
     } catch (e) {
@@ -151,9 +169,10 @@ export async function configurePlugins(
   }
 
   output.log({ title: '🔨 Configuring plugins' });
-  let { succeededPlugins, failedPlugins } = await installPlugins(
+  let { succeededPlugins, failedPlugins } = await runPluginInitGenerators(
     plugins,
     updatePackageScripts,
+    pmc,
     repoRoot,
     verbose
   );

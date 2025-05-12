@@ -2,7 +2,7 @@ import { ButtonLinkProps } from '@nx/nx-dev/ui-common';
 import { NxCloudAnimatedIcon } from '@nx/nx-dev/ui-icons';
 
 export const requestFreeTrial: ButtonLinkProps = {
-  href: '/contact/sales',
+  href: '/enterprise/trial',
   variant: 'primary',
   size: 'small',
   title: 'Request a free trial',

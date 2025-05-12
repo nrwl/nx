@@ -83,7 +83,12 @@
     "routing": {
       "type": "boolean",
       "description": "Generate application with routes.",
-      "x-prompt": "Would you like to add React Router to this application?",
+      "x-prompt": "Would you like to add routing to this application?",
+      "default": false
+    },
+    "useReactRouter": {
+      "description": "Use React Router for routing.",
+      "type": "boolean",
       "default": false
     },
     "skipFormat": {
@@ -101,7 +106,7 @@
     "bundler": {
       "description": "The bundler to use.",
       "type": "string",
-      "enum": ["vite", "webpack", "rspack", "rsbuild"],
+      "enum": ["vite", "rsbuild", "rspack", "webpack"],
       "x-prompt": "Which bundler do you want to use to build the application?",
       "default": "vite",
       "x-priority": "important"
@@ -187,6 +192,10 @@
       "description": "Generate a React app with a minimal setup, no separate test files.",
       "type": "boolean",
       "default": false
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "required": ["directory"],

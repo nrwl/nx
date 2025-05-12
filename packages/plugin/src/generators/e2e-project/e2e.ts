@@ -17,10 +17,7 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  resolveImportPath,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
@@ -28,10 +25,9 @@ import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator'
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
-  getProjectPackageManagerWorkspaceState,
-  getProjectPackageManagerWorkspaceStateWarningTask,
-} from '@nx/js/src/utils/package-manager-workspaces';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { Schema } from './schema';
@@ -107,12 +103,14 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     join(projectConfiguration.root, 'package.json')
   );
 
+  const simplePluginName = options.pluginName.split('/').pop();
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
     packageManagerCommands: getPackageManagerCommand(),
     pluginPackageName,
+    simplePluginName,
   });
 }
 
@@ -130,7 +128,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       {
-        name: resolveImportPath(host, options.projectName, options.projectRoot),
+        name: options.projectName,
         version: '0.0.1',
         private: true,
       }
@@ -149,6 +147,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     skipSerializers: true,
     skipFormat: true,
     addPlugin: options.addPlugin,
+    compiler: options.isTsSolutionSetup ? 'swc' : undefined,
   });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
@@ -256,22 +255,14 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
     });
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
-  if (options.isTsSolutionSetup && !options.skipWorkspacesWarning) {
-    const projectPackageManagerWorkspaceState =
-      getProjectPackageManagerWorkspaceState(host, options.projectRoot);
-
-    if (projectPackageManagerWorkspaceState !== 'included') {
-      tasks.push(
-        getProjectPackageManagerWorkspaceStateWarningTask(
-          projectPackageManagerWorkspaceState,
-          host.root
-        )
-      );
-    }
+  if (!options.skipFormat) {
+    await formatFiles(host);
   }
 
   return runTasksInSerial(...tasks);

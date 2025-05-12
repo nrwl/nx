@@ -1,4 +1,6 @@
-import { Schema, Tag } from '@markdoc/markdoc';
+import { Schema } from '@markdoc/markdoc';
+import markdoc from '@markdoc/markdoc';
+const { Tag } = markdoc;
 
 export const fence: Schema = {
   render: 'FenceWrapper',
@@ -14,6 +16,7 @@ export const fence: Schema = {
     process: { type: 'Boolean', render: false, default: true },
     skipRescope: { type: 'Boolean', default: false },
     enableCopy: { type: 'Boolean', default: true },
+    lineWrap: { type: 'Number', default: 0 },
   },
   transform(node, config) {
     const attributes = node.transformAttributes(config);

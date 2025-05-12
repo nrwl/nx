@@ -2,8 +2,9 @@
 title: 'Single File Monorepo Config, Custom Workspace Presets, Improved Tailwind Support, and more in Nx 13.4!'
 slug: 'single-file-monorepo-config-custom-workspace-presets-improved-tailwind-support-and-more-in-nx-13'
 authors: ['Brandon Roberts']
-cover_image: '/blog/images/2021-12-23/4u3Fw49H5U-sqgyBoGsqw.png'
+cover_image: '/blog/images/2021-12-23/4u3Fw49H5U-sqgyBoGsqw.avif'
 tags: [nx, release]
+description: Nx 13.4 brings single file monorepo configuration, custom workspace presets, enhanced Tailwind support for Angular, and dedicated TypeScript/JavaScript support with @nrwl/js.
 ---
 
 Nx is a smart, extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and libraries while providing a robust CLI, computation caching, dependency management, and more.
@@ -25,13 +26,13 @@ With the latest release of Nx and add-nx-to-monorepo 2.0, there is only the **nx
 npx add-nx-to-monorepo
 ```
 
-> Victor Savkin demoed the flexibility of Nx by migrating Meta’s (Facebook) React repository: [video link](https://youtu.be/XLP2RAOwfLQ)
+> Victor Savkin demoed the flexibility of Nx by migrating Meta's (Facebook) React repository: [video link](https://youtu.be/XLP2RAOwfLQ)
 
 Learn more in our guide of [adding Nx to an existing workspace](/recipes/adopting-nx/adding-to-monorepo) and the config inside the [**nx.json**](/reference/project-configuration)**.**
 
 ## Custom Workspace Presets 🎨
 
-Nx provides many presets by default to support many different ecosystems. Nx for monorepos is like VSCode, where plugins allow you to extend the functionality of your monorepo to fit your ecosystem or platform of choice. To make it easier for scaffolding a pre-defined setup, we’ve introduced the ability to use custom presets when creating Nx workspaces with a provided npm package.
+Nx provides many presets by default to support many different ecosystems. Nx for monorepos is like VSCode, where plugins allow you to extend the functionality of your monorepo to fit your ecosystem or platform of choice. To make it easier for scaffolding a pre-defined setup, we've introduced the ability to use custom presets when creating Nx workspaces with a provided npm package.
 
 ```shell
 npx create-nx-workspace --preset=your-npm-package-name
@@ -47,7 +48,7 @@ This allows you to enhance the initial experience for new workspaces directly fo
 
 Nx has always shipped with great TypeScript support. In version 13.4 we improve it even further by releasing a brand new package: `@nrwl/js` .
 
-This is particularly useful if you have framework-agnostic TS/JS packages within an existing Nx workspace but also for those scenarios where you want to build and publish a TS/JS-based library to some package registry. The setup is very lightweight, but still provides all benefits you’d expect from an Nx-based setup such as Jest, ESLint, Prettier etc.
+This is particularly useful if you have framework-agnostic TS/JS packages within an existing Nx workspace but also for those scenarios where you want to build and publish a TS/JS-based library to some package registry. The setup is very lightweight, but still provides all benefits you'd expect from an Nx-based setup such as Jest, ESLint, Prettier etc.
 
 Read all the details on [our new TypeScript guide](/getting-started/intro) or check out the video walkthrough below.
 
@@ -58,7 +59,7 @@ Read all the details on [our new TypeScript guide](/getting-started/intro) or ch
 ![](/blog/images/2021-12-23/1yacozydc1muZ74G.avif)
 _Tailwind Logo_
 
-Tailwind is a utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup. If you’ve used Tailwind with Angular applications previously, it's supported out of the box with Nx. We’re continually looking to improve the developer experience of using Tailwind in Angular applications and libraries. We already added support to the Angular plugin for Nx, and have added a new generator to configure Tailwind in **existing** apps and buildable/publishable libs, allowing you to set up and configure Tailwind without manual steps. The ability to configure new apps and libs is also supported, with support for Tailwind V2 and the latest V3 release.
+Tailwind is a utility-first CSS framework packed with classes that can be composed to build any design, directly in your markup. If you've used Tailwind with Angular applications previously, it's supported out of the box with Nx. We're continually looking to improve the developer experience of using Tailwind in Angular applications and libraries. We already added support to the Angular plugin for Nx, and have added a new generator to configure Tailwind in **existing** apps and buildable/publishable libs, allowing you to set up and configure Tailwind without manual steps. The ability to configure new apps and libs is also supported, with support for Tailwind V2 and the latest V3 release.
 
 ```shell
 nx g @nrwl/angular:app my-app --addTailwind

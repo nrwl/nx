@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: 'Nx Cloud - Available Plans',
   description:
     "Distribute everything, don't waste time waiting on CI. Use Nx Cloud's distributed task execution and caching features to release faster. Save time and money.",
+  alternates: {
+    canonical: 'https://nx.dev/pricing',
+  },
   openGraph: {
     url: 'https://nx.dev/pricing',
     title: 'Nx Cloud - Available Plans',

@@ -11,7 +11,6 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -40,7 +39,7 @@ describe('lib', () => {
       directory: 'my-lib',
       publishable: false,
       buildable: false,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       unitTestRunner: UnitTestRunner.Jest,
       simpleName: false,
@@ -76,7 +75,6 @@ describe('lib', () => {
     // ASSERT
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
-    expect(dependencies['@angular/animations']).toBe(angularVersion);
     expect(dependencies['@angular/common']).toBe(angularVersion);
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
@@ -1206,7 +1204,7 @@ describe('lib', () => {
       it('should add valid eslint JSON configuration which extends from Nx presets (flat config)', async () => {
         tree.write('eslint.config.cjs', '');
 
-        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
+        await runLibraryGeneratorWithOpts({ linter: 'eslint' });
 
         const eslintConfig = tree.read('my-lib/eslint.config.cjs', 'utf-8');
         expect(eslintConfig).toMatchInlineSnapshot(`
@@ -1254,7 +1252,7 @@ describe('lib', () => {
 
       it('should add valid eslint JSON configuration which extends from Nx presets (eslintrc)', async () => {
         // ACT
-        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
+        await runLibraryGeneratorWithOpts({ linter: 'eslint' });
 
         // ASSERT
 
@@ -1312,7 +1310,7 @@ describe('lib', () => {
       it('should add dependency checks to buildable libs', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({
-          linter: Linter.EsLint,
+          linter: 'eslint',
           buildable: true,
         });
 
@@ -1389,7 +1387,7 @@ describe('lib', () => {
     describe('none', () => {
       it('should not add an architect target for lint', async () => {
         // ACT
-        await runLibraryGeneratorWithOpts({ linter: Linter.None });
+        await runLibraryGeneratorWithOpts({ linter: 'none' });
 
         // ASSERT
         expect(

@@ -51,8 +51,8 @@
       "bundler": {
         "type": "string",
         "description": "The bundler to use.",
-        "enum": ["webpack", "none", "vite"],
-        "default": "webpack",
+        "enum": ["vite", "webpack", "none"],
+        "default": "vite",
         "x-prompt": "Which bundler do you want to use?",
         "x-priority": "important"
       },
@@ -60,7 +60,8 @@
         "description": "The tool to use for running lint checks.",
         "type": "string",
         "enum": ["eslint", "none"],
-        "default": "eslint"
+        "default": "none",
+        "x-prompt": "Which linter would you like to use?"
       },
       "skipFormat": {
         "description": "Skip formatting files",
@@ -71,8 +72,9 @@
       "unitTestRunner": {
         "type": "string",
         "enum": ["vitest", "jest", "none"],
-        "default": "vitest",
-        "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler"
+        "default": "none",
+        "description": "Test runner to use for unit tests. Default value is 'jest' when using 'webpack' or 'none' as the bundler and 'vitest' when using 'vite' as the bundler",
+        "x-prompt": "What unit test runner should be used?"
       },
       "inSourceTests": {
         "type": "boolean",
@@ -100,11 +102,9 @@
         "description": "Creates an application with strict mode and strict type checking.",
         "default": true
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json",
+      "useProjectJson": {
         "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["directory"],

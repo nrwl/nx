@@ -15,7 +15,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -30,13 +30,18 @@ import {
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { relative } from 'node:path/posix';
+import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...options,
   });
 }
@@ -48,31 +53,33 @@ export async function e2eProjectGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
-  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
 
   // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
-  if (isUsingTsSolutionConfig) {
-    writeJson(host, joinPathFragments(options.e2eProjectRoot, 'package.json'), {
-      name: getImportPath(host, options.e2eProjectName),
-      version: '0.0.1',
-      private: true,
-      nx: {
-        name: options.e2eProjectName,
-        projectType: 'application',
-        implicitDependencies: [options.project],
-        targets: {
-          e2e: {
-            executor: '@nx/jest:jest',
-            outputs: ['{workspaceRoot}/coverage/{e2eProjectRoot}'],
-            options: {
-              jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
-              passWithNoTests: true,
-            },
-            dependsOn: [`${options.project}:build`],
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    packageJson.nx = {
+      name:
+        options.e2eProjectName !== options.importPath
+          ? options.e2eProjectName
+          : undefined,
+      implicitDependencies: [options.project],
+      targets: {
+        e2e: {
+          executor: '@nx/jest:jest',
+          outputs: ['{projectRoot}/test-output/jest/coverage'],
+          options: {
+            jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
+            passWithNoTests: true,
           },
+          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
-    });
+    };
   } else {
     addProjectConfiguration(host, options.e2eProjectName, {
       root: options.e2eProjectRoot,
@@ -86,11 +93,20 @@ export async function e2eProjectGeneratorInternal(
             jestConfig: `${options.e2eProjectRoot}/jest.config.ts`,
             passWithNoTests: true,
           },
-          dependsOn: [`${options.project}:build`],
+          dependsOn: [`${options.project}:build`, `${options.project}:serve`],
         },
       },
     });
   }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      host,
+      joinPathFragments(options.e2eProjectRoot, 'package.json'),
+      packageJson
+    );
+  }
+
   // TODO(@nicholas): Find a better way to get build target
 
   // We remove the 'test' target from the e2e project because it is not needed
@@ -120,9 +136,14 @@ export async function e2eProjectGeneratorInternal(
   }
 
   const jestPreset = findRootJestPreset(host) ?? 'jest.preset.js';
-  const tsConfigFile = isUsingTsSolutionConfig
+  const tsConfigFile = options.isUsingTsSolutionConfig
     ? 'tsconfig.json'
     : 'tsconfig.spec.json';
+  const rootOffset = offsetFromRoot(options.e2eProjectRoot);
+  const coverageDirectory = options.isUsingTsSolutionConfig
+    ? 'test-output/jest/coverage'
+    : joinPathFragments(rootOffset, 'coverage', options.e2eProjectName);
+  const projectSimpleName = options.project.split('/').pop();
   if (options.projectType === 'server') {
     generateFiles(
       host,
@@ -130,10 +151,11 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'server' : options.project),
+        ...names(options.rootProject ? 'server' : projectSimpleName),
         tsConfigFile,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         jestPreset,
+        coverageDirectory,
         tmpl: '',
       }
     );
@@ -145,9 +167,9 @@ export async function e2eProjectGeneratorInternal(
         options.e2eProjectRoot,
         {
           ...options,
-          ...names(options.rootProject ? 'server' : options.project),
+          ...names(options.rootProject ? 'server' : projectSimpleName),
           tsConfigFile,
-          offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+          offsetFromRoot: rootOffset,
           tmpl: '',
         }
       );
@@ -160,17 +182,19 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        ...names(options.rootProject ? 'cli' : options.project),
+        ...names(options.rootProject ? 'cli' : projectSimpleName),
         mainFile,
         tsConfigFile,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         jestPreset,
+        coverageDirectory,
         tmpl: '',
       }
     );
   }
 
-  if (isUsingTsSolutionConfig) {
+  if (options.isUsingTsSolutionConfig) {
+    addSwcTestConfig(host, options.e2eProjectRoot, 'es6');
     generateFiles(
       host,
       path.join(__dirname, 'files/ts-solution'),
@@ -181,7 +205,7 @@ export async function e2eProjectGeneratorInternal(
           options.e2eProjectRoot,
           appProject.root
         ),
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         tmpl: '',
       }
     );
@@ -192,7 +216,7 @@ export async function e2eProjectGeneratorInternal(
       options.e2eProjectRoot,
       {
         ...options,
-        offsetFromRoot: offsetFromRoot(options.e2eProjectRoot),
+        offsetFromRoot: rootOffset,
         tmpl: '',
       }
     );
@@ -206,10 +230,10 @@ export async function e2eProjectGeneratorInternal(
   );
   tasks.push(installTask);
 
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const linterTask = await lintProjectGenerator(host, {
       project: options.e2eProjectName,
-      linter: Linter.EsLint,
+      linter: 'eslint',
       skipFormat: true,
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
@@ -230,11 +254,7 @@ export async function e2eProjectGeneratorInternal(
     }
   }
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
-
-  if (isUsingTsSolutionConfig) {
+  if (options.isUsingTsSolutionConfig) {
     updateJson(host, 'tsconfig.json', (json) => {
       json.references ??= [];
       const e2eRef = `./${options.e2eProjectRoot}`;
@@ -243,6 +263,16 @@ export async function e2eProjectGeneratorInternal(
       }
       return json;
     });
+  }
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(host, options.e2eProjectRoot);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
   }
 
   tasks.push(() => {
@@ -256,28 +286,45 @@ async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<
-  Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
+  Omit<Schema, 'name'> & {
+    e2eProjectRoot: string;
+    e2eProjectName: string;
+    importPath: string;
+    isUsingTsSolutionConfig: boolean;
+  }
 > {
-  options.directory = options.directory ?? `${options.project}-e2e`;
-  const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: options.name,
-      projectType: 'library',
-      directory: options.rootProject ? 'e2e' : options.directory,
-    });
+  let directory = options.rootProject ? 'e2e' : options.directory;
+  if (!directory) {
+    const projectConfig = readProjectConfiguration(tree, options.project);
+    directory = `${projectConfig.root}-e2e`;
+  }
+  const {
+    projectName: e2eProjectName,
+    projectRoot: e2eProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'application',
+    directory,
+  });
 
   const nxJson = readNxJson(tree);
   const addPlugin =
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
+
   return {
     addPlugin,
     ...options,
     e2eProjectRoot,
     e2eProjectName,
+    importPath,
     port: options.port ?? 3000,
     rootProject: !!options.rootProject,
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 

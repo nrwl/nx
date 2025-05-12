@@ -242,9 +242,7 @@ describe('nx release first run', () => {
         nxJson.release = {
           projects: [pkg1, pkg2, pkg3],
           version: {
-            generatorOptions: {
-              fallbackCurrentVersionResolver: 'disk',
-            },
+            fallbackCurrentVersionResolver: 'disk',
           },
         };
 
@@ -268,9 +266,7 @@ describe('nx release first run', () => {
         nxJson.release = {
           projects: [pkg1, pkg2, pkg3],
           version: {
-            generatorOptions: {
-              fallbackCurrentVersionResolver: 'disk',
-            },
+            fallbackCurrentVersionResolver: 'disk',
           },
           changelog: {
             automaticFromRef: true,
@@ -302,9 +298,7 @@ describe('nx release first run', () => {
           projects: [pkg1, pkg2, pkg3],
           projectsRelationship: 'independent',
           version: {
-            generatorOptions: {
-              fallbackCurrentVersionResolver: 'disk',
-            },
+            fallbackCurrentVersionResolver: 'disk',
           },
           changelog: {
             projectChangelogs: {},
@@ -332,9 +326,7 @@ describe('nx release first run', () => {
           projects: [pkg1, pkg2, pkg3],
           projectsRelationship: 'independent',
           version: {
-            generatorOptions: {
-              fallbackCurrentVersionResolver: 'disk',
-            },
+            fallbackCurrentVersionResolver: 'disk',
           },
           changelog: {
             automaticFromRef: true,

@@ -1,18 +1,24 @@
-import { joinPathFragments, type Tree } from '@nx/devkit';
+import { joinPathFragments, readNxJson, type Tree } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
 
+function arePluginsExplicitlyDisabled(host: Tree) {
+  const { useInferencePlugins } = readNxJson(host);
+  const addPluginEnvVar = process.env.NX_ADD_PLUGINS;
+  return useInferencePlugins === false || addPluginEnvVar === 'false';
+}
+
 export async function normalizeOptions(
   host: Tree,
-  options: Partial<Schema>
+  options: Partial<Schema>,
+  isRspack?: boolean
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(host, options as Schema, 'application');
+  await ensureRootProjectName(options as Schema, 'application');
   const { projectName: appProjectName, projectRoot: appProjectRoot } =
     await determineProjectNameAndRootOptions(host, {
       name: options.name,
@@ -31,17 +37,20 @@ export async function normalizeOptions(
 
   const bundler = options.bundler ?? 'esbuild';
 
+  const addPlugin =
+    options.addPlugin ?? (!arePluginsExplicitlyDisabled(host) && isRspack);
+
   // Set defaults and then overwrite with user options
   return {
+    addPlugin,
     style: 'css',
     routing: true,
     inlineStyle: false,
     inlineTemplate: false,
     skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
-    unitTestRunner: UnitTestRunner.Jest,
     e2eTestRunner: E2eTestRunner.Playwright,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     strict: true,
     standalone: true,
     directory: appProjectRoot,
@@ -59,5 +68,6 @@ export async function normalizeOptions(
       !options.rootProject ? appProjectRoot : appProjectName
     ),
     ssr: options.ssr ?? false,
+    unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
   };
 }

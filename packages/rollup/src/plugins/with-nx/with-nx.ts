@@ -15,6 +15,7 @@ import {
 import {
   calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
@@ -80,7 +81,15 @@ export function withNx(
   const useBabel = options.compiler === 'babel';
   const useSwc = options.compiler === 'swc';
 
-  const tsConfigPath = joinPathFragments(workspaceRoot, options.tsConfig);
+  const tsConfigPath =
+    options.buildLibsFromSource || global.NX_GRAPH_CREATION
+      ? joinPathFragments(workspaceRoot, options.tsConfig)
+      : createTmpTsConfig(
+          options.tsConfig,
+          workspaceRoot,
+          projectRoot,
+          dependencies
+        );
   const tsConfigFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
   const tsConfig = ts.parseJsonConfigFileContent(
     tsConfigFile.config,
@@ -211,7 +220,7 @@ export function withNx(
       // Needed to generate type definitions, even if we're using babel or swc.
       require('rollup-plugin-typescript2')({
         check: !options.skipTypeCheck,
-        tsconfig: options.tsConfig,
+        tsconfig: tsConfigPath,
         tsconfigOverride: {
           compilerOptions: createTsCompilerOptions(
             projectRoot,
@@ -265,7 +274,7 @@ export function withNx(
       commonjs(),
       analyze(),
       options.generatePackageJson && generatePackageJson(options, packageJson),
-    ];
+    ].filter(Boolean);
     if (Array.isArray(rollupConfig.plugins)) {
       finalConfig.plugins.push(...rollupConfig.plugins);
     }

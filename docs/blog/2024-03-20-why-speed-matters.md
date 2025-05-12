@@ -3,12 +3,13 @@ title: Monorepos - Why Speed Matters
 slug: 'monorepos-why-speed-matters'
 authors: ['Katerina Skroumpelou', 'Jeff Cross']
 tags: [nx, nxdevtools, speed, ci]
-cover_image: '/blog/images/2024-03-20/featured_img.png'
+cover_image: '/blog/images/2024-03-20/featured_img.avif'
+description: 'Discover how Nx enhances development speed through Rust integration, improved caching, Nx Agents, and test atomization features.'
 ---
 
 In the ever-evolving landscape of software development, efficiency and speed are vital. As projects grow in complexity, developers and teams need tools that can keep up without sacrificing quality or performance.
 
-Nx is a suite of powerful tools designed to optimize your development workflow, which sets the [building blocks for a fast CI](/ci/concepts/building-blocks-fast-ci). Nx is always innovating in many ways to make developers’ lives easier, but this post is exclusively focused on the things Nx has done in the past year to make development faster and faster.
+Nx is a suite of powerful tools designed to optimize your development workflow, which sets the [building blocks for a fast CI](/ci/concepts/building-blocks-fast-ci). Nx is always innovating in many ways to make developers' lives easier, but this post is exclusively focused on the things Nx has done in the past year to make development faster and faster.
 
 ## Why speed matters
 
@@ -18,13 +19,13 @@ The ability to iterate quickly and efficiently is vital for any software project
 - **Reduced time to market:** Accelerating the development process can significantly cut down the overall time to market, providing a competitive edge which reclaims revenue that would have otherwise been lost.
 - **Decreased developer frustration:** [No more waiting for builds and tests to complete](/ci/concepts/reduce-waste). A streamlined workflow keeps morale high and productivity higher.
 
-If you’re using Nx already, you’re already familiar with
+If you're using Nx already, you're already familiar with
 
 - [**Affected**](/ci/features/affected) - identifying and running tasks only on projects impacted by code changes,
 - [**Nx Replay**](/ci/features/remote-cache) - our powerful cache and
 - [**Nx Agents**](/ci/features/distribute-task-execution) - the concept of [Parallelization and Distribution](/ci/concepts/parallelization-distribution).
 
-But let’s see all the extra things we did this past year to make everything faster.
+But let's see all the extra things we did this past year to make everything faster.
 
 ## Speed at the core
 
@@ -44,9 +45,9 @@ The archive file is a binary file that contains the workspace file hashes with t
 
 ![](/blog/images/2024-03-20/bodyimg1.webp)
 
-Nx Replay enables caching and reusing of task results. It’s our well known Nx remote cache! It allows developers to avoid re-running expensive tasks by retrieving the cached results from a remote cache. This significantly improves build and test performance, as well as developer productivity. Nx Replay is also critical to the functioning of Nx Agents, which rely on the remote cache to ensure that the results of a task will be shared with every agent that needs them. By using Nx Replay, developers can optimize their workflows and reduce the time spent waiting for tasks to complete.
+Nx Replay enables caching and reusing of task results. It's our well known Nx remote cache! It allows developers to avoid re-running expensive tasks by retrieving the cached results from a remote cache. This significantly improves build and test performance, as well as developer productivity. Nx Replay is also critical to the functioning of Nx Agents, which rely on the remote cache to ensure that the results of a task will be shared with every agent that needs them. By using Nx Replay, developers can optimize their workflows and reduce the time spent waiting for tasks to complete.
 
-With Nx Replay, you can see significant speed improvements in your CI pipelines for modified PRs. What’s also important is that if a task has been executed in CI, a developer running that same task locally can reuse the task result instead of actually running the task. So you will also see improvements locally.
+With Nx Replay, you can see significant speed improvements in your CI pipelines for modified PRs. What's also important is that if a task has been executed in CI, a developer running that same task locally can reuse the task result instead of actually running the task. So you will also see improvements locally.
 
 ### Nx Agents
 
@@ -55,7 +56,7 @@ With Nx Replay, you can see significant speed improvements in your CI pipelines 
 [Nx Agents](/ci/features/distribute-task-execution) represent the pinnacle of task distribution optimization, ensuring that tasks are executed as efficiently as possible based on the specific requirements of each change. Some features that make up this effort are:
 
 - [Easy integration with existing providers](/ci/recipes/set-up)
-  - Distribution is handled on the Nx Cloud infrastructure and all you need is a single line. What’s more, all results are played back to your original CI provider script which triggers the Nx Cloud distribution, so that you can make use of the resulting artifacts
+  - Distribution is handled on the Nx Cloud infrastructure and all you need is a single line. What's more, all results are played back to your original CI provider script which triggers the Nx Cloud distribution, so that you can make use of the resulting artifacts
 - [Efficient task distribution](/ci/features/dynamic-agents)
   - Save compute resources and reduce costs, minimizing idle time and compute waste
   - Dynamic sizing based on PR size
@@ -82,7 +83,7 @@ Nx creates a hash of all the inputs for a task whenever it is run. If it encount
 
 ### Module Federation
 
-With the help of Nx and the Module Federation setup that Nx offers, you can split up large Angular apps into smaller “vertical slices”. This can significantly speed up your builds and app startup time. Nx has revolutionized the use of Module Federation, especially in how static remotes are built and served. We make use of Nx’s task orchestration, allowing users to fine tune the number of builds happening in parallel to improve local startup time, manage machine resources better, allow for scaling.
+With the help of Nx and the Module Federation setup that Nx offers, you can split up large Angular apps into smaller "vertical slices". This can significantly speed up your builds and app startup time. Nx has revolutionized the use of Module Federation, especially in how static remotes are built and served. We make use of Nx's task orchestration, allowing users to fine tune the number of builds happening in parallel to improve local startup time, manage machine resources better, allow for scaling.
 
 ### First-Class Playwright support
 

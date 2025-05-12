@@ -1,38 +1,20 @@
 import {
   cleanupProject,
-  getSelectedPackageManager,
   newProject,
+  readJson,
   runCLI,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
 
-describe('Vue Plugin', () => {
+describe('Vue (TS solution)', () => {
   let proj: string;
-
-  const pm = getSelectedPackageManager();
 
   beforeAll(() => {
     proj = newProject({
       packages: ['@nx/vue'],
       preset: 'ts',
     });
-    if (pm === 'pnpm') {
-      updateFile(
-        'pnpm-workspace.yaml',
-        `
-packages:
-  - 'apps/**'
-  - 'packages/**'
-`
-      );
-    } else {
-      updateJson('package.json', (json) => {
-        json.workspaces = ['apps/**', 'packages/**'];
-        return json;
-      });
-    }
   });
 
   afterAll(() => cleanupProject());
@@ -65,11 +47,39 @@ packages:
     `
     );
 
-    expect(() => runCLI(`lint ${app}`)).not.toThrow();
-    expect(() => runCLI(`test ${app}`)).not.toThrow();
-    expect(() => runCLI(`build ${app}`)).not.toThrow();
-    expect(() => runCLI(`lint ${lib}`)).not.toThrow();
-    expect(() => runCLI(`test ${lib}`)).not.toThrow();
-    expect(() => runCLI(`build ${lib}`)).not.toThrow();
+    expect(() => runCLI(`lint @proj/${app}`)).not.toThrow();
+    expect(() => runCLI(`test @proj/${app}`)).not.toThrow();
+    expect(() => runCLI(`build @proj/${app}`)).not.toThrow();
+    expect(() => runCLI(`lint @proj/${lib}`)).not.toThrow();
+    expect(() => runCLI(`test @proj/${lib}`)).not.toThrow();
+    expect(() => runCLI(`build @proj/${lib}`)).not.toThrow();
+  }, 300_000);
+
+  it('should respect and support generating libraries with a name different than the import path', async () => {
+    const lib = uniq('lib');
+
+    runCLI(
+      `generate @nx/vue:library packages/${lib} --name=${lib} --bundler=vite --unitTestRunner=vitest`
+    );
+    // lib generator doesn't generate specs, add one
+    updateFile(
+      `packages/${lib}/src/foo.spec.ts`,
+      `test('it should run', () => {
+        expect(true).toBeTruthy();
+      });`
+    );
+
+    const packageJson = readJson(`packages/${lib}/package.json`);
+    expect(packageJson.nx.name).toBe(lib);
+
+    expect(runCLI(`build ${lib}`)).toContain(
+      `Successfully ran target build for project ${lib}`
+    );
+    expect(runCLI(`typecheck ${lib}`)).toContain(
+      `Successfully ran target typecheck for project ${lib}`
+    );
+    expect(runCLI(`test ${lib}`)).toContain(
+      `Successfully ran target test for project ${lib}`
+    );
   }, 300_000);
 });

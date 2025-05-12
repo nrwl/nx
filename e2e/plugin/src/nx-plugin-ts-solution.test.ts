@@ -3,8 +3,10 @@ import {
   cleanupProject,
   createFile,
   newProject,
+  readJson,
   renameFile,
   runCLI,
+  runCommand,
   uniq,
   updateFile,
   updateJson,
@@ -23,6 +25,80 @@ describe('Nx Plugin (TS solution)', () => {
 
   afterAll(() => cleanupProject());
 
+  it('should be able to generate a Nx Plugin with generators, executors and migrations', async () => {
+    const plugin = uniq('plugin');
+    const generator = uniq('generator');
+    const executor = uniq('executor');
+    const migrationVersion = '1.0.0';
+
+    runCLI(
+      `generate @nx/plugin:plugin packages/${plugin} --linter=eslint --unitTestRunner=jest --e2eTestRunner=jest --publishable`
+    );
+    runCLI(
+      `generate @nx/plugin:generator packages/${plugin}/src/generators/${generator}/generator --name ${generator}`
+    );
+    runCLI(
+      `generate @nx/plugin:executor packages/${plugin}/src/executors/${executor}/executor --name ${executor} --includeHasher`
+    );
+    runCLI(
+      `generate @nx/plugin:migration packages/${plugin}/src/migrations/update-${migrationVersion}/update-${migrationVersion} --packageVersion=${migrationVersion} --packageJsonUpdates=false`
+    );
+
+    expect(runCLI(`lint @proj/${plugin}`)).toContain(
+      `Successfully ran target lint for project @proj/${plugin}`
+    );
+    expect(runCLI(`typecheck @proj/${plugin}`)).toContain(
+      `Successfully ran target typecheck for project @proj/${plugin}`
+    );
+    expect(runCLI(`build @proj/${plugin}`)).toContain(
+      `Successfully ran target build for project @proj/${plugin}`
+    );
+    checkFilesExist(
+      // entry point
+      `packages/${plugin}/dist/index.js`,
+      `packages/${plugin}/dist/index.d.ts`,
+      // generator
+      `packages/${plugin}/dist/generators/${generator}/schema.json`,
+      `packages/${plugin}/dist/generators/${generator}/schema.d.ts`,
+      `packages/${plugin}/dist/generators/${generator}/generator.js`,
+      `packages/${plugin}/dist/generators/${generator}/generator.d.ts`,
+      // executor
+      `packages/${plugin}/dist/executors/${executor}/schema.json`,
+      `packages/${plugin}/dist/executors/${executor}/schema.d.ts`,
+      `packages/${plugin}/dist/executors/${executor}/executor.js`,
+      `packages/${plugin}/dist/executors/${executor}/executor.d.ts`,
+      `packages/${plugin}/dist/executors/${executor}/hasher.js`,
+      `packages/${plugin}/dist/executors/${executor}/hasher.d.ts`,
+      // migration
+      `packages/${plugin}/dist/migrations/update-${migrationVersion}/update-${migrationVersion}.js`,
+      `packages/${plugin}/dist/migrations/update-${migrationVersion}/update-${migrationVersion}.d.ts`
+    );
+    expect(runCLI(`test @proj/${plugin}`)).toContain(
+      `Successfully ran target test for project @proj/${plugin}`
+    );
+    expect(runCLI(`e2e @proj/${plugin}-e2e`)).toContain(
+      `Successfully ran target e2e for project @proj/${plugin}-e2e`
+    );
+
+    // Check that inferred targets also work
+    updateJson('nx.json', (json) => {
+      json.plugins.push({
+        plugin: '@nx/jest/plugin',
+        include: ['packages/*-e2e/**/*'],
+        options: {
+          targetName: 'e2e',
+          ciTargetName: 'e2e-ci',
+        },
+      });
+      return json;
+    });
+    updateJson(`packages/${plugin}-e2e/package.json`, (json) => {
+      delete json.targets;
+      return json;
+    });
+    expect(() => runCLI(`e2e @proj/${plugin}-e2e`)).not.toThrow();
+  }, 90000);
+
   it('should be able to infer projects and targets', async () => {
     const plugin = uniq('plugin');
     runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
@@ -32,12 +108,10 @@ describe('Nx Plugin (TS solution)', () => {
 
     // Register plugin in nx.json (required for inference)
     updateJson(`nx.json`, (nxJson) => {
-      nxJson.plugins = [
-        {
-          plugin: `@${workspaceName}/${plugin}`,
-          options: { inferredTags: ['my-tag'] },
-        },
-      ];
+      nxJson.plugins.push({
+        plugin: `@${workspaceName}/${plugin}`,
+        options: { inferredTags: ['my-tag'] },
+      });
       return nxJson;
     });
 
@@ -191,4 +265,22 @@ describe('Nx Plugin (TS solution)', () => {
     expect(() => checkFilesExist(`libs/${generatedProject}`)).not.toThrow();
     expect(() => runCLI(`execute ${generatedProject}`)).not.toThrow();
   });
+
+  it('should respect and support generating plugins with a name different than the import path', async () => {
+    const plugin = uniq('plugin');
+
+    runCLI(
+      `generate @nx/plugin:plugin packages/${plugin} --name=${plugin} --linter=eslint --publishable`
+    );
+
+    const packageJson = readJson(`packages/${plugin}/package.json`);
+    expect(packageJson.nx.name).toBe(plugin);
+
+    expect(runCLI(`build ${plugin}`)).toContain(
+      `Successfully ran target build for project ${plugin}`
+    );
+    expect(runCLI(`lint ${plugin}`)).toContain(
+      `Successfully ran target lint for project ${plugin}`
+    );
+  }, 90000);
 });

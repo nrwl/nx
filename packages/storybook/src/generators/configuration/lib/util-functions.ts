@@ -16,7 +16,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -30,6 +30,7 @@ import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 import {
   findRuntimeTsConfigName,
+  getProjectType,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
@@ -234,7 +235,7 @@ export function createStorybookTsconfigFile(
   };
 
   if (useTsSolution) {
-    const runtimeConfig = findRuntimeTsConfigName(tree, projectRoot);
+    const runtimeConfig = findRuntimeTsConfigName(projectRoot, tree);
     if (runtimeConfig) {
       storybookTsConfig.references ??= [];
       storybookTsConfig.references.push({
@@ -466,7 +467,7 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: Linter.EsLint,
+    linter: 'eslint' as LinterType,
     js: false,
   };
   return {
@@ -581,7 +582,8 @@ export function createProjectStorybookDir(
   usesReactNative?: boolean
 ) {
   let projectDirectory =
-    projectType === 'application'
+    getProjectType(tree, root, projectType as 'application' | 'library') ===
+    'application'
       ? isNextJs
         ? 'components'
         : 'src/app'
@@ -616,7 +618,10 @@ export function createProjectStorybookDir(
     projectType,
     interactionTests,
     mainDir,
-    isNextJs: isNextJs && projectType === 'application',
+    isNextJs:
+      isNextJs &&
+      getProjectType(tree, root, projectType as 'application' | 'library') ===
+        'application',
     usesSwc,
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
@@ -651,7 +656,7 @@ export function getTsConfigPath(
     root,
     path?.length > 0
       ? path
-      : projectType === 'application'
+      : getProjectType(tree, root, projectType) === 'application'
       ? 'tsconfig.app.json'
       : 'tsconfig.lib.json'
   );

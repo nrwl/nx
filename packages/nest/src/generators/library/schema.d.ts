@@ -28,11 +28,12 @@ export interface LibraryGeneratorOptions {
     | 'es2021';
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
-  standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
   simpleName?: boolean;
   addPlugin?: boolean;
+  isUsingTsSolutionsConfig?: boolean;
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {

@@ -2,8 +2,9 @@
 title: 'Nx 15.3 — Standalone Projects, Vite, Task Graph and more!'
 slug: 'nx-15-3-standalone-projects-vite-task-graph-and-more'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.png'
+cover_image: '/blog/images/2022-12-06/VXYjjWhOUpNuHFGCoF63OQ.avif'
 tags: [nx, release]
+description: Nx 15.3 introduces standalone projects, Vite and Vitest tooling, enhanced task graph visualization, and simplified project adoption, now reaching 3M weekly downloads.
 ---
 
 What a massive release! Here are all the news 👇
@@ -28,14 +29,14 @@ Prefer **a video version?**
 
 ## Funding — Nx raises $8.6M
 
-In case you missed it, we raised $8.6 million a couple of weeks ago. Here’s the official blog post from our CEO Jeff: [/blog/from-bootstrapped-to-venture-backed](/blog/from-bootstrapped-to-venture-backed)
+In case you missed it, we raised $8.6 million a couple of weeks ago. Here's the official blog post from our CEO Jeff: [/blog/from-bootstrapped-to-venture-backed](/blog/from-bootstrapped-to-venture-backed)
 
 It is exciting for us as we can now have more employees focused on pushing Nx and Nx Cloud forward, which will significantly boost development speed!  
-For most of our workforce, working on Nx and Nx Cloud was only part of their “20% project”. Yet we released terrific features over the last years and have seen tremendous growth with Nx (which brings us to the next section)
+For most of our workforce, working on Nx and Nx Cloud was only part of their "20% project". Yet we released terrific features over the last years and have seen tremendous growth with Nx (which brings us to the next section)
 
 ## 3 million downloads per week
 
-2022 has been a particularly crazy but successful year for us. And Nx’s growth confirms that we’re on the right track:
+2022 has been a particularly crazy but successful year for us. And Nx's growth confirms that we're on the right track:
 
 - January: Nx crosses 1 million downloads per week
 - June: Nx crosses 2 million downloads per week
@@ -51,7 +52,7 @@ On to 4 million!
 
 One of our most loved features also just got more powerful: the Nx graph!
 
-Nx already visualizes your project graph, mapping the dependencies different projects have on one another through imports and exports in your code. But your tasks also have a graph. Your task can either depend on another target on the same project, let’s say you have a `prebuild`  
+Nx already visualizes your project graph, mapping the dependencies different projects have on one another through imports and exports in your code. But your tasks also have a graph. Your task can either depend on another target on the same project, let's say you have a `prebuild`  
 and a `build` target. Whenever you run `build`, you want to run `prebuild` first. Similarly, if your project depends on other projects, you might want to make sure to build them first as well. This is called a [task pipeline](/concepts/task-pipeline-configuration) and can be defined in `nx.json` as follows:
 
 ```json5 {% fileName="nx.json" %}
@@ -89,7 +90,7 @@ In 15.3 we are therefore making **standalone projects** a first-class feature. S
 
 ![](/blog/images/2022-12-06/z3UOtkyCIKcL2LNg.avif)
 
-In a standalone project setup, you don’t have the typical `apps` and `libs` structure you might be accustomed to if you have been using Nx in the past. Instead, the app lives directly at the root of your workspace. The structure looks similar to the following:
+In a standalone project setup, you don't have the typical `apps` and `libs` structure you might be accustomed to if you have been using Nx in the past. Instead, the app lives directly at the root of your workspace. The structure looks similar to the following:
 
 ```text
 e2e/
@@ -136,15 +137,15 @@ package.json
 
 It is really up to you how you want to structure them.
 
-Think of it as a supercharged development tool, providing powerful generators, features like [module boundary rules](/blog/mastering-the-project-boundaries-in-nx) and obviously the ability to run tests, linting, building on individual libraries. Not to forget about Nx’s powerful caching ability. And if you’re ready for a “real” monorepo because you want to add multiple applications, there will be paths for you to “upgrade” to that structure.
+Think of it as a supercharged development tool, providing powerful generators, features like [module boundary rules](/blog/mastering-the-project-boundaries-in-nx) and obviously the ability to run tests, linting, building on individual libraries. Not to forget about Nx's powerful caching ability. And if you're ready for a "real" monorepo because you want to add multiple applications, there will be paths for you to "upgrade" to that structure.
 
 ## Integrated Vite and Vitest support is here!
 
-Finally! We talked about it; now it is here! Official Vite and Vitest support for Nx-based integrated monorepos and standalone app projects! That adds the Vite community into the Nx family, and we’ve been chatting with core members there recently, and we love it!
+Finally! We talked about it; now it is here! Official Vite and Vitest support for Nx-based integrated monorepos and standalone app projects! That adds the Vite community into the Nx family, and we've been chatting with core members there recently, and we love it!
 
 So before we dive into this: if you are using a package-based monorepo with Nx, you could already use Vite or whatever other technology you want. Nx does just the task scheduling there, running your `package.json` scripts efficiently. Whatever those scripts do "internally" is up to you.
 
-But if you power an integrated setup, you’d want more support via a dedicated Nx plugin. And there has already been a [Nx community plugin](/community) created by the folks from [https://nxext.dev/](https://nxext.dev/). Given the high demand for Vite support, we (the Nx core team) started to look into creating and maintaining our own. We reached out to the out [Dominik Piper](https://mobile.twitter.com/dominik_pieper) and [Jordan Hall](https://mobile.twitter.com/JordanHall_dev) from the NxExt team and they were on board from the beginning! We got lots of helpful input, while designing the new Vite plugin. Huge shoutout to them!!
+But if you power an integrated setup, you'd want more support via a dedicated Nx plugin. And there has already been a [Nx community plugin](/community) created by the folks from [https://nxext.dev/](https://nxext.dev/). Given the high demand for Vite support, we (the Nx core team) started to look into creating and maintaining our own. We reached out to the out [Dominik Piper](https://mobile.twitter.com/dominik_pieper) and [Jordan Hall](https://mobile.twitter.com/JordanHall_dev) from the NxExt team and they were on board from the beginning! We got lots of helpful input, while designing the new Vite plugin. Huge shoutout to them!!
 
 `@nrwl/vite` (just like `@nrwl/webpack`) is a package that can be integrated as part of other packages. Right now, we're prioritizing our React setup. If you generate a new Nx workspace and choose the new "Standalone React app" version, you will get a React application powered by Vite and Vitest.
 
@@ -160,7 +161,7 @@ This new setup gives you an easy jumpstart as it does all the configuration for 
 - Tests with Vitest
 - Making sure it nicely works with TypeScript (both in src and spec files)
 
-Open the application’s `project.json` to inspect the setup:
+Open the application's `project.json` to inspect the setup:
 
 ```json
 {
@@ -189,7 +190,7 @@ Open the application’s `project.json` to inspect the setup:
 }
 ```
 
-Furthermore, there’s a `vite.config.ts` at the project root level, which you can further customize to your needs. It is already pre-configured to seamlessly work in a monorepo scenario and has the Vitest setup. Just run `npx nx serve` or `npx nx build` or `npx nx test` to serve, build or test your standalone React app.
+Furthermore, there's a `vite.config.ts` at the project root level, which you can further customize to your needs. It is already pre-configured to seamlessly work in a monorepo scenario and has the Vitest setup. Just run `npx nx serve` or `npx nx build` or `npx nx test` to serve, build or test your standalone React app.
 
 If you are currently using the NxExt based Vite plugin, or even a Webpack based Nx React setup, you can easily transition to the new Vite plugin by just running the following generator:
 
@@ -199,11 +200,11 @@ npx nx g @nrwl/vite:configuration
 
 This will adjust the NxExt Vite plugin configuration to match the one provided by our core team. Check out our docs for more info: [/nx-api/vite/generators/configuration](/nx-api/vite/generators/configuration)
 
-You can also find all the details about the new Vite package on our docs: [/nx-api/vite](/nx-api/vite)
+You can also find all the details about the new Vite package in our docs: [/nx-api/vite](/nx-api/vite)
 
 ## Adopting Nx has never been easier
 
-Many developers don’t necessarily start with a greenfield project, but rather have an existing reality where they want to use Nx. We’ve been improving this process of adopting Nx over this year to the point where it has never been easier than now!
+Many developers don't necessarily start with a greenfield project, but rather have an existing reality where they want to use Nx. We've been improving this process of adopting Nx over this year to the point where it has never been easier than now!
 
 Regardless of whether you have
 
@@ -228,7 +229,7 @@ Check out our docs for all the details on
 - [migrating your CRA project to Nx](/recipes/adopting-nx/adding-to-existing-project)
 - [migrating your Angular CLI app to Nx](/recipes/angular/migration/angular)
 
-Oh..you’re wondering why you would want to add Nx to an existing non-monorepo project? Then keep reading 👇
+Oh..you're wondering why you would want to add Nx to an existing non-monorepo project? Then keep reading 👇
 
 ## Adding Nx to an Existing Standalone Project
 
@@ -243,7 +244,7 @@ npx nx lint
 npx nx e2e
 ```
 
-If your change just modified a couple of “spec files”, then there’s no point on running `build` or `e2e` again, but just `test` and potentially `lint`. Nx can restore the results of the other operations from the cache.
+If your change just modified a couple of "spec files", then there's no point on running `build` or `e2e` again, but just `test` and potentially `lint`. Nx can restore the results of the other operations from the cache.
 
 To add Nx to an existing standalone project, all you need to run is
 
@@ -251,7 +252,7 @@ To add Nx to an existing standalone project, all you need to run is
 npx nx@latest init
 ```
 
-This process will ask you a few questions about which operations are cacheable. We optimized it so that you don’t necessarily have to use `nx` to run your build, linting or serving your app. You can keep using `npm run build` or `npm start`. This is because Nx wraps your scripts in the `package.json`. Notice how `build` and `lint` are wrapped because they are cacheable operations.
+This process will ask you a few questions about which operations are cacheable. We optimized it so that you don't necessarily have to use `nx` to run your build, linting or serving your app. You can keep using `npm run build` or `npm start`. This is because Nx wraps your scripts in the `package.json`. Notice how `build` and `lint` are wrapped because they are cacheable operations.
 
 ```json
 {
@@ -270,13 +271,13 @@ This process will ask you a few questions about which operations are cacheable. 
 }
 ```
 
-Read more on our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
+Read more in our docs: [/recipes/adopting-nx/adding-to-existing-project](/recipes/adopting-nx/adding-to-existing-project)
 
 ## Root-level Scripts
 
 {% youtube src="https://www.youtube.com/watch?v=PRURABLaS8s" /%}
 
-Most of the tasks in a workspace run against a specific project, like building or testing it. That’s why they live in the corresponding `package.json` or `project.json`. But sometimes you have workspace-wide commands which you want to run through the "Nx pipeline" to get the benefits of caching.
+Most of the tasks in a workspace run against a specific project, like building or testing it. That's why they live in the corresponding `package.json` or `project.json`. But sometimes you have workspace-wide commands which you want to run through the "Nx pipeline" to get the benefits of caching.
 
 Assume you already have a script called `docs` in your root-level `package.json`.
 
@@ -311,7 +312,7 @@ npx nx docs
 
 As the next steps you might obviously want to add `docs` to the [cacheable operations](/ci/reference/config) and [fine-tune it's cache inputs](/recipes/running-tasks/configure-inputs).
 
-Read more about it on our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
+Read more about it in our docs: [/recipes/running-tasks/root-level-scripts](/recipes/running-tasks/root-level-scripts)
 
 ## Simplified Nx run-commands
 
@@ -344,7 +345,7 @@ Nx can automatically detect your scripts in `package.json`. But if you have an i
 
 The task itself is handled by an [Nx executor](/extending-nx/recipes/local-executors) that comes with the plugin, in this case `@nrwl/vite:build` to build a Vite project.
 
-To add a custom command, like invoking a node script, Nx has the so-called [“run-commands”](/recipes/running-tasks/run-commands-executor). So far you had to wrap those commands as follows:
+To add a custom command, like invoking a node script, Nx has the so-called ["run-commands"](/recipes/running-tasks/run-commands-executor). So far you had to wrap those commands as follows:
 
 ```json5 {% fileName="project.json" %}
 {
@@ -383,13 +384,13 @@ For simple commands this was a huge overhead, so we simplified it to just this:
 }
 ```
 
-Simple, isn’t it! Obviously the expanded form is still there and also useful for when you need more options, run multiple commands or features such as argument forwarding.
+Simple, isn't it! Obviously the expanded form is still there and also useful for when you need more options, run multiple commands or features such as argument forwarding.
 
-You can read all about it on our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
+You can read all about it in our docs: [/recipes/running-tasks/run-commands-executor](/recipes/running-tasks/run-commands-executor)
 
 ## Coming up
 
-Wow, what a launch! But more features are on the way in the coming weeks that didn’t make it for this release. Super excited about these, which most prominently include
+Wow, what a launch! But more features are on the way in the coming weeks that didn't make it for this release. Super excited about these, which most prominently include
 
 - Workspace watching
 - Lock-file pruning

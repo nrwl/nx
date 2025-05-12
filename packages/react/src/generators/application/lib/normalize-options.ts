@@ -1,37 +1,32 @@
-import { Tree, extractLayoutDirectory, names, readNxJson } from '@nx/devkit';
+import { Tree, names, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertValidStyle } from '../../../utils/assertion';
+import {
+  assertValidReactRouter,
+  assertValidStyle,
+} from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-
-export function normalizeDirectory(options: Schema) {
-  options.directory = options.directory?.replace(/\\{1,2}/g, '/');
-  const { projectDirectory } = extractLayoutDirectory(options.directory);
-  return projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-}
-
-export function normalizeProjectName(options: Schema) {
-  return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
-}
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema<T>> {
-  await ensureProjectName(host, options, 'application');
-  const { projectName: appProjectName, projectRoot: appProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: options.name,
-      projectType: 'application',
-      directory: options.directory,
-      rootProject: options.rootProject,
-    });
+  await ensureRootProjectName(options, 'application');
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot: appProjectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    rootProject: options.rootProject,
+  });
 
   const nxJson = readNxJson(host);
   const addPlugin =
@@ -41,6 +36,10 @@ export async function normalizeOptions<T extends Schema = Schema>(
   options.addPlugin ??= addPlugin;
 
   options.rootProject = appProjectRoot === '.';
+
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(host);
+  const appProjectName =
+    !isUsingTsSolutionConfig || options.name ? projectName : importPath;
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -56,22 +55,31 @@ export async function normalizeOptions<T extends Schema = Schema>(
     : options.style;
 
   assertValidStyle(options.style);
+  assertValidReactRouter(options.useReactRouter, options.bundler);
+
+  if (options.useReactRouter && !options.bundler) {
+    options.bundler = 'vite';
+  }
+  options.useReactRouter = options.routing ? options.useReactRouter : false;
 
   const normalized = {
     ...options,
-    name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,
+    importPath,
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
     fileName,
     styledModule,
     hasStyles: options.style !== 'none',
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(host),
+    names: names(projectNames.projectSimpleName),
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;
+  normalized.useReactRouter = normalized.useReactRouter ?? false;
   normalized.strict = normalized.strict ?? true;
   normalized.classComponent = normalized.classComponent ?? false;
   normalized.compiler = normalized.compiler ?? 'babel';

@@ -92,9 +92,10 @@ export const getGlobalEsLintConfiguration = (
 };
 
 export const getGlobalFlatEslintConfiguration = (
+  format: 'cjs' | 'mjs',
   rootProject?: boolean
 ): string => {
-  const nodeList = createNodeList(new Map(), []);
+  const nodeList = createNodeList(new Map(), [], format);
   let content = stringifyNodeList(nodeList);
   content = addImportToFlatConfig(content, 'nx', '@nx/eslint-plugin');
 
@@ -114,49 +115,60 @@ export const getGlobalFlatEslintConfiguration = (
 
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatOverride({
-      ignores: ['**/dist'],
-    })
+    generateFlatOverride(
+      {
+        ignores: ['**/dist'],
+      },
+      format
+    )
   );
 
   if (!rootProject) {
     content = addBlockToFlatConfigExport(
       content,
-      generateFlatOverride({
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-        rules: {
-          '@nx/enforce-module-boundaries': [
-            'error',
-            {
-              enforceBuildableLibDependency: true,
-              allow: [
-                // This allows a root project to be present without causing lint errors
-                // since all projects will depend on this base file.
-                '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
-              ],
-              depConstraints: [
-                { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
-              ],
-            },
-          ],
-        } as Linter.RulesRecord,
-      })
+      generateFlatOverride(
+        {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          rules: {
+            '@nx/enforce-module-boundaries': [
+              'error',
+              {
+                enforceBuildableLibDependency: true,
+                allow: [
+                  // This allows a root project to be present without causing lint errors
+                  // since all projects will depend on this base file.
+                  '^.*/eslint(\\.base)?\\.config\\.[cm]?js$',
+                ],
+                depConstraints: [
+                  { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+                ],
+              },
+            ],
+          } as Linter.RulesRecord,
+        },
+        format
+      )
     );
   }
 
   content = addBlockToFlatConfigExport(
     content,
-    generateFlatOverride({
-      files: [
-        '**/*.ts',
-        '**/*.tsx',
-        '**/*.js',
-        '**/*.jsx',
-        '**/*.cjs',
-        '**/*.mjs',
-      ],
-      rules: {},
-    })
+    generateFlatOverride(
+      {
+        files: [
+          '**/*.ts',
+          '**/*.tsx',
+          '**/*.cts',
+          '**/*.mts',
+          '**/*.js',
+          '**/*.jsx',
+          '**/*.cjs',
+          '**/*.mjs',
+        ],
+        rules: {},
+      },
+      format
+    )
   );
 
   return content;

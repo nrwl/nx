@@ -2,8 +2,9 @@
 title: 'Setting up Module Federation with Server-Side Rendering for Angular'
 slug: 'setting-up-module-federation-with-server-side-rendering-for-angular'
 authors: ['Colum Ferry']
-cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.png'
+cover_image: '/blog/images/2023-01-10/kyMChnJ-X6jK9sbuaOdOiw.avif'
 tags: [nx, tutorial]
+description: Learn how to implement Webpack Module Federation with Server-Side Rendering in Angular applications using Nx for improved performance and micro-frontend architecture.
 ---
 
 [Module Federation](https://webpack.js.org/plugins/module-federation-plugin/) is a technology provided by [Webpack](https://webpack.js.org/) that enables modules to be federated across different origins at runtime. This means that Webpack will simply ignore these modules at build time, expecting them to be available to be fetched across the network at runtime.
@@ -29,7 +30,7 @@ A traditional SSR application is rendered on the server. It receives the request
 
 ![](/blog/images/2023-01-10/ZqG4jdD8DaqmG_It.avif)
 
-With Module Federation and SSR, it takes that concept and the concept of MF to allow portions of the app to be run on their own server. The host server will receive the route and if it’s a route pointing to a remote, it will ask the remote to process the route, then send the rendered HTML to the browser.
+With Module Federation and SSR, it takes that concept and the concept of MF to allow portions of the app to be run on their own server. The host server will receive the route and if it's a route pointing to a remote, it will ask the remote to process the route, then send the rendered HTML to the browser.
 
 ![](/blog/images/2023-01-10/eQis_bQnsj-MToCa.avif)
 
@@ -37,13 +38,13 @@ This gives us full power of SSR but also still allowing us to break our build in
 
 ## Example
 
-Let’s walk through how to set this up with Nx for Angular. We will generate a host application (dashboard) and a remote application (login).
+Let's walk through how to set this up with Nx for Angular. We will generate a host application (dashboard) and a remote application (login).
 
 ```shell
 npx create-nx-workspace@latest myorg
 ```
 
-You’ll be prompted for the type of workspace you want to create, and the preset to use.
+You'll be prompted for the type of workspace you want to create, and the preset to use.
 
 Answer with the following:
 
@@ -51,7 +52,7 @@ Answer with the following:
 ✔ What to create in the new workspace · apps  
 ✔ Enable distributed caching to make your CI faster · No
 
-> _You will also be prompted whether to add Nx Cloud to your workspace. We won’t address this in this article, but it is highly recommended to use this along with Module Federation to allow for the cache of your remote applications to be shared amongst teammates and CI, further improving your build times. You can learn more about Nx Cloud here:_ [_https://nx.app_](https://nx.app/)_._
+> _You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this article, but it is highly recommended to use this along with Module Federation to allow for the cache of your remote applications to be shared amongst teammates and CI, further improving your build times. You can learn more about Nx Cloud here:_ [_https://nx.app_](https://nx.app/)_._
 
 When your workspace is created, run `cd myorg`.
 
@@ -91,11 +92,11 @@ Compiled successfully.
 \*\* Angular Universal Live Development Server is listening on http://localhost:4200, open your browser on http://localhost:4200 \*\*
 ```
 
-Let’s open a new tab in our browser, and open Network tab in the DevTools. After this, navigate to [http://localhost:4200](http://localhost:4200/). You should see the following:
+Let's open a new tab in our browser, and open Network tab in the DevTools. After this, navigate to [http://localhost:4200](http://localhost:4200/). You should see the following:
 
 ![](/blog/images/2023-01-10/3irxzNENB79JiQmR.avif)
 
-The most interesting piece here is the first entry in the network log. Let’s look at it more closely:
+The most interesting piece here is the first entry in the network log. Let's look at it more closely:
 
 ![](/blog/images/2023-01-10/Ikvgk8dF8rKmutTY.avif)
 
@@ -103,15 +104,15 @@ We can see that the server returned the fully rendered HTML for the page!
 
 Angular Universal will switch to CSR after the initial page load, which means if we were to click on the `login` link, it would use CSR to render that page. The Angular Module that is resolved and rendered still lives on the remote server, but Module Federation will still resolve this correctly! 🔥
 
-But to see where the real magic happens, let’s manually navigate the browser to [http://localhost:4200/login](http://localhost:4200/login). You should see that in the Network tab, the fully rendered HTML for the login page has been returned!
+But to see where the real magic happens, let's manually navigate the browser to [http://localhost:4200/login](http://localhost:4200/login). You should see that in the Network tab, the fully rendered HTML for the login page has been returned!
 
 Despite the code for that page living on a different, remote, server, the host server composed it correctly and was still able to return the correct HTML for that route, thanks to Module Federation!
 
-And that’s it! It’s super simple to get Module Federation and SSR up and running with Nx!
+And that's it! It's super simple to get Module Federation and SSR up and running with Nx!
 
 ## Serving the login application and watching for changes
 
-If you’re working on the login application, and are iteratively checking the results of your changes, you’ll want the server to rebuild when you make your change. You can easily enable that by using the `devRemotes` flag::
+If you're working on the login application, and are iteratively checking the results of your changes, you'll want the server to rebuild when you make your change. You can easily enable that by using the `devRemotes` flag::
 
 ```shell
 npx nx serve-ssr dashboard --devRemotes=login

@@ -3,7 +3,7 @@ import { minimatch } from 'minimatch';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { configurationGlobs } from '../../utils/retrieve-workspace-files';
+import { getGlobPatternsOfPlugins } from '../../utils/retrieve-workspace-files';
 import { combineGlobPatterns } from '../../../utils/globs';
 import { getPlugins } from '../../plugins/get-plugins';
 
@@ -20,8 +20,8 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
           'package.json',
         ]);
       }
-      const plugins = await getPlugins();
-      return combineGlobPatterns(configurationGlobs(plugins));
+      const plugins = (await getPlugins()).filter((p) => !!p.createNodes);
+      return combineGlobPatterns(getGlobPatternsOfPlugins(plugins));
     })();
 
     const touchedProjects = new Set<string>();

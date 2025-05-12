@@ -15,6 +15,7 @@ import {
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'path';
 import { nxVersion, typescriptESLintVersion } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
@@ -80,7 +81,7 @@ export async function lintWorkspaceRulesProjectGenerator(
       supportTsx: false,
       skipSerializers: true,
       setupFile: 'none',
-      compiler: 'tsc',
+      compiler: isUsingTsSolutionSetup(tree) ? 'swc' : 'tsc',
       skipFormat: true,
       testEnvironment: 'node',
     })

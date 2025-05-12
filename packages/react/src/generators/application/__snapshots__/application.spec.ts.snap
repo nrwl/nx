@@ -222,8 +222,8 @@ if (import.meta.vitest) {
   });
 
   it('should have a greeting as the title', () => {
-    const { getByText } = render(<App />);
-    expect(getByText(/Welcome plain/gi)).toBeTruthy();
+    const { getAllByText } = render(<App />);
+    expect(getAllByText(new RegExp('Welcome plain', 'gi')).length > 0).toBeTruthy();
   });
 
 }
@@ -277,7 +277,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
@@ -301,7 +301,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 
@@ -351,7 +351,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
@@ -375,7 +375,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 
@@ -420,7 +420,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server: {
@@ -448,14 +448,14 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -483,7 +483,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server: {
@@ -511,14 +511,14 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -649,7 +649,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   server:{
@@ -673,7 +673,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-});
+}));
 "
 `;
 

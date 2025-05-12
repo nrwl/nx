@@ -4,6 +4,7 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function normalizeOptions(
   tree: Tree,
@@ -41,7 +42,10 @@ export async function normalizeOptions(
     ? null
     : options.style;
 
-  if (options.export && projectType === 'application') {
+  if (
+    options.export &&
+    getProjectType(tree, projectRoot, projectType) === 'application'
+  ) {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );

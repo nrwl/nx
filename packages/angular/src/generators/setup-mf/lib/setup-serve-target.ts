@@ -23,6 +23,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
 
   if (options.mfType === 'remote') {
     appConfig.targets['serve-static'] = {
+      continuous: true,
       executor: '@nx/web:file-server',
       defaultConfiguration: 'production',
       options: {

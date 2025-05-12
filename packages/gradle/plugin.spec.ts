@@ -1,14 +1,17 @@
-import { CreateNodesContext } from '@nx/devkit';
+import { CreateNodesContext, readJsonFile } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodesV2 } from './plugin';
-import { type GradleReport } from './src/utils/get-gradle-report';
+import { type ProjectGraphReport } from './src/plugin/utils/get-project-graph-from-gradle-plugin';
+import { join } from 'path';
 
-let gradleReport: GradleReport;
-jest.mock('./src/utils/get-gradle-report', () => {
+let gradleReport: ProjectGraphReport;
+jest.mock('./src/plugin/utils/get-project-graph-from-gradle-plugin', () => {
   return {
     GRADLE_BUILD_FILES: new Set(['build.gradle', 'build.gradle.kts']),
-    populateGradleReport: jest.fn().mockImplementation(() => void 0),
-    getCurrentGradleReport: jest.fn().mockImplementation(() => gradleReport),
+    populateProjectGraph: jest.fn().mockImplementation(() => void 0),
+    getCurrentProjectGraphReport: jest
+      .fn()
+      .mockImplementation(() => gradleReport),
   };
 });
 
@@ -19,26 +22,9 @@ describe('@nx/gradle/plugin', () => {
 
   beforeEach(async () => {
     tempFs = new TempFs('gradle-plugin');
-    gradleReport = {
-      gradleFileToGradleProjectMap: new Map<string, string>([
-        ['proj/build.gradle', 'proj'],
-      ]),
-      buildFileToDepsMap: new Map<string, string>(),
-      gradleFileToOutputDirsMap: new Map<string, Map<string, string>>([
-        ['proj/build.gradle', new Map([['build', 'build']])],
-      ]),
-      gradleProjectToTasksMap: new Map<string, Set<string>>([
-        ['proj', new Set(['test'])],
-      ]),
-      gradleProjectToTasksTypeMap: new Map<string, Map<string, string>>([
-        ['proj', new Map([['test', 'Verification']])],
-      ]),
-      gradleProjectToProjectName: new Map<string, string>([['proj', 'proj']]),
-      gradleProjectNameToProjectRootMap: new Map<string, string>([
-        ['proj', 'proj'],
-      ]),
-      gradleProjectToChildProjects: new Map<string, string[]>(),
-    };
+    gradleReport = readJsonFile(
+      join(__dirname, 'src/plugin/utils/__mocks__/gradle_tutorial.json')
+    );
     context = {
       nxJsonConfiguration: {
         namedInputs: {
@@ -76,48 +62,33 @@ describe('@nx/gradle/plugin', () => {
         [
           "proj/build.gradle",
           {
+            "externalNodes": {},
             "projects": {
               "proj": {
                 "metadata": {
                   "targetGroups": {
-                    "Verification": [
-                      "test",
+                    "help": [
+                      "buildEnvironment",
                     ],
                   },
                   "technologies": [
                     "gradle",
                   ],
                 },
-                "name": "proj",
-                "projectType": "application",
+                "name": "gradle-tutorial",
+                "root": "proj",
                 "targets": {
-                  "test": {
+                  "buildEnvironment": {
                     "cache": true,
-                    "command": "./gradlew proj:test",
-                    "dependsOn": [
-                      "testClasses",
-                    ],
-                    "inputs": [
-                      "default",
-                      "^production",
-                    ],
+                    "command": "./gradlew :buildEnvironment",
                     "metadata": {
-                      "help": {
-                        "command": "./gradlew help --task proj:test",
-                        "example": {
-                          "options": {
-                            "args": [
-                              "--rerun",
-                            ],
-                          },
-                        },
-                      },
+                      "description": "Displays all buildscript dependencies declared in root project 'gradle-tutorial'.",
                       "technologies": [
                         "gradle",
                       ],
                     },
                     "options": {
-                      "cwd": ".",
+                      "cwd": "proj",
                     },
                   },
                 },

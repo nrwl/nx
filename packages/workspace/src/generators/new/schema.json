@@ -25,6 +25,11 @@
       "type": "boolean",
       "default": true
     },
+    "useReactRouter": {
+      "description": "Use React Router for routing.",
+      "type": "boolean",
+      "default": false
+    },
     "standaloneApi": {
       "description": "Use Standalone Components if generating an Angular application.",
       "type": "boolean",
@@ -73,6 +78,11 @@
       "type": "boolean",
       "default": true
     },
+    "unitTestRunner": {
+      "description": "The tool to use for running unit tests.",
+      "type": "string",
+      "enum": ["jest", "vitest", "none"]
+    },
     "e2eTestRunner": {
       "description": "The tool to use for running e2e tests.",
       "type": "string",
@@ -100,7 +110,11 @@
     "workspaces": {
       "description": "Whether to use package manager workspaces.",
       "type": "boolean",
-      "default": false
+      "default": true
+    },
+    "useProjectJson": {
+      "type": "boolean",
+      "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
     }
   },
   "additionalProperties": true

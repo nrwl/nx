@@ -27,8 +27,12 @@ import { mergeRemoteSource } from './utils/merge-remote-source';
 import { minimatch } from 'minimatch';
 import {
   configurePlugins,
-  runPackageManagerInstallPlugins,
+  installPluginPackages,
 } from '../init/configure-plugins';
+import {
+  checkCompatibleWithPlugins,
+  updatePluginsInNxJson,
+} from '../init/implementation/check-compatible-with-plugins';
 
 const importRemoteName = '__tmp_nx_import__';
 
@@ -286,19 +290,28 @@ export async function importHandler(options: ImportOptions) {
     packageManager,
     destinationGitClient
   );
-
-  if (installed && plugins.length > 0) {
-    installed = await runPluginsInstall(plugins, pmc, destinationGitClient);
-    if (installed) {
-      const { succeededPlugins } = await configurePlugins(
-        plugins,
-        updatePackageScripts,
-        pmc,
-        workspaceRoot,
-        verbose
-      );
-      if (succeededPlugins.length > 0) {
+  if (installed) {
+    // Check compatibility with existing plugins for the workspace included new imported projects
+    if (nxJson.plugins?.length > 0) {
+      const incompatiblePlugins = await checkCompatibleWithPlugins();
+      if (Object.keys(incompatiblePlugins).length > 0) {
+        updatePluginsInNxJson(workspaceRoot, incompatiblePlugins);
         await destinationGitClient.amendCommit();
+      }
+    }
+    if (plugins.length > 0) {
+      installed = await runPluginsInstall(plugins, pmc, destinationGitClient);
+      if (installed) {
+        const { succeededPlugins } = await configurePlugins(
+          plugins,
+          updatePackageScripts,
+          pmc,
+          workspaceRoot,
+          verbose
+        );
+        if (succeededPlugins.length > 0) {
+          await destinationGitClient.amendCommit();
+        }
       }
     }
   }
@@ -313,6 +326,22 @@ export async function importHandler(options: ImportOptions) {
         `You may need to run "${pmc.install}" manually to resolve the issue. The error is logged above.`,
       ],
     });
+    if (plugins.length > 0) {
+      output.error({
+        title: `Failed to install plugins`,
+        bodyLines: [
+          'The following plugins were not installed:',
+          ...plugins.map((p) => `- ${chalk.bold(p)}`),
+        ],
+      });
+      output.error({
+        title: `To install the plugins manually`,
+        bodyLines: [
+          'You may need to run commands to install the plugins:',
+          ...plugins.map((p) => `- ${chalk.bold(pmc.exec + ' nx add ' + p)}`),
+        ],
+      });
+    }
   }
 
   if (source != destination) {
@@ -412,7 +441,7 @@ async function runPluginsInstall(
   let installed = true;
   output.log({ title: 'Installing Plugins' });
   try {
-    runPackageManagerInstallPlugins(workspaceRoot, pmc, plugins);
+    installPluginPackages(workspaceRoot, pmc, plugins);
     await destinationGitClient.amendCommit();
   } catch (e) {
     installed = false;

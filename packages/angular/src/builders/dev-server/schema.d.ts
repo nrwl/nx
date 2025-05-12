@@ -21,9 +21,13 @@ interface BaseSchema {
   prebundle?: boolean | { exclude: string[] };
   buildLibsFromSource?: boolean;
   esbuildMiddleware?: string[];
+  watchDependencies?: boolean;
 }
 
 export type SchemaWithBrowserTarget = BaseSchema & {
+  /**
+   * @deprecated Use `buildTarget` instead. It will be removed when Angular v20 is released.
+   */
   browserTarget: string;
 };
 

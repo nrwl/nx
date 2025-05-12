@@ -12,12 +12,10 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-  visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { extractTsConfigBase } from '@nx/js/src/utils/typescript/create-ts-config';
-import { dirname } from 'node:path';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
@@ -39,16 +37,16 @@ import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
 import {
   addE2E,
+  ignoreViteTempFiles,
   normalizeOptions,
   updateUnitTestConfig,
-  addViteTempFilesToGitIgnore,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
 import {
   addProjectToTsSolutionWorkspace,
-  isUsingTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export function remixApplicationGenerator(
   tree: Tree,
@@ -56,6 +54,7 @@ export function remixApplicationGenerator(
 ) {
   return remixApplicationGeneratorInternal(tree, {
     addPlugin: true,
+    useProjectJson: true,
     ...options,
   });
 }
@@ -73,6 +72,7 @@ export async function remixApplicationGeneratorInternal(
       skipFormat: true,
       addTsPlugin: _options.useTsSolution,
       formatter: _options.formatter,
+      platform: 'web',
     }),
   ];
 
@@ -83,9 +83,13 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  const isUsingTsSolution = isUsingTsSolutionSetup(tree);
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
 
-  if (!isUsingTsSolution) {
+  if (options.useProjectJson) {
     addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,
       sourceRoot: `${options.projectRoot}`,
@@ -120,7 +124,6 @@ export async function remixApplicationGeneratorInternal(
     eslintVersion,
     typescriptVersion,
     viteVersion,
-    isUsingTsSolution,
   };
 
   generateFiles(
@@ -152,12 +155,29 @@ export async function remixApplicationGeneratorInternal(
     );
   }
 
-  if (isUsingTsSolution) {
+  if (options.isUsingTsSolutionConfig) {
     generateFiles(
       tree,
       joinPathFragments(__dirname, 'files/ts-solution'),
       options.projectRoot,
       vars
+    );
+  }
+
+  if (!options.useProjectJson) {
+    updateJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      (json) => {
+        if (options.projectName !== options.importPath) {
+          json.nx = { name: options.projectName };
+        }
+        if (options.parsedTags?.length) {
+          json.nx ??= {};
+          json.nx.tags = options.parsedTags;
+        }
+        return json;
+      }
     );
   }
 
@@ -205,6 +225,7 @@ export async function remixApplicationGeneratorInternal(
         skipPackageJson: false,
         skipFormat: true,
         addPlugin: true,
+        compiler: options.useTsSolution ? 'swc' : undefined,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
       if (projectConfig.targets?.['test']?.options) {
@@ -309,10 +330,7 @@ export default {...nxPreset};
 
   tasks.push(await addE2E(tree, options));
 
-  addViteTempFilesToGitIgnore(tree);
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
+  await ignoreViteTempFiles(tree, options.projectRoot);
 
   updateTsconfigFiles(
     tree,
@@ -329,10 +347,10 @@ export default {...nxPreset};
     '.'
   );
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.useTsSolution) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  sortPackageJsonFields(tree, options.projectRoot);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   tasks.push(() => {

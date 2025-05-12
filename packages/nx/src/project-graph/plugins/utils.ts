@@ -1,11 +1,16 @@
 import {
+  CreateNodesContext,
   CreateNodesContextV2,
-  CreateNodesFunction,
   CreateNodesResult,
 } from './public-api';
 import { AggregateCreateNodesError } from '../error-types';
 export async function createNodesFromFiles<T = unknown>(
-  createNodes: CreateNodesFunction<T>,
+  createNodes: (
+    projectConfigurationFile: string,
+    options: T | undefined,
+    context: CreateNodesContext,
+    idx: number
+  ) => CreateNodesResult | Promise<CreateNodesResult>,
   configFiles: readonly string[],
   options: T,
   context: CreateNodesContextV2
@@ -14,12 +19,17 @@ export async function createNodesFromFiles<T = unknown>(
   const errors: Array<[file: string, error: Error]> = [];
 
   await Promise.all(
-    configFiles.map(async (file) => {
+    configFiles.map(async (file, idx) => {
       try {
-        const value = await createNodes(file, options, {
-          ...context,
-          configFiles,
-        });
+        const value = await createNodes(
+          file,
+          options,
+          {
+            ...context,
+            configFiles,
+          },
+          idx
+        );
         if (value) {
           results.push([file, value] as const);
         }

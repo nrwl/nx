@@ -13,6 +13,7 @@ import {
 } from '../../../utils/testing-config-utils';
 import {
   getRemixVersion,
+  testingLibraryDomVersion,
   testingLibraryJestDomVersion,
   testingLibraryReactVersion,
   testingLibraryUserEventsVersion,
@@ -89,6 +90,7 @@ export function updateUnitTestConfig(
     {},
     {
       '@testing-library/jest-dom': testingLibraryJestDomVersion,
+      '@testing-library/dom': testingLibraryDomVersion,
       '@testing-library/react': testingLibraryReactVersion,
       '@testing-library/user-event': testingLibraryUserEventsVersion,
       '@remix-run/node': getRemixVersion(tree),

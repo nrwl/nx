@@ -89,8 +89,7 @@ export async function initGeneratorInternal(
   schema.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
     nxJson.useInferencePlugins !== false;
-  schema.addTsPlugin ??=
-    schema.addPlugin && process.env.NX_ADD_TS_PLUGIN !== 'false';
+  schema.addTsPlugin ??= schema.addPlugin;
 
   if (schema.addTsPlugin) {
     await addPlugin(
@@ -105,9 +104,24 @@ export async function initGeneratorInternal(
           { targetName: 'tsc-typecheck' },
         ],
         build: [
-          { targetName: 'build', configName: 'tsconfig.lib.json' },
-          { targetName: 'tsc:build', configName: 'tsconfig.lib.json' },
-          { targetName: 'tsc-build', configName: 'tsconfig.lib.json' },
+          {
+            targetName: 'build',
+            configName: 'tsconfig.lib.json',
+            buildDepsName: 'build-deps',
+            watchDepsName: 'watch-deps',
+          },
+          {
+            targetName: 'tsc:build',
+            configName: 'tsconfig.lib.json',
+            buildDepsName: 'tsc:build-deps',
+            watchDepsName: 'tsc:watch-deps',
+          },
+          {
+            targetName: 'tsc-build',
+            configName: 'tsconfig.lib.json',
+            buildDepsName: 'tsc-build-deps',
+            watchDepsName: 'tsc-watch-deps',
+          },
         ],
       },
       schema.updatePackageScripts
@@ -116,7 +130,9 @@ export async function initGeneratorInternal(
 
   if (schema.addTsConfigBase && !getRootTsConfigFileName(tree)) {
     if (schema.addTsPlugin) {
+      const platform = schema.platform ?? 'node';
       generateFiles(tree, join(__dirname, './files/ts-solution'), '.', {
+        platform,
         tmpl: '',
       });
     } else {

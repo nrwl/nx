@@ -5,6 +5,7 @@ import {
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   logger,
   NxJsonConfiguration,
   readJsonFile,
@@ -19,6 +20,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;
@@ -30,7 +32,10 @@ export interface ExpoPluginOptions {
   installTargetName?: string;
   buildTargetName?: string;
   submitTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(
   cachePath: string
@@ -150,17 +155,21 @@ function buildExpoTargets(
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
       executor: `@nx/expo:start`,
+      continuous: true,
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
+      continuous: true,
       options: { cwd: projectRoot, args: ['--clear'] },
     },
     [options.runIosTargetName]: {
       command: `expo run:ios`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
       command: `expo run:android`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.exportTargetName]: {
@@ -185,6 +194,14 @@ function buildExpoTargets(
       options: { cwd: projectRoot },
     },
   };
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return targets;
 }

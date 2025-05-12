@@ -106,6 +106,8 @@ export function normalizeOptions(
     ),
     generateIndexHtml:
       combinedPluginAndMaybeExecutorOptions.generateIndexHtml ?? true,
+    useLegacyHtmlPlugin:
+      combinedPluginAndMaybeExecutorOptions.useLegacyHtmlPlugin ?? false,
     main: combinedPluginAndMaybeExecutorOptions.main,
     namedChunks: combinedPluginAndMaybeExecutorOptions.namedChunks ?? !isProd,
     optimization: combinedPluginAndMaybeExecutorOptions.optimization ?? isProd,
@@ -120,10 +122,15 @@ export function normalizeOptions(
     projectRoot: projectNode.data.root,
     root: workspaceRoot,
     runtimeChunk: combinedPluginAndMaybeExecutorOptions.runtimeChunk ?? true,
+    sassImplementation:
+      combinedPluginAndMaybeExecutorOptions.sassImplementation ??
+      'sass-embedded',
     scripts: combinedPluginAndMaybeExecutorOptions.scripts ?? [],
     sourceMap: combinedPluginAndMaybeExecutorOptions.sourceMap ?? !isProd,
     sourceRoot,
     styles: combinedPluginAndMaybeExecutorOptions.styles ?? [],
+    subresourceIntegrity:
+      combinedPluginAndMaybeExecutorOptions.subresourceIntegrity ?? false,
     target: combinedPluginAndMaybeExecutorOptions.target ?? 'web',
     targetName,
     vendorChunk: combinedPluginAndMaybeExecutorOptions.vendorChunk ?? !isProd,

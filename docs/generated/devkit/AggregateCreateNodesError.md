@@ -22,6 +22,7 @@ It allows Nx to recieve partial results and continue processing for better UX.
 - [message](../../devkit/documents/AggregateCreateNodesError#message): string
 - [name](../../devkit/documents/AggregateCreateNodesError#name): string
 - [partialResults](../../devkit/documents/AggregateCreateNodesError#partialresults): CreateNodesResultV2
+- [pluginIndex](../../devkit/documents/AggregateCreateNodesError#pluginindex): number
 - [stack](../../devkit/documents/AggregateCreateNodesError#stack): string
 - [prepareStackTrace](../../devkit/documents/AggregateCreateNodesError#preparestacktrace): Function
 - [stackTraceLimit](../../devkit/documents/AggregateCreateNodesError#stacktracelimit): number
@@ -121,6 +122,12 @@ Error.name
 • `Readonly` **partialResults**: [`CreateNodesResultV2`](../../devkit/documents/CreateNodesResultV2)
 
 The partial results of the `createNodesV2` function. This should be the results for each file that didn't encounter an issue.
+
+---
+
+### pluginIndex
+
+• **pluginIndex**: `number`
 
 ---
 

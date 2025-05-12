@@ -24,5 +24,6 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
     hmr: schema.hmr ?? (angularMajorVersion < 19 ? false : undefined),
     open: schema.open ?? false,
     ssl: schema.ssl ?? false,
+    watchDependencies: schema.watchDependencies ?? true,
   };
 }

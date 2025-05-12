@@ -135,6 +135,7 @@ describe('Remix Library Generator', () => {
     expect(pkgJson.main).toEqual('./dist/index.cjs.js');
     expect(pkgJson.typings).toEqual('./dist/index.d.ts');
   });
+
   describe('TS solution setup', () => {
     let tree: Tree;
 
@@ -148,6 +149,7 @@ describe('Remix Library Generator', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -162,22 +164,173 @@ describe('Remix Library Generator', () => {
         directory: 'packages/foo',
         style: 'css',
         addPlugin: true,
+        useProjectJson: false,
       });
 
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(readJson(tree, 'packages/foo/package.json')))
+        .toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "main",
+          "types",
+          "exports",
+        ]
+      `);
       expect(readJson(tree, 'packages/foo/package.json'))
         .toMatchInlineSnapshot(`
         {
+          "exports": {
+            ".": {
+              "default": "./src/index.ts",
+              "import": "./src/index.ts",
+              "types": "./src/index.ts",
+            },
+            "./package.json": "./package.json",
+          },
           "main": "./src/index.ts",
           "name": "@proj/foo",
-          "nx": {
-            "name": "foo",
-            "projectType": "library",
-            "sourceRoot": "packages/foo/src",
-          },
           "types": "./src/index.ts",
           "version": "0.0.1",
         }
       `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/foo',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(tree.read('packages/foo/package.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/foo",
+          "version": "0.0.1",
+          "type": "module",
+          "main": "./dist/index.esm.js",
+          "module": "./dist/index.esm.js",
+          "types": "./dist/index.esm.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.esm.d.ts",
+              "import": "./dist/index.esm.js",
+              "default": "./dist/index.esm.js"
+            }
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        directory: 'packages/foo',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        buildable: true,
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'packages/foo/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
+    it('should generate server entrypoint', async () => {
+      await libraryGenerator(tree, {
+        directory: 'test',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      expect(tree.exists(`test/src/server.ts`)).toBeTruthy();
+      expect(tree.children(`test/src/lib`).sort()).toMatchInlineSnapshot(`
+        [
+          "test.module.css",
+          "test.spec.tsx",
+          "test.tsx",
+        ]
+      `);
+    }, 25_000);
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'packages/my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-lib',
+        name: '@proj/my-lib',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-lib',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        directory: 'packages/my-lib',
+        style: 'css',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('packages/my-lib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-lib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-lib",
+          "projectType": "library",
+          "root": "packages/my-lib",
+          "sourceRoot": "packages/my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'packages/my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

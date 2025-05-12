@@ -420,7 +420,7 @@ export function createOrEditViteConfig(
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es']
+      formats: ['es' as const]
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
@@ -471,7 +471,7 @@ export function createOrEditViteConfig(
     watch: false,
     globals: true,
     environment: '${options.testEnvironment ?? 'jsdom'}',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 ${options.setupFile ? `    setupFiles: ['${options.setupFile}'],\n` : ''}\
 ${
   options.inSourceTests
@@ -482,7 +482,9 @@ ${
     coverage: {
       reportsDirectory: '${reportsDirectory}',
       provider: ${
-        options.coverageProvider ? `'${options.coverageProvider}'` : `'v8'`
+        options.coverageProvider
+          ? `'${options.coverageProvider}' as const`
+          : `'v8' as const`
       },
     }
   },`
@@ -547,7 +549,7 @@ ${
 import { defineConfig } from 'vite';
 ${imports.join(';\n')}${imports.length ? ';' : ''}
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   ${printOptions(
     cacheDir,
@@ -559,7 +561,7 @@ export default defineConfig({
     defineOption,
     testOption
   )}
-});
+}));
 `.replace(/\s+(?=(\n|$))/gm, '\n');
 
   tree.write(viteConfigPath, viteConfigContent);
@@ -761,7 +763,7 @@ function handleViteConfigFileExists(
     reporters: ['default'],
     coverage: {
       reportsDirectory: reportsDirectory,
-      provider: `${options.coverageProvider ?? 'v8'}`,
+      provider: `'${options.coverageProvider ?? 'v8'}'`,
     },
   };
 

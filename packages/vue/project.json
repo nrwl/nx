@@ -54,7 +54,7 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js vue",
-      "outputs": ["{workspaceRoot}/build/packages/vue"]
+      "outputs": ["{workspaceRoot}/build/packages/vue/README.md"]
     }
   }
 }

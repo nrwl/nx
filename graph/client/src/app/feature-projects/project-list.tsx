@@ -5,6 +5,7 @@ import {
   EyeIcon,
   FlagIcon,
   MapPinIcon,
+  ViewfinderCircleIcon,
 } from '@heroicons/react/24/outline';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
@@ -25,7 +26,7 @@ import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate, useNavigation } from 'react-router-dom';
-import { useRouteConstructor } from '@nx/graph/shared';
+import { useRouteConstructor } from '@nx/graph/legacy/shared';
 import { CompositeNode } from '../interfaces';
 import { useMemo } from 'react';
 
@@ -113,7 +114,7 @@ function ProjectListItem({
             true
           )}
         >
-          <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+          <ViewfinderCircleIcon className="h-5 w-5" />
         </Link>
 
         <ExperimentalFeature>

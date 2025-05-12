@@ -7,6 +7,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -18,7 +19,7 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
@@ -28,8 +29,11 @@ import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import {
+  addProjectToTsSolutionWorkspace,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -43,12 +47,20 @@ export interface NormalizedSchema extends Schema {
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
   const tasks: GeneratorCallback[] = [];
 
   if (options.publishable === true && !schema.importPath) {
@@ -59,15 +71,15 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 
   // Create `package.json` first because @nx/js:lib generator will update it.
   if (
+    !options.useProjectJson ||
     options.isUsingTsSolutionConfig ||
     options.publishable ||
     options.buildable
   ) {
     writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
+      name: options.importPath,
       version: '0.0.1',
       private: true,
-      files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
     });
   }
 
@@ -80,9 +92,11 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
       testEnvironment: 'node',
       skipFormat: true,
       setParserOptionsProject: schema.setParserOptionsProject,
-      useProjectJson: !options.isUsingTsSolutionConfig,
+      useProjectJson: options.useProjectJson,
     })
   );
+
+  updatePackageJson(tree, options);
 
   tasks.push(
     await initGenerator(tree, {
@@ -105,6 +119,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     tasks.push(() => installPackagesTask(tree, true));
   }
 
+  sortPackageJsonFields(tree, options.projectRoot);
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
@@ -118,7 +134,7 @@ async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  await ensureProjectName(tree, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -148,14 +164,17 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
+  const isUsingTsSolutionConfig = isUsingTsSolutionSetup(tree);
   return {
     ...options,
     fileName,
-    projectName,
+    projectName:
+      isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectRoot,
     parsedTags,
     importPath,
-    isUsingTsSolutionConfig: isUsingTsSolutionSetup(tree),
+    isUsingTsSolutionConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionConfig,
   };
 }
 
@@ -233,4 +252,24 @@ function ensureDependencies(tree: Tree): GeneratorCallback {
     { tslib: tslibVersion },
     { '@types/node': typesNodeVersion }
   );
+}
+
+function updatePackageJson(tree: Tree, options: NormalizedSchema) {
+  const packageJsonPath = joinPathFragments(
+    options.projectRoot,
+    'package.json'
+  );
+  if (!tree.exists(packageJsonPath)) {
+    return;
+  }
+
+  const packageJson = readJson(tree, packageJsonPath);
+
+  if (packageJson.type === 'module') {
+    // The @nx/js:lib generator can set the type to 'module' which would
+    // potentially break consumers of the library.
+    delete packageJson.type;
+  }
+
+  writeJson(tree, packageJsonPath, packageJson);
 }

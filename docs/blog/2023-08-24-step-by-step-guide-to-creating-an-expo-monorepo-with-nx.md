@@ -2,8 +2,9 @@
 title: 'Step-by-Step Guide to Creating an Expo Monorepo with Nx'
 slug: 'step-by-step-guide-to-creating-an-expo-monorepo-with-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2023-08-24/IpM0kZdUNXoDWV4r8J5xXQ.png'
+cover_image: '/blog/images/2023-08-24/IpM0kZdUNXoDWV4r8J5xXQ.avif'
 tags: [nx, tutorial]
+description: A comprehensive tutorial on building a multi-app Expo monorepo using Nx, featuring shared UI components, navigation setup, and deployment configurations, demonstrated through the creation of two mobile apps.
 ---
 
 This blog will show you how to create an Expo monorepo with Nx. In this example, you will be creating two Expo apps in a monorepo with `@nx/expo`: one shows random facts about cats, and the other shows random facts about dogs.
@@ -25,7 +26,7 @@ Github repo: [xiongemi/nx-expo-monorepo](https://github.com/xiongemi/nx-expo-mon
 
 ## Creating an Nx Workspace
 
-To create a new Nx workspace, run the command `npx create-nx-workspace <workspace name>` in the terminal. In this example, let’s name it `nx-expo-monorepo`:
+To create a new Nx workspace, run the command `npx create-nx-workspace <workspace name>` in the terminal. In this example, let's name it `nx-expo-monorepo`:
 
 ```
 ✔ Where would you like to create your workspace? · create-nx-monorepo
@@ -344,7 +345,7 @@ It will then ask you to choose which binary to submit from one of the following 
 - Path to an .apk or .aab or .ipa archive on your local filesystem.
 - URL to the app archive.
 
-Alternatively, you can submit your app on the [expo.dev](https://expo.dev/) site. Go to your build, under options, choose “Submit to an app store”:
+Alternatively, you can submit your app on the [expo.dev](https://expo.dev/) site. Go to your build, under options, choose "Submit to an app store":
 
 ![](/blog/images/2023-08-24/yQlEmKOy3TXdWPCk9ILiZA.avif)
 

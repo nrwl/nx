@@ -5,6 +5,7 @@ import {
   CreateNodesResult,
   CreateNodesV2,
   detectPackageManager,
+  getPackageManagerCommand,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -17,12 +18,17 @@ import { existsSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 export interface DetoxPluginOptions {
   buildTargetName?: string;
   startTargetName?: string;
   testTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
+
+const pmc = getPackageManagerCommand();
 
 function readTargetsCache(
   cachePath: string
@@ -131,6 +137,7 @@ function buildDetoxTargets(
     },
     [options.startTargetName]: {
       command: `detox start`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.testTargetName]: {
@@ -140,6 +147,14 @@ function buildDetoxTargets(
       inputs: getInputs(namedInputs),
     },
   };
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return targets;
 }

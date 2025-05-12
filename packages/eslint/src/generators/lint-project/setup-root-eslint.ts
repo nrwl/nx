@@ -22,6 +22,7 @@ export type SetupRootEsLintOptions = {
   unitTestRunner?: string;
   skipPackageJson?: boolean;
   rootProject?: boolean;
+  eslintConfigFormat?: 'mjs' | 'cjs';
 };
 
 export function setupRootEsLint(
@@ -32,6 +33,8 @@ export function setupRootEsLint(
   if (rootEslintFile) {
     return () => {};
   }
+  options.eslintConfigFormat ??= 'mjs';
+
   if (!useFlatConfig(tree)) {
     return setUpLegacyRootEslintRc(tree, options);
   }
@@ -71,8 +74,11 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
 
 function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
   tree.write(
-    'eslint.config.cjs',
-    getGlobalFlatEslintConfiguration(options.rootProject)
+    `eslint.config.${options.eslintConfigFormat}`,
+    getGlobalFlatEslintConfiguration(
+      options.eslintConfigFormat,
+      options.rootProject
+    )
   );
 
   return !options.skipPackageJson

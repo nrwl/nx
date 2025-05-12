@@ -2,13 +2,14 @@
 title: 'Share code between React Web & React Native Mobile with Nx'
 slug: 'share-code-between-react-web-react-native-mobile-with-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2022-02-01/lL-fGNaIGYBC_eOBwSvdBw.png'
+cover_image: '/blog/images/2022-02-01/lL-fGNaIGYBC_eOBwSvdBw.avif'
 tags: [nx, tutorial]
+description: Learn how to create and manage React web and React Native mobile apps in an Nx monorepo, with guidance on sharing code and handling platform differences.
 ---
 
 **A problem I try to solve:** I got this awesome idea, not only do I want to create a web app, but I also want to create a mobile app for it. Usually creating web and mobile apps require totally different tech stacks, and it is pretty hard to share code. This article shows how I added a React web app and a React Native mobile app in the same monorepo using Nx, and how I optimized codeshare between the two.
 
-I am mostly a web developer, so let’s start with the web app first: [https://xiongemi.github.io/studio-ghibli-search-engine](https://xiongemi.github.io/studio-ghibli-search-engine). It is a search engine for movies and characters under Studio Ghibli:
+I am mostly a web developer, so let's start with the web app first: [https://xiongemi.github.io/studio-ghibli-search-engine](https://xiongemi.github.io/studio-ghibli-search-engine). It is a search engine for movies and characters under Studio Ghibli:
 
 ![](/blog/images/2022-02-01/TILaEjwvKtDTODE8Zo7wFA.avif)
 _Screenshot of web app_
@@ -17,7 +18,7 @@ Example Repo: [xiongemi/studio-ghibli-search-engine](https://github.com/xiongemi
 
 Github page: [https://xiongemi.github.io/studio-ghibli-search-engine](https://github.com/xiongemi/studio-ghibli-search-engine)
 
-Now let’s create the corresponding mobile version of this app.
+Now let's create the corresponding mobile version of this app.
 
 ## Tech Stack
 
@@ -25,7 +26,7 @@ Now let’s create the corresponding mobile version of this app.
 - Web Frontend: [React](https://reactjs.org/)
 - API: [https://ghibliapi.herokuapp.com/](https://ghibliapi.herokuapp.com/)
 
-Currently, there’s only a React web app within our Nx workspace. If I run `nx graph`, the dependency graph looks like the below:
+Currently, there's only a React web app within our Nx workspace. If I run `nx graph`, the dependency graph looks like the below:
 
 ![](/blog/images/2022-02-01/AkrRrJ1pbALScj64T8rc_g.avif)
 _Dependency graph_
@@ -46,7 +47,7 @@ Next, we can generate a new React Native app by running:
 npx nx generate @nrwl/react-native:app studio-ghibli-search-engine-mobile
 ```
 
-> Note, if you’re using VSCode you might want to try [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) for a more visual experience of running such commands.
+> Note, if you're using VSCode you might want to try [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) for a more visual experience of running such commands.
 
 As a result of running the above command, you should now have two new folders under the `apps` directory: `studio-ghibli-search-engine-mobile` and `studio-ghibli-search-engine-mobile-e2e`
 
@@ -68,7 +69,7 @@ Even though our goal is to share as much as possible between our React web app a
 
 We have to rewrite all the UI components for the mobile app. Unlike [Cordova](https://cordova.apache.org/) or [Ionic](https://ionicframework.com/), React Native is NOT a webview. The JavaScript we wrote got interpreted and converted to mobile native elements. Hence we cannot simply reuse UI HTML elements written for the React web app.
 
-Here’s a quick list of libraries we’ve used for the React web app and a corresponding React Native counterpart library we can use.
+Here's a quick list of libraries we've used for the React web app and a corresponding React Native counterpart library we can use.
 
 **Routing**
 
@@ -246,7 +247,7 @@ Nx comes with a set of different options for [handling environment variables](/r
 NX_REQUEST_BASE_URL=://ghibliapi.herokuapp.com
 ```
 
-This works nicely for our React web build, but it doesn’t for our React Native application. This is because React Native and React apps use different Javascript bundlers. React Native uses [Metro](https://facebook.github.io/metro/) and React uses [Webpack](https://webpack.js.org/). Therefore, when we try to access `process.env.NX_REQUEST_BASE_URL`, we get `undefined`.
+This works nicely for our React web build, but it doesn't for our React Native application. This is because React Native and React apps use different Javascript bundlers. React Native uses [Metro](https://facebook.github.io/metro/) and React uses [Webpack](https://webpack.js.org/). Therefore, when we try to access `process.env.NX_REQUEST_BASE_URL`, we get `undefined`.
 
 To solve this, we can use the [react-native-config](https://github.com/luggit/react-native-config) library
 
@@ -256,7 +257,7 @@ npm install react-native-config --save-dev# yarn
 yarn add react-native-config --dev
 ```
 
-Here’s an example of how to set up [react-native-config](https://github.com/luggit/react-native-config): [https://github.com/luggit/react-native-config#setup](https://github.com/luggit/react-native-config#setup).
+Here's an example of how to set up [react-native-config](https://github.com/luggit/react-native-config): [https://github.com/luggit/react-native-config#setup](https://github.com/luggit/react-native-config#setup).
 
 After that, we can have a simple utility function to retrieve the environment variables in our app.
 
@@ -267,11 +268,11 @@ export function getEnv(envName: string) {
 }
 ```
 
-To access the environment variable `NX_REQUEST_BASE_URL`, we can then simply use the above function:`getEnv(‘NX_REQUEST_BASE_URL’)`.
+To access the environment variable `NX_REQUEST_BASE_URL`, we can then simply use the above function:`getEnv('NX_REQUEST_BASE_URL')`.
 
 ### Fetch With HTTP
 
-On the web, you most probably lean on the [fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to make network requests. On iOS, however, you’ll get an error saying: `TypeError: Network request failed`.
+On the web, you most probably lean on the [fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to make network requests. On iOS, however, you'll get an error saying: `TypeError: Network request failed`.
 
 It turns out that React Native does not allow HTTP requests by default: [https://stackoverflow.com/questions/38418998/react-native-fetch-network-request-failed](https://stackoverflow.com/questions/38418998/react-native-fetch-network-request-failed).
 
@@ -466,7 +467,7 @@ _Screenshots of Mobile App (left: iOS, right: Android)_
 
 In this article, we ended up building both, a React-based web application and a corresponding React Native app in the same repository using Nx.
 
-Nx’s architecture promotes the separation of concerns, splitting things into `apps` (which are technology-specific) and `libs` which can be technology-specific or technology-independent. That allows us to easily have our common business logic in a technology-independent library which in turn (thanks to Nx’s setup) be easily linked to both, our React web and React Native mobile app.
+Nx's architecture promotes the separation of concerns, splitting things into `apps` (which are technology-specific) and `libs` which can be technology-specific or technology-independent. That allows us to easily have our common business logic in a technology-independent library which in turn (thanks to Nx's setup) be easily linked to both, our React web and React Native mobile app.
 
 Although there are UI-specific differences we need to account for, that simply comes with one being a web tech stack and the other being a native app, we were still able to share big chunks of the technology-independent business logic of our application. That ultimately helps with maintenance and having feature parity across different platforms.
 

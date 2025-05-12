@@ -72,7 +72,7 @@
         "type": "executor"
       },
       "/nx-api/angular/executors/package": {
-        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
+        "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is a drop-in replacement for the `@angular-devkit/build-angular:ng-packagr` and `@angular/build:ng-packagr` builders, with additional support for incremental builds.",
         "file": "generated/packages/angular/executors/package.json",
         "hidden": false,
         "name": "package",
@@ -206,6 +206,15 @@
         "name": "convert-to-application-executor",
         "originalFilePath": "/packages/angular/src/generators/convert-to-application-executor/schema.json",
         "path": "/nx-api/angular/generators/convert-to-application-executor",
+        "type": "generator"
+      },
+      "/nx-api/angular/generators/convert-to-rspack": {
+        "description": "Converts Angular Webpack projects to use Rspack.",
+        "file": "generated/packages/angular/generators/convert-to-rspack.json",
+        "hidden": false,
+        "name": "convert-to-rspack",
+        "originalFilePath": "/packages/angular/src/generators/convert-to-rspack/schema.json",
+        "path": "/nx-api/angular/generators/convert-to-rspack",
         "type": "generator"
       },
       "/nx-api/angular/generators/directive": {
@@ -434,6 +443,768 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence": {
+        "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+        "file": "generated/packages/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence.json",
+        "hidden": false,
+        "name": "change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence",
+        "version": "21.0.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/set-continuous-option": {
+        "description": "Set the `continuous` option to `true` for continuous tasks.",
+        "file": "generated/packages/angular/migrations/set-continuous-option.json",
+        "hidden": false,
+        "name": "set-continuous-option",
+        "version": "21.0.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/set-continuous-option",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.8.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.8.1-package-updates.json",
+        "hidden": false,
+        "name": "20.8.1-package-updates",
+        "version": "20.8.1-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.8.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.5.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.5.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-angular-eslint-package-updates",
+        "version": "20.5.0-rc.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.5.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-19-2-0": {
+        "description": "Update the @angular/cli package version to ~19.2.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-19-2-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-19-2-0",
+        "version": "20.5.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-19-2-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-19-1-0": {
+        "description": "Update the @angular/cli package version to ~19.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-19-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-19-1-0",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-19-1-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/ensure-nx-module-federation-package": {
+        "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+        "file": "generated/packages/angular/migrations/ensure-nx-module-federation-package.json",
+        "hidden": false,
+        "name": "ensure-nx-module-federation-package",
+        "version": "20.3.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/ensure-nx-module-federation-package",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.3-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.3-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "20.2.3-ngrx-package-updates",
+        "version": "20.3.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.3-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.2-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.2-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.2.2-angular-eslint-package-updates",
+        "version": "20.2.2-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.2-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/remove-angular-eslint-rules": {
+        "description": "Remove Angular ESLint rules that were removed in v19.0.0.",
+        "file": "generated/packages/angular/migrations/remove-angular-eslint-rules.json",
+        "hidden": false,
+        "name": "remove-angular-eslint-rules",
+        "version": "20.2.0-beta.8",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/remove-angular-eslint-rules",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/remove-tailwind-config-from-ng-packagr-executors": {
+        "description": "Remove the deprecated 'tailwindConfig' option from ng-packagr executors. Tailwind CSS configurations located at the project or workspace root will be picked up automatically.",
+        "file": "generated/packages/angular/migrations/remove-tailwind-config-from-ng-packagr-executors.json",
+        "hidden": false,
+        "name": "remove-tailwind-config-from-ng-packagr-executors",
+        "version": "20.2.0-beta.8",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/remove-tailwind-config-from-ng-packagr-executors",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.0-analog-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.0-analog-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-analog-package-updates",
+        "version": "20.2.0-beta.7",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.0-analog-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/disable-angular-eslint-prefer-standalone": {
+        "description": "Disable the Angular ESLint prefer-standalone rule if not set.",
+        "file": "generated/packages/angular/migrations/disable-angular-eslint-prefer-standalone.json",
+        "hidden": false,
+        "name": "disable-angular-eslint-prefer-standalone",
+        "version": "20.2.0-beta.6",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/disable-angular-eslint-prefer-standalone",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-19-0-0": {
+        "description": "Update the @angular/cli package version to ~19.0.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-19-0-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-19-0-0",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-19-0-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/add-localize-polyfill-to-targets": {
+        "description": "Add the '@angular/localize/init' polyfill to the 'polyfills' option of targets using esbuild-based executors.",
+        "file": "generated/packages/angular/migrations/add-localize-polyfill-to-targets.json",
+        "hidden": false,
+        "name": "add-localize-polyfill-to-targets",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/add-localize-polyfill-to-targets",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-ssr-imports-to-use-node-entry-point": {
+        "description": "Update '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.",
+        "file": "generated/packages/angular/migrations/update-angular-ssr-imports-to-use-node-entry-point.json",
+        "hidden": false,
+        "name": "update-angular-ssr-imports-to-use-node-entry-point",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-ssr-imports-to-use-node-entry-point",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.0-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-package-updates",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.0-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-jest-package-updates",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.0-jest-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-angular-eslint-package-updates",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/20.2.0-module-federation-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/20.2.0-module-federation-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-module-federation-package-updates",
+        "version": "20.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/20.2.0-module-federation-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-20-2-0-update-module-federation-config-import": {
+        "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+        "file": "generated/packages/angular/migrations/update-20-2-0-update-module-federation-config-import.json",
+        "hidden": false,
+        "name": "update-20-2-0-update-module-federation-config-import",
+        "version": "20.2.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-20-2-0-update-module-federation-config-import",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-20-2-0-update-with-module-federation-import": {
+        "description": "Update the withModuleFederation import use @nx/module-federation/angular.",
+        "file": "generated/packages/angular/migrations/update-20-2-0-update-with-module-federation-import.json",
+        "hidden": false,
+        "name": "update-20-2-0-update-with-module-federation-import",
+        "version": "20.2.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-20-2-0-update-with-module-federation-import",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.7.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.7.0-package-updates.json",
+        "hidden": false,
+        "name": "19.7.0-package-updates",
+        "version": "19.7.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.7.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-19-6-1-ensure-module-federation-target-defaults": {
+        "description": "Ensure Target Defaults are set correctly for Module Federation.",
+        "file": "generated/packages/angular/migrations/update-19-6-1-ensure-module-federation-target-defaults.json",
+        "hidden": false,
+        "name": "update-19-6-1-ensure-module-federation-target-defaults",
+        "version": "19.6.1-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-19-6-1-ensure-module-federation-target-defaults",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.6.1-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.6.1-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "19.6.1-ngrx-package-updates",
+        "version": "19.6.1-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.6.1-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-18-2-0": {
+        "description": "Update the @angular/cli package version to ~18.2.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-18-2-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-18-2-0",
+        "version": "19.6.0-beta.7",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-18-2-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.6.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.6.0-package-updates.json",
+        "hidden": false,
+        "name": "19.6.0-package-updates",
+        "version": "19.6.0-beta.7",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.6.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-19-6-0": {
+        "description": "Ensure Module Federation DTS is turned off by default.",
+        "file": "generated/packages/angular/migrations/update-19-6-0.json",
+        "hidden": false,
+        "name": "update-19-6-0",
+        "version": "19.6.0-beta.4",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-19-6-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.5.4-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.5.4-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "19.5.4-ngrx-package-updates",
+        "version": "19.5.4-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.5.4-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-18-1-0": {
+        "description": "Update the @angular/cli package version to ~18.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-18-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-18-1-0",
+        "version": "19.5.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-18-1-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.5.0-package-updates.json",
+        "hidden": false,
+        "name": "19.5.0-package-updates",
+        "version": "19.5.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.5.0-module-federation-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.5.0-module-federation-package-updates.json",
+        "hidden": false,
+        "name": "19.5.0-module-federation-package-updates",
+        "version": "19.5.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.5.0-module-federation-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.4.0-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.4.0-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "19.4.0-ngrx-package-updates",
+        "version": "19.4.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.4.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/add-typescript-eslint-utils": {
+        "description": "Installs the '@typescript-eslint/utils' package when having installed '@angular-eslint/eslint-plugin' or '@angular-eslint/eslint-plugin-template' with version >=18.0.0.",
+        "file": "generated/packages/angular/migrations/add-typescript-eslint-utils.json",
+        "hidden": false,
+        "name": "add-typescript-eslint-utils",
+        "version": "19.2.1-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/add-typescript-eslint-utils",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.1.2-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.1.2-package-updates.json",
+        "hidden": false,
+        "name": "19.1.2-package-updates",
+        "version": "19.1.2-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.1.2-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-18-0-0": {
+        "description": "Update the @angular/cli package version to ~18.0.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-18-0-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-18-0-0",
+        "version": "19.1.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-18-0-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.1.0-package-updates.json",
+        "hidden": false,
+        "name": "19.1.0-package-updates",
+        "version": "19.1.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.1.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/19.1.0-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/19.1.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "19.1.0-jest-package-updates",
+        "version": "19.1.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/19.1.0-jest-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-17-3-0": {
+        "description": "Update the @angular/cli package version to ~17.3.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-17-3-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-17-3-0",
+        "version": "18.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-17-3-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/18.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/18.2.0-package-updates.json",
+        "hidden": false,
+        "name": "18.2.0-package-updates",
+        "version": "18.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/18.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/18.2.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/18.2.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "18.2.0-angular-eslint-package-updates",
+        "version": "18.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/18.2.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/fix-target-defaults-for-webpack-browser": {
+        "description": "Ensure targetDefaults inputs for task hashing when '@nx/angular:webpack-browser' is used are correct for Module Federation.",
+        "file": "generated/packages/angular/migrations/fix-target-defaults-for-webpack-browser.json",
+        "hidden": false,
+        "name": "fix-target-defaults-for-webpack-browser",
+        "version": "18.1.1-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/fix-target-defaults-for-webpack-browser",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/18.1.0-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/18.1.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "18.1.0-jest-package-updates",
+        "version": "18.1.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/18.1.0-jest-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-17-2-0": {
+        "description": "Update the @angular/cli package version to ~17.2.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-17-2-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-17-2-0",
+        "version": "18.1.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-17-2-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/18.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/18.1.0-package-updates.json",
+        "hidden": false,
+        "name": "18.1.0-package-updates",
+        "version": "18.1.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/18.1.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/add-module-federation-env-var-to-target-defaults": {
+        "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/angular:webpack-browser' is used for Module Federation.",
+        "file": "generated/packages/angular/migrations/add-module-federation-env-var-to-target-defaults.json",
+        "hidden": false,
+        "name": "add-module-federation-env-var-to-target-defaults",
+        "version": "18.0.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/add-module-federation-env-var-to-target-defaults",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-17-1-0": {
+        "description": "Update the @angular/cli package version to ~17.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-17-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-17-1-0",
+        "version": "17.3.0-beta.10",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-17-1-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/add-browser-sync-dependency": {
+        "description": "Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' or '@nx/angular:module-federation-dev-ssr' is used.",
+        "file": "generated/packages/angular/migrations/add-browser-sync-dependency.json",
+        "hidden": false,
+        "name": "add-browser-sync-dependency",
+        "version": "17.3.0-beta.10",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/add-browser-sync-dependency",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/add-autoprefixer-dependency": {
+        "description": "Add 'autoprefixer' as dev dependency when '@nx/angular:ng-packagr-lite' or '@nx/angular:package` is used.",
+        "file": "generated/packages/angular/migrations/add-autoprefixer-dependency.json",
+        "hidden": false,
+        "name": "add-autoprefixer-dependency",
+        "version": "17.3.0-beta.10",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/add-autoprefixer-dependency",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.3.0-package-updates.json",
+        "hidden": false,
+        "name": "17.3.0-package-updates",
+        "version": "17.3.0-beta.10",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.3.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.3.0-types-node-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.3.0-types-node-package-updates.json",
+        "hidden": false,
+        "name": "17.3.0-types-node-package-updates",
+        "version": "17.3.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.3.0-types-node-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.2.0-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.2.0-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "17.2.0-ngrx-package-updates",
+        "version": "17.2.0-beta.3",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.2.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/rename-webpack-dev-server-executor": {
+        "description": "Rename '@nx/angular:webpack-dev-server' executor to '@nx/angular:dev-server'",
+        "file": "generated/packages/angular/migrations/rename-webpack-dev-server-executor.json",
+        "hidden": false,
+        "name": "rename-webpack-dev-server-executor",
+        "version": "17.2.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/rename-webpack-dev-server-executor",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.1.3-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.1.3-jest-package-updates.json",
+        "hidden": false,
+        "name": "17.1.3-jest-package-updates",
+        "version": "17.1.3-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.1.3-jest-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-17-0-0": {
+        "description": "Update the @angular/cli package version to ~17.0.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-17-0-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-17-0-0",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-17-0-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/rename-browser-target-to-build-target": {
+        "description": "Rename 'browserTarget' to 'buildTarget'.",
+        "file": "generated/packages/angular/migrations/rename-browser-target-to-build-target.json",
+        "hidden": false,
+        "name": "rename-browser-target-to-build-target",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/rename-browser-target-to-build-target",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/replace-nguniversal-builders": {
+        "description": "Replace usages of '@nguniversal/builders' with '@angular-devkit/build-angular'.",
+        "file": "generated/packages/angular/migrations/replace-nguniversal-builders.json",
+        "hidden": false,
+        "name": "replace-nguniversal-builders",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/replace-nguniversal-builders",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/replace-nguniversal-engines": {
+        "description": "Replace usages of '@nguniversal/' packages with '@angular/ssr'.",
+        "file": "generated/packages/angular/migrations/replace-nguniversal-engines.json",
+        "hidden": false,
+        "name": "replace-nguniversal-engines",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/replace-nguniversal-engines",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-zone-js-deep-import": {
+        "description": "Replace the deep imports from 'zone.js/dist/zone' and 'zone.js/dist/zone-testing' with 'zone.js' and 'zone.js/testing'.",
+        "file": "generated/packages/angular/migrations/update-zone-js-deep-import.json",
+        "hidden": false,
+        "name": "update-zone-js-deep-import",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-zone-js-deep-import",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.1.0-package-updates.json",
+        "hidden": false,
+        "name": "17.1.0-package-updates",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.1.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.1.0-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.1.0-jest-package-updates.json",
+        "hidden": false,
+        "name": "17.1.0-jest-package-updates",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.1.0-jest-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/17.1.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/17.1.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "17.1.0-angular-eslint-package-updates",
+        "version": "17.1.0-beta.5",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/17.1.0-angular-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.8.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.8.0-package-updates.json",
+        "hidden": false,
+        "name": "16.8.0-package-updates",
+        "version": "16.8.0-beta.2",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.8.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-16-2-0": {
+        "description": "Update the @angular/cli package version to ~16.2.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-16-2-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-16-2-0",
+        "version": "16.7.0-beta.6",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-16-2-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.7.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.7.0-package-updates.json",
+        "hidden": false,
+        "name": "16.7.0-package-updates",
+        "version": "16.7.0-beta.6",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.7.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/explicitly-set-projects-to-update-buildable-deps": {
+        "description": "Explicitly set 'updateBuildableProjectDepsInPackageJson' to 'true' in targets that rely on that value as the default.",
+        "file": "generated/packages/angular/migrations/explicitly-set-projects-to-update-buildable-deps.json",
+        "hidden": false,
+        "name": "explicitly-set-projects-to-update-buildable-deps",
+        "version": "16.6.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/explicitly-set-projects-to-update-buildable-deps",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/update-angular-cli-version-16-1-0": {
+        "description": "Update the @angular/cli package version to ~16.1.0.",
+        "file": "generated/packages/angular/migrations/update-angular-cli-version-16-1-0.json",
+        "hidden": false,
+        "name": "update-angular-cli-version-16-1-0",
+        "version": "16.4.0-beta.11",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/update-angular-cli-version-16-1-0",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.4.0-package-updates.json",
+        "hidden": false,
+        "name": "16.4.0-package-updates",
+        "version": "16.4.0-beta.11",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.4.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/rename-angular-eslint-accesibility-rules": {
+        "description": "Remove the 'accessibility-' prefix from '@angular-eslint/eslint-plugin-template' rules.",
+        "file": "generated/packages/angular/migrations/rename-angular-eslint-accesibility-rules.json",
+        "hidden": false,
+        "name": "rename-angular-eslint-accesibility-rules",
+        "version": "16.4.0-beta.6",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/rename-angular-eslint-accesibility-rules",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/switch-data-persistence-operators-imports-to-ngrx-router-store": {
+        "description": "Switch the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+        "file": "generated/packages/angular/migrations/switch-data-persistence-operators-imports-to-ngrx-router-store.json",
+        "hidden": false,
+        "name": "switch-data-persistence-operators-imports-to-ngrx-router-store",
+        "version": "16.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/switch-data-persistence-operators-imports-to-ngrx-router-store",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.2.0-ngrx-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.2.0-ngrx-package-updates.json",
+        "hidden": false,
+        "name": "16.2.0-ngrx-package-updates",
+        "version": "16.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.2.0-ngrx-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.1.3-jest-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.1.3-jest-package-updates.json",
+        "hidden": false,
+        "name": "16.1.3-jest-package-updates",
+        "version": "16.1.3-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.1.3-jest-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.1.0-package-updates.json",
+        "hidden": false,
+        "name": "16.1.0-package-updates",
+        "version": "16.1.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.1.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/angular/migrations/16.1.0-angular-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/angular/migrations/16.1.0-angular-eslint-package-updates.json",
+        "hidden": false,
+        "name": "16.1.0-angular-eslint-package-updates",
+        "version": "16.1.0-beta.1",
+        "originalFilePath": "/packages/angular",
+        "path": "/nx-api/angular/migrations/16.1.0-angular-eslint-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/angular"
   },
   "create-nx-plugin": {
@@ -446,6 +1217,7 @@
     "source": "/packages/create-nx-plugin/src",
     "executors": {},
     "generators": {},
+    "migrations": {},
     "path": "/nx-api/create-nx-plugin"
   },
   "create-nx-workspace": {
@@ -458,6 +1230,7 @@
     "source": "/packages/create-nx-workspace/src",
     "executors": {},
     "generators": {},
+    "migrations": {},
     "path": "/nx-api/create-nx-workspace"
   },
   "cypress": {
@@ -538,6 +1311,98 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor": {
+        "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
+        "file": "generated/packages/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/set-inject-document-domain": {
+        "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
+        "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",
+        "hidden": false,
+        "name": "set-inject-document-domain",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/set-inject-document-domain",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/remove-experimental-fetch-polyfill": {
+        "description": "Removes the `experimentalFetchPolyfill` configuration option.",
+        "file": "generated/packages/cypress/migrations/remove-experimental-fetch-polyfill.json",
+        "hidden": false,
+        "name": "remove-experimental-fetch-polyfill",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/remove-experimental-fetch-polyfill",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/replace-experimental-just-in-time-compile": {
+        "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
+        "file": "generated/packages/cypress/migrations/replace-experimental-just-in-time-compile.json",
+        "hidden": false,
+        "name": "replace-experimental-just-in-time-compile",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/replace-experimental-just-in-time-compile",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/update-component-testing-mount-imports": {
+        "description": "Updates the module specifier for the Component Testing `mount` function.",
+        "file": "generated/packages/cypress/migrations/update-component-testing-mount-imports.json",
+        "hidden": false,
+        "name": "update-component-testing-mount-imports",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/update-component-testing-mount-imports",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/20.8.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/cypress/migrations/20.8.0-package-updates.json",
+        "hidden": false,
+        "name": "20.8.0-package-updates",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/20.8.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite": {
+        "description": "Update ciWebServerCommand to use static serve for the application.",
+        "file": "generated/packages/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite.json",
+        "hidden": false,
+        "name": "update-19-6-0-update-ci-webserver-for-vite",
+        "version": "19.6.0-beta.4",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/update-19-6-0-update-ci-webserver-for-vite",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/19.4.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/cypress/migrations/19.4.1-package-updates.json",
+        "hidden": false,
+        "name": "19.4.1-package-updates",
+        "version": "19.4.1-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/19.4.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/cypress/migrations/19.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/cypress/migrations/19.1.0-package-updates.json",
+        "hidden": false,
+        "name": "19.1.0-package-updates",
+        "version": "19.1.0-beta.0",
+        "originalFilePath": "/packages/cypress",
+        "path": "/nx-api/cypress/migrations/19.1.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/cypress"
   },
   "detox": {
@@ -609,6 +1474,38 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/detox/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/detox/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.2",
+        "originalFilePath": "/packages/detox",
+        "path": "/nx-api/detox/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/detox/migrations/20.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/detox/migrations/20.3.0-package-updates.json",
+        "hidden": false,
+        "name": "20.3.0-package-updates",
+        "version": "20.3.0-beta.0",
+        "originalFilePath": "/packages/detox",
+        "path": "/nx-api/detox/migrations/20.3.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/detox/migrations/19.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/detox/migrations/19.2.0-package-updates.json",
+        "hidden": false,
+        "name": "19.2.0-package-updates",
+        "version": "19.2.0-beta.2",
+        "originalFilePath": "/packages/detox",
+        "path": "/nx-api/detox/migrations/19.2.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/detox"
   },
   "devkit": {
@@ -644,6 +1541,7 @@
     "source": "/packages/devkit/src",
     "executors": {},
     "generators": {},
+    "migrations": {},
     "path": "/nx-api/devkit"
   },
   "esbuild": {
@@ -697,6 +1595,7 @@
         "type": "generator"
       }
     },
+    "migrations": {},
     "path": "/nx-api/esbuild"
   },
   "eslint": {
@@ -777,6 +1676,68 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/eslint/migrations/20.7.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.7.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.0-package-updates",
+        "version": "20.7.0-beta.4",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/20.7.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/20.4.0-typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.4.0-typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-typescript-eslint-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/20.4.0-typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/20.4.0-@typescript-eslint-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/20.4.0-@typescript-eslint-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-@typescript-eslint-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/20.4.0-@typescript-eslint-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/add-file-extensions-to-overrides": {
+        "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
+        "file": "generated/packages/eslint/migrations/add-file-extensions-to-overrides.json",
+        "hidden": false,
+        "name": "add-file-extensions-to-overrides",
+        "version": "20.3.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/add-file-extensions-to-overrides",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/update-typescript-eslint-v8.13.0": {
+        "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
+        "file": "generated/packages/eslint/migrations/update-typescript-eslint-v8.13.0.json",
+        "hidden": false,
+        "name": "update-typescript-eslint-v8.13.0",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/update-typescript-eslint-v8.13.0",
+        "type": "migration"
+      },
+      "/nx-api/eslint/migrations/19.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/eslint/migrations/19.5.0-package-updates.json",
+        "hidden": false,
+        "name": "19.5.0-package-updates",
+        "version": "19.5.0-beta.1",
+        "originalFilePath": "/packages/eslint",
+        "path": "/nx-api/eslint/migrations/19.5.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/eslint"
   },
   "eslint-plugin": {
@@ -823,6 +1784,18 @@
     "source": "/packages/eslint-plugin/src",
     "executors": {},
     "generators": {},
+    "migrations": {
+      "/nx-api/eslint-plugin/migrations/update-19-1-0-rename-no-extra-semi": {
+        "description": "Migrate no-extra-semi rules into user config, out of nx extendable configs",
+        "file": "generated/packages/eslint-plugin/migrations/update-19-1-0-rename-no-extra-semi.json",
+        "hidden": false,
+        "name": "update-19-1-0-rename-no-extra-semi",
+        "version": "19.1.0-beta.6",
+        "originalFilePath": "/packages/eslint-plugin",
+        "path": "/nx-api/eslint-plugin/migrations/update-19-1-0-rename-no-extra-semi",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/eslint-plugin"
   },
   "expo": {
@@ -1002,6 +1975,68 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/expo/migrations/20.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/expo/migrations/20.3.0-package-updates.json",
+        "hidden": false,
+        "name": "20.3.0-package-updates",
+        "version": "20.3.0-beta.0",
+        "originalFilePath": "/packages/expo",
+        "path": "/nx-api/expo/migrations/20.3.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/expo/migrations/update-19-7-0-remove-eas-pre-install": {
+        "description": "Remove eas-build-pre-install script from app's package.json",
+        "file": "generated/packages/expo/migrations/update-19-7-0-remove-eas-pre-install.json",
+        "hidden": false,
+        "name": "update-19-7-0-remove-eas-pre-install",
+        "version": "19.7.0-beta.4",
+        "originalFilePath": "/packages/expo",
+        "path": "/nx-api/expo/migrations/update-19-7-0-remove-eas-pre-install",
+        "type": "migration"
+      },
+      "/nx-api/expo/migrations/update-19-2-0-remove-webpack-config": {
+        "description": "Remove deprecated webpack.config.js",
+        "file": "generated/packages/expo/migrations/update-19-2-0-remove-webpack-config.json",
+        "hidden": false,
+        "name": "update-19-2-0-remove-webpack-config",
+        "version": "19.2.0-beta.2",
+        "originalFilePath": "/packages/expo",
+        "path": "/nx-api/expo/migrations/update-19-2-0-remove-webpack-config",
+        "type": "migration"
+      },
+      "/nx-api/expo/migrations/19.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/expo/migrations/19.2.0-package-updates.json",
+        "hidden": false,
+        "name": "19.2.0-package-updates",
+        "version": "19.2.0-beta.2",
+        "originalFilePath": "/packages/expo",
+        "path": "/nx-api/expo/migrations/19.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/expo/migrations/update-19-0-0-change-webpack-to-metro": {
+        "description": "Change webpack to metro in expo projects",
+        "file": "generated/packages/expo/migrations/update-19-0-0-change-webpack-to-metro.json",
+        "hidden": false,
+        "name": "update-19-0-0-change-webpack-to-metro",
+        "version": "19.0.0-beta.9",
+        "originalFilePath": "/packages/expo",
+        "path": "/nx-api/expo/migrations/update-19-0-0-change-webpack-to-metro",
+        "type": "migration"
+      },
+      "/nx-api/expo/migrations/19.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/expo/migrations/19.0.0-package-updates.json",
+        "hidden": false,
+        "name": "19.0.0-package-updates",
+        "version": "19.0.0-beta.7",
+        "originalFilePath": "/packages/expo",
+        "path": "/nx-api/expo/migrations/19.0.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/expo"
   },
   "express": {
@@ -1045,6 +2080,7 @@
         "type": "generator"
       }
     },
+    "migrations": {},
     "path": "/nx-api/express"
   },
   "gradle": {
@@ -1067,12 +2103,22 @@
     },
     "root": "/packages/gradle",
     "source": "/packages/gradle/src",
-    "executors": {},
+    "executors": {
+      "/nx-api/gradle/executors/gradle": {
+        "description": "Runs gradle tasks via the Gradle Tooling API or by invoking gradlew.",
+        "file": "generated/packages/gradle/executors/gradle.json",
+        "hidden": false,
+        "name": "gradle",
+        "originalFilePath": "/packages/gradle/src/executors/gradle/schema.json",
+        "path": "/nx-api/gradle/executors/gradle",
+        "type": "executor"
+      }
+    },
     "generators": {
       "/nx-api/gradle/generators/init": {
         "description": "Initializes a Gradle project in the current workspace",
         "file": "generated/packages/gradle/generators/init.json",
-        "hidden": false,
+        "hidden": true,
         "name": "init",
         "originalFilePath": "/packages/gradle/src/generators/init/schema.json",
         "path": "/nx-api/gradle/generators/init",
@@ -1086,6 +2132,58 @@
         "originalFilePath": "/packages/gradle/src/generators/ci-workflow/schema.json",
         "path": "/nx-api/gradle/generators/ci-workflow",
         "type": "generator"
+      }
+    },
+    "migrations": {
+      "/nx-api/gradle/migrations/change-ciTargetName-to-ciTestTargetName": {
+        "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
+        "file": "generated/packages/gradle/migrations/change-ciTargetName-to-ciTestTargetName.json",
+        "hidden": false,
+        "name": "change-ciTargetName-to-ciTestTargetName",
+        "version": "21.0.0-beta.13",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-ciTargetName-to-ciTestTargetName",
+        "type": "migration"
+      },
+      "/nx-api/gradle/migrations/change-plugin-to-v1": {
+        "description": "Change @nx/gradle plugin to version 1",
+        "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
+        "hidden": false,
+        "name": "change-plugin-to-v1",
+        "version": "21.0.0-beta.5",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-plugin-to-v1",
+        "type": "migration"
+      },
+      "/nx-api/gradle/migrations/add-include-subprojects-tasks": {
+        "description": "Add includeSubprojectsTasks to build.gradle file",
+        "file": "generated/packages/gradle/migrations/add-include-subprojects-tasks.json",
+        "hidden": false,
+        "name": "add-include-subprojects-tasks",
+        "version": "20.2.0-beta.4",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/add-include-subprojects-tasks",
+        "type": "migration"
+      },
+      "/nx-api/gradle/migrations/change-regex-production-test": {
+        "description": "This function changes !{projectRoot}/test/**/* in nx.json for production to !{projectRoot}/src/test/**/*",
+        "file": "generated/packages/gradle/migrations/change-regex-production-test.json",
+        "hidden": false,
+        "name": "change-regex-production-test",
+        "version": "19.4.1-beta.0",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/change-regex-production-test",
+        "type": "migration"
+      },
+      "/nx-api/gradle/migrations/add-project-report-all": {
+        "description": "Add task projectReportAll to build.gradle file",
+        "file": "generated/packages/gradle/migrations/add-project-report-all.json",
+        "hidden": false,
+        "name": "add-project-report-all",
+        "version": "19.4.0-beta.1",
+        "originalFilePath": "/packages/gradle",
+        "path": "/nx-api/gradle/migrations/add-project-report-all",
+        "type": "migration"
       }
     },
     "path": "/nx-api/gradle"
@@ -1150,6 +2248,58 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/jest/migrations/remove-tsconfig-option-from-jest-executor": {
+        "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
+        "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-option-from-jest-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/remove-tsconfig-option-from-jest-executor",
+        "type": "migration"
+      },
+      "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21": {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+        "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
+        "hidden": false,
+        "name": "replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "version": "21.0.0-beta.9",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21",
+        "type": "migration"
+      },
+      "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync": {
+        "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
+        "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync.json",
+        "hidden": false,
+        "name": "replace-getJestProjects-with-getJestProjectsAsync",
+        "version": "20.0.0-beta.5",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync",
+        "type": "migration"
+      },
+      "/nx-api/jest/migrations/19.6.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/19.6.0-package-updates.json",
+        "hidden": false,
+        "name": "19.6.0-package-updates",
+        "version": "19.6.0-beta.1",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/19.6.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/jest/migrations/19.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/jest/migrations/19.2.0-package-updates.json",
+        "hidden": false,
+        "name": "19.2.0-package-updates",
+        "version": "19.2.0-beta.0",
+        "originalFilePath": "/packages/jest",
+        "path": "/nx-api/jest/migrations/19.2.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/jest"
   },
   "js": {
@@ -1168,17 +2318,6 @@
         "path": "/nx-api/js/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/js/js-plugin"
-      },
-      "/nx-api/js/documents/typescript-project-references": {
-        "id": "typescript-project-references",
-        "name": "Configure TypeScript Project References in an Nx Workspace",
-        "description": "The JS plugin for Nx contains executors and generators that provide the best experience for developing JavaScript and TypeScript projects. ",
-        "file": "generated/packages/js/documents/typescript-project-references",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/js/documents/typescript-project-references",
-        "tags": [],
-        "originalFilePath": "shared/packages/js/typescript-project-references"
       }
     },
     "root": "/packages/js",
@@ -1304,6 +2443,78 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/js/migrations/20.7.1-beta.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/20.7.1-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/20.7.1-beta.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/js/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/js/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/js/migrations/20.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/20.2.0-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-package-updates",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/20.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/js/migrations/19.5.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/19.5.1-package-updates.json",
+        "hidden": false,
+        "name": "19.5.1-package-updates",
+        "version": "19.5.0-beta.1",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/19.5.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/js/migrations/19.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/19.2.0-package-updates.json",
+        "hidden": false,
+        "name": "19.2.0-package-updates",
+        "version": "19.2.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/19.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/js/migrations/19.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/js/migrations/19.0.0-package-updates.json",
+        "hidden": false,
+        "name": "19.0.0-package-updates",
+        "version": "19.0.0-beta.0",
+        "originalFilePath": "/packages/js",
+        "path": "/nx-api/js/migrations/19.0.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/js"
   },
   "module-federation": {
@@ -1311,11 +2522,56 @@
     "name": "module-federation",
     "packageName": "@nx/module-federation",
     "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
-    "documents": {},
+    "documents": {
+      "/nx-api/module-federation/documents/nx-module-federation-plugin": {
+        "id": "nx-module-federation-plugin",
+        "name": "NxModuleFederationPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/module-federation/documents/nx-module-federation-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-plugin"
+      },
+      "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin": {
+        "id": "nx-module-federation-dev-server-plugin",
+        "name": "NxModuleFederationDevServerPlugin",
+        "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
+        "file": "generated/packages/module-federation/documents/nx-module-federation-dev-server-plugin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/module-federation/documents/nx-module-federation-dev-server-plugin",
+        "tags": [],
+        "originalFilePath": "shared/packages/module-federation/nx-module-federation-dev-server-plugin"
+      }
+    },
     "root": "/packages/module-federation",
     "source": "/packages/module-federation/src",
     "executors": {},
     "generators": {},
+    "migrations": {
+      "/nx-api/module-federation/migrations/20.5.0": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.5.0.json",
+        "hidden": false,
+        "name": "20.5.0",
+        "version": "20.5.0-beta.5",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/nx-api/module-federation/migrations/20.5.0",
+        "type": "migration"
+      },
+      "/nx-api/module-federation/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/module-federation/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.0",
+        "originalFilePath": "/packages/module-federation",
+        "path": "/nx-api/module-federation/migrations/20.4.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/module-federation"
   },
   "nest": {
@@ -1503,6 +2759,7 @@
         "type": "generator"
       }
     },
+    "migrations": {},
     "path": "/nx-api/nest"
   },
   "next": {
@@ -1619,6 +2876,48 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/next/migrations/20.7.1-beta.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "/nx-api/next/migrations/20.7.1-beta.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/next/migrations/20.7.1-beta.0-next14-package-updates": {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-next14-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-next14-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "/nx-api/next/migrations/20.7.1-beta.0-next14-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/next/migrations/20.7.1-beta.0-next15-package-updates": {
+        "description": "",
+        "file": "generated/packages/next/migrations/20.7.1-beta.0-next15-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-beta.0-next15-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "/nx-api/next/migrations/20.7.1-beta.0-next15-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/next/migrations/19.0.3-package-updates": {
+        "description": "",
+        "file": "generated/packages/next/migrations/19.0.3-package-updates.json",
+        "hidden": false,
+        "name": "19.0.3-package-updates",
+        "version": "19.0.3-beta.0",
+        "originalFilePath": "/packages/next",
+        "path": "/nx-api/next/migrations/19.0.3-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/next"
   },
   "node": {
@@ -1680,6 +2979,18 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/node/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/node/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.3",
+        "originalFilePath": "/packages/node",
+        "path": "/nx-api/node/migrations/20.4.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/node"
   },
   "nuxt": {
@@ -1730,6 +3041,18 @@
         "originalFilePath": "/packages/nuxt/src/generators/storybook-configuration/schema.json",
         "path": "/nx-api/nuxt/generators/storybook-configuration",
         "type": "generator"
+      }
+    },
+    "migrations": {
+      "/nx-api/nuxt/migrations/add-vue-to-storybook-config": {
+        "description": "Add vue() plugin to viteFinal in Storybook config files when it is missing.",
+        "file": "generated/packages/nuxt/migrations/add-vue-to-storybook-config.json",
+        "hidden": false,
+        "name": "add-vue-to-storybook-config",
+        "version": "19.6.0-beta.0",
+        "originalFilePath": "/packages/nuxt",
+        "path": "/nx-api/nuxt/migrations/add-vue-to-storybook-config",
+        "type": "migration"
       }
     },
     "path": "/nx-api/nuxt"
@@ -1825,7 +3148,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/affected",
-        "tags": ["run-tasks"],
+        "tags": ["run-tasks", "affected"],
         "originalFilePath": "generated/cli/affected"
       },
       "/nx-api/nx/documents/format-check": {
@@ -2080,6 +3403,98 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/nx/migrations/release-version-config-changes": {
+        "description": "Updates release version config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-version-config-changes.json",
+        "hidden": false,
+        "name": "release-version-config-changes",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/release-version-config-changes",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/release-changelog-config-changes": {
+        "description": "Updates release changelog config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-changelog-config-changes.json",
+        "hidden": false,
+        "name": "release-changelog-config-changes",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/release-changelog-config-changes",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/remove-legacy-cache": {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-legacy-cache.json",
+        "hidden": false,
+        "name": "remove-legacy-cache",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/remove-legacy-cache",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/remove-custom-tasks-runner": {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-custom-tasks-runner.json",
+        "hidden": false,
+        "name": "remove-custom-tasks-runner",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/remove-custom-tasks-runner",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/use-legacy-cache": {
+        "description": "Set `useLegacyCache` to true for migrating workspaces",
+        "file": "generated/packages/nx/migrations/use-legacy-cache.json",
+        "hidden": false,
+        "name": "use-legacy-cache",
+        "version": "20.0.1",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/use-legacy-cache",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/move-use-daemon-process": {
+        "description": "Migration for v20.0.0-beta.7",
+        "file": "generated/packages/nx/migrations/move-use-daemon-process.json",
+        "hidden": false,
+        "name": "move-use-daemon-process",
+        "version": "20.0.0-beta.7",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/move-use-daemon-process",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/19-2-4-set-project-name": {
+        "description": "Set project name in nx.json explicitly",
+        "file": "generated/packages/nx/migrations/19-2-4-set-project-name.json",
+        "hidden": false,
+        "name": "19-2-4-set-project-name",
+        "version": "19.2.4-beta.0",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/19-2-4-set-project-name",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/19-2-2-update-nx-wrapper": {
+        "description": "Updates the nx wrapper.",
+        "file": "generated/packages/nx/migrations/19-2-2-update-nx-wrapper.json",
+        "hidden": false,
+        "name": "19-2-2-update-nx-wrapper",
+        "version": "19.2.2-beta.0",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/19-2-2-update-nx-wrapper",
+        "type": "migration"
+      },
+      "/nx-api/nx/migrations/19-2-0-move-graph-cache-directory": {
+        "description": "Updates the default workspace data directory to .nx/workspace-data",
+        "file": "generated/packages/nx/migrations/19-2-0-move-graph-cache-directory.json",
+        "hidden": false,
+        "name": "19-2-0-move-graph-cache-directory",
+        "version": "19.2.0-beta.2",
+        "originalFilePath": "/packages/nx",
+        "path": "/nx-api/nx/migrations/19-2-0-move-graph-cache-directory",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/nx"
   },
   "playwright": {
@@ -2126,7 +3541,7 @@
       "/nx-api/playwright/generators/init": {
         "description": "Initializes a Playwright project in the current workspace",
         "file": "generated/packages/playwright/generators/init.json",
-        "hidden": false,
+        "hidden": true,
         "name": "init",
         "originalFilePath": "/packages/playwright/src/generators/init/schema.json",
         "path": "/nx-api/playwright/generators/init",
@@ -2140,6 +3555,28 @@
         "originalFilePath": "/packages/playwright/src/generators/convert-to-inferred/schema.json",
         "path": "/nx-api/playwright/generators/convert-to-inferred",
         "type": "generator"
+      }
+    },
+    "migrations": {
+      "/nx-api/playwright/migrations/update-19-6-0-add-e2e-ci-target-defaults": {
+        "description": "Add inferred ciTargetNames to targetDefaults with dependsOn to ensure dependent application builds are scheduled before atomized tasks.",
+        "file": "generated/packages/playwright/migrations/update-19-6-0-add-e2e-ci-target-defaults.json",
+        "hidden": false,
+        "name": "update-19-6-0-add-e2e-ci-target-defaults",
+        "version": "19.6.0-beta.1",
+        "originalFilePath": "/packages/playwright",
+        "path": "/nx-api/playwright/migrations/update-19-6-0-add-e2e-ci-target-defaults",
+        "type": "migration"
+      },
+      "/nx-api/playwright/migrations/19-6-0-use-serve-static-preview-for-command": {
+        "description": "Use serve-static or preview for webServerCommand.",
+        "file": "generated/packages/playwright/migrations/19-6-0-use-serve-static-preview-for-command.json",
+        "hidden": false,
+        "name": "19-6-0-use-serve-static-preview-for-command",
+        "version": "19.6.0-beta.0",
+        "originalFilePath": "/packages/playwright",
+        "path": "/nx-api/playwright/migrations/19-6-0-use-serve-static-preview-for-command",
+        "type": "migration"
       }
     },
     "path": "/nx-api/playwright"
@@ -2239,6 +3676,7 @@
         "type": "generator"
       }
     },
+    "migrations": {},
     "path": "/nx-api/plugin"
   },
   "react": {
@@ -2434,6 +3872,178 @@
         "originalFilePath": "/packages/react/src/generators/federate-module/schema.json",
         "path": "/nx-api/react/generators/federate-module",
         "type": "generator"
+      }
+    },
+    "migrations": {
+      "/nx-api/react/migrations/update-21-0-0-update-babel-loose": {
+        "description": "Replaces `classProperties.loose` option with `loose`.",
+        "file": "generated/packages/react/migrations/update-21-0-0-update-babel-loose.json",
+        "hidden": false,
+        "name": "update-21-0-0-update-babel-loose",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-21-0-0-update-babel-loose",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/add-mf-env-var-to-target-defaults": {
+        "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
+        "file": "generated/packages/react/migrations/add-mf-env-var-to-target-defaults.json",
+        "hidden": false,
+        "name": "add-mf-env-var-to-target-defaults",
+        "version": "20.4.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/add-mf-env-var-to-target-defaults",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/ensure-nx-module-federation-package": {
+        "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+        "file": "generated/packages/react/migrations/ensure-nx-module-federation-package.json",
+        "hidden": false,
+        "name": "ensure-nx-module-federation-package",
+        "version": "20.3.0-beta.2",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/ensure-nx-module-federation-package",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/20.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/20.3.0-package-updates.json",
+        "hidden": false,
+        "name": "20.3.0-package-updates",
+        "version": "20.3.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/20.3.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/20.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/20.2.0-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-package-updates",
+        "version": "20.2.0-beta.3",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/20.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/update-20-2-0-update-module-federation-config-import": {
+        "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
+        "file": "generated/packages/react/migrations/update-20-2-0-update-module-federation-config-import.json",
+        "hidden": false,
+        "name": "update-20-2-0-update-module-federation-config-import",
+        "version": "20.2.0-beta.2",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-20-2-0-update-module-federation-config-import",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/update-20-2-0-update-with-module-federation-import": {
+        "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
+        "file": "generated/packages/react/migrations/update-20-2-0-update-with-module-federation-import.json",
+        "hidden": false,
+        "name": "update-20-2-0-update-with-module-federation-import",
+        "version": "20.2.0-beta.2",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-20-2-0-update-with-module-federation-import",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/20.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/20.1.0-package-updates.json",
+        "hidden": false,
+        "name": "20.1.0-package-updates",
+        "version": "20.1.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/20.1.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/20.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/20.0.0-package-updates.json",
+        "hidden": false,
+        "name": "20.0.0-package-updates",
+        "version": "20.0.0-beta.8",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/20.0.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/19.7.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/19.7.0-package-updates.json",
+        "hidden": false,
+        "name": "19.7.0-package-updates",
+        "version": "19.7.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/19.7.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/update-19-6-1-ensure-module-federation-target-defaults": {
+        "description": "Ensure Target Defaults are set correctly for Module Federation.",
+        "file": "generated/packages/react/migrations/update-19-6-1-ensure-module-federation-target-defaults.json",
+        "hidden": false,
+        "name": "update-19-6-1-ensure-module-federation-target-defaults",
+        "version": "19.6.1-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-19-6-1-ensure-module-federation-target-defaults",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/update-19-6-0-turn-module-federation-dts-off": {
+        "description": "Ensure Module Federation DTS is turned off by default.",
+        "file": "generated/packages/react/migrations/update-19-6-0-turn-module-federation-dts-off.json",
+        "hidden": false,
+        "name": "update-19-6-0-turn-module-federation-dts-off",
+        "version": "19.6.0-beta.4",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-19-6-0-turn-module-federation-dts-off",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/update-module-federation-ssr-server-file": {
+        "description": "Update the server file for Module Federation SSR port value to be the same as the 'serve' target port value.",
+        "file": "generated/packages/react/migrations/update-module-federation-ssr-server-file.json",
+        "hidden": false,
+        "name": "update-module-federation-ssr-server-file",
+        "version": "19.6.0-beta.4",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/update-module-federation-ssr-server-file",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/19.5.0-module-federation-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/19.5.0-module-federation-package-updates.json",
+        "hidden": false,
+        "name": "19.5.0-module-federation-package-updates",
+        "version": "19.5.0-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/19.5.0-module-federation-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/19.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/19.2.0-package-updates.json",
+        "hidden": false,
+        "name": "19.2.0-package-updates",
+        "version": "19.2.0-beta.8",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/19.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/19.0.3-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/19.0.3-package-updates.json",
+        "hidden": false,
+        "name": "19.0.3-package-updates",
+        "version": "19.0.3-beta.0",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/19.0.3-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react/migrations/19.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react/migrations/19.0.0-package-updates.json",
+        "hidden": false,
+        "name": "19.0.0-package-updates",
+        "version": "19.0.0-beta.12",
+        "originalFilePath": "/packages/react",
+        "path": "/nx-api/react/migrations/19.0.0-package-updates",
+        "type": "migration"
       }
     },
     "path": "/nx-api/react"
@@ -2651,6 +4261,58 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/react-native/migrations/20.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/20.3.0-package-updates.json",
+        "hidden": false,
+        "name": "20.3.0-package-updates",
+        "version": "20.3.0-beta.0",
+        "originalFilePath": "/packages/react-native",
+        "path": "/nx-api/react-native/migrations/20.3.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react-native/migrations/update-19-6-0-rename-upgrade-target-name": {
+        "description": "Rename upgrade target name to fix casing.",
+        "file": "generated/packages/react-native/migrations/update-19-6-0-rename-upgrade-target-name.json",
+        "hidden": false,
+        "name": "update-19-6-0-rename-upgrade-target-name",
+        "version": "19.6.0-beta.1",
+        "originalFilePath": "/packages/react-native",
+        "path": "/nx-api/react-native/migrations/update-19-6-0-rename-upgrade-target-name",
+        "type": "migration"
+      },
+      "/nx-api/react-native/migrations/19.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/19.5.0-package-updates.json",
+        "hidden": false,
+        "name": "19.5.0-package-updates",
+        "version": "19.5.0-beta.0",
+        "originalFilePath": "/packages/react-native",
+        "path": "/nx-api/react-native/migrations/19.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react-native/migrations/19.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/19.2.0-package-updates.json",
+        "hidden": false,
+        "name": "19.2.0-package-updates",
+        "version": "19.2.0-beta.2",
+        "originalFilePath": "/packages/react-native",
+        "path": "/nx-api/react-native/migrations/19.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/react-native/migrations/19.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/react-native/migrations/19.0.0-package-updates.json",
+        "hidden": false,
+        "name": "19.0.0-package-updates",
+        "version": "19.0.0-beta.7",
+        "originalFilePath": "/packages/react-native",
+        "path": "/nx-api/react-native/migrations/19.0.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/react-native"
   },
   "remix": {
@@ -2839,6 +4501,18 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/remix/migrations/20.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/remix/migrations/20.1.0-package-updates.json",
+        "hidden": false,
+        "name": "20.1.0-package-updates",
+        "version": "20.1.0-beta.5",
+        "originalFilePath": "/packages/remix",
+        "path": "/nx-api/remix/migrations/20.1.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/remix"
   },
   "rollup": {
@@ -2889,6 +4563,18 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/rollup/migrations/19.0.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rollup/migrations/19.0.0-package-updates.json",
+        "hidden": false,
+        "name": "19.0.0-package-updates",
+        "version": "19.0.0-beta.0",
+        "originalFilePath": "/packages/rollup",
+        "path": "/nx-api/rollup/migrations/19.0.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/rollup"
   },
   "rsbuild": {
@@ -2920,6 +4606,7 @@
         "type": "generator"
       }
     },
+    "migrations": {},
     "path": "/nx-api/rsbuild"
   },
   "rspack": {
@@ -3063,6 +4750,78 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/rspack/migrations/21.0.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
+        "hidden": false,
+        "name": "21.0.1-package-updates",
+        "version": "21.0.1-beta.0",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/21.0.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/rspack/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.4",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/rspack/migrations/ensure-nx-module-federation-package": {
+        "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
+        "file": "generated/packages/rspack/migrations/ensure-nx-module-federation-package.json",
+        "hidden": false,
+        "name": "ensure-nx-module-federation-package",
+        "version": "20.3.0-beta.2",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/ensure-nx-module-federation-package",
+        "type": "migration"
+      },
+      "/nx-api/rspack/migrations/20.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/20.2.0-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-package-updates",
+        "version": "20.2.0-beta.7",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/20.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/rspack/migrations/update-20-2-0-update-with-module-federation-import": {
+        "description": "Update the withModuleFederation import use @nx/module-federation/rspack.",
+        "file": "generated/packages/rspack/migrations/update-20-2-0-update-with-module-federation-import.json",
+        "hidden": false,
+        "name": "update-20-2-0-update-with-module-federation-import",
+        "version": "20.2.0-beta.3",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/update-20-2-0-update-with-module-federation-import",
+        "type": "migration"
+      },
+      "/nx-api/rspack/migrations/19.7.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/19.7.0-package-updates.json",
+        "hidden": false,
+        "name": "19.7.0-package-updates",
+        "version": "19.7.0-beta.1",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/19.7.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/rspack/migrations/19.3.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/19.3.0-package-updates.json",
+        "hidden": false,
+        "name": "19.3.0-package-updates",
+        "version": "19.3.0-beta.0",
+        "originalFilePath": "/packages/rspack",
+        "path": "/nx-api/rspack/migrations/19.3.0-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/rspack"
   },
   "storybook": {
@@ -3183,6 +4942,48 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/storybook/migrations/20.8.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/storybook/migrations/20.8.0-package-updates.json",
+        "hidden": false,
+        "name": "20.8.0-package-updates",
+        "version": "20.8.0-beta.0",
+        "originalFilePath": "/packages/storybook",
+        "path": "/nx-api/storybook/migrations/20.8.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/storybook/migrations/20.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/storybook/migrations/20.2.0-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-package-updates",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/storybook",
+        "path": "/nx-api/storybook/migrations/20.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/storybook/migrations/19.6.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/storybook/migrations/19.6.0-package-updates.json",
+        "hidden": false,
+        "name": "19.6.0-package-updates",
+        "version": "19.6.0-beta.1",
+        "originalFilePath": "/packages/storybook",
+        "path": "/nx-api/storybook/migrations/19.6.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/storybook/migrations/update-19-6-0-add-nx-packages": {
+        "description": "Update workspace to use Storybook v8",
+        "file": "generated/packages/storybook/migrations/update-19-6-0-add-nx-packages.json",
+        "hidden": false,
+        "name": "update-19-6-0-add-nx-packages",
+        "version": "19.6.0-beta.0",
+        "originalFilePath": "/packages/storybook",
+        "path": "/nx-api/storybook/migrations/update-19-6-0-add-nx-packages",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/storybook"
   },
   "vite": {
@@ -3290,6 +5091,98 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/vite/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-20-5-0-update-resolve-conditions": {
+        "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
+        "file": "generated/packages/vite/migrations/update-20-5-0-update-resolve-conditions.json",
+        "hidden": false,
+        "name": "update-20-5-0-update-resolve-conditions",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-5-0-update-resolve-conditions",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/eslint-ignore-vite-temp-files": {
+        "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+        "file": "generated/packages/vite/migrations/eslint-ignore-vite-temp-files.json",
+        "hidden": false,
+        "name": "eslint-ignore-vite-temp-files",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/eslint-ignore-vite-temp-files",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/vite/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-20-5-0-install-jiti": {
+        "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
+        "file": "generated/packages/vite/migrations/update-20-5-0-install-jiti.json",
+        "hidden": false,
+        "name": "update-20-5-0-install-jiti",
+        "version": "20.5.0-beta.2",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-5-0-install-jiti",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-20-3-0": {
+        "description": "Add gitignore entry for temporary vitest config files.",
+        "file": "generated/packages/vite/migrations/update-20-3-0.json",
+        "hidden": false,
+        "name": "update-20-3-0",
+        "version": "20.3.0-beta.2",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-3-0",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-20-0-6": {
+        "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
+        "file": "generated/packages/vite/migrations/update-20-0-6.json",
+        "hidden": false,
+        "name": "update-20-0-6",
+        "version": "20.0.6-beta.0",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-0-6",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-20-0-4": {
+        "description": "Add gitignore entry for temporary vite config files.",
+        "file": "generated/packages/vite/migrations/update-20-0-4.json",
+        "hidden": false,
+        "name": "update-20-0-4",
+        "version": "20.0.4-beta.0",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-20-0-4",
+        "type": "migration"
+      },
+      "/nx-api/vite/migrations/update-19-6-0-add-depends-on-for-preview-server": {
+        "description": "Add dependsOn: [build] to preview targets using preview-server",
+        "file": "generated/packages/vite/migrations/update-19-6-0-add-depends-on-for-preview-server.json",
+        "hidden": false,
+        "name": "update-19-6-0-add-depends-on-for-preview-server",
+        "version": "19.6.0-beta.0",
+        "originalFilePath": "/packages/vite",
+        "path": "/nx-api/vite/migrations/update-19-6-0-add-depends-on-for-preview-server",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/vite"
   },
   "vue": {
@@ -3378,6 +5271,28 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/vue/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/vue/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/vue",
+        "path": "/nx-api/vue/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/vue/migrations/19.4.3-package-updates": {
+        "description": "",
+        "file": "generated/packages/vue/migrations/19.4.3-package-updates.json",
+        "hidden": false,
+        "name": "19.4.3-package-updates",
+        "version": "19.4.3-beta.0",
+        "originalFilePath": "/packages/vue",
+        "path": "/nx-api/vue/migrations/19.4.3-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/vue"
   },
   "web": {
@@ -3440,6 +5355,7 @@
         "type": "generator"
       }
     },
+    "migrations": {},
     "path": "/nx-api/web"
   },
   "webpack": {
@@ -3527,6 +5443,68 @@
         "originalFilePath": "/packages/webpack/src/generators/convert-to-inferred/schema.json",
         "path": "/nx-api/webpack/generators/convert-to-inferred",
         "type": "generator"
+      }
+    },
+    "migrations": {
+      "/nx-api/webpack/migrations/update-21-0-0-remove-isolated-config": {
+        "description": "Remove isolatedConfig option for @nx/webpack:webpack",
+        "file": "generated/packages/webpack/migrations/update-21-0-0-remove-isolated-config.json",
+        "hidden": false,
+        "name": "update-21-0-0-remove-isolated-config",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/update-21-0-0-remove-isolated-config",
+        "type": "migration"
+      },
+      "/nx-api/webpack/migrations/20.7.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",
+        "hidden": false,
+        "name": "20.7.1-package-updates",
+        "version": "20.7.1-beta.0",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/20.7.1-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/webpack/migrations/20.5.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/20.5.0-package-updates.json",
+        "hidden": false,
+        "name": "20.5.0-package-updates",
+        "version": "20.5.0-beta.3",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/20.5.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/webpack/migrations/19.7.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/19.7.0-package-updates.json",
+        "hidden": false,
+        "name": "19.7.0-package-updates",
+        "version": "19.7.0-beta.4",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/19.7.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/webpack/migrations/update-19-6-3-proxy-config": {
+        "description": "Migrate proxy config files to match new format from webpack-dev-server v5.",
+        "file": "generated/packages/webpack/migrations/update-19-6-3-proxy-config.json",
+        "hidden": false,
+        "name": "update-19-6-3-proxy-config",
+        "version": "19.6.3-beta.0",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/update-19-6-3-proxy-config",
+        "type": "migration"
+      },
+      "/nx-api/webpack/migrations/19.6.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/webpack/migrations/19.6.0-package-updates.json",
+        "hidden": false,
+        "name": "19.6.0-package-updates",
+        "version": "19.6.0-beta.1",
+        "originalFilePath": "/packages/webpack",
+        "path": "/nx-api/webpack/migrations/19.6.0-package-updates",
+        "type": "migration"
       }
     },
     "path": "/nx-api/webpack"
@@ -3665,233 +5643,248 @@
         "type": "generator"
       }
     },
+    "migrations": {
+      "/nx-api/workspace/migrations/20.4.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/20.4.0-package-updates.json",
+        "hidden": false,
+        "name": "20.4.0-package-updates",
+        "version": "20.4.0-beta.1",
+        "originalFilePath": "/packages/workspace",
+        "path": "/nx-api/workspace/migrations/20.4.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/workspace/migrations/20.2.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/20.2.0-package-updates.json",
+        "hidden": false,
+        "name": "20.2.0-package-updates",
+        "version": "20.2.0-beta.5",
+        "originalFilePath": "/packages/workspace",
+        "path": "/nx-api/workspace/migrations/20.2.0-package-updates",
+        "type": "migration"
+      },
+      "/nx-api/workspace/migrations/19.5.1-package-updates": {
+        "description": "",
+        "file": "generated/packages/workspace/migrations/19.5.1-package-updates.json",
+        "hidden": false,
+        "name": "19.5.1-package-updates",
+        "version": "19.5.0-beta.1",
+        "originalFilePath": "/packages/workspace",
+        "path": "/nx-api/workspace/migrations/19.5.1-package-updates",
+        "type": "migration"
+      }
+    },
     "path": "/nx-api/workspace"
   },
-  "powerpack-azure-cache": {
+  "azure-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-azure-cache",
-    "packageName": "@nx/powerpack-azure-cache",
-    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+    "name": "azure-cache",
+    "packageName": "@nx/azure-cache",
+    "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
     "documents": {
-      "/nx-api/powerpack-azure-cache/documents/overview": {
+      "/nx-api/azure-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
-        "file": "external-generated/packages/powerpack-azure-cache/documents/overview",
+        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Azure Blob Storage.",
+        "file": "external-generated/packages/azure-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-azure-cache/documents/overview",
+        "path": "/nx-api/azure-cache/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-azure-cache/powerpack-azure-cache-plugin"
+        "originalFilePath": "shared/packages/azure-cache/azure-cache-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-azure-cache",
-    "source": "/libs/nx-packages/powerpack-azure-cache/src",
+    "root": "/libs/nx-packages/azure-cache",
+    "source": "/libs/nx-packages/azure-cache/src",
     "executors": {},
     "generators": {},
-    "path": "/nx-api/powerpack-azure-cache"
+    "migrations": {},
+    "path": "/nx-api/azure-cache"
   },
-  "powerpack-conformance": {
+  "conformance": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-conformance",
-    "packageName": "@nx/powerpack-conformance",
-    "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+    "name": "conformance",
+    "packageName": "@nx/conformance",
+    "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
     "documents": {
-      "/nx-api/powerpack-conformance/documents/overview": {
+      "/nx-api/conformance/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
-        "file": "external-generated/packages/powerpack-conformance/documents/overview",
+        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/conformance/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-conformance/documents/overview",
+        "path": "/nx-api/conformance/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-conformance/powerpack-conformance-plugin"
+        "originalFilePath": "shared/packages/conformance/conformance-plugin"
+      },
+      "/nx-api/conformance/documents/create-conformance-rule": {
+        "id": "create-conformance-rule",
+        "name": "Create a Conformance Rule",
+        "description": "A Nx plugin which allows users to write and apply rules for your entire workspace that help with consistency, maintainability, reliability and security.",
+        "file": "external-generated/packages/conformance/documents/create-conformance-rule",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/conformance/documents/create-conformance-rule",
+        "tags": [],
+        "originalFilePath": "shared/packages/conformance/create-conformance-rule"
       }
     },
-    "root": "/libs/nx-packages/powerpack-conformance",
-    "source": "/libs/nx-packages/powerpack-conformance/src",
+    "root": "/libs/nx-packages/conformance",
+    "source": "/libs/nx-packages/conformance/src",
     "executors": {
-      "/nx-api/powerpack-conformance/executors/bundle-rules": {
+      "/nx-api/conformance/executors/bundle-rules": {
         "description": "Compile and bundle one or more Nx Conformance Rules",
-        "file": "external-generated/packages/powerpack-conformance/executors/bundle-rules.json",
+        "file": "external-generated/packages/conformance/executors/bundle-rules.json",
         "hidden": false,
         "name": "bundle-rules",
-        "originalFilePath": "/libs/nx-packages/powerpack-conformance/src/executors/bundle-rules/schema.json",
-        "path": "/nx-api/powerpack-conformance/executors/bundle-rules",
+        "originalFilePath": "/libs/nx-packages/conformance/src/executors/bundle-rules/schema.json",
+        "path": "/nx-api/conformance/executors/bundle-rules",
         "type": "executor"
       }
     },
-    "generators": {},
-    "path": "/nx-api/powerpack-conformance"
-  },
-  "powerpack-enterprise-cloud": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-enterprise-cloud",
-    "packageName": "@nx/powerpack-enterprise-cloud",
-    "description": "A Nx Powerpack plugin which is specific to Nx Enterprise Cloud workspaces.",
-    "documents": {},
-    "root": "/libs/nx-packages/powerpack-enterprise-cloud",
-    "source": "/libs/nx-packages/powerpack-enterprise-cloud/src",
-    "executors": {},
     "generators": {
-      "/nx-api/powerpack-enterprise-cloud/generators/init": {
-        "description": "Initialize Nx Powerpack Enterprise Cloud config",
-        "file": "external-generated/packages/powerpack-enterprise-cloud/generators/init.json",
+      "/nx-api/conformance/generators/create-rule": {
+        "description": "Create a new conformance rule",
+        "file": "external-generated/packages/conformance/generators/create-rule.json",
         "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-enterprise-cloud/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-enterprise-cloud/generators/init",
+        "name": "create-rule",
+        "originalFilePath": "/libs/nx-packages/conformance/src/generators/create-rule/schema.json",
+        "path": "/nx-api/conformance/generators/create-rule",
         "type": "generator"
       }
     },
-    "path": "/nx-api/powerpack-enterprise-cloud"
+    "migrations": {},
+    "path": "/nx-api/conformance"
   },
-  "powerpack-gcs-cache": {
+  "owners": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-gcs-cache",
-    "packageName": "@nx/powerpack-gcs-cache",
-    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+    "name": "owners",
+    "packageName": "@nx/owners",
+    "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
     "documents": {
-      "/nx-api/powerpack-gcs-cache/documents/overview": {
+      "/nx-api/owners/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
-        "file": "external-generated/packages/powerpack-gcs-cache/documents/overview",
+        "description": "A Nx plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
+        "file": "external-generated/packages/owners/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-gcs-cache/documents/overview",
+        "path": "/nx-api/owners/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-gcs-cache/powerpack-gcs-cache-plugin"
+        "originalFilePath": "shared/packages/owners/owners-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-gcs-cache",
-    "source": "/libs/nx-packages/powerpack-gcs-cache/src",
-    "executors": {},
-    "generators": {},
-    "path": "/nx-api/powerpack-gcs-cache"
-  },
-  "powerpack-license": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-license",
-    "packageName": "@nx/powerpack-license",
-    "description": "Package to provide the ability to activate and read licenses for Nx Powerpack.",
-    "documents": {},
-    "root": "/libs/nx-packages/powerpack-license",
-    "source": "/libs/nx-packages/powerpack-license/src",
-    "executors": {},
-    "generators": {},
-    "path": "/nx-api/powerpack-license"
-  },
-  "powerpack-owners": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-owners",
-    "packageName": "@nx/powerpack-owners",
-    "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-    "documents": {
-      "/nx-api/powerpack-owners/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides the ability to configure and maintain codeowners for projects in Nx workspaces.",
-        "file": "external-generated/packages/powerpack-owners/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/powerpack-owners/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/powerpack-owners/powerpack-owners-plugin"
-      }
-    },
-    "root": "/libs/nx-packages/powerpack-owners",
-    "source": "/libs/nx-packages/powerpack-owners/src",
+    "root": "/libs/nx-packages/owners",
+    "source": "/libs/nx-packages/owners/src",
     "executors": {},
     "generators": {
-      "/nx-api/powerpack-owners/generators/init": {
+      "/nx-api/owners/generators/init": {
         "description": "Initialize Nx Powerpack Owners config",
-        "file": "external-generated/packages/powerpack-owners/generators/init.json",
+        "file": "external-generated/packages/owners/generators/init.json",
         "hidden": false,
         "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-owners/generators/init",
+        "originalFilePath": "/libs/nx-packages/owners/src/generators/init/schema.json",
+        "path": "/nx-api/owners/generators/init",
         "type": "generator"
       },
-      "/nx-api/powerpack-owners/generators/sync-codeowners-file": {
+      "/nx-api/owners/generators/sync-codeowners-file": {
         "description": "Sync Nx Powerpack Owners config to a CODEOWNERS file",
-        "file": "external-generated/packages/powerpack-owners/generators/sync-codeowners-file.json",
+        "file": "external-generated/packages/owners/generators/sync-codeowners-file.json",
         "hidden": false,
         "name": "sync-codeowners-file",
-        "originalFilePath": "/libs/nx-packages/powerpack-owners/src/generators/sync-codeowners-file/schema.json",
-        "path": "/nx-api/powerpack-owners/generators/sync-codeowners-file",
+        "originalFilePath": "/libs/nx-packages/owners/src/generators/sync-codeowners-file/schema.json",
+        "path": "/nx-api/owners/generators/sync-codeowners-file",
         "type": "generator"
       }
     },
-    "path": "/nx-api/powerpack-owners"
+    "migrations": {},
+    "path": "/nx-api/owners"
   },
-  "powerpack-s3-cache": {
+  "gcs-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-s3-cache",
-    "packageName": "@nx/powerpack-s3-cache",
-    "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
+    "name": "gcs-cache",
+    "packageName": "@nx/gcs-cache",
+    "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
     "documents": {
-      "/nx-api/powerpack-s3-cache/documents/overview": {
+      "/nx-api/gcs-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin which provides a Nx cache which can be self hosted on Amazon S3.",
-        "file": "external-generated/packages/powerpack-s3-cache/documents/overview",
+        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Google Cloud Storage.",
+        "file": "external-generated/packages/gcs-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-s3-cache/documents/overview",
+        "path": "/nx-api/gcs-cache/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-s3-cache/powerpack-s3-cache-plugin"
+        "originalFilePath": "shared/packages/gcs-cache/gcs-cache-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-s3-cache",
-    "source": "/libs/nx-packages/powerpack-s3-cache/src",
+    "root": "/libs/nx-packages/gcs-cache",
+    "source": "/libs/nx-packages/gcs-cache/src",
     "executors": {},
-    "generators": {
-      "/nx-api/powerpack-s3-cache/generators/init": {
-        "description": "Initialize the S3 Cache",
-        "file": "external-generated/packages/powerpack-s3-cache/generators/init.json",
-        "hidden": false,
-        "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-s3-cache/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-s3-cache/generators/init",
-        "type": "generator"
-      }
-    },
-    "path": "/nx-api/powerpack-s3-cache"
+    "generators": {},
+    "migrations": {},
+    "path": "/nx-api/gcs-cache"
   },
-  "powerpack-shared-fs-cache": {
+  "s3-cache": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "powerpack-shared-fs-cache",
-    "packageName": "@nx/powerpack-shared-fs-cache",
-    "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
+    "name": "s3-cache",
+    "packageName": "@nx/s3-cache",
+    "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
     "documents": {
-      "/nx-api/powerpack-shared-fs-cache/documents/overview": {
+      "/nx-api/s3-cache/documents/overview": {
         "id": "overview",
         "name": "Overview",
-        "description": "A Nx Powerpack plugin to enable you to use a shared file system directory",
-        "file": "external-generated/packages/powerpack-shared-fs-cache/documents/overview",
+        "description": "A Nx plugin which provides a Nx cache which can be self hosted on Amazon S3.",
+        "file": "external-generated/packages/s3-cache/documents/overview",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-api/powerpack-shared-fs-cache/documents/overview",
+        "path": "/nx-api/s3-cache/documents/overview",
         "tags": [],
-        "originalFilePath": "shared/packages/powerpack-shared-fs-cache/powerpack-shared-fs-cache-plugin"
+        "originalFilePath": "shared/packages/s3-cache/s3-cache-plugin"
       }
     },
-    "root": "/libs/nx-packages/powerpack-shared-fs-cache",
-    "source": "/libs/nx-packages/powerpack-shared-fs-cache/src",
+    "root": "/libs/nx-packages/s3-cache",
+    "source": "/libs/nx-packages/s3-cache/src",
+    "executors": {},
+    "generators": {},
+    "migrations": {},
+    "path": "/nx-api/s3-cache"
+  },
+  "shared-fs-cache": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "shared-fs-cache",
+    "packageName": "@nx/shared-fs-cache",
+    "description": "A Nx plugin to enable you to use a shared file system directory",
+    "documents": {
+      "/nx-api/shared-fs-cache/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "A Nx plugin to enable you to use a shared file system directory",
+        "file": "external-generated/packages/shared-fs-cache/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/shared-fs-cache/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/shared-fs-cache/shared-fs-cache-plugin"
+      }
+    },
+    "root": "/libs/nx-packages/shared-fs-cache",
+    "source": "/libs/nx-packages/shared-fs-cache/src",
     "executors": {},
     "generators": {
-      "/nx-api/powerpack-shared-fs-cache/generators/init": {
+      "/nx-api/shared-fs-cache/generators/init": {
         "description": "Add the shared fs cache",
-        "file": "external-generated/packages/powerpack-shared-fs-cache/generators/init.json",
+        "file": "external-generated/packages/shared-fs-cache/generators/init.json",
         "hidden": false,
         "name": "init",
-        "originalFilePath": "/libs/nx-packages/powerpack-shared-fs-cache/src/generators/init/schema.json",
-        "path": "/nx-api/powerpack-shared-fs-cache/generators/init",
+        "originalFilePath": "/libs/nx-packages/shared-fs-cache/src/generators/init/schema.json",
+        "path": "/nx-api/shared-fs-cache/generators/init",
         "type": "generator"
       }
     },
-    "path": "/nx-api/powerpack-shared-fs-cache"
+    "migrations": {},
+    "path": "/nx-api/shared-fs-cache"
   }
 }

@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { Linter, LinterType } from '@nx/eslint';
 import {
   getRelativePathToRootTsConfig,
@@ -35,8 +36,10 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
-import { installedCypressVersion } from '../../utils/cypress-version';
-import { typesNodeVersion, viteVersion } from '../../utils/versions';
+import {
+  getInstalledCypressMajorVersion,
+  versions,
+} from '../../utils/versions';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 import cypressInitGenerator, { addPlugin } from '../init/init';
 
@@ -81,7 +84,7 @@ export async function configurationGeneratorInternal(
   const tasks: GeneratorCallback[] = [];
 
   const projectGraph = await createProjectGraphAsync();
-  if (!installedCypressVersion()) {
+  if (!getInstalledCypressMajorVersion(tree)) {
     tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
     tasks.push(
       await cypressInitGenerator(tree, {
@@ -173,15 +176,23 @@ export async function configurationGeneratorInternal(
 }
 
 function ensureDependencies(tree: Tree, options: NormalizedSchema) {
+  const pkgVersions = versions(tree);
+
   const devDependencies: Record<string, string> = {
-    '@types/node': typesNodeVersion,
+    '@types/node': pkgVersions.typesNodeVersion,
   };
 
   if (options.bundler === 'vite') {
-    devDependencies['vite'] = viteVersion;
+    devDependencies['vite'] = pkgVersions.viteVersion;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }
 
 async function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
@@ -192,6 +203,18 @@ async function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {
   if (projectConfig?.targets?.e2e) {
     throw new Error(`Project ${options.project} already has an e2e target.
 Rename or remove the existing e2e target.`);
+  }
+
+  if (
+    !options.baseUrl &&
+    !options.devServerTarget &&
+    !projectConfig?.targets?.serve
+  ) {
+    const { devServerTarget, baseUrl } = await promptForMissingServeData(
+      options.project
+    );
+    options.devServerTarget = devServerTarget;
+    options.baseUrl = baseUrl;
   }
 
   if (
@@ -228,6 +251,38 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   };
 }
 
+async function promptForMissingServeData(projectName: string) {
+  const { devServerTarget, port } = await promptWhenInteractive<{
+    devServerTarget: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'devServerTarget',
+        message:
+          'What is the name of the target used to serve the application locally?',
+        initial: `${projectName}:serve`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      devServerTarget: `${projectName}:serve`,
+      port: 3000,
+    }
+  );
+
+  return {
+    devServerTarget,
+    baseUrl: `http://localhost:${port}`,
+  };
+}
+
 async function addFiles(
   tree: Tree,
   options: NormalizedSchema,
@@ -235,7 +290,7 @@ async function addFiles(
   hasPlugin: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const cyVersion = installedCypressVersion();
+  const cyVersion = getInstalledCypressMajorVersion(tree);
   const filesToUse = cyVersion && cyVersion < 10 ? 'v9' : 'v10';
 
   const hasTsConfig = tree.exists(
@@ -355,7 +410,7 @@ function addTarget(
   projectGraph: ProjectGraph
 ) {
   const projectConfig = readProjectConfiguration(tree, opts.project);
-  const cyVersion = installedCypressVersion();
+  const cyVersion = getInstalledCypressMajorVersion(tree);
   projectConfig.targets ??= {};
   projectConfig.targets.e2e = {
     executor: '@nx/cypress:cypress',
@@ -429,10 +484,10 @@ function createPackageJson(tree: Tree, options: NormalizedSchema) {
     name: importPath,
     version: '0.0.1',
     private: true,
-    nx: {
-      name: options.project,
-    },
   };
+  if (options.project !== importPath) {
+    packageJson.nx = { name: options.project };
+  }
   writeJson(tree, packageJsonPath, packageJson);
 }
 

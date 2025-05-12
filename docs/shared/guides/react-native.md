@@ -1,3 +1,8 @@
+---
+title: React Native with Nx
+description: Learn how to develop React Native applications with Nx, including workspace setup, running on simulators, testing, and leveraging Nx's powerful tooling.
+---
+
 # React Native with Nx
 
 Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/nx-api/detox), Storybook, Jest, and more.

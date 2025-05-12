@@ -64,11 +64,20 @@
         "cwd": "nx-dev/nx-dev"
       }
     },
+    "copy-tutorial": {
+      "inputs": ["{workspaceRoot}/nx-dev/tutorial/**/*"],
+      "outputs": ["{projectRoot}/public/tutorials"],
+      "command": "node ./copy-tutorial.js",
+      "dependsOn": ["tutorial:build"],
+      "options": {
+        "cwd": "nx-dev/nx-dev"
+      }
+    },
     "serve-docs": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx watch --projects=docs -- nx run nx-dev:copy-docs",
+          "nx watch --projects=docs,tutorial -- nx run-many -t=copy-docs,copy-tutorial -p nx-dev",
           "nx run nx-dev:serve"
         ],
         "parallel": true
@@ -80,7 +89,7 @@
     },
     "serve": {
       "executor": "@nx/next:server",
-      "dependsOn": ["copy-docs"],
+      "dependsOn": ["copy-docs", "copy-tutorial"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
@@ -100,6 +109,7 @@
     "deploy-build": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/public/documentation"],
+      "dependsOn": ["@nx/nx-source:documentation"],
       "options": {
         "commands": [
           {
@@ -107,12 +117,12 @@
             "description": "OG images generation"
           },
           {
-            "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
-            "description": "Pre-generate official package metadata"
-          },
-          {
             "command": "nx copy-docs nx-dev",
             "description": "Copy generated docs to build output"
+          },
+          {
+            "command": "nx copy-tutorial nx-dev",
+            "description": "Copy tutorial to build output"
           },
           {
             "command": "npx ts-node -P scripts/tsconfig.scripts.json scripts/documentation/plugin-quality-indicators.ts",

@@ -9,4 +9,5 @@ export interface InitSchema {
   addPlugin?: boolean;
   updatePackageScripts?: boolean;
   addTsPlugin?: boolean;
+  platform?: 'web' | 'node';
 }

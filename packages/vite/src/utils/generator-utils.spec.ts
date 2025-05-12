@@ -144,7 +144,7 @@ describe('generator utils', () => {
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/myproj',
           plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), dts({ entryRoot: 'src', tsconfigPath: path.join(__dirname, 'tsconfig.lib.json') })],
@@ -168,7 +168,7 @@ describe('generator utils', () => {
               fileName: 'index',
               // Change this to the formats you want to support.
               // Don't forget to update your package.json as well.
-              formats: ['es']
+              formats: ['es' as const]
             },
             rollupOptions: {
               // External packages that should not be bundled into your library.
@@ -182,15 +182,15 @@ describe('generator utils', () => {
             watch: false,
             globals: true,
             environment: 'jsdom',
-            include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             reporters: ['default'],
             coverage: {
               reportsDirectory: '../coverage/myproj',
-              provider: 'v8',
+              provider: 'v8' as const,
             }
           },
-        });
+        }));
         "
       `);
     });
@@ -218,7 +218,7 @@ describe('generator utils', () => {
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-        export default defineConfig({
+        export default defineConfig(() => ({
           root: __dirname,
           cacheDir: '../node_modules/.vite/myproj',
           server:{
@@ -242,7 +242,7 @@ describe('generator utils', () => {
               transformMixedEsModules: true,
             },
           },
-        });
+        }));
         "
       `);
     });

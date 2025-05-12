@@ -4,38 +4,51 @@ import {
   GeneratorCallback,
   installPackagesTask,
   joinPathFragments,
-  readNxJson,
+  readJson,
+  readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
-  updateJson,
-  updateNxJson,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
-import { vueInitGenerator } from '../init/init';
-import { Schema } from './schema';
-import { normalizeOptions } from './lib/normalize-options';
-import { addLinting } from '../../utils/add-linting';
-import { createLibraryFiles } from './lib/create-library-files';
-import { extractTsConfigBase } from '../../utils/create-ts-config';
-import componentGenerator from '../component/component';
-import { addVite } from './lib/add-vite';
-import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import {
+  addReleaseConfigForNonTsSolution,
+  addReleaseConfigForTsSolution,
+  releaseTasks,
+} from '@nx/js/src/generators/library/utils/add-release-config';
+import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import {
+  addProjectToTsSolutionWorkspace,
+  updateTsconfigFiles,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import { relative } from 'path';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { updateTsconfigFiles } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addLinting } from '../../utils/add-linting';
+import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
+import componentGenerator from '../component/component';
+import { vueInitGenerator } from '../init/init';
+import { addVite } from './lib/add-vite';
+import { createLibraryFiles } from './lib/create-library-files';
+import { determineEntryFields } from './lib/determine-entry-fields';
+import { normalizeOptions } from './lib/normalize-options';
+import { Schema } from './schema';
 
 export function libraryGenerator(tree: Tree, schema: Schema) {
-  return libraryGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return libraryGeneratorInternal(tree, {
+    addPlugin: false,
+    useProjectJson: true,
+    ...schema,
+  });
 }
 
 export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-
-  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
 
   const options = await normalizeOptions(tree, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -44,41 +57,48 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     );
   }
 
+  tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isUsingTsSolutionConfig) {
-    const moduleFile =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : './dist/index.mjs';
-    const typesFile =
-      options.bundler === 'none'
-        ? options.js
-          ? './src/index.js'
-          : './src/index.ts'
-        : './dist/index.d.ts';
-    writeJson(tree, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: getImportPath(tree, options.name),
-      version: '0.0.1',
-      private: true,
-      module: moduleFile,
-      types: typesFile,
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
+  }
+
+  let packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+  };
+
+  if (!options.useProjectJson) {
+    packageJson = {
+      ...packageJson,
+      ...determineEntryFields(options),
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: `${options.projectRoot}/src`,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+    };
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
-    addProjectConfiguration(tree, options.name, {
+    addProjectConfiguration(tree, options.projectName, {
       root: options.projectRoot,
       sourceRoot: joinPathFragments(options.projectRoot, 'src'),
       projectType: 'library',
       tags: options.parsedTags,
       targets: {},
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      tree,
+      joinPathFragments(options.projectRoot, 'package.json'),
+      packageJson
+    );
   }
 
   tasks.push(
@@ -119,16 +139,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     });
   }
 
-  if (
-    !options.isUsingTsSolutionConfig &&
-    (options.publishable || options.bundler !== 'none')
-  ) {
-    updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
-      json.name = options.importPath;
-      return json;
-    });
-  }
-
   if (!options.skipTsConfig && !options.isUsingTsSolutionConfig) {
     addTsConfigPath(tree, options.importPath, [
       joinPathFragments(
@@ -140,8 +150,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   if (options.js) toJS(tree);
-
-  if (!options.skipFormat) await formatFiles(tree);
 
   if (options.isUsingTsSolutionConfig) {
     updateTsconfigFiles(
@@ -160,6 +168,31 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
         : undefined
     );
   }
+
+  sortPackageJsonFields(tree, options.projectRoot);
+
+  if (options.publishable) {
+    const projectConfig = readProjectConfiguration(tree, options.projectName);
+    if (options.isUsingTsSolutionConfig) {
+      await addReleaseConfigForTsSolution(
+        tree,
+        options.projectName,
+        projectConfig
+      );
+    } else {
+      const nxJson = readJson(tree, 'nx.json');
+      await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
+        tree,
+        options.projectName,
+        projectConfig
+      );
+    }
+    updateProjectConfiguration(tree, options.projectName, projectConfig);
+    tasks.push(await releaseTasks(tree));
+  }
+
+  if (!options.skipFormat) await formatFiles(tree);
 
   // Always run install to link packages.
   if (options.isUsingTsSolutionConfig) {

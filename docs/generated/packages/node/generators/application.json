@@ -69,8 +69,7 @@
       },
       "swcJest": {
         "type": "boolean",
-        "description": "Use `@swc/jest` instead `ts-jest` for faster test compilation.",
-        "default": false
+        "description": "Use `@swc/jest` instead `ts-jest` for faster test compilation."
       },
       "babelJest": {
         "type": "boolean",
@@ -124,6 +123,10 @@
       "docker": {
         "type": "boolean",
         "description": "Add a docker build target"
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["directory"],

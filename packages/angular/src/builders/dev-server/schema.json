@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Webpack Dev Server",
@@ -17,7 +18,7 @@
       "type": "string",
       "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v20."
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed when Angular v20 is released."
     },
     "buildTarget": {
       "type": "string",
@@ -78,11 +79,11 @@
     },
     "publicHost": {
       "type": "string",
-      "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies."
+      "description": "The URL that the browser client (or live-reload client, if enabled) should use to connect to the development server. Use for a complex dev server setup, such as one with reverse proxies. This option has no effect when using the 'application' or other esbuild-based builders."
     },
     "allowedHosts": {
       "type": "array",
-      "description": "List of hosts that are allowed to access the dev server.",
+      "description": "List of hosts that are allowed to access the dev server. This option has no effect when using the 'application' or other esbuild-based builders in Angular versions lower than 19.2.0.",
       "default": [],
       "items": {
         "type": "string"
@@ -94,7 +95,7 @@
     },
     "disableHostCheck": {
       "type": "boolean",
-      "description": "Don't verify connected clients are part of allowed hosts.",
+      "description": "Don't verify connected clients are part of allowed hosts. This option has no effect when using the 'application' or other esbuild-based builders in Angular versions lower than 19.2.0.",
       "default": false
     },
     "hmr": {
@@ -156,6 +157,11 @@
         "type": "string",
         "description": "The path to the middleware function. Relative to the workspace root."
       }
+    },
+    "watchDependencies": {
+      "type": "boolean",
+      "description": "Watch buildable dependencies and rebuild when they change.",
+      "default": true
     }
   },
   "additionalProperties": false,

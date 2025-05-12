@@ -2,7 +2,8 @@
 title: Versioning and Releasing Packages in a Monorepo
 slug: 'versioning-and-releasing-packages-in-a-monorepo'
 authors: [Juri Strumpflohner]
-cover_image: '/blog/images/2024-02-09/featured_img.png'
+description: 'Learn how to use Nx Release to version and publish packages in your monorepo with conventional commits and automated changelog generation.'
+cover_image: '/blog/images/2024-02-09/featured_img.avif'
 tags: [nx, nx-cloud, releases, changelog]
 ---
 
@@ -10,7 +11,7 @@ When it comes to publishing NPM packages, there are a bunch of libraries and uti
 
 Nx already has all that knowledge, and it can leverage the information it has about your project dependencies and relationships to optimize your task runs.
 
-Here’s the structure of our current example workspace we’re going to refer to in this article:
+Here's the structure of our current example workspace we're going to refer to in this article:
 
 ![@tuskdesign/demo relies on @tuskdesign/forms and @tuskdesign/buttons, and @tuskdesign/forms also depends on @tuskdesign/buttons](/blog/images/2024-02-09/bodyimg1.webp)
 
@@ -20,9 +21,7 @@ As you can see `@tuskdesign/forms` relies on `@tuskdesign/buttons` and as such h
 
 ---
 
-**Prefer a video?**
-
-{% youtube src="https://www.youtube.com/embed/KjZKFGu3_9I?si=L-8oRzy-hV-WF_pS" title="Versioning and Releasing Packages in a Monorepo" /%}
+{% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
 ---
 
@@ -53,7 +52,7 @@ This brings up a couple of questions including whether to install [Project Cryst
 
 ![](/blog/images/2024-02-09/bodyimg2.webp)
 
-It gives you some additional benefits ([you can read more here](/blog/what-if-nx-plugins-were-more-like-vscode-extensions)), but you don’t have to as it is not required for Nx Release.
+It gives you some additional benefits ([you can read more here](/blog/what-if-nx-plugins-were-more-like-vscode-extensions)), but you don't have to as it is not required for Nx Release.
 
 ## Installing the JavaScript/TypeScript versioning Package
 
@@ -67,7 +66,7 @@ _(We use the `-w` flag to install it at the monorepo root level)_
 
 ## Running Nx Release
 
-Once you’re set-up, you can already go ahead and run the following command:
+Once you're set-up, you can already go ahead and run the following command:
 
 ```shell
 pnpm nx release --dry-run
@@ -77,7 +76,7 @@ This command will do the versioning, changelog generation, and publishing steps 
 
 ![](/blog/images/2024-02-09/bodyimg3.webp)
 
-You’ll get asked whether you want to release a major, pre-major, minor… release or choose an exact version.
+You'll get asked whether you want to release a major, pre-major, minor… release or choose an exact version.
 
 Once this runs through, you might hit the following error:
 
@@ -169,7 +168,7 @@ pnpm nx release --dry-run
 
 ![](/blog/images/2024-02-09/bodyimg7.webp)
 
-Let’s go ahead and change something in our `@tuskdesign/buttons` package and then commit it as follows:
+Let's go ahead and change something in our `@tuskdesign/buttons` package and then commit it as follows:
 
 ```shell
 git commit -am 'feat(buttons): add new background shadow'
@@ -229,13 +228,13 @@ Note, you can still use `--dry-run` and it'd show you the URL where the GitHub r
 
 ## Programmatic Mode
 
-As you’ve seen, you can use `nx release` right away with minimal configuration. However, we are very well aware that many real-world scenarios are more complex, you want/need more control over when the version is happening, when the changelog generation kicks in and so on. This is why we also introduced a **programmatic API.**
+As you've seen, you can use `nx release` right away with minimal configuration. However, we are very well aware that many real-world scenarios are more complex, you want/need more control over when the version is happening, when the changelog generation kicks in and so on. This is why we also introduced a **programmatic API.**
 
-This approach gives you full control to embed Nx Release into your current release flow. There’s a nice [example script in our docs](/features/manage-releases#using-the-programmatic-api-for-nx-release) that can help you get started.
+This approach gives you full control to embed Nx Release into your current release flow. There's a nice [example script in our docs](/features/manage-releases#using-the-programmatic-api-for-nx-release) that can help you get started.
 
 Create a file — I call it `release.ts` - at the root of my workspace. Nx Release obviously doesn't care how the file is called or where you place it. You can also go with plain JS.
 
-Here’s the [example script from our docs](/features/manage-releases#using-the-programmatic-api-for-nx-release):
+Here's the [example script from our docs](/features/manage-releases#using-the-programmatic-api-for-nx-release):
 
 ```ts
 import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';

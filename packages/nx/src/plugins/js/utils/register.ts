@@ -245,6 +245,7 @@ export function getTranspiler(
   // use NodeJs module resolution until support for TS 4.x is dropped and then
   // we can switch to Node10
   compilerOptions.moduleResolution = ts.ModuleResolutionKind.NodeJs;
+  compilerOptions.customConditions = null;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
@@ -293,8 +294,7 @@ export function getTranspiler(
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigRaw?: unknown
+  compilerOptions: CompilerOptions
 ): () => void {
   // Function to register transpiler that returns cleanup function
   const transpiler = getTranspiler(compilerOptions);

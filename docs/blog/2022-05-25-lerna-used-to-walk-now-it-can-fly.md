@@ -2,8 +2,9 @@
 title: 'How Lerna just got 10x faster!'
 slug: 'lerna-used-to-walk-now-it-can-fly'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-05-25/WPGHapKqT3IguWjeN5UgWg.png'
+cover_image: '/blog/images/2022-05-25/WPGHapKqT3IguWjeN5UgWg.avif'
 tags: [nx]
+description: Lerna v5.1 introduces the useNx flag for dramatic performance gains, making it 5.3x faster than Turborepo with added caching and task execution features.
 ---
 
 **_TL;DR:_** _We released a new beta version of Lerna and it happens that it is now 5.3 times faster than Turbo 👀…by turning on a flag. Keep reading to learn more._
@@ -11,7 +12,7 @@ tags: [nx]
 > _ICYMI: A couple of weeks ago we (Nrwl) announced that we take over stewardship of Lerna. Read all about it in our_ [_recent blog post_](/blog/lerna-is-dead-long-live-lerna)_.  
 > We also just released Lerna v5 as a first maintenance release:_ [_Read more here_](https://github.com/lerna/lerna/releases/tag/v5.0.0)_._
 
-For folks that want to migrate to Nx, we always had a dedicated [Nx and Lerna](/recipes/adopting-nx) docs page that shows you how you can easily integrate the two. However, we felt we could do better and allow you to get all the speed benefits that come from Nx’s task scheduling abilities, without needing to change nearly anything in your Lerna workspace.
+For folks that want to migrate to Nx, we always had a dedicated [Nx and Lerna](/recipes/adopting-nx) docs page that shows you how you can easily integrate the two. However, we felt we could do better and allow you to get all the speed benefits that come from Nx's task scheduling abilities, without needing to change nearly anything in your Lerna workspace.
 
 And it got fast, like really fast!!
 
@@ -25,11 +26,11 @@ Here you go
 
 We just published Lerna v5.1 which introduces a `useNx` flag. Adding that makes Lerna to be on par with Nx in terms of speed, and is significantly faster than other tools.
 
-Comparing Lerna with and without the flag isn’t really an apples-to-apples comparison because one comes with caching abilities, while before, Lerna didn’t have that at all. But just to give you an idea: enabling Nx on your existing Lerna workspace can **speed it up in the range of 2–10 times**, depending on the repo setup.
+Comparing Lerna with and without the flag isn't really an apples-to-apples comparison because one comes with caching abilities, while before, Lerna didn't have that at all. But just to give you an idea: enabling Nx on your existing Lerna workspace can **speed it up in the range of 2–10 times**, depending on the repo setup.
 
-But let’s do some more real “apples-to-apples” comparison of Lerna’s speed with `useNx` enabled. For benchmarking Nx we have set up a repo in the past which we regularly use to measure the speed of new Nx releases with other similar tools on the market such as [Lage](https://microsoft.github.io/lage/) and [Turborepo](https://turborepo.org/): [https://github.com/vsavkin/large-monorepo](https://github.com/vsavkin/large-monorepo). We now added Lerna+Nx (Lerna with `useNx` enabled) to that repo to measure the impact.
+But let's do some more real "apples-to-apples" comparison of Lerna's speed with `useNx` enabled. For benchmarking Nx we have set up a repo in the past which we regularly use to measure the speed of new Nx releases with other similar tools on the market such as [Lage](https://microsoft.github.io/lage/) and [Turborepo](https://turborepo.org/): [https://github.com/vsavkin/large-monorepo](https://github.com/vsavkin/large-monorepo). We now added Lerna+Nx (Lerna with `useNx` enabled) to that repo to measure the impact.
 
-Here’s a gif of running the benchmark of Lerna+Nx and Turborepo:
+Here's a gif of running the benchmark of Lerna+Nx and Turborepo:
 
 ![](/blog/images/2022-05-25/MrhEU4wPZlwp4dbKsj876g.avif)
 
@@ -50,7 +51,7 @@ Finally, add the following to your `lerna.json`.
 }
 ```
 
-That’s mostly it. You can continue using the usual Lerna commands, but at this point Lerna would delegate its operations to Nx underneath.
+That's mostly it. You can continue using the usual Lerna commands, but at this point Lerna would delegate its operations to Nx underneath.
 
 To get more out of it, you might want to create a small `nx.json` file (or run `npx nx init` to generate one) for going into some more details on configuring the cacheable operations:
 
@@ -76,11 +77,11 @@ So how does this work on a technical level. So far Lerna (`lerna run` to be more
 
 With the change we made in Lerna 5.1 we are adding Nx (MIT licensed) as a third option in addition to the already existing `p-map` and `p-queue`. By having `nx` installed and configured (as mentioned in the previous section), Lerna can now delegate its `lerna run` command to Nx directly. All of this is done in a backwards-compatible way: every `lerna run` command will work but will be significantly faster and can optionally even be distributed across multiple machines without any config (more about that in the next section).
 
-## What’s more?
+## What's more?
 
-By having Nx integrated, you not just get faster builds but also some other Nx’s features for free!
+By having Nx integrated, you not just get faster builds but also some other Nx's features for free!
 
-[**Nx Project graph**](/features/explore-graph) — By running `npx nx graph` you get the visualization of the graph. You can interactively explore what your workspace looks like and the relationships between the packages. We actually used this same graph on the Lerna repo itself, which helped us to get a better understanding of how the repo is structured when we took over the maintenance. Here’s an example of filtering the lerna packages to understand what `@lerna/exec` is about and how it relates to other packages in the repo.
+[**Nx Project graph**](/features/explore-graph) — By running `npx nx graph` you get the visualization of the graph. You can interactively explore what your workspace looks like and the relationships between the packages. We actually used this same graph on the Lerna repo itself, which helped us to get a better understanding of how the repo is structured when we took over the maintenance. Here's an example of filtering the lerna packages to understand what `@lerna/exec` is about and how it relates to other packages in the repo.
 
 ![](/blog/images/2022-05-25/uW4TaZQy7smwCDEj.avif)
 
@@ -96,6 +97,6 @@ npx nx connect-to-nx-cloud
 
 ## Conclusion
 
-This is the first beta which we are trying out on some projects already. We aren’t worried about task orchestration, caching or distribution — all of those are done by Nx, which has been around for 5 years and is solid. We are trying to see if there is something in the integration that is confusing. We hope to release s stable version by mid-June.
+This is the first beta which we are trying out on some projects already. We aren't worried about task orchestration, caching or distribution — all of those are done by Nx, which has been around for 5 years and is solid. We are trying to see if there is something in the integration that is confusing. We hope to release s stable version by mid-June.
 
 Please have a look, upgrade your repo and [open an issue](https://github.com/lerna/lerna/issues) if you run into some weird behavior with the new `useNx` enabled. But not only that, feel free to ping us on the [@NxDevTools](https://twitter.com/nxdevtools) account with your success stories too. We'd love to hear 😃.

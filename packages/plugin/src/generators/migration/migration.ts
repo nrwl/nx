@@ -57,7 +57,7 @@ async function normalizeOptions(
     name,
     description,
     projectRoot,
-    projectSourceRoot,
+    projectSourceRoot: projectSourceRoot ?? join(projectRoot, 'src'),
     isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
 

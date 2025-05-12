@@ -2,11 +2,21 @@
 title: 'Setup a Monorepo with PNPM workspaces and speed it up with Nx!'
 slug: 'setup-a-monorepo-with-pnpm-workspaces-and-speed-it-up-with-nx'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-07-14/ABrBjQPg4SrYzFQQXFxY-Q.png'
+cover_image: '/blog/images/2022-07-14/ABrBjQPg4SrYzFQQXFxY-Q.avif'
 tags: [nx, tutorial]
+description: Learn to set up a monorepo with PNPM workspaces for Remix and React projects, then enhance it with Nx's task scheduling and caching features.
 ---
 
-In this article we’re going to have a deep dive into setting up a new monorepo using [PNPM workspaces](https://pnpm.io/workspaces) that hosts a Remix application as well as a React-based library. We will learn how to run commands with PNPM, how to run them in parallel and finally we’re going to add Nx for a more sophisticated task scheduling, including command caching and more.
+In this article we're going to have a deep dive into setting up a new monorepo using [PNPM workspaces](https://pnpm.io/workspaces) that hosts a Remix application as well as a React-based library. We will learn how to run commands with PNPM, how to run them in parallel and finally we're going to add Nx for a more sophisticated task scheduling, including command caching and more.
+
+{% callout type="warning" title="Updated video!" %}
+
+We made a lot of improvements since we last wrote this article. Here's our **updated content**:
+
+- [the full all-in-one video on Youtube](https://youtu.be/zX-1tpqUG5c)
+- [our free course: From PNPM Workspaces to Distributed CI](/courses/pnpm-nx-next)
+
+{% /callout %}
 
 **Important:** If you are already familiar with the setup and configuration of a new PNPM workspace, feel free to skip to the part where we add Nx later in the article.
 
@@ -37,9 +47,9 @@ In this article we’re going to have a deep dive into setting up a new monorepo
 
 ## Initialize a new PNPM workspace
 
-To get started, let’s make sure you have PNPM installed. The [official docs have an installation page](https://pnpm.io/installation) with detailed instructions. I also recommend using something like [Volta](https://volta.sh/) in particular if you have to deal with multiple different versions of NPM/PNPM and node versions.
+To get started, let's make sure you have PNPM installed. The [official docs have an installation page](https://pnpm.io/installation) with detailed instructions. I also recommend using something like [Volta](https://volta.sh/) in particular if you have to deal with multiple different versions of NPM/PNPM and node versions.
 
-Let’s create a new folder named `pnpm-mono`, cd into it and then run `pnpm init` to generate a top-level `package.json`. This will be the root `package.json` for our PNPM monorepo.
+Let's create a new folder named `pnpm-mono`, cd into it and then run `pnpm init` to generate a top-level `package.json`. This will be the root `package.json` for our PNPM monorepo.
 
 ```shell
 ❯ mkdir pnpm-mono
@@ -53,7 +63,7 @@ It is probably also handy to initialize a new Git repository such that we can co
 git init
 ```
 
-At this point let’s also create a `.gitignore` file to immediately exclude things like `node_modules` and common build output folders.
+At this point let's also create a `.gitignore` file to immediately exclude things like `node_modules` and common build output folders.
 
 ```.gitignore {% fileName=".gitignore" %}
 node_modules
@@ -68,7 +78,7 @@ The structure of a monorepo might vary depending on what you plan to use it for.
 - **package centric** repositories which are used for developing and publishing a cohesive set of reusable packages. This is a common setup in the open source world and can be seen in repositories such as [Angular](https://github.com/angular/angular), [React](https://github.com/facebook/react), [Vue](https://github.com/vuejs/vue) and many others. Those repos are characterized by most commonly having a `packages` folder and which are then commonly published to some public registry such as [NPM](https://npmjs.com/).
 - **app centric** repositories which are used mainly for developing applications and products. This is a common setup in companies. Such repos are characterized in having an `apps` and `packages` or `libs` folder, where the `apps` folder contains the buildable and deployable applications, while the `packages` or `libs` folder contains libraries that are specific to one or multiple applications that are being developed within the monorepo. You can still also publish some of these libs to a public registry.
 
-In this article we’re going to use the “app centric” approach, to demonstrate how we can have an application that consumes packages from within the monorepo.
+In this article we're going to use the "app centric" approach, to demonstrate how we can have an application that consumes packages from within the monorepo.
 
 Create an `apps` and `packages` folder within `pnpm-mono`:
 
@@ -76,7 +86,7 @@ Create an `apps` and `packages` folder within `pnpm-mono`:
 ❯ mkdir apps packages
 ```
 
-Now let’s configure PNPM to properly recognize the monorepo workspace. Basically we have to create a `pnpm-workspace.yaml` file at the root of the repository, defining our monorepo structure:
+Now let's configure PNPM to properly recognize the monorepo workspace. Basically we have to create a `pnpm-workspace.yaml` file at the root of the repository, defining our monorepo structure:
 
 ```yaml {% fileName="pnpm-workspace.yaml" %}
 packages:
@@ -88,7 +98,7 @@ packages:
 
 ## Adding a Remix application
 
-We should now be ready to add our first application. For this example I picked [Remix](https://remix.run/) but you can really host any type of application in here, it won’t really matter.
+We should now be ready to add our first application. For this example I picked [Remix](https://remix.run/) but you can really host any type of application in here, it won't really matter.
 
 > _Info: We use the normal_ [_Remix installation & setup procedure_](https://remix.run/docs/en/v1) _here which you can find on their docs page._
 
@@ -99,7 +109,7 @@ cd apps
 npx create-remix@latest
 ```
 
-You will be asked for an app name. Let’s just go with “my-remix-app” which we’ll be using for the rest of this article. Obviously feel free to use a different one. In addition, the Remix setup process is also going to ask you a couple of questions that customize the exact setup. The particular options are not really relevant for our article here, so feel free to choose whatever best suits your needs.
+You will be asked for an app name. Let's just go with "my-remix-app" which we'll be using for the rest of this article. Obviously feel free to use a different one. In addition, the Remix setup process is also going to ask you a couple of questions that customize the exact setup. The particular options are not really relevant for our article here, so feel free to choose whatever best suits your needs.
 
 You should have now a Remix app, within the `apps/my-remix-app` folder or whatever name you chose. Remix has already a `package.json` with corresponding scripts configured:
 
@@ -122,7 +132,7 @@ Usually, in a monorepo you want to run commands from the root of the repository 
 pnpm --filter <package-name> <command>
 ```
 
-Now it happens (at the writing of this article) that Remix’s default `package.json` doesn't have a `name` property defined which PNPM wants to run the package. So let's define one in the `apps/my-remix-app/package.json`:
+Now it happens (at the writing of this article) that Remix's default `package.json` doesn't have a `name` property defined which PNPM wants to run the package. So let's define one in the `apps/my-remix-app/package.json`:
 
 ```json
 {
@@ -143,7 +153,7 @@ pnpm --filter my-remix-app dev
 
 ## Create a Shared UI library
 
-Now that we have our app set up, let’s create a library package that can be consumed by our application.
+Now that we have our app set up, let's create a library package that can be consumed by our application.
 
 ```shell
 
@@ -152,7 +162,7 @@ mkdir shared-ui
 
 ```
 
-Next, let’s create a `package.json` with the following content (you can also use `pnpm init` and adjust it):
+Next, let's create a `package.json` with the following content (you can also use `pnpm init` and adjust it):
 
 ```json
 {
@@ -170,7 +180,7 @@ Next, let’s create a `package.json` with the following content (you can also u
 
 Note, we declare it as `private` because we don't want to publish it to NPM or somewhere else, but rather just reference and use it locally within our workspace. I also removed the `version` property since it is not used.
 
-As the technology stack I’ve chosen to go with [React](https://reactjs.org/) (so we can import it in Remix) and [TypeScript](https://www.typescriptlang.org/) (because it can almost be considered a standard nowadays). Let’s install these dependencies from the root of the workspace:
+As the technology stack I've chosen to go with [React](https://reactjs.org/) (so we can import it in Remix) and [TypeScript](https://www.typescriptlang.org/) (because it can almost be considered a standard nowadays). Let's install these dependencies from the root of the workspace:
 
 ```shell
 pnpm add --filter shared-ui react
@@ -196,7 +206,7 @@ We also want to have a public API where we export components to be used outside 
 export * from './Button';
 ```
 
-For sake of simplicity we just use the TypeScript compiler to compile our package. We could have some more sophisticated setup for bundling multiple files together etc with something like [Rollup](https://rollupjs.org/guide/en/) or whatever you prefer using, but that’s outside the scope of this article.
+For sake of simplicity we just use the TypeScript compiler to compile our package. We could have some more sophisticated setup for bundling multiple files together etc with something like [Rollup](https://rollupjs.org/guide/en/) or whatever you prefer using, but that's outside the scope of this article.
 
 To create the desired compilation output create a `packages/shared-ui/tsconfig.json` file with the following configuration.
 
@@ -376,13 +386,13 @@ This is exactly where Nx can help. It is optimized for monorepo scenarios and co
 
 ## Installing Nx
 
-Since Nx will be used for running operations across the entire monorepo workspace we’re going to install it at the root level `package.json`.
+Since Nx will be used for running operations across the entire monorepo workspace we're going to install it at the root level `package.json`.
 
 ```shell
 pnpm add nx -D -w
 ```
 
-That’s it.
+That's it.
 
 ## Running tasks with Nx
 
@@ -394,7 +404,7 @@ npx nx <target> <project>
 
 `target` is the NPM script in this specific case you want to execute.
 
-Let’s try to run the build for our `shared-ui` package using the following command:
+Let's try to run the build for our `shared-ui` package using the following command:
 
 ```shell
 npx nx build shared-ui
@@ -431,15 +441,15 @@ npx nx run-many --target=build --projects=my-remix-app,shared-ui
     NX   Successfully ran target build for 2 projects (1s)
 ```
 
-> _Note I’m prefixing the commands with_ `_npx_` _which runs the Nx executable in the_ `_node_modules_` _folder. In this way I don't have to install_ `_nx_` _globally. If you prefer doing that, feel free to do so._
+> _Note I'm prefixing the commands with_ `_npx_` _which runs the Nx executable in the_ `_node_modules_` _folder. In this way I don't have to install_ `_nx_` _globally. If you prefer doing that, feel free to do so._
 
 ## Configure Caching
 
 One of the main benefits of adding Nx to our PNPM workspace is **speed via caching**. [Computation caching](/concepts/how-caching-works) is a feature where different inputs (source files, env variables, command flags, etc.) are collected and a hash computed & stored in a local folder. Next time you run the command again, Nx looks for a matching hash, and if it finds one it just restores it. This includes restoring the terminal output as well as build artifacts (e.g. JS files in `dist` folders).
 
-Not all operations are cacheable, only side-effect free ones are. For example, if you run an operation with the same inputs, it reliably always has to produce the same output. If as part of that operation you call some API for instance, it wouldn’t be cacheable because the result of that API might vary given the same input parameters.
+Not all operations are cacheable, only side-effect free ones are. For example, if you run an operation with the same inputs, it reliably always has to produce the same output. If as part of that operation you call some API for instance, it wouldn't be cacheable because the result of that API might vary given the same input parameters.
 
-In order to enable caching, let’s configure our cacheable operations. To do that we create an `nx.json` at the root of our workspace with the following content
+In order to enable caching, let's configure our cacheable operations. To do that we create an `nx.json` at the root of our workspace with the following content
 
 ```json {% fileName="nx.json" %}
 {
@@ -456,7 +466,7 @@ In order to enable caching, let’s configure our cacheable operations. To do th
 
 Note the `cacheableOperations` array where we specify `build` and `test` . You can add more such as linting.
 
-Having enabled this, if we now run our Remix app build the first time it is executed just as normal and we’ll see it takes roughly 1s.
+Having enabled this, if we now run our Remix app build the first time it is executed just as normal and we'll see it takes roughly 1s.
 
 ```shell
 npx nx build my-remix-app
@@ -480,7 +490,7 @@ NX   Successfully ran target build for project my-remix-app (9ms)
 Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-You can also see that from the terminal output mentioning “existing outputs match the cache, left as is” as well as at the end “Nx read the output from the cache instead of running the command for 1 out of 1 tasks.”
+You can also see that from the terminal output mentioning "existing outputs match the cache, left as is" as well as at the end "Nx read the output from the cache instead of running the command for 1 out of 1 tasks."
 
 Having caching in place can drastically improve command execution times. It also gets even more useful if the cache is remotely distributed so that it can be shared with CI as well as other developer machines. In the case of Nx this can be done by enabling [Nx Cloud](/ci/features/remote-cache), which comes with 500 hours saved/month for free (no credit card required) and unlimited hours for open source projects.
 
@@ -600,7 +610,7 @@ Next, we also want to define a targetDefault for our Remix `dev` command, such t
 }
 ```
 
-Here’s the entire `nx.json` file again as a reference point:
+Here's the entire `nx.json` file again as a reference point:
 
 ```json
 {
@@ -635,7 +645,7 @@ _Nx highlights dependent projects being built, but it keeps the main attention t
 
 ## Running just what changed
 
-In addition to providing caching, Nx also allows to just run what changed in a given branch with respect to a base branch by using the so-called [“affected command”](/ci/features/affected).
+In addition to providing caching, Nx also allows to just run what changed in a given branch with respect to a base branch by using the so-called ["affected command"](/ci/features/affected).
 
 ```shell
 npx nx affected:<target>
@@ -648,7 +658,7 @@ You can use any target you have defined in your workspace. For example
 - `npx nx affected:lint`
 - `npx nx affected:publish`
 
-**How does this work?** Nx builds a project graph based on the structure and dependencies among packages in your monorepo workspace. Let’s assume the following hypothetical graph:
+**How does this work?** Nx builds a project graph based on the structure and dependencies among packages in your monorepo workspace. Let's assume the following hypothetical graph:
 
 ![](/blog/images/2022-07-14/wdMo0VwoyAdZbAmDbn6uMw.avif)
 
@@ -668,7 +678,7 @@ If `lib2` gets changed in our feature branch, running tests against the workspac
 
 ![](/blog/images/2022-07-14/FACbo_7-AlbPOna_6-hDaw.avif)
 
-_Affected projects if “lib2” gets changed_
+_Affected projects if "lib2" gets changed_
 
 Be aware however, if we run `affected:build` and we defined a dependency in our `nx.json` indicating that dependent projects need to be built first as well (see section "Defining task dependencies"), then `affected:build` would build
 
@@ -680,7 +690,7 @@ It would not build `lib1` or `appA` though.
 
 ## Additional features
 
-Besides speed and task scheduling improvements, we also get some additional features by adding Nx to our PNPM workspace. Let’s explore some:
+Besides speed and task scheduling improvements, we also get some additional features by adding Nx to our PNPM workspace. Let's explore some:
 
 ## Want to automate the creation of packages?
 
@@ -718,12 +728,12 @@ _Terminal output of Nx dynamically showing the parallel tasks being computed as 
 npx nx graph
 ```
 
-This launches an interactive visualization of the workspace’s project graph with some advanced capabilities of filtering, debugging your workspace structure and more.
+This launches an interactive visualization of the workspace's project graph with some advanced capabilities of filtering, debugging your workspace structure and more.
 
 ![](/blog/images/2022-07-14/KpUCyj6SvYR3t7tmADloog.avif)
 _Nx project graph visualization of our PNPM workspace_
 
-> _As a side-note: you can run the project graph on any PNPM workspace, even if you don’t have Nx installed. Running_ `_npx nx graph_` _should work._
+> _As a side-note: you can run the project graph on any PNPM workspace, even if you don't have Nx installed. Running_ `_npx nx graph_` _should work._
 
 ## Conclusion
 
@@ -743,5 +753,5 @@ You can find an example of such setup on the **Nx Recipe GitHub repository**:
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 📹 [Nrwl Youtube Channel](https://www.youtube.com/nrwl_io)
+- 📹 [Nrwl Youtube Channel](https://www.youtube.com/@nxdevtools)
 - 🥚 [Free Egghead course](https://egghead.io/courses/scale-react-development-with-nx-4038)

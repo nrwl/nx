@@ -13,6 +13,7 @@ import {
   type JestPresetExtension,
 } from '../../../utils/config/config-file';
 import type { NormalizedJestProjectSchema } from '../schema';
+import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
 
 export async function createJestConfig(
   tree: Tree,
@@ -91,7 +92,13 @@ module.exports = { ...nxPreset };`
       }
 
       const jestProjectConfig = `jest.config.${
-        rootProjectConfig.projectType === 'application' ? 'app' : 'lib'
+        getProjectType(
+          tree,
+          rootProjectConfig.root,
+          rootProjectConfig.projectType
+        ) === 'application'
+          ? 'app'
+          : 'lib'
       }.${options.js ? 'js' : 'ts'}`;
 
       tree.rename(rootJestPath, jestProjectConfig);
@@ -144,9 +151,10 @@ function generateGlobalConfig(tree: Tree, isJS: boolean) {
 module.exports = async () => ({
   projects: await getJestProjectsAsync()
 });`
-    : `import { getJestProjectsAsync } from '@nx/jest';
+    : `import type { Config } from 'jest';
+import { getJestProjectsAsync } from '@nx/jest';
 
-export default async () => ({
+export default async (): Promise<Config> => ({
   projects: await getJestProjectsAsync()
 });`;
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);

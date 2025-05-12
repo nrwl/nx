@@ -32,8 +32,7 @@
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/compat": "./src/executors/*/compat.js"
+    "./src/executors/*.impl": "./src/executors/*.impl.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -50,9 +49,10 @@
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@typescript-eslint/type-utils": "^8.0.0",
-    "chalk": "^4.1.0",
+    "enquirer": "~2.3.6",
+    "picocolors": "^1.1.0",
+    "picomatch": "4.0.2",
     "magic-string": "~0.30.2",
-    "minimatch": "9.0.3",
     "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
@@ -60,6 +60,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/rspack": "file:../rspack",
     "@nx/module-federation": "file:../module-federation",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace",

@@ -18,6 +18,7 @@ Nx.json configuration
 
 ### Properties
 
+- [$schema](../../devkit/documents/NxJsonConfiguration#$schema): string
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
@@ -27,6 +28,7 @@ Nx.json configuration
 - [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry<T>
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
+- [maxCacheSize](../../devkit/documents/NxJsonConfiguration#maxcachesize): string
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [neverConnectToCloud](../../devkit/documents/NxJsonConfiguration#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
@@ -40,12 +42,18 @@ Nx.json configuration
 - [sync](../../devkit/documents/NxJsonConfiguration#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+- [tui](../../devkit/documents/NxJsonConfiguration#tui): Object
 - [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins): boolean
-- [useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
+
+### $schema
+
+• `Optional` **$schema**: `string`
+
+---
 
 ### affected
 
@@ -152,6 +160,14 @@ use [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs) instea
 Configures the Nx installation for a repo. Useful for maintaining a separate
 set of dependencies for Nx + Plugins compared to the base package.json, but also
 useful for workspaces that don't have a root package.json + node_modules.
+
+---
+
+### maxCacheSize
+
+• `Optional` **maxCacheSize**: `string`
+
+Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
 
 ---
 
@@ -264,12 +280,27 @@ Dependencies between different target names across all projects
 
 **`Deprecated`**
 
-Custom task runners will no longer be supported in Nx 21. Use Nx Cloud or Nx Powerpack instead.
+Custom task runners will be replaced by a new API starting with Nx 21. More info: https://nx.dev/deprecated/custom-tasks-runner
 Available Task Runners for Nx to use
 
 #### Index signature
 
 ▪ [tasksRunnerName: `string`]: \{ `options?`: `any` ; `runner?`: `string` }
+
+---
+
+### tui
+
+• `Optional` **tui**: `Object`
+
+Settings for the Nx Terminal User Interface (TUI)
+
+#### Type declaration
+
+| Name        | Type                  | Description                                                                                                                                                                                                                                                                                |
+| :---------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoExit?` | `number` \| `boolean` | Whether to exit the TUI automatically after all tasks finish. - If set to `true`, the TUI will exit immediately. - If set to `false` the TUI will not automatically exit. - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits. |
+| `enabled?`  | `boolean`             | Whether to enable the TUI whenever possible (based on the current environment and terminal).                                                                                                                                                                                               |
 
 ---
 
@@ -286,14 +317,6 @@ Set this to false to disable the daemon.
 • `Optional` **useInferencePlugins**: `boolean`
 
 Set this to false to disable adding inference plugins when generating new projects
-
----
-
-### useLegacyCache
-
-• `Optional` **useLegacyCache**: `boolean`
-
-Use the legacy file system cache instead of the db cache
 
 ---
 

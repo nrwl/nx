@@ -1,5 +1,15 @@
 'use client';
-import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Disclosure,
+  DisclosureButton,
+  Popover,
+  PopoverButton,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
 import {
   Bars4Icon,
   ChevronDownIcon,
@@ -7,13 +17,20 @@ import {
 } from '@heroicons/react/24/outline';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Fragment, ReactElement, useEffect, useState } from 'react';
+import {
+  Fragment,
+  type MouseEvent,
+  ReactElement,
+  useEffect,
+  useState,
+} from 'react';
 import { ButtonLink, ButtonLinkProps } from '../button';
-import { resourceMenuItems } from './menu-items';
+import { enterpriseItems, resourceMenuItems } from './menu-items';
 import { MobileMenuItem } from './mobile-menu-item';
 import { SectionsMenu } from './sections-menu';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { GitHubIcon, NxIcon } from '@nx/nx-dev/ui-icons';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   ctaButtons?: ButtonLinkProps[];
@@ -21,6 +38,13 @@ interface HeaderProps {
 
 export function Header({ ctaButtons }: HeaderProps): ReactElement {
   let [isOpen, setIsOpen] = useState(false);
+
+  const router = useRouter();
+
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    router.push('/brands');
+  };
 
   // We need to close the popover if the route changes or the window is resized to prevent the popover from being stuck open.
   const checkSizeAndClosePopover = () => {
@@ -39,7 +63,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
 
   const defaultCtaButtons: ButtonLinkProps[] = [
     {
-      href: '/nx-cloud',
+      href: 'https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=header&utm_campaign=try-nx-cloud',
       variant: 'primary',
       size: 'small',
       target: '_blank',
@@ -68,8 +92,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             href="/"
             className="mr-4 flex items-center text-slate-900 dark:text-white"
             prefetch={false}
+            onContextMenu={handleContextMenu}
           >
-            <span className="sr-only">Nx</span>
+            <span className="sr-only">
+              Nx – Left-click: Home. Right-click: Brands.
+            </span>
             <NxIcon aria-hidden="true" className="h-8 w-8" />
           </Link>
           <nav
@@ -97,7 +124,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             <Popover className="relative">
               {({ open }) => (
                 <>
-                  <Popover.Button
+                  <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-sky-500' : '',
                       'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
@@ -115,7 +142,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                       )}
                       aria-hidden="true"
                     />
-                  </Popover.Button>
+                  </PopoverButton>
 
                   <Transition
                     as={Fragment}
@@ -135,6 +162,14 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
             </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <Link
+              href="/remote-cache"
+              title="Nx Remote Cache"
+              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
+              prefetch={false}
+            >
+              Remote Cache
+            </Link>
+            <Link
               href="/nx-cloud"
               title="Nx Cloud"
               className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
@@ -151,22 +186,49 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
               Pricing
             </Link>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
-            <Link
-              href="/powerpack"
-              title="Nx Powerpack"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Powerpack
-            </Link>
-            <Link
-              href="/enterprise"
-              title="Nx Enterprise"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-slate-200 dark:hover:text-sky-500"
-              prefetch={false}
-            >
-              Enterprise
-            </Link>
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <PopoverButton
+                    className={cx(
+                      open ? 'text-blue-500 dark:text-sky-500' : '',
+                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-slate-200'
+                    )}
+                  >
+                    <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500">
+                      Enterprise
+                    </span>
+                    <ChevronDownIcon
+                      className={cx(
+                        open
+                          ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                          : '',
+                        'ml-2 h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                      )}
+                      aria-hidden="true"
+                    />
+                  </PopoverButton>
+
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute left-60 z-30 mt-3 w-max max-w-2xl -translate-x-1/2 transform lg:left-20">
+                      <SectionsMenu
+                        sections={{
+                          'Nx for Enterprises': enterpriseItems,
+                        }}
+                      />
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
             <div className="hidden h-6 w-px bg-slate-200 md:block dark:bg-slate-700" />
             <div className="px-3 opacity-50 hover:opacity-100">
               <AlgoliaSearch tiny={true} />
@@ -228,7 +290,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
           </div>
         </div>
       </div>
-      <Transition.Root show={isOpen} as={Fragment}>
+      <Transition show={isOpen} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-10"
@@ -238,7 +300,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
           <div className="fixed inset-0 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
               <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
-                <Transition.Child
+                <TransitionChild
                   as={Fragment}
                   enter="transform transition ease-in-out duration-250 sm:duration-500"
                   enterFrom="translate-x-full"
@@ -247,11 +309,11 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                   leaveFrom="translate-x-0"
                   leaveTo="translate-x-full"
                 >
-                  <Dialog.Panel className="pointer-events-auto w-screen">
+                  <DialogPanel className="pointer-events-auto w-screen">
                     <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl dark:bg-slate-900">
                       <div className="px-4 sm:px-6">
                         <div className="flex items-start justify-between">
-                          <Dialog.Title>
+                          <DialogTitle>
                             <Link
                               href="/"
                               className="flex items-center text-slate-900 dark:text-white"
@@ -269,7 +331,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                               </svg>
                               <span className="sr-only">Nx</span>
                             </Link>
-                          </Dialog.Title>
+                          </DialogTitle>
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
@@ -321,7 +383,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                           <Disclosure as="div">
                             {({ open }) => (
                               <>
-                                <Disclosure.Button
+                                <DisclosureButton
                                   className={cx(
                                     open
                                       ? 'text-blue-500 dark:text-sky-500'
@@ -339,7 +401,7 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                                       'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
                                     )}
                                   />
-                                </Disclosure.Button>
+                                </DisclosureButton>
                                 <Disclosure.Panel
                                   as="ul"
                                   className="space-y-1 pb-2"
@@ -373,21 +435,51 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                             Pricing
                           </Link>
                           <Link
-                            href="/powerpack"
-                            title="Powerpack"
+                            href="/remote-cache"
+                            title="Nx Remote Cache"
                             className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
                             prefetch={false}
                           >
-                            Powerpack
+                            Remote Cache
                           </Link>
-                          <Link
-                            href="/enterprise"
-                            title="Enterprise"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500"
-                            prefetch={false}
-                          >
-                            Enterprise
-                          </Link>
+                          <Disclosure as="div">
+                            {({ open }) => (
+                              <>
+                                <DisclosureButton
+                                  className={cx(
+                                    open
+                                      ? 'text-blue-500 dark:text-sky-500'
+                                      : 'tex-slate-800 dark:text-slate-200',
+                                    'flex w-full items-center justify-between py-4 text-left text-base font-medium focus:outline-none'
+                                  )}
+                                >
+                                  <span>Enterprise</span>
+                                  <ChevronDownIcon
+                                    aria-hidden="true"
+                                    className={cx(
+                                      open
+                                        ? 'rotate-180 transform text-blue-500 dark:text-sky-500'
+                                        : 'tex-slate-800 dark:text-slate-200',
+                                      'h-3 w-3 transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-sky-500'
+                                    )}
+                                  />
+                                </DisclosureButton>
+                                <Disclosure.Panel
+                                  as="ul"
+                                  className="space-y-1 pb-2"
+                                >
+                                  {Object.values(enterpriseItems)
+                                    .flat()
+                                    .map((item) => (
+                                      <MobileMenuItem
+                                        key={item.name}
+                                        item={item}
+                                      />
+                                    ))}
+                                </Disclosure.Panel>
+                              </>
+                            )}
+                          </Disclosure>
                           <Link
                             href="/contact"
                             title="Contact"
@@ -399,13 +491,13 @@ export function Header({ ctaButtons }: HeaderProps): ReactElement {
                         </div>
                       </div>
                     </div>
-                  </Dialog.Panel>
-                </Transition.Child>
+                  </DialogPanel>
+                </TransitionChild>
               </div>
             </div>
           </div>
         </Dialog>
-      </Transition.Root>
+      </Transition>
     </div>
   );
 }

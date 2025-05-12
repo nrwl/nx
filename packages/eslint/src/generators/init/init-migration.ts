@@ -9,8 +9,12 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { dirname } from 'path';
-import { findEslintFile, isEslintConfigSupported } from '../utils/eslint-file';
+import { dirname, extname } from 'path';
+import {
+  determineEslintConfigFormat,
+  findEslintFile,
+  isEslintConfigSupported,
+} from '../utils/eslint-file';
 import {
   getGlobalEsLintConfiguration,
   getGlobalFlatEslintConfiguration,
@@ -32,10 +36,24 @@ export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
   tree: Tree,
   unitTestRunner: string,
+  eslintConfigFormat: 'mjs' | 'cjs',
   keepExistingVersions?: boolean
 ): GeneratorCallback {
   const rootEslintConfig = findEslintFile(tree);
   let skipCleanup = false;
+
+  if (rootEslintConfig) {
+    // We do not want to mix the formats
+    const fileExtension = extname(rootEslintConfig);
+    if (fileExtension === '.mjs' || fileExtension === '.cjs') {
+      eslintConfigFormat = fileExtension.slice(1) as 'mjs' | 'cjs';
+    } else {
+      eslintConfigFormat = determineEslintConfigFormat(
+        tree.read(rootEslintConfig, 'utf-8')
+      );
+    }
+  }
+
   if (
     rootEslintConfig?.match(/\.base\./) &&
     !projects.some((p) => p.root === '.')
@@ -57,10 +75,10 @@ export function migrateConfigToMonorepoStyle(
         keepExistingVersions
       );
       tree.write(
-        tree.exists('eslint.config.cjs')
-          ? 'eslint.base.config.cjs'
-          : 'eslint.config.cjs',
-        getGlobalFlatEslintConfiguration()
+        tree.exists(`eslint.config.${eslintConfigFormat}`)
+          ? `eslint.base.config.${eslintConfigFormat}`
+          : `eslint.config.${eslintConfigFormat}`,
+        getGlobalFlatEslintConfiguration(eslintConfigFormat)
       );
     } else {
       const eslintFile = findEslintFile(tree, '.');
@@ -134,7 +152,9 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       let config = tree.read(projectEslintPath, 'utf-8');
       // remove @nx plugin
       config = removePlugin(config, '@nx', '@nx/eslint-plugin-nx');
-      // extend eslint.base.config.cjs
+
+      // if base config is cjs, we will need to import it using async import
+
       config = addImportToFlatConfig(
         config,
         'baseConfig',

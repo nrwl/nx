@@ -156,7 +156,6 @@ export default defineConfig({
 exports[`Remix Application Integrated Repo --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
@@ -183,7 +182,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx run test:serve-static',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [
@@ -253,7 +252,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/test',
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
@@ -270,10 +269,10 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -430,7 +429,8 @@ installGlobals();
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 3`] = `
 "import { createRemixStub } from '@remix-run/testing';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import Index from '../../app/routes/_index';
 
 test('renders loader data', async () => {
@@ -443,7 +443,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Hello there,'));
+  await screen.findByText('Hello there,');
 });
 "
 `;
@@ -455,7 +455,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: './node_modules/.vite/test',
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
@@ -472,16 +472,17 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage/test',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 2`] = `
 "import { createRemixStub } from '@remix-run/testing';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import Index from '../../app/routes/_index';
 
 test('renders loader data', async () => {
@@ -494,7 +495,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Hello there,'));
+  await screen.findByText('Hello there,');
 });
 "
 `;
@@ -607,7 +608,8 @@ export default function Index() {
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 3`] = `
 "import { createRemixStub } from '@remix-run/testing';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import Index from '../../app/routes/_index';
 
 test('renders loader data', async () => {
@@ -620,7 +622,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Hello there,'));
+  await screen.findByText('Hello there,');
 });
 "
 `;
@@ -657,7 +659,13 @@ export default defineConfig({
 exports[`Remix Application Standalone Project Repo should create the application correctly 5`] = `
 "{
   "root": true,
-  "ignorePatterns": ["!**/*", "build", "public/build"],
+  "ignorePatterns": [
+    "!**/*",
+    "build",
+    "public/build",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "plugins": ["@nx"],
   "overrides": [
     {
@@ -678,7 +686,6 @@ exports[`Remix Application Standalone Project Repo should create the application
 exports[`Remix Application Standalone Project Repo should generate a playwright e2e application for the app 1`] = `
 "import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
@@ -705,7 +712,7 @@ export default defineConfig({
   webServer: {
     command: 'npx nx run test:serve-static',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: workspaceRoot,
   },
   projects: [

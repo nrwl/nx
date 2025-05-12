@@ -11,18 +11,17 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
-exports[`app generated files content - as-provided - my-app general application should add the nuxt and vitest plugins 1`] = `
-{
-  "dependsOn": [
-    "^build-static",
-  ],
-}
-`;
-
 exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
+  "ignorePatterns": [
+    "!**/*",
+    ".nuxt/**",
+    ".output/**",
+    "node_modules",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -33,7 +32,7 @@ exports[`app generated files content - as-provided - my-app general application 
 "
 `;
 
-exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config) 1`] = `
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config CJS) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const baseConfig = require('../eslint.config.cjs');
@@ -56,6 +55,40 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
+"
+`;
+
+exports[`app generated files content - as-provided - my-app general application should configure eslint correctly (flat config ESM) 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import baseConfig from '../eslint.config.mjs';
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
       },
     },
   },
@@ -131,7 +164,7 @@ import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/my-app',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
@@ -143,14 +176,14 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/my-app',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 
@@ -371,18 +404,17 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*"
 `;
 
-exports[`app generated files content - as-provided - myApp general application should add the nuxt and vitest plugins 1`] = `
-{
-  "dependsOn": [
-    "^build-static",
-  ],
-}
-`;
-
 exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (eslintrc) 1`] = `
 "{
   "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", ".nuxt/**", ".output/**", "node_modules"],
+  "ignorePatterns": [
+    "!**/*",
+    ".nuxt/**",
+    ".output/**",
+    "node_modules",
+    "**/vite.config.*.timestamp*",
+    "**/vitest.config.*.timestamp*"
+  ],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
@@ -393,7 +425,7 @@ exports[`app generated files content - as-provided - myApp general application s
 "
 `;
 
-exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config) 1`] = `
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config CJS) 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
 const baseConfig = require('../eslint.config.cjs');
@@ -416,6 +448,40 @@ module.exports = [
     languageOptions: {
       parserOptions: {
         parser: require('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    ignores: ['.nuxt/**', '.output/**', 'node_modules'],
+  },
+];
+"
+`;
+
+exports[`app generated files content - as-provided - myApp general application should configure eslint correctly (flat config ESM) 1`] = `
+"import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import js from '@eslint/js';
+import baseConfig from '../eslint.config.mjs';
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url)),
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...baseConfig,
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    // Override or add rules here
+    rules: {},
+  },
+  ...compat.extends('@nuxt/eslint-config'),
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
       },
     },
   },
@@ -491,7 +557,7 @@ import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
-export default defineConfig({
+export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/myApp',
   plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
@@ -503,14 +569,14 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/myApp',
-      provider: 'v8',
+      provider: 'v8' as const,
     },
   },
-});
+}));
 "
 `;
 

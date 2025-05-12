@@ -6,6 +6,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
@@ -70,6 +71,7 @@ function normalizeOptions(
   return {
     ...schemaDefaults,
     ...options,
+    keepExistingVersions: options.keepExistingVersions ?? true,
     rootProject: project.root === '.' || project.root === '',
     isTsSolutionSetup: isUsingTsSolutionSetup(tree),
   };
@@ -120,6 +122,18 @@ export async function configurationGeneratorInternal(
 
   if (options.isTsSolutionSetup) {
     ignoreTestOutput(tree);
+
+    // in the TS solution setup, the test target depends on the build outputs
+    // so we need to setup the task pipeline accordingly
+    const nxJson = readNxJson(tree);
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[options.targetName] ??= {};
+    nxJson.targetDefaults[options.targetName].dependsOn ??= [];
+    nxJson.targetDefaults[options.targetName].dependsOn.push('^build');
+    nxJson.targetDefaults[options.targetName].dependsOn = Array.from(
+      new Set(nxJson.targetDefaults[options.targetName].dependsOn)
+    );
+    updateNxJson(tree, nxJson);
   }
 
   if (!schema.skipFormat) {

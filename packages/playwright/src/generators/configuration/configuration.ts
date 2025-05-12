@@ -20,6 +20,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { resolveImportPath } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { normalizeLinterOption } from '@nx/js/src/utils/generator-prompts';
 import {
@@ -38,6 +39,7 @@ import type {
   ConfigurationGeneratorSchema,
   NormalizedGeneratorOptions,
 } from './schema';
+import { addIgnoresToLintConfig } from '@nx/eslint/src/generators/utils/eslint-file';
 
 export function configurationGenerator(
   tree: Tree,
@@ -74,7 +76,46 @@ export async function configurationGeneratorInternal(
 
   const isTsSolutionSetup = isUsingTsSolutionSetup(tree);
   const tsconfigPath = joinPathFragments(projectConfig.root, 'tsconfig.json');
-  if (!tree.exists(tsconfigPath)) {
+  if (tree.exists(tsconfigPath)) {
+    if (isTsSolutionSetup) {
+      const tsconfig: any = {
+        extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
+        compilerOptions: {
+          allowJs: true,
+          outDir: 'out-tsc/playwright',
+          sourceMap: false,
+        },
+        include: [
+          joinPathFragments(options.directory, '**/*.ts'),
+          joinPathFragments(options.directory, '**/*.js'),
+          'playwright.config.ts',
+        ],
+        exclude: ['out-tsc', 'test-output'],
+      };
+
+      // skip eslint from typechecking since it extends from root file that is outside rootDir
+      if (options.linter === 'eslint') {
+        tsconfig.exclude.push(
+          'eslint.config.js',
+          'eslint.config.mjs',
+          'eslint.config.cjs'
+        );
+      }
+
+      writeJson(
+        tree,
+        joinPathFragments(projectConfig.root, 'tsconfig.e2e.json'),
+        tsconfig
+      );
+
+      updateJson(tree, tsconfigPath, (json) => {
+        // add the project tsconfig to the workspace root tsconfig.json references
+        json.references ??= [];
+        json.references.push({ path: './tsconfig.e2e.json' });
+        return json;
+      });
+    }
+  } else {
     const tsconfig: any = {
       extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
       compilerOptions: {
@@ -139,14 +180,14 @@ export async function configurationGeneratorInternal(
         name: importPath,
         version: '0.0.1',
         private: true,
-        nx: {
-          name: options.project,
-        },
       };
+      if (options.project !== importPath) {
+        packageJson.nx = { name: options.project };
+      }
       writeJson(tree, packageJsonPath, packageJson);
     }
 
-    ignoreTestOutput(tree);
+    ignoreTestOutput(tree, options);
   }
 
   const hasPlugin = readNxJson(tree).plugins?.some((p) =>
@@ -230,11 +271,49 @@ async function normalizeOptions(
 
   const linter = await normalizeLinterOption(tree, options.linter);
 
+  if (!options.webServerCommand || !options.webServerAddress) {
+    const { webServerCommand, webServerAddress } =
+      await promptForMissingServeData(options.project);
+    options.webServerCommand = webServerCommand;
+    options.webServerAddress = webServerAddress;
+  }
+
   return {
     ...options,
     addPlugin,
     linter,
     directory: options.directory ?? 'e2e',
+  };
+}
+
+async function promptForMissingServeData(projectName: string) {
+  const { command, port } = await promptWhenInteractive<{
+    command: string;
+    port: number;
+  }>(
+    [
+      {
+        type: 'input',
+        name: 'command',
+        message: 'What command should be run to serve the application locally?',
+        initial: `npx nx serve ${projectName}`,
+      },
+      {
+        type: 'numeral',
+        name: 'port',
+        message: 'What port will the application be served on?',
+        initial: 3000,
+      },
+    ],
+    {
+      command: `npx nx serve ${projectName}`,
+      port: 3000,
+    }
+  );
+
+  return {
+    webServerCommand: command,
+    webServerAddress: `http://localhost:${port}`,
   };
 }
 
@@ -310,7 +389,16 @@ Rename or remove the existing e2e target.`);
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
 
-function ignoreTestOutput(tree: Tree): void {
+function ignoreTestOutput(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+): void {
+  // Make sure playwright outputs are not linted.
+  if (options.linter === 'eslint') {
+    addIgnoresToLintConfig(tree, '', ['**/test-output']);
+  }
+
+  // Handle gitignore
   if (!tree.exists('.gitignore')) {
     logger.warn(`Couldn't find a root .gitignore file to update.`);
   }

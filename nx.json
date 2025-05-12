@@ -16,7 +16,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
       "{workspaceRoot}/.nx/workflows/agents.yaml",
-      "{workspaceRoot}/.circleci/config.yml"
+      "{workspaceRoot}/.github/workflows/ci.yml"
     ],
     "native": [
       "{projectRoot}/**/*.rs",
@@ -66,15 +66,16 @@
       }
     },
     "version": {
-      "generatorOptions": {
-        "packageRoot": "build/packages/{projectName}",
-        "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true
-      },
       "git": {
         "commit": false,
         "stageChanges": false,
         "tag": false
+      },
+      "currentVersionResolver": "registry",
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["build/packages/{projectName}"],
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   },
@@ -96,7 +97,6 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "build/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
@@ -119,14 +119,7 @@
       }
     },
     "lint": {
-      "dependsOn": [
-        "build-native",
-        "^build-native",
-        "@nx/nx-source:lint-pnpm-lock"
-      ]
-    },
-    "lint-pnpm-lock": {
-      "cache": true
+      "dependsOn": ["build-native", "^build-native"]
     },
     "e2e": {
       "cache": true,
@@ -134,7 +127,11 @@
     },
     "e2e-local": {
       "cache": true,
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["e2eInputs", "^production"],
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
@@ -142,20 +139,27 @@
     "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
     },
     "e2e-ci--**/**": {
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false,
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci--**/*": {
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false,
-      "dependsOn": ["@nx/nx-source:populate-local-registry-storage"]
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -240,7 +244,16 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    "@nx/powerpack-enterprise-cloud"
+    "@nx/enterprise-cloud",
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "serveStorybookTargetName": "serve:storybook",
+        "buildStorybookTargetName": "build:storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static:storybook"
+      }
+    }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
@@ -249,6 +262,20 @@
   "defaultBase": "master",
   "conformance": {
     "rules": [
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/blog-description",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "{blog,shared}/**/!(sitemap).md"
+        }
+      },
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/blog-cover-image",
+        "projects": ["docs"],
+        "options": {
+          "mdGlobPattern": "blog/**/!(sitemap).md"
+        }
+      },
       {
         "rule": "@nx/workspace-plugin/conformance-rules/project-package-json",
         "projects": [
@@ -282,7 +309,94 @@
           "!webpack",
           "!workspace"
         ]
+      },
+      {
+        "rule": "@nx/workspace-plugin/conformance-rules/migration-groups",
+        "options": {
+          "versionRange": ">= 19.8",
+          "groups": [
+            [
+              "angular-eslint",
+              "@angular-eslint/eslint-plugin",
+              "@angular-eslint/eslint-plugin-template",
+              "@angular-eslint/template-parser",
+              "@angular-eslint/utils",
+              "@angular-eslint/schematics",
+              "@angular-eslint/test-utils",
+              "@angular-eslint/builder",
+              "@angular-eslint/bundled-angular-compiler"
+            ],
+            [
+              "typescript-eslint",
+              "@typescript-eslint/eslint-plugin",
+              "@typescript-eslint/parser",
+              "@typescript-eslint/utils",
+              "@typescript-eslint/rule-tester",
+              "@typescript-eslint/scope-manager",
+              "@typescript-eslint/typescript-estree"
+            ],
+            [
+              "@storybook/addon-controls",
+              "@storybook/addon-essentials",
+              "@storybook/addon-jest",
+              "@storybook/addon-mdx-gfm",
+              "@storybook/addon-onboarding",
+              "@storybook/addon-themes",
+              "@storybook/angular",
+              "@storybook/blocks",
+              "@storybook/builder-manager",
+              "@storybook/builder-webpack5",
+              "@storybook/cli",
+              "@storybook/components",
+              "@storybook/core",
+              "@storybook/core-common",
+              "@storybook/core-events",
+              "@storybook/core-server",
+              "@storybook/core-webpack",
+              "@storybook/csf-tools",
+              "@storybook/html",
+              "@storybook/html-vite",
+              "@storybook/html-webpack5",
+              "@storybook/manager",
+              "@storybook/manager-api",
+              "@storybook/nextjs",
+              "@storybook/preact",
+              "@storybook/preact-vite",
+              "@storybook/preact-webpack5",
+              "@storybook/preset-create-react-app",
+              "@storybook/preset-html-webpack",
+              "@storybook/preset-preact-webpack",
+              "@storybook/preset-react-webpack",
+              "@storybook/preset-server-webpack",
+              "@storybook/preset-vue3-webpack",
+              "@storybook/react",
+              "@storybook/react-vite",
+              "@storybook/react-webpack5",
+              "@storybook/router",
+              "@storybook/server",
+              "@storybook/server-webpack5",
+              "@storybook/svelte",
+              "@storybook/svelte-vite",
+              "@storybook/sveltekit",
+              "@storybook/theming",
+              "@storybook/types",
+              "@storybook/vue3",
+              "@storybook/vue3-vite",
+              "@storybook/vue3-webpack5",
+              "@storybook/web-components",
+              "@storybook/web-components-vite",
+              "@storybook/web-components-webpack5"
+            ]
+          ]
+        }
       }
     ]
+  },
+  "generators": {
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "jest"
+      }
+    }
   }
 }

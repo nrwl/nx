@@ -14,7 +14,7 @@ export async function withModuleFederationForSSR(
   }
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
-    await getModuleFederationConfig(options, {
+    getModuleFederationConfig(options, {
       isServer: true,
     });
 
@@ -26,7 +26,6 @@ export async function withModuleFederationForSSR(
     };
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: false,
     };
 
     config.plugins.push(

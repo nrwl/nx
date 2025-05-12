@@ -3,14 +3,12 @@ import 'nx/src/internal-testing-utils/mock-project-graph';
 import {
   getProjects,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { expoApplicationGenerator } from './application';
 
 describe('app', () => {
@@ -25,7 +23,7 @@ describe('app', () => {
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
@@ -41,7 +39,7 @@ describe('app', () => {
       directory: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
@@ -58,7 +56,7 @@ describe('app', () => {
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: false,
@@ -77,7 +75,7 @@ describe('app', () => {
     await expoApplicationGenerator(appTree, {
       directory: 'my-app',
       displayName: 'myApp',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       e2eTestRunner: 'none',
       skipFormat: false,
       js: true,
@@ -97,7 +95,7 @@ describe('app', () => {
       await expoApplicationGenerator(appTree, {
         name: 'my-app',
         directory: 'my-dir',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
@@ -158,7 +156,7 @@ describe('app', () => {
     it('should create e2e app without directory', async () => {
       await expoApplicationGenerator(appTree, {
         directory: 'my-app',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
@@ -219,7 +217,7 @@ describe('app', () => {
       await expoApplicationGenerator(appTree, {
         directory: 'my-app',
         displayName: 'my app name',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'detox',
         js: false,
         skipFormat: false,
@@ -280,59 +278,11 @@ describe('app', () => {
     });
   });
 
-  describe('cypress', () => {
-    it('should create e2e app with e2e-ci targetDefaults', async () => {
-      await expoApplicationGenerator(appTree, {
-        name: 'my-app',
-        directory: 'my-dir',
-        linter: Linter.EsLint,
-        e2eTestRunner: 'cypress',
-        js: false,
-        skipFormat: false,
-        unitTestRunner: 'none',
-        addPlugin: true,
-      });
-
-      // ASSERT
-      const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^export",
-          ],
-        }
-      `);
-    });
-  });
-
-  describe('playwright', () => {
-    it('should create e2e app with e2e-ci targetDefaults', async () => {
-      await expoApplicationGenerator(appTree, {
-        name: 'my-app',
-        directory: 'my-dir',
-        linter: Linter.EsLint,
-        e2eTestRunner: 'playwright',
-        js: false,
-        skipFormat: false,
-        unitTestRunner: 'none',
-        addPlugin: true,
-      });
-
-      // ASSERT
-      const nxJson = readNxJson(appTree);
-      expect(nxJson.targetDefaults['e2e-ci--**/*']).toMatchInlineSnapshot(`
-        {
-          "dependsOn": [
-            "^export",
-          ],
-        }
-      `);
-    });
-  });
-
   describe('TS solution setup', () => {
-    it('should add project references when using TS solution', async () => {
-      const tree = createTreeWithEmptyWorkspace();
+    let tree: Tree;
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace();
       tree.write('.gitignore', '');
       updateJson(tree, 'package.json', (json) => {
         json.workspaces = ['packages/*', 'apps/*'];
@@ -349,11 +299,13 @@ describe('app', () => {
         files: [],
         references: [],
       });
+    });
 
+    it('should add project references when using TS solution', async () => {
       await expoApplicationGenerator(tree, {
         directory: 'my-app',
         displayName: 'myApp',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         e2eTestRunner: 'none',
         skipFormat: false,
         js: false,
@@ -366,6 +318,17 @@ describe('app', () => {
           {
             "path": "./my-app",
           },
+        ]
+      `);
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
         ]
       `);
       expect(readJson(tree, 'my-app/tsconfig.json')).toMatchInlineSnapshot(`
@@ -390,9 +353,9 @@ describe('app', () => {
             "module": "esnext",
             "moduleResolution": "bundler",
             "noUnusedLocals": false,
-            "outDir": "out-tsc/my-app",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-app/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
@@ -465,6 +428,79 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should respect the provided name', async () => {
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        name: 'my-app',
+        displayName: 'myApp',
+        linter: 'eslint',
+        e2eTestRunner: 'none',
+        skipFormat: false,
+        js: false,
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'my-app/package.json');
+      expect(packageJson.name).toBe('@proj/my-app');
+      expect(packageJson.nx.name).toBe('my-app');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await expoApplicationGenerator(tree, {
+        directory: 'my-app',
+        linter: 'eslint',
+        e2eTestRunner: 'cypress',
+        useProjectJson: true,
+        unitTestRunner: 'none',
+        js: false,
+        addPlugin: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-app/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-app'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-app",
+          "projectType": "application",
+          "root": "my-app",
+          "sourceRoot": "my-app/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-app/package.json').nx).toBeUndefined();
+      expect(tree.exists('my-app-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-app-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/my-app",
+          ],
+          "name": "@proj/my-app-e2e",
+          "projectType": "application",
+          "root": "my-app-e2e",
+          "sourceRoot": "my-app-e2e/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-app-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

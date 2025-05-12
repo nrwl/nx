@@ -1,5 +1,4 @@
 use crate::native::db::connection::NxDbConnection;
-use fs4::fs_std::FileExt;
 use rusqlite::{Connection, OpenFlags};
 use std::fs::{remove_file, File};
 use std::path::{Path, PathBuf};
@@ -12,9 +11,7 @@ pub(super) struct LockFile {
 
 pub(super) fn unlock_file(lock_file: &LockFile) {
     if lock_file.path.exists() {
-        lock_file
-            .file
-            .unlock()
+        fs4::fs_std::FileExt::unlock(&lock_file.file)
             .and_then(|_| remove_file(&lock_file.path))
             .ok();
     }
@@ -26,8 +23,7 @@ pub(super) fn create_lock_file(db_path: &Path) -> anyhow::Result<LockFile> {
         .map_err(|e| anyhow::anyhow!("Unable to create db lock file: {:?}", e))?;
 
     trace!("Getting lock on db lock file");
-    lock_file
-        .lock_exclusive()
+    fs4::fs_std::FileExt::lock_exclusive(&lock_file)
         .inspect(|_| trace!("Got lock on db lock file"))
         .map_err(|e| anyhow::anyhow!("Unable to lock the db lock file: {:?}", e))?;
     Ok(LockFile {
@@ -77,7 +73,10 @@ pub(super) fn initialize_db(nx_version: String, db_path: &Path) -> anyhow::Resul
             Ok(c)
         }
         Err(reason) => {
-            trace!("Unable to connect to existing database because: {:?}", reason);
+            trace!(
+                "Unable to connect to existing database because: {:?}",
+                reason
+            );
             trace!("Removing existing incompatible database");
             remove_file(db_path)?;
 

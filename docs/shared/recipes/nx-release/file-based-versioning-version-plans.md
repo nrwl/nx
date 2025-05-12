@@ -1,3 +1,8 @@
+---
+title: File Based Versioning (Version Plans)
+description: Learn how to use Nx Release's version plans feature to track version bumps in separate files, similar to Changesets or Beachball, allowing for more flexible versioning workflows.
+---
+
 # File Based Versioning ("Version Plans")
 
 Tools such as Changesets and Beachball helped popularize the concept of tracking the desired semver version bump in a separate file on disk (which is committed to your repository alongside your code changes). This has the advantage of separating the desired bump from your git commits themselves, which can be very useful if you are not able to enforce that all contributors follow a strict commit message format ([e.g. Conventional Commits](/recipes/nx-release/automatically-version-with-conventional-commits)), or if you want multiple commits to be included in the same version bump and therefore not map commits 1:1 with changelog entries.
@@ -118,7 +123,7 @@ Attempting to keep track of this manually as a part of pull request reviews can 
 nx release plan:check
 ```
 
-Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updatedDependents` option).
+Running this command will analyze the changed files (supporting the same options you may be familiar with from `nx affected`, such as `--base`, `--head`, `--files`, `--uncommitted`, etc) and then determine which projects have been "touched" as a result. Note that it is specifically touched projects, and not affected in this case, because only directly changed projects are relevant for versioning. The side-effects of versioning independently released dependents are handled by the release process itself (controllable via the `version.generatorOptions.updateDependents` option).
 
 <!-- Prettier will mess up the end tag of the callout causing it to capture all content that follows it -->
 <!-- prettier-ignore-start -->

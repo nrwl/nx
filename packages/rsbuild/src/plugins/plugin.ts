@@ -20,6 +20,7 @@ import { existsSync, readdirSync } from 'fs';
 import { join, dirname, isAbsolute, relative } from 'path';
 import { minimatch } from 'minimatch';
 import { loadConfig, type RsbuildConfig } from '@rsbuild/core';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -29,6 +30,8 @@ export interface RsbuildPluginOptions {
   previewTargetName?: string;
   inspectTargetName?: string;
   typecheckTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 type RsbuildTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
@@ -99,7 +102,7 @@ async function createNodesInternal(
   const normalizedOptions = normalizeOptions(options);
   const hash = await calculateHashForCreateNodes(
     projectRoot,
-    normalizedOptions,
+    { ...normalizedOptions, isUsingTsSolutionSetup },
     context,
     [getLockFileName(detectPackageManager(context.workspaceRoot))]
   );
@@ -184,6 +187,7 @@ async function createRsbuildTargets(
   };
 
   targets[options.devTargetName] = {
+    continuous: true,
     command: `rsbuild dev`,
     options: {
       cwd: projectRoot,
@@ -192,6 +196,7 @@ async function createRsbuildTargets(
   };
 
   targets[options.previewTargetName] = {
+    continuous: true,
     command: `rsbuild preview`,
     dependsOn: [`${options.buildTargetName}`, `^${options.buildTargetName}`],
     options: {
@@ -221,22 +226,40 @@ async function createRsbuildTargets(
         { externalDependencies: ['typescript'] },
       ],
       command: isUsingTsSolutionSetup
-        ? `tsc --build --emitDeclarationOnly --pretty --verbose`
-        : `tsc --noEmit -p ${tsConfigToUse}`,
+        ? `tsc --build --emitDeclarationOnly`
+        : `tsc -p ${tsConfigToUse} --noEmit`,
       options: { cwd: joinPathFragments(projectRoot) },
       metadata: {
-        description: `Run Typechecking`,
+        description: `Runs type-checking for the project.`,
+        technologies: ['typescript'],
         help: {
-          command: `${pmc.exec} tsc --help -p ${tsConfigToUse}`,
-          example: {
-            options: {
-              noEmit: true,
-            },
-          },
+          command: isUsingTsSolutionSetup
+            ? `${pmc.exec} tsc --build --help`
+            : `${pmc.exec} tsc -p ${tsConfigToUse} --help`,
+          example: isUsingTsSolutionSetup
+            ? { args: ['--force'] }
+            : { options: { noEmit: true } },
         },
       },
     };
+
+    if (isUsingTsSolutionSetup) {
+      targets[options.typecheckTargetName].dependsOn = [
+        `^${options.typecheckTargetName}`,
+      ];
+      targets[options.typecheckTargetName].syncGenerators = [
+        '@nx/js:typescript-sync',
+      ];
+    }
   }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return { targets, metadata: {} };
 }

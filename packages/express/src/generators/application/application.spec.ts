@@ -1,4 +1,10 @@
-import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -158,6 +164,7 @@ describe('app', () => {
     it('should add project references when using TS solution', async () => {
       await applicationGenerator(appTree, {
         directory: 'myapp',
+        useProjectJson: false,
       } as Schema);
 
       expect(readJson(appTree, 'tsconfig.json').references)
@@ -171,13 +178,22 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBeUndefined();
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "name": "@proj/myapp",
           "nx": {
-            "name": "myapp",
-            "projectType": "application",
-            "sourceRoot": "myapp/src",
             "targets": {
               "build": {
                 "configurations": {
@@ -192,7 +208,7 @@ describe('app', () => {
                   ],
                   "compiler": "tsc",
                   "main": "myapp/src/main.ts",
-                  "outputPath": "dist/myapp",
+                  "outputPath": "myapp/dist",
                   "target": "node",
                   "tsConfig": "myapp/tsconfig.app.json",
                   "webpackConfig": "myapp/webpack.config.js",
@@ -207,19 +223,20 @@ describe('app', () => {
               "serve": {
                 "configurations": {
                   "development": {
-                    "buildTarget": "myapp:build:development",
+                    "buildTarget": "@proj/myapp:build:development",
                   },
                   "production": {
-                    "buildTarget": "myapp:build:production",
+                    "buildTarget": "@proj/myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
                 ],
                 "executor": "@nx/js:node",
                 "options": {
-                  "buildTarget": "myapp:build",
+                  "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
               },
@@ -255,9 +272,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "nodenext",
             "moduleResolution": "nodenext",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
               "express",
@@ -305,6 +322,102 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should respect the provided name', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        name: 'myapp',
+        useProjectJson: false,
+        skipFormat: true,
+      } as Schema);
+
+      const packageJson = readJson(appTree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(appTree, {
+        directory: 'myapp',
+        useProjectJson: true,
+        skipFormat: true,
+      } as Schema);
+
+      expect(appTree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(appTree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "tags": [],
+          "targets": {
+            "build": {
+              "configurations": {
+                "development": {},
+                "production": {},
+              },
+              "defaultConfiguration": "production",
+              "executor": "@nx/webpack:webpack",
+              "options": {
+                "assets": [
+                  "myapp/src/assets",
+                ],
+                "compiler": "tsc",
+                "main": "myapp/src/main.ts",
+                "outputPath": "myapp/dist",
+                "target": "node",
+                "tsConfig": "myapp/tsconfig.app.json",
+                "webpackConfig": "myapp/webpack.config.js",
+              },
+              "outputs": [
+                "{options.outputPath}",
+              ],
+            },
+            "lint": {
+              "executor": "@nx/eslint:lint",
+            },
+            "serve": {
+              "configurations": {
+                "development": {
+                  "buildTarget": "@proj/myapp:build:development",
+                },
+                "production": {
+                  "buildTarget": "@proj/myapp:build:production",
+                },
+              },
+              "continuous": true,
+              "defaultConfiguration": "development",
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:node",
+              "options": {
+                "buildTarget": "@proj/myapp:build",
+                "runBuildTargetDependencies": false,
+              },
+            },
+            "test": {
+              "options": {
+                "passWithNoTests": true,
+              },
+            },
+          },
+        }
+      `);
+      expect(readJson(appTree, 'myapp/package.json').nx).toBeUndefined();
     });
   });
 });

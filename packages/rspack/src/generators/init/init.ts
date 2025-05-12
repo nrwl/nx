@@ -15,8 +15,9 @@ import {
   reactRefreshVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
-  rspackPluginMinifyVersion,
   rspackPluginReactRefreshVersion,
+  sassEmbeddedVersion,
+  sassLoaderVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -60,6 +61,16 @@ export async function rspackInitGenerator(
           'rspack-preview',
           'preview-rspack',
         ],
+        buildDepsTargetName: [
+          'build-deps',
+          'rspack:build-deps',
+          'rspack-build-deps',
+        ],
+        watchDepsTargetName: [
+          'watch-deps',
+          'rspack:watch-deps',
+          'rspack-watch-deps',
+        ],
       },
       schema.updatePackageScripts
     );
@@ -76,7 +87,6 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
     '@rspack/cli': rspackCoreVersion,
-    '@rspack/plugin-minify': rspackPluginMinifyVersion,
     '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
     'react-refresh': reactRefreshVersion,
   };
@@ -90,6 +100,10 @@ export async function rspackInitGenerator(
 
   if (schema.style === 'less') {
     devDependencies['less-loader'] = lessLoaderVersion;
+  }
+  if (schema.style === 'scss') {
+    devDependencies['sass-loader'] = sassLoaderVersion;
+    devDependencies['sass-embedded'] = sassEmbeddedVersion;
   }
 
   if (schema.framework !== 'none' || schema.devServer) {

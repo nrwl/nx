@@ -4,7 +4,7 @@ const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '<%= offset %><%= webpackPluginOptions.outputPath %>'),
+    path: join(__dirname, '<%= webpackPluginOptions.outputPath %>'),
   },
   plugins: [
     new NxAppWebpackPlugin({

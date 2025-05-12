@@ -208,14 +208,6 @@ You can optionally also pass a `path` like
 ‎```
 ````
 
-#### Terminal Video Output
-
-You can have a more dynamic visualization of a terminal output by using the following component:
-
-```
-{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
-```
-
 #### Table of Contents
 
 You can add a table of contents to your document by using the following component. This is mostly useful for blog posts.
@@ -305,6 +297,14 @@ Have a more decent button-like widget that you can place below sections of a tut
 
 ```markdown
 {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
+```
+
+#### Course video embed
+
+This is for embedding a video just like with the Youtube component, but in addition to have a link to a Nx Course (nx.dev/courses) video to improve the discoverability of these courses.
+
+```markdown
+{% course-video src="https://youtu.be/3hW53b1IJ84" courseTitle="From PNPM Workspaces to Distributed CI" courseUrl="/courses/pnpm-nx-next/lessons-01-nx-init" title="Initialize Nx in Your Project with nx init" /%}
 ```
 
 #### Project Details View

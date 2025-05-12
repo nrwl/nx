@@ -21,6 +21,7 @@ import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
 
 const pmc = getPackageManagerCommand();
 
@@ -46,6 +47,8 @@ export const createDependencies: CreateDependencies = () => {
 
 export interface RollupPluginOptions {
   buildTargetName?: string;
+  buildDepsTargetName?: string;
+  watchDepsTargetName?: string;
 }
 
 const rollupConfigGlob = '**/rollup.config.{js,cjs,mjs,ts,cts,mts}';
@@ -170,11 +173,13 @@ async function buildRollupTarget(
     loadConfigFile = require('rollup/loadConfigFile').loadConfigFile;
   }
 
+  const isTsConfig = configFilePath.endsWith('ts');
+  const tsConfigPlugin = '@rollup/plugin-typescript';
   const namedInputs = getNamedInputs(projectRoot, context);
   const rollupConfig = (
     (await loadConfigFile(
       joinPathFragments(context.workspaceRoot, configFilePath),
-      {},
+      isTsConfig ? { configPlugin: tsConfigPlugin } : {},
       true // Enable watch mode so that rollup properly reloads config files without reusing a cached version
     )) as { options: RollupOptions[] }
   ).options;
@@ -183,9 +188,7 @@ async function buildRollupTarget(
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = {
     command: `rollup -c ${basename(configFilePath)}${
-      configFilePath.endsWith('ts')
-        ? ' --configPlugin @rollup/plugin-typescript'
-        : ''
+      isTsConfig ? ` --configPlugin ${tsConfigPlugin}` : ''
     }`,
     options: { cwd: projectRoot },
     cache: true,
@@ -217,6 +220,14 @@ async function buildRollupTarget(
       '@nx/js:typescript-sync',
     ];
   }
+
+  addBuildAndWatchDepsTargets(
+    context.workspaceRoot,
+    projectRoot,
+    targets,
+    options,
+    pmc
+  );
 
   return targets;
 }
@@ -261,5 +272,7 @@ function normalizeOptions(
 ): Required<RollupPluginOptions> {
   return {
     buildTargetName: options.buildTargetName ?? 'build',
+    buildDepsTargetName: options.buildDepsTargetName ?? 'build-deps',
+    watchDepsTargetName: options.watchDepsTargetName ?? 'watch-deps',
   };
 }

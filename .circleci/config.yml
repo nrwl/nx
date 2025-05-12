@@ -1,14 +1,6 @@
 version: 2.1
 
 # -------------------------
-#        ORBS
-# -------------------------
-orbs:
-  nx: nrwl/nx@1.6.2
-  rust: circleci/rust@1.6.0
-  browser-tools: circleci/browser-tools@1.4.8
-
-# -------------------------
 #        EXECUTORS
 # -------------------------
 
@@ -19,56 +11,9 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/rust:1.73.0-browsers
-    resource_class: medium+
+      - image: cimg/rust:1.84.0-browsers
+    resource_class: small
 
-  macos:
-    <<: *defaults
-    resource_class: macos.m1.medium.gen1
-    macos:
-      xcode: '14.2.0'
-
-# -------------------------
-#        COMMANDS
-# -------------------------
-commands:
-  run-pnpm-install:
-    parameters:
-      os:
-        type: string
-    steps:
-      - restore_cache:
-          name: Restore pnpm Package Cache
-          keys:
-            - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
-      - when:
-          condition:
-            equal: [<< parameters.os >>, linux]
-          steps:
-            - run:
-                name: Install pnpm package manager (linux)
-                command: |
-                  npm install --prefix=$HOME/.local -g @pnpm/exe@9.8.0
-      - when:
-          condition:
-            equal: [<< parameters.os >>, macos]
-          steps:
-            - run:
-                name: Install pnpm package manager (macos)
-                command: |
-                  npm install -g @pnpm/exe@9.8.0
-      - run:
-          name: Install Dependencies
-          command: |
-            pnpm install --frozen-lockfile
-            pnpm playwright install --with-deps
-      - save_cache:
-          name: Save pnpm Package Cache
-          key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - ~/.pnpm-store
-            - ~/.cache/Cypress
-            - node_modules
 # -------------------------
 #          JOBS
 # -------------------------
@@ -78,101 +23,8 @@ jobs:
   # -------------------------
   main-linux:
     executor: linux
-    environment:
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_DAEMON: 'true'
-      NX_PERF_LOGGING: 'false'
-      NX_VERBOSE_LOGGING: 'false'
-      NX_NATIVE_LOGGING: 'false'
-      NX_E2E_RUN_E2E: 'true'
-      NX_CI_EXECUTION_ENV: 'linux'
-      NX_CLOUD_DTE_V2: 'true'
-      NX_CLOUD_DTE_SUMMARY: 'true'
-      NX_CLOUD_NO_TIMEOUTS: 'true'
     steps:
-      - checkout
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run: npx nx-cloud@next start-ci-run --distribute-on="./.nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
-      - run:
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev
-      - browser-tools/install-chrome
-      - run-pnpm-install:
-          os: linux
-      - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
-      - run:
-          name: Run Checks/Lint/Test/Build
-          no_output_timeout: 60m
-          command: |
-            pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx-cloud record -- nx sync:check
-            pids+=($!)
-
-            pnpm nx-cloud record -- nx-cloud conformance:check
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            pnpm nx affected --targets=lint,test,build,e2e,e2e-ci --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-
-            for pid in "${pids[@]}"; do
-              wait "$pid"
-            done
-  # -------------------------
-  #     JOBS: Main-MacOS
-  # -------------------------
-  mainmacos:
-    executor: macos
-    environment:
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_PERF_LOGGING: 'false'
-      NX_CI_EXECUTION_ENV: 'macos'
-      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore Homebrew packages
-          keys:
-            - nrwl-nx-homebrew-packages
-      - run:
-          name: Configure Detox Environment, Install applesimutils
-          command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-            xcrun simctl shutdown all && xcrun simctl erase all
-          no_output_timeout: 20m
-      - save_cache:
-          name: Save Homebrew Cache
-          key: nrwl-nx-homebrew-packages
-          paths:
-            - /usr/local/Homebrew
-            - ~/Library/Caches/Homebrew
-      - run-pnpm-install:
-          os: macos
-      - rust/install
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Run E2E Tests for macOS
-          command: |
-            HAS_CHANGED=$(node ./scripts/check-react-native-changes.js $NX_BASE $NX_HEAD);
-            if $HAS_CHANGED; then
-              pnpm nx affected -t e2e-macos-local --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-            else
-              echo "Skip E2E tests for macOS as there are no changes in React Native projects."
-            fi
-          no_output_timeout: 45m
+      - run: echo "We are in the process of transitioning from Circle CI to GitHub Actions. For details about your build results, consult github actions build logs."
 
 # -------------------------
 #        WORKFLOWS(JOBS)
@@ -183,5 +35,3 @@ workflows:
   build:
     jobs:
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e

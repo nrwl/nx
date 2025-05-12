@@ -1,7 +1,7 @@
 import * as metroResolver from 'metro-resolver';
 import type { MatchPath } from 'tsconfig-paths';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
-import * as chalk from 'chalk';
+import * as pc from 'picocolors';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';
 import * as fs from 'fs';
@@ -56,10 +56,10 @@ export function getResolveRequest(
     }
     if (debug) {
       console.log(
-        chalk.red(`[Nx] Unable to resolve with any resolver: ${realModuleName}`)
+        pc.red(`[Nx] Unable to resolve with any resolver: ${realModuleName}`)
       );
     }
-    throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
+    throw new Error(`Cannot resolve ${pc.bold(realModuleName)}`);
   };
 }
 
@@ -75,7 +75,7 @@ function resolveRequestFromContext(
   } catch {
     if (debug)
       console.log(
-        chalk.cyan(
+        pc.cyan(
           `[Nx] Unable to resolve with default resolveRequest: ${realModuleName}`
         )
       );
@@ -97,7 +97,7 @@ function defaultMetroResolver(
   } catch {
     if (debug)
       console.log(
-        chalk.cyan(
+        pc.cyan(
           `[Nx] Unable to resolve with default Metro resolver: ${realModuleName}`
         )
       );
@@ -131,7 +131,7 @@ function pnpmResolver(
   } catch {
     if (debug)
       console.log(
-        chalk.cyan(
+        pc.cyan(
           `[Nx] Unable to resolve with default PNPM resolver: ${realModuleName}`
         )
       );
@@ -160,12 +160,10 @@ function tsconfigPathsResolver(
     return metroResolver.resolve(context, match, platform);
   } catch {
     if (debug) {
+      console.log(pc.cyan(`[Nx] Failed to resolve ${pc.bold(realModuleName)}`));
       console.log(
-        chalk.cyan(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
-      );
-      console.log(
-        chalk.cyan(
-          `[Nx] The following tsconfig paths was used:\n:${chalk.bold(
+        pc.cyan(
+          `[Nx] The following tsconfig paths was used:\n:${pc.bold(
             JSON.stringify(paths, null, 2)
           )}`
         )
@@ -186,11 +184,11 @@ function getMatcher(debug: boolean) {
       paths = result.paths;
       if (debug) {
         console.log(
-          chalk.cyan(`[Nx] Located tsconfig at ${chalk.bold(absoluteBaseUrl)}`)
+          pc.cyan(`[Nx] Located tsconfig at ${pc.bold(absoluteBaseUrl)}`)
         );
         console.log(
-          chalk.cyan(
-            `[Nx] Found the following paths:\n:${chalk.bold(
+          pc.cyan(
+            `[Nx] Found the following paths:\n:${pc.bold(
               JSON.stringify(paths, null, 2)
             )}`
           )
@@ -198,7 +196,7 @@ function getMatcher(debug: boolean) {
       }
       matcher = createMatchPath(absoluteBaseUrl, paths);
     } else {
-      console.log(chalk.cyan(`[Nx] Failed to locate tsconfig}`));
+      console.log(pc.cyan(`[Nx] Failed to locate tsconfig}`));
       throw new Error(`Could not load tsconfig for project`);
     }
   }

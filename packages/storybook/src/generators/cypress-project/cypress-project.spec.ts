@@ -1,5 +1,5 @@
-jest.mock('nx/src/project-graph/plugins/loader', () => ({
-  ...jest.requireActual('nx/src/project-graph/plugins/loader'),
+jest.mock('nx/src/project-graph/plugins/in-process-loader', () => ({
+  ...jest.requireActual('nx/src/project-graph/plugins/in-process-loader'),
   loadNxPlugin: jest.fn().mockImplementation(() => {
     return [Promise.resolve({}), () => {}];
   }),
@@ -11,7 +11,6 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { libraryGenerator } from '@nx/js';
 import { cypressProjectGenerator } from './cypress-project';
 
@@ -31,7 +30,7 @@ describe('@nx/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/test-ui-lib-e2e',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
 
     expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeTruthy();
@@ -46,7 +45,7 @@ describe('@nx/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/test-ui-lib-e2e',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib-e2e');
 
@@ -64,7 +63,7 @@ describe('@nx/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/one/two/test-ui-lib-e2e',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
     expect(readProjectConfiguration(tree, 'test-ui-lib-e2e')).toBeDefined();
     expect(
@@ -83,7 +82,7 @@ describe('@nx/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'apps/test-ui-lib-e2e',
-      linter: Linter.EsLint,
+      linter: 'eslint',
     });
 
     // ASSERT

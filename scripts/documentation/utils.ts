@@ -131,19 +131,30 @@ export async function formatWithPrettier(filePath: string, content: string) {
   return format(content, options);
 }
 
+export function wrapLinks(content: string): string {
+  const urlRegex = /(https?:\/\/)[^\s]+[a-zA-Z][a-zA-Z]/g;
+  const links = content.match(urlRegex) || [];
+  for (const link of links) {
+    const wrappedLink = `[${link}](${link.replace('https://nx.dev', '')})`;
+    content = content.replace(link, wrappedLink);
+  }
+  return content;
+}
+
 export function formatDescription(
   description: string,
   deprecated: boolean | string
 ) {
+  const updatedDescription = wrapLinks(description);
   if (!deprecated) {
-    return description;
+    return updatedDescription;
   }
   if (!description) {
     return `${bold('Deprecated:')} ${deprecated}`;
   }
   return deprecated === true
-    ? `${bold('Deprecated:')} ${description}`
-    : mdLines(`${bold('Deprecated:')} ${deprecated}`, description);
+    ? `${bold('Deprecated:')} ${updatedDescription}`
+    : mdLines(`${bold('Deprecated:')} ${deprecated}`, updatedDescription);
 }
 
 export function getCommands(command: any) {
@@ -151,7 +162,7 @@ export function getCommands(command: any) {
 }
 
 export interface ParsedCommandOption {
-  name: string;
+  name: string[];
   type: string;
   description: string;
   default: string;
@@ -231,7 +242,7 @@ export async function parseCommand(
     deprecated: command.deprecated,
     options:
       Object.keys(builderDescriptions).map((key) => ({
-        name: key,
+        name: [key, ...(builderOptions.alias[key] || [])],
         description: builderDescriptions[key]
           ? builderDescriptions[key].replace('__yargsString__:', '')
           : '',
@@ -259,12 +270,15 @@ export function generateOptionsMarkdown(
   ];
   if (Array.isArray(command.options) && !!command.options.length) {
     command.options
-      .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .sort((a, b) => sortAlphabeticallyFunction(a.name[0], b.name[0]))
       .filter(({ hidden }) => !hidden)
       .forEach((option) => {
+        function nameAliases(aliases) {
+          return aliases.map((alias) => code('--' + alias)).join(', ');
+        }
         const name = option.deprecated
-          ? strikethrough(code('--' + option.name))
-          : code('--' + option.name);
+          ? strikethrough(nameAliases(option.name))
+          : nameAliases(option.name);
         let description = formatDescription(
           option.description,
           option.deprecated
@@ -282,9 +296,9 @@ export function generateOptionsMarkdown(
           )}\`)`;
         }
         if (
-          (option.name === 'version' &&
+          (option.name[0] === 'version' &&
             option.description === 'Show version number') ||
-          (option.name === 'help' && option.description === 'Show help')
+          (option.name[0] === 'help' && option.description === 'Show help')
         ) {
           // Add . to the end of the built-in description for consistency with our other descriptions
           description = `${description}.`;

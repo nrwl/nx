@@ -15,7 +15,10 @@ import {
   initGenerator as jsInitGenerator,
 } from '@nx/js';
 import { getImportPath } from '@nx/js/src/utils/get-import-path';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import {
+  getProjectType,
+  isUsingTsSolutionSetup,
+} from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { join } from 'node:path/posix';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
@@ -50,8 +53,11 @@ export async function viteConfigurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const { targets, root: projectRoot } = projectConfig;
 
-  const projectType =
-    schema.projectType ?? projectConfig.projectType ?? 'library';
+  const projectType = getProjectType(
+    tree,
+    projectConfig.root,
+    schema.projectType ?? projectConfig.projectType
+  );
 
   schema.includeLib ??= projectType === 'library';
 
@@ -75,7 +81,11 @@ export async function viteConfigurationGeneratorInternal(
     tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
   });
   tasks.push(jsInitTask);
-  const initTask = await initGenerator(tree, { ...schema, skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    ...schema,
+    projectRoot,
+    skipFormat: true,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
@@ -196,7 +206,7 @@ function updatePackageJson(
       name: getImportPath(tree, options.project),
       version: '0.0.1',
     };
-    if (projectType === 'application') {
+    if (getProjectType(tree, project.root, projectType) === 'application') {
       packageJson.private = true;
     }
   }
@@ -209,6 +219,10 @@ function updatePackageJson(
     const rootDir = join(project.root, 'src');
     const outputPath = joinPathFragments(project.root, 'dist');
 
+    // the file must exist in the TS solution setup, which is the only case this
+    // function is called
+    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
       outputPath,
@@ -217,6 +231,10 @@ function updatePackageJson(
       generateExportsField: true,
       packageJsonPath,
       format: ['esm'],
+      skipDevelopmentExports:
+        !tsconfigBase.compilerOptions?.customConditions?.includes(
+          'development'
+        ),
     });
   }
 

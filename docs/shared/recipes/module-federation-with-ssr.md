@@ -1,3 +1,8 @@
+---
+title: Module Federation with Server-Side Rendering
+description: Learn how to set up Module Federation with Server-Side Rendering (SSR) for Angular and React applications using Nx generators.
+---
+
 # Setup Module Federation with SSR for Angular and React
 
 This guide will walk you through creating a Module Federated setup with Server Side Rendering (SSR) for Angular and React using Nx and its generators.

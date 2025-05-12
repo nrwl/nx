@@ -1,7 +1,7 @@
 'use client';
 import { ButtonLink, SectionHeading, Strong } from '@nx/nx-dev/ui-common';
 import { ReactElement, useState, useEffect } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, Transition } from '@headlessui/react';
 import Link from 'next/link';
 
 const MOBILE_BREAKPOINT = 768;
@@ -41,12 +41,12 @@ export function Hero(): ReactElement {
         </SectionHeading>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <ButtonLink
-            href="https://cloud.nx.app/powerpack/purchase?utm_source=nx.dev&utm_medium=referral&utm_campaign=nx-powerpackurl"
-            title="Talk to the engineering team"
+            href="https://cloud.nx.app/powerpack?utm_source=nx-website&utm_medium=referral&utm_campaign=powerpack-landing-page&utm_content=cta-button&utm_term=get-nx-powerpack-hero"
             variant="primary"
             size="default"
+            title="Get Powerpack License"
           >
-            Get Powerpack
+            Get Powerpack License
           </ButtonLink>
           <a
             href={YOUTUBE_URL}
@@ -63,14 +63,14 @@ export function Hero(): ReactElement {
           </a>
         </div>
         <p className="mt-6 text-sm italic">
-          Want to use Powerpack for OSS?
+          Nx Powerpack is included in Nx Enterprise.
           <br />
           <Link
-            href="/powerpack/special-offer"
+            href="/enterprise/trial"
             prefetch={false}
             className="font-semibold underline"
           >
-            Apply for a free OSS license.
+            Request a free trial of Nx Enterprise
           </Link>
         </p>
       </div>
@@ -85,7 +85,7 @@ export function Hero(): ReactElement {
           <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Dialog.Panel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-600 text-left align-middle shadow-xl transition-all focus:outline-none dark:border-slate-800">
+              <DialogPanel className="relative w-auto transform overflow-hidden rounded-2xl border border-slate-950 bg-slate-950 text-left align-middle shadow-xl transition-all focus:outline-none">
                 <iframe
                   width="812"
                   height="456"
@@ -95,7 +95,7 @@ export function Hero(): ReactElement {
                   allowFullScreen
                   className="max-w-full"
                 />
-              </Dialog.Panel>
+              </DialogPanel>
             </div>
           </div>
         </Dialog>
