@@ -13,10 +13,6 @@ use jsonrpsee::core::client::{ReceivedMessage, TransportReceiverT, TransportSend
 use thiserror::Error;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub struct IpcError(#[from] anyhow::Error);
-
 pub struct IpcTransport {
     pub reader: IpcTransportReceiver,
     pub writer: IpcTransportSender,
@@ -37,25 +33,26 @@ pub struct IpcTransportReceiver(Arc<Stream>);
 
 const NEW_LINE: &str = "\r\n";
 
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub enum IpcError {
+    GenericError(#[from] anyhow::Error),
+    IoError(#[from] std::io::Error),
+}
+
 impl TransportSenderT for IpcTransportSender {
     type Error = IpcError;
 
     async fn send(&mut self, msg: String) -> Result<(), Self::Error> {
         let mut stream = self.0.as_tokio_async_write();
         let headers = format!("content-length: {}{}{}", msg.len(), NEW_LINE, NEW_LINE);
-        stream
-            .write_all(headers.as_bytes())
-            .await
-            .map_err(anyhow::Error::from)?;
-        stream.flush().await.map_err(anyhow::Error::from)?;
+        stream.write_all(headers.as_bytes()).await?;
+        stream.flush().await?;
         let mut msg = msg;
         msg.push_str(NEW_LINE);
         msg.push_str(NEW_LINE);
-        stream
-            .write_all(msg.as_bytes())
-            .await
-            .map_err(anyhow::Error::from)?;
-        stream.flush().await.map_err(anyhow::Error::from)?;
+        stream.write_all(msg.as_bytes()).await?;
+        stream.flush().await?;
         Ok(())
     }
 }
@@ -69,10 +66,7 @@ impl TransportReceiverT for IpcTransportReceiver {
         let mut buffer = [0u8; 1024];
 
         loop {
-            let bytes_read = stream
-                .read(buffer.as_mut())
-                .await
-                .map_err(anyhow::Error::from)?;
+            let bytes_read = stream.read(buffer.as_mut()).await?;
             if bytes_read == 0 {
                 break;
             }
