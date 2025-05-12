@@ -57,7 +57,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-          cache: 'pnpm'
+          cache: ${{ matrix.os != 'windows-latest' && 'pnpm' || '' }}
 
       - name: Set PNPM store path
         if: ${{ matrix.os == 'windows-latest' }}
@@ -73,6 +73,8 @@ jobs:
           lookup-only: true
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-${{ matrix.node_version }}-
 
       - name: Setup Python for MacOS
         if: ${{ matrix.os == 'macos-latest' }}
@@ -87,6 +89,11 @@ jobs:
       - name: Install packages
         if: steps.cache-modules.outputs.cache-hit != 'true' 
         run: pnpm install --frozen-lockfile
+        shell: bash
+        env:
+          # Speed up pnpm install on Windows
+          PNPM_SHAMEFULLY_HOIST: ${{ matrix.os == 'windows-latest' && 'true' || 'false' }}
+          CI: 'true'
 
       - name: Restore Homebrew packages
         if: ${{ matrix.os == 'macos-latest' }}
@@ -96,6 +103,8 @@ jobs:
             /opt/homebrew
             ~/Library/Caches/Homebrew
           key: ${{ matrix.node_version }}-nrwl-nx-homebrew-packages
+          restore-keys: |
+            ${{ matrix.node_version }}-nrwl-nx-homebrew-
 
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
@@ -120,11 +129,15 @@ jobs:
         with:
           lookup-only: true
           path: '${{ github.workspace }}/.cypress'
-          key: ${{ runner.os }}-cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
 
       - name: Install Cypress
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
+        env:
+          CI: 'true'
 
   prepare-matrix:
     name: Prepare matrix combinations
@@ -176,12 +189,18 @@ jobs:
         with:
           bun-version: latest
           
-
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-          cache: 'pnpm'
+          cache: ${{ matrix.os != 'windows-latest' && 'pnpm' || '' }}
+
+      - name: Set PNPM store path
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run: |
+          echo "PNPM_HOME=$RUNNER_TEMP/pnpm-store" >> $GITHUB_ENV
+          mkdir -p $RUNNER_TEMP/pnpm-store
 
       - name: Cache node_modules
         id: cache-modules
@@ -189,11 +208,16 @@ jobs:
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-${{ matrix.node_version }}-
 
       - name: Install packages 
         if: ${{ steps.cache-modules.outputs.cache-hit != 'true'}}
         run: pnpm install --frozen-lockfile
         shell: bash
+        env:
+          PNPM_SHAMEFULLY_HOIST: ${{ matrix.os == 'windows-latest' && 'true' || 'false' }}
+          CI: 'true'
       
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -215,6 +239,8 @@ jobs:
             /opt/homebrew
             ~/Library/Caches/Homebrew
           key: ${{ matrix.node_version }}-nrwl-nx-homebrew-packages
+          restore-keys: |
+            ${{ matrix.node_version }}-nrwl-nx-homebrew-
 
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
@@ -238,11 +264,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: '${{ github.workspace }}/.cypress'
-          key: ${{ runner.os }}-cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
 
       - name: Install Cypress
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
+        env:
+          # Prevent excessive logging
+          CI: 'true'
 
       - name: Reset iOS Simulators
         if: ${{ matrix.os == 'macos-latest' }}
