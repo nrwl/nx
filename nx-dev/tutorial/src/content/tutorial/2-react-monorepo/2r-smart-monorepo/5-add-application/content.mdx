@@ -12,7 +12,7 @@ title: Add an Application
 Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin provides, run the following command and inspect the output:
 
 ```shell
-nx list @nx/react
+npx nx list @nx/react
 ```
 
 :::info
@@ -27,7 +27,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
 ```shell
-nx g @nx/react:app apps/inventory --dry-run
+npx nx g @nx/react:app apps/inventory --dry-run
 ```
 
 ```
@@ -35,11 +35,11 @@ NX  Generating @nx/react:application
 
 ✔ Would you like to add React Router to this application? (y/N) · false
 ✔ What unit test runner should be used? · vitest
-✔ Which E2E test runner would you like to use? · none
+✔ Which E2E test runner would you like to use? · cypress
 ```
 
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
 ```shell
-nx g @nx/react:app apps/inventory
+npx nx g @nx/react:app apps/inventory
 ```

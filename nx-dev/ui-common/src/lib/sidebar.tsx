@@ -137,22 +137,6 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
             >
               {subItem.children.length ? (
                 <SidebarSectionItems item={subItem} />
-              ) : subItem.isExternal ? (
-                <a
-                  href={subItem.path}
-                  className={cx(
-                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
-                  )}
-                >
-                  <span
-                    className={cx('relative', {
-                      'text-md font-medium text-blue-500 dark:text-sky-500':
-                        isActiveLink,
-                    })}
-                  >
-                    {subItem.name}
-                  </span>
-                </a>
               ) : (
                 <Link
                   href={subItem.path}
