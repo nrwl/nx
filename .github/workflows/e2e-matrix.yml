@@ -77,29 +77,41 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' }}
         run: pip install setuptools wheel
 
-      - name: Install packages
-        if: steps.cache-modules.outputs.cache-hit != 'true'
+      - name: Install packages (Linux/Windows)
+        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os != 'macos-latest' }}
         run: pnpm install --frozen-lockfile
+        shell: bash
+      
+      - name: Install packages (macOS)
+        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os == 'macos-latest' }}
+        run: npm ci
+        shell: bash
 
-      - name: Homebrew cache directory path
-        if: ${{ matrix.os == 'macos-latest' }}
-        id: homebrew-cache-dir-path
-        run: echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
-
-
-      - name: Cache Homebrew
+      - name: Restore Homebrew packages
         if: ${{ matrix.os == 'macos-latest' }}
         uses: actions/cache@v4
         with:
           path: |
-            ${{ steps.homebrew-cache-dir-path.outputs.dir }}
-            /usr/local/Homebrew
-            /usr/local/Caskroom
-            /usr/local/Cellar
-            /opt/homebrew/Library/Taps/wix/homebrew-brew
-          key: ${{ runner.os }}-brew-${{ matrix.node_version }}-${{ hashFiles('**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-brew-
+            /opt/homebrew
+            ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-nrwl-nx-homebrew-packages
+
+      - name: Configure Detox Environment, Install applesimutils
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+          xcrun simctl shutdown all && xcrun simctl erase all
+        timeout-minutes: 20
+
+      - name: Save Homebrew Cache
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/homebrew
+            ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-${{ matrix.node_version }}-nrwl-nx-homebrew-packages
 
       - name: Cache Cypress
         id: cache-cypress
@@ -177,8 +189,15 @@ jobs:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install packages
+      - name: Install packages (Linux/Windows)
+        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os != 'macos-latest' }}
         run: pnpm install --frozen-lockfile
+        shell: bash
+      
+      - name: Install packages (macOS)
+        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os == 'macos-latest' }}
+        run: npm ci
+        shell: bash
 
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -192,24 +211,31 @@ jobs:
           sudo apt-get install lsof
           echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
-      - name: Homebrew cache directory path
-        if: ${{ matrix.os == 'macos-latest' }}
-        id: homebrew-cache-dir-path
-        run: echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
-
-      - name: Cache Homebrew
+      - name: Restore Homebrew packages
         if: ${{ matrix.os == 'macos-latest' }}
         uses: actions/cache@v4
         with:
           path: |
-            ${{ steps.homebrew-cache-dir-path.outputs.dir }}
-            /usr/local/Homebrew
-            /usr/local/Caskroom
-            /usr/local/Cellar
-            /opt/homebrew/Library/Taps/wix/homebrew-brew
-          key: ${{ runner.os }}-brew-${{ matrix.node_version }}-${{ hashFiles('**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-brew-
+            /opt/homebrew
+            ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-${{ matrix.node_version }}-nrwl-nx-homebrew-packages
+
+      - name: Configure Detox Environment, Install applesimutils
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+          xcrun simctl shutdown all && xcrun simctl erase all
+        timeout-minutes: 20
+
+      - name: Save Homebrew Cache
+        if: ${{ matrix.os == 'macos-latest' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/homebrew
+            ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-${{ matrix.node_version }}-nrwl-nx-homebrew-packages
 
       - name: Cache Cypress
         id: cache-cypress
@@ -221,41 +247,6 @@ jobs:
       - name: Install Cypress
         if: steps.cache-cypress.outputs.cache-hit != 'true'
         run: npx cypress install
-      
-      - name: Diagnostic Info (MacOS)
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          echo "==== System Info ===="
-          sw_vers
-          echo "==== Disk Space ===="
-          df -h
-          echo "==== Node Info ===="
-          node -v
-          npm -v 
-          echo "==== Homebrew Info ===="
-          brew config
-          echo "==== Xcode Info ===="
-          xcodebuild -version
-          xcrun simctl list
-        
-      - name: Install AppleSimUtils
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          set -e
-          if ! command -v applesimutils >/dev/null; then
-            echo "Installing applesimutils..."
-            # Try using the tap first
-            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew || true
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install --quiet applesimutils || {
-              # Fallback to direct installation if tap fails
-              curl -L https://github.com/wix/AppleSimulatorUtils/releases/download/0.9.2/AppleSimulatorUtils-0.9.2.tar.gz -o AppleSimulatorUtils.tar.gz
-              tar -xzf AppleSimulatorUtils.tar.gz
-              cd AppleSimulatorUtils
-              ./buildForBrew.sh
-              HOMEBREW_NO_AUTO_UPDATE=1 brew install --quiet applesimutils
-            }
-          fi
-          applesimutils --version
 
       - name: Reset iOS Simulators
         if: ${{ matrix.os == 'macos-latest' }}
@@ -302,7 +293,12 @@ jobs:
       - name: Run e2e tests with npm (macOS)
         id: e2e-run-npm
         if: ${{ matrix.os == 'macos-latest' }}
-        run: npx nx run ${{ matrix.project }}:e2e-local
+        run: |
+          if [[ "${{ matrix.project }}" == "e2e-detox" ]] || [[ "${{ matrix.project }}" == "e2e-react-native" ]] || [[ "${{ matrix.project }}" == "e2e-expo" ]]; then
+            pnpm nx run ${{ matrix.project }}:e2e-macos-local --parallel=1
+          else
+            pnpm nx run ${{ matrix.project }}:e2e-local --parallel=1
+          fi
         shell: bash
         timeout-minutes: ${{ matrix.os_timeout }}
         env:
@@ -311,9 +307,13 @@ jobs:
           NX_PERF_LOGGING: 'false'
           NX_E2E_VERBOSE_LOGGING: 'true'
           NX_NATIVE_LOGGING: 'false'
+          NX_CI_EXECUTION_ENV: 'macos'
           NX_E2E_RUN_E2E: 'true'
           NX_CLOUD_NO_TIMEOUTS: 'true'
           NX_E2E_SKIP_CLEANUP: 'true'
+          NX_ALLOW_NON_CACHEABLE_DTE: 'true'
+          NX_CLOUD_USE_NEW_TASK_APIS: 'true'
+          NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
           NODE_OPTIONS: --max_old_space_size=8192
           SELECTED_PM: 'npm'
           npm_config_registry: http://localhost:4872

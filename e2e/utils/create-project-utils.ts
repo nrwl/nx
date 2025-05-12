@@ -363,6 +363,7 @@ export function runCreateWorkspace(
 
     return create;
   } catch (e) {
+    console.error(e);
     logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
     throw e;
   }
