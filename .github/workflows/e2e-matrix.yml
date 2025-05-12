@@ -77,15 +77,9 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' }}
         run: pip install setuptools wheel
 
-      - name: Install packages (Linux/Windows)
-        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os != 'macos-latest' }}
+      - name: Install packages
+        if: steps.cache-modules.outputs.cache-hit != 'true' 
         run: pnpm install --frozen-lockfile
-        shell: bash
-      
-      - name: Install packages (macOS)
-        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os == 'macos-latest' }}
-        run: npm ci
-        shell: bash
 
       - name: Restore Homebrew packages
         if: ${{ matrix.os == 'macos-latest' }}
@@ -94,7 +88,7 @@ jobs:
           path: |
             /opt/homebrew
             ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-nrwl-nx-homebrew-packages
+          key: ${{ matrix.node_version }}-nrwl-nx-homebrew-packages
 
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
@@ -111,7 +105,7 @@ jobs:
           path: |
             /opt/homebrew
             ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-${{ matrix.node_version }}-nrwl-nx-homebrew-packages
+          key: ${{ matrix.node_version }}-nrwl-nx-homebrew-packages
 
       - name: Cache Cypress
         id: cache-cypress
@@ -189,16 +183,11 @@ jobs:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ matrix.node_version }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install packages (Linux/Windows)
-        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os != 'macos-latest' }}
+      - name: Install packages 
+        if: ${{ steps.cache-modules.outputs.cache-hit != 'true'}}
         run: pnpm install --frozen-lockfile
         shell: bash
       
-      - name: Install packages (macOS)
-        if: ${{ steps.cache-modules.outputs.cache-hit != 'true' && matrix.os == 'macos-latest' }}
-        run: npm ci
-        shell: bash
-
       - name: Cleanup
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
@@ -218,7 +207,7 @@ jobs:
           path: |
             /opt/homebrew
             ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-${{ matrix.node_version }}-nrwl-nx-homebrew-packages
+          key: ${{ matrix.node_version }}-nrwl-nx-homebrew-packages
 
       - name: Configure Detox Environment, Install applesimutils
         if: ${{ matrix.os == 'macos-latest' }}
@@ -235,7 +224,7 @@ jobs:
           path: |
             /opt/homebrew
             ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-${{ matrix.node_version }}-nrwl-nx-homebrew-packages
+          key: ${{ matrix.node_version }}-nrwl-nx-homebrew-packages
 
       - name: Cache Cypress
         id: cache-cypress
