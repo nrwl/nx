@@ -23,7 +23,7 @@ export default async function gradleExecutor(
     args.push(`--tests`, options.testClassName);
   }
   try {
-    await runCommandsImpl(
+    const { success } = await runCommandsImpl(
       {
         command: `${gradlewPath} ${options.taskName}`,
         cwd: dirname(gradlewPath),
@@ -32,7 +32,7 @@ export default async function gradleExecutor(
       },
       context
     );
-    return { success: true };
+    return { success };
   } catch (e) {
     return { success: false };
   }
