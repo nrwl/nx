@@ -207,7 +207,7 @@ async function getBuildTargetConfig(
     dependsOn: ['^build'],
     cache: true,
     inputs: getInputs(namedInputs),
-    outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
+    outputs: [`${nextOutputPath}/!(cache)/**/*`, `${nextOutputPath}/!(cache)`],
   };
 
   // TODO(ndcunningham): Update this to be consider different versions of next.js which is running

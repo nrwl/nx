@@ -41,7 +41,7 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 | Advanced Generators (e.g. Module Federation, Tailwind,...)                                            | ❌              | ✅            |
 | Integrated Tooling (Jest, Cypress, Playwright etc.)                                                   | ❌              | ✅            |
 | Support for single-project Workspaces                                                                 | ✅              | ✅            |
-| First-Class [Monorepo Support](/tutorials/3-angular-monorepo/1a-introduction/1-welcome)               | ❌\*            | ✅            |
+| First-Class [Monorepo Support](/getting-started/tutorials/angular-monorepo-tutorial)                  | ❌\*            | ✅            |
 | [Enforced Module Boundaries](/features/enforce-module-boundaries)                                     | ❌              | ✅            |
 | Interactive [Project Graph](/features/explore-graph)                                                  | ❌              | ✅            |
 | Task Graph                                                                                            | ❌              | ✅            |
@@ -411,4 +411,4 @@ There is also a guide describing how to [consolidate multiple Angular CLI projec
 
 You can learn more about Angular & Nx by following our dedicated tutorials:
 
-- [Tutorial: Building Angular Apps in an Nx Monorepo](/tutorials/3-angular-monorepo/1a-introduction/1-welcome)
+- [Tutorial: Building Angular Apps in an Nx Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
