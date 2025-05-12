@@ -16,7 +16,7 @@ export function getOptimization(
     emitOnErrors: false,
     moduleIds: 'deterministic',
     runtimeChunk: platform === 'browser' ? 'single' : false,
-    minimizer: normalizedOptions.optimization
+    minimizer: normalizedOptions.optimization.scripts
       ? [
           new SwcJsMinimizerRspackPlugin({
             minimizerOptions: {
