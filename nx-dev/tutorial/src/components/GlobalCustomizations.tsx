@@ -7,6 +7,11 @@ export function GlobalCustomizations() {
   useEffect(() => {
     // These actions run on every page load
 
+    // Force reload of the page when navigating between lessons
+    document.addEventListener('astro:before-preparation', (e) => {
+      document.location.href = e.to.href;
+      e.preventDefault();
+    });
     // Disable previous and next buttons if this is the first or last lesson of a tutorial
     function waitForTopBar() {
       if (!document.querySelector('#top-bar')) {
