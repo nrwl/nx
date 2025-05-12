@@ -1001,7 +1001,11 @@ impl TasksList {
                                 .enumerate()
                                 .filter_map(|(idx, task)| {
                                     if task.as_deref() == Some(task_name.as_str()) {
-                                        Some(format!("[Pinned output {}]", idx + 1))
+                                        Some(if has_narrow_area_width {
+                                            format!("[{}]", idx + 1)
+                                        } else {
+                                            format!("[Pinned output {}]", idx + 1)
+                                        })
                                     } else {
                                         None
                                     }
@@ -2777,6 +2781,17 @@ mod tests {
                 "The remote cache will not be read from or written to during this run.".to_string(),
             ))
             .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pinned_tasks_with_narrow_width() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(40, 15);
+
+        tasks_list.pin_task(test_tasks[0].id.clone(), 0);
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
