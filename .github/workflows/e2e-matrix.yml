@@ -59,6 +59,13 @@ jobs:
           node-version: ${{ matrix.node_version }}
           cache: 'pnpm'
 
+      - name: Set PNPM store path
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run: |
+          echo "PNPM_HOME=$RUNNER_TEMP/pnpm-store" >> $GITHUB_ENV
+          mkdir -p $RUNNER_TEMP/pnpm-store
+
       - name: Cache node_modules
         id: cache-modules
         uses: actions/cache@v4
