@@ -5,7 +5,7 @@ previews:
   - {
       port: 4211,
       title: 'Project Details View',
-      pathname: '/project-details/react-store',
+      pathname: '/project-details/%40react-monorepo%2Freact-store',
     }
 ---
 
@@ -18,7 +18,7 @@ previews:
 Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/getting-started/editor-setup) project detail view or run:
 
 ```shell
-nx show project react-store
+npx nx show project @react-monorepo/react-store
 ```
 
 If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{projectRoot}/dist`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:

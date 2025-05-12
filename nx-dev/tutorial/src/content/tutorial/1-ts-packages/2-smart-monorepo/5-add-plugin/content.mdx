@@ -1,0 +1,68 @@
+---
+type: lesson
+title: Add the @nx/js Plugin
+focus: /nx.json
+previews:
+  - {
+      port: 4211,
+      title: 'Project Details',
+      pathname: 'project-details/%40tuskdesign%2Fzoo',
+    }
+---
+
+### Use Nx Plugins to Enhance Your Workspace
+
+We mentioned earlier that this repository is using TypeScript project references defined in the `tsconfig.json` files to incrementally build each project so that the output is available for other projects in the repository. In order for this feature to work, the `references` section in the `tsconfig.json` files for each project need to accurately reflect the actual dependencies of that project. This can be difficult to maintain, but Nx already knows the dependencies of every project and you can use the `@nx/js` plugin to automatically keep the TypeScript project references in sync with the code base.
+
+Nx plugins can:
+
+- automatically configure caching for you, including inputs and outputs based on the underlying tooling configuration
+- infer tasks that can be run on a project because of the tooling present
+- keep tooling configuration in sync with the structure of your codebase
+- provide code generators to help scaffold out projects
+- automatically keep the tooling versions and configuration files up to date
+
+For this tutorial, we'll focus on inferring tasks and keeping tooling configuration in sync.
+
+First, let's remove the existing `build` and `typecheck` scripts from each project's `package.json` files to allow the `@nx/js` plugin to infer those tasks for us.
+
+```file:/packages/animals/package.json del={12-13} title="/packages/animals/package.json" collapse={3-10,15-21}
+
+```
+
+```file:/packages/names/package.json del={12-13} title="/packages/names/package.json" collapse={3-10,15-21}
+
+```
+
+```solution:/packages/zoo/package.json ins={12} title="/packages/zoo/package.json" collapse={3-10,14-24}
+
+```
+
+Now let's add the `@nx/js` plugin:
+
+```shell
+npx nx add @nx/js
+```
+
+Your output should look like this:
+
+```
+✔ Installing @nx/js...
+✔ Initializing @nx/js...
+ NX  Generating @nx/js:init
+
+UPDATE nx.json
+UPDATE package.json
+
+ NX   Package @nx/js added successfully.
+```
+
+The `nx add` command installs the version of the plugin that matches your repo's Nx version and runs that plugin's initialization script. For `@nx/js`, the initialization script registers the plugin in the `plugins` array of `nx.json`. The registered plugin automatically infers `build` and `typecheck` tasks for any project with a `tsconfig.json` file.
+
+Open the project details view for the `zoo` package and look at the `build` task.
+
+```shell
+npx nx show project @tuskdesign/zoo
+```
+
+Notice that the `inputs` that are inferred for the `build` task match the `include` and `exclude` settings in the `tsconfig.lib.json` file. As those settings are changed, the cache `inputs` will automatically update to the correct values.
