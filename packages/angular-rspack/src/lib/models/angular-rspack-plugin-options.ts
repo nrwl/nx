@@ -91,9 +91,29 @@ export interface NormalizedDevServerOptions extends DevServerOptions {
 }
 
 export interface OptimizationOptions {
-  fonts?: boolean;
+  fonts?:
+    | boolean
+    | {
+        inline?: boolean;
+      };
   scripts?: boolean;
-  styles?: boolean;
+  styles?:
+    | boolean
+    | {
+        minify?: boolean;
+        inlineCritical?: boolean;
+      };
+}
+
+export interface NormalizedOptimizationOptions {
+  fonts: {
+    inline: boolean;
+  };
+  scripts: boolean;
+  styles: {
+    minify: boolean;
+    inlineCritical: boolean;
+  };
 }
 
 export type OutputHashing = 'none' | 'all' | 'media' | 'bundles';
@@ -319,7 +339,7 @@ export interface NormalizedAngularRspackPluginOptions
   index: NormalizedIndexElement;
   inlineStyleLanguage: InlineStyleLanguage;
   namedChunks: boolean;
-  optimization: boolean | OptimizationOptions;
+  optimization: NormalizedOptimizationOptions;
   outputHashing: OutputHashing;
   outputPath: OutputPath;
   polyfills: string[];

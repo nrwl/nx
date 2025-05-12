@@ -54,10 +54,13 @@ export class NgRspackPlugin implements RspackPluginInstance {
       );
     }
     new DefinePlugin({
-      // TODO: Replace with ...(this.pluginOptions.optimization.scripts ? { 'ngDevMode': 'false' } : undefined) when Optimization is implemented
-      ...(this.pluginOptions.optimization ? { ngDevMode: 'false' } : {}),
+      ...(this.pluginOptions.optimization.scripts
+        ? { ngDevMode: 'false' }
+        : {}),
       ngJitMode: this.pluginOptions.aot ? undefined : 'true',
       ngServerMode: this.isPlatformServer,
+      ngHmrMode:
+        this.pluginOptions.devServer?.hmr && isDevServer ? 'true' : 'false',
       ...(this.pluginOptions.define ?? {}),
     }).apply(compiler);
     if (this.pluginOptions.assets) {
@@ -117,9 +120,6 @@ export class NgRspackPlugin implements RspackPluginInstance {
     new RxjsEsmResolutionPlugin().apply(compiler);
     new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
     if (!this.isPlatformServer && this.pluginOptions.index) {
-      // @TODO: remove this once we properly support optimization granular options
-      const optimize = this.pluginOptions.optimization !== false;
-
       new IndexHtmlPlugin({
         indexPath: this.pluginOptions.index.input,
         index: this.pluginOptions.index,
@@ -131,15 +131,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
           this.pluginOptions.devServer?.hmr
         ),
         i18n: this.i18n,
-        optimization: {
-          fonts: { inline: optimize },
-          scripts: optimize,
-          styles: {
-            inlineCritical: optimize,
-            minify: optimize,
-            removeSpecialComments: optimize,
-          },
-        },
+        optimization: this.pluginOptions.optimization,
         isSsr: !!(
           this.pluginOptions.ssr ||
           this.pluginOptions.prerender ||

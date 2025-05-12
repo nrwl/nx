@@ -107,13 +107,8 @@ export class PrerenderPlugin implements RspackPluginInstance {
                 indexFile,
                 deployUrl: this.#_options.deployUrl || '',
                 inlineCriticalCss:
-                  // TODO: Enable below when styles optimization is enabled
-                  // !!normalizedStylesOptimization.inlineCritical,
-                  true,
-                minifyCss:
-                  // TODO: Enable below when styles optimization is enabled
-                  // !!normalizedStylesOptimization.minify,
-                  true,
+                  !!this.#_options.optimization.styles.inlineCritical,
+                minifyCss: !!this.#_options.optimization.styles.minify,
                 outputPath: normalizedOutputPath,
                 route,
                 serverBundlePath,

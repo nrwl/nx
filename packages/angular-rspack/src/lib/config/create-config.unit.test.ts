@@ -105,7 +105,16 @@ describe('createConfig', () => {
                   hidden: false,
                   vendor: false,
                 },
-                optimization: true,
+                optimization: {
+                  fonts: {
+                    inline: true,
+                  },
+                  styles: {
+                    minify: true,
+                    inlineCritical: true,
+                  },
+                  scripts: true,
+                },
                 advancedOptimizations: true,
                 useTsProjectReferences: false,
                 polyfills: [],
@@ -271,7 +280,16 @@ describe('createConfig', () => {
                   vendor: false,
                 },
                 polyfills: [],
-                optimization: false,
+                optimization: {
+                  fonts: {
+                    inline: false,
+                  },
+                  styles: {
+                    minify: false,
+                    inlineCritical: false,
+                  },
+                  scripts: false,
+                },
                 advancedOptimizations: false,
               }),
             },

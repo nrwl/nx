@@ -114,9 +114,7 @@ export async function getStylesConfig(
 
   let componentsSourceMap = !!cssSourceMap;
   if (cssSourceMap) {
-    // TODO: use below once we support optimization granular options
-    // if (buildOptions.optimization.styles.minify) {
-    if (buildOptions.optimization) {
+    if (buildOptions.optimization.styles.minify) {
       // Never use component css sourcemap when style optimizations are on.
       // It will just increase bundle size without offering good debug experience.
       console.warn(

@@ -27,6 +27,7 @@ import type {
   NormalizedAssetElement,
   NormalizedDevServerOptions,
   NormalizedIndexElement,
+  NormalizedOptimizationOptions,
   OutputPath,
   ScriptOrStyleEntry,
   SourceMap,
@@ -87,18 +88,6 @@ export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
     }
 }
 
-export function validateOptimization(
-  optimization: AngularRspackPluginOptions['optimization']
-) {
-  if (typeof optimization === 'boolean' || optimization === undefined) {
-    return;
-  }
-  if (typeof optimization === 'object')
-    console.warn(
-      'The "optimization" option currently only supports a boolean value. Please check the documentation.'
-    );
-}
-
 function validateGeneralUnsupportedOptions(
   options: AngularRspackPluginOptions
 ) {
@@ -137,8 +126,7 @@ export async function normalizeOptions(
       }
     : ssr;
 
-  validateOptimization(optimization);
-  const normalizedOptimization = optimization !== false; // @TODO: Add support for optimization options
+  const normalizedOptimization = normalizeOptimization(optimization);
 
   const root = options.root ?? process.cwd();
   const tsConfig = options.tsConfig
@@ -146,9 +134,7 @@ export async function normalizeOptions(
     : join(root, 'tsconfig.app.json');
 
   const aot = options.aot ?? true;
-  // @TODO: use this once we support granular optimization options
-  // const advancedOptimizations = aot && normalizedOptimization.scripts;
-  const advancedOptimizations = aot && normalizedOptimization;
+  const advancedOptimizations = aot && normalizedOptimization.scripts;
 
   const project = await getProject(root);
 
@@ -291,6 +277,59 @@ export async function normalizeOptions(
     vendorChunk: options.vendorChunk ?? false,
     verbose: options.verbose ?? false,
     watch: options.watch ?? false,
+  };
+}
+
+function normalizeOptimization(
+  optimization: AngularRspackPluginOptions['optimization']
+): NormalizedOptimizationOptions {
+  if (typeof optimization === 'boolean') {
+    return {
+      fonts: {
+        inline: optimization,
+      },
+      scripts: optimization,
+      styles: {
+        minify: optimization,
+        inlineCritical: optimization,
+      },
+    };
+  } else if (optimization === undefined) {
+    return {
+      fonts: {
+        inline: true,
+      },
+      scripts: true,
+      styles: {
+        minify: true,
+        inlineCritical: true,
+      },
+    };
+  }
+  return {
+    fonts: {
+      inline:
+        optimization.fonts === undefined
+          ? true
+          : typeof optimization.fonts === 'boolean'
+          ? optimization.fonts
+          : optimization.fonts.inline ?? true,
+    },
+    scripts: optimization.scripts ?? true,
+    styles: {
+      minify:
+        optimization.styles === undefined
+          ? true
+          : typeof optimization.styles === 'boolean'
+          ? optimization.styles
+          : optimization.styles.minify ?? true,
+      inlineCritical:
+        optimization.styles === undefined
+          ? true
+          : typeof optimization.styles === 'boolean'
+          ? optimization.styles
+          : optimization.styles.inlineCritical ?? true,
+    },
   };
 }
 
