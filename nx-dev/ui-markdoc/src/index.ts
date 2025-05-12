@@ -180,11 +180,4 @@ export const renderMarkdown: (
   };
 };
 
-export {
-  Metrics,
-  VideoLink,
-  GithubRepository,
-  CourseVideo,
-  Graph,
-  ProjectDetails,
-};
+export { Metrics, VideoLink, GithubRepository, CourseVideo };

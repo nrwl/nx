@@ -78,7 +78,7 @@ export function GlobalCustomizations() {
     // Apply file changes
     async function applyFileChanges(e: any) {
       const { filepath } = e.detail;
-      if (!filepath || !(tutorialStore as any)._lessonSolution[filepath]) {
+      if (!filepath) {
         return;
       }
       tutorialStore.updateFile(

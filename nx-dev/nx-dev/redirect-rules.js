@@ -600,42 +600,42 @@ for (const path of oldAngularTutorialPaths) {
  */
 const standaloneTutorialRedirects = {
   '/showcase/example-repos/react-nx':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
-  '/react-tutorial': '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial': '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-tutorial/1-code-generation':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-tutorial/2-project-graph':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-tutorial/3-task-running':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-tutorial/4-task-pipelines':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-tutorial/5-summary':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/1-code-generation':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/2-project-graph':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/3-task-running':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/4-task-pipelines':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/5-summary':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/angular-standalone-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/1-code-generation':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/2-project-graph':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/3-task-running':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/4-task-pipelines':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/5-summary':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
 };
 
 const packagesIndexes = {
@@ -773,17 +773,17 @@ const conceptUrls = {
   '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
-    '/tutorials/1-ts-packages/1t-introduction/1-welcome',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/tutorials/package-based-repo-tutorial':
-    '/tutorials/1-ts-packages/1t-introduction/1-welcome',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/integrated-repo-tutorial':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/tutorials/integrated-repo-tutorial':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/react-standalone-tutorial':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/angular-standalone-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/concepts/more-concepts/micro-frontend-architecture':
     '/concepts/module-federation/micro-frontend-architecture',
   '/concepts/more-concepts/faster-builds-with-module-federation':
@@ -799,45 +799,35 @@ const conceptUrls = {
 
 const nested5minuteTutorialUrls = {
   '/tutorials/package-based-repo-tutorial':
-    '/tutorials/1-ts-packages/1t-introduction/1-welcome',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/getting-started/tutorials/npm-workspaces-tutorial':
-    '/tutorials/1-ts-packages/1t-introduction/1-welcome',
+    '/getting-started/tutorials/typescript-packages-tutorial',
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/tutorials/react-standalone-tutorial':
-    '/tutorials/2-react-monorepo/1r-introduction/1-welcome',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/tutorials/angular-standalone-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/getting-started/tutorials/angular-standalone-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/getting-started/tutorials/vue-standalone-tutorial':
     '/getting-started/tutorials',
   '/tutorials/node-server-tutorial': '/getting-started/tutorials',
-  '/angular-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+  '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/1-code-generation':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/getting-started/angular-monorepo-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/2-project-graph':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/3-task-running':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/4-workspace-optimization':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/5-summary':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
-  '/getting-started/tutorials': '/tutorials',
-  '/getting-started/tutorials/typescript-packages-tutorial':
-    '/tutorials/1-ts-packages/1t-introduction/1-welcome',
-  '/getting-started/tutorials/react-monorepo-tutorial':
-    '/tutorials/2-react-monorepo/1a-introduction/1-welcome',
-  '/getting-started/tutorials/angular-monorepo-tutorial':
-    '/tutorials/3-angular-monorepo/1a-introduction/1-welcome',
-  '/getting-started/tutorials/gradle-tutorial':
-    '/tutorials/4-gradle/1a-introduction/1-welcome',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
 };
 
 const pluginUrls = {

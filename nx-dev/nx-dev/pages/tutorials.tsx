@@ -62,7 +62,7 @@ export default function Tutorials(): JSX.Element {
                 <TutorialCard
                   title="TypeScript Monorepo"
                   type="Tutorial"
-                  url="/tutorials/1-ts-packages/1t-introduction/1-welcome"
+                  url="/tutorials/1-ts-packages/1-introduction/1-welcome"
                   icon="jsMono"
                 />
                 <TutorialCard
@@ -80,7 +80,7 @@ export default function Tutorials(): JSX.Element {
                 <TutorialCard
                   title="Gradle Monorepo"
                   type="Tutorial"
-                  url="/tutorials/4-gradle/1g-introduction/1-welcome"
+                  url="/getting-started/tutorials/gradle-tutorial"
                   icon="gradle"
                 />
               </dl>

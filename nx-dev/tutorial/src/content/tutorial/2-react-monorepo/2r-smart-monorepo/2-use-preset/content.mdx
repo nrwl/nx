@@ -28,7 +28,7 @@ If you experience technical issues with the in-browser tutorial, try refreshing 
 Create a new React monorepo with the following command:
 
 ```shell
-npx create-nx-workspace@latest react-monorepo --preset=react-monorepo --nx-cloud=skip
+npx create-nx-workspace@latest react-monorepo --preset=react-monorepo
 ```
 
 ```
@@ -41,6 +41,7 @@ NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 ✔ Default stylesheet format · css
 ✔ Would you like to use ESLint? · Yes
 ✔ Would you like to use Prettier for code formatting? · Yes
+✔ Which CI provider would you like to use? · github
 ```
 
 Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. We'll talk more about how Nx integrates with GitHub Actions later in the tutorial. The above command generates the following structure:
@@ -77,7 +78,7 @@ Let's name the initial application `react-store`. In this tutorial we're going t
 The setup includes..
 
 - a new React application (`apps/react-store/`)
-- a Cypress based set of e2e tests (`apps/react-store-e2e/`)
+- a Playwright based set of e2e tests (`apps/react-store-e2e/`)
 - Prettier preconfigured
 - ESLint preconfigured
 - Jest preconfigured

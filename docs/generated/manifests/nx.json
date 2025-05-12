@@ -62,10 +62,10 @@
             "name": "TypeScript Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "",
+            "file": "shared/tutorials/typescript-packages",
             "itemList": [],
-            "isExternal": true,
-            "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
+            "isExternal": false,
+            "path": "/getting-started/tutorials/typescript-packages-tutorial",
             "tags": []
           },
           {
@@ -73,10 +73,10 @@
             "name": "React Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "",
+            "file": "shared/tutorials/react-monorepo",
             "itemList": [],
-            "isExternal": true,
-            "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
+            "isExternal": false,
+            "path": "/getting-started/tutorials/react-monorepo-tutorial",
             "tags": []
           },
           {
@@ -84,10 +84,10 @@
             "name": "Angular Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "",
+            "file": "shared/tutorials/angular-monorepo",
             "itemList": [],
-            "isExternal": true,
-            "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
+            "isExternal": false,
+            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
             "tags": []
           },
           {
@@ -95,15 +95,15 @@
             "name": "Gradle Monorepo",
             "description": "",
             "mediaImage": "",
-            "file": "",
+            "file": "shared/tutorials/gradle",
             "itemList": [],
-            "isExternal": true,
-            "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
+            "isExternal": false,
+            "path": "/getting-started/tutorials/gradle-tutorial",
             "tags": []
           }
         ],
         "isExternal": false,
-        "path": "/tutorials",
+        "path": "/getting-started/tutorials",
         "tags": []
       }
     ],
@@ -155,7 +155,7 @@
     "path": "/getting-started/editor-setup",
     "tags": ["editor-setup"]
   },
-  "/tutorials": {
+  "/getting-started/tutorials": {
     "id": "tutorials",
     "name": "Tutorials",
     "description": "Get started with basic information, concepts and tutorials.",
@@ -167,10 +167,10 @@
         "name": "TypeScript Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/tutorials/typescript-packages",
         "itemList": [],
-        "isExternal": true,
-        "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
+        "isExternal": false,
+        "path": "/getting-started/tutorials/typescript-packages-tutorial",
         "tags": []
       },
       {
@@ -178,10 +178,10 @@
         "name": "React Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/tutorials/react-monorepo",
         "itemList": [],
-        "isExternal": true,
-        "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
+        "isExternal": false,
+        "path": "/getting-started/tutorials/react-monorepo-tutorial",
         "tags": []
       },
       {
@@ -189,10 +189,10 @@
         "name": "Angular Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/tutorials/angular-monorepo",
         "itemList": [],
-        "isExternal": true,
-        "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
+        "isExternal": false,
+        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "tags": []
       },
       {
@@ -200,59 +200,59 @@
         "name": "Gradle Monorepo",
         "description": "",
         "mediaImage": "",
-        "file": "",
+        "file": "shared/tutorials/gradle",
         "itemList": [],
-        "isExternal": true,
-        "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
+        "isExternal": false,
+        "path": "/getting-started/tutorials/gradle-tutorial",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/tutorials",
+    "path": "/getting-started/tutorials",
     "tags": []
   },
-  "/tutorials/1-ts-packages/1t-introduction/1-welcome": {
+  "/getting-started/tutorials/typescript-packages-tutorial": {
     "id": "typescript-packages-tutorial",
     "name": "TypeScript Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/tutorials/typescript-packages",
     "itemList": [],
-    "isExternal": true,
-    "path": "/tutorials/1-ts-packages/1t-introduction/1-welcome",
+    "isExternal": false,
+    "path": "/getting-started/tutorials/typescript-packages-tutorial",
     "tags": []
   },
-  "/tutorials/2-react-monorepo/1r-introduction/1-welcome": {
+  "/getting-started/tutorials/react-monorepo-tutorial": {
     "id": "react-monorepo-tutorial",
     "name": "React Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/tutorials/react-monorepo",
     "itemList": [],
-    "isExternal": true,
-    "path": "/tutorials/2-react-monorepo/1r-introduction/1-welcome",
+    "isExternal": false,
+    "path": "/getting-started/tutorials/react-monorepo-tutorial",
     "tags": []
   },
-  "/tutorials/3-angular-monorepo/1a-introduction/1-welcome": {
+  "/getting-started/tutorials/angular-monorepo-tutorial": {
     "id": "angular-monorepo-tutorial",
     "name": "Angular Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/tutorials/angular-monorepo",
     "itemList": [],
-    "isExternal": true,
-    "path": "/tutorials/3-angular-monorepo/1a-introduction/1-welcome",
+    "isExternal": false,
+    "path": "/getting-started/tutorials/angular-monorepo-tutorial",
     "tags": []
   },
-  "/tutorials/4-gradle/1g-introduction/1-welcome": {
+  "/getting-started/tutorials/gradle-tutorial": {
     "id": "gradle-tutorial",
     "name": "Gradle Monorepo",
     "description": "",
     "mediaImage": "",
-    "file": "",
+    "file": "shared/tutorials/gradle",
     "itemList": [],
-    "isExternal": true,
-    "path": "/tutorials/4-gradle/1g-introduction/1-welcome",
+    "isExternal": false,
+    "path": "/getting-started/tutorials/gradle-tutorial",
     "tags": []
   },
   "/features": {

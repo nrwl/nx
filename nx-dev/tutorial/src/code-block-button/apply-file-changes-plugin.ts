@@ -15,10 +15,8 @@ export function applyFileChangesPlugin(): ExpressiveCodePlugin {
     applyFileChangesTexts,
     (codeBlock, isTerminal) =>
       !isTerminal &&
-      ['solution:', 'file:'].some(
-        (prefix) =>
-          codeBlock.metaOptions.getString('path')?.startsWith(prefix) &&
-          !codeBlock.metaOptions.getBoolean('no-apply')
+      ['solution:', 'file:'].some((prefix) =>
+        codeBlock.metaOptions.getString('path')?.startsWith(prefix)
       ),
     (codeBlock, _) => {
       return {

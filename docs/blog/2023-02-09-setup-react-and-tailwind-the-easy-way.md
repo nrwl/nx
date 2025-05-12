@@ -59,7 +59,7 @@ You can pass `--vite=false` if you still want to keep the Webpack configuration 
 
 ## Generating a Tailwind Setup
 
-Once you have a [Nx-based React](/tutorials/2-react-monorepo/1r-introduction/1-welcome) setup, adding Tailwind is as easy as running:
+Once you have a [Nx-based React](/getting-started/tutorials/react-monorepo-tutorial) setup, adding Tailwind is as easy as running:
 
 ```shell
 $ npx nx g @nrwl/react:setup-tailwind
@@ -79,7 +79,7 @@ You'll get
 
 You should be all setup and ready now! Here are some related resources to explore:
 
-- [Nx docs: React Monorepo tutorial](/tutorials/2-react-monorepo/1r-introduction/1-welcome)
+- [Nx docs: React Monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Youtube: Is CRA Dead](https://youtu.be/fkTz6KJxhhE)
 - [Nx docs: Migrate CRA to React and Vite](/recipes/adopting-nx/adding-to-existing-project)
 

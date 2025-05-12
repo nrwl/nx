@@ -115,74 +115,15 @@ export function LinkCard({
   type,
   icon,
   url,
-  isExternal = false,
   appearance = 'default',
 }: {
   title: string;
   type: string;
   icon: string; // Can be either a component name or a direct image URL
   url: string;
-  isExternal?: boolean;
   appearance?: 'default' | 'small';
 }): JSX.Element {
-  function linkContents() {
-    return (
-      <>
-        {icon && (
-          <div
-            className={cx(
-              'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
-              {
-                'h-12 w-12': appearance === 'small',
-              }
-            )}
-          >
-            {icon.startsWith('/') ? (
-              <img
-                src={icon}
-                alt={title}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              frameworkIcons[icon as Framework]?.image ||
-              callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
-              callIfFunction(
-                (heroIcons[icon as keyof typeof heroIcons] as any)?.render,
-                { className: 'w-full h-full' }
-              )
-            )}
-          </div>
-        )}
-        <div
-          className={cx({ 'pt-4': !!icon }, { 'pt-2': appearance === 'small' })}
-        >
-          {appearance === 'small' && type ? null : (
-            <div className="mb-1 text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
-              {type}
-            </div>
-          )}
-          <h3
-            className={cx(
-              'm-0 text-lg font-semibold text-slate-900 dark:text-white',
-              { 'text-sm font-normal': appearance === 'small' }
-            )}
-          >
-            {title}
-          </h3>
-        </div>
-      </>
-    );
-  }
-  return isExternal ? (
-    <a
-      key={title}
-      href={url}
-      className="no-prose relative col-span-1 mx-auto flex w-full max-w-md flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
-      style={{ textDecorationLine: 'none' }}
-    >
-      {linkContents()}
-    </a>
-  ) : (
+  return (
     <Link
       key={title}
       href={url}
@@ -190,7 +131,48 @@ export function LinkCard({
       style={{ textDecorationLine: 'none' }}
       prefetch={false}
     >
-      {linkContents()}
+      {icon && (
+        <div
+          className={cx(
+            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
+            {
+              'h-12 w-12': appearance === 'small',
+            }
+          )}
+        >
+          {icon.startsWith('/') ? (
+            <img
+              src={icon}
+              alt={title}
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            frameworkIcons[icon as Framework]?.image ||
+            callIfFunction(nxDevIcons[icon as keyof typeof nxDevIcons]) ||
+            callIfFunction(
+              (heroIcons[icon as keyof typeof heroIcons] as any)?.render,
+              { className: 'w-full h-full' }
+            )
+          )}
+        </div>
+      )}
+      <div
+        className={cx({ 'pt-4': !!icon }, { 'pt-2': appearance === 'small' })}
+      >
+        {appearance === 'small' && type ? null : (
+          <div className="mb-1 text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
+            {type}
+          </div>
+        )}
+        <h3
+          className={cx(
+            'm-0 text-lg font-semibold text-slate-900 dark:text-white',
+            { 'text-sm font-normal': appearance === 'small' }
+          )}
+        >
+          {title}
+        </h3>
+      </div>
     </Link>
   );
 }
@@ -200,13 +182,11 @@ export function Card({
   title,
   type = 'documentation',
   url,
-  isExternal = false,
 }: {
   title: string;
   description: string;
   type: 'documentation' | 'external' | 'video';
   url: string;
-  isExternal?: boolean;
 }): JSX.Element {
   const iconMap = {
     documentation: <DocumentIcon className="mr-3 h-5 w-5 shrink-0" />,
@@ -219,47 +199,7 @@ export function Card({
     );
   const hasYoutubeId = !!youtubeRegex ? youtubeRegex[1] : '';
 
-  function linkContents() {
-    return (
-      <>
-        {!!hasYoutubeId && (
-          <div className="max-h-24">
-            <img
-              className="!m-0 h-full !w-full rounded-t-md bg-black object-contain"
-              alt="Youtube Link"
-              src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
-            />
-          </div>
-        )}
-        <div className="relative flex flex-col p-3 pr-8">
-          <span className="flex items-center font-semibold underline">
-            <span className="absolute inset-0" aria-hidden="true"></span>
-            {!hasYoutubeId ? iconMap[type] : null}
-            {title}
-          </span>
-          {description ? (
-            <p className="mt-1.5 w-full text-sm no-underline">{description}</p>
-          ) : null}
-
-          {/*HOVER ICON*/}
-          <span className="absolute right-2 top-1/2 -translate-x-2 -translate-y-2.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
-            <ArrowRightCircleIcon className="h-5 w-5" />
-          </span>
-        </div>
-      </>
-    );
-  }
-
-  return isExternal ? (
-    <a
-      key={title}
-      href={url}
-      title={title}
-      className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
-    >
-      {linkContents()}
-    </a>
-  ) : (
+  return (
     <Link
       key={title}
       href={url}
@@ -267,7 +207,30 @@ export function Card({
       className="group flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
       prefetch={false}
     >
-      {linkContents()}
+      {!!hasYoutubeId && (
+        <div className="max-h-24">
+          <img
+            className="!m-0 h-full !w-full rounded-t-md bg-black object-contain"
+            alt="Youtube Link"
+            src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
+          />
+        </div>
+      )}
+      <div className="relative flex flex-col p-3 pr-8">
+        <span className="flex items-center font-semibold underline">
+          <span className="absolute inset-0" aria-hidden="true"></span>
+          {!hasYoutubeId ? iconMap[type] : null}
+          {title}
+        </span>
+        {description ? (
+          <p className="mt-1.5 w-full text-sm no-underline">{description}</p>
+        ) : null}
+
+        {/*HOVER ICON*/}
+        <span className="absolute right-2 top-1/2 -translate-x-2 -translate-y-2.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
+          <ArrowRightCircleIcon className="h-5 w-5" />
+        </span>
+      </div>
     </Link>
   );
 }

@@ -1,0 +1,28 @@
+---
+type: lesson
+title: Checkpoint
+previews:
+  - {
+      port: 4211,
+      title: 'Task Graph',
+      pathname: 'tasks/serve?projects=%40tuskdesign%2Fzoo',
+    }
+---
+
+## Checkpoint
+
+At this point, the repository is still using all the same tools to run tasks, but now Nx runs those tasks in a smarter way. The tasks are efficiently cached so that there is no repeated work and the cache configuration settings are automatically synced with your tooling configuration files by Nx plugins. Also, any task dependencies are automatically executed whenever needed because we configured task pipelines for the projects.
+
+Open up the task graph for `zoo` app's `serve` task again to see the changes.
+
+```shell {% path="~/tuskydesigns" %}
+npx nx run @tuskdesign/zoo:serve --graph
+```
+
+The rest of this tutorial covers managing releases and setting up CI, which both require you to have a local copy of the repository. Click the "Download Repository" button and extract the zip file on your local machine before moving to the next section.
+
+import { DownloadButton } from '../../../../../components/DownloadButton';
+
+<div class="my-5">
+  <DownloadButton client:load></DownloadButton>
+</div>
