@@ -12,7 +12,7 @@ title: Add an Application
 Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
 
 ```shell
-nx list @nx/angular
+npx nx list @nx/angular
 ```
 
 :::info
@@ -27,7 +27,7 @@ More info can be found in [the integrate with editors article](/getting-started/
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
 ```shell
-nx g @nx/angular:app apps/inventory --dry-run
+npx nx g @nx/angular:app apps/inventory --dry-run
 ```
 
 ```
@@ -40,5 +40,5 @@ NX  Generating @nx/angular:application
 As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
 ```shell
-nx g @nx/angular:app apps/inventory
+npx nx g @nx/angular:app apps/inventory
 ```

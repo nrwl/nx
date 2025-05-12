@@ -2,7 +2,7 @@
 type: lesson
 title: Share Code
 previews:
-  - { port: 4200, title: 'ReactStore', pathname: '/products' }
+  - { port: 4211, title: 'Project Graph', pathname: '/projects' }
 ---
 
 ### Import Libraries into the React Applications
@@ -13,7 +13,7 @@ previews:
 
 All libraries that we generate are automatically included in the `workspaces` defined in the root-level `package.json`.
 
-```file:/package.json title="/package.json" collapse={3-53} no-apply
+```file:/package.json title="/package.json" collapse={3-51}
 
 ```
 
@@ -61,11 +61,7 @@ export function App() {
 export default App;
 ```
 
-Serving your app (`nx serve react-store`) and then navigating to `/products` should give you the following result:
-
-```shell
-nx serve react-store
-```
+Serving your app (`npx nx serve react-store`) and then navigating to `/products` should give you the following result:
 
 ![products route](/documentation/shared/tutorials/react-tutorial-products-route.png)
 

@@ -11,7 +11,7 @@ powering Nx underneath. As a result, Lerna gets all the modern features such as 
 on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first-class support for [monorepos](/tutorials/1-ts-packages/1t-introduction/1-welcome). If you have
+Nx has first-class support for [monorepos](/getting-started/tutorials/typescript-packages-tutorial). If you have
 an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/features/run-tasks)
