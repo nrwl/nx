@@ -104,7 +104,7 @@ mod test_utils {
         fn create_connection_path() -> (PathBuf, PathBuf);
 
         // Create server
-        fn create_server(path: &PathBuf) -> Self::ServerHandle;
+        fn create_server(path: PathBuf) -> Self::ServerHandle;
 
         // Accept client connection
         fn accept_connection(handle: &mut Self::ServerHandle) -> Self::AcceptFuture;
@@ -118,7 +118,7 @@ mod test_utils {
         let (server_path, client_path) = T::create_connection_path();
 
         // Create a mock server
-        let mut server = T::create_server(&server_path);
+        let mut server = T::create_server(server_path);
 
         // Connect in a separate task
         let client_task = task::spawn(async move {
@@ -138,7 +138,7 @@ mod test_utils {
         let (server_path, client_path) = T::create_connection_path();
 
         // Create a mock server
-        let mut server = T::create_server(&server_path);
+        let mut server = T::create_server(server_path);
 
         // Start client in background
         let client_task = task::spawn(async move {
@@ -162,7 +162,7 @@ mod test_utils {
         let (server_path, client_path) = T::create_connection_path();
 
         // Create a mock server
-        let mut server = T::create_server(&server_path);
+        let mut server = T::create_server(server_path);
 
         // Start client in background
         let client_task = task::spawn(async move {
@@ -215,8 +215,8 @@ mod tests {
             (socket_path.clone(), socket_path)
         }
 
-        fn create_server(path: &PathBuf) -> Self::ServerHandle {
-            UnixListener::bind(path).unwrap()
+        fn create_server(path: PathBuf) -> Self::ServerHandle {
+            UnixListener::bind(&path).unwrap()
         }
 
         fn accept_connection(handle: &mut Self::ServerHandle) -> Self::AcceptFuture {
@@ -256,10 +256,9 @@ mod tests {
 mod tests_windows {
     use super::test_utils::*;
     use super::*;
-    use std::future::Future;
     use std::pin::Pin;
-    use tempfile::NamedTempFile;
-    use tokio::net::windows::named_pipe::{ClientOptions, ServerOptions};
+    use std::{future::Future, path::PathBuf};
+    use tokio::net::windows::named_pipe::ServerOptions;
     use uuid::Uuid;
 
     struct WindowsIpcTestSetup;
@@ -281,15 +280,18 @@ mod tests_windows {
             (pipe_name.clone().into(), pipe_name.into())
         }
 
-        fn create_server(path: &PathBuf) -> Self::ServerHandle {
-            (ServerOptions::new().first_pipe_instance(true), path.clone())
+        fn create_server(path: PathBuf) -> Self::ServerHandle {
+            let mut options = ServerOptions::new();
+            options.first_pipe_instance(true);
+            (options, path)
         }
 
         fn accept_connection(handle: &mut Self::ServerHandle) -> Self::AcceptFuture {
             let (options, path) = handle;
-            let path_clone = path.clone();
+            let options = options.clone();
+            let path = path.clone();
             Box::pin(async move {
-                let path_str = path_clone.to_str().unwrap();
+                let path_str = path.to_str().unwrap();
                 let server = options.create(path_str).unwrap();
                 server.connect().await.unwrap();
                 server
@@ -297,7 +299,7 @@ mod tests_windows {
         }
 
         fn connect_client(path: PathBuf) -> Self::ConnectFuture {
-            Box::pin(async move { IpcTransport::new(path).await })
+            Box::pin(async move { IpcTransport::new(&path).await })
         }
     }
 
