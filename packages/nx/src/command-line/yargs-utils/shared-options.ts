@@ -409,12 +409,10 @@ const coerceTuiAutoExit = (value: string) => {
   throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
 };
 
-function concurrency(str: string) {
-  let parallel = parseInt(str);
-  if (isNaN(parallel)) {
-    throw new Error(`Invalid number: ${str}`);
-  }
-  if (str.at(-1) === '%') {
+function concurrency(val: string | number) {
+  let parallel = typeof val === 'number' ? val : parseInt(val);
+
+  if (typeof val === 'string' && val.at(-1) === '%') {
     const maxCores = availableParallelism?.() ?? cpus().length;
     parallel = (maxCores * parallel) / 100;
   }
