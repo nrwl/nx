@@ -17,8 +17,14 @@
     },
     "noUpgrade": {
       "type": "boolean",
-      "description": "Skip upgrading Storybook packages. Only use this option if you are already on version 9, and you do not want the latest beta.",
+      "description": "Skip upgrading Storybook packages. Only use this option if you are already on version 9, and you do not want to install the packages again.",
       "default": false
+    },
+    "versionTag": {
+      "type": "string",
+      "description": "The version of Storybook to use. Use 'latest' to use the latest stable version, or 'next' to use the latest beta.",
+      "default": "latest",
+      "enum": ["latest", "next"]
     }
   },
   "examplesFile": "../../../docs/migrate-9-generator-examples.md"

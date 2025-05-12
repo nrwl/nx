@@ -12,6 +12,7 @@ import {
 import { Schema } from './schema';
 
 export async function migrate9Generator(tree: Tree, schema: Schema) {
+  schema.versionTag = schema.versionTag ?? 'latest';
   const packageJson = readJson(tree, 'package.json');
   if (!checkStorybookInstalled(packageJson)) {
     output.error({

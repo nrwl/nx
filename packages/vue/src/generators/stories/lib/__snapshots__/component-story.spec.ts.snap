@@ -4,8 +4,7 @@ exports[`vue:component-story default setup component with other syntax of props 
 "import type { Meta, StoryObj } from '@storybook/vue3';
 import testUiLib from './test-ui-lib.vue';
 
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 
 const meta: Meta<typeof testUiLib> = {
@@ -31,8 +30,7 @@ export const Heading: Story = {
     displayAge:  false,
     age:  0,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
   },
 };
@@ -44,8 +42,7 @@ exports[`vue:component-story default setup component with props defined should c
 "import type { Meta, StoryObj } from '@storybook/vue3';
 import testUiLib from './test-ui-lib.vue';
 
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 
 const meta: Meta<typeof testUiLib> = {
@@ -71,8 +68,7 @@ export const Heading: Story = {
     displayAge:  false,
     age:  0,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
   },
 };
@@ -84,8 +80,7 @@ exports[`vue:component-story default setup default component setup should proper
 "import type { Meta, StoryObj } from '@storybook/vue3';
 import testUiLib from './test-ui-lib.vue';
 
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 
 
 const meta: Meta<typeof testUiLib> = {
@@ -105,8 +100,7 @@ export const Primary = {
 export const Heading: Story = {
   args: {
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
   },
 };

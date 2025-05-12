@@ -4105,33 +4105,6 @@
         "path": "/technologies/react/react-native/api/generators/component",
         "type": "generator"
       },
-      "/technologies/react/react-native/api/generators/storybook-configuration": {
-        "description": "Set up Storybook for a React Native application or library.",
-        "file": "generated/packages/react-native/generators/storybook-configuration.json",
-        "hidden": false,
-        "name": "storybook-configuration",
-        "originalFilePath": "/packages/react-native/src/generators/storybook-configuration/schema.json",
-        "path": "/technologies/react/react-native/api/generators/storybook-configuration",
-        "type": "generator"
-      },
-      "/technologies/react/react-native/api/generators/component-story": {
-        "description": "Generate Storybook story for a React Native component.",
-        "file": "generated/packages/react-native/generators/component-story.json",
-        "hidden": false,
-        "name": "component-story",
-        "originalFilePath": "/packages/react-native/src/generators/component-story/schema.json",
-        "path": "/technologies/react/react-native/api/generators/component-story",
-        "type": "generator"
-      },
-      "/technologies/react/react-native/api/generators/stories": {
-        "description": "Create stories for all components declared in an application or library.",
-        "file": "generated/packages/react-native/generators/stories.json",
-        "hidden": false,
-        "name": "stories",
-        "originalFilePath": "/packages/react-native/src/generators/stories/schema.json",
-        "path": "/technologies/react/react-native/api/generators/stories",
-        "type": "generator"
-      },
       "/technologies/react/react-native/api/generators/upgrade-native": {
         "description": "Destructive command to upgrade native iOS and Android code to latest.",
         "file": "generated/packages/react-native/generators/upgrade-native.json",
@@ -4746,15 +4719,6 @@
         "path": "/technologies/test-tools/storybook/api/generators/configuration",
         "type": "generator"
       },
-      "/technologies/test-tools/storybook/api/generators/cypress-project": {
-        "description": "Add cypress E2E app to test a ui library that is set up for Storybook.",
-        "file": "generated/packages/storybook/generators/cypress-project.json",
-        "hidden": false,
-        "name": "cypress-project",
-        "originalFilePath": "/packages/storybook/src/generators/cypress-project/schema.json",
-        "path": "/technologies/test-tools/storybook/api/generators/cypress-project",
-        "type": "generator"
-      },
       "/technologies/test-tools/storybook/api/generators/convert-to-inferred": {
         "description": "Convert existing Storybook project(s) using `@nx/storybook:*` executors to use `@nx/storybook/plugin`. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
         "file": "generated/packages/storybook/generators/convert-to-inferred.json",
@@ -4762,15 +4726,6 @@
         "name": "convert-to-inferred",
         "originalFilePath": "/packages/storybook/src/generators/convert-to-inferred/schema.json",
         "path": "/technologies/test-tools/storybook/api/generators/convert-to-inferred",
-        "type": "generator"
-      },
-      "/technologies/test-tools/storybook/api/generators/migrate-7": {
-        "description": "Migrate to Storybook version 7.",
-        "file": "generated/packages/storybook/generators/migrate-7.json",
-        "hidden": false,
-        "name": "migrate-7",
-        "originalFilePath": "/packages/storybook/src/generators/migrate-7/schema.json",
-        "path": "/technologies/test-tools/storybook/api/generators/migrate-7",
         "type": "generator"
       },
       "/technologies/test-tools/storybook/api/generators/migrate-8": {
@@ -4781,9 +4736,48 @@
         "originalFilePath": "/packages/storybook/src/generators/migrate-8/schema.json",
         "path": "/technologies/test-tools/storybook/api/generators/migrate-8",
         "type": "generator"
+      },
+      "/technologies/test-tools/storybook/api/generators/migrate-9": {
+        "description": "Migrate to Storybook version 9.",
+        "file": "generated/packages/storybook/generators/migrate-9.json",
+        "hidden": false,
+        "name": "migrate-9",
+        "originalFilePath": "/packages/storybook/src/generators/migrate-9/schema.json",
+        "path": "/technologies/test-tools/storybook/api/generators/migrate-9",
+        "type": "generator"
       }
     },
     "migrations": {
+      "/technologies/test-tools/storybook/api/migrations/update-21-2-0-migrate-storybook-v9": {
+        "description": "Update workspace to use Storybook v9",
+        "file": "generated/packages/storybook/migrations/update-21-2-0-migrate-storybook-v9.json",
+        "hidden": false,
+        "name": "update-21-2-0-migrate-storybook-v9",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/storybook",
+        "path": "/technologies/test-tools/storybook/api/migrations/update-21-2-0-migrate-storybook-v9",
+        "type": "migration"
+      },
+      "/technologies/test-tools/storybook/api/migrations/update-21-2-0-remove-addon-dependencies": {
+        "description": "Remove deprecated Storybook addon dependencies",
+        "file": "generated/packages/storybook/migrations/update-21-2-0-remove-addon-dependencies.json",
+        "hidden": false,
+        "name": "update-21-2-0-remove-addon-dependencies",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/storybook",
+        "path": "/technologies/test-tools/storybook/api/migrations/update-21-2-0-remove-addon-dependencies",
+        "type": "migration"
+      },
+      "/technologies/test-tools/storybook/api/migrations/21.1.0-package-updates": {
+        "description": "",
+        "file": "generated/packages/storybook/migrations/21.1.0-package-updates.json",
+        "hidden": false,
+        "name": "21.1.0-package-updates",
+        "version": "21.2.0-beta.3",
+        "originalFilePath": "/packages/storybook",
+        "path": "/technologies/test-tools/storybook/api/migrations/21.1.0-package-updates",
+        "type": "migration"
+      },
       "/technologies/test-tools/storybook/api/migrations/20.8.0-package-updates": {
         "description": "",
         "file": "generated/packages/storybook/migrations/20.8.0-package-updates.json",

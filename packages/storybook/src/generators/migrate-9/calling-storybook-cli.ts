@@ -43,9 +43,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       bodyLines: [
         `🚨 The Storybook CLI failed to upgrade your @storybook/* packages to the latest version.`,
         `Please try running the sb upgrade command manually:`,
-        `${pm.exec} ${
-          packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
-        } upgrade`,
+        `${pm.exec} storybook@${schema.versionTag} upgrade`,
       ],
       color: 'red',
     });
@@ -80,9 +78,7 @@ export function callAutomigrate(
     ([projectName, storybookProjectInfo]) => {
       const packageManager = detectPackageManager();
       const pm = getPackageManagerCommand(packageManager);
-      const commandToRun = `${pm.dlx} ${
-        packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
-      } automigrate --config-dir ${storybookProjectInfo.configDir}`;
+      const commandToRun = `${pm.dlx} storybook automigrate --config-dir ${storybookProjectInfo.configDir}`;
       try {
         output.log({
           title: `Calling sb automigrate for ${projectName}`,
@@ -95,6 +91,10 @@ export function callAutomigrate(
           {
             stdio: 'inherit',
             windowsHide: false,
+            env: {
+              ...process.env,
+              STORYBOOK_PROJECT_ROOT: storybookProjectInfo.configDir,
+            },
           }
         );
 

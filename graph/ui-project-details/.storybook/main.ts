@@ -4,17 +4,22 @@ import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-docs'],
 
   framework: {
     name: '@storybook/react-vite',
     options: {},
   },
 
-  viteFinal: async (config) =>
-    mergeConfig(config, {
-      plugins: [],
-    }),
+  viteFinal: async (config) => {
+    const {
+      nxViteTsPaths,
+      // nx-ignore-next-line
+    } = require('@nx/vite/plugins/nx-tsconfig-paths.plugin');
+    return mergeConfig(config, {
+      plugins: [nxViteTsPaths()],
+    });
+  },
 
   docs: {},
 };

@@ -23,7 +23,7 @@ import { nxVersion } from '../../utils/versions';
 export async function angularStoriesGenerator(
   tree: Tree,
   options: StoriesGeneratorOptions
-): Promise<GeneratorCallback> {
+) {
   const entryPoints = getProjectEntryPoints(tree, options.name);
   const componentsInfo: ComponentInfo[] = [];
   for (const entryPoint of entryPoints) {
@@ -62,24 +62,10 @@ export async function angularStoriesGenerator(
       skipFormat: true,
     });
   }
-  const tasks: GeneratorCallback[] = [];
-
-  if (options.interactionTests) {
-    const { interactionTestsDependencies, addInteractionsInAddons } =
-      ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
-
-    const projectConfiguration = readProjectConfiguration(tree, options.name);
-    addInteractionsInAddons(tree, projectConfiguration);
-
-    tasks.push(
-      addDependenciesToPackageJson(tree, {}, interactionTestsDependencies())
-    );
-  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
-  return runTasksInSerial(...tasks);
 }
 
 export default angularStoriesGenerator;

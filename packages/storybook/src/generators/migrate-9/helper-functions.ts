@@ -18,75 +18,79 @@ export function onlyShowGuide(storybookProjects: {
     configDir: string;
   };
 }) {
+  const packageManager = detectPackageManager();
+  const pm = getPackageManagerCommand(packageManager);
+
   output.log({
-    title: 'Storybook Migration Guide',
+    title: 'Storybook 9 Migration Guide',
     bodyLines: [
-      `ℹ️ Nx has detected that you have Storybook installed in your workspace.`,
-      `To migrate to Storybook 9, you need to run the following commands:`,
+      `You can run the following commands manually to upgrade your Storybook projects to Storybook 9:`,
       ``,
-      `1. Upgrade your Storybook packages to the latest version:`,
-      `npx storybook@latest upgrade`,
+      `1. Call the Storybook upgrade script:`,
+      `${pm.exec} ${
+        packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+      } upgrade`,
       ``,
-      `2. Run the automigrate command for each project that uses Storybook:`,
+      `2. Call the Storybook automigrate scripts:`,
+      `Run the following commands for each Storybook project:`,
+      ...Object.entries(storybookProjects).map(
+        ([_projectName, storybookProjectInfo]) => {
+          return `${pm.exec} ${
+            packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
+          } automigrate --config-dir ${storybookProjectInfo.configDir}`;
+        }
+      ),
+      ``,
     ],
   });
-
-  Object.entries(storybookProjects).forEach(
-    ([_projectName, storybookProjectInfo]) => {
-      output.log({
-        title: '',
-        bodyLines: [
-          `npx storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir}`,
-        ],
-      });
-    }
-  );
 }
 
-export function getAllStorybookInfo(tree: Tree) {
-  const allStorybookProjects: {
-    [key: string]: {
-      configDir: string;
-    };
-  } = {};
-
-  const storybookConfigPath = (path: string) => {
-    const mainTsPath = join(path, 'main.ts');
-    const mainJsPath = join(path, 'main.js');
-    const mainCjsPath = join(path, 'main.cjs');
-    const mainMjsPath = join(path, 'main.mjs');
-
-    if (
-      fileExists(mainTsPath) ||
-      fileExists(mainJsPath) ||
-      fileExists(mainCjsPath) ||
-      fileExists(mainMjsPath)
-    ) {
-      const projectName = path
-        .replace(workspaceRoot, '')
-        .split('/')
-        .filter((p) => p !== '.storybook' && p !== '')
-        .join('-');
-
-      if (projectName) {
-        allStorybookProjects[projectName] = {
-          configDir: path,
-        };
-      } else {
-        allStorybookProjects['root'] = {
-          configDir: path,
-        };
-      }
-    }
+export function getAllStorybookInfo(tree: Tree): {
+  [key: string]: {
+    configDir: string;
   };
+} {
+  const allStorybookDirs: { [key: string]: { configDir: string } } = {};
 
-  visitNotIgnoredFiles(tree, '.', (path) => {
-    if (path.includes('.storybook') && !path.includes('node_modules')) {
-      storybookConfigPath(dirname(joinPathFragments(workspaceRoot, path)));
+  const extensions = ['ts', 'js', 'cjs', 'mts', 'mjs', 'cts'];
+  const isStorybookMainFile = (path: string) =>
+    extensions.some((ext) => path.endsWith(`.storybook/main.${ext}`));
+
+  visitNotIgnoredFiles(tree, '', (storybookConfigPath) => {
+    if (!isStorybookMainFile(storybookConfigPath)) {
+      return;
     }
+    const storybookConfigDir = dirname(storybookConfigPath);
+
+    let projectRoot = '';
+    if (storybookConfigPath.includes('/.storybook')) {
+      projectRoot = storybookConfigDir.replace('/.storybook', '');
+    } else {
+      projectRoot = storybookConfigDir.replace('.storybook', '');
+    }
+
+    if (projectRoot === '') {
+      projectRoot = '.';
+    }
+
+    const packageOrProjectJson = [
+      joinPathFragments(projectRoot, 'package.json'),
+      joinPathFragments(projectRoot, 'project.json'),
+    ].find((p) => tree.exists(p));
+    if (!packageOrProjectJson) {
+      return;
+    }
+
+    const projectName = readJson(tree, packageOrProjectJson)?.name;
+    if (!projectName) {
+      return;
+    }
+    allStorybookDirs[projectName] = {
+      configDir: storybookConfigDir,
+    };
   });
 
-  return allStorybookProjects;
+  return allStorybookDirs;
 }
 
 export function handleMigrationResult(
@@ -99,113 +103,113 @@ export function handleMigrationResult(
       configDir: string;
     };
   }
-) {
-  const packageManager = detectPackageManager();
-  const pm = getPackageManagerCommand(packageManager);
-
-  // Check if any projects failed to migrate
-  if (Object.keys(migrateResult.failedProjects).length > 0) {
-    output.log({
-      title: 'Some projects failed to migrate',
-      bodyLines: [
-        `ℹ️ Some projects failed to migrate to Storybook 9.`,
-        `You can try to run the migration manually for these projects.`,
-      ],
-    });
-
-    Object.keys(migrateResult.failedProjects).forEach((projectName) => {
-      output.log({
-        title: `Failed to migrate ${projectName}`,
-        bodyLines: [
-          `Run the following command to migrate ${projectName} to Storybook 9:`,
-          `${pm.dlx} ${
-            packageManager === 'yarn' ? 'storybook' : 'storybook@latest'
-          } automigrate --config-dir ${
-            allStorybookProjects[projectName].configDir
-          }`,
-        ],
-      });
-    });
-  }
-
-  // Generate a migration summary file
-  try {
-    const migrationSummaryPath = join(workspaceRoot, 'storybook-migration.md');
-    const successfulProjects = Object.entries(
-      migrateResult.successfulProjects
-    ).map(([project, _command]) => project);
-    const failedProjects = Object.entries(migrateResult.failedProjects).map(
-      ([project, _command]) => project
+): { successfulProjects: {}; failedProjects: {} } {
+  if (
+    fileExists(join(workspaceRoot, 'migration-storybook.log')) &&
+    Object.keys(migrateResult.successfulProjects)?.length
+  ) {
+    const sbLogFile = readFileSync(
+      join(workspaceRoot, 'migration-storybook.log'),
+      'utf-8'
     );
-
-    generateFiles(
-      {
-        sourceRoot: join(__dirname, 'files'),
-        targetRoot: workspaceRoot,
-        template: {
-          hasSuccessfulProjects: successfulProjects.length > 0,
-          hasFailedProjects: failedProjects.length > 0,
-          successfulProjects: Object.values(migrateResult.successfulProjects),
-          failedProjects: Object.values(migrateResult.failedProjects),
-          tmpl: '',
-        },
-      },
-      '',
-      '',
-      {
-        'storybook-migration-summary.md__tmpl__': 'storybook-migration.md',
+    Object.keys(migrateResult.successfulProjects).forEach((projectName) => {
+      if (
+        sbLogFile.includes(
+          `The migration failed to update your ${allStorybookProjects[projectName].configDir}`
+        )
+      ) {
+        migrateResult.failedProjects[projectName] =
+          migrateResult.successfulProjects[projectName];
+        delete migrateResult.successfulProjects[projectName];
       }
-    );
-
-    output.log({
-      title: 'Migration summary',
-      bodyLines: [
-        `ℹ️ A migration summary has been generated at ${migrationSummaryPath}`,
-      ],
-    });
-  } catch (e) {
-    output.error({
-      title: 'Failed to generate migration summary',
-      bodyLines: [`Error: ${e}`],
     });
   }
 
+  if (
+    Object.keys(allStorybookProjects)?.length ===
+      Object.keys(migrateResult.successfulProjects)?.length ||
+    Object.keys(migrateResult.failedProjects)?.length === 0
+  ) {
+    output.log({
+      title: `Storybook configuration migrated.`,
+      bodyLines: [
+        `☑️ The automigrate command was successful.`,
+        `All your projects were migrated successfully.`,
+      ],
+      color: 'green',
+    });
+  } else {
+    if (Object.keys(migrateResult.failedProjects).length) {
+      if (Object.keys(migrateResult.failedProjects).length) {
+        output.log({
+          title: `Storybook configuration migrated.`,
+          bodyLines: [
+            `☑️ The automigrate command was successful.`,
+            `The following projects were migrated successfully:`,
+            ...Object.keys(migrateResult.successfulProjects).map(
+              (project) => `  - ${project}`
+            ),
+          ],
+          color: 'green',
+        });
+      }
+
+      output.log({
+        title: `Failed migrations.`,
+        bodyLines: [
+          `There were some projects that were not migrated successfully.`,
+          `⚠️ The following projects were not migrated successfully:`,
+          ...Object.keys(migrateResult.failedProjects).map(
+            (project) => `  - ${project}`
+          ),
+          `You can run the following commands to migrate them manually:`,
+          ...Object.entries(migrateResult.failedProjects).map(
+            ([_project, command]) => `- ${command}`
+          ),
+        ],
+        color: 'red',
+      });
+    }
+  }
   return migrateResult;
 }
 
-export function checkStorybookInstalled(packageJson: any) {
-  return Object.keys(packageJson.dependencies || {}).some((dep) =>
-    dep.includes('@storybook')
+export function checkStorybookInstalled(packageJson): boolean {
+  return (
+    (packageJson.dependencies['storybook'] ||
+      packageJson.devDependencies['storybook']) &&
+    (packageJson.dependencies['@nx/storybook'] ||
+      packageJson.devDependencies['@nx/storybook'])
   );
 }
 
 export function logResult(
   tree: Tree,
   migrationSummary: {
-    successfulProjects: {};
-    failedProjects: {};
+    successfulProjects: { [key: string]: string };
+    failedProjects: { [key: string]: string };
   }
 ) {
-  const successfulProjects = Object.entries(migrationSummary.successfulProjects);
-  const failedProjects = Object.entries(migrationSummary.failedProjects);
+  output.log({
+    title: `Migration complete!`,
+    bodyLines: [
+      `🎉 Your Storybook configuration has been migrated to Storybook ^9.0.0!`,
+      `📖 You can see a summary of the tasks that were performed in the storybook-migration-summary.md file in the root of your workspace.`,
+    ],
+    color: 'green',
+  });
 
-  if (successfulProjects.length > 0) {
-    output.log({
-      title: 'Successfully migrated projects',
-      bodyLines: [
-        `✅ The following projects were successfully migrated to Storybook 9:`,
-        ...successfulProjects.map(([_projectName, command]) => `- ${command}`),
-      ],
-    });
-  }
-
-  if (failedProjects.length > 0) {
-    output.error({
-      title: 'Failed to migrate projects',
-      bodyLines: [
-        `🚨 The following projects failed to migrate to Storybook 9:`,
-        ...failedProjects.map(([_projectName, command]) => `- ${command}`),
-      ],
-    });
-  }
+  generateFiles(tree, join(__dirname, 'files'), '.', {
+    tmpl: '',
+    successfulProjects: Object.entries(
+      migrationSummary?.successfulProjects
+    )?.map(([_projectName, command]) => command),
+    failedProjects: Object.entries(migrationSummary?.failedProjects)?.map(
+      ([_projectName, command]) => command
+    ),
+    hasFailedProjects:
+      Object.keys(migrationSummary?.failedProjects)?.length > 0,
+    hasSuccessfulProjects:
+      Object.keys(migrationSummary?.successfulProjects)?.length > 0,
+  });
 }
