@@ -5,8 +5,8 @@ use anyhow::anyhow;
 use interprocess::{
     bound_util::{RefTokioAsyncRead, RefTokioAsyncWrite},
     local_socket::{
-        tokio::{prelude::*, Stream},
         GenericFilePath, ToFsName,
+        tokio::{Stream, prelude::*},
     },
 };
 use jsonrpsee::core::client::{ReceivedMessage, TransportReceiverT, TransportSenderT};
