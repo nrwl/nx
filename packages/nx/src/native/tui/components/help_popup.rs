@@ -12,7 +12,7 @@ use std::any::Any;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::{Component, Frame};
-use crate::native::tui::action::Action;
+use crate::native::tui::{action::Action, nx_console};
 
 use crate::native::tui::theme::THEME;
 
@@ -159,11 +159,19 @@ impl HelpPopup {
 
         if self.console_available {
             // add Copilot specific keybindings for AI assistance
+
             keybindings.extend([
                 ("", ""),
                 (
                     "<ctrl>+a",
-                    "Send this output to Copilot so that it can assist with any issues",
+                    match nx_console::get_current_editor() {
+                        nx_console::SupportedEditor::VSCode => {
+                            "Send terminal output to Copilot so that it can assist with any issues"
+                        }
+                        _ => {
+                            "Send terminal output to your AI assistant so that it can assist with any issues"
+                        }
+                    },
                 ),
             ]);
         }

@@ -578,7 +578,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 ),
                             ])
                         } else {
-                            let mut spans = vec![
+                            let spans = vec![
                                 Span::raw("  "),
                                 Span::styled("i", Style::default().fg(THEME.info)),
                                 Span::styled(
@@ -586,29 +586,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                     Style::default().fg(THEME.secondary_fg),
                                 ),
                             ];
-                            if state.console_available {
-                                let mut ai_info = vec![
-                                    Span::raw("  "),
-                                    Span::styled("<ctrl>+a", Style::default().fg(THEME.info)),
-                                ];
 
-                                if matches!(
-                                    nx_console::get_current_editor(),
-                                    nx_console::SupportedEditor::VSCode
-                                ) {
-                                    ai_info.push(Span::styled(
-                                        " to this send output to Copilot",
-                                        Style::default().fg(THEME.secondary_fg),
-                                    ))
-                                } else {
-                                    ai_info.push(Span::styled(
-                                        " to send output to your editor's AI assistant",
-                                        Style::default().fg(THEME.secondary_fg),
-                                    ))
-                                }
-
-                                spans.extend(ai_info);
-                            }
                             Line::from(spans)
                         };
 
