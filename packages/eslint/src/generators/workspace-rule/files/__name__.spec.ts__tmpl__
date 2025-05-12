@@ -1,6 +1,6 @@
 <% if (flatConfig) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
-import { rule, RULE_NAME } from './my-custom-rule';
+import { rule, RULE_NAME } from './<%= name %>';
 
 const ruleTester = new RuleTester({
   languageOptions: {
