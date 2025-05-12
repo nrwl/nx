@@ -216,10 +216,10 @@ export const learnItems: MenuItem[] = [
 ];
 export const eventItems: MenuItem[] = [
   {
-    name: 'Monorepo World',
+    name: 'Office Hours',
     description: null,
-    href: 'https://monorepo.world',
-    icon: GlobeAltIcon,
+    href: 'https://go.nx.dev/office-hours',
+    icon: DiscordIcon,
     isNew: false,
     isHighlight: false,
   },
