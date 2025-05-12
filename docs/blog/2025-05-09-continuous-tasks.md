@@ -6,7 +6,6 @@ tags: ['nx']
 cover_image: /blog/images/2025-05-09/continuous-tasks.avif
 description: 'Learn how to use continuous tasks in Nx 21 to improve your developer experience.'
 youtubeUrl: https://youtu.be/AD51BKJtDBk
-pinned: true
 ---
 
 {% callout type="deepdive" title="Nx 21 Launch Week" expanded=true %}
