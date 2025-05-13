@@ -35,6 +35,7 @@
     "@angular-eslint/eslint-plugin": "19.2.0",
     "@angular-eslint/eslint-plugin-template": "19.2.0",
     "@angular-eslint/template-parser": "19.2.0",
+    "@angular/build": "20.0.0-rc.0",
     "@angular/cli": "20.0.0-rc.0",
     "@angular/common": "20.0.0-rc.0",
     "@angular/compiler": "20.0.0-rc.0",

@@ -14,6 +14,7 @@ import { dirname, join } from 'node:path/posix';
 import { allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import type { GeneratorOptions } from './schema';
 
 const executorsToConvert = new Set([
@@ -100,9 +101,16 @@ async function convertProjectTargets(
 
   const useNxExecutor =
     project.targets[buildTargetName].executor.startsWith('@nx/angular:');
-  const newExecutor = useNxExecutor
-    ? '@nx/angular:application'
-    : '@angular-devkit/build-angular:application';
+  let newExecutor: string;
+  if (useNxExecutor) {
+    newExecutor = '@nx/angular:application';
+  } else {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+    newExecutor =
+      angularMajorVersion >= 20
+        ? '@angular/build:application'
+        : '@angular-devkit/build-angular:application';
+  }
 
   const buildTarget = project.targets[buildTargetName];
   buildTarget.executor = newExecutor;
@@ -252,6 +260,7 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
   for (const target of Object.keys(targets)) {
     if (
       targets[target].executor === '@nx/angular:application' ||
+      targets[target].executor === '@angular/build:application' ||
       targets[target].executor === '@angular-devkit/build-angular:application'
     ) {
       logger.warn(

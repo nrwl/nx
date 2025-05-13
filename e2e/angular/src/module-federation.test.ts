@@ -86,7 +86,7 @@ describe('Angular Module Federation', () => {
       import { ${
         names(wildcardLib).className
       }Module } from '@${proj}/${wildcardLib}/${
-        names(secondaryEntry).fileName
+        names(wildcardLib).fileName
       }.module';
       import { ${
         names(sharedLib).className
