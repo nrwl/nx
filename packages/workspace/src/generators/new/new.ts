@@ -36,7 +36,6 @@ interface Schema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
   ssr?: boolean;
-  serverRouting?: boolean;
   prefix?: string;
   useGitHub?: boolean;
   nxCloud?: 'yes' | 'skip' | 'circleci' | 'github';
