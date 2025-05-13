@@ -244,6 +244,7 @@
         "serveStaticTargetName": "serve-static"
       }
     },
+    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {
