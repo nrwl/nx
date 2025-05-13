@@ -1377,6 +1377,41 @@ describe('app', () => {
         ]
       ).toBeDefined();
     });
+
+    it('should not set provideBrowserGlobalErrorListeners in app.module.ts for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      expect(
+        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
+      ).not.toContain('provideBrowserGlobalErrorListeners');
+    });
+
+    it('should not set provideBrowserGlobalErrorListeners in standalone app.config.ts for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', {
+        bundler: 'esbuild',
+        standalone: true,
+      });
+
+      expect(
+        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).not.toContain('provideBrowserGlobalErrorListeners');
+    });
   });
 });
 
