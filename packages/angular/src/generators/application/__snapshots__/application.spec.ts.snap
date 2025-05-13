@@ -27,7 +27,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   "styles": [
     "./src/styles.css"
   ],
-  "scripts": [],
   "devServer": {},
   "ssr": {
     "entry": "./src/server.ts"
@@ -174,7 +173,6 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
   "styles": [
     "./src/styles.css"
   ],
-  "scripts": [],
   "devServer": {}
 
     }
@@ -818,7 +816,7 @@ exports[`app nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "options": {
         "assets": [
           {
@@ -831,7 +829,6 @@ exports[`app nested should create project configs 1`] = `
         "polyfills": [
           "zone.js",
         ],
-        "scripts": [],
         "styles": [
           "my-dir/my-app/src/styles.css",
         ],
@@ -842,7 +839,7 @@ exports[`app nested should create project configs 1`] = `
       ],
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "my-app:build",
       },
@@ -861,7 +858,7 @@ exports[`app nested should create project configs 1`] = `
       },
       "continuous": true,
       "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
     },
     "serve-static": {
       "continuous": true,
@@ -935,7 +932,7 @@ exports[`app not nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:application",
+      "executor": "@angular/build:application",
       "options": {
         "assets": [
           {
@@ -948,7 +945,6 @@ exports[`app not nested should create project configs 1`] = `
         "polyfills": [
           "zone.js",
         ],
-        "scripts": [],
         "styles": [
           "my-app/src/styles.css",
         ],
@@ -959,7 +955,7 @@ exports[`app not nested should create project configs 1`] = `
       ],
     },
     "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "executor": "@angular/build:extract-i18n",
       "options": {
         "buildTarget": "my-app:build",
       },
@@ -978,7 +974,7 @@ exports[`app not nested should create project configs 1`] = `
       },
       "continuous": true,
       "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@angular/build:dev-server",
     },
     "serve-static": {
       "continuous": true,
