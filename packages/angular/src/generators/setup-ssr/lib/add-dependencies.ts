@@ -1,5 +1,6 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
 import {
+  getInstalledAngularDevkitVersion,
   getInstalledPackageVersion,
   versions,
 } from '../../utils/version-utils';
@@ -21,9 +22,7 @@ export function addDependencies(
   };
 
   dependencies['@angular/ssr'] =
-    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-    getInstalledPackageVersion(tree, '@angular/build') ??
-    pkgVersions.angularDevkitVersion;
+    getInstalledAngularDevkitVersion(tree) ?? pkgVersions.angularDevkitVersion;
   if (!isUsingApplicationBuilder) {
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
   }

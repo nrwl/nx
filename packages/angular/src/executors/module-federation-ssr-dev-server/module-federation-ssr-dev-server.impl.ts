@@ -1,30 +1,35 @@
-import { executeSSRDevServerBuilder } from '@angular-devkit/build-angular';
 import { type ExecutorContext, logger } from '@nx/devkit';
-import { existsSync } from 'fs';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { extname, join } from 'path';
-import {
-  getDynamicMfManifestFile,
-  validateDevRemotes,
-} from '../../builders/utilities/module-federation';
-import type { Schema } from './schema';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
-import { startRemotes } from './lib/start-dev-remotes';
 import {
   combineAsyncIterables,
   createAsyncIterable,
   mapAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { normalizeOptions } from './lib/normalize-options';
+import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { existsSync } from 'fs';
+import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { extname, join } from 'path';
+import {
+  getDynamicMfManifestFile,
+  validateDevRemotes,
+} from '../../builders/utilities/module-federation';
+import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
+import { normalizeOptions } from './lib/normalize-options';
+import { startRemotes } from './lib/start-dev-remotes';
+import type { Schema } from './schema';
 
 export async function* moduleFederationSsrDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
   const options = normalizeOptions(schema);
+
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
+  const { executeSSRDevServerBuilder } = await import(
+    '@angular-devkit/build-angular'
+  );
 
   const currIter = eachValueFrom(
     executeSSRDevServerBuilder(
