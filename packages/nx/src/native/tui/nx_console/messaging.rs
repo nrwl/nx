@@ -25,6 +25,7 @@ pub struct UpdatedRunningTask {
     pub name: String,
     pub status: TaskStatus,
     pub output: String,
+    pub continuous: bool,
 }
 
 #[rpc(client, namespace = "nx", namespace_separator = "/")]
@@ -121,6 +122,7 @@ impl NxConsoleMessageConnection {
                         name: task.name.clone(),
                         status: task.status,
                         output,
+                        continuous: task.continuous,
                     }
                 })
                 .collect();
