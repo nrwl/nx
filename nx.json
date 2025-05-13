@@ -97,7 +97,6 @@
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
       "inputs": ["production", "^production"],
-      "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "build/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
@@ -128,7 +127,11 @@
     },
     "e2e-local": {
       "cache": true,
-      "inputs": ["e2eInputs", "^production"]
+      "inputs": ["e2eInputs", "^production"],
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-ci": {
       "inputs": ["e2eInputs", "^production"]
@@ -136,7 +139,10 @@
     "e2e-macos-local": {
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
-      "parallelism": false
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
     },
     "e2e-macos-ci": {
       "inputs": ["e2eInputs", "^production"]
@@ -238,7 +244,7 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    "@nx/powerpack-enterprise-cloud",
+    "@nx/enterprise-cloud",
     {
       "plugin": "@nx/storybook/plugin",
       "options": {

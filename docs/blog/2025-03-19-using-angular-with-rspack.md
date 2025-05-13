@@ -206,14 +206,14 @@ Given that the primary goal for Angular Rspack is to provide a faster build syst
 
 The following are known limitations and missing features of Angular Rspack:
 
-- Static Site Generation (SSG) is not supported.
-- Angular's built-in support for Internationalization (i18n) is not supported.
+- Static Site Generation (SSG) is not supported. _**UPDATE**: As of Angular Rspack version 20.9, SSG is supported._
+- Angular's built-in support for Internationalization (i18n) is not supported. _**UPDATE**: As of Angular Rspack version 20.8, i18n is supported._
 - Server Routing is not supported - still experimental in Angular currently.
 - App Engine APIs are not supported - still experimental in Angular currently.
 - Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made.
   - Styles optimization for `inline-critical` and `remove-special-comments` are not yet implemented.
   - Inlining of fonts is not yet implemented.
-- Web Workers are not fully supported.
+- Web Workers are not fully supported. _**UPDATE**: As of Angular Rspack version 20.8, Web Workers are supported._
 - Hot Module Replacement (HMR) is partially supported.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).

@@ -1226,6 +1226,11 @@ const powerpackRedirects = {
     '/nx-api/shared-fs-cache/documents/overview',
 };
 
+const tmpTerminalUiRedirects = {
+  // This will be a dedicated landing page in a follow up, redirect to the recipe for now
+  '/terminal-ui': '/recipes/running-tasks/terminal-ui',
+};
+
 /**
  * Public export API
  */
@@ -1262,4 +1267,5 @@ module.exports = {
   enterpriseNxSection,
   manualDTEUpdate,
   powerpackRedirects,
+  tmpTerminalUiRedirects,
 };

@@ -31,7 +31,7 @@ This makes it a great solution for teams that want to migrate to a faster build 
 
 {% callout type="warning" title="Angular Rspack Status" %}
 
-Please not that Angular Rspack support is still experimental and is not yet considered production ready. We are actively working on improving the experience and stability of Angular Rspack, and we will continue to update this page as we make progress.
+Please note that Angular Rspack support is still experimental and is not yet considered production ready. We are actively working on improving the experience and stability of Angular Rspack, and we will continue to update this page as we make progress.
 
 {% /callout %}
 
@@ -39,13 +39,11 @@ Please not that Angular Rspack support is still experimental and is not yet cons
 
 The following are known limitations and missing features of Angular Rspack:
 
-- Static Site Generation (SSG) is not supported.
 - Server Routing is not supported - still experimental in Angular currently.
 - App Engine APIs are not supported - still experimental in Angular currently.
 - Optimization is not currently 1:1 with Angular's optimization - however, there are still great optimizations that are made.
   - Styles optimization for `inline-critical` and `remove-special-comments` are not yet implemented.
   - Inlining of fonts is not yet implemented.
-- Web Workers are not fully supported.
 - Hot Module Replacement (HMR) is partially supported.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).

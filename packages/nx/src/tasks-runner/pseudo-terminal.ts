@@ -4,20 +4,12 @@ import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
 import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
+import { codeToSignal } from '../utils/exit-codes';
 
 // Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<() => void> = [];
-process.on('SIGINT', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
-});
-process.on('SIGTERM', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
-});
-process.on('SIGHUP', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
-});
-process.on('exit', () => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb());
+const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
+process.on('exit', (code) => {
+  pseudoTerminalShutdownCallbacks.forEach((cb) => cb(code));
 });
 
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
@@ -56,10 +48,10 @@ export class PseudoTerminal {
     this.initialized = true;
   }
 
-  shutdown() {
+  shutdown(code: number) {
     for (const cp of this.childProcesses) {
       try {
-        cp.kill();
+        cp.kill(codeToSignal(code));
       } catch {}
     }
     if (this.initialized) {
@@ -106,11 +98,13 @@ export class PseudoTerminal {
       execArgv,
       jsEnv,
       quiet,
+      commandLabel,
     }: {
       cwd?: string;
       execArgv?: string[];
       jsEnv?: Record<string, string>;
       quiet?: boolean;
+      commandLabel?: string;
     }
   ) {
     if (!this.initialized) {
@@ -125,7 +119,8 @@ export class PseudoTerminal {
         cwd,
         jsEnv,
         execArgv,
-        quiet
+        quiet,
+        commandLabel
       ),
       id,
       this.pseudoIPC
@@ -189,10 +184,10 @@ export class PseudoTtyProcess implements RunningTask {
     this.outputCallbacks.push(callback);
   }
 
-  kill(): void {
+  kill(s?: NodeJS.Signals): void {
     if (this.isAlive) {
       try {
-        this.childProcess.kill();
+        this.childProcess.kill(s);
       } catch {
         // when the child process completes before we explicitly call kill, this will throw
         // do nothing

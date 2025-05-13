@@ -3,7 +3,7 @@ use tracing::trace;
 
 use super::child_process::ChildProcess;
 use super::os;
-use super::pseudo_terminal::PseudoTerminal;
+use super::pseudo_terminal::{PseudoTerminal, PseudoTerminalOptions};
 use crate::native::logger::enable_logger;
 
 #[napi]
@@ -17,7 +17,7 @@ impl RustPseudoTerminal {
     pub fn new() -> napi::Result<Self> {
         enable_logger();
 
-        let pseudo_terminal = PseudoTerminal::default()?;
+        let pseudo_terminal = PseudoTerminal::new(PseudoTerminalOptions::default())?;
 
         Ok(Self { pseudo_terminal })
     }
@@ -31,9 +31,17 @@ impl RustPseudoTerminal {
         exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
+        command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
-        self.pseudo_terminal
-            .run_command(command, command_dir, js_env, exec_argv, quiet, tty)
+        self.pseudo_terminal.run_command(
+            command,
+            command_dir,
+            js_env,
+            exec_argv,
+            quiet,
+            tty,
+            command_label,
+        )
     }
 
     /// This allows us to run a pseudoterminal with a fake node ipc channel
@@ -48,6 +56,7 @@ impl RustPseudoTerminal {
         js_env: Option<HashMap<String, String>>,
         exec_argv: Option<Vec<String>>,
         quiet: bool,
+        command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
         let command = format!(
             "node {} {} {}",
@@ -64,6 +73,7 @@ impl RustPseudoTerminal {
             exec_argv,
             Some(quiet),
             Some(true),
+            command_label,
         )
     }
 }

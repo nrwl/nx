@@ -22,6 +22,7 @@ import { existsSync } from 'fs';
 import { readNxJson } from '../../config/configuration';
 import { nxVersion } from '../../utils/versions';
 import { runNxSync } from '../../utils/child-process';
+import { writeJsonFile } from '../../utils/fileutils';
 
 export function installPluginPackages(
   repoRoot: string,
@@ -40,6 +41,7 @@ export function installPluginPackages(
     for (const plugin of plugins) {
       nxJson.installation.plugins[plugin] = nxVersion;
     }
+    writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
     // Invoking nx wrapper to install plugins.
     runNxSync('--version', { stdio: 'ignore' });
   }
@@ -61,6 +63,8 @@ export async function runPluginInitGenerator(
   verbose: boolean = false,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ): Promise<void> {
+  let command = `g ${plugin}:init ${verbose ? '--verbose' : ''}`;
+
   try {
     const { schema } = getGeneratorInformation(
       plugin,
@@ -69,20 +73,12 @@ export async function runPluginInitGenerator(
       {}
     );
 
-    let command = `g ${plugin}:init ${verbose ? '--verbose' : ''}`;
-
     if (!!schema.properties['keepExistingVersions']) {
       command += ` --keepExistingVersions`;
     }
     if (updatePackageScripts && !!schema.properties['updatePackageScripts']) {
       command += ` --updatePackageScripts`;
     }
-    runNxSync(command, {
-      stdio: [0, 1, 2],
-      cwd: repoRoot,
-      windowsHide: false,
-      packageManagerCommand: pmc,
-    });
   } catch {
     // init generator does not exist, so this function should noop
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
@@ -92,6 +88,12 @@ export async function runPluginInitGenerator(
     }
     return;
   }
+  runNxSync(command, {
+    stdio: [0, 1, 2],
+    cwd: repoRoot,
+    windowsHide: false,
+    packageManagerCommand: pmc,
+  });
 }
 
 /**

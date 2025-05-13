@@ -109,6 +109,7 @@ impl HttpRemoteCache {
         let tar_gz: Vec<u8> = Vec::new();
         let enc = flate2::write::GzEncoder::new(tar_gz, Compression::default());
         let mut archive = Builder::new(enc);
+        archive.follow_symlinks(false);
         trace!("Created tar file for writing");
 
         let cache_path = Path::new(&cache_directory);

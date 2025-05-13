@@ -2089,7 +2089,7 @@
     ],
     "executors": [
       {
-        "description": "The Gradlew executor is used to run Gradle tasks.",
+        "description": "Runs gradle tasks via the Gradle Tooling API or by invoking gradlew.",
         "file": "generated/packages/gradle/executors/gradle.json",
         "hidden": false,
         "name": "gradle",
@@ -2119,6 +2119,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
+        "file": "generated/packages/gradle/migrations/change-ciTargetName-to-ciTestTargetName.json",
+        "hidden": false,
+        "name": "change-ciTargetName-to-ciTestTargetName",
+        "version": "21.0.0-beta.13",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-ciTargetName-to-ciTestTargetName",
+        "type": "migration"
+      },
       {
         "description": "Change @nx/gradle plugin to version 1",
         "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
@@ -3116,7 +3126,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/affected",
-        "tags": ["run-tasks"],
+        "tags": ["run-tasks", "affected"],
         "originalFilePath": "generated/cli/affected"
       },
       {
@@ -4709,6 +4719,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "",
+        "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
+        "hidden": false,
+        "name": "21.0.1-package-updates",
+        "version": "21.0.1-beta.0",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/21.0.1-package-updates",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",

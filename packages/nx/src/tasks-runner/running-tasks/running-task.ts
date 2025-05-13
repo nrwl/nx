@@ -5,7 +5,7 @@ export abstract class RunningTask {
 
   abstract onExit(cb: (code: number) => void): void;
 
-  abstract kill(signal?: NodeJS.Signals | number): Promise<void> | void;
+  abstract kill(signal?: NodeJS.Signals): Promise<void> | void;
 
   abstract onOutput?(cb: (output: string) => void): void;
 

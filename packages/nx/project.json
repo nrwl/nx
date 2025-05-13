@@ -152,6 +152,19 @@
           "args": ["--all"]
         }
       }
+    },
+    "lint-native": {
+      "command": "cargo clippy",
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}/src/native",
+        "args": ["--frozen"]
+      },
+      "configurations": {
+        "fix": {
+          "args": []
+        }
+      }
     }
   }
 }

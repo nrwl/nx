@@ -27,9 +27,20 @@ fun runTasksInParallel(
   val errorStream = ByteArrayOutputStream()
 
   val args = buildList {
-    addAll(listOf("--info", "--continue", "--parallel", "--build-cache"))
+    // --info is for terminal per task
+    // --continue is for continue running tasks if one failed in a batch
+    // --parallel and --build-cache are for performance
+    // -Dorg.gradle.daemon.idletimeout=10000 is to kill daemon after 10 seconds
+    addAll(
+        listOf(
+            "--info",
+            "--continue",
+            "--parallel",
+            "--build-cache",
+            "-Dorg.gradle.daemon.idletimeout=10000"))
     addAll(additionalArgs.split(" ").filter { it.isNotBlank() })
   }
+  logger.info("🏳️ Args: ${args.joinToString(", ")}")
 
   val taskNames = tasks.values.map { it.taskName }.distinct()
 

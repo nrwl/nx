@@ -465,6 +465,11 @@
     "url": "https://github.com/naxodev/oss/tree/main/packages/nx-cloudflare"
   },
   {
+    "name": "@naxodev/gonx",
+    "description": "Modern Nx plugin to use Go in a Nx workspace. Forked from @nx-go/nx-go",
+    "url": "https://github.com/naxodev/oss/tree/main/packages/gonx"
+  },
+  {
     "name": "@ziacik/azure-func",
     "description": "Generating, serving and publishing Azure Functions 4 apps.",
     "url": "https://github.com/ziacik/nx-tools/tree/master/packages/azure-func"
@@ -518,6 +523,11 @@
     "name": "nx-foundry",
     "description": "Foundry generators and inferred tasks for Nx",
     "url": "https://github.com/juliangsibecas/nx-foundry"
+  },
+  {
+    "name": "@robby-rabbitman/nx-plus-web-test-runner",
+    "description": "Web Test Runner plugin for Nx workspaces.",
+    "url": "https://github.com/RobbyRabbitman/nx-plus/tree/main/libs/web-test-runner"
   },
   {
     "name": "@aws/nx-plugin",

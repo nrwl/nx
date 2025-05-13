@@ -192,3 +192,37 @@ class NonParallelTaskDependsOnContinuousTasksError extends Error {
     this.name = 'NonParallelTaskDependsOnContinuousTasksError';
   }
 }
+
+export function getLeafTasks(taskGraph: TaskGraph): Set<string> {
+  const reversed = reverseTaskGraph(taskGraph);
+  const leafTasks = new Set<string>();
+  for (const [taskId, dependencies] of Object.entries(reversed.dependencies)) {
+    if (dependencies.length === 0) {
+      leafTasks.add(taskId);
+    }
+  }
+
+  return leafTasks;
+}
+
+function reverseTaskGraph(taskGraph: TaskGraph): TaskGraph {
+  const reversed = {
+    tasks: taskGraph.tasks,
+    dependencies: Object.fromEntries(
+      Object.entries(taskGraph.tasks).map(([taskId]) => [taskId, []])
+    ),
+  } as TaskGraph;
+  for (const [taskId, dependencies] of Object.entries(taskGraph.dependencies)) {
+    for (const dependency of dependencies) {
+      reversed.dependencies[dependency].push(taskId);
+    }
+  }
+  for (const [taskId, dependencies] of Object.entries(
+    taskGraph.continuousDependencies
+  )) {
+    for (const dependency of dependencies) {
+      reversed.dependencies[dependency].push(taskId);
+    }
+  }
+  return reversed;
+}

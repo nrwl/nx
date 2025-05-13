@@ -108,7 +108,11 @@ impl LayoutManager {
             min_horizontal_width: 120, // Minimum width for horizontal layout to be viable
             min_vertical_height: 30,   // Minimum height for vertical layout to be viable
             pane_arrangement: PaneArrangement::None,
-            task_list_visibility: TaskListVisibility::Visible,
+            task_list_visibility: if task_count > 1 {
+                TaskListVisibility::Visible
+            } else {
+                TaskListVisibility::Hidden
+            },
             task_count,
             horizontal_padding: 2, // Default horizontal padding of 2 characters
             vertical_padding: 1,   // Default vertical padding of 1 character
@@ -125,12 +129,23 @@ impl LayoutManager {
         self.mode
     }
 
-    /// Cycles the layout mode.
-    pub fn cycle_layout_mode(&mut self) {
+    /// Manually toggle the layout mode.
+    /// Initially we will be attempting to automatically pick the best layout using auto, but with this function we should
+    /// figure out our current orientation and toggle it to the opposite.
+    /// i.e. in the simple case, if currently horizontal, toggle to vertical and vice versa.
+    /// In the case where we are in auto mode, we need to figure out our current orientation and set the mode to the opposite.
+    pub fn toggle_layout_mode(&mut self, area: Rect) {
         self.mode = match self.mode {
-            LayoutMode::Auto => LayoutMode::Vertical,
+            LayoutMode::Auto => {
+                // If we are in auto mode, we need to figure out our current orientation and set the mode to the opposite.
+                if self.is_vertical_layout_preferred(area.width, area.height, self.task_count) {
+                    LayoutMode::Horizontal
+                } else {
+                    LayoutMode::Vertical
+                }
+            }
             LayoutMode::Vertical => LayoutMode::Horizontal,
-            LayoutMode::Horizontal => LayoutMode::Auto,
+            LayoutMode::Horizontal => LayoutMode::Vertical,
         };
     }
 
@@ -152,6 +167,13 @@ impl LayoutManager {
     /// Gets the current task list visibility.
     pub fn get_task_list_visibility(&self) -> TaskListVisibility {
         self.task_list_visibility
+    }
+
+    pub fn toggle_task_list_visibility(&mut self) {
+        self.task_list_visibility = match self.task_list_visibility {
+            TaskListVisibility::Visible => TaskListVisibility::Hidden,
+            TaskListVisibility::Hidden => TaskListVisibility::Visible,
+        };
     }
 
     /// Sets the task count.
@@ -728,7 +750,6 @@ mod tests {
     #[cfg(test)]
     mod visual_tests {
         use super::*;
-        use ratatui::style::{Color, Style};
         use ratatui::widgets::{Block, Borders};
         use ratatui::{backend::TestBackend, Terminal};
 
@@ -747,10 +768,8 @@ mod tests {
 
                     // Render task list if visible
                     if let Some(task_list_area) = areas.task_list {
-                        let task_list_block = Block::default()
-                            .title("Task List")
-                            .borders(Borders::ALL)
-                            .border_style(Style::default().fg(Color::Green));
+                        let task_list_block =
+                            Block::default().title("Task List").borders(Borders::ALL);
 
                         frame.render_widget(task_list_block, task_list_area);
                     }
@@ -759,8 +778,7 @@ mod tests {
                     for (i, pane_area) in areas.terminal_panes.iter().enumerate() {
                         let pane_block = Block::default()
                             .title(format!("Terminal Pane {}", i + 1))
-                            .borders(Borders::ALL)
-                            .border_style(Style::default().fg(Color::Yellow));
+                            .borders(Borders::ALL);
 
                         frame.render_widget(pane_block, *pane_area);
                     }

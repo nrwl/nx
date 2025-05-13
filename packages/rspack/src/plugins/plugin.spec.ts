@@ -126,6 +126,9 @@ describe('@nx/rspack', () => {
                   },
                   "serve-static": {
                     "continuous": true,
+                    "dependsOn": [
+                      "build",
+                    ],
                     "executor": "@nx/web:file-server",
                     "options": {
                       "buildTarget": "build",

@@ -392,6 +392,12 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Use the Terminal UI",
+                  "id": "terminal-ui",
+                  "tags": ["run-tasks", "terminal-ui"],
+                  "file": "shared/recipes/running-tasks/terminal-ui"
+                },
+                {
                   "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
@@ -2201,7 +2207,7 @@
             },
             {
               "name": "affected",
-              "tags": ["run-tasks"],
+              "tags": ["run-tasks", "affected"],
               "id": "affected",
               "file": "generated/cli/affected"
             },

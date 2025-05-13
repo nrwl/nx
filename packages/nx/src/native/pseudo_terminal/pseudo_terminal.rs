@@ -23,7 +23,7 @@ use tracing::log::trace;
 use vt100_ctt::Parser;
 
 use super::os;
-use crate::native::pseudo_terminal::child_process::ChildProcess;
+use crate::native::pseudo_terminal::{child_process::ChildProcess, process_killer::ProcessKiller};
 
 pub struct PseudoTerminal {
     pub pty_pair: PtyPair,
@@ -109,42 +109,45 @@ impl PseudoTerminal {
                     let quiet = quiet_clone.load(Ordering::Relaxed);
                     trace!("Quiet: {}", quiet);
                     debug!("Read {} bytes", len);
-                    if let Ok(mut parser) = parser_clone.write() {
-                        parser.process(&buf[..len]);
-
-                        if !quiet {
-                            let mut logged_interrupted_error = false;
-
-                            let mut content = String::from_utf8_lossy(&buf[0..len]).to_string();
-                            if content.contains("\x1B[6n") {
-                                trace!(
-                                    "Prevented terminal escape sequence ESC[6n from being printed."
-                                );
-                                content = content.replace("\x1B[6n", "");
+                    if is_within_nx_tui {
+                        if let Ok(mut parser) = parser_clone.write() {
+                            if is_within_nx_tui {
+                                trace!("Processing data via vt100 for use in tui");
+                                parser.process(&buf[..len]);
                             }
+                        }
+                    }
 
-                            let write_buf = content.as_bytes();
-                            debug!("Escaped Stdout: {:?}", write_buf.escape_ascii().to_string());
+                    if !quiet {
+                        let mut logged_interrupted_error = false;
 
-                            while let Err(e) = stdout.write_all(&write_buf) {
-                                match e.kind() {
-                                    std::io::ErrorKind::Interrupted => {
-                                        if !logged_interrupted_error {
-                                            trace!("Interrupted error writing to stdout: {:?}", e);
-                                            logged_interrupted_error = true;
-                                        }
-                                        continue;
+                        let mut content = String::from_utf8_lossy(&buf[0..len]).to_string();
+                        if content.contains("\x1B[6n") {
+                            trace!("Prevented terminal escape sequence ESC[6n from being printed.");
+                            content = content.replace("\x1B[6n", "");
+                        }
+
+                        let write_buf = content.as_bytes();
+                        debug!("Escaped Stdout: {:?}", write_buf.escape_ascii().to_string());
+
+                        while let Err(e) = stdout.write_all(write_buf) {
+                            match e.kind() {
+                                std::io::ErrorKind::Interrupted => {
+                                    if !logged_interrupted_error {
+                                        trace!("Interrupted error writing to stdout: {:?}", e);
+                                        logged_interrupted_error = true;
                                     }
-                                    _ => {
-                                        // We should figure out what to do for more error types as they appear.
-                                        trace!("Error writing to stdout: {:?}", e);
-                                        trace!("Error kind: {:?}", e.kind());
-                                        break 'read_loop;
-                                    }
+                                    continue;
+                                }
+                                _ => {
+                                    // We should figure out what to do for more error types as they appear.
+                                    trace!("Error writing to stdout: {:?}", e);
+                                    trace!("Error kind: {:?}", e.kind());
+                                    break 'read_loop;
                                 }
                             }
-                            let _ = stdout.flush();
                         }
+                        let _ = stdout.flush();
                     } else {
                         debug!("Failed to lock parser");
                     }
@@ -169,10 +172,6 @@ impl PseudoTerminal {
         })
     }
 
-    pub fn default() -> Result<PseudoTerminal> {
-        Self::new(PseudoTerminalOptions::default())
-    }
-
     pub fn run_command(
         &mut self,
         command: String,
@@ -181,6 +180,7 @@ impl PseudoTerminal {
         exec_argv: Option<Vec<String>>,
         quiet: Option<bool>,
         tty: Option<bool>,
+        command_label: Option<String>,
     ) -> napi::Result<ChildProcess> {
         let command_dir = get_directory(command_dir)?;
 
@@ -206,15 +206,18 @@ impl PseudoTerminal {
 
         let (exit_to_process_tx, exit_to_process_rx) = bounded(1);
 
-        let command_info = format!("> {}\n\n\r", command);
+        let command_clone = command.clone();
+        let command_info = format!("> {}\n\n\r", command_label.unwrap_or(command));
         self.stdout_tx.send(command_info.clone()).ok();
 
-        self.parser
-            .write()
-            .expect("Failed to acquire parser write lock")
-            .process(command_info.as_bytes());
+        if self.is_within_nx_tui {
+            self.parser
+                .write()
+                .expect("Failed to acquire parser write lock")
+                .process(command_info.as_bytes());
+        }
 
-        trace!("Running {}", command);
+        trace!("Running {}", command_clone);
         let mut child = pair.slave.spawn_command(cmd)?;
         self.running.store(true, Ordering::SeqCst);
 
@@ -225,7 +228,11 @@ impl PseudoTerminal {
             trace!("Enabling raw mode");
             enable_raw_mode().expect("Failed to enter raw terminal mode");
         }
-        let process_killer = child.clone_killer();
+        let process_killer = ProcessKiller::new(
+            child
+                .process_id()
+                .expect("unable to determine child process id") as i32,
+        );
 
         trace!("Getting running clone");
         let running_clone = self.running.clone();
@@ -234,11 +241,11 @@ impl PseudoTerminal {
 
         trace!("spawning thread to wait for command");
         std::thread::spawn(move || {
-            trace!("Waiting for {}", command);
+            trace!("Waiting for {}", command_clone);
 
             let res = child.wait();
             if let Ok(exit) = res {
-                trace!("{} Exited", command);
+                trace!("{} Exited", command_clone);
                 // This mitigates the issues with ConPTY on windows and makes it work.
                 running_clone.store(false, Ordering::SeqCst);
                 if cfg!(windows) {
@@ -261,7 +268,7 @@ impl PseudoTerminal {
                 }
                 exit_to_process_tx.send(exit.to_string()).ok();
             } else {
-                trace!("Error waiting for {}", command);
+                trace!("Error waiting for {}", command_clone);
             };
         });
 
@@ -317,7 +324,7 @@ mod tests {
         while i < 10 {
             println!("Running {}", i);
             let cp1 = pseudo_terminal
-                .run_command(String::from("whoami"), None, None, None)
+                .run_command(String::from("whoami"), None, None, None, None, None)
                 .unwrap();
             cp1.wait_receiver.recv().unwrap();
             i += 1;

@@ -2,7 +2,7 @@ use color_eyre::eyre::Result;
 use hashbrown::HashSet;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style, Stylize},
+    style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Cell, Paragraph, Row, Table},
     Frame,
@@ -13,6 +13,10 @@ use std::{
 };
 use tokio::sync::mpsc::UnboundedSender;
 
+use super::help_text::HelpText;
+use super::pagination::Pagination;
+use super::task_selection_manager::{SelectionMode, TaskSelectionManager};
+use crate::native::tui::theme::THEME;
 use crate::native::{
     tasks::types::{Task, TaskResult},
     tui::{
@@ -24,10 +28,6 @@ use crate::native::{
     },
 };
 
-use super::help_text::HelpText;
-use super::pagination::Pagination;
-use super::task_selection_manager::{SelectionMode, TaskSelectionManager};
-
 const CACHE_STATUS_LOCAL_KEPT_EXISTING: &str = "Kept Existing";
 const CACHE_STATUS_LOCAL: &str = "Local";
 const CACHE_STATUS_REMOTE: &str = "Remote";
@@ -36,7 +36,13 @@ const CACHE_STATUS_NOT_APPLICABLE: &str = "-";
 const DURATION_NOT_YET_KNOWN: &str = "...";
 
 // This is just a fallback value, the real value will be set via start_command on the lifecycle
-const DEFAULT_MAX_PARALLEL: usize = 3;
+const DEFAULT_MAX_PARALLEL: usize = 0;
+
+// Constants for layout calculation
+const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
+const FULL_HELP_WIDTH: u16 = 86; // Full help text width
+const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
+const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Pag, Cloud, Help
 
 /// Represents an individual task with its current state and execution details.
 pub struct TaskItem {
@@ -59,7 +65,7 @@ impl Clone for TaskItem {
             name: self.name.clone(),
             duration: self.duration.clone(),
             cache_status: self.cache_status.clone(),
-            status: self.status.clone(),
+            status: self.status,
             continuous: self.continuous,
             terminal_output: self.terminal_output.clone(),
             start_time: self.start_time,
@@ -200,7 +206,7 @@ impl TasksList {
 
         let filtered_names = Vec::new();
 
-        Self {
+        let mut s = Self {
             selection_manager,
             filtered_names,
             tasks: task_items,
@@ -217,7 +223,12 @@ impl TasksList {
             pinned_tasks: [None, None],
             initiating_tasks,
             run_mode,
-        }
+        };
+
+        // Sort tasks to populate task selection list
+        s.sort_tasks();
+
+        s
     }
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
@@ -302,7 +313,10 @@ impl TasksList {
             if in_progress_count < self.max_parallel {
                 // When we have fewer InProgress tasks than self.max_parallel, fill the remaining slots
                 // with empty placeholder rows to maintain the fixed height
-                entries.extend(std::iter::repeat(None).take(self.max_parallel - in_progress_count));
+                entries.extend(std::iter::repeat_n(
+                    None,
+                    self.max_parallel - in_progress_count,
+                ));
             }
 
             // Always add a separator after the parallel tasks section with a bottom cap
@@ -332,14 +346,13 @@ impl TasksList {
 
     // Add a helper method to safely check if we should show the parallel in progress section
     fn should_show_parallel_section(&self) -> bool {
-        // Only show the parallel section if we're on the first page and have tasks in progress or pending
         let is_first_page = self.selection_manager.lock().unwrap().get_current_page() == 0;
         let has_active_tasks = self
             .tasks
             .iter()
             .any(|t| matches!(t.status, TaskStatus::InProgress | TaskStatus::NotStarted));
 
-        is_first_page && has_active_tasks
+        is_first_page && self.max_parallel > 0 && has_active_tasks
     }
 
     // Add a helper method to check if we're in the initial loading state
@@ -473,9 +486,9 @@ impl TasksList {
     /// Returns a dimmed style when focus is not on the task list.
     fn get_table_style(&self) -> Style {
         if self.is_task_list_focused() {
-            Style::default()
+            Style::default().fg(THEME.secondary_fg)
         } else {
-            Style::default().dim()
+            Style::default().dim().fg(THEME.secondary_fg)
         }
     }
 
@@ -544,9 +557,9 @@ impl TasksList {
     /// Shows either filter input or task status based on current state.
     fn get_header_cells(&self, has_narrow_area_width: bool) -> Vec<Cell> {
         let status_style = if !self.is_task_list_focused() {
-            Style::default().fg(Color::DarkGray).dim()
+            Style::default().fg(THEME.secondary_fg).dim()
         } else {
-            Style::default().fg(Color::DarkGray)
+            Style::default().fg(THEME.secondary_fg)
         };
 
         // Determine if all tasks are completed and the status color to use
@@ -569,12 +582,12 @@ impl TasksList {
                 .iter()
                 .any(|t| matches!(t.status, TaskStatus::Failure));
             if has_failures {
-                Color::Red
+                THEME.error
             } else {
-                Color::Green
+                THEME.success
             }
         } else {
-            Color::Cyan
+            THEME.info
         };
 
         // Leave first cell empty for the logo
@@ -649,135 +662,74 @@ impl TasksList {
         }
         self.sort_tasks();
     }
-}
 
-impl Component for TasksList {
-    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
-        self.action_tx = Some(tx);
-        Ok(())
+    fn generate_empty_row(&self, has_narrow_area_width: bool) -> Row {
+        let empty_cells = if has_narrow_area_width {
+            vec![
+                Cell::from("   "), // Just spaces for indentation, no vertical line
+                Cell::from(""),
+                Cell::from(""),
+            ]
+        } else {
+            vec![
+                Cell::from("   "), // Just spaces for indentation, no vertical line
+                Cell::from(""),
+                Cell::from(""),
+                Cell::from(""),
+            ]
+        };
+        Row::new(empty_cells)
     }
 
-    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
-        let has_short_area_height = area.height < 12;
-        let has_narrow_area_width = area.width < 90;
-        let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
+    /// Renders the filter display area.
+    fn render_filter(&self, f: &mut Frame<'_>, filter_area: Rect) {
+        let hidden_tasks = self.tasks.len() - self.filtered_names.len();
+        let filter_text = format!("  Filter: {}", self.filter_text);
+        let should_dim = !self.is_task_list_focused();
 
-        // Create layout for title, table and bottom elements
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(if filter_is_active {
-                // When filter is active, keep the original layout with space for filter display
-                if has_short_area_height {
-                    vec![
-                        Constraint::Fill(1),   // Table gets most space
-                        Constraint::Length(2), // Filter display (when active)
-                        Constraint::Length(1), // Empty line between filter and pagination
-                        Constraint::Length(1), // Bottom bar (pagination)
-                    ]
-                } else if area.width < 60 {
-                    vec![
-                        Constraint::Fill(1),   // Table gets most space
-                        Constraint::Length(2), // Filter display (when active)
-                        Constraint::Length(1), // Empty line between filter and pagination
-                        Constraint::Length(2), // Bottom bar (2 units for stacked layout)
-                    ]
-                } else {
-                    vec![
-                        Constraint::Fill(1),   // Table gets most space
-                        Constraint::Length(2), // Filter display (when active)
-                        Constraint::Length(1), // Empty line between filter and pagination
-                        Constraint::Length(1), // Bottom bar
-                    ]
-                }
-            } else {
-                // When filter is not active, don't allocate space for it
-                if has_short_area_height {
-                    vec![
-                        Constraint::Fill(1),   // Table gets all available space
-                        Constraint::Length(1), // Bottom bar (pagination)
-                    ]
-                } else if area.width < 60 {
-                    vec![
-                        Constraint::Fill(1),   // Table gets all available space
-                        Constraint::Length(2), // Bottom bar (2 units for stacked layout)
-                    ]
-                } else {
-                    vec![
-                        Constraint::Fill(1),   // Table gets all available space
-                        Constraint::Length(1), // Bottom bar
-                    ]
-                }
-            })
-            .split(area);
-
-        // Assign table_area and pagination_area based on whether filter is active
-        let (table_area, pagination_area) = if filter_is_active {
-            let table_area = chunks[0];
-            let filter_area = chunks[1];
-            let pagination_area = chunks[3]; // Bottom bar area
-
-            // Only render filter if active
-            // After rendering the table, render the filter text (we know filter is active here)
-            let hidden_tasks = self.tasks.len() - self.filtered_names.len();
-
-            // Render exactly as it was before, just at the bottom
-            // Add proper indentation to align with task content - 4 spaces matches the task indentation
-            let filter_text = format!("  Filter: {}", self.filter_text);
-
-            // Determine if filter text should be dimmed based on focus
-            let should_dim = !self.is_task_list_focused();
-
-            let filter_style = if should_dim {
-                Style::default().fg(Color::Yellow).dim()
-            } else {
-                Style::default().fg(Color::Yellow)
-            };
-
-            let instruction_text = if hidden_tasks > 0 {
-                if self.filter_persisted {
-                    format!(
-                        "  -> {} tasks filtered out. Press / to edit, <esc> to clear",
-                        hidden_tasks
-                    )
-                } else {
-                    format!(
-                        "  -> {} tasks filtered out. Press / to persist, <esc> to clear",
-                        hidden_tasks
-                    )
-                }
-            } else if self.filter_persisted {
-                "    Press / to edit filter".to_string()
-            } else {
-                "  Press <esc> to clear filter".to_string()
-            };
-
-            // Render the full filter information exactly as it was before
-            let filter_lines = vec![
-                Line::from(vec![Span::styled(filter_text, filter_style)]),
-                Line::from(vec![Span::styled(instruction_text, filter_style)]),
-            ];
-
-            let filter_paragraph = Paragraph::new(filter_lines).alignment(Alignment::Left);
-
-            f.render_widget(filter_paragraph, filter_area);
-
-            (table_area, pagination_area)
+        let filter_style = if should_dim {
+            Style::default().fg(THEME.warning).dim()
         } else {
-            // When filter is not active, use simpler layout
-            let table_area = chunks[0];
-            let pagination_area = chunks[1]; // Bottom bar is the second chunk when no filter
-            (table_area, pagination_area)
+            Style::default().fg(THEME.warning)
         };
 
-        // Reserve space for pagination and borders
-        self.recalculate_pages(table_area.height.saturating_sub(4));
+        let instruction_text = if hidden_tasks > 0 {
+            if self.filter_persisted {
+                format!(
+                    "  -> {} tasks filtered out. Press / to edit, <esc> to clear",
+                    hidden_tasks
+                )
+            } else {
+                format!(
+                    "  -> {} tasks filtered out. Press / to persist, <esc> to clear",
+                    hidden_tasks
+                )
+            }
+        } else if self.filter_persisted {
+            "    Press / to edit filter".to_string()
+        } else {
+            "  Press <esc> to clear filter".to_string()
+        };
 
+        let filter_lines = vec![
+            Line::from(vec![Span::styled(filter_text, filter_style)]),
+            Line::from(vec![Span::styled(instruction_text, filter_style)]),
+        ];
+
+        let filter_paragraph = Paragraph::new(filter_lines).alignment(Alignment::Left);
+        f.render_widget(filter_paragraph, filter_area);
+    }
+
+    /// Renders the main task table.
+    fn render_task_table(&self, f: &mut Frame<'_>, table_area: Rect, has_narrow_area_width: bool) {
         let visible_entries = self
             .selection_manager
             .lock()
             .unwrap()
             .get_current_page_entries();
-        let selected_style = Style::default().add_modifier(Modifier::BOLD);
+        let selected_style = Style::default()
+            .fg(THEME.primary_fg)
+            .add_modifier(Modifier::BOLD);
         let normal_style = Style::default();
 
         // Determine if all tasks are completed
@@ -798,7 +750,7 @@ impl Component for TasksList {
         // Determine the color of the NX logo based on task status
         let logo_color = if self.tasks.is_empty() {
             // No tasks
-            Color::Cyan
+            THEME.info
         } else if all_tasks_completed {
             // All tasks are completed, check if any failed
             let has_failures = self
@@ -806,13 +758,13 @@ impl Component for TasksList {
                 .iter()
                 .any(|t| matches!(t.status, TaskStatus::Failure));
             if has_failures {
-                Color::Red
+                THEME.error
             } else {
-                Color::Green
+                THEME.success
             }
         } else {
             // Tasks are still running
-            Color::Cyan
+            THEME.info
         };
 
         // Get header cells using the existing method but add NX logo to first cell
@@ -823,7 +775,7 @@ impl Component for TasksList {
             // Use the logo color for the title text as well
             logo_color
         } else {
-            Color::White
+            THEME.primary_fg
         };
 
         // Apply modifiers based on focus state
@@ -854,7 +806,7 @@ impl Component for TasksList {
             // First cell: Just the NX logo and box corner if needed
             let mut first_cell_spans = vec![Span::styled(
                 " NX ",
-                title_style.bold().bg(logo_color).fg(Color::Black),
+                Style::reset().bold().bg(logo_color).fg(THEME.primary_fg),
             )];
 
             // Add box corner if needed
@@ -922,8 +874,8 @@ impl Component for TasksList {
                         // Space for selection indicator
                         Span::raw(" "),
                         // Add vertical line for visual continuity, only on first page
-                        if is_first_page {
-                            Span::styled("│", Style::default().fg(Color::Cyan))
+                        if is_first_page && self.max_parallel > 0 {
+                            Span::styled("│", Style::default().fg(THEME.info))
                         } else {
                             Span::raw(" ")
                         },
@@ -938,8 +890,8 @@ impl Component for TasksList {
                         // Space for selection indicator
                         Span::raw(" "),
                         // Add vertical line for visual continuity, only on first page
-                        if is_first_page {
-                            Span::styled("│", Style::default().fg(Color::Cyan))
+                        if is_first_page && self.max_parallel > 0 {
+                            Span::styled("│", Style::default().fg(THEME.info))
                         } else {
                             Span::raw(" ")
                         },
@@ -953,22 +905,11 @@ impl Component for TasksList {
             all_rows.push(Row::new(empty_cells).height(1).style(normal_style));
         } else {
             // Even when there's no parallel section, add an empty row for consistent spacing
-            // but don't include any vertical line styling
-            let empty_cells = if has_narrow_area_width {
-                vec![
-                    Cell::from("   "), // Just spaces for indentation, no vertical line
-                    Cell::from(""),
-                    Cell::from(""),
-                ]
-            } else {
-                vec![
-                    Cell::from("   "), // Just spaces for indentation, no vertical line
-                    Cell::from(""),
-                    Cell::from(""),
-                    Cell::from(""),
-                ]
-            };
-            all_rows.push(Row::new(empty_cells).height(1).style(normal_style));
+            all_rows.push(
+                self.generate_empty_row(has_narrow_area_width)
+                    .height(1)
+                    .style(normal_style),
+            );
         }
 
         // Add task rows
@@ -980,7 +921,7 @@ impl Component for TasksList {
                         .selection_manager
                         .lock()
                         .unwrap()
-                        .is_selected(&task_name);
+                        .is_selected(task_name);
 
                     // Use the helper method to check if we should show the parallel section
                     let show_parallel = self.should_show_parallel_section();
@@ -989,40 +930,25 @@ impl Component for TasksList {
                     let is_in_parallel_section = show_parallel && row_idx < self.max_parallel;
 
                     let status_cell = match task.status {
-                        TaskStatus::Success => Cell::from(Line::from(vec![
+                        TaskStatus::Success
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::LocalCache
+                        | TaskStatus::RemoteCache => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("✔", Style::default().fg(Color::Green)),
+                            Span::styled("✔", Style::default().fg(THEME.success)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::Failure => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("✖", Style::default().fg(Color::Red)),
+                            Span::styled("✖", Style::default().fg(THEME.error)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::Skipped => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("⏭", Style::default().fg(Color::Yellow)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::LocalCacheKeptExisting => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("◼", Style::default().fg(Color::Green)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::LocalCache => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("◼", Style::default().fg(Color::Green)),
-                            Span::raw(" "),
-                        ])),
-                        TaskStatus::RemoteCache => Cell::from(Line::from(vec![
-                            Span::raw(if is_selected { ">" } else { " " }),
-                            Span::raw(" "),
-                            Span::styled("▼", Style::default().fg(Color::Green)),
+                            Span::styled("⏭", Style::default().fg(THEME.warning)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::InProgress | TaskStatus::Shared => {
@@ -1036,7 +962,7 @@ impl Component for TasksList {
                             if is_in_parallel_section
                                 && self.selection_manager.lock().unwrap().get_current_page() == 0
                             {
-                                spans.push(Span::styled("│", Style::default().fg(Color::Cyan)));
+                                spans.push(Span::styled("│", Style::default().fg(THEME.info)));
                             } else {
                                 spans.push(Span::raw(" "));
                             }
@@ -1044,7 +970,7 @@ impl Component for TasksList {
                             // Add the spinner with consistent spacing
                             spans.push(Span::styled(
                                 throbber_char.to_string(),
-                                Style::default().fg(Color::LightCyan),
+                                Style::default().fg(THEME.info_light),
                             ));
 
                             // Add trailing space to maintain consistent width
@@ -1055,14 +981,14 @@ impl Component for TasksList {
                         TaskStatus::Stopped => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             Span::raw(" "),
-                            Span::styled("⯀️", Style::default().fg(Color::DarkGray)),
+                            Span::styled("◼", Style::default().fg(THEME.secondary_fg)),
                             Span::raw(" "),
                         ])),
                         TaskStatus::NotStarted => Cell::from(Line::from(vec![
                             Span::raw(if is_selected { ">" } else { " " }),
                             // No need for parallel section check for pending tasks
                             Span::raw(" "),
-                            Span::styled("·", Style::default().fg(Color::DarkGray)),
+                            Span::styled("·", Style::default().fg(THEME.secondary_fg)),
                             Span::raw(" "),
                         ])),
                     };
@@ -1075,7 +1001,11 @@ impl Component for TasksList {
                                 .enumerate()
                                 .filter_map(|(idx, task)| {
                                     if task.as_deref() == Some(task_name.as_str()) {
-                                        Some(format!("[Pinned output {}]", idx + 1))
+                                        Some(if has_narrow_area_width {
+                                            format!("[{}]", idx + 1)
+                                        } else {
+                                            format!("[Pinned output {}]", idx + 1)
+                                        })
                                     } else {
                                         None
                                     }
@@ -1212,8 +1142,8 @@ impl Component for TasksList {
                                 // Space for selection indicator (fixed width of 2)
                                 Span::raw(" "),
                                 // Add space and vertical line for parallel section (fixed position)
-                                if is_first_page {
-                                    Span::styled("│", Style::default().fg(Color::Cyan))
+                                if is_first_page && self.max_parallel > 0 {
+                                    Span::styled("│", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw("  ")
                                 },
@@ -1228,8 +1158,8 @@ impl Component for TasksList {
                                 // Space for selection indicator (fixed width of 2)
                                 Span::raw(" "),
                                 // Add space and vertical line for parallel section (fixed position)
-                                if is_first_page {
-                                    Span::styled("│", Style::default().fg(Color::Cyan))
+                                if is_first_page && self.max_parallel > 0 {
+                                    Span::styled("│", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw("  ")
                                 },
@@ -1253,7 +1183,7 @@ impl Component for TasksList {
                                 Span::raw(" "),
                                 // Add bottom corner for the box, or just spaces if not on first page
                                 if is_first_page {
-                                    Span::styled("└", Style::default().fg(Color::Cyan))
+                                    Span::styled("└", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw(" ")
                                 },
@@ -1269,7 +1199,7 @@ impl Component for TasksList {
                                 Span::raw(" "),
                                 // Add bottom corner for the box, or just spaces if not on first page
                                 if is_first_page {
-                                    Span::styled("└", Style::default().fg(Color::Cyan))
+                                    Span::styled("└", Style::default().fg(THEME.info))
                                 } else {
                                     Span::raw(" ")
                                 },
@@ -1320,257 +1250,504 @@ impl Component for TasksList {
             .style(self.get_table_style());
 
         f.render_widget(t, table_area);
+    }
 
-        // Render cloud message in its dedicated area if it exists
-        let needs_vertical_bottom_layout = has_narrow_area_width;
+    /// Calculates the required width for the pagination display string.
+    fn calculate_pagination_width(&self) -> u16 {
+        let current_page = self.selection_manager.lock().unwrap().get_current_page() + 1; // Display is 1-based
+        let total_pages = self.selection_manager.lock().unwrap().total_pages();
+        format!("  <- {}/{} ->", current_page, total_pages).len() as u16
+    }
 
-        // Bottom bar layout
-        let bottom_layout = if needs_vertical_bottom_layout {
-            // Stack vertically when area is limited
-            Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(vec![
-                    Constraint::Length(1), // Pagination
-                    Constraint::Length(1), // Help text
-                ])
-                .split(pagination_area)
-        } else {
-            // Original horizontal layout - use the full width for a single area
-            Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(vec![
-                    Constraint::Fill(1), // Full width for both pagination and help text
-                ])
-                .split(pagination_area)
-        };
-
-        // Get pagination info
+    /// Renders the pagination component.
+    fn render_pagination(&self, f: &mut Frame<'_>, pagination_area: Rect, is_dimmed: bool) {
         let total_pages = self.selection_manager.lock().unwrap().total_pages();
         let current_page = self.selection_manager.lock().unwrap().get_current_page();
-
-        // Create combined bottom bar with pagination on left and help text centered
         let pagination = Pagination::new(current_page, total_pages);
 
-        // Create help text component
-        let help_text = HelpText::new(
-            self.cloud_message.is_some(),
-            !self.is_task_list_focused(),
-            false,
-        ); // Use collapsed mode when cloud message is present
+        let padded_area = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Length(2), // Left padding to align with task content
+                Constraint::Min(10),   // Width for pagination content
+                Constraint::Fill(1),   // Remaining space in the allocated area
+            ])
+            .split(pagination_area)[1]; // Use the second chunk (index 1)
 
-        // Always draw pagination
-        if needs_vertical_bottom_layout {
-            // For vertical layout, render pagination and help text separately
-            let pagination_area = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Length(2), // Left padding to align with content
-                    Constraint::Min(12),   // Space for pagination
-                    Constraint::Fill(1),   // Remaining space
-                ])
-                .split(bottom_layout[0])[1];
+        pagination.render(f, padded_area, is_dimmed);
+    }
 
-            pagination.render(f, pagination_area, !self.is_task_list_focused());
+    /// Renders the help text component.
+    fn render_help_text(
+        &self,
+        f: &mut Frame<'_>,
+        help_text_area: Rect,
+        is_collapsed: bool,
+        is_dimmed: bool,
+    ) {
+        let help_text = HelpText::new(is_collapsed, is_dimmed, false);
+        help_text.render(f, help_text_area);
+    }
 
-            // Only show help text if focused
-            if self.is_task_list_focused() {
-                help_text.render(f, bottom_layout[1]);
+    /// Renders messages received from Nx Cloud
+    fn render_cloud_message(&self, f: &mut Frame<'_>, cloud_message_area: Rect, is_dimmed: bool) {
+        if let Some(message) = &self.cloud_message {
+            let available_width = cloud_message_area.width;
+            // Ensure minimum width to render anything
+            if available_width == 0 || cloud_message_area.height == 0 {
+                return;
+            }
+
+            let message_style = if is_dimmed {
+                Style::default().fg(THEME.secondary_fg).dim()
+            } else {
+                Style::default().fg(THEME.secondary_fg)
+            };
+
+            // No URL present in the message, render the message as is if it fits, otherwise truncate
+            if !message.contains("https://") {
+                let message_line = Line::from(Span::styled(message.as_str(), message_style));
+                // Line fits as is
+                if message_line.width() <= available_width as usize {
+                    let cloud_message_paragraph =
+                        Paragraph::new(message_line).alignment(Alignment::Left);
+                    f.render_widget(cloud_message_paragraph, cloud_message_area);
+                    return;
+                }
+                // Line doesn't fit, truncate
+                let max_message_render_len = available_width.saturating_sub(3); // Reserve for "..."
+                let truncated_message =
+                    format!("{}...", &message[..max_message_render_len as usize]);
+                let cloud_message_paragraph =
+                    Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
+                        .alignment(Alignment::Left);
+                f.render_widget(cloud_message_paragraph, cloud_message_area);
+                return;
+            }
+
+            // Find URL position
+            let url_start_pos = message.find("https://").unwrap_or(message.len());
+            // Figure out the "prefix" (i.e. any message contents before the URL)
+            let prefix = &message[0..url_start_pos];
+            let url = &message[url_start_pos..];
+
+            let prefix_len = prefix.len() as u16;
+            let url_len = url.len() as u16;
+
+            let mut spans = vec![];
+
+            let url_style = if is_dimmed {
+                Style::default().fg(THEME.info).underlined().dim()
+            } else {
+                Style::default().fg(THEME.info).underlined()
+            };
+
+            // Determine what fits, prioritizing the URL
+            if url_len <= available_width {
+                // Full URL Fits, check if the full message does, and if so, render the full thing
+                if prefix_len + url_len <= available_width {
+                    spans.push(Span::styled(prefix, message_style));
+                    spans.push(Span::styled(url, url_style));
+                } else {
+                    // Only URL fits, do not render the prefix
+                    spans.push(Span::styled(url, url_style));
+                }
+            } else if available_width >= MIN_CLOUD_URL_WIDTH {
+                // Full URL doesn't fit, but Truncated URL does.
+                let max_url_render_len = available_width.saturating_sub(3); // Reserve for "..."
+                let truncated_url = format!("{}...", &url[..max_url_render_len as usize]);
+                spans.push(Span::styled(truncated_url, url_style));
+            } else {
+                // Not enough space for even truncated URL, show nothing...
+                // Hopefully in this situation user can make their terminal bigger or switch layout mode
+            }
+
+            if !spans.is_empty() {
+                let message_line = Line::from(spans);
+                let cloud_message_paragraph =
+                    Paragraph::new(message_line).alignment(Alignment::Left);
+
+                f.render_widget(cloud_message_paragraph, cloud_message_area);
+            }
+        }
+    }
+}
+
+impl Component for TasksList {
+    fn register_action_handler(&mut self, tx: UnboundedSender<Action>) -> Result<()> {
+        self.action_tx = Some(tx);
+        Ok(())
+    }
+
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+        // --- 1. Calculate Context ---
+        let has_narrow_area_width = area.width < 90;
+        let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
+        let is_dimmed = !self.is_task_list_focused();
+        let has_cloud_message = self.cloud_message.is_some();
+
+        // --- 2. Determine Bottom Layout Mode ---
+        enum BottomLayoutMode {
+            SingleLine { help_collapsed: bool }, // Pag + Cloud + Help
+            TwoLine { help_collapsed: bool },    // Cloud / Pag + Help
+            NoCloud { help_collapsed: bool },    // Pag + Help
+        }
+        let layout_mode: BottomLayoutMode;
+
+        if has_cloud_message {
+            // Estimate cloud width (this might overestimate if URL gets truncated, but good for initial check)
+            let cloud_text_width = if let Some(message) = &self.cloud_message {
+                let url_start_pos = message.find("https://").unwrap_or(message.len());
+                let prefix = &message[0..url_start_pos];
+                let url = &message[url_start_pos..];
+                (prefix.len() + url.len()) as u16
+            } else {
+                0
+            };
+
+            let required_width_full_help = self.calculate_pagination_width()
+                + cloud_text_width
+                + FULL_HELP_WIDTH
+                + MIN_BOTTOM_SPACING;
+            let required_width_collapsed_help = self.calculate_pagination_width()
+                + cloud_text_width
+                + COLLAPSED_HELP_WIDTH
+                + MIN_BOTTOM_SPACING;
+
+            if required_width_full_help <= area.width {
+                layout_mode = BottomLayoutMode::SingleLine {
+                    help_collapsed: false,
+                };
+            } else if required_width_collapsed_help <= area.width {
+                layout_mode = BottomLayoutMode::SingleLine {
+                    help_collapsed: true,
+                };
+            } else {
+                layout_mode = BottomLayoutMode::TwoLine {
+                    help_collapsed: true,
+                }; // Force collapse in two-line mode
             }
         } else {
-            // For horizontal layout, create a three-part layout: pagination on left, help text in middle, cloud message on right
-            let has_cloud_message = self.cloud_message.is_some();
-            let bottom_bar_layout = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(if has_cloud_message {
-                    [
-                        Constraint::Length(12), // Width for pagination (with padding)
-                        Constraint::Length(24), // Smaller width for help text when cloud message is present
-                        Constraint::Fill(1),    // Cloud message gets most of the remaining space
-                        Constraint::Length(0),  // No right-side padding
-                    ]
-                } else {
-                    [
-                        Constraint::Length(15), // Width for pagination (with padding)
-                        Constraint::Fill(1),    // Help text gets all remaining space
-                        Constraint::Length(1),  // Minimal width when no cloud message
-                        Constraint::Length(0),  // No right padding needed when no cloud message
-                    ]
-                })
-                .split(bottom_layout[0]);
+            // No Cloud message is present
+            let required_width_full_help =
+                self.calculate_pagination_width() + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
+            let required_width_collapsed_help =
+                self.calculate_pagination_width() + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
 
-            // Render pagination in its area
-            let pagination_area = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Length(2),  // Left padding to align with task content
-                    Constraint::Length(10), // Width for pagination
-                    Constraint::Fill(1),    // Remaining space
-                ])
-                .split(bottom_bar_layout[0])[1];
-
-            pagination.render(f, pagination_area, !self.is_task_list_focused());
-
-            // Only show help text if focused
-            if self.is_task_list_focused() {
-                // Let the help text use its dedicated area
-                help_text.render(f, bottom_bar_layout[1]);
+            if required_width_full_help <= area.width {
+                layout_mode = BottomLayoutMode::NoCloud {
+                    help_collapsed: false,
+                };
+            } else if required_width_collapsed_help <= area.width {
+                layout_mode = BottomLayoutMode::NoCloud {
+                    help_collapsed: true,
+                };
+            } else {
+                // Force vertical PagHelp split, treat as TwoLine for structure, ensure help is collapsed
+                layout_mode = BottomLayoutMode::TwoLine {
+                    help_collapsed: true,
+                };
             }
+        }
 
-            // Render cloud message if it exists
-            if let Some(message) = &self.cloud_message {
-                let should_show_message = message.contains("https://");
+        // --- 3. Calculate Main Vertical Split ---
+        let mut vertical_constraints = vec![Constraint::Fill(1)]; // Table first
+        let mut bottom_row_indices: std::collections::HashMap<&str, usize> =
+            std::collections::HashMap::new();
+        let mut current_chunk_index = 1; // Index for chunks after the table
 
-                if should_show_message {
-                    // Get available width for the cloud message
-                    let available_width = bottom_bar_layout[2].width as usize;
+        // Determine if help will be collapsed for the separator logic
+        let final_help_collapsed = match layout_mode {
+            BottomLayoutMode::SingleLine { help_collapsed } => help_collapsed,
+            BottomLayoutMode::TwoLine { help_collapsed } => help_collapsed,
+            BottomLayoutMode::NoCloud { help_collapsed } => help_collapsed,
+        };
 
-                    // Create text with URL styling if needed
-                    let message_line = if let Some(url_pos) = message.find("https://") {
-                        let prefix = &message[0..url_pos];
-                        let url = &message[url_pos..];
+        let needs_filter_separator = matches!(layout_mode, BottomLayoutMode::TwoLine {..} | BottomLayoutMode::NoCloud {..} if has_cloud_message || !final_help_collapsed);
+        let final_help_width = if final_help_collapsed {
+            COLLAPSED_HELP_WIDTH
+        } else {
+            FULL_HELP_WIDTH
+        };
+        let needs_pag_help_vertical_split =
+            self.calculate_pagination_width() + final_help_width + MIN_BOTTOM_SPACING > area.width;
 
-                        // Determine styles based on dimming state
-                        let prefix_style = if !self.is_task_list_focused() {
-                            Style::default().fg(Color::DarkGray).dim()
-                        } else {
-                            Style::default().fg(Color::DarkGray)
-                        };
+        if filter_is_active {
+            vertical_constraints.push(Constraint::Length(2)); // Filter area below table
+            bottom_row_indices.insert("filter", current_chunk_index);
+            current_chunk_index += 1;
+            if needs_filter_separator || matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
+                // Add separator if filter isn't the very last thing
+                vertical_constraints.push(Constraint::Length(1)); // Separator
+                bottom_row_indices.insert("filter_sep", current_chunk_index);
+                current_chunk_index += 1;
+            }
+        }
+        if matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
+            // Reserve space for cloud or the top part of vertical PagHelp
+            vertical_constraints.push(Constraint::Length(1));
+            bottom_row_indices.insert("cloud_or_pag_vertical", current_chunk_index);
+            current_chunk_index += 1;
+            // Add separator between cloud and pag/help rows in two-line mode
+            vertical_constraints.push(Constraint::Length(1));
+            bottom_row_indices.insert("cloud_paghelp_sep", current_chunk_index);
+            current_chunk_index += 1;
+        }
+        // Reserve space for pag/help row or the bottom part of vertical PagHelp
+        vertical_constraints.push(Constraint::Length(1));
+        bottom_row_indices.insert("paghelp_or_help_vertical", current_chunk_index);
 
-                        let url_style = if !self.is_task_list_focused() {
-                            Style::default().fg(Color::LightCyan).underlined().dim()
-                        } else {
-                            Style::default().fg(Color::LightCyan).underlined()
-                        };
+        let vertical_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vertical_constraints)
+            .split(area);
 
-                        // In collapsed mode or with limited width, prioritize showing the URL
-                        if available_width < 30 {
-                            // Show only the URL, completely omit prefix if needed
-                            if url.len() > available_width.saturating_sub(3) {
-                                // URL is too long, we need to truncate it
-                                let shortened_url = if url.contains("nx.app") {
-                                    // For nx.app links, try to preserve the run ID at the end
-                                    let parts: Vec<&str> = url.split('/').collect();
-                                    if parts.len() > 4 {
-                                        // Try to show the domain and run ID
-                                        format!("{}/../{}", parts[0], parts[parts.len() - 1])
-                                    } else {
-                                        // Just truncate
-                                        format!(
-                                            "{}...",
-                                            &url[..available_width
-                                                .saturating_sub(3)
-                                                .min(url.len())]
-                                        )
-                                    }
-                                } else {
-                                    // For other URLs, just truncate
-                                    format!(
-                                        "{}...",
-                                        &url[..available_width.saturating_sub(3).min(url.len())]
-                                    )
-                                };
+        // --- 4. Assign Areas ---
+        let table_area = vertical_chunks[0]; // Table is always the first chunk
+        let filter_area = bottom_row_indices
+            .get("filter")
+            .map(|&i| vertical_chunks[i]);
+        // Separator area not needed directly
+        let cloud_or_pag_vertical_area = bottom_row_indices
+            .get("cloud_or_pag_vertical")
+            .map(|&i| vertical_chunks[i]);
+        let paghelp_or_help_vertical_area = bottom_row_indices
+            .get("paghelp_or_help_vertical")
+            .map(|&i| vertical_chunks[i])
+            .unwrap(); // Must exist at this point
 
-                                Line::from(vec![Span::styled(shortened_url, url_style)])
-                            } else {
-                                // URL fits, show it all
-                                Line::from(vec![Span::styled(url, url_style)])
-                            }
-                        } else {
-                            // Normal mode with enough space - try to show prefix and URL
-                            if prefix.len() + url.len() > available_width.saturating_sub(3) {
-                                // Not enough space for both, prioritize URL
-                                let shortened_url = if url.contains("nx.app") {
-                                    // For nx.app links, try to preserve the run ID at the end
-                                    let parts: Vec<&str> = url.split('/').collect();
-                                    if parts.len() > 4 {
-                                        // Try to show the domain and run ID
-                                        format!("{}/../{}", parts[0], parts[parts.len() - 1])
-                                    } else {
-                                        // Just truncate
-                                        format!(
-                                            "{}...",
-                                            &url[..available_width
-                                                .saturating_sub(3)
-                                                .min(url.len())]
-                                        )
-                                    }
-                                } else {
-                                    // For other URLs, just truncate
-                                    format!(
-                                        "{}...",
-                                        &url[..available_width.saturating_sub(3).min(url.len())]
-                                    )
-                                };
+        // --- 5. Render Table (Recalculate Pages First) ---
+        self.recalculate_pages(table_area.height.saturating_sub(4));
+        self.render_task_table(f, table_area, has_narrow_area_width);
 
-                                // If we still have space for a bit of prefix, show it
-                                let remaining_space =
-                                    available_width.saturating_sub(shortened_url.len() + 3);
-                                if remaining_space > 5 && !prefix.is_empty() {
-                                    let shortened_prefix = if prefix.len() > remaining_space {
-                                        format!(
-                                            "{}...",
-                                            &prefix[..remaining_space.saturating_sub(3)]
-                                        )
-                                    } else {
-                                        prefix.to_string()
-                                    };
+        // --- 6. Render Filter ---
+        if let Some(area) = filter_area {
+            if area.height > 0
+                && area.width > 0
+                && area.y < f.area().height
+                && area.x < f.area().width
+            {
+                let safe_area = Rect {
+                    x: area.x,
+                    y: area.y,
+                    width: area.width.min(f.area().width.saturating_sub(area.x)),
+                    height: area.height.min(f.area().height.saturating_sub(area.y)),
+                };
+                self.render_filter(f, safe_area);
+            }
+        }
 
-                                    Line::from(vec![
-                                        Span::styled(shortened_prefix, prefix_style),
-                                        Span::styled(shortened_url, url_style),
-                                    ])
-                                } else {
-                                    // No space for prefix, just show URL
-                                    Line::from(vec![Span::styled(shortened_url, url_style)])
+        // --- 7. Render Bottom Rows ---
+        // Use final_help_collapsed and final_help_width from here down
+        let help_is_collapsed = final_help_collapsed;
+        let help_text_width = final_help_width;
+
+        match layout_mode {
+            BottomLayoutMode::SingleLine { .. } => {
+                // Don't need help_collapsed from enum variant now
+                // Pag + Cloud + Help on one line (pag_help_area)
+                // Calculate exact cloud width based on available space in single line
+                let cloud_message_render_width = area
+                    .width
+                    .saturating_sub(self.calculate_pagination_width().max(12)) // Ensure min width for Pag
+                    .saturating_sub(help_text_width) // Use final calculated width
+                    .saturating_sub(MIN_BOTTOM_SPACING);
+
+                let constraints = vec![
+                    Constraint::Length(self.calculate_pagination_width().max(12)),
+                    Constraint::Length(cloud_message_render_width),
+                    Constraint::Fill(1),
+                    Constraint::Length(help_text_width),
+                ];
+                let row_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints(constraints)
+                    .split(paghelp_or_help_vertical_area);
+
+                // Render components with safety checks
+                if !row_chunks.is_empty()
+                    && row_chunks[0].height > 0
+                    && row_chunks[0].width > 0
+                    && row_chunks[0].y < f.area().height
+                {
+                    self.render_pagination(f, row_chunks[0].intersection(f.area()), is_dimmed);
+                }
+                if row_chunks.len() > 1
+                    && row_chunks[1].height > 0
+                    && row_chunks[1].width > 0
+                    && row_chunks[1].y < f.area().height
+                {
+                    self.render_cloud_message(f, row_chunks[1].intersection(f.area()), is_dimmed);
+                }
+                if row_chunks.len() > 3
+                    && row_chunks[3].height > 0
+                    && row_chunks[3].width > 0
+                    && row_chunks[3].y < f.area().height
+                {
+                    self.render_help_text(
+                        f,
+                        row_chunks[3].intersection(f.area()),
+                        help_is_collapsed,
+                        is_dimmed,
+                    );
+                }
+            }
+            BottomLayoutMode::TwoLine { .. } => {
+                // Cloud (if present) row first
+                if has_cloud_message {
+                    if let Some(area) = cloud_or_pag_vertical_area {
+                        if area.height > 0
+                            && area.width > 0
+                            && area.y < f.area().height
+                            && area.x < f.area().width
+                        {
+                            // Apply padding safely
+                            let constraints = [Constraint::Length(2), Constraint::Fill(1)];
+                            let padded_chunks = Layout::default()
+                                .direction(Direction::Horizontal)
+                                .constraints(constraints)
+                                .split(area);
+                            if padded_chunks.len() >= 2 {
+                                let safe_padded_area = padded_chunks[1].intersection(f.area());
+                                if safe_padded_area.height > 0 && safe_padded_area.width > 0 {
+                                    self.render_cloud_message(f, safe_padded_area, is_dimmed);
                                 }
                             } else {
-                                // Enough space for both prefix and URL
-                                Line::from(vec![
-                                    Span::styled(prefix, prefix_style),
-                                    Span::styled(url, url_style),
-                                ])
+                                // Fallback: Render in original area if padding fails
+                                let safe_area = area.intersection(f.area());
+                                if safe_area.height > 0 && safe_area.width > 0 {
+                                    self.render_cloud_message(f, safe_area, is_dimmed);
+                                }
                             }
                         }
-                    } else {
-                        // Handle non-URL messages (only shown in non-collapsed mode)
-                        let display_message = if message.len() > available_width {
-                            format!("{}...", &message[..available_width.saturating_sub(3)])
-                        } else {
-                            message.clone()
-                        };
+                    }
+                }
+                // Then Pag + Help row (or split vertically if needed)
+                if needs_pag_help_vertical_split {
+                    // Split paghelp_or_help_vertical_area vertically
+                    let pag_help_chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Length(1), Constraint::Length(1)])
+                        .split(paghelp_or_help_vertical_area);
+                    if pag_help_chunks.len() >= 2 {
+                        // Render Pag into top chunk, Help into bottom chunk
+                        let pag_area = pag_help_chunks[0];
+                        let help_area = pag_help_chunks[1];
 
-                        let message_style = if !self.is_task_list_focused() {
-                            Style::default().fg(Color::DarkGray).dim()
-                        } else {
-                            Style::default().fg(Color::DarkGray)
-                        };
+                        // Render pagination with safety check
+                        if pag_area.height > 0 && pag_area.width > 0 && pag_area.y < f.area().height
+                        {
+                            self.render_pagination(f, pag_area.intersection(f.area()), is_dimmed);
+                        }
+                        // Render help text with safety check
+                        if help_area.height > 0
+                            && help_area.width > 0
+                            && help_area.y < f.area().height
+                        {
+                            self.render_help_text(
+                                f,
+                                help_area.intersection(f.area()),
+                                help_is_collapsed,
+                                is_dimmed,
+                            );
+                        }
+                    }
+                } else {
+                    // Render Pag + Help horizontally in paghelp_or_help_vertical_area
+                    let constraints = vec![
+                        Constraint::Length(self.calculate_pagination_width().max(12)),
+                        Constraint::Fill(1),
+                        Constraint::Length(help_text_width),
+                    ];
+                    let row_chunks = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints(constraints)
+                        .split(paghelp_or_help_vertical_area);
 
-                        Line::from(vec![Span::styled(display_message, message_style)])
-                    };
-
-                    let cloud_message_paragraph =
-                        Paragraph::new(message_line).alignment(Alignment::Right);
-
-                    // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
-                    let cloud_message_area = bottom_bar_layout[2];
-                    if cloud_message_area.width > 0
-                        && cloud_message_area.height > 0
-                        && cloud_message_area.x < f.area().width
-                        && cloud_message_area.y < f.area().height
+                    // Render components with safety checks
+                    if !row_chunks.is_empty()
+                        && row_chunks[0].height > 0
+                        && row_chunks[0].width > 0
+                        && row_chunks[0].y < f.area().height
                     {
-                        // Ensure area is entirely within frame bounds
-                        let safe_area = Rect {
-                            x: cloud_message_area.x,
-                            y: cloud_message_area.y,
-                            width: cloud_message_area
-                                .width
-                                .min(f.area().width.saturating_sub(cloud_message_area.x)),
-                            height: cloud_message_area
-                                .height
-                                .min(f.area().height.saturating_sub(cloud_message_area.y)),
-                        };
+                        self.render_pagination(f, row_chunks[0].intersection(f.area()), is_dimmed);
+                    }
+                    if row_chunks.len() > 2
+                        && row_chunks[2].height > 0
+                        && row_chunks[2].width > 0
+                        && row_chunks[2].y < f.area().height
+                    {
+                        self.render_help_text(
+                            f,
+                            row_chunks[2].intersection(f.area()),
+                            help_is_collapsed,
+                            is_dimmed,
+                        );
+                    }
+                }
+            }
+            BottomLayoutMode::NoCloud { .. } => {
+                // Pag + Help row (split vertically if needed)
+                if needs_pag_help_vertical_split {
+                    // Split paghelp_or_help_vertical_area vertically
+                    let pag_help_chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([Constraint::Length(1), Constraint::Length(1)])
+                        .split(paghelp_or_help_vertical_area);
+                    if pag_help_chunks.len() >= 2 {
+                        if pag_help_chunks[0].height > 0
+                            && pag_help_chunks[0].width > 0
+                            && pag_help_chunks[0].y < f.area().height
+                        {
+                            self.render_pagination(
+                                f,
+                                pag_help_chunks[0].intersection(f.area()),
+                                is_dimmed,
+                            );
+                        }
+                        if pag_help_chunks[1].height > 0
+                            && pag_help_chunks[1].width > 0
+                            && pag_help_chunks[1].y < f.area().height
+                        {
+                            self.render_help_text(
+                                f,
+                                pag_help_chunks[1].intersection(f.area()),
+                                help_is_collapsed,
+                                is_dimmed,
+                            );
+                        }
+                    }
+                } else {
+                    // Render Pag + Help horizontally
+                    let constraints = vec![
+                        Constraint::Length(self.calculate_pagination_width().max(12)),
+                        Constraint::Fill(1),
+                        Constraint::Length(help_text_width),
+                    ];
+                    let row_chunks = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints(constraints)
+                        .split(paghelp_or_help_vertical_area);
 
-                        f.render_widget(cloud_message_paragraph, safe_area);
+                    // Render components with safety checks
+                    if !row_chunks.is_empty()
+                        && row_chunks[0].height > 0
+                        && row_chunks[0].width > 0
+                        && row_chunks[0].y < f.area().height
+                    {
+                        self.render_pagination(f, row_chunks[0].intersection(f.area()), is_dimmed);
+                    }
+                    if row_chunks.len() > 2
+                        && row_chunks[2].height > 0
+                        && row_chunks[2].width > 0
+                        && row_chunks[2].y < f.area().height
+                    {
+                        self.render_help_text(
+                            f,
+                            row_chunks[2].intersection(f.area()),
+                            help_is_collapsed,
+                            is_dimmed,
+                        );
                     }
                 }
             }
@@ -1661,5 +1838,962 @@ impl Component for TasksList {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native::tasks::types::TaskTarget;
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+
+    // Helper function to create a TasksList with test task data
+    fn create_test_tasks_list() -> (TasksList, Vec<Task>) {
+        let test_tasks = vec![
+            Task {
+                id: "task1".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "task2".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "task3".to_string(),
+                target: TaskTarget {
+                    project: "app2".to_string(),
+                    target: "lint".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+        let title_text = "Test Tasks".to_string();
+
+        let tasks_list = TasksList::new(
+            test_tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            title_text,
+            selection_manager,
+        );
+
+        (tasks_list, test_tasks)
+    }
+
+    fn create_test_terminal(width: u16, height: u16) -> Terminal<TestBackend> {
+        let backend = TestBackend::new(width, height);
+        Terminal::new(backend).unwrap()
+    }
+
+    fn render_to_test_backend(terminal: &mut Terminal<TestBackend>, tasks_list: &mut TasksList) {
+        terminal
+            .draw(|f| {
+                tasks_list.draw(f, f.area()).unwrap();
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn test_initial_rendering() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // No tasks have been started yet
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_three_tasks_one_in_progress_two_pending_with_two_max_parallel() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_all_tasks_in_progress() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set max parallel to 3
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Start all tasks
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::StartTasks(vec![task.clone()]))
+                .ok();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_completed_tasks_with_different_durations() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Create task results with different durations
+        let mut task_results = Vec::new();
+
+        // First task: 2 seconds
+        let mut task1 = test_tasks[0].clone();
+        task1.start_time = Some(1000);
+        task1.end_time = Some(3000);
+
+        // Second task: 10 seconds
+        let mut task2 = test_tasks[1].clone();
+        task2.start_time = Some(1000);
+        task2.end_time = Some(11000);
+
+        // Third task: 1 minute
+        let mut task3 = test_tasks[2].clone();
+        task3.start_time = Some(1000);
+        task3.end_time = Some(61000);
+
+        task_results.push(TaskResult {
+            task: task1,
+            status: "success".to_string(),
+            code: 0,
+            terminal_output: None,
+        });
+
+        task_results.push(TaskResult {
+            task: task2,
+            status: "success".to_string(),
+            code: 0,
+            terminal_output: None,
+        });
+
+        task_results.push(TaskResult {
+            task: task3,
+            status: "success".to_string(),
+            code: 0,
+            terminal_output: None,
+        });
+
+        // End tasks with the results that include duration information
+        tasks_list.update(Action::EndTasks(task_results)).ok();
+
+        // Explicitly update task statuses to Success to ensure they're properly marked as completed
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::Success,
+                ))
+                .ok();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_mixed_task_statuses() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Set different statuses for each task
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .ok();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[1].id.clone(),
+                TaskStatus::Failure,
+            ))
+            .ok();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[2].id.clone(),
+                TaskStatus::Skipped,
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_task_with_cache_status() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        // Set various cache statuses
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::LocalCache,
+            ))
+            .ok();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[1].id.clone(),
+                TaskStatus::RemoteCache,
+            ))
+            .ok();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[2].id.clone(),
+                TaskStatus::LocalCacheKeptExisting,
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_active_filter() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Activate filter mode
+        tasks_list.update(Action::EnterFilterMode).ok();
+        // Add some filter text
+        tasks_list.update(Action::AddFilterChar('a')).ok();
+        tasks_list.update(Action::AddFilterChar('p')).ok();
+        tasks_list.update(Action::AddFilterChar('p')).ok();
+        tasks_list.update(Action::AddFilterChar('1')).ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_persisted_filter() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Activate filter mode
+        tasks_list.update(Action::EnterFilterMode).ok();
+        // Add some filter text
+        tasks_list.update(Action::AddFilterChar('a')).ok();
+        tasks_list.update(Action::AddFilterChar('p')).ok();
+        tasks_list.update(Action::AddFilterChar('p')).ok();
+        tasks_list.update(Action::AddFilterChar('1')).ok();
+
+        tasks_list.persist_filter();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_narrow_width_rendering() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(40, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_very_narrow_width_rendering() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(20, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_short_height_rendering() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 10);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_rendering() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // All tasks should be complete in some way, we'll do a mixture of success and failure
+        tasks_list
+            .update(Action::EndTasks(vec![
+                TaskResult {
+                    task: test_tasks[0].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[1].clone(),
+                    status: "failure".to_string(),
+                    code: 1,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[2].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+            ]))
+            .unwrap();
+
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[1].id.clone(),
+                TaskStatus::Failure,
+            ))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[2].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+
+        // Set a cloud message with a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_not_focused() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Change focus away from task list
+        tasks_list
+            .update(Action::UpdateFocus(Focus::MultipleOutput(0)))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_spacebar_mode() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Enable spacebar mode
+        tasks_list.update(Action::SetSpacebarMode(true)).ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pinned_tasks() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Pin a task to pane 0
+        tasks_list
+            .update(Action::PinTask(test_tasks[0].id.clone(), 0))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_continuous_task() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Create a task list with a continuous task
+        let continuous_task = Task {
+            id: "continuous-task".to_string(),
+            target: TaskTarget {
+                project: "app3".to_string(),
+                target: "serve".to_string(),
+                configuration: None,
+            },
+            outputs: vec![],
+            project_root: Some("".to_string()),
+            continuous: Some(true),
+            start_time: None,
+            end_time: None,
+        };
+
+        // Add and start the continuous task
+        tasks_list
+            .tasks
+            .push(TaskItem::new(continuous_task.id.clone(), true));
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+        tasks_list
+            .update(Action::StartTasks(vec![continuous_task]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination() {
+        // Create a list with many tasks to force pagination
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(5))); // Only 5 tasks per page
+        let mut tasks = Vec::new();
+
+        // Create 12 tasks to force pagination
+        for i in 1..=12 {
+            let task = Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: format!("app{}", i % 3 + 1),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            };
+            tasks.push(task);
+        }
+
+        let mut tasks_list = TasksList::new(
+            tasks.clone(),
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Tasks".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Force apply filter to update the filtered_names
+        tasks_list.apply_filter();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!("pagination_page1", terminal.backend());
+
+        // Move to next page
+        tasks_list.update(Action::NextPage).ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!("pagination_page2", terminal.backend());
+    }
+
+    #[test]
+    fn test_run_one_mode_with_highlighted_task() {
+        // Create a task list with a highlighted initiating task
+        let test_tasks = vec![
+            Task {
+                id: "task1".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+            Task {
+                id: "task2".to_string(),
+                target: TaskTarget {
+                    project: "app1".to_string(),
+                    target: "build".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            },
+        ];
+
+        // Create a set of initiating tasks (task1)
+        let mut initiating_tasks = HashSet::new();
+        initiating_tasks.insert("task1".to_string());
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(10)));
+
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            initiating_tasks,
+            RunMode::RunOne,
+            Focus::TaskList,
+            "Run One Mode".to_string(),
+            selection_manager,
+        );
+
+        // Set 2 parallel tasks
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        let mut terminal = create_test_terminal(120, 15);
+
+        // Force sort to ensure the highlighted task is positioned correctly
+        tasks_list.sort_tasks();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_medium_width_rendering() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(70, 15);
+
+        // Set focus away from task list to verify help text shows regardless
+        tasks_list
+            .update(Action::UpdateFocus(Focus::MultipleOutput(0)))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_wide_and_short_rendering() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(160, 10);
+
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_without_url() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(90, 15);
+
+        // Set a cloud message without a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "This is some warning from Nx Cloud".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_without_url_super_wide() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(150, 15);
+
+        // Set a cloud message without a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "This is some warning from Nx Cloud".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_two_line_layout() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(60, 15);
+
+        tasks_list
+            .update(Action::EndTasks(vec![
+                TaskResult {
+                    task: test_tasks[0].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[1].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+                TaskResult {
+                    task: test_tasks[2].clone(),
+                    status: "success".to_string(),
+                    code: 0,
+                    terminal_output: None,
+                },
+            ]))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[0].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[1].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+        tasks_list
+            .update(Action::UpdateTaskStatus(
+                test_tasks[2].id.clone(),
+                TaskStatus::Success,
+            ))
+            .unwrap();
+
+        // Set a cloud message
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_very_narrow_pag_help_handling() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(25, 15);
+
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_very_narrow_pag_help_handling_with_cloud_message() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(25, 15);
+
+        // Start the first task
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[0].clone()]))
+            .ok();
+
+        // Add a cloud message without a URL
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "The remote cache will not be read from or written to during this run.".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_wide() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(120, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_wide_with_cloud_message() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(120, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        // Set a cloud message
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "The remote cache will not be read from or written to during this run.".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_narrow() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(40, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pagination_many_pages_narrow_with_cloud_message() {
+        let items_per_page = 1;
+        let num_tasks = 100;
+
+        let mut tasks = Vec::new();
+        for i in 1..=num_tasks {
+            tasks.push(Task {
+                id: format!("task{}", i),
+                target: TaskTarget {
+                    project: "app".to_string(),
+                    target: "test".to_string(),
+                    configuration: None,
+                },
+                outputs: vec![],
+                project_root: Some("".to_string()),
+                continuous: Some(false),
+                start_time: None,
+                end_time: None,
+            });
+        }
+
+        let selection_manager = Arc::new(Mutex::new(TaskSelectionManager::new(items_per_page)));
+
+        let mut tasks_list = TasksList::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            "Many Pages Test".to_string(),
+            selection_manager,
+        );
+
+        let mut terminal = create_test_terminal(40, 6);
+
+        // Go to page 50 (index 49)
+        for _ in 0..49 {
+            tasks_list.next_page();
+        }
+
+        // Set a cloud message
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "The remote cache will not be read from or written to during this run.".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_pinned_tasks_with_narrow_width() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(40, 15);
+
+        tasks_list.pin_task(test_tasks[0].id.clone(), 0);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
     }
 }

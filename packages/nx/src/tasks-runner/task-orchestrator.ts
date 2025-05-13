@@ -25,7 +25,7 @@ import { Cache, DbCache, dbCacheEnabled, getCache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
-import { TaskMetadata } from './life-cycle';
+import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
 import { RunningTask } from './running-tasks/running-task';
@@ -87,6 +87,7 @@ export class TaskOrchestrator {
   private bailed = false;
 
   private runningContinuousTasks = new Map<string, RunningTask>();
+  private runningRunCommandsTasks = new Map<string, RunningTask>();
 
   // endregion internal state
 
@@ -108,16 +109,15 @@ export class TaskOrchestrator {
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
       this.forkedProcessTaskRunner.init(),
-      this.tasksSchedule.init(),
+      this.tasksSchedule.init().then(() => {
+        return this.tasksSchedule.scheduleNextTasks();
+      }),
       'init' in this.cache ? this.cache.init() : null,
     ]);
   }
 
   async run() {
     await this.init();
-
-    // initial scheduling
-    await this.tasksSchedule.scheduleNextTasks();
 
     performance.mark('task-execution:start');
 
@@ -160,6 +160,10 @@ export class TaskOrchestrator {
     return this.completedTasks;
   }
 
+  public nextBatch() {
+    return this.tasksSchedule.nextBatch();
+  }
+
   private async executeNextBatchOfTasksUsingTaskSchedule() {
     // completed all the tasks
     if (!this.tasksSchedule.hasTasks() || this.bailed) {
@@ -171,7 +175,7 @@ export class TaskOrchestrator {
       this.options.skipNxCache === undefined;
 
     this.processAllScheduledTasks();
-    const batch = this.tasksSchedule.nextBatch();
+    const batch = this.nextBatch();
     if (batch) {
       const groupId = this.closeGroup();
 
@@ -203,7 +207,7 @@ export class TaskOrchestrator {
     );
   }
 
-  processTasks(taskIds: string[]) {
+  private processTasks(taskIds: string[]) {
     for (const taskId of taskIds) {
       // Task is already handled or being handled
       if (!this.processedTasks.has(taskId)) {
@@ -251,7 +255,7 @@ export class TaskOrchestrator {
     );
   }
 
-  private processAllScheduledTasks() {
+  public processAllScheduledTasks() {
     const { scheduledTasks, scheduledBatches } =
       this.tasksSchedule.getAllScheduledTasks();
 
@@ -264,13 +268,7 @@ export class TaskOrchestrator {
   // endregion Processing Scheduled Tasks
 
   // region Applying Cache
-  private async applyCachedResults(tasks: Task[]): Promise<
-    {
-      task: Task;
-      code: number;
-      status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
-    }[]
-  > {
+  private async applyCachedResults(tasks: Task[]): Promise<TaskResult[]> {
     const cacheableTasks = tasks.filter((t) =>
       isCacheableTask(t, this.options)
     );
@@ -319,11 +317,11 @@ export class TaskOrchestrator {
   // endregion Applying Cache
 
   // region Batch
-  private async applyFromCacheOrRunBatch(
+  public async applyFromCacheOrRunBatch(
     doNotSkipCache: boolean,
     batch: Batch,
     groupId: number
-  ) {
+  ): Promise<TaskResult[]> {
     const applyFromCacheOrRunBatchStart = performance.mark(
       'TaskOrchestrator-apply-from-cache-or-run-batch:start'
     );
@@ -335,11 +333,9 @@ export class TaskOrchestrator {
 
     await this.preRunSteps(tasks, { groupId });
 
-    let results: {
-      task: Task;
-      status: TaskStatus;
-      terminalOutput?: string;
-    }[] = doNotSkipCache ? await this.applyCachedResults(tasks) : [];
+    let results: TaskResult[] = doNotSkipCache
+      ? await this.applyCachedResults(tasks)
+      : [];
 
     // Run tasks that were not cached
     if (results.length !== taskEntries.length) {
@@ -389,9 +385,13 @@ export class TaskOrchestrator {
       applyFromCacheOrRunBatchStart.name,
       applyFromCacheOrRunBatchEnd.name
     );
+    return results;
   }
 
-  private async runBatch(batch: Batch, env: NodeJS.ProcessEnv) {
+  private async runBatch(
+    batch: Batch,
+    env: NodeJS.ProcessEnv
+  ): Promise<TaskResult[]> {
     const runBatchStart = performance.mark('TaskOrchestrator-run-batch:start');
     try {
       const batchProcess =
@@ -405,6 +405,7 @@ export class TaskOrchestrator {
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
+        code: result.success ? 0 : 1,
         task: {
           ...this.taskGraph.tasks[taskId],
           startTime: result.startTime,
@@ -416,6 +417,7 @@ export class TaskOrchestrator {
     } catch (e) {
       return batch.taskGraph.roots.map((rootTaskId) => ({
         task: this.taskGraph.tasks[rootTaskId],
+        code: 1,
         status: 'failure' as TaskStatus,
       }));
     } finally {
@@ -435,7 +437,7 @@ export class TaskOrchestrator {
     doNotSkipCache: boolean,
     task: Task,
     groupId: number
-  ) {
+  ): Promise<TaskResult> {
     // Wait for task to be processed
     const taskSpecificEnv = await this.processedTasks.get(task.id);
 
@@ -554,6 +556,11 @@ export class TaskOrchestrator {
           root: workspaceRoot, // only root is needed in runCommands
         } as any);
 
+        this.runningRunCommandsTasks.set(task.id, runningTask);
+        runningTask.onExit(() => {
+          this.runningRunCommandsTasks.delete(task.id);
+        });
+
         if (this.tuiEnabled) {
           if (runningTask instanceof PseudoTtyProcess) {
             // This is an external of a the pseudo terminal where a task is running and can be passed to the TUI
@@ -561,10 +568,13 @@ export class TaskOrchestrator {
               task.id,
               runningTask.getParserAndWriter()
             );
+            runningTask.onOutput((output) => {
+              this.options.lifeCycle.appendTaskOutput(task.id, output, true);
+            });
           } else {
             this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
             runningTask.onOutput((output) => {
-              this.options.lifeCycle.appendTaskOutput(task.id, output);
+              this.options.lifeCycle.appendTaskOutput(task.id, output, false);
             });
           }
         }
@@ -633,10 +643,13 @@ export class TaskOrchestrator {
             task.id,
             runningTask.getParserAndWriter()
           );
+          runningTask.onOutput((output) => {
+            this.options.lifeCycle.appendTaskOutput(task.id, output, true);
+          });
         } else if ('onOutput' in runningTask) {
           this.options.lifeCycle.registerRunningTaskWithEmptyParser(task.id);
           runningTask.onOutput((output) => {
-            this.options.lifeCycle.appendTaskOutput(task.id, output);
+            this.options.lifeCycle.appendTaskOutput(task.id, output, false);
           });
         }
       }
@@ -997,8 +1010,9 @@ export class TaskOrchestrator {
   // endregion utils
 
   private async cleanup() {
-    await Promise.all(
-      Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
+    this.forkedProcessTaskRunner.cleanup();
+    await Promise.all([
+      ...Array.from(this.runningContinuousTasks).map(async ([taskId, t]) => {
         try {
           await t.kill();
           this.options.lifeCycle.setTaskStatus(
@@ -1010,8 +1024,15 @@ export class TaskOrchestrator {
         } finally {
           this.runningTasksService.removeRunningTask(taskId);
         }
-      })
-    );
+      }),
+      ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
+        try {
+          await t.kill();
+        } catch (e) {
+          console.error(`Unable to terminate ${taskId}\nError:`, e);
+        }
+      }),
+    ]);
   }
 
   private cleanUpUnneededContinuousTasks() {
