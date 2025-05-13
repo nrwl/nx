@@ -63,15 +63,29 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
-        import { ServerModule } from '@angular/platform-server';
+        import { provideServerRendering, withRoutes } from '@angular/ssr';
         import { AppComponent } from './app.component';
         import { AppModule } from './app.module';
+        import { serverRoutes } from './app.routes.server';
 
         @NgModule({
-          imports: [AppModule, ServerModule],
+          imports: [AppModule],
+          providers: [provideServerRendering(withRoutes(serverRoutes))],
           bootstrap: [AppComponent],
         })
         export class AppServerModule {}
+        "
+      `);
+      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { RenderMode, ServerRoute } from '@angular/ssr';
+
+        export const serverRoutes: ServerRoute[] = [
+          {
+            path: '**',
+            renderMode: RenderMode.Prerender,
+          },
+        ];
         "
       `);
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
@@ -136,14 +150,27 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
+        import { provideServerRendering, withRoutes } from '@angular/ssr';
         import { appConfig } from './app.config';
+        import { serverRoutes } from './app.routes.server';
 
         const serverConfig: ApplicationConfig = {
-          providers: [provideServerRendering()],
+          providers: [provideServerRendering(withRoutes(serverRoutes))],
         };
 
         export const config = mergeApplicationConfig(appConfig, serverConfig);
+        "
+      `);
+      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { RenderMode, ServerRoute } from '@angular/ssr';
+
+        export const serverRoutes: ServerRoute[] = [
+          {
+            path: '**',
+            renderMode: RenderMode.Prerender,
+          },
+        ];
         "
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -260,86 +287,6 @@ describe('setupSSR', () => {
         '{projectRoot}/some-other-output-dir',
       ]);
       expect(updatedProject.targets.build.options.outputPath).toBe('dist/app1');
-    });
-
-    it('should setup server routing for NgModule apps when "serverRouting" is true', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: false,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', serverRouting: true });
-
-      expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { ServerModule } from '@angular/platform-server';
-        import { provideServerRouting } from '@angular/ssr';
-        import { AppComponent } from './app.component';
-        import { AppModule } from './app.module';
-        import { serverRoutes } from './app.routes.server';
-
-        @NgModule({
-          imports: [AppModule, ServerModule],
-          providers: [provideServerRouting(serverRoutes)],
-          bootstrap: [AppComponent],
-        })
-        export class AppServerModule {}
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
-
-        export const serverRoutes: ServerRoute[] = [
-          {
-            path: '**',
-            renderMode: RenderMode.Prerender,
-          },
-        ];
-        "
-      `);
-    });
-
-    it('should setup server routing for standalone apps when "serverRouting" is true', async () => {
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        standalone: true,
-        skipFormat: true,
-      });
-
-      await setupSsr(tree, { project: 'app1', serverRouting: true });
-
-      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
-        import { provideServerRouting } from '@angular/ssr';
-        import { appConfig } from './app.config';
-        import { serverRoutes } from './app.routes.server';
-
-        const serverConfig: ApplicationConfig = {
-          providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
-        };
-
-        export const config = mergeApplicationConfig(appConfig, serverConfig);
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { RenderMode, ServerRoute } from '@angular/ssr';
-
-        export const serverRoutes: ServerRoute[] = [
-          {
-            path: '**',
-            renderMode: RenderMode.Prerender,
-          },
-        ];
-        "
-      `);
     });
   });
 
@@ -490,7 +437,7 @@ describe('setupSSR', () => {
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-        import { provideServerRendering } from '@angular/platform-server';
+        import { provideServerRendering } from '@angular/ssr';
         import { appConfig } from './app.config';
 
         const serverConfig: ApplicationConfig = {
@@ -647,12 +594,13 @@ describe('setupSSR', () => {
     expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-      import { provideServerRendering } from '@angular/platform-server';
+      import { provideServerRendering, withRoutes } from '@angular/ssr';
       import { appConfig } from './app.config';
+      import { serverRoutes } from './app.routes.server';
 
       const serverConfig: ApplicationConfig = {
         providers: [
-          provideServerRendering()
+          provideServerRendering(withRoutes(serverRoutes))
         ]
       };
 
@@ -901,6 +849,52 @@ describe('setupSSR', () => {
       `);
     });
 
+    it('should setup server routing using "provideServerRouting" for NgModule apps when "serverRouting" is true and @angular/ssr version is 19.2.x', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '19.2.0', '@angular/ssr': '19.2.0' },
+        devDependencies: { '@angular-devkit/build-angular': '19.2.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: false,
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', serverRouting: true });
+
+      expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { ServerModule } from '@angular/platform-server';
+        import { provideServerRouting } from '@angular/ssr';
+        import { AppComponent } from './app.component';
+        import { AppModule } from './app.module';
+        import { serverRoutes } from './app.routes.server';
+
+        @NgModule({
+          imports: [AppModule, ServerModule],
+          providers: [provideServerRouting(serverRoutes)],
+          bootstrap: [AppComponent],
+        })
+        export class AppServerModule {}
+        "
+      `);
+      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { RenderMode, ServerRoute } from '@angular/ssr';
+
+        export const serverRoutes: ServerRoute[] = [
+          {
+            path: '**',
+            renderMode: RenderMode.Prerender,
+          },
+        ];
+        "
+      `);
+    });
+
     it('should setup server routing using "provideServerRoutesConfig" for standalone apps when "serverRouting" is true and @angular/ssr version is lower than 19.2.0', async () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       updateJson(tree, 'package.json', (json) => ({
@@ -929,6 +923,50 @@ describe('setupSSR', () => {
             provideServerRendering(),
             provideServerRoutesConfig(serverRoutes),
           ],
+        };
+
+        export const config = mergeApplicationConfig(appConfig, serverConfig);
+        "
+      `);
+      expect(tree.read('app1/src/app/app.routes.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { RenderMode, ServerRoute } from '@angular/ssr';
+
+        export const serverRoutes: ServerRoute[] = [
+          {
+            path: '**',
+            renderMode: RenderMode.Prerender,
+          },
+        ];
+        "
+      `);
+    });
+
+    it('should setup server routing using "provideServerRouting" for standalone apps when "serverRouting" is true and @angular/ssr version is 19.2.x', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { '@angular/core': '19.2.0', '@angular/ssr': '19.2.0' },
+        devDependencies: { '@angular-devkit/build-angular': '19.2.0' },
+      }));
+      await generateTestApplication(tree, {
+        directory: 'app1',
+        standalone: true,
+        skipFormat: true,
+      });
+
+      await setupSsr(tree, { project: 'app1', serverRouting: true });
+
+      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+        import { provideServerRendering } from '@angular/platform-server';
+        import { provideServerRouting } from '@angular/ssr';
+        import { appConfig } from './app.config';
+        import { serverRoutes } from './app.routes.server';
+
+        const serverConfig: ApplicationConfig = {
+          providers: [provideServerRendering(), provideServerRouting(serverRoutes)],
         };
 
         export const config = mergeApplicationConfig(appConfig, serverConfig);

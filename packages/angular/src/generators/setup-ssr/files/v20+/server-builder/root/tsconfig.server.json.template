@@ -1,0 +1,16 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "outDir": "<%= rootOffset %>out-tsc/server",
+    "types": [
+      "node"<% if (hasLocalizePackage) { %>,
+      "@angular/localize"<% } %>
+    ]
+  },
+  "files": [
+    "src/<%= main %>",
+    "src/server.ts"
+  ]
+}
