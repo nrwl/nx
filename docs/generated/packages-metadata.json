@@ -450,6 +450,26 @@
         "type": "migration"
       },
       {
+        "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
+        "file": "generated/packages/angular/migrations/migrate-provide-server-rendering-import.json",
+        "hidden": false,
+        "name": "migrate-provide-server-rendering-import",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/migrate-provide-server-rendering-import",
+        "type": "migration"
+      },
+      {
+        "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+        "file": "generated/packages/angular/migrations/replace-provide-server-routing.json",
+        "hidden": false,
+        "name": "replace-provide-server-routing",
+        "version": "21.2.0-beta.0",
+        "originalFilePath": "/packages/angular",
+        "path": "angular/migrations/replace-provide-server-routing",
+        "type": "migration"
+      },
+      {
         "description": "",
         "file": "generated/packages/angular/migrations/21.2.0-package-updates.json",
         "hidden": false,
