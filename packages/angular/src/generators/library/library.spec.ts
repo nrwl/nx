@@ -311,6 +311,7 @@ describe('lib', () => {
           strictInjectionParameters: true,
           strictInputAccessModifiers: true,
           strictTemplates: true,
+          typeCheckHostBindings: true,
         },
         compilerOptions: {
           forceConsistentCasingInFileNames: true,
@@ -1831,6 +1832,28 @@ describe('lib', () => {
         readJson(tree, 'my-lib/tsconfig.json').compilerOptions
           .useDefineForClassFields
       ).toBe(false);
+    });
+
+    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await runLibraryGeneratorWithOpts();
+
+      expect(readJson(tree, 'my-lib/tsconfig.json').angularCompilerOptions)
+        .toMatchInlineSnapshot(`
+        {
+          "enableI18nLegacyMessageIdFormat": false,
+          "strictInjectionParameters": true,
+          "strictInputAccessModifiers": true,
+          "strictTemplates": true,
+        }
+      `);
     });
   });
 });
