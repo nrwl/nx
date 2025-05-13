@@ -30,10 +30,19 @@ export function generateSSRFiles(
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const baseFilesPath = join(__dirname, '..', 'files');
   let pathToFiles: string;
-  if (angularMajorVersion >= 19) {
+  if (angularMajorVersion >= 20) {
     pathToFiles = join(
       baseFilesPath,
-      'v19+',
+      'v20+',
+      options.isUsingApplicationBuilder
+        ? 'application-builder'
+        : 'server-builder',
+      options.standalone ? 'standalone-src' : 'ngmodule-src'
+    );
+  } else if (angularMajorVersion === 19) {
+    pathToFiles = join(
+      baseFilesPath,
+      'v19',
       options.isUsingApplicationBuilder
         ? 'application-builder'
         : 'server-builder',
@@ -64,7 +73,7 @@ export function generateSSRFiles(
     tpl: '',
   });
 
-  if (angularMajorVersion >= 19 && !options.serverRouting) {
+  if (angularMajorVersion === 19 && !options.serverRouting) {
     tree.delete(joinPathFragments(sourceRoot, 'app/app.routes.server.ts'));
   }
 }
