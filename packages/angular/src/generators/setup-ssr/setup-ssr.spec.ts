@@ -90,7 +90,7 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
+        "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
         import {
           BrowserModule,
           provideClientHydration,
@@ -104,7 +104,10 @@ describe('setupSSR', () => {
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
           imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-          providers: [provideClientHydration(withEventReplay())],
+          providers: [
+            provideBrowserGlobalErrorListeners(),
+            provideClientHydration(withEventReplay()),
+          ],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -364,7 +367,7 @@ describe('setupSSR', () => {
       `);
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
+        "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
         import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
@@ -377,7 +380,7 @@ describe('setupSSR', () => {
             BrowserModule,
             RouterModule.forRoot(appRoutes),
           ],
-          providers: [provideClientHydration(withEventReplay())],
+          providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
           bootstrap: [AppComponent],
         })
         export class AppModule {}
@@ -540,7 +543,7 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { NgModule } from '@angular/core';
+      "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
@@ -553,7 +556,7 @@ describe('setupSSR', () => {
           BrowserModule,
           RouterModule.forRoot(appRoutes),
         ],
-        providers: [provideClientHydration(withEventReplay())],
+        providers: [provideBrowserGlobalErrorListeners(), provideClientHydration(withEventReplay())],
         bootstrap: [AppComponent],
       })
       export class AppModule {}
@@ -580,13 +583,17 @@ describe('setupSSR', () => {
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(withEventReplay()),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
+        providers: [provideClientHydration(withEventReplay()),
+          provideBrowserGlobalErrorListeners(),
+          provideZoneChangeDetection({ eventCoalescing: true }),
+          provideRouter(appRoutes)
+        ]
       };
       "
     `);
@@ -626,7 +633,7 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { NgModule } from '@angular/core';
+      "import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
@@ -639,7 +646,7 @@ describe('setupSSR', () => {
           BrowserModule,
           RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
         ],
-        providers: [],
+        providers: [provideBrowserGlobalErrorListeners()],
         bootstrap: [AppComponent],
       })
       export class AppModule {}
@@ -662,12 +669,16 @@ describe('setupSSR', () => {
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+      "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
       import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes, withEnabledBlockingInitialNavigation())]
+        providers: [
+          provideBrowserGlobalErrorListeners(),
+          provideZoneChangeDetection({ eventCoalescing: true }),
+          provideRouter(appRoutes, withEnabledBlockingInitialNavigation())
+        ]
       };
       "
     `);
@@ -781,7 +792,10 @@ describe('setupSSR', () => {
         import { provideClientHydration } from '@angular/platform-browser';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideClientHydration(),provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
+          providers: [provideClientHydration(),
+            provideZoneChangeDetection({ eventCoalescing: true }),
+            provideRouter(appRoutes)
+          ]
         };
         "
       `);
