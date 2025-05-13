@@ -1,6 +1,5 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { createFiles } from './create-files';
 
 describe('Create Files', () => {
@@ -15,13 +14,14 @@ describe('Create Files', () => {
       e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       framework: 'react-native',
     });
 

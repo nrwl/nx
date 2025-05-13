@@ -9,7 +9,6 @@ use crate::native::{
     tasks::{inputs::SplitInputs, types::Task},
 };
 use napi::bindgen_prelude::External;
-use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use tracing::trace;
@@ -102,13 +101,11 @@ impl HashPlanner {
     #[napi]
     pub fn get_plans_reference(
         &self,
-        env: Env,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-    ) -> anyhow::Result<JsExternal> {
+    ) -> anyhow::Result<External<HashMap<String, Vec<HashInstruction>>>> {
         let plans = self.get_plans_internal(task_ids, task_graph)?;
-        env.create_external(plans, None)
-            .map_err(anyhow::Error::from)
+        Ok(External::new(plans))
     }
 
     fn target_input<'a>(

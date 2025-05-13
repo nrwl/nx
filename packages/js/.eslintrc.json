@@ -12,6 +12,10 @@
             "message": "Please use `tinyglobby` instead."
           },
           {
+            "name": "minimatch",
+            "message": "Please use `picomatch` instead."
+          },
+          {
             "name": "fs-extra",
             "message": "Please use equivalent utilities from `node:fs` instead."
           }
@@ -58,6 +62,7 @@
               "source-map-support",
               "@babel/core",
               "@babel/plugin-proposal-decorators",
+              "@babel/plugin-transform-class-properties",
               "@babel/plugin-transform-runtime",
               "@babel/preset-env",
               "@babel/preset-typescript",

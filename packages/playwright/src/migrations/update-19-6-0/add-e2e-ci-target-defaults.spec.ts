@@ -77,7 +77,7 @@ describe('add-e2e-ci-target-defaults', () => {
         "build": {
           "cache": true,
         },
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -144,7 +144,7 @@ export default defineConfig({
         "build": {
           "cache": true,
         },
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -196,7 +196,7 @@ export default defineConfig({
         "build": {
           "cache": true,
         },
-        "e2e-ci--**/*": {
+        "e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -204,7 +204,7 @@ export default defineConfig({
         "lint": {
           "cache": true,
         },
-        "playwright:e2e-ci--**/*": {
+        "playwright:e2e-ci--**/**": {
           "dependsOn": [
             "^build",
           ],
@@ -254,7 +254,7 @@ export default defineConfig({
         "lint": {
           "cache": true,
         },
-        "playwright:e2e-ci--**/*": {
+        "playwright:e2e-ci--**/**": {
           "dependsOn": [
             "^build",
             "^bundle",

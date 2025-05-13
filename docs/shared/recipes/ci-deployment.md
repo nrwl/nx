@@ -1,3 +1,8 @@
+---
+title: Prepare Applications for Deployment via CI
+description: Learn how to generate package.json and pruned lock files for your Nx applications to optimize container-based deployments in CI environments.
+---
+
 # Prepare applications for deployment via CI
 
 A common approach to deploying applications is via docker containers. Some applications can be built into bundles that are environment agnostic, while others depend on OS-specific packages being installed. For these situations, having just bundled code is not enough, we also need to have `package.json`.
@@ -7,10 +12,6 @@ Nx supports the generation of the project's `package.json` by identifying all th
 Additionally, we should generate pruned lock file according to the generated `package.json`. This makes the installation in the container significantly faster as we only need to install a subset of the packages.
 
 Nx offers two varieties of Webpack plugin which can be used to generate `package.json`.
-
-{% tabs %}
-
-{% tab label="Nx 18+" %}
 
 ## Basic Plugin Configuration
 
@@ -64,23 +65,6 @@ module.exports = {
   ],
 };
 ```
-
-{% /tab %}
-
-{% tab label="Nx < 18" %}
-
-## Supported executors
-
-The `@nx/webpack:webpack` executor supports the `generatePackageJson` flag which generates both `package.json` as well as the lock file.
-
-Some executors automatically generate output `package.json` and the lock file generation is supported using the `generateLockfile` flag:
-
-- `@nx/js:swc`
-- `@nx/js:tsc`
-- `@nx/next:build`
-
-{% /tab %}
-{% /tabs %}
 
 ## Programmatic usage
 

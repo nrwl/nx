@@ -8,7 +8,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -18,7 +17,7 @@ describe('library', () => {
 
   let defaultSchema: Schema = {
     directory: 'my-lib',
-    linter: Linter.EsLint,
+    linter: 'eslint',
     skipFormat: false,
     skipTsConfig: false,
     unitTestRunner: 'vitest',
@@ -509,6 +508,7 @@ module.exports = [
       expect(eslintConfig.overrides[0].files).toContain('*.vue');
     });
   });
+
   describe('TS solution setup', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
@@ -520,6 +520,7 @@ module.exports = [
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -534,6 +535,7 @@ module.exports = [
         ...defaultSchema,
         setParserOptionsProject: true,
         linter: 'eslint',
+        useProjectJson: false,
       });
 
       expect(tree.read('my-lib/vite.config.ts', 'utf-8'))
@@ -577,12 +579,44 @@ module.exports = [
         [
           "name",
           "version",
-          "private",
           "module",
           "types",
           "exports",
           "nx",
         ]
+      `);
+      expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/my-lib",
+          "version": "0.0.1",
+          "module": "./src/index.ts",
+          "types": "./src/index.ts",
+          "exports": {
+            ".": {
+              "types": "./src/index.ts",
+              "import": "./src/index.ts",
+              "default": "./src/index.ts"
+            },
+            "./package.json": "./package.json"
+          },
+          "nx": {
+            "targets": {
+              "lint": {
+                "executor": "@nx/eslint:lint"
+              },
+              "test": {
+                "executor": "@nx/vite:test",
+                "outputs": [
+                  "{options.reportsDirectory}"
+                ],
+                "options": {
+                  "reportsDirectory": "../coverage/my-lib"
+                }
+              }
+            }
+          }
+        }
+        "
       `);
       expect(readJson(tree, 'my-lib/tsconfig.json')).toMatchInlineSnapshot(`
         {
@@ -606,10 +640,10 @@ module.exports = [
             "jsxImportSource": "vue",
             "module": "esnext",
             "moduleResolution": "bundler",
-            "outDir": "out-tsc/my-lib",
+            "outDir": "dist",
             "resolveJsonModule": true,
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
             "types": [
               "vite/client",
             ],
@@ -687,6 +721,125 @@ module.exports = [
           ],
         }
       `);
+    });
+
+    it('should create a correct package.json for buildable libraries', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: false,
+        bundler: 'vite',
+        skipFormat: true,
+      });
+
+      expect(tree.read('my-lib/package.json', 'utf-8')).toMatchInlineSnapshot(`
+        "{
+          "name": "@proj/my-lib",
+          "version": "0.0.1",
+          "type": "module",
+          "main": "./dist/index.js",
+          "module": "./dist/index.js",
+          "types": "./dist/index.d.ts",
+          "exports": {
+            "./package.json": "./package.json",
+            ".": {
+              "development": "./src/index.ts",
+              "types": "./dist/index.d.ts",
+              "import": "./dist/index.js",
+              "default": "./dist/index.js"
+            }
+          }
+        }
+        "
+      `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        setParserOptionsProject: true,
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: false,
+        bundler: 'vite',
+        skipFormat: true,
+      });
+
+      expect(
+        readJson(tree, 'my-lib/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: 'my-lib', // import path contains the npm scope, so it would be different
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-lib/package.json').nx).toStrictEqual({
+        name: 'my-lib',
+      });
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        directory: 'my-lib',
+        name: '@proj/my-lib',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema, // defaultSchema has no name
+        directory: 'my-lib',
+        addPlugin: true,
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        linter: 'eslint',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('my-lib/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/my-lib'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/my-lib",
+          "projectType": "library",
+          "root": "my-lib",
+          "sourceRoot": "my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
+      expect(readJson(tree, 'my-lib/package.json').nx).toBeUndefined();
     });
   });
 });

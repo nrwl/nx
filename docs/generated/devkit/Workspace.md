@@ -26,6 +26,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [generators](../../devkit/documents/Workspace#generators): Object
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry<string[] | "\*">
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
+- [maxCacheSize](../../devkit/documents/Workspace#maxcachesize): string
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [neverConnectToCloud](../../devkit/documents/Workspace#neverconnecttocloud): boolean
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
@@ -40,9 +41,9 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [sync](../../devkit/documents/Workspace#sync): NxSyncConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+- [tui](../../devkit/documents/Workspace#tui): Object
 - [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [useInferencePlugins](../../devkit/documents/Workspace#useinferenceplugins): boolean
-- [useLegacyCache](../../devkit/documents/Workspace#uselegacycache): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -199,6 +200,18 @@ useful for workspaces that don't have a root package.json + node_modules.
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[installation](../../devkit/documents/NxJsonConfiguration#installation)
+
+---
+
+### maxCacheSize
+
+• `Optional` **maxCacheSize**: `string`
+
+Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[maxCacheSize](../../devkit/documents/NxJsonConfiguration#maxcachesize)
 
 ---
 
@@ -384,6 +397,25 @@ Available Task Runners for Nx to use
 
 ---
 
+### tui
+
+• `Optional` **tui**: `Object`
+
+Settings for the Nx Terminal User Interface (TUI)
+
+#### Type declaration
+
+| Name        | Type                  | Description                                                                                                                                                                                                                                                                                |
+| :---------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoExit?` | `number` \| `boolean` | Whether to exit the TUI automatically after all tasks finish. - If set to `true`, the TUI will exit immediately. - If set to `false` the TUI will not automatically exit. - If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits. |
+| `enabled?`  | `boolean`             | Whether to enable the TUI whenever possible (based on the current environment and terminal).                                                                                                                                                                                               |
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tui](../../devkit/documents/NxJsonConfiguration#tui)
+
+---
+
 ### useDaemonProcess
 
 • `Optional` **useDaemonProcess**: `boolean`
@@ -405,18 +437,6 @@ Set this to false to disable adding inference plugins when generating new projec
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useInferencePlugins](../../devkit/documents/NxJsonConfiguration#useinferenceplugins)
-
----
-
-### useLegacyCache
-
-• `Optional` **useLegacyCache**: `boolean`
-
-Use the legacy file system cache instead of the db cache
-
-#### Inherited from
-
-[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useLegacyCache](../../devkit/documents/NxJsonConfiguration#uselegacycache)
 
 ---
 

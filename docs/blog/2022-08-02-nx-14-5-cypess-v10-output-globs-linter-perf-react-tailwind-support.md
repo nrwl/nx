@@ -2,7 +2,7 @@
 title: 'Nx 14.5 — Cypress v10, output globs, linter perf, React Tailwind support'
 slug: 'nx-14-5-cypress-v10-output-globs-linter-perf-react-tailwind-support'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-08-02/ZUzLD-4JgrEBIZb3dXOvag.png'
+cover_image: '/blog/images/2022-08-02/ZUzLD-4JgrEBIZb3dXOvag.avif'
 tags: [nx, release]
 description: 'Nx 14.5 adds Cypress v10 with component testing, glob-based outputs for better caching, and improved React Tailwind integration.'
 ---

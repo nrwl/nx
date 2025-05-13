@@ -84,6 +84,7 @@ It only uses language primitives and immutable objects
 - [Hasher](../../devkit/documents/Hasher)
 - [ImplicitDependency](../../devkit/documents/ImplicitDependency)
 - [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry)
+- [Migration](../../devkit/documents/Migration)
 - [NxPlugin](../../devkit/documents/NxPlugin)
 - [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)

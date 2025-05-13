@@ -4,15 +4,14 @@
   "schema": {
     "version": 2,
     "outputCapture": "direct-nodejs",
-    "title": "Web Library Rollup Target (Experimental)",
+    "title": "Web Library Rollup Target",
     "description": "Packages a library for different web usages (ESM, CommonJS).",
     "cli": "nx",
     "type": "object",
     "properties": {
       "project": {
         "type": "string",
-        "description": "The path to package.json file.",
-        "x-priority": "important"
+        "description": "The path to package.json file."
       },
       "main": {
         "type": "string",
@@ -148,6 +147,11 @@
         "description": "Additional entry-points to add to exports field in the package.json file.",
         "items": { "type": "string" },
         "x-priority": "important"
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
       },
       "skipTypeCheck": {
         "type": "boolean",

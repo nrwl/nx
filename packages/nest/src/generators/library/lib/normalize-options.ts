@@ -1,20 +1,18 @@
 import { Tree, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/generators/library/schema';
-import { Linter } from '@nx/eslint';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorOptions
 ): Promise<NormalizedOptions> {
-  await ensureProjectName(tree, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const {
     projectName,
     names: projectNames,
@@ -47,12 +45,11 @@ export async function normalizeOptions(
     controller: options.controller ?? false,
     fileName,
     global: options.global ?? false,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     parsedTags,
     prefix: getNpmScope(tree), // we could also allow customizing this
-    projectName: isUsingTsSolutionsConfig
-      ? getImportPath(tree, projectName)
-      : projectName,
+    projectName:
+      isUsingTsSolutionsConfig && !options.name ? importPath : projectName,
     projectRoot,
     importPath,
     service: options.service ?? false,
@@ -60,6 +57,7 @@ export async function normalizeOptions(
     testEnvironment: options.testEnvironment ?? 'node',
     unitTestRunner: options.unitTestRunner ?? 'jest',
     isUsingTsSolutionsConfig,
+    useProjectJson: options.useProjectJson ?? !isUsingTsSolutionsConfig,
   };
 
   return normalized;
@@ -84,6 +82,6 @@ export function toJsLibraryGeneratorOptions(
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     addPlugin: options.addPlugin,
-    useProjectJson: !options.isUsingTsSolutionsConfig,
+    useProjectJson: options.useProjectJson,
   };
 }

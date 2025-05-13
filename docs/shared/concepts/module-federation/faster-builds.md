@@ -1,3 +1,8 @@
+---
+title: Faster Builds with Module Federation
+description: Learn how Module Federation in Nx enables faster builds by splitting large SPAs into smaller remote applications while minimizing common downsides.
+---
+
 # Faster Builds with Module Federation
 
 As applications grow, builds can become unacceptably slow, which leads to slow CI/CD pipelines and long dev-server

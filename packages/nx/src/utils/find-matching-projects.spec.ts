@@ -55,6 +55,14 @@ describe('findMatchingProjects', () => {
         tags: [],
       },
     },
+    '@acme/foo-e2e': {
+      name: '@acme/foo-e2e',
+      type: 'lib',
+      data: {
+        root: 'lib/foo-e2e',
+        tags: [],
+      },
+    },
     '@acme/bar': {
       name: '@acme/bar',
       type: 'lib',
@@ -80,6 +88,22 @@ describe('findMatchingProjects', () => {
         tags: [],
       },
     },
+    '@test/test': {
+      name: '@test/test',
+      type: 'app',
+      data: {
+        root: 'apps/test',
+        tags: [],
+      },
+    },
+    '@test/test-e2e': {
+      name: '@test/test-e2e',
+      type: 'app',
+      data: {
+        root: 'apps/test-e2e',
+        tags: [],
+      },
+    },
   };
 
   it('should return no projects when passed no patterns', () => {
@@ -102,9 +126,12 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
   });
 
@@ -115,9 +142,12 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
     expect(findMatchingProjects(['a', '!*'], projectGraph)).toEqual([]);
   });
@@ -162,9 +192,12 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
   });
 
@@ -176,7 +209,7 @@ describe('findMatchingProjects', () => {
       projectGraph
     );
     expect(matches).toEqual(expect.arrayContaining(['a', 'b', 'nested']));
-    expect(matches.length).toEqual(7);
+    expect(matches.length).toEqual(10);
   });
 
   it('should expand generic glob patterns for tags', () => {
@@ -202,10 +235,15 @@ describe('findMatchingProjects', () => {
       'a',
       'b',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
     ]);
-    expect(findMatchingProjects(['apps/*'], projectGraph)).toEqual(['c']);
+    expect(findMatchingProjects(['apps/*'], projectGraph)).toEqual([
+      'c',
+      '@test/test',
+      '@test/test-e2e',
+    ]);
     expect(findMatchingProjects(['**/nested'], projectGraph)).toEqual([
       'nested',
     ]);
@@ -218,17 +256,23 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
     expect(findMatchingProjects(['!tag:api'], projectGraph)).toEqual([
       'b',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
     ]);
     expect(
       findMatchingProjects(['!tag:api', 'test-project'], projectGraph)
@@ -236,9 +280,12 @@ describe('findMatchingProjects', () => {
       'b',
       'nested',
       '@acme/foo',
+      '@acme/foo-e2e',
       '@acme/bar',
       'foo_bar1',
       '@acme/nested/foo',
+      '@test/test',
+      '@test/test-e2e',
       'test-project',
     ]);
   });
@@ -248,6 +295,9 @@ describe('findMatchingProjects', () => {
       '@acme/foo',
       'foo_bar1',
       '@acme/nested/foo',
+    ]);
+    expect(findMatchingProjects(['foo-e2e'], projectGraph)).toEqual([
+      '@acme/foo-e2e',
     ]);
     expect(findMatchingProjects(['bar'], projectGraph)).toEqual(['@acme/bar']);
     // Case insensitive
@@ -261,6 +311,15 @@ describe('findMatchingProjects', () => {
     // Only full segments are matched
     expect(findMatchingProjects(['fo'], projectGraph)).toEqual([]);
     expect(findMatchingProjects(['nested/fo'], projectGraph)).toEqual([]);
+  });
+
+  it('should handle case where scope and names are the same', () => {
+    expect(findMatchingProjects(['test'], projectGraph)).toEqual([
+      '@test/test',
+    ]);
+    expect(findMatchingProjects(['test-e2e'], projectGraph)).toEqual([
+      '@test/test-e2e',
+    ]);
   });
 });
 

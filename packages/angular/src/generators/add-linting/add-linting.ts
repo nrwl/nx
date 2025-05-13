@@ -6,8 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
-import type * as eslint from 'eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
@@ -31,7 +30,7 @@ export async function addLintingGenerator(
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   const lintTask = await lintProjectGenerator(tree, {
-    linter: Linter.EsLint,
+    linter: 'eslint',
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
@@ -40,7 +39,7 @@ export async function addLintingGenerator(
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
-    addPlugin: false,
+    addPlugin: options.addPlugin ?? false,
     addExplicitTargets: true,
     skipPackageJson: options.skipPackageJson,
   });

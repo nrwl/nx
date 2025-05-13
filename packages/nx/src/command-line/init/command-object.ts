@@ -49,6 +49,12 @@ async function withInitOptions(yargs: Argv) {
         description:
           'Initialize an Nx workspace setup in the .nx directory of the current repository.',
         default: false,
+      })
+      .option('force', {
+        describe:
+          'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
+        type: 'boolean',
+        default: false,
       });
   } else {
     return yargs

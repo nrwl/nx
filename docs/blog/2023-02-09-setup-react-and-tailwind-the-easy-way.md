@@ -2,7 +2,7 @@
 title: 'Setup React and Tailwind — The Easy Way'
 slug: 'setup-react-and-tailwind-the-easy-way'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-02-09/TK4Kdj-cc890gQkgUtKNyA.png'
+cover_image: '/blog/images/2023-02-09/TK4Kdj-cc890gQkgUtKNyA.avif'
 tags: [nx, tutorial]
 description: Learn how to quickly set up React with Tailwind CSS using Nx's code generators, including migration from Create React App and automated configuration tools.
 ---
@@ -39,7 +39,7 @@ And so did also [Fireship](https://youtu.be/2OTq15A5s0Y) and ultimately [Dan Abr
 
 Code generators speed up such configuration tasks. They are valuable for scaffolding the initial project structure and adding new features to the app setup, such as Tailwind.
 
-Nx has such generators. To use them, you need an Nx-based React setup. If you're starting new, you can create an [Nx Standalone React project](/getting-started/tutorials/react-standalone-tutorial) easily using the following command
+Nx has such generators. To use them, you need an Nx-based React setup. If you're starting new, you can create an Nx Standalone React project easily using the following command
 
 ```shell
 $ npx create-nx-workspace reactapp --preset=react-standalone
@@ -59,7 +59,7 @@ You can pass `--vite=false` if you still want to keep the Webpack configuration 
 
 ## Generating a Tailwind Setup
 
-Once you have a [Nx-based React](/getting-started/tutorials/react-standalone-tutorial) setup, adding Tailwind is as easy as running:
+Once you have a [Nx-based React](/getting-started/tutorials/react-monorepo-tutorial) setup, adding Tailwind is as easy as running:
 
 ```shell
 $ npx nx g @nrwl/react:setup-tailwind
@@ -79,7 +79,6 @@ You'll get
 
 You should be all setup and ready now! Here are some related resources to explore:
 
-- [Nx docs: React Standalone tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [Nx docs: React Monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Youtube: Is CRA Dead](https://youtu.be/fkTz6KJxhhE)
 - [Nx docs: Migrate CRA to React and Vite](/recipes/adopting-nx/adding-to-existing-project)

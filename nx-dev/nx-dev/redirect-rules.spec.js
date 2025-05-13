@@ -66,11 +66,7 @@ describe('Redirect rules configuration', () => {
     });
 
     test('old tutorial links', () => {
-      const oldTutorialUrls = [
-        '/tutorials/integrated-repo-tutorial',
-        '/tutorials/react-standalone-tutorial',
-        '/tutorials/angular-standalone-tutorial',
-      ];
+      const oldTutorialUrls = ['/tutorials/integrated-repo-tutorial'];
 
       for (const url of oldTutorialUrls) {
         expect(redirectRules.nested5minuteTutorialUrls[url]).toEqual(

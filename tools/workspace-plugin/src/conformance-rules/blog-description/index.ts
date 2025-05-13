@@ -6,13 +6,13 @@ import { sync as globSync } from 'glob';
 import {
   createConformanceRule,
   type ProjectFilesViolation,
-} from '@nx/powerpack-conformance';
+} from '@nx/conformance';
 
 export default createConformanceRule<{ mdGlobPattern: string }>({
   name: 'blog-description',
   category: 'consistency',
   description:
-    'Ensures that blog posts have a description in their frontmatter',
+    'Ensures that markdown documentation files have a description in their frontmatter',
   reporter: 'project-files-reporter',
   implementation: async ({ projectGraph, ruleOptions }) => {
     const violations: ProjectFilesViolation[] = [];
@@ -43,26 +43,32 @@ export default createConformanceRule<{ mdGlobPattern: string }>({
       const content = readFileSync(file, 'utf-8');
       const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
 
-      // Only check files with frontmatter
-      if (frontmatterMatch) {
-        try {
-          const frontmatter = yamlLoad(frontmatterMatch[1]) as Record<
-            string,
-            unknown
-          >;
+      if (!frontmatterMatch) {
+        violations.push({
+          message: 'Markdown documentation files must have frontmatter',
+          sourceProject: docsProject.name,
+          file: file,
+        });
+        continue;
+      }
 
-          if (!frontmatter.description) {
-            violations.push({
-              message:
-                'Blog posts with frontmatter must have a description field',
-              sourceProject: docsProject.name,
-              file: file,
-            });
-          }
-        } catch (e) {
-          // If YAML parsing fails, we skip the file
-          continue;
+      try {
+        const frontmatter = yamlLoad(frontmatterMatch[1]) as Record<
+          string,
+          unknown
+        >;
+
+        if (!frontmatter.description) {
+          violations.push({
+            message:
+              'Markdown documentation files must have a description field in their frontmatter',
+            sourceProject: docsProject.name,
+            file: file,
+          });
         }
+      } catch (e) {
+        // If YAML parsing fails, we skip the file
+        continue;
       }
     }
 

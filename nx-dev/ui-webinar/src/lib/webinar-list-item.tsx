@@ -7,11 +7,14 @@ export interface WebinarListItemProps {
   episode: number;
 }
 export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
-  const formattedDate = new Date(webinar.date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  });
+  const formattedDate = new Date(webinar.eventDate || '').toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }
+  );
   const authorsList = (
     webinar.authors.length > 1
       ? webinar.authors.map((a, i) =>
@@ -45,9 +48,9 @@ export function WebinarListItem({ webinar, episode }: WebinarListItemProps) {
       <p className="my-2">{webinar.description}</p>
       <Link href={link} prefetch={false}>
         <span className="my-4 text-balance text-slate-500 sm:w-8/12 dark:text-white">
-          {webinar.status === 'Past - Gated'
-            ? 'Sign up to view the recording'
-            : 'Watch the recording'}
+          {webinar.status === 'Past - Ungated'
+            ? 'Watch the recording'
+            : 'Sign up to view the recording'}
         </span>
       </Link>
     </div>

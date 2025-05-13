@@ -3,7 +3,7 @@ title: Advent of Code Gets The Crystal Treatment!
 slug: advent-of-code-crystal-edition
 authors: ['Zack DeRose']
 tags: [nx]
-cover_image: /blog/images/2024-11-30/thumbnail.png
+cover_image: /blog/images/2024-11-30/thumbnail.avif
 youtubeUrl: https://youtu.be/st6Yq-19bW8
 description: Get started with Advent of Code using our Nx-powered starter repo that handles all setup, letting you focus purely on solving the daily challenges.
 ---

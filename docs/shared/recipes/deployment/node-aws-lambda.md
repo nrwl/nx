@@ -1,3 +1,8 @@
+---
+title: Deploying AWS Lambda Functions in Node.js
+description: Learn how to set up, develop, and deploy AWS Lambda functions in an Nx workspace using the @nx/aws-lambda plugin.
+---
+
 # Deploying AWS Lambda Functions in Node.js
 
 {% callout type="warning"  title="deprecated" %}

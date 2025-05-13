@@ -1,5 +1,7 @@
 ---
-keywords: [update]
+title: Automate Updating Dependencies
+description: Learn how to use Nx migrate to automatically update package dependencies, configuration files, and source code to match new package versions.
+keywords: [update, migrate]
 ---
 
 # Automate Updating Dependencies
@@ -20,6 +22,10 @@ To update your workspace, run:
 ```shell
 npx nx migrate latest
 ```
+
+{% callout type="note" title="Visual migration tool from Nx Console" %}
+Want a more visual and guided way to migrate? Check out the [Migrate UI](/recipes/nx-console/console-migrate-ui) that comes with the [Nx Console extension](/getting-started/editor-setup).
+{% /callout %}
 
 ## How Does It Work?
 

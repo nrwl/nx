@@ -1,6 +1,6 @@
-# Custom Distributed Task Execution on Github Actions
+# Manual Distributed Task Execution on Github Actions
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
 ## Run Custom Agents on GitHub
 
@@ -40,6 +40,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          filter: tree:0
 
       - uses: actions/checkout@v4
         name: Checkout [Default Branch]
@@ -47,6 +48,7 @@ jobs:
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          filter: tree:0
 
       # Set node/npm/yarn versions using volta
       - uses: volta-cli/action@v4

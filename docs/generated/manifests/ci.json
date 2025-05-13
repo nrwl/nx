@@ -675,6 +675,84 @@
         "tags": []
       },
       {
+        "id": "dte",
+        "name": "Manual Distributed Task Execution",
+        "description": "Manual DTE on your own CI provider",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "github-dte",
+            "name": "GitHub Actions Manual DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/github-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/dte/github-dte",
+            "tags": []
+          },
+          {
+            "id": "circle-ci-dte",
+            "name": "Circle CI Manual DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/dte/circle-ci-dte",
+            "tags": []
+          },
+          {
+            "id": "azure-dte",
+            "name": "Azure Pipelines Manual DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/azure-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/dte/azure-dte",
+            "tags": []
+          },
+          {
+            "id": "bitbucket-dte",
+            "name": "Bitbucket Pipelines Manual DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/dte/bitbucket-dte",
+            "tags": []
+          },
+          {
+            "id": "gitlab-dte",
+            "name": "GitLab Manual DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/gitlab-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/dte/gitlab-dte",
+            "tags": []
+          },
+          {
+            "id": "jenkins-dte",
+            "name": "Jenkins Manual DTE",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/enterprise/dte/jenkins-dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/dte/jenkins-dte",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/dte",
+        "tags": []
+      },
+      {
         "id": "enterprise",
         "name": "Enterprise",
         "description": "Recipes for enterprise accounts",
@@ -768,84 +846,6 @@
             ],
             "isExternal": false,
             "path": "/ci/recipes/enterprise/single-tenant",
-            "tags": []
-          },
-          {
-            "id": "dte",
-            "name": "Custom Distributed Task Execution",
-            "description": "Custom DTE on your own CI provider",
-            "mediaImage": "",
-            "file": "",
-            "itemList": [
-              {
-                "id": "github-dte",
-                "name": "GitHub Actions Custom DTE",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/dte/github-dte",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/dte/github-dte",
-                "tags": []
-              },
-              {
-                "id": "circle-ci-dte",
-                "name": "Circle CI Custom DTE",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/dte/circle-ci-dte",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-                "tags": []
-              },
-              {
-                "id": "azure-dte",
-                "name": "Azure Pipelines Custom DTE",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/dte/azure-dte",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/dte/azure-dte",
-                "tags": []
-              },
-              {
-                "id": "bitbucket-dte",
-                "name": "Bitbucket Pipelines Custom DTE",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/dte/bitbucket-dte",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-                "tags": []
-              },
-              {
-                "id": "gitlab-dte",
-                "name": "GitLab Custom DTE",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/dte/gitlab-dte",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-                "tags": []
-              },
-              {
-                "id": "jenkins-dte",
-                "name": "Jenkins Custom DTE",
-                "description": "",
-                "mediaImage": "",
-                "file": "nx-cloud/enterprise/dte/jenkins-dte",
-                "itemList": [],
-                "isExternal": false,
-                "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-                "tags": []
-              }
-            ],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte",
             "tags": []
           },
           {
@@ -1281,6 +1281,150 @@
     "path": "/ci/recipes/source-control-integration/azure-devops",
     "tags": []
   },
+  "/ci/recipes/dte": {
+    "id": "dte",
+    "name": "Manual Distributed Task Execution",
+    "description": "Manual DTE on your own CI provider",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "github-dte",
+        "name": "GitHub Actions Manual DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/github-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/dte/github-dte",
+        "tags": []
+      },
+      {
+        "id": "circle-ci-dte",
+        "name": "Circle CI Manual DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/dte/circle-ci-dte",
+        "tags": []
+      },
+      {
+        "id": "azure-dte",
+        "name": "Azure Pipelines Manual DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/azure-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/dte/azure-dte",
+        "tags": []
+      },
+      {
+        "id": "bitbucket-dte",
+        "name": "Bitbucket Pipelines Manual DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/dte/bitbucket-dte",
+        "tags": []
+      },
+      {
+        "id": "gitlab-dte",
+        "name": "GitLab Manual DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/gitlab-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/dte/gitlab-dte",
+        "tags": []
+      },
+      {
+        "id": "jenkins-dte",
+        "name": "Jenkins Manual DTE",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/enterprise/dte/jenkins-dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/dte/jenkins-dte",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/dte",
+    "tags": []
+  },
+  "/ci/recipes/dte/github-dte": {
+    "id": "github-dte",
+    "name": "GitHub Actions Manual DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/github-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/dte/github-dte",
+    "tags": []
+  },
+  "/ci/recipes/dte/circle-ci-dte": {
+    "id": "circle-ci-dte",
+    "name": "Circle CI Manual DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/circle-ci-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/dte/circle-ci-dte",
+    "tags": []
+  },
+  "/ci/recipes/dte/azure-dte": {
+    "id": "azure-dte",
+    "name": "Azure Pipelines Manual DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/azure-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/dte/azure-dte",
+    "tags": []
+  },
+  "/ci/recipes/dte/bitbucket-dte": {
+    "id": "bitbucket-dte",
+    "name": "Bitbucket Pipelines Manual DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/bitbucket-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/dte/bitbucket-dte",
+    "tags": []
+  },
+  "/ci/recipes/dte/gitlab-dte": {
+    "id": "gitlab-dte",
+    "name": "GitLab Manual DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/gitlab-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/dte/gitlab-dte",
+    "tags": []
+  },
+  "/ci/recipes/dte/jenkins-dte": {
+    "id": "jenkins-dte",
+    "name": "Jenkins Manual DTE",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/enterprise/dte/jenkins-dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/dte/jenkins-dte",
+    "tags": []
+  },
   "/ci/recipes/enterprise": {
     "id": "enterprise",
     "name": "Enterprise",
@@ -1375,84 +1519,6 @@
         ],
         "isExternal": false,
         "path": "/ci/recipes/enterprise/single-tenant",
-        "tags": []
-      },
-      {
-        "id": "dte",
-        "name": "Custom Distributed Task Execution",
-        "description": "Custom DTE on your own CI provider",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "github-dte",
-            "name": "GitHub Actions Custom DTE",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/dte/github-dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte/github-dte",
-            "tags": []
-          },
-          {
-            "id": "circle-ci-dte",
-            "name": "Circle CI Custom DTE",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/dte/circle-ci-dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-            "tags": []
-          },
-          {
-            "id": "azure-dte",
-            "name": "Azure Pipelines Custom DTE",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/dte/azure-dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte/azure-dte",
-            "tags": []
-          },
-          {
-            "id": "bitbucket-dte",
-            "name": "Bitbucket Pipelines Custom DTE",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/dte/bitbucket-dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-            "tags": []
-          },
-          {
-            "id": "gitlab-dte",
-            "name": "GitLab Custom DTE",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/dte/gitlab-dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-            "tags": []
-          },
-          {
-            "id": "jenkins-dte",
-            "name": "Jenkins Custom DTE",
-            "description": "",
-            "mediaImage": "",
-            "file": "nx-cloud/enterprise/dte/jenkins-dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte",
         "tags": []
       },
       {
@@ -1658,150 +1724,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/enterprise/single-tenant/custom-github-app",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte": {
-    "id": "dte",
-    "name": "Custom Distributed Task Execution",
-    "description": "Custom DTE on your own CI provider",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "github-dte",
-        "name": "GitHub Actions Custom DTE",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/dte/github-dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte/github-dte",
-        "tags": []
-      },
-      {
-        "id": "circle-ci-dte",
-        "name": "Circle CI Custom DTE",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/dte/circle-ci-dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-        "tags": []
-      },
-      {
-        "id": "azure-dte",
-        "name": "Azure Pipelines Custom DTE",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/dte/azure-dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte/azure-dte",
-        "tags": []
-      },
-      {
-        "id": "bitbucket-dte",
-        "name": "Bitbucket Pipelines Custom DTE",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/dte/bitbucket-dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-        "tags": []
-      },
-      {
-        "id": "gitlab-dte",
-        "name": "GitLab Custom DTE",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/dte/gitlab-dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-        "tags": []
-      },
-      {
-        "id": "jenkins-dte",
-        "name": "Jenkins Custom DTE",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/enterprise/dte/jenkins-dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/recipes/enterprise/dte/jenkins-dte",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte/github-dte": {
-    "id": "github-dte",
-    "name": "GitHub Actions Custom DTE",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/dte/github-dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte/github-dte",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte/circle-ci-dte": {
-    "id": "circle-ci-dte",
-    "name": "Circle CI Custom DTE",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/dte/circle-ci-dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte/circle-ci-dte",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte/azure-dte": {
-    "id": "azure-dte",
-    "name": "Azure Pipelines Custom DTE",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/dte/azure-dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte/azure-dte",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte/bitbucket-dte": {
-    "id": "bitbucket-dte",
-    "name": "Bitbucket Pipelines Custom DTE",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/dte/bitbucket-dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte/bitbucket-dte",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte/gitlab-dte": {
-    "id": "gitlab-dte",
-    "name": "GitLab Custom DTE",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/dte/gitlab-dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte/gitlab-dte",
-    "tags": []
-  },
-  "/ci/recipes/enterprise/dte/jenkins-dte": {
-    "id": "jenkins-dte",
-    "name": "Jenkins Custom DTE",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/enterprise/dte/jenkins-dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/recipes/enterprise/dte/jenkins-dte",
     "tags": []
   },
   "/ci/recipes/enterprise/conformance": {

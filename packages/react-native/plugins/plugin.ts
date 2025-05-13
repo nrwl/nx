@@ -164,6 +164,7 @@ function buildReactNativeTargets(
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
       command: `react-native start`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.podInstallTargetName]: {
@@ -173,10 +174,12 @@ function buildReactNativeTargets(
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
       command: `react-native run-android`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.buildIosTargetName]: {

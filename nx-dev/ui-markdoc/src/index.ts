@@ -1,11 +1,5 @@
-import {
-  Node,
-  parse,
-  RenderableTreeNode,
-  renderers,
-  Tokenizer,
-  transform,
-} from '@markdoc/markdoc';
+import { Node, RenderableTreeNode } from '@markdoc/markdoc';
+import markdoc from '@markdoc/markdoc';
 import { load as yamlLoad } from '@zkochan/js-yaml';
 import React, { ReactNode } from 'react';
 import { Heading } from './lib/nodes/heading.component';
@@ -45,6 +39,8 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { Tweet, tweet } from '@nx/nx-dev/ui-common';
 import { YouTube, youtube } from '@nx/nx-dev/ui-common';
+import { CourseVideo } from '@nx/nx-dev/ui-common';
+import { courseVideo } from './lib/tags/course-video.schema';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
@@ -58,6 +54,8 @@ import { Testimonial, testimonial } from './lib/tags/testimonial.component';
 import { metrics } from './lib/tags/metrics.schema';
 import { Metrics } from './lib/tags/metrics.component';
 export { CallToAction };
+
+const { parse, renderers, Tokenizer, transform } = markdoc;
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string,
@@ -95,6 +93,7 @@ export const getMarkdocCustomConfig = (
       toc: tableOfContents,
       tweet,
       youtube,
+      'course-video': courseVideo,
       'video-link': videoLink,
       metrics,
       // 'svg-animation': svgAnimation,
@@ -127,6 +126,7 @@ export const getMarkdocCustomConfig = (
     Testimonial,
     Tweet,
     YouTube,
+    CourseVideo,
     VideoLink,
     VideoPlayer,
     Metrics,
@@ -180,5 +180,4 @@ export const renderMarkdown: (
   };
 };
 
-export { GithubRepository } from './lib/tags/github-repository.component';
-export { Metrics };
+export { Metrics, VideoLink, GithubRepository, CourseVideo };

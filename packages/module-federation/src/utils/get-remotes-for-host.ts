@@ -1,4 +1,4 @@
-import { logger, type ProjectGraph } from '@nx/devkit';
+import { logger, parseTargetString, type ProjectGraph } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import * as pc from 'picocolors';
@@ -59,7 +59,46 @@ function collectRemoteProjects(
   collected.add(remote);
 
   const remoteProjectRoot = remoteProject.root;
-  const remoteProjectTsConfig = remoteProject.targets['build'].options.tsConfig;
+
+  // Find the target that uses the module-federation-dev-server executor
+  let buildTargetName = 'build';
+  if (remoteProject.targets) {
+    for (const [targetKey, targetConfig] of Object.entries(
+      remoteProject.targets
+    )) {
+      const executor = targetConfig.executor || '';
+      // Extract the portion after the `:` in the executor name
+      const executorParts = executor.split(':');
+      const executorName =
+        executorParts.length > 1 ? executorParts[1] : executor;
+
+      if (executorName === 'module-federation-dev-server') {
+        // Extract the buildTarget from the options
+        if (targetConfig.options?.buildTarget) {
+          const parsedTarget = parseTargetString(
+            targetConfig.options.buildTarget,
+            context.projectGraph
+          );
+          buildTargetName = parsedTarget.target;
+          break;
+        }
+      }
+    }
+  }
+
+  let remoteProjectTsConfig =
+    remoteProject.targets?.[buildTargetName]?.options?.tsConfig ??
+    [
+      join(remoteProjectRoot, 'tsconfig.app.json'),
+      join(remoteProjectRoot, 'tsconfig.json'),
+      join(context.root, 'tsconfig.json'),
+      join(context.root, 'tsconfig.base.json'),
+    ].find((p) => existsSync(p));
+  if (!remoteProjectTsConfig) {
+    throw new Error(
+      `Could not find a tsconfig for remote project ${remote}. Please add a tsconfig.app.json or tsconfig.json to the project.`
+    );
+  }
   const remoteProjectConfig = getModuleFederationConfig(
     remoteProjectTsConfig,
     context.root,

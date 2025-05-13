@@ -81,6 +81,11 @@ export interface Task {
    * Determines if a given task should be parallelizable.
    */
   parallelism: boolean;
+
+  /**
+   * This denotes if the task runs continuously
+   */
+  continuous?: boolean;
 }
 
 /**
@@ -99,4 +104,6 @@ export interface TaskGraph {
    * Map of Task IDs to IDs of tasks which the task depends on
    */
   dependencies: Record<string, string[]>;
+
+  continuousDependencies: Record<string, string[]>;
 }

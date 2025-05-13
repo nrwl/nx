@@ -1,0 +1,15 @@
+{
+  "name": "20.7.1-beta.0-next15-package-updates",
+  "version": "20.7.1-beta.0",
+  "requires": { "next": "^15.0.0" },
+  "packages": {
+    "next": { "version": "~15.2.4", "alwaysAddToPackageJson": false }
+  },
+  "aliases": [],
+  "description": "",
+  "hidden": false,
+  "implementation": "",
+  "path": "/packages/next",
+  "schema": null,
+  "type": "migration"
+}

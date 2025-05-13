@@ -1,3 +1,8 @@
+---
+title: Get Started with Nx Release
+description: Learn how to use Nx Release to version packages, generate changelogs, and publish packages in your JavaScript monorepo with a step-by-step guide.
+---
+
 # Get Started with Nx Release
 
 This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.
@@ -57,11 +62,6 @@ nx release --first-release --dry-run
 Nx Release will prompt you to pick a version bump for all the packages in the release. By default, all package versions are kept in sync, so the prompt only needs to be answered one time. If needed, you can [configure Nx to release projects independently](/recipes/nx-release/release-projects-independently).
 
 ```text {% command="nx release --first-release --dry-run" %}
-
-NX   Running release version for project: pkg-1
-
-pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
-pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.json
 ? What kind of change is this for the 3 matched projects(s)? …
 ❯ major
   premajor
@@ -79,25 +79,23 @@ After this prompt, the command will finish, showing you the preview of changes t
 
 ```text {% command="nx release --first-release --dry-run" %}
 
-NX   Running release version for project: pkg-1
+ NX   Running release version for project: pkg-1
 
-pkg-1 🔍 Reading data for package "@myorg/pkg-1" from packages/pkg-1/package.json
-pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.json
-✔ What kind of change is this for the 3 matched projects(s)? · patch
-pkg-1 ✍️  New version 0.0.2 written to packages/pkg-1/package.json
+pkg-1 📄 Resolved the current version as 0.0.1 from manifest: packages/pkg-1/package.json
+pkg-1 ❓ Applied semver relative bump "major", from the prompted specifier, to get new version 1.0.0
+pkg-1 ✍️ New version 1.0.0 written to manifest: packages/pkg-1/package.json
 
-NX   Running release version for project: pkg-2
+ NX   Running release version for project: pkg-2
 
-pkg-2 🔍 Reading data for package "@myorg/pkg-2" from packages/pkg-2/package.json
-pkg-2 📄 Resolved the current version as 0.0.1 from packages/pkg-2/package.json
-pkg-2 ✍️  New version 0.0.2 written to packages/pkg-2/package.json
-pkg-2 ✍️  Applying new version 0.0.2 to 1 package which depends on pkg-2
+pkg-2 📄 Resolved the current version as 0.0.1 from manifest: packages/pkg-2/package.json
+pkg-2 ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing pkg-1
+pkg-2 ✍️ New version 1.0.0 written to manifest: packages/pkg-2/package.json
 
-NX   Running release version for project: pkg-3
+ NX   Running release version for project: pkg-3
 
-pkg-3 🔍 Reading data for package "@myorg/pkg-3" from packages/pkg-3/package.json
-pkg-3 📄 Resolved the current version as 0.0.1 from packages/pkg-3/package.json
-pkg-3 ✍️  New version 0.0.2 written to packages/pkg-3/package.json
+pkg-3 📄 Resolved the current version as 0.0.1 from manifest: packages/pkg-3/package.json
+pkg-3 ❓ Applied version 1.0.0 directly, because the project is a member of a fixed release group containing pkg-1
+pkg-3 ✍️ New version 1.0.0 written to manifest: packages/pkg-3/package.json
 
 UPDATE packages/pkg-1/package.json [dry-run]
 

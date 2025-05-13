@@ -2,7 +2,7 @@
 title: What's new in Nx 15?
 slug: 'whats-new-in-nx-15'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.png'
+cover_image: '/blog/images/2022-10-14/ReZPz_brTiYN84yvR7Hi2w.avif'
 tags: [nx, release]
 description: 'Explore the major features and improvements introduced in Nx version 15, including enhanced performance and developer experience.'
 ---
@@ -181,7 +181,6 @@ It is an ongoing process, and we have a lot of content to cover! We follow the [
 
 Besides the two new [package-based](/getting-started/tutorials/typescript-packages-tutorial) and [integrated style tutorials](/getting-started/tutorials/react-monorepo-tutorial) we also have two brand new reworked tutorials
 
-- [/getting-started/tutorials/react-standalone-tutorial](/getting-started/tutorials/react-standalone-tutorial)
 - [/getting-started/tutorials](/getting-started/tutorials)
 
 Stay tuned for more updates to come.

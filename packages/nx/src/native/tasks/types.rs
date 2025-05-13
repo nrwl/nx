@@ -7,20 +7,32 @@ use napi::{
 };
 
 #[napi(object)]
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct Task {
     pub id: String,
     pub target: TaskTarget,
     pub outputs: Vec<String>,
     pub project_root: Option<String>,
+    pub start_time: Option<i64>,
+    pub end_time: Option<i64>,
+    pub continuous: Option<bool>,
 }
 
 #[napi(object)]
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct TaskTarget {
     pub project: String,
     pub target: String,
     pub configuration: Option<String>,
+}
+
+#[napi(object)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct TaskResult {
+    pub task: Task,
+    pub status: String,
+    pub code: i32,
+    pub terminal_output: Option<String>,
 }
 
 #[napi(object)]

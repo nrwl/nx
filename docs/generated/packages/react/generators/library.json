@@ -10,12 +10,12 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g lib mylib --directory=myapp",
-        "description": "Generate `libs/myapp/mylib`"
+        "command": "nx g @nx/react:lib libs/mylib",
+        "description": "Generate a library under `libs/mylib`"
       },
       {
-        "command": "nx g lib mylib --appProject=myapp",
-        "description": "Generate a library with routes and add them to `myapp`"
+        "command": "nx g @nx/react:lib mylib --appProject=myapp",
+        "description": "Generate a library under mylib with routes and add them to `myapp`"
       }
     ],
     "properties": {
@@ -184,6 +184,10 @@
         "description": "Don't include the directory in the name of the module of the library.",
         "type": "boolean",
         "default": false
+      },
+      "useProjectJson": {
+        "type": "boolean",
+        "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
       }
     },
     "required": ["directory"],

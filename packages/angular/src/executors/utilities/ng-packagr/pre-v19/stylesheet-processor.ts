@@ -16,7 +16,7 @@ import { getTailwindConfigPath } from '../tailwindcss';
 import { workspaceRoot } from '@nx/devkit';
 import type { PostcssConfiguration } from 'ng-packagr/lib/styles/postcss-configuration';
 import { gt, gte } from 'semver';
-import { getInstalledPackageVersionInfo } from '../../angular-version-utils';
+import { getNgPackagrVersionInfo } from '../ng-packagr-version';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
 const maxThreads =
@@ -91,8 +91,7 @@ export class StylesheetProcessor {
 
     const browserslistData = browserslist(undefined, { path: this.basePath });
 
-    const { version: ngPackagrVersion } =
-      getInstalledPackageVersionInfo('ng-packagr');
+    const { version: ngPackagrVersion } = getNgPackagrVersionInfo();
     let tailwindConfigPath: string | undefined;
     let postcssConfiguration: PostcssConfiguration | undefined;
     if (gte(ngPackagrVersion, '18.0.0')) {
@@ -212,8 +211,7 @@ export class AsyncStylesheetProcessor {
 
     const browserslistData = browserslist(undefined, { path: this.basePath });
 
-    const { version: ngPackagrVersion } =
-      getInstalledPackageVersionInfo('ng-packagr');
+    const { version: ngPackagrVersion } = getNgPackagrVersionInfo();
     let postcssConfiguration: PostcssConfiguration | undefined;
     if (ngPackagrVersion === '17.2.0') {
       const {

@@ -58,18 +58,26 @@ export function generateExternalPackageSchemas(): Promise<any> {
     return Promise.all([]);
   }
   const sourcePackagesDirectory = 'libs/nx-packages';
-  const sourcePackagesNamePrefix = 'powerpack-';
+  const specificPackages = [
+    'azure-cache',
+    'conformance',
+    'owners',
+    'gcs-cache',
+    's3-cache',
+    'shared-fs-cache',
+  ];
+
   return generatePackageSchemas(
     sourceRepositoryRelativePath,
     sourcePackagesDirectory,
-    sourcePackagesNamePrefix
+    specificPackages
   );
 }
 
 export function generatePackageSchemas(
   sourceRepositoryRelativePath = '',
   sourcePackagesDirectory = 'packages',
-  sourcePackagesNamePrefix = ''
+  specificPackages?: string[] | undefined
 ): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
@@ -83,7 +91,7 @@ export function generatePackageSchemas(
   const packages = findPackageMetadataList(
     sourceRepositoryRoot,
     sourcePackagesDirectory,
-    sourcePackagesNamePrefix
+    specificPackages
   ).map((packageMetadata) => {
     const getCurrentSchemaPath = pathResolver(absoluteRoot);
     if (!!packageMetadata.executors.length) {

@@ -613,29 +613,29 @@ const standaloneTutorialRedirects = {
   '/react-tutorial/5-summary':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/1-code-generation':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/2-project-graph':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/3-task-running':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/4-task-pipelines':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/react-standalone-tutorial/5-summary':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/angular-standalone-tutorial':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/1-code-generation':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/2-project-graph':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/3-task-running':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/4-task-pipelines':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-standalone-tutorial/5-summary':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
 };
 
 const packagesIndexes = {
@@ -656,7 +656,6 @@ const packagesIndexes = {
   '/nest': '/packages/nest',
   '/next': '/packages/next',
   '/node': '/packages/node',
-  '/react': '/packages/react',
   '/react-native': '/packages/react',
   '/rollup': '/packages/rollup',
   '/storybook': '/packages/storybook',
@@ -782,9 +781,9 @@ const conceptUrls = {
   '/getting-started/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/react-standalone-tutorial':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/getting-started/angular-standalone-tutorial':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
   '/concepts/more-concepts/micro-frontend-architecture':
     '/concepts/module-federation/micro-frontend-architecture',
   '/concepts/more-concepts/faster-builds-with-module-federation':
@@ -806,9 +805,15 @@ const nested5minuteTutorialUrls = {
   '/tutorials/integrated-repo-tutorial':
     '/getting-started/tutorials/integrated-repo-tutorial',
   '/tutorials/react-standalone-tutorial':
-    '/getting-started/tutorials/react-standalone-tutorial',
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/getting-started/tutorials/react-standalone-tutorial':
+    '/getting-started/tutorials/react-monorepo-tutorial',
   '/tutorials/angular-standalone-tutorial':
-    '/getting-started/tutorials/angular-standalone-tutorial',
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/getting-started/tutorials/angular-standalone-tutorial':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/getting-started/tutorials/vue-standalone-tutorial':
+    '/getting-started/tutorials',
   '/tutorials/node-server-tutorial': '/getting-started/tutorials',
   '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/1-code-generation':
@@ -873,7 +878,7 @@ const missingAndCatchAllRedirects = {
   // catch all
   '/(l|latest|p|previous)/(a|angular|r|react|n|node)/:path*': '/:path*',
   '/(l|latest|p|previous)/:path*': '/:path*',
-  '/(a|angular|r|react|n|node)/:path*': '/:path*',
+  '/(a|angular|n|node)/:path*': '/:path*',
   // Storybook
   '/(l|latest)/(r|react)/storybook/overview': '/storybook/overview-react',
   '/(l|latest)/(a|angular)/storybook/overview': '/storybook/overview-angular',
@@ -1172,9 +1177,59 @@ const enterpriseNxSection = {
   '/features/powerpack/conformance': '/nx-enterprise/powerpack/conformance',
   '/features/powerpack/owners': '/nx-enterprise/powerpack/owners',
   '/features/powerpack/custom-caching':
-    '/nx-enterprise/powerpack/custom-caching',
+    '/recipes/running-tasks/self-hosted-caching',
   '/recipes/installation/activate-powerpack':
     '/nx-enterprise/activate-powerpack',
+};
+
+const manualDTEUpdate = {
+  '/ci/recipes/enterprise/dte': '/ci/recipes/dte',
+  '/ci/recipes/enterprise/dte/github-dte': '/ci/recipes/dte/github-dte',
+  '/ci/recipes/enterprise/dte/circle-ci-dte': '/ci/recipes/dte/circle-ci-dte',
+  '/ci/recipes/enterprise/dte/azure-dte': '/ci/recipes/dte/azure-dte',
+  '/ci/recipes/enterprise/dte/bitbucket-dte': '/ci/recipes/dte/bitbucket-dte',
+  '/ci/recipes/enterprise/dte/gitlab-dte': '/ci/recipes/dte/gitlab-dte',
+  '/ci/recipes/enterprise/dte/jenkins-dte': '/ci/recipes/dte/jenkins-dte',
+  '/showcase/benchmarks/dte': '/showcase/benchmarks/nx-agents',
+};
+
+const powerpackRedirects = {
+  '/nx-enterprise/powerpack/custom-caching':
+    '/recipes/running-tasks/self-hosted-caching',
+  '/nx-enterprise/powerpack/free-licenses-and-trials':
+    '/nx-enterprise/powerpack/licenses-and-trials',
+
+  // Redirects for renamed powerpack packages
+  '/nx-api/powerpack-owners': '/nx-api/owners',
+  '/nx-api/powerpack-owners/documents/overview':
+    '/nx-api/owners/documents/overview',
+
+  '/nx-api/powerpack-conformance': '/nx-api/conformance',
+  '/nx-api/powerpack-conformance/documents/overview':
+    '/nx-api/conformance/documents/overview',
+  '/nx-api/powerpack-conformance/documents/create-conformance-rule':
+    '/nx-api/conformance/documents/create-conformance-rule',
+
+  '/nx-api/powerpack-azure-cache': '/nx-api/azure-cache',
+  '/nx-api/powerpack-azure-cache/documents/overview':
+    '/nx-api/azure-cache/documents/overview',
+
+  '/nx-api/powerpack-gcs-cache': '/nx-api/gcs-cache',
+  '/nx-api/powerpack-gcs-cache/documents/overview':
+    '/nx-api/gcs-cache/documents/overview',
+
+  '/nx-api/powerpack-s3-cache': '/nx-api/s3-cache',
+  '/nx-api/powerpack-s3-cache/documents/overview':
+    '/nx-api/s3-cache/documents/overview',
+
+  '/nx-api/powerpack-shared-fs-cache': '/nx-api/shared-fs-cache',
+  '/nx-api/powerpack-shared-fs-cache/documents/overview':
+    '/nx-api/shared-fs-cache/documents/overview',
+};
+
+const tmpTerminalUiRedirects = {
+  // This will be a dedicated landing page in a follow up, redirect to the recipe for now
+  '/terminal-ui': '/recipes/running-tasks/terminal-ui',
 };
 
 /**
@@ -1211,4 +1266,7 @@ module.exports = {
   featurePagesUpdate,
   marketing,
   enterpriseNxSection,
+  manualDTEUpdate,
+  powerpackRedirects,
+  tmpTerminalUiRedirects,
 };

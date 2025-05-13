@@ -2,7 +2,7 @@
 title: "The React CLI you always wanted but didn't know about"
 slug: 'the-react-cli-you-always-wanted-but-didnt-know-about'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2022-03-29/YR6QUEZel3nlNcTo6Pdlwg.png'
+cover_image: '/blog/images/2022-03-29/YR6QUEZel3nlNcTo6Pdlwg.avif'
 tags: [nx]
 description: Discover Nx as a powerful CLI for React development with built-in project generation, build tools, and pre-configured integrations for modern tooling.
 ---
@@ -19,9 +19,7 @@ While speed is of major importance, developer ergonomics shouldn't be left behin
 
 ## Update (Aug 2023): Want a non-monorepo setup?
 
-This article walks you through how to setup a new Nx monorepo workspace with React. If you rather prefer starting with a single-project setup (also named "standalone") then you might want to have a look at this tutorial (including video):
-
-[/getting-started/tutorials/react-standalone-tutorial](/getting-started/tutorials/react-standalone-tutorial)
+This article walks you through how to setup a new Nx monorepo workspace with React. If you rather prefer starting with a single-project setup (also named "standalone") then you might want to have a look at the standalone tutorial (including video).
 
 ## Why use a devtool CLI?
 

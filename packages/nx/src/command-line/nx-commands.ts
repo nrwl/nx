@@ -1,7 +1,7 @@
 import * as chalk from 'chalk';
 import * as yargs from 'yargs';
 
-import { yargsActivatePowerpackCommand } from './activate-powerpack/command-object';
+import { yargsRegisterCommand } from './register/command-object';
 import {
   yargsAffectedBuildCommand,
   yargsAffectedCommand,
@@ -59,13 +59,13 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  * parse it. The CLI will consume it and call the `.argv` to bootstrapped
  * the CLI. These command declarations needs to be in a different file
  * from the `.argv` call, so the object and it's relative scripts can
- * le executed correctly.
+ * be executed correctly.
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
-  .command(yargsActivatePowerpackCommand)
+  .command(yargsRegisterCommand)
   .command(yargsAddCommand)
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)
@@ -121,7 +121,7 @@ function createMissingConformanceCommand(
       output.error({
         title: `${command} is not available`,
         bodyLines: [
-          `In order to use the \`nx ${command}\` command you must have an active Powerpack license and the \`@nx/powerpack-conformance\` plugin installed.`,
+          `In order to use the \`nx ${command}\` command you must have an active Nx key and the \`@nx/conformance\` plugin installed.`,
           '',
           'To learn more, visit https://nx.dev/nx-enterprise/powerpack/conformance',
         ],
@@ -133,7 +133,13 @@ function createMissingConformanceCommand(
 
 function resolveConformanceCommandObject() {
   try {
-    const { yargsConformanceCommand } = require('@nx/powerpack-conformance');
+    const { yargsConformanceCommand } = (() => {
+      try {
+        return require('@nx/powerpack-conformance');
+      } catch {
+        return require('@nx/conformance');
+      }
+    })();
     return yargsConformanceCommand;
   } catch {
     return createMissingConformanceCommand('conformance');
@@ -142,9 +148,13 @@ function resolveConformanceCommandObject() {
 
 function resolveConformanceCheckCommandObject() {
   try {
-    const {
-      yargsConformanceCheckCommand,
-    } = require('@nx/powerpack-conformance');
+    const { yargsConformanceCheckCommand } = (() => {
+      try {
+        return require('@nx/powerpack-conformance');
+      } catch {
+        return require('@nx/conformance');
+      }
+    })();
     return yargsConformanceCheckCommand;
   } catch {
     return createMissingConformanceCommand('conformance:check');

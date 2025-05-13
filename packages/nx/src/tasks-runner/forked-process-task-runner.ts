@@ -1,25 +1,23 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { ChildProcess, fork, Serializable } from 'child_process';
-import * as chalk from 'chalk';
+import { writeFileSync } from 'fs';
+import { fork, Serializable } from 'child_process';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
 import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { join } from 'path';
-import {
-  BatchMessage,
-  BatchMessageType,
-  BatchResults,
-} from './batch/batch-messages';
+import { BatchMessageType } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
-import { Transform } from 'stream';
-import {
-  PseudoTtyProcess,
-  getPseudoTerminal,
-  PseudoTerminal,
-} from './pseudo-terminal';
+import { PseudoTerminal, PseudoTtyProcess } from './pseudo-terminal';
 import { signalToCode } from '../utils/exit-codes';
+import { ProjectGraph } from '../config/project-graph';
+import {
+  NodeChildProcessWithDirectOutput,
+  NodeChildProcessWithNonDirectOutput,
+} from './running-tasks/node-child-process';
+import { BatchProcess } from './running-tasks/batch-process';
+import { RunningTask } from './running-tasks/running-task';
+import { RustPseudoTerminal } from '../native';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -29,97 +27,70 @@ export class ForkedProcessTaskRunner {
   cliPath = getCliPath();
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  private processes = new Set<ChildProcess | PseudoTtyProcess>();
+  private processes = new Set<RunningTask | BatchProcess>();
+  private finishedProcesses = new Set<BatchProcess>();
+  private pseudoTerminals = new Set<PseudoTerminal>();
 
-  private pseudoTerminal: PseudoTerminal | null = PseudoTerminal.isSupported()
-    ? getPseudoTerminal()
-    : null;
-
-  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+  constructor(
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly tuiEnabled: boolean
+  ) {}
 
   async init() {
-    if (this.pseudoTerminal) {
-      await this.pseudoTerminal.init();
-    }
     this.setupProcessEventListeners();
   }
 
   // TODO: vsavkin delegate terminal output printing
-  public forkProcessForBatch(
+  public async forkProcessForBatch(
     { executorName, taskGraph: batchTaskGraph }: Batch,
+    projectGraph: ProjectGraph,
     fullTaskGraph: TaskGraph,
     env: NodeJS.ProcessEnv
-  ) {
-    return new Promise<BatchResults>((res, rej) => {
-      try {
-        const count = Object.keys(batchTaskGraph.tasks).length;
-        if (count > 1) {
-          output.logSingleLine(
-            `Running ${output.bold(count)} ${output.bold(
-              'tasks'
-            )} with ${output.bold(executorName)}`
-          );
-        } else {
-          const args = getPrintableCommandArgsForTask(
-            Object.values(batchTaskGraph.tasks)[0]
-          );
-          output.logCommand(args.join(' '));
-        }
+  ): Promise<BatchProcess> {
+    const count = Object.keys(batchTaskGraph.tasks).length;
+    if (count > 1) {
+      output.logSingleLine(
+        `Running ${output.bold(count)} ${output.bold(
+          'tasks'
+        )} with ${output.bold(executorName)}`
+      );
+    } else {
+      const args = getPrintableCommandArgsForTask(
+        Object.values(batchTaskGraph.tasks)[0]
+      );
+      output.logCommand(args.join(' '));
+    }
 
-        const p = fork(workerPath, {
-          stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env,
-        });
-        this.processes.add(p);
-
-        p.once('exit', (code, signal) => {
-          this.processes.delete(p);
-          if (code === null) code = signalToCode(signal);
-          if (code !== 0) {
-            const results: BatchResults = {};
-            for (const rootTaskId of batchTaskGraph.roots) {
-              results[rootTaskId] = {
-                success: false,
-                terminalOutput: '',
-              };
-            }
-            rej(
-              new Error(
-                `"${executorName}" exited unexpectedly with code: ${code}`
-              )
-            );
-          }
-        });
-
-        p.on('message', (message: BatchMessage) => {
-          switch (message.type) {
-            case BatchMessageType.CompleteBatchExecution: {
-              res(message.results);
-              break;
-            }
-            case BatchMessageType.RunTasks: {
-              break;
-            }
-            default: {
-              // Re-emit any non-batch messages from the task process
-              if (process.send) {
-                process.send(message);
-              }
-            }
-          }
-        });
-
-        // Start the tasks
-        p.send({
-          type: BatchMessageType.RunTasks,
-          executorName,
-          batchTaskGraph,
-          fullTaskGraph,
-        });
-      } catch (e) {
-        rej(e);
-      }
+    const p = fork(workerPath, {
+      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+      env,
     });
+    const cp = new BatchProcess(p, executorName);
+    this.processes.add(cp);
+
+    cp.onExit(() => {
+      this.processes.delete(cp);
+    });
+
+    // Start the tasks
+    cp.send({
+      type: BatchMessageType.RunTasks,
+      executorName,
+      projectGraph,
+      batchTaskGraph,
+      fullTaskGraph,
+    });
+
+    return cp;
+  }
+
+  public cleanUpBatchProcesses() {
+    if (this.finishedProcesses.size > 0) {
+      this.finishedProcesses.forEach((p) => {
+        p.kill();
+      });
+      this.finishedProcesses.clear();
+    }
   }
 
   public async forkProcessLegacy(
@@ -137,15 +108,15 @@ export class ForkedProcessTaskRunner {
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
     }
-  ): Promise<{ code: number; terminalOutput: string }> {
+  ): Promise<RunningTask> {
     return pipeOutput
-      ? await this.forkProcessPipeOutputCapture(task, {
+      ? this.forkProcessWithPrefixAndNotTTY(task, {
           temporaryOutputPath,
           streamOutput,
           taskGraph,
           env,
         })
-      : await this.forkProcessDirectOutputCapture(task, {
+      : this.forkProcessDirectOutputCapture(task, {
           temporaryOutputPath,
           streamOutput,
           taskGraph,
@@ -169,32 +140,45 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
       disablePseudoTerminal: boolean;
     }
-  ): Promise<{ code: number; terminalOutput: string }> {
+  ): Promise<RunningTask | PseudoTtyProcess> {
     const shouldPrefix =
-      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+      streamOutput &&
+      process.env.NX_PREFIX_OUTPUT === 'true' &&
+      !this.tuiEnabled;
 
     // streamOutput would be false if we are running multiple targets
     // there's no point in running the commands in a pty if we are not streaming the output
     if (
-      !this.pseudoTerminal ||
-      disablePseudoTerminal ||
-      !streamOutput ||
-      shouldPrefix
+      PseudoTerminal.isSupported() &&
+      !disablePseudoTerminal &&
+      (this.tuiEnabled || (streamOutput && !shouldPrefix))
     ) {
-      return this.forkProcessWithPrefixAndNotTTY(task, {
-        temporaryOutputPath,
-        streamOutput,
-        taskGraph,
-        env,
-      });
-    } else {
       return this.forkProcessWithPseudoTerminal(task, {
         temporaryOutputPath,
         streamOutput,
         taskGraph,
         env,
       });
+    } else {
+      return this.forkProcessWithPrefixAndNotTTY(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
     }
+  }
+
+  private async createPseudoTerminal() {
+    const terminal = new PseudoTerminal(new RustPseudoTerminal());
+
+    await terminal.init();
+
+    terminal.onMessageFromChildren((message: Serializable) => {
+      process.send(message);
+    });
+
+    return terminal;
   }
 
   private async forkProcessWithPseudoTerminal(
@@ -210,18 +194,16 @@ export class ForkedProcessTaskRunner {
       taskGraph: TaskGraph;
       env: NodeJS.ProcessEnv;
     }
-  ): Promise<{ code: number; terminalOutput: string }> {
-    const args = getPrintableCommandArgsForTask(task);
-    if (streamOutput) {
-      output.logCommand(args.join(' '));
-    }
-
+  ): Promise<PseudoTtyProcess> {
     const childId = task.id;
-    const p = await this.pseudoTerminal.fork(childId, forkScript, {
+    const pseudoTerminal = await this.createPseudoTerminal();
+    this.pseudoTerminals.add(pseudoTerminal);
+    const p = await pseudoTerminal.fork(childId, forkScript, {
       cwd: process.cwd(),
       execArgv: process.execArgv,
       jsEnv: env,
       quiet: !streamOutput,
+      commandLabel: `nx run ${task.id}`,
     });
 
     p.send({
@@ -237,41 +219,23 @@ export class ForkedProcessTaskRunner {
       terminalOutput += msg;
     });
 
-    return new Promise((res) => {
-      p.onExit((code) => {
-        // If the exit code is greater than 128, it's a special exit code for a signal
-        if (code >= 128) {
-          process.exit(code);
-        }
-        this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
-        res({
-          code,
-          terminalOutput,
-        });
-      });
+    p.onExit((code) => {
+      if (!this.tuiEnabled && code > 128) {
+        process.exit(code);
+      }
+      this.pseudoTerminals.delete(pseudoTerminal);
+      this.processes.delete(p);
+      if (!streamOutput) {
+        this.options.lifeCycle.printTaskTerminalOutput(
+          task,
+          code === 0 ? 'success' : 'failure',
+          terminalOutput
+        );
+      }
+      this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
     });
-  }
 
-  private forkProcessPipeOutputCapture(
-    task: Task,
-    {
-      streamOutput,
-      temporaryOutputPath,
-      taskGraph,
-      env,
-    }: {
-      streamOutput: boolean;
-      temporaryOutputPath: string;
-      taskGraph: TaskGraph;
-      env: NodeJS.ProcessEnv;
-    }
-  ) {
-    return this.forkProcessWithPrefixAndNotTTY(task, {
-      streamOutput,
-      temporaryOutputPath,
-      taskGraph,
-      env,
-    });
+    return p;
   }
 
   private forkProcessWithPrefixAndNotTTY(
@@ -288,85 +252,49 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
     }
   ) {
-    return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
-      try {
-        const args = getPrintableCommandArgsForTask(task);
-        if (streamOutput) {
-          output.logCommand(args.join(' '));
-        }
-
-        const p = fork(this.cliPath, {
-          stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
-          env,
-        });
-        this.processes.add(p);
-
-        // Re-emit any messages from the task process
-        p.on('message', (message) => {
-          if (process.send) {
-            process.send(message);
-          }
-        });
-
-        // Send message to run the executor
-        p.send({
-          targetDescription: task.target,
-          overrides: task.overrides,
-          taskGraph,
-          isVerbose: this.verbose,
-        });
-
-        if (streamOutput) {
-          if (process.env.NX_PREFIX_OUTPUT === 'true') {
-            const color = getColor(task.target.project);
-            const prefixText = `${task.target.project}:`;
-
-            p.stdout
-              .pipe(
-                logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
-              )
-              .pipe(addPrefixTransformer(color.bold(prefixText)))
-              .pipe(process.stdout);
-            p.stderr
-              .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
-              .pipe(addPrefixTransformer(color(prefixText)))
-              .pipe(process.stderr);
-          } else {
-            p.stdout.pipe(addPrefixTransformer()).pipe(process.stdout);
-            p.stderr.pipe(addPrefixTransformer()).pipe(process.stderr);
-          }
-        }
-
-        let outWithErr = [];
-        p.stdout.on('data', (chunk) => {
-          outWithErr.push(chunk.toString());
-        });
-        p.stderr.on('data', (chunk) => {
-          outWithErr.push(chunk.toString());
-        });
-
-        p.on('exit', (code, signal) => {
-          this.processes.delete(p);
-          if (code === null) code = signalToCode(signal);
-          // we didn't print any output as we were running the command
-          // print all the collected output|
-          const terminalOutput = outWithErr.join('');
-
-          if (!streamOutput) {
-            this.options.lifeCycle.printTaskTerminalOutput(
-              task,
-              code === 0 ? 'success' : 'failure',
-              terminalOutput
-            );
-          }
-          this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
-          res({ code, terminalOutput });
-        });
-      } catch (e) {
-        console.error(e);
-        rej(e);
+    try {
+      const args = getPrintableCommandArgsForTask(task);
+      if (streamOutput) {
+        output.logCommand(args.join(' '));
       }
-    });
+
+      const p = fork(this.cliPath, {
+        stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
+        env,
+      });
+
+      // Send message to run the executor
+      p.send({
+        targetDescription: task.target,
+        overrides: task.overrides,
+        taskGraph,
+        isVerbose: this.verbose,
+      });
+
+      const cp = new NodeChildProcessWithNonDirectOutput(p, {
+        streamOutput,
+        prefix: task.target.project,
+      });
+      this.processes.add(cp);
+
+      cp.onExit((code, terminalOutput) => {
+        this.processes.delete(cp);
+
+        if (!streamOutput) {
+          this.options.lifeCycle.printTaskTerminalOutput(
+            task,
+            code === 0 ? 'success' : 'failure',
+            terminalOutput
+          );
+        }
+        this.writeTerminalOutput(temporaryOutputPath, terminalOutput);
+      });
+
+      return cp;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 
   private forkProcessDirectOutputCapture(
@@ -383,188 +311,107 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
     }
   ) {
-    return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
-      try {
-        const args = getPrintableCommandArgsForTask(task);
-        if (streamOutput) {
-          output.logCommand(args.join(' '));
-        }
-        const p = fork(this.cliPath, {
-          stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-          env,
-        });
-        this.processes.add(p);
+    try {
+      const args = getPrintableCommandArgsForTask(task);
+      if (streamOutput) {
+        output.logCommand(args.join(' '));
+      }
+      const p = fork(this.cliPath, {
+        stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+        env,
+      });
+      const cp = new NodeChildProcessWithDirectOutput(p, temporaryOutputPath);
 
-        // Re-emit any messages from the task process
-        p.on('message', (message) => {
-          if (process.send) {
-            process.send(message);
+      this.processes.add(cp);
+
+      // Send message to run the executor
+      p.send({
+        targetDescription: task.target,
+        overrides: task.overrides,
+        taskGraph,
+        isVerbose: this.verbose,
+      });
+
+      cp.onExit((code, signal) => {
+        this.processes.delete(cp);
+        // we didn't print any output as we were running the command
+        // print all the collected output
+        try {
+          const terminalOutput = cp.getTerminalOutput();
+          if (!streamOutput) {
+            this.options.lifeCycle.printTaskTerminalOutput(
+              task,
+              code === 0 ? 'success' : 'failure',
+              terminalOutput
+            );
           }
-        });
-
-        // Send message to run the executor
-        p.send({
-          targetDescription: task.target,
-          overrides: task.overrides,
-          taskGraph,
-          isVerbose: this.verbose,
-        });
-
-        p.on('exit', (code, signal) => {
-          if (code === null) code = signalToCode(signal);
-          // we didn't print any output as we were running the command
-          // print all the collected output
-          let terminalOutput = '';
-          try {
-            terminalOutput = this.readTerminalOutput(temporaryOutputPath);
-            if (!streamOutput) {
-              this.options.lifeCycle.printTaskTerminalOutput(
-                task,
-                code === 0 ? 'success' : 'failure',
-                terminalOutput
-              );
-            }
-          } catch (e) {
-            console.log(stripIndents`
+        } catch (e) {
+          console.log(stripIndents`
               Unable to print terminal output for Task "${task.id}".
               Task failed with Exit Code ${code} and Signal "${signal}".
 
               Received error message:
               ${e.message}
             `);
-          }
-          res({
-            code,
-            terminalOutput,
-          });
-        });
-      } catch (e) {
-        console.error(e);
-        rej(e);
-      }
-    });
-  }
+        }
+      });
 
-  private readTerminalOutput(outputPath: string) {
-    return readFileSync(outputPath).toString();
+      return cp;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 
   private writeTerminalOutput(outputPath: string, content: string) {
     writeFileSync(outputPath, content);
   }
 
-  private setupProcessEventListeners() {
-    if (this.pseudoTerminal) {
-      this.pseudoTerminal.onMessageFromChildren((message: Serializable) => {
-        process.send(message);
-      });
-    }
+  cleanup(signal?: NodeJS.Signals) {
+    this.processes.forEach((p) => {
+      p.kill(signal);
+    });
+    this.cleanUpBatchProcesses();
+  }
 
-    // When the nx process gets a message, it will be sent into the task's process
-    process.on('message', (message: Serializable) => {
-      // this.publisher.publish(message.toString());
-      if (this.pseudoTerminal) {
-        this.pseudoTerminal.sendMessageToChildren(message);
-      }
+  private setupProcessEventListeners() {
+    const messageHandler = (message: Serializable) => {
+      this.pseudoTerminals.forEach((p) => {
+        p.sendMessageToChildren(message);
+      });
 
       this.processes.forEach((p) => {
-        if ('connected' in p && p.connected) {
+        if ('connected' in p && p.connected && 'send' in p) {
           p.send(message);
         }
       });
-    });
+    };
+
+    // When the nx process gets a message, it will be sent into the task's process
+    process.on('message', messageHandler);
 
     // Terminate any task processes on exit
-    process.on('exit', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill();
-        }
-      });
+    process.once('exit', () => {
+      this.cleanup();
+      process.off('message', messageHandler);
     });
-    process.on('SIGINT', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill('SIGTERM');
-        }
-      });
+    process.once('SIGINT', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
       // we exit here because we don't need to write anything to cache.
       process.exit(signalToCode('SIGINT'));
     });
-    process.on('SIGTERM', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill('SIGTERM');
-        }
-      });
+    process.once('SIGTERM', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
-    process.on('SIGHUP', () => {
-      this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive) {
-          p.kill('SIGTERM');
-        }
-      });
+    process.once('SIGHUP', () => {
+      this.cleanup('SIGTERM');
+      process.off('message', messageHandler);
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
   }
-}
-
-const colors = [
-  chalk.green,
-  chalk.greenBright,
-  chalk.red,
-  chalk.redBright,
-  chalk.cyan,
-  chalk.cyanBright,
-  chalk.yellow,
-  chalk.yellowBright,
-  chalk.magenta,
-  chalk.magentaBright,
-];
-
-function getColor(projectName: string) {
-  let code = 0;
-  for (let i = 0; i < projectName.length; ++i) {
-    code += projectName.charCodeAt(i);
-  }
-  const colorIndex = code % colors.length;
-
-  return colors[colorIndex];
-}
-
-/**
- * Prevents terminal escape sequence from clearing line prefix.
- */
-function logClearLineToPrefixTransformer(prefix: string) {
-  let prevChunk = null;
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      if (prevChunk && prevChunk.toString() === '\x1b[2K') {
-        chunk = chunk.toString().replace(/\x1b\[1G/g, (m) => m + prefix);
-      }
-      this.push(chunk);
-      prevChunk = chunk;
-      callback();
-    },
-  });
-}
-
-function addPrefixTransformer(prefix?: string) {
-  const newLineSeparator = process.platform.startsWith('win') ? '\r\n' : '\n';
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      const list = chunk.toString().split(/\r\n|[\n\v\f\r\x85\u2028\u2029]/g);
-      list
-        .filter(Boolean)
-        .forEach((m) =>
-          this.push(
-            prefix ? prefix + ' ' + m + newLineSeparator : m + newLineSeparator
-          )
-        );
-      callback();
-    },
-  });
 }

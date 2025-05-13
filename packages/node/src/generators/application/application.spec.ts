@@ -51,6 +51,7 @@ describe('app', () => {
                   "buildTarget": "my-node-app:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
@@ -263,6 +264,7 @@ describe('app', () => {
                   "buildTarget": "my-node-app:build:production",
                 },
               },
+              "continuous": true,
               "defaultConfiguration": "development",
               "dependsOn": [
                 "build",
@@ -587,6 +589,7 @@ describe('app', () => {
         bundler: 'webpack',
         unitTestRunner: 'jest',
         addPlugin: true,
+        useProjectJson: false,
       });
 
       expect(readJson(tree, 'tsconfig.json').references).toMatchInlineSnapshot(`
@@ -599,9 +602,11 @@ describe('app', () => {
           },
         ]
       `);
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBeUndefined();
       // Make sure keys are in idiomatic order
-      expect(Object.keys(readJson(tree, 'myapp/package.json')))
-        .toMatchInlineSnapshot(`
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
         [
           "name",
           "version",
@@ -613,26 +618,24 @@ describe('app', () => {
         {
           "name": "@proj/myapp",
           "nx": {
-            "name": "myapp",
-            "projectType": "application",
-            "sourceRoot": "myapp/src",
             "targets": {
               "serve": {
                 "configurations": {
                   "development": {
-                    "buildTarget": "myapp:build:development",
+                    "buildTarget": "@proj/myapp:build:development",
                   },
                   "production": {
-                    "buildTarget": "myapp:build:production",
+                    "buildTarget": "@proj/myapp:build:production",
                   },
                 },
+                "continuous": true,
                 "defaultConfiguration": "development",
                 "dependsOn": [
                   "build",
                 ],
                 "executor": "@nx/js:node",
                 "options": {
-                  "buildTarget": "myapp:build",
+                  "buildTarget": "@proj/myapp:build",
                   "runBuildTargetDependencies": false,
                 },
               },
@@ -667,9 +670,9 @@ describe('app', () => {
           "compilerOptions": {
             "module": "nodenext",
             "moduleResolution": "nodenext",
-            "outDir": "out-tsc/myapp",
+            "outDir": "dist",
             "rootDir": "src",
-            "tsBuildInfoFile": "out-tsc/myapp/tsconfig.app.tsbuildinfo",
+            "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
             ],
@@ -717,10 +720,35 @@ describe('app', () => {
       `);
     });
 
+    it('should respect the provided name', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        name: 'myapp',
+        bundler: 'webpack',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: false,
+      });
+
+      const packageJson = readJson(tree, 'myapp/package.json');
+      expect(packageJson.name).toBe('@proj/myapp');
+      expect(packageJson.nx.name).toBe('myapp');
+      // Make sure keys are in idiomatic order
+      expect(Object.keys(packageJson)).toMatchInlineSnapshot(`
+        [
+          "name",
+          "version",
+          "private",
+          "nx",
+        ]
+      `);
+    });
+
     it('should use @swc/jest for jest', async () => {
       await applicationGenerator(tree, {
         directory: 'apps/my-app',
         swcJest: true,
+        useProjectJson: false,
       } as Schema);
 
       expect(tree.read('apps/my-app/jest.config.ts', 'utf-8'))
@@ -737,7 +765,7 @@ describe('app', () => {
         swcJestConfig.swcrc = false;
 
         export default {
-          displayName: 'my-app',
+          displayName: '@proj/my-app',
           preset: '../../jest.preset.js',
           testEnvironment: 'node',
           transform: {
@@ -781,6 +809,7 @@ describe('app', () => {
         directory: 'apps/my-app',
         bundler: 'webpack',
         addPlugin: true,
+        useProjectJson: false,
         skipFormat: true,
       });
 
@@ -815,11 +844,12 @@ describe('app', () => {
         directory: 'apps/my-app',
         bundler: 'webpack',
         addPlugin: false,
+        useProjectJson: false,
         skipFormat: true,
       });
 
       expect(
-        readProjectConfiguration(tree, 'my-app').targets.build.options
+        readProjectConfiguration(tree, '@proj/my-app').targets.build.options
           .outputPath
       ).toBe('apps/my-app/dist');
     });
@@ -829,13 +859,96 @@ describe('app', () => {
         directory: 'apps/my-app',
         bundler: 'esbuild',
         addPlugin: false,
+        useProjectJson: false,
         skipFormat: true,
       });
 
       expect(
-        readProjectConfiguration(tree, 'my-app').targets.build.options
+        readProjectConfiguration(tree, '@proj/my-app').targets.build.options
           .outputPath
       ).toBe('apps/my-app/dist');
+    });
+
+    it('should generate project.json if useProjectJson is true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        bundler: 'webpack',
+        unitTestRunner: 'jest',
+        addPlugin: true,
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(tree.exists('myapp/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "@proj/myapp",
+          "projectType": "application",
+          "root": "myapp",
+          "sourceRoot": "myapp/src",
+          "tags": [],
+          "targets": {
+            "serve": {
+              "configurations": {
+                "development": {
+                  "buildTarget": "@proj/myapp:build:development",
+                },
+                "production": {
+                  "buildTarget": "@proj/myapp:build:production",
+                },
+              },
+              "continuous": true,
+              "defaultConfiguration": "development",
+              "dependsOn": [
+                "build",
+              ],
+              "executor": "@nx/js:node",
+              "options": {
+                "buildTarget": "@proj/myapp:build",
+                "runBuildTargetDependencies": false,
+              },
+            },
+            "test": {
+              "options": {
+                "passWithNoTests": true,
+              },
+            },
+          },
+        }
+      `);
+      expect(readJson(tree, 'myapp/package.json').nx).toBeUndefined();
+      expect(tree.exists('myapp-e2e/project.json')).toBeTruthy();
+      expect(readProjectConfiguration(tree, '@proj/myapp-e2e'))
+        .toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "implicitDependencies": [
+            "@proj/myapp",
+          ],
+          "name": "@proj/myapp-e2e",
+          "projectType": "application",
+          "root": "myapp-e2e",
+          "targets": {
+            "e2e": {
+              "dependsOn": [
+                "@proj/myapp:build",
+                "@proj/myapp:serve",
+              ],
+              "executor": "@nx/jest:jest",
+              "options": {
+                "jestConfig": "myapp-e2e/jest.config.ts",
+                "passWithNoTests": true,
+              },
+              "outputs": [
+                "{workspaceRoot}/coverage/{e2eProjectRoot}",
+              ],
+            },
+          },
+        }
+      `);
+      expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
     });
   });
 });

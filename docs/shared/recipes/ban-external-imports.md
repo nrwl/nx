@@ -1,3 +1,8 @@
+---
+title: Ban External Imports
+description: Learn how to use ESLint module boundary constraints to prevent projects from importing specific external packages and enforce separation of concerns.
+---
+
 # Ban External Imports
 
 **This constraint is only available for projects using ESLint.**

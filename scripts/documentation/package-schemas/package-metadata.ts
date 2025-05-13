@@ -109,21 +109,36 @@ function getSchemaList(
 export function findPackageMetadataList(
   absoluteRoot: string,
   packagesDirectory: string = 'packages',
-  prefix = ''
+  specificPackages?: string[] | undefined
 ): PackageData[] {
   const packagesDir = resolve(join(absoluteRoot, packagesDirectory));
 
   /**
    * Get all the custom overview information on each package if available
    */
-  const additionalApiReferences: DocumentMetadata[] = DocumentationMap.content
-    .find((data) => data.id === 'additional-api-references')!
-    .itemList.map((item) => convertToDocumentMetadata(item));
+  let additionalApiReferences: DocumentMetadata[] = [];
+  const additionalApiReferencesItem = DocumentationMap.content.find(
+    (data) => data.id === 'additional-api-references'
+  );
+
+  if (additionalApiReferencesItem && additionalApiReferencesItem.itemList) {
+    additionalApiReferences = additionalApiReferencesItem.itemList.map((item) =>
+      convertToDocumentMetadata(item)
+    );
+  }
+
+  // Use specific packages if provided, otherwise get all packages
+  let packagePaths: string[];
+  if (specificPackages && specificPackages.length > 0) {
+    packagePaths = specificPackages.map((pkg) => `${packagesDir}/${pkg}`);
+  } else {
+    packagePaths = sync(`${packagesDir}/*`, {
+      ignore: [`${packagesDir}/cli`, `${packagesDir}/*-e2e`],
+    });
+  }
 
   // Do not use map.json, but add a documentation property on the package.json directly that can be easily resolved
-  return sync(`${packagesDir}/${prefix}*`, {
-    ignore: [`${packagesDir}/cli`, `${packagesDir}/*-e2e`],
-  })
+  return packagePaths
     .map((folderPath: string): PackageData => {
       const folderName = folderPath.substring(packagesDir.length + 1);
 

@@ -1,3 +1,8 @@
+---
+title: Using Tailwind CSS in React and Next.js
+description: Learn how to set up and configure Tailwind CSS in your React and Next.js applications within an Nx workspace, with both automated and manual installation options.
+---
+
 # Using Tailwind CSS in React and Next.js
 
 This guide serves as a quickstart to installing [Tailwind CSS](https://tailwindcss.com) in your React and Next.js app.

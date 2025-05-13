@@ -26,6 +26,7 @@ export type {
  */
 export type {
   Generator,
+  Migration,
   GeneratorCallback,
   PromiseExecutor,
   AsyncIteratorExecutor,
@@ -260,4 +261,4 @@ export { cacheDir } from './utils/cache-directory';
  */
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
-export { isDaemonEnabled } from './daemon/client/enabled';
+export { isDaemonEnabled } from './daemon/client/client';

@@ -71,7 +71,7 @@ module.exports = withNx(
     tsConfig: './tsconfig.lib.json',
     compiler: 'babel',
     format: ['esm'],
-    assets: [{ input: '.', output: '.', glob: '*.md' }],
+    assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
   },
   {
     // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options
@@ -100,7 +100,7 @@ module.exports = withNx(
     tsConfig: './tsconfig.custom.json',
     compiler: 'babel',
     format: ['esm'],
-    assets: [{ input: '.', output: '.', glob: '*.md' }],
+    assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
   },
   {
     // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options

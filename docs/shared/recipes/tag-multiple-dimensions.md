@@ -1,3 +1,8 @@
+---
+title: Tag in Multiple Dimensions
+description: Learn how to use multiple tag dimensions in Nx to create more sophisticated module boundary constraints, controlling dependencies between projects based on scope, type, and other attributes.
+---
+
 # Tag in Multiple Dimensions
 
 The example listed in [Enforce Module Boundaries](/features/enforce-module-boundaries#tags) shows using a single dimension: `scope`. It's the most commonly used one. But you can find other dimensions useful. You can define which projects contain components, state management code, and features, so you, for instance, can disallow projects containing presentational UI components to depend on state management code. You can define which projects are experimental and which are stable, so stable applications cannot depend on experimental projects etc. You can define which projects have server-side code and which have client-side code to make sure your node app doesn't bundle in your frontend framework.

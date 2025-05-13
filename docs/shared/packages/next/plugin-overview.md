@@ -231,13 +231,53 @@ Next.js applications can be build with:
 nx build my-new-app
 ```
 
-And if you generated a library with --buildable, then you can build a library as well:
+And if you generated a library with `--bundler`, then you can build a library as well:
 
 ```shell
 nx build my-new-lib
 ```
 
-After running a build, the output will be in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.
+After running a build, the output will be in the `{workspaceRoot}/dist/{projectRoot}` folder.
+
+{% tabs %}
+
+{% tab label="Using inferred tasks" %}
+
+You can customize the output folder path by update the bundler's config. For example vite's config can be updated in `vite.config.ts`:
+
+```typescript {% fileName="apps/my-next-app/vite.config.ts" highlightLines=[4]%}
+import { defineConfig } from 'vite';
+export default defineConfig(() => ({
+  build: {
+    outDir: 'dist/my-next-app',
+  },
+}));
+```
+
+{% /tab %}
+
+{% tab label="Using the @nx/next:build executor" %}
+
+You can customize the output folder by setting `outputPath` in the project's `project.json` file
+
+```json {% fileName="apps/my-next-app/project.json" highlightLines=[9]%}
+{
+  "root": "apps/my-next-app",
+  "sourceRoot": "apps/my-next-app/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/my-next-app"
+      }
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 The library in `dist` is publishable to npm or a private registry.
 

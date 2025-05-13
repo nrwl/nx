@@ -1,4 +1,4 @@
-import * as fg from 'fast-glob';
+import * as globby from 'tinyglobby';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as octokit from 'octokit';
@@ -35,7 +35,7 @@ async function main() {
 
     for (const pattern of patternsToCheck) {
       foundMatchingFiles ||=
-        fg.sync(pattern, {
+        globby.globSync(pattern, {
           ignore: ['node_modules', 'dist', 'build', '.git'],
           cwd: path.join(__dirname, '..'),
           onlyFiles: false,

@@ -114,6 +114,7 @@ export async function addReleaseConfigForTsSolution(
  * Add release option in project.json and add packageRoot to nx-release-publish target
  */
 export async function addReleaseConfigForNonTsSolution(
+  useLegacyVersioning: boolean,
   tree: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration,
@@ -131,17 +132,30 @@ export async function addReleaseConfigForNonTsSolution(
     },
   };
 
-  projectConfiguration.release = {
-    version: {
-      generatorOptions: {
-        packageRoot,
+  if (useLegacyVersioning) {
+    projectConfiguration.release = {
+      version: {
+        generatorOptions: {
+          packageRoot,
+          // using git tags to determine the current version is required here because
+          // the version in the package root is overridden with every build
+          currentVersionResolver: 'git-tag',
+          fallbackCurrentVersionResolver: 'disk',
+        },
+      },
+    };
+  } else {
+    // TODO: re-evaluate this config in new versions
+    projectConfiguration.release = {
+      version: {
+        manifestRootsToUpdate: [packageRoot],
         // using git tags to determine the current version is required here because
         // the version in the package root is overridden with every build
         currentVersionResolver: 'git-tag',
         fallbackCurrentVersionResolver: 'disk',
       },
-    },
-  };
+    };
+  }
 
   await addReleaseConfigForTsSolution(tree, projectName, projectConfiguration);
 
