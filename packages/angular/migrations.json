@@ -311,6 +311,22 @@
       },
       "description": "Update the @angular/cli package version to 20.0.0-rc.0.",
       "factory": "./src/migrations/update-21-2-0/update-angular-cli"
+    },
+    "migrate-provide-server-rendering-import": {
+      "version": "21.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.0.0-rc.0"
+      },
+      "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
+      "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import"
+    },
+    "replace-provide-server-routing": {
+      "version": "21.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=20.0.0-rc.0"
+      },
+      "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+      "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing"
     }
   },
   "packageJsonUpdates": {

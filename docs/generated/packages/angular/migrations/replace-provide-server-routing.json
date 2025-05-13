@@ -1,0 +1,14 @@
+{
+  "name": "replace-provide-server-routing",
+  "version": "21.2.0-beta.0",
+  "requires": { "@angular/core": ">=20.0.0-rc.0" },
+  "description": "Replace `provideServerRouting` with `provideServerRendering` using `withRoutes`.",
+  "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing",
+  "implementation": "/packages/angular/src/migrations/update-21-2-0/replace-provide-server-routing.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Replace `provideServerRouting` with `provideServerRendering`\n\nReplace `provideServerRouting` calls with `provideServerRendering` using `withRoutes`.\n\n#### Examples\n\nRemove `provideServerRouting` from your providers array and update the `provideServerRendering` call to use `withRoutes`:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2,6] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRendering, provideServerRouting } from '@angular/ssr';\nimport { serverRoutes } from './app.routes.server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [provideServerRendering(), provideServerRouting(serverRoutes)],\n};\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2,6] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRendering, withRoutes } from '@angular/ssr';\nimport { serverRoutes } from './app.routes.server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [provideServerRendering(withRoutes(serverRoutes))],\n};\n```\n\n{% /tab %}\n{% /tabs %}\n\nIf you have `provideServerRouting` with additional arguments, the migration will preserve them:\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[4,11,12] %}\nimport { ApplicationConfig } from '@angular/core';\nimport {\n  provideServerRendering,\n  provideServerRouting,\n  withAppShell,\n} from '@angular/ssr';\nimport { serverRoutes } from './app.routes.server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [\n    provideServerRendering(),\n    provideServerRouting(serverRoutes, withAppShell(AppShellComponent)),\n  ],\n};\n```\n\n{% /tab %}\n\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"app/app.config.server.ts\" highlightLines=[2,\"7-10\"] %}\nimport { ApplicationConfig } from '@angular/core';\nimport { provideServerRendering, withAppShell, withRoutes } from '@angular/ssr';\nimport { serverRoutes } from './app.routes.server';\n\nconst serverConfig: ApplicationConfig = {\n  providers: [\n    provideServerRendering(\n      withRoutes(serverRoutes),\n      withAppShell(AppShellComponent)\n    ),\n  ],\n};\n```\n\n{% /tab %}\n{% /tabs %}\n"
+}
