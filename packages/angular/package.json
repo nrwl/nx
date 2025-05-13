@@ -67,11 +67,20 @@
     "webpack-merge": "^5.8.0"
   },
   "peerDependencies": {
+    "@angular/build": ">= 18.0.0 < 21.0.0",
     "@angular-devkit/build-angular": ">= 18.0.0 < 21.0.0",
     "@angular-devkit/core": ">= 18.0.0 < 21.0.0",
     "@angular-devkit/schematics": ">= 18.0.0 < 21.0.0",
     "@schematics/angular": ">= 18.0.0 < 21.0.0",
     "rxjs": "^6.5.3 || ^7.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@angular/build": {
+      "optional": true
+    },
+    "@angular-devkit/build-angular": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

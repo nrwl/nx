@@ -11,7 +11,11 @@ import {
 import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { assertNotUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { createNodesV2 } from '../../plugins/plugin';
-import { getInstalledPackageVersion, versions } from '../utils/version-utils';
+import {
+  getInstalledAngularDevkitVersion,
+  getInstalledPackageVersion,
+  versions,
+} from '../utils/version-utils';
 import { Schema } from './schema';
 
 export async function angularInitGenerator(
@@ -61,8 +65,7 @@ function installAngularDevkitCoreIfMissing(
   if (!packageVersion) {
     const pkgVersions = versions(tree);
     const devkitVersion =
-      getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
-      getInstalledPackageVersion(tree, '@angular/build') ??
+      getInstalledAngularDevkitVersion(tree) ??
       pkgVersions.angularDevkitVersion;
 
     try {

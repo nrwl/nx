@@ -89,12 +89,21 @@ describe('lib', () => {
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
-    expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion
-    );
 
+    // @angular/build should no be installed unless using vitest, as no other
+    // task requires it
+    expect(devDependencies['@angular/build']).toBeUndefined();
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should add @angular/build when using vitest', async () => {
+    await runLibraryGeneratorWithOpts({
+      unitTestRunner: UnitTestRunner.Vitest,
+    });
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {

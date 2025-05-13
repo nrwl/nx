@@ -1,8 +1,10 @@
-import type { buildApplication as buildApplicationFn } from '@angular-devkit/build-angular';
+import type { BuilderOutput } from '@angular-devkit/architect';
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadPlugins,
@@ -14,7 +16,7 @@ import { validateOptions } from './utils/validate-options';
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
   context: ExecutorContext
-): ReturnType<typeof buildApplicationFn> {
+): AsyncIterable<BuilderOutput> {
   validateOptions(options);
   options = normalizeOptions(options);
 
@@ -51,6 +53,17 @@ export default async function* applicationExecutor(
     context
   );
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
+  if (angularMajorVersion >= 20) {
+    assertBuilderPackageIsInstalled('@angular/build');
+    const { buildApplication } = await import('@angular/build');
+    return yield* buildApplication(delegateExecutorOptions, builderContext, {
+      codePlugins: plugins,
+      indexHtmlTransformer,
+    });
+  }
+
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
   const { buildApplication } = await import('@angular-devkit/build-angular');
   return yield* buildApplication(delegateExecutorOptions, builderContext, {
     codePlugins: plugins,

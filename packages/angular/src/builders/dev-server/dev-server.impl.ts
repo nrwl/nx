@@ -12,11 +12,13 @@ import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
+import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadMiddleware,
@@ -31,8 +33,6 @@ import {
 } from '../utilities/webpack';
 import { normalizeOptions, validateOptions } from './lib';
 import type { NormalizedSchema, Schema } from './schema';
-import { readNxJson } from 'nx/src/config/configuration';
-
 type BuildTargetOptions = {
   tsConfig: string;
   buildLibsFromSource?: boolean;
@@ -167,6 +167,7 @@ export function executeDevServerBuilder(
    * handle `@nx/angular:*` executors.
    */
   patchBuilderContext(context, !isUsingWebpackBuilder, parsedBuildTarget);
+  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
 
   return combineLatest([
     from(import('@angular-devkit/build-angular')),

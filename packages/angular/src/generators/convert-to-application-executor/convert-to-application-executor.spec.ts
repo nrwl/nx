@@ -2,6 +2,7 @@ import {
   addProjectConfiguration,
   logger,
   readProjectConfiguration,
+  updateJson,
   type Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -18,13 +19,37 @@ describe('convert-to-application-executor generator', () => {
 
   it.each`
     executor                                           | expected
-    ${'@angular-devkit/build-angular:browser'}         | ${'@angular-devkit/build-angular:application'}
-    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular-devkit/build-angular:application'}
+    ${'@angular-devkit/build-angular:browser'}         | ${'@angular/build:application'}
+    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular/build:application'}
     ${'@nx/angular:webpack-browser'}                   | ${'@nx/angular:application'}
     ${'@nx/angular:browser-esbuild'}                   | ${'@nx/angular:application'}
   `(
     'should replace "$executor" with "$expected"',
     async ({ executor, expected }) => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'app1',
+        projectType: 'application',
+        targets: { build: { executor } },
+      });
+
+      await convertToApplicationExecutor(tree, {});
+
+      const project = readProjectConfiguration(tree, 'app1');
+      expect(project.targets.build.executor).toBe(expected);
+    }
+  );
+
+  it.each`
+    executor                                           | expected
+    ${'@angular-devkit/build-angular:browser'}         | ${'@angular-devkit/build-angular:application'}
+    ${'@angular-devkit/build-angular:browser-esbuild'} | ${'@angular-devkit/build-angular:application'}
+  `(
+    'should replace "$executor" with "$expected" when using an Angular version lower than 20',
+    async ({ executor, expected }) => {
+      updateJson(tree, 'package.json', (json) => {
+        json.dependencies['@angular/core'] = '19.0.0';
+        return json;
+      });
       addProjectConfiguration(tree, 'app1', {
         root: 'app1',
         projectType: 'application',

@@ -25,7 +25,7 @@ exports[`setupSSR with application builder should create the files correctly for
     },
   },
   "defaultConfiguration": "production",
-  "executor": "@angular-devkit/build-angular:application",
+  "executor": "@angular/build:application",
   "options": {
     "assets": [
       {
@@ -39,7 +39,6 @@ exports[`setupSSR with application builder should create the files correctly for
       "zone.js",
     ],
     "prerender": true,
-    "scripts": [],
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",
@@ -151,7 +150,7 @@ exports[`setupSSR with application builder should create the files correctly for
     },
   },
   "defaultConfiguration": "production",
-  "executor": "@angular-devkit/build-angular:application",
+  "executor": "@angular/build:application",
   "options": {
     "assets": [
       {
@@ -165,7 +164,6 @@ exports[`setupSSR with application builder should create the files correctly for
       "zone.js",
     ],
     "prerender": true,
-    "scripts": [],
     "server": "app1/src/main.server.ts",
     "ssr": {
       "entry": "app1/src/server.ts",

@@ -78,12 +78,20 @@ describe('app', () => {
     expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
     expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
     expect(devDependencies['@angular/language-service']).toBe(angularVersion);
-    expect(devDependencies['@angular-devkit/build-angular']).toBe(
-      angularDevkitVersion
-    );
+    expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
 
     // codelyzer should no longer be there by default
     expect(devDependencies['codelyzer']).toBeUndefined();
+  });
+
+  it('should add both packages for builders when using rspack bundler', async () => {
+    await generateApp(appTree, 'my-app', { bundler: 'rspack' });
+
+    const { devDependencies } = readJson(appTree, 'package.json');
+    expect(devDependencies['@angular/build']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
   });
 
   it('should generate correct tsconfig.editor.json', async () => {
@@ -787,9 +795,7 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.Vitest,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.build.executor).toBe(
-          '@angular-devkit/build-angular:application'
-        );
+        expect(targets.build.executor).toBe('@angular/build:application');
       });
 
       it('should not override serve configuration when using vitest as a test runner', async () => {
@@ -797,9 +803,7 @@ describe('app', () => {
           unitTestRunner: UnitTestRunner.Vitest,
         });
         const { targets } = readProjectConfiguration(appTree, 'my-app');
-        expect(targets.serve.executor).toBe(
-          '@angular-devkit/build-angular:dev-server'
-        );
+        expect(targets.serve.executor).toBe('@angular/build:dev-server');
       });
     });
 
@@ -1144,7 +1148,7 @@ describe('app', () => {
 
       const project = readProjectConfiguration(appTree, 'ngesbuild');
       expect(project.targets.build.executor).toEqual(
-        '@angular-devkit/build-angular:application'
+        '@angular/build:application'
       );
       expect(
         project.targets.build.configurations.development.buildOptimizer
@@ -1344,6 +1348,34 @@ describe('app', () => {
 
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options.index).toBe('my-app/src/index.html');
+    });
+
+    it('should use builders from "@angular-devkit/build-angular" for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
+
+      const project = readProjectConfiguration(appTree, 'my-app');
+      expect(project.targets.build.executor).toBe(
+        '@angular-devkit/build-angular:application'
+      );
+      expect(project.targets.serve.executor).toBe(
+        '@angular-devkit/build-angular:dev-server'
+      );
+      expect(project.targets['extract-i18n'].executor).toBe(
+        '@angular-devkit/build-angular:extract-i18n'
+      );
+      expect(
+        readJson(appTree, 'package.json').devDependencies[
+          '@angular-devkit/build-angular'
+        ]
+      ).toBeDefined();
     });
   });
 });
