@@ -522,8 +522,36 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         scrollbar.render(safe_area, buf, &mut state.scrollbar_state);
                     }
 
-                    // Show interactive/readonly status for focused, in progress tasks
-                    if state.task_status == TaskStatus::InProgress
+                    // Show instructions to quit in minimal mode if somehow terminal became non-interactive
+                    if self.minimal && !self.is_currently_interactive() {
+                        let top_text = Line::from(vec![
+                            Span::styled("quit: ", Style::default().fg(THEME.primary_fg)),
+                            Span::styled("q ", Style::default().fg(THEME.info)),
+                        ]);
+
+                        let mode_width = top_text
+                            .spans
+                            .iter()
+                            .map(|span| span.content.len())
+                            .sum::<usize>();
+
+                        // Ensure text doesn't extend past safe area
+                        if mode_width as u16 + 3 < safe_area.width {
+                            let top_right_area = Rect {
+                                x: safe_area.x + safe_area.width - mode_width as u16 - 3,
+                                y: safe_area.y,
+                                width: mode_width as u16 + 2,
+                                height: 1,
+                            };
+
+                            Paragraph::new(top_text)
+                                .alignment(Alignment::Right)
+                                .style(border_style)
+                                .render(top_right_area, buf);
+                        }
+
+                    // Show interactive/readonly status for focused, in progress tasks, when not in minimal mode
+                    } else if state.task_status == TaskStatus::InProgress
                         && state.is_focused
                         && pty_data.can_be_interactive
                         && !self.minimal

@@ -984,7 +984,7 @@ impl App {
                                 );
 
                                 let terminal_pane = TerminalPane::new()
-                                    .minimal(tasks_list_hidden && self.tasks.len() <= 1)
+                                    .minimal(tasks_list_hidden && self.tasks.len() == 1)
                                     .pty_data(terminal_pane_data)
                                     .continuous(task.continuous);
 

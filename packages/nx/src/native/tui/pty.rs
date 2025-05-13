@@ -95,9 +95,9 @@ impl PtyInstance {
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
-        let application_cursor_mode = self.parser.read().unwrap().screen().application_cursor();
-        debug!("Alternate Screen: {:?}", application_cursor_mode);
-        if !application_cursor_mode {
+        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
+        debug!("Alternate Screen: {:?}", alternative_screen);
+        if !alternative_screen {
             match event.code {
                 KeyCode::Up => {
                     self.scroll_up();
@@ -121,9 +121,9 @@ impl PtyInstance {
     }
 
     pub fn send_mouse_event(&mut self, event: MouseEvent) {
-        let application_cursor_mode = self.parser.read().unwrap().screen().application_cursor();
-        debug!("Alternate Screen: {:?}", application_cursor_mode);
-        if !application_cursor_mode {
+        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
+        debug!("Alternate Screen: {:?}", alternative_screen);
+        if !alternative_screen {
             match event.kind {
                 MouseEventKind::ScrollUp => {
                     self.scroll_up();
