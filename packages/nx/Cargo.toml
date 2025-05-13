@@ -68,8 +68,6 @@ vt100-ctt = { git = "https://github.com/JamesHenry/vt100-rust", rev = "b15dc3b0f
 serde = "1.0.219"
 serde_json = "1.0.140"
 
-sha2 = "0.10.8"
-
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi", "psapi", "shellapi"] }
 

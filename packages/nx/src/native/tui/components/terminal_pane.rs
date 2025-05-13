@@ -15,7 +15,7 @@ use tui_term::widget::PseudoTerminal;
 
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::theme::THEME;
-use crate::native::tui::{action::Action, nx_console, pty::PtyInstance};
+use crate::native::tui::{action::Action, pty::PtyInstance};
 
 pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
@@ -578,16 +578,14 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 ),
                             ])
                         } else {
-                            let spans = vec![
+                            Line::from(vec![
                                 Span::raw("  "),
                                 Span::styled("i", Style::default().fg(THEME.info)),
                                 Span::styled(
                                     " to make interactive  ",
                                     Style::default().fg(THEME.secondary_fg),
                                 ),
-                            ];
-
-                            Line::from(spans)
+                            ])
                         };
 
                         let text_width = bottom_text

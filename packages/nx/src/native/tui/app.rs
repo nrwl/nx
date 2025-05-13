@@ -1586,7 +1586,7 @@ impl App {
             .as_ref()
             .is_some_and(|c| c.is_connected())
         {
-            self.dispatch_action(Action::ConsoleMessagesAvailable(true));
+            self.dispatch_action(Action::ConsoleMessengerAvailable(true));
         }
     }
 }

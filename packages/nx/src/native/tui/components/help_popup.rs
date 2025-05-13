@@ -388,7 +388,7 @@ impl Component for HelpPopup {
             Action::Resize(w, h) => {
                 self.handle_resize(w, h);
             }
-            Action::ConsoleMessagesAvailable(available) => {
+            Action::ConsoleMessengerAvailable(available) => {
                 self.set_console_available(available);
             }
             _ => {}
