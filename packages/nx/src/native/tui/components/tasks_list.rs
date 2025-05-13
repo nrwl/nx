@@ -1,11 +1,11 @@
 use color_eyre::eyre::Result;
 use hashbrown::HashSet;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{Block, Cell, Paragraph, Row, Table},
-    Frame,
 };
 use std::{
     any::Any,
@@ -1845,8 +1845,8 @@ impl Component for TasksList {
 mod tests {
     use super::*;
     use crate::native::tasks::types::TaskTarget;
-    use ratatui::backend::TestBackend;
     use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
 
     // Helper function to create a TasksList with test task data
     fn create_test_tasks_list() -> (TasksList, Vec<Task>) {

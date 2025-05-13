@@ -1,6 +1,6 @@
 use crate::native::db::connection::NxDbConnection;
 use rusqlite::{Connection, OpenFlags};
-use std::fs::{remove_file, File};
+use std::fs::{File, remove_file};
 use std::path::{Path, PathBuf};
 use tracing::{debug, trace};
 
