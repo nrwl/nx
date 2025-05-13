@@ -353,8 +353,10 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     .fg
                     .expect("Base style should have foreground color")),
             ));
+            title.push(Span::raw("  "));
+        } else {
+            title.push(status_icon.clone());
         }
-        title.push(status_icon.clone());
         title.push(Span::styled(
             format!("{}  ", state.task_name),
             Style::default().fg(if state.is_focused {
