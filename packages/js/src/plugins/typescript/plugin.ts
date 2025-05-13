@@ -344,7 +344,7 @@ async function getConfigFileHash(
     ...(packageJson ? [hashObject(packageJson)] : []),
     // change this to bust the cache when making changes that would yield
     // different results for the same hash
-    hashObject({ bust: 2 }),
+    hashObject({ bust: 3 }),
   ]);
 }
 
@@ -636,11 +636,18 @@ function getInputs(
     return [input];
   };
 
+  const configDirTemplate = '${configDir}';
+  const substituteConfigDir = (p: string) =>
+    p.startsWith(configDirTemplate) ? p.replace(configDirTemplate, './') : p;
+
   projectTsConfigFiles.forEach(([configPath, config]) => {
     configFiles.add(configPath);
     const offset = relative(absoluteProjectRoot, dirname(configPath));
     (config.raw?.include ?? []).forEach((p: string) => {
-      const normalized = normalizeInput(join(offset, p), config);
+      const normalized = normalizeInput(
+        join(offset, substituteConfigDir(p)),
+        config
+      );
       normalized.forEach((input) => includePaths.add(input));
     });
 
@@ -653,11 +660,14 @@ function getInputs(
       const otherFilesInclude: string[] = [];
       projectTsConfigFiles.forEach(([path, c]) => {
         if (path !== configPath) {
-          otherFilesInclude.push(...(c.raw?.include ?? []));
+          otherFilesInclude.push(
+            ...(c.raw?.include ?? []).map(substituteConfigDir)
+          );
         }
       });
       const normalize = (p: string) => (p.startsWith('./') ? p.slice(2) : p);
-      config.raw.exclude.forEach((excludePath: string) => {
+      config.raw.exclude.forEach((e: string) => {
+        const excludePath = substituteConfigDir(e);
         if (
           !otherFilesInclude.some(
             (includePath) =>

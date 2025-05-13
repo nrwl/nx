@@ -2,7 +2,7 @@
 title: 'Nx 15.4 — Vite 4 Support, a new Nx Watch Command, and more!'
 slug: 'nx-15-4-vite-4-support-a-new-nx-watch-command-and-more'
 authors: ['Zack DeRose']
-cover_image: '/blog/images/2022-12-22/N4_XxtYFr-V2cF6fPoBO3g.png'
+cover_image: '/blog/images/2022-12-22/N4_XxtYFr-V2cF6fPoBO3g.avif'
 tags: [nx, release]
 description: Nx 15.4 adds Vite 4.0 support, new Watch command for file watching, webpack-less Cypress support, SSR for Module Federation, and parallel target execution improvements.
 ---

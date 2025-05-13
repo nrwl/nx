@@ -1091,6 +1091,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Use the Terminal UI",
+                "path": "/recipes/running-tasks/terminal-ui",
+                "id": "terminal-ui",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
@@ -1304,6 +1312,14 @@
                 "name": "Automate GitHub Releases",
                 "path": "/recipes/nx-release/automate-github-releases",
                 "id": "automate-github-releases",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Automate GitLab Releases",
+                "path": "/recipes/nx-release/automate-gitlab-releases",
+                "id": "automate-gitlab-releases",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2185,6 +2201,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Use the Terminal UI",
+            "path": "/recipes/running-tasks/terminal-ui",
+            "id": "terminal-ui",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
@@ -2287,6 +2311,14 @@
         "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use the Terminal UI",
+        "path": "/recipes/running-tasks/terminal-ui",
+        "id": "terminal-ui",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2555,6 +2587,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Automate GitLab Releases",
+            "path": "/recipes/nx-release/automate-gitlab-releases",
+            "id": "automate-gitlab-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Publish Rust Crates",
             "path": "/recipes/nx-release/publish-rust-crates",
             "id": "publish-rust-crates",
@@ -2665,6 +2705,14 @@
         "name": "Automate GitHub Releases",
         "path": "/recipes/nx-release/automate-github-releases",
         "id": "automate-github-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automate GitLab Releases",
+        "path": "/recipes/nx-release/automate-gitlab-releases",
+        "id": "automate-gitlab-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8381,6 +8429,23 @@
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "executors",
+            "path": "/nx-api/gradle/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "gradle",
+                "path": "/nx-api/gradle/executors/gradle",
+                "name": "gradle",
+                "children": [],
+                "isExternal": false,
                 "disableCollapsible": false
               }
             ],

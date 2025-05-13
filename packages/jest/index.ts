@@ -2,7 +2,9 @@ import { configurationGenerator } from './src/generators/configuration/configura
 export { configurationGenerator };
 
 // Exported for backwards compatibility in case a plugin is using the old name.
-/** @deprecated Use `configurationGenerator` instead. */
+/**
+ * @deprecated Use `configurationGenerator` instead. It will be removed in Nx v22.
+ */
 export const jestProjectGenerator = configurationGenerator;
 
 export {

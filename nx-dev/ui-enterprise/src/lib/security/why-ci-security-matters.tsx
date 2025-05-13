@@ -29,8 +29,8 @@ export function WhyCiSecurityMatters(): ReactElement {
               Why CI Security Matters
             </SectionHeading>
             <SectionHeading as="p" variant="subtitle" className="mt-6">
-              CI pipelines are a growing target – and your cache is a critical
-              entry point.
+              CI pipelines are often an overlooked threat – and your cache is a
+              critical entry point.
             </SectionHeading>
 
             <SectionDescription as="p" className="mt-6">

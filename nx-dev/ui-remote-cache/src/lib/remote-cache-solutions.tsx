@@ -1,10 +1,12 @@
 'use client';
 import { ReactElement } from 'react';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import {
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+} from '@heroicons/react/24/solid';
 import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import Link from 'next/link';
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 export function RemoteCacheSolutions(): ReactElement {
   return (
@@ -22,15 +24,17 @@ export function RemoteCacheSolutions(): ReactElement {
           <div className="-mt-16 grid max-w-full grid-cols-1 gap-12 sm:mx-auto lg:mt-0 lg:grid-cols-3 xl:-mx-4">
             {/* NX CLOUD */}
             <div>
-              <div className="rounded-xl border border-slate-200 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
+              <div className="relative rounded-xl border-2 border-blue-500 bg-white p-8 dark:border-sky-500 dark:bg-slate-950">
+                <span className="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-6 transform items-center rounded-t-md bg-blue-500 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset">
+                  Recommended
+                </span>
                 <div className="flex items-center gap-x-2">
                   <h4 className="text-xl font-semibold leading-8 text-slate-950 dark:text-white">
-                    Managed remote cache
+                    Nx Cloud remote cache
                   </h4>
                 </div>
                 <p className="mt-2 text-sm">
-                  Easiest setup, high performance, secure, fully managed by Nx
-                  Cloud.
+                  Easiest setup, high performance, secure, fully managed by Nx.
                 </p>
                 <div className="my-8">
                   <ButtonLink
@@ -73,8 +77,25 @@ export function RemoteCacheSolutions(): ReactElement {
                         title="Remote caching security"
                         className="font-semibold underline"
                       >
-                        Learn more
+                        learn more
                       </Link>
+                      )
+                    </span>
+                  </li>
+                  <li className="flex items-start justify-start gap-x-2 py-2.5">
+                    <CheckCircleIcon
+                      aria-hidden="true"
+                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                    />
+                    <span>
+                      SOC 2 compliant (
+                      <a
+                        href="https://security.nx.app/"
+                        title="Check our SOC 2 security report"
+                        className="font-semibold underline"
+                      >
+                        view report
+                      </a>
                       )
                     </span>
                   </li>
@@ -116,23 +137,6 @@ export function RemoteCacheSolutions(): ReactElement {
                       aria-hidden="true"
                       className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
                     />
-                    <span>
-                      SOC-2 compliant (
-                      <a
-                        href="https://security.nx.app/"
-                        title="Check our SOC 2 security report"
-                        className="font-semibold underline"
-                      >
-                        view report
-                      </a>
-                      )
-                    </span>
-                  </li>
-                  <li className="flex items-start justify-start gap-x-2 py-2.5">
-                    <CheckCircleIcon
-                      aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
-                    />
                     <span>Support</span>
                   </li>
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
@@ -158,8 +162,8 @@ export function RemoteCacheSolutions(): ReactElement {
                   </h4>
                 </div>
                 <p className="mt-2 text-sm">
-                  Dedicated NPM packages for major storage providers, Nx
-                  managed.
+                  Dedicated NPM packages for major storage providers, maintained
+                  by Nx.
                 </p>
                 <div className="my-8">
                   <ButtonLink
@@ -191,10 +195,10 @@ export function RemoteCacheSolutions(): ReactElement {
                   <li className="flex items-start justify-start gap-x-2 py-2.5">
                     <ExclamationCircleIcon
                       aria-hidden="true"
-                      className="h-6 w-5 flex-none text-blue-600 dark:text-sky-500"
+                      className="h-6 w-5 flex-none text-yellow-600 dark:text-yellow-500"
                     />
                     <span>
-                      Not recommended for organizations requiring HIPAA or SOC-2
+                      Not recommended for organizations requiring HIPAA or SOC 2
                       compliance (
                       <Link
                         href="/enterprise/security"
@@ -202,7 +206,7 @@ export function RemoteCacheSolutions(): ReactElement {
                         title="Remote caching security"
                         className="font-semibold underline"
                       >
-                        Learn more
+                        learn more
                       </Link>
                       )
                     </span>

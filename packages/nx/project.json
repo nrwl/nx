@@ -139,6 +139,32 @@
         "parallel": false
       }
     },
-    "test-native": {}
+    "test-native": {},
+    "format-native": {
+      "command": "cargo fmt",
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}/src/native",
+        "args": ["--all", "--check"]
+      },
+      "configurations": {
+        "fix": {
+          "args": ["--all"]
+        }
+      }
+    },
+    "lint-native": {
+      "command": "cargo clippy",
+      "cache": true,
+      "options": {
+        "cwd": "{projectRoot}/src/native",
+        "args": ["--frozen"]
+      },
+      "configurations": {
+        "fix": {
+          "args": []
+        }
+      }
+    }
   }
 }

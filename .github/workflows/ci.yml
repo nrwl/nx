@@ -8,10 +8,6 @@ on:
     branches:
       - "**"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !contains(github.event.type, 'push')}}
-
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
@@ -27,6 +23,8 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
       NX_CLOUD_NO_TIMEOUTS: 'true'
+      NX_ALLOW_NON_CACHEABLE_DTE: 'true'
+      NX_CLOUD_USE_NEW_TASK_APIS: 'true'
       NX_CLOUD_USE_NEW_STREAM_OUTPUT: 'true'
 
     steps:
@@ -74,7 +72,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
       - name: Check Documentation
         run: pnpm nx documentation
@@ -96,7 +94,7 @@ jobs:
           pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners --parallel=1 --no-dte &
           pids+=($!)
 
-          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci &
+          pnpm nx affected --targets=lint,test,build,e2e,e2e-ci,format-native,lint-native &
           pids+=($!)
 
           for pid in "${pids[@]}"; do
@@ -106,13 +104,25 @@ jobs:
 
   main-macos:
     runs-on: macos-latest
-    
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}${{ contains(github.event_name, 'push') && format('-{0}', github.sha) || '' }}
+      cancel-in-progress: true
+
     env:
       NX_E2E_CI_CACHE_KEY: e2e-github-macos
       NX_PERF_LOGGING: 'false'
       NX_CI_EXECUTION_ENV: 'macos'
       SELECTED_PM: 'npm'
     steps:
+
+      - name: Log concurrency info
+        run: |
+          echo "Concurrency group: ${{ github.workflow }}-${{ github.ref }}${{ contains(github.event_name, 'push') && format('-{0}', github.sha) || '' }}"
+          echo "Concurrency cancel-in-progress: ${{ !contains(github.event_name, 'push') }}"
+          echo "Concurrency cancel-event-name: ${{ github.event_name }}"
+        if: always()
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -127,7 +137,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /opt/Homebrew
+            /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 
@@ -142,7 +152,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /opt/Homebrew
+            /opt/homebrew
             ~/Library/Caches/Homebrew
           key: nrwl-nx-homebrew-packages
 

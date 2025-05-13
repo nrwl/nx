@@ -1,16 +1,7 @@
-import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import {
-  joinPathFragments,
-  ProjectGraph,
-  readCachedProjectGraph,
-  readJson,
-  readNxJson,
-  Tree,
-} from '@nx/devkit';
+import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import applicationGenerator from '../application/application';
 import setupSsrGenerator from './setup-ssr';
-import { Linter } from '@nx/eslint';
 
 jest.mock('@nx/devkit', () => {
   const myAppData = {
@@ -126,7 +117,7 @@ describe('setupSsrGenerator', () => {
     await applicationGenerator(tree, {
       directory: appName,
       style: 'css',
-      linter: Linter.None,
+      linter: 'none',
       unitTestRunner: 'none',
       e2eTestRunner: 'none',
       skipFormat: true,

@@ -2,7 +2,7 @@
 title: Launch Nx Week Recap
 slug: 'launch-nx-week-recap'
 authors: [Zack DeRose]
-cover_image: '/blog/images/2024-02-15/featured_img.png'
+cover_image: '/blog/images/2024-02-15/featured_img.avif'
 tags: [nx, nx-cloud, releases, changelog]
 description: 'Explore the major announcements from Launch Nx Week, including Nx 18.0, Project Crystal, Nuxt plugin, Nx Agents, and Tusky AI integration.'
 ---

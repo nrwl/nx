@@ -93,12 +93,20 @@ function startWebServer(webServerCommand: string) {
       }
     } else {
       return new Promise<void>((res, rej) => {
-        treeKill(serverProcess.pid, (err) => {
-          if (err) {
-            rej(err);
+        if (process.platform === 'win32' || process.platform === 'darwin') {
+          if (serverProcess.kill()) {
+            res();
+          } else {
+            rej('Unable to kill process');
           }
-          res();
-        });
+        } else {
+          treeKill(serverProcess.pid, (err) => {
+            if (err) {
+              rej(err);
+            }
+            res();
+          });
+        }
       });
     }
   };

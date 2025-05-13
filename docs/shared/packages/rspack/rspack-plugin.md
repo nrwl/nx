@@ -15,9 +15,6 @@ Make sure to install the `@nx/rspack` version that matches the version of `nx` i
 
 In any Nx workspace, you can install `@nx/rspack` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/rspack
 ```
@@ -60,18 +57,6 @@ The `@nx/rspack/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 The `buildTargetName`, `previewTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Rspack tasks. The default names are `build`, `preview`, `serve` and `serve-static`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/rspack` package with your package manager.
-
-```shell
-npm add -D @nx/rspack
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using @nx/rspack
 

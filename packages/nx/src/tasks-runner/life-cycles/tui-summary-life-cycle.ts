@@ -1,14 +1,15 @@
 import { EOL } from 'node:os';
 import { TaskStatus as NativeTaskStatus } from '../../native';
-import { Task } from '../../config/task-graph';
+import { Task, TaskGraph } from '../../config/task-graph';
 import { output } from '../../utils/output';
 import type { LifeCycle } from '../life-cycle';
 import type { TaskStatus } from '../tasks-runner';
 import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 import { prettyTime } from './pretty-time';
 import { viewLogsFooterRows } from './view-logs-utils';
-import figures = require('figures');
+import * as figures from 'figures';
 import { getTasksHistoryLifeCycle } from './task-history-life-cycle';
+import { getLeafTasks } from '../task-graph-utils';
 
 const LEFT_PAD = `   `;
 const SPACER = `  `;
@@ -17,6 +18,7 @@ const EXTENDED_LEFT_PAD = `      `;
 export function getTuiTerminalSummaryLifeCycle({
   projectNames,
   tasks,
+  taskGraph,
   args,
   overrides,
   initiatingProject,
@@ -25,6 +27,7 @@ export function getTuiTerminalSummaryLifeCycle({
 }: {
   projectNames: string[];
   tasks: Task[];
+  taskGraph: TaskGraph;
   args: { targets?: string[]; configuration?: string; parallel?: number };
   overrides: Record<string, unknown>;
   initiatingProject: string;
@@ -41,31 +44,37 @@ export function getTuiTerminalSummaryLifeCycle({
   let totalSuccessfulTasks = 0;
   let totalFailedTasks = 0;
   let totalCompletedTasks = 0;
-  let totalStoppedTasks = 0;
   let timeTakenText: string;
 
   const failedTasks = new Set<string>();
   const inProgressTasks = new Set<string>();
-  const tasksToTerminalOutputs: Record<
-    string,
-    { terminalOutput: string; taskStatus: TaskStatus }
-  > = {};
-  const taskIdsInOrderOfCompletion: string[] = [];
+  const stoppedTasks = new Set<string>();
+
+  const tasksToTerminalOutputs: Record<string, string> = {};
+  const tasksToTaskStatus: Record<string, TaskStatus> = {};
+
+  const taskIdsInTheOrderTheyStart: string[] = [];
 
   lifeCycle.startTasks = (tasks) => {
     for (let t of tasks) {
+      tasksToTerminalOutputs[t.id] ??= '';
+      taskIdsInTheOrderTheyStart.push(t.id);
       inProgressTasks.add(t.id);
     }
   };
 
-  lifeCycle.printTaskTerminalOutput = (task, taskStatus, terminalOutput) => {
-    taskIdsInOrderOfCompletion.push(task.id);
-    tasksToTerminalOutputs[task.id] = { terminalOutput, taskStatus };
+  lifeCycle.appendTaskOutput = (taskId, output) => {
+    tasksToTerminalOutputs[taskId] += output;
   };
 
+  // TODO(@AgentEnder): The following 2 methods should be one but will need more refactoring
+  lifeCycle.printTaskTerminalOutput = (task, taskStatus) => {
+    tasksToTaskStatus[task.id] = taskStatus;
+  };
   lifeCycle.setTaskStatus = (taskId, taskStatus) => {
     if (taskStatus === NativeTaskStatus.Stopped) {
-      totalStoppedTasks++;
+      stoppedTasks.add(taskId);
+      inProgressTasks.delete(taskId);
     }
   };
 
@@ -108,28 +117,51 @@ export function getTuiTerminalSummaryLifeCycle({
       return;
     }
 
+    const failure = totalSuccessfulTasks + stoppedTasks.size !== totalTasks;
+    const cancelled =
+      // Some tasks were in progress...
+      inProgressTasks.size > 0 ||
+      // or some tasks had not started yet
+      totalTasks !== tasks.length ||
+      // the run had a continous task as a leaf...
+      // this is needed because continous tasks get marked as stopped when the process is interrupted
+      [...getLeafTasks(taskGraph)].filter((t) => taskGraph.tasks[t].continuous)
+        .length > 0;
+
     if (isRunOne) {
-      printRunOneSummary();
+      printRunOneSummary({
+        failure,
+        cancelled,
+      });
     } else {
-      printRunManySummary();
+      printRunManySummary({
+        failure,
+        cancelled,
+      });
     }
     getTasksHistoryLifeCycle()?.printFlakyTasksMessage();
   };
 
-  const printRunOneSummary = () => {
+  const printRunOneSummary = ({
+    failure,
+    cancelled,
+  }: {
+    failure: boolean;
+    cancelled: boolean;
+  }) => {
     let lines: string[] = [];
-    const failure = totalSuccessfulTasks + totalStoppedTasks !== totalTasks;
 
     // Prints task outputs in the order they were completed
     // above the summary, since run-one should print all task results.
-    for (const taskId of taskIdsInOrderOfCompletion) {
-      const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
+    for (const taskId of taskIdsInTheOrderTheyStart) {
+      const taskStatus = tasksToTaskStatus[taskId];
+      const terminalOutput = tasksToTerminalOutputs[taskId];
       output.logCommandOutput(taskId, taskStatus, terminalOutput);
     }
 
     lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
 
-    if (!failure) {
+    if (!failure && !cancelled) {
       const text = `Successfully ran ${formatTargetsAndProjects(
         [initiatingProject],
         targets,
@@ -165,7 +197,7 @@ export function getTuiTerminalSummaryLifeCycle({
         );
       }
       lines = [output.colors.green(lines.join(EOL))];
-    } else if (totalCompletedTasks + totalStoppedTasks === totalTasks) {
+    } else if (!cancelled) {
       let text = `Ran target ${output.bold(
         targets[0]
       )} for project ${output.bold(initiatingProject)}`;
@@ -173,7 +205,7 @@ export function getTuiTerminalSummaryLifeCycle({
         text += ` and ${output.bold(tasks.length - 1)} task(s) they depend on`;
       }
 
-      const taskOverridesLines = [];
+      const taskOverridesLines: string[] = [];
       if (Object.keys(overrides).length > 0) {
         taskOverridesLines.push('');
         taskOverridesLines.push(
@@ -188,28 +220,29 @@ export function getTuiTerminalSummaryLifeCycle({
 
       const viewLogs = viewLogsFooterRows(totalFailedTasks);
 
-      lines = [
-        output.colors.red([
-          output.applyNxPrefix(
-            'red',
-            output.colors.red(text) + output.dim(` (${timeTakenText})`)
-          ),
-          ...taskOverridesLines,
-          '',
-          `${LEFT_PAD}${output.colors.red(
-            figures.cross
-          )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
-          `${LEFT_PAD}${output.dim(
-            figures.tick
-          )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
-            `[${totalCachedTasks} read from cache]`
-          )}`,
-          ...viewLogs,
-        ]),
-      ];
+      lines.push(
+        output.colors.red(
+          [
+            output.applyNxPrefix(
+              'red',
+              output.colors.red(text) + output.dim(` (${timeTakenText})`)
+            ),
+            ...taskOverridesLines,
+            '',
+            `${LEFT_PAD}${output.colors.red(
+              figures.cross
+            )}${SPACER}${totalFailedTasks}${`/${totalCompletedTasks}`} failed`,
+            `${LEFT_PAD}${output.dim(
+              figures.tick
+            )}${SPACER}${totalSuccessfulTasks}${`/${totalCompletedTasks}`} succeeded ${output.dim(
+              `[${totalCachedTasks} read from cache]`
+            )}`,
+            ...viewLogs,
+          ].join(EOL)
+        )
+      );
     } else {
-      lines = [
-        ...output.getVerticalSeparatorLines('red'),
+      lines.push(
         output.applyNxPrefix(
           'red',
           output.colors.red(
@@ -217,8 +250,8 @@ export function getTuiTerminalSummaryLifeCycle({
               targets[0]
             )} for project ${output.bold(initiatingProject)}`
           ) + output.dim(` (${timeTakenText})`)
-        ),
-      ];
+        )
+      );
     }
 
     // adds some vertical space after the summary to avoid bunching against terminal
@@ -227,16 +260,32 @@ export function getTuiTerminalSummaryLifeCycle({
     console.log(lines.join(EOL));
   };
 
-  const printRunManySummary = () => {
+  const printRunManySummary = ({
+    failure,
+    cancelled,
+  }: {
+    failure: boolean;
+    cancelled: boolean;
+  }) => {
     console.log('');
 
-    const lines: string[] = [];
-    const failure = totalSuccessfulTasks + totalStoppedTasks !== totalTasks;
+    const lines: string[] = [''];
 
-    for (const taskId of taskIdsInOrderOfCompletion) {
-      const { terminalOutput, taskStatus } = tasksToTerminalOutputs[taskId];
-      if (taskStatus === 'failure') {
+    for (const taskId of taskIdsInTheOrderTheyStart) {
+      const taskStatus = tasksToTaskStatus[taskId];
+      const terminalOutput = tasksToTerminalOutputs[taskId];
+      // Task Status is null?
+      if (!taskStatus) {
         output.logCommandOutput(taskId, taskStatus, terminalOutput);
+        output.addNewline();
+        lines.push(
+          `${LEFT_PAD}${output.colors.cyan(
+            figures.squareSmallFilled
+          )}${SPACER}${output.colors.gray('nx run ')}${taskId}`
+        );
+      } else if (taskStatus === 'failure') {
+        output.logCommandOutput(taskId, taskStatus, terminalOutput);
+        output.addNewline();
         lines.push(
           `${LEFT_PAD}${output.colors.red(
             figures.cross
@@ -253,7 +302,7 @@ export function getTuiTerminalSummaryLifeCycle({
 
     lines.push(...output.getVerticalSeparatorLines(failure ? 'red' : 'green'));
 
-    if (totalSuccessfulTasks + totalStoppedTasks === totalTasks) {
+    if (totalSuccessfulTasks + stoppedTasks.size === totalTasks) {
       const successSummaryRows = [];
       const text = `Successfully ran ${formatTargetsAndProjects(
         projectNames,
@@ -292,9 +341,9 @@ export function getTuiTerminalSummaryLifeCycle({
       lines.push(successSummaryRows.join(EOL));
     } else {
       const text = `${
-        inProgressTasks.size ? 'Cancelled while running' : 'Ran'
+        cancelled ? 'Cancelled while running' : 'Ran'
       } ${formatTargetsAndProjects(projectNames, targets, tasks)}`;
-      const taskOverridesRows = [];
+      const taskOverridesRows: string[] = [];
       if (Object.keys(overrides).length > 0) {
         taskOverridesRows.push('');
         taskOverridesRows.push(
@@ -312,7 +361,7 @@ export function getTuiTerminalSummaryLifeCycle({
         0,
         numFailedToPrint
       );
-      const failureSummaryRows = [
+      const failureSummaryRows: string[] = [
         output.applyNxPrefix(
           'red',
           output.colors.red(text) + output.dim.white(` (${timeTakenText})`)

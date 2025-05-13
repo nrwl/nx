@@ -4,6 +4,7 @@ import {
   ESquareIcon,
   HeroDevsIcon,
   PushBasedIcon,
+  BriebugIcon,
 } from '@nx/nx-dev/ui-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Partner } from './partner';
@@ -32,8 +33,8 @@ export function PartnersList(): JSX.Element {
         logo: <PushBasedIcon aria-hidden="true" className="mb-4 h-12" />,
         href: 'https://push-based.io/',
         location: 'EU',
-        tagline: 'Your Trusted Source for Nx and Angular Expertise',
-        capabilities: ['Angular', 'Nx'],
+        tagline: 'Make Code Fast at Scale',
+        capabilities: ['Monorepo Strategies', 'Performance', 'Training'],
       },
       {
         name: 'Callstack',
@@ -51,6 +52,14 @@ export function PartnersList(): JSX.Element {
         location: 'EU',
         tagline: 'Developer Experts On Demand',
         capabilities: ['Angular', 'React', 'Node', 'Next.js'],
+      },
+      {
+        name: 'Briebug',
+        logo: <BriebugIcon aria-hidden="true" className="h-14" />,
+        href: 'https://briebug.com/',
+        location: 'US',
+        tagline: 'Your Angular and Nx Experts.',
+        capabilities: ['Angular', 'Ionic', 'NgRx'],
       },
     ],
     []

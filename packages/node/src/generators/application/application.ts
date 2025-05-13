@@ -32,7 +32,7 @@ import {
   tsConfigBaseOptions,
 } from '@nx/js';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
-import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import {
   expressTypingsVersion,
@@ -541,7 +541,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   updateTsConfigOptions(tree, options);
 
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === 'eslint') {
     const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
@@ -678,7 +678,7 @@ async function normalizeOptions(
     appProjectRoot,
     importPath,
     parsedTags,
-    linter: options.linter ?? Linter.EsLint,
+    linter: options.linter ?? 'eslint',
     unitTestRunner: options.unitTestRunner ?? 'jest',
     rootProject: options.rootProject ?? false,
     port: options.port ?? 3000,

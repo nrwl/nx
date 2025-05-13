@@ -1305,6 +1305,16 @@
     ],
     "migrations": [
       {
+        "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
+        "file": "generated/packages/cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/cypress",
+        "path": "cypress/migrations/remove-tsconfig-and-copy-files-options-from-cypress-executor",
+        "type": "migration"
+      },
+      {
         "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
         "file": "generated/packages/cypress/migrations/set-inject-document-domain.json",
         "hidden": false,
@@ -2077,7 +2087,17 @@
         "originalFilePath": "shared/packages/gradle/gradle-plugin"
       }
     ],
-    "executors": [],
+    "executors": [
+      {
+        "description": "Runs gradle tasks via the Gradle Tooling API or by invoking gradlew.",
+        "file": "generated/packages/gradle/executors/gradle.json",
+        "hidden": false,
+        "name": "gradle",
+        "originalFilePath": "/packages/gradle/src/executors/gradle/schema.json",
+        "path": "gradle/executors/gradle",
+        "type": "executor"
+      }
+    ],
     "generators": [
       {
         "description": "Initializes a Gradle project in the current workspace",
@@ -2099,6 +2119,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
+        "file": "generated/packages/gradle/migrations/change-ciTargetName-to-ciTestTargetName.json",
+        "hidden": false,
+        "name": "change-ciTargetName-to-ciTestTargetName",
+        "version": "21.0.0-beta.13",
+        "originalFilePath": "/packages/gradle",
+        "path": "gradle/migrations/change-ciTargetName-to-ciTestTargetName",
+        "type": "migration"
+      },
       {
         "description": "Change @nx/gradle plugin to version 1",
         "file": "generated/packages/gradle/migrations/change-plugin-to-v1.json",
@@ -2202,6 +2232,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Remove the previously deprecated and unused `tsConfig` option from the `@nx/jest:jest` executor.",
+        "file": "generated/packages/jest/migrations/remove-tsconfig-option-from-jest-executor.json",
+        "hidden": false,
+        "name": "remove-tsconfig-option-from-jest-executor",
+        "version": "21.0.0-beta.10",
+        "originalFilePath": "/packages/jest",
+        "path": "jest/migrations/remove-tsconfig-option-from-jest-executor",
+        "type": "migration"
+      },
       {
         "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
         "file": "generated/packages/jest/migrations/replace-getJestProjects-with-getJestProjectsAsync-v21.json",
@@ -3086,7 +3126,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/affected",
-        "tags": ["run-tasks"],
+        "tags": ["run-tasks", "affected"],
         "originalFilePath": "generated/cli/affected"
       },
       {
@@ -3345,9 +3385,39 @@
         "file": "generated/packages/nx/migrations/release-version-config-changes.json",
         "hidden": false,
         "name": "release-version-config-changes",
-        "version": "21.0.0-beta.1",
+        "version": "21.0.0-beta.11",
         "originalFilePath": "/packages/nx",
         "path": "nx/migrations/release-version-config-changes",
+        "type": "migration"
+      },
+      {
+        "description": "Updates release changelog config based on the breaking changes in Nx v21",
+        "file": "generated/packages/nx/migrations/release-changelog-config-changes.json",
+        "hidden": false,
+        "name": "release-changelog-config-changes",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/release-changelog-config-changes",
+        "type": "migration"
+      },
+      {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-legacy-cache.json",
+        "hidden": false,
+        "name": "remove-legacy-cache",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/remove-legacy-cache",
+        "type": "migration"
+      },
+      {
+        "description": "Removes the legacy cache configuration from nx.json",
+        "file": "generated/packages/nx/migrations/remove-custom-tasks-runner.json",
+        "hidden": false,
+        "name": "remove-custom-tasks-runner",
+        "version": "21.0.0-beta.8",
+        "originalFilePath": "/packages/nx",
+        "path": "nx/migrations/remove-custom-tasks-runner",
         "type": "migration"
       },
       {
@@ -3778,6 +3848,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Replaces `classProperties.loose` option with `loose`.",
+        "file": "generated/packages/react/migrations/update-21-0-0-update-babel-loose.json",
+        "hidden": false,
+        "name": "update-21-0-0-update-babel-loose",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/react",
+        "path": "react/migrations/update-21-0-0-update-babel-loose",
+        "type": "migration"
+      },
       {
         "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
         "file": "generated/packages/react/migrations/add-mf-env-var-to-target-defaults.json",
@@ -4641,6 +4721,16 @@
     "migrations": [
       {
         "description": "",
+        "file": "generated/packages/rspack/migrations/21.0.1-package-updates.json",
+        "hidden": false,
+        "name": "21.0.1-package-updates",
+        "version": "21.0.1-beta.0",
+        "originalFilePath": "/packages/rspack",
+        "path": "rspack/migrations/21.0.1-package-updates",
+        "type": "migration"
+      },
+      {
+        "description": "",
         "file": "generated/packages/rspack/migrations/20.5.0-package-updates.json",
         "hidden": false,
         "name": "20.5.0-package-updates",
@@ -5319,6 +5409,16 @@
       }
     ],
     "migrations": [
+      {
+        "description": "Remove isolatedConfig option for @nx/webpack:webpack",
+        "file": "generated/packages/webpack/migrations/update-21-0-0-remove-isolated-config.json",
+        "hidden": false,
+        "name": "update-21-0-0-remove-isolated-config",
+        "version": "21.0.0-beta.11",
+        "originalFilePath": "/packages/webpack",
+        "path": "webpack/migrations/update-21-0-0-remove-isolated-config",
+        "type": "migration"
+      },
       {
         "description": "",
         "file": "generated/packages/webpack/migrations/20.7.1-package-updates.json",

@@ -6,7 +6,7 @@ date: 2025-02-26
 slug: 'react-development-for-2025'
 authors: ['Juri Strumpflohner']
 tags: [webinar]
-cover_image: /blog/images/2025-02-26/Feb-Webinar-Card.png
+cover_image: /blog/images/2025-02-26/Feb-Webinar-Card.avif
 status: Past - Gated
 registrationUrl: https://go.nx.dev/feb2025-webinar
 ---

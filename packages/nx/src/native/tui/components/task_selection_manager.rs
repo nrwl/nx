@@ -214,7 +214,7 @@ impl TaskSelectionManager {
     pub fn is_selected(&self, task_name: &str) -> bool {
         self.selected_task_name
             .as_ref()
-            .map_or(false, |selected| selected == task_name)
+            .is_some_and(|selected| selected == task_name)
     }
 
     pub fn get_selected_task_name(&self) -> Option<&String> {
@@ -222,7 +222,7 @@ impl TaskSelectionManager {
     }
 
     pub fn total_pages(&self) -> usize {
-        (self.entries.len() + self.items_per_page - 1) / self.items_per_page
+        self.entries.len().div_ceil(self.items_per_page)
     }
 
     pub fn get_current_page(&self) -> usize {

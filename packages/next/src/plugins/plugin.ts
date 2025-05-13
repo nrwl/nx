@@ -207,7 +207,7 @@ async function getBuildTargetConfig(
     dependsOn: ['^build'],
     cache: true,
     inputs: getInputs(namedInputs),
-    outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
+    outputs: [`${nextOutputPath}/!(cache)/**/*`, `${nextOutputPath}/!(cache)`],
   };
 
   // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
@@ -237,21 +237,6 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
       cwd: projectRoot,
     },
     dependsOn: [options.buildTargetName],
-  };
-
-  return targetConfig;
-}
-
-function getStaticServeTargetConfig(options: NextPluginOptions) {
-  const targetConfig: TargetConfiguration = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: options.buildTargetName,
-      staticFilePath: '{projectRoot}/out',
-      port: 3000,
-      // Routes are found correctly with serve-static
-      spa: false,
-    },
   };
 
   return targetConfig;

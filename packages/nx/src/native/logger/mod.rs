@@ -1,4 +1,8 @@
+pub mod console;
+
 use colored::Colorize;
+use std::env;
+use std::fs::create_dir_all;
 use std::io::IsTerminal;
 use tracing::{Event, Level, Subscriber};
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
@@ -6,6 +10,7 @@ use tracing_subscriber::fmt::{format, FmtContext, FormatEvent, FormatFields, For
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::{EnvFilter, Layer};
+use tui_logger::TuiTracingSubscriberLayer;
 
 struct NxLogFormatter;
 impl<S, N> FormatEvent<S, N> for NxLogFormatter
@@ -97,12 +102,34 @@ pub(crate) fn enable_logger() {
         .with_writer(std::io::stdout)
         .event_format(NxLogFormatter)
         .with_filter(
-            EnvFilter::try_from_env("NX_NATIVE_LOGGING")
-                .unwrap_or_else(|_| EnvFilter::new("ERROR")),
+            EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("OFF")),
         );
 
+    let registry = tracing_subscriber::registry()
+        .with(stdout_layer)
+        .with(TuiTracingSubscriberLayer);
+    tui_logger::init_logger(tui_logger::LevelFilter::Trace).ok();
+
+    if env::var("NX_NATIVE_FILE_LOGGING").is_err() {
+        // File logging is not enabled
+        registry.try_init().ok();
+        return;
+    }
+
+    let log_dir = ".nx/workspace-data";
+
+    if let Err(e) = create_dir_all(log_dir) {
+        // Could not create the directory, so we will not log to file
+        println!(
+            "Logging to a file was not enabled because Nx could not create the {} directory for logging. Error: {}",
+            log_dir, e
+        );
+        registry.try_init().ok();
+        return;
+    };
+
     let file_appender: RollingFileAppender =
-        RollingFileAppender::new(Rotation::NEVER, ".nx/workspace-data", "nx.log");
+        RollingFileAppender::new(Rotation::NEVER, log_dir, "nx.log");
     let file_layer = tracing_subscriber::fmt::layer()
         .with_writer(file_appender)
         .event_format(NxLogFormatter)
@@ -111,9 +138,6 @@ pub(crate) fn enable_logger() {
             EnvFilter::try_from_env("NX_NATIVE_FILE_LOGGING")
                 .unwrap_or_else(|_| EnvFilter::new("ERROR")),
         );
-    tracing_subscriber::registry()
-        .with(stdout_layer)
-        .with(file_layer)
-        .try_init()
-        .ok();
+
+    registry.with(file_layer).try_init().ok();
 }

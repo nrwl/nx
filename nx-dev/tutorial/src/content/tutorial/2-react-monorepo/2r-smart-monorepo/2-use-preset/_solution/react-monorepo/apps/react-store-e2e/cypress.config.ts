@@ -7,10 +7,10 @@ export default defineConfig({
       cypressDir: 'src',
       bundler: 'vite',
       webServerCommands: {
-        default: 'npx nx run @react-monorepo/react-store:dev',
-        production: 'npx nx run @react-monorepo/react-store:preview',
+        default: 'npx nx run react-store:dev',
+        production: 'npx nx run react-store:preview',
       },
-      ciWebServerCommand: 'npx nx run @react-monorepo/react-store:preview',
+      ciWebServerCommand: 'npx nx run react-store:preview',
       ciBaseUrl: 'http://localhost:4300',
     }),
     baseUrl: 'http://localhost:4200',

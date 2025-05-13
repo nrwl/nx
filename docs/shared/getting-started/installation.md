@@ -85,6 +85,13 @@ brew install nx
 ```
 
 {% /tab %}
+{% tab label="Chocolatey" %}
+
+```shell
+choco install nx
+```
+
+{% /tab %}
 {% tab label="npm" %}
 
 ```shell

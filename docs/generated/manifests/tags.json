@@ -102,6 +102,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/running-custom-commands",
       "id": "run-commands-executor",
       "name": "Run Custom Commands",
@@ -682,6 +689,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/nx-release/automate-gitlab-releases",
+      "id": "automate-gitlab-releases",
+      "name": "Automate GitLab Releases",
+      "path": "/recipes/nx-release/automate-gitlab-releases"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/nx-release/publish-rust-crates",
       "id": "publish-rust-crates",
       "name": "Publish Rust Crates",
@@ -968,6 +982,15 @@
       "id": "create-nx-workspace",
       "name": "create-nx-workspace",
       "path": "/nx-api/nx/documents/create-nx-workspace"
+    }
+  ],
+  "terminal-ui": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/terminal-ui",
+      "id": "terminal-ui",
+      "name": "Use the Terminal UI",
+      "path": "/recipes/running-tasks/terminal-ui"
     }
   ],
   "exec": [
@@ -1566,6 +1589,15 @@
       "id": "ci-deployment",
       "name": "Prepare applications for deployment via CI",
       "path": "/ci/recipes/other/ci-deployment"
+    }
+  ],
+  "affected": [
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/nx/documents/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/nx-api/nx/documents/affected"
     }
   ]
 }

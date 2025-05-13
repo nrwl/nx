@@ -154,9 +154,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -355,9 +355,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -559,9 +559,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -794,9 +794,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1013,9 +1013,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1241,9 +1241,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1467,9 +1467,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1678,9 +1678,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -1884,9 +1884,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2324,9 +2324,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -2452,9 +2452,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2664,9 +2664,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2695,9 +2695,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2904,9 +2904,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -2997,9 +2997,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3210,9 +3210,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3420,9 +3420,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3626,9 +3626,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -3837,9 +3837,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4061,9 +4061,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4265,9 +4265,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4481,9 +4481,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4609,9 +4609,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -4908,9 +4908,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": false,
                   "commitReferences": false,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -4920,9 +4920,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "Custom no changes!",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5048,9 +5048,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": false,
                     "commitReferences": false,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -5137,9 +5137,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5149,9 +5149,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5277,9 +5277,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -5367,9 +5367,436 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring gitlab as a shorthand for createRelease for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: 'gitlab',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "https://gitlab.com/api/v4",
+                  "hostname": "gitlab.com",
+                  "provider": "gitlab",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "<dirname>/release/changelog-renderer",
+              },
+            },
+            "conventionalCommits": {
+              "types": {
+                "__INVALID__": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "Invalid based on conventional commits specification",
+                  },
+                  "semverBump": "none",
+                },
+                "build": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📦 Build",
+                  },
+                  "semverBump": "none",
+                },
+                "chore": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏡 Chore",
+                  },
+                  "semverBump": "none",
+                },
+                "ci": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🤖 CI",
+                  },
+                  "semverBump": "none",
+                },
+                "docs": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "📖 Documentation",
+                  },
+                  "semverBump": "none",
+                },
+                "examples": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🏀 Examples",
+                  },
+                  "semverBump": "none",
+                },
+                "feat": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🚀 Features",
+                  },
+                  "semverBump": "minor",
+                },
+                "fix": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🩹 Fixes",
+                  },
+                  "semverBump": "patch",
+                },
+                "perf": {
+                  "changelog": {
+                    "hidden": false,
+                    "title": "🔥 Performance",
+                  },
+                  "semverBump": "none",
+                },
+                "refactor": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "💅 Refactors",
+                  },
+                  "semverBump": "none",
+                },
+                "revert": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "⏪ Revert",
+                  },
+                  "semverBump": "none",
+                },
+                "style": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🎨 Styles",
+                  },
+                  "semverBump": "none",
+                },
+                "test": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "✅ Tests",
+                  },
+                  "semverBump": "none",
+                },
+                "types": {
+                  "changelog": {
+                    "hidden": true,
+                    "title": "🌊 Types",
+                  },
+                  "semverBump": "none",
+                },
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "push": false,
+              "pushArgs": "",
+              "stageChanges": false,
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "releaseTagPatternCheckAllBranchesWhen": undefined,
+                "version": {
+                  "conventionalCommits": false,
+                  "groupPreVersionCommand": "",
+                  "logUnchangedProjects": true,
+                  "preserveLocalDependencyProtocols": true,
+                  "updateDependents": "auto",
+                  "useLegacyVersioning": false,
+                  "versionActions": "@nx/js/src/release/version-actions",
+                  "versionActionsOptions": {},
+                },
+                "versionPlans": false,
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "releaseTagPatternCheckAllBranchesWhen": undefined,
+            "version": {
+              "conventionalCommits": false,
+              "currentVersionResolver": undefined,
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": false,
+                "pushArgs": "",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "logUnchangedProjects": true,
+              "preVersionCommand": "",
+              "preserveLocalDependencyProtocols": true,
+              "specifierSource": undefined,
+              "updateDependents": "auto",
+              "useLegacyVersioning": false,
+              "versionActions": "@nx/js/src/release/version-actions",
+              "versionActionsOptions": {},
+            },
+            "versionPlans": false,
+          },
+        }
+      `);
+    });
+
+    it('should allow configuring a gitlab hostname and set a default apiBaseUrl for the workspace changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, projectFileMap, {
+        changelog: {
+          workspaceChangelog: {
+            createRelease: {
+              provider: 'gitlab',
+              hostname: 'gitlab.example.com',
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "automaticFromRef": false,
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "push": true,
+                "pushArgs": "",
+                "stageChanges": false,
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": {
+                  "apiBaseUrl": "https://gitlab.example.com/api/v4",
+                  "hostname": "gitlab.example.com",
+                  "provider": "gitlab",
+                },
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "applyUsernameToAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5582,9 +6009,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5798,9 +6225,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -5992,6 +6419,7 @@ describe('createNxReleaseConfig()', () => {
             "provider": "something-invalid",
             "supportedProviders": [
               "github-enterprise-server",
+              "gitlab",
             ],
           },
         }
@@ -6075,9 +6503,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6208,9 +6636,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6307,9 +6735,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6440,9 +6868,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -6517,6 +6945,7 @@ describe('createNxReleaseConfig()', () => {
             "provider": "something-invalid",
             "supportedProviders": [
               "github-enterprise-server",
+              "gitlab",
             ],
           },
         }
@@ -6720,9 +7149,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -6925,9 +7354,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7152,9 +7581,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7376,9 +7805,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7596,9 +8025,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -7817,9 +8246,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8041,9 +8470,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8245,7 +8674,7 @@ describe('createNxReleaseConfig()', () => {
               createRelease: 'github', // set field in group config
               renderOptions: {
                 authors: false, // override deeply nested field in group config
-                mapAuthorsToGitHubUsernames: false, // override deeply nested field in group config
+                applyUsernameToAuthors: false, // override deeply nested field in group config
               },
             },
           },
@@ -8283,9 +8712,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8416,9 +8845,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": false,
                     "authors": false,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": false,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -8467,9 +8896,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/a-different-custom-path-at-the-group.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -8570,9 +8999,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8586,9 +9015,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8718,9 +9147,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -8834,9 +9263,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -8966,9 +9395,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -9063,9 +9492,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -9195,9 +9624,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
+                    "applyUsernameToAuthors": true,
                     "authors": true,
                     "commitReferences": true,
-                    "mapAuthorsToGitHubUsernames": true,
                     "versionTitleDate": true,
                   },
                   "renderer": "<dirname>/release/changelog-renderer",
@@ -9273,6 +9702,7 @@ describe('createNxReleaseConfig()', () => {
             "provider": "something-invalid",
             "supportedProviders": [
               "github-enterprise-server",
+              "gitlab",
             ],
           },
         }
@@ -9525,9 +9955,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -9736,7 +10166,7 @@ describe('createNxReleaseConfig()', () => {
                 "renderOptions": {
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
+                  "applyUsernameToAuthors": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -10337,9 +10767,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -10552,9 +10982,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -10766,9 +11196,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -10983,9 +11413,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -11192,9 +11622,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -11449,9 +11879,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -11659,9 +12089,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",
@@ -12824,9 +13254,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
+                  "applyUsernameToAuthors": true,
                   "authors": true,
                   "commitReferences": true,
-                  "mapAuthorsToGitHubUsernames": true,
                   "versionTitleDate": true,
                 },
                 "renderer": "<dirname>/release/changelog-renderer",

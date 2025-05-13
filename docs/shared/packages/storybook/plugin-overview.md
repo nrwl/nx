@@ -17,9 +17,6 @@ Make sure to install the `@nx/storybook` version that matches the version of `nx
 
 In any Nx workspace, you can install `@nx/storybook` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/storybook
 ```
@@ -62,18 +59,6 @@ The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/storybook` package with your package manager.
-
-```shell
-npm add -D @nx/storybook
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Using Storybook
 

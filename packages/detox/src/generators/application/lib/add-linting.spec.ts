@@ -1,6 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { addLinting } from './add-linting';
 import { addProject } from './add-project';
 
@@ -20,7 +19,7 @@ describe('Add Linting', () => {
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
@@ -38,7 +37,7 @@ describe('Add Linting', () => {
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
@@ -58,7 +57,7 @@ describe('Add Linting', () => {
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.None,
+      linter: 'none',
       isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });

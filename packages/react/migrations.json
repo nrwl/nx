@@ -41,6 +41,12 @@
       "version": "20.4.0-beta.0",
       "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
       "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+    },
+    "update-21-0-0-update-babel-loose": {
+      "cli": "nx",
+      "version": "21.0.0-beta.11",
+      "description": "Replaces `classProperties.loose` option with `loose`.",
+      "factory": "./src/migrations/update-21-0-0/update-babel-loose"
     }
   },
   "packageJsonUpdates": {

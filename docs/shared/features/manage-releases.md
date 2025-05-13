@@ -75,7 +75,9 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
           // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
           "commitReferences": true,
           // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
+          "versionTitleDate": true,
+          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
+          "applyUsernameToAuthors": true
         }
       },
       "workspaceChangelog": {
@@ -85,7 +87,9 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
           // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
           "commitReferences": true,
           // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
+          "versionTitleDate": true,
+          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
+          "applyUsernameToAuthors": true
         }
       }
     }

@@ -72,31 +72,34 @@ describe('Nx Import Gradle', () => {
     const source = '.';
     const directory = 'projects/gradle-app-kotlin';
 
-    runCLI(
-      `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
-      {
-        verbose: true,
-      }
-    );
+    try {
+      runCLI(
+        `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
+        {
+          verbose: true,
+        }
+      );
 
-    checkFilesExist(
-      `${directory}/settings.gradle.kts`,
-      `${directory}/build.gradle.kts`,
-      `${directory}/gradlew`,
-      `${directory}/gradlew.bat`
-    );
-    const nxJson = readJson('nx.json');
-    const gradlePlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/gradle'
-    );
-    expect(gradlePlugin).toBeDefined();
-    expect(() => {
-      runCLI(`show projects`);
-      runCLI('build kotlin-app');
-    }).not.toThrow();
-
-    runCommand(`git add .`);
-    runCommand(`git commit -am 'import kotlin project'`);
+      checkFilesExist(
+        `${directory}/settings.gradle.kts`,
+        `${directory}/build.gradle.kts`,
+        `${directory}/gradlew`,
+        `${directory}/gradlew.bat`
+      );
+      const nxJson = readJson('nx.json');
+      const gradlePlugin = nxJson.plugins.find(
+        (plugin) => plugin.plugin === '@nx/gradle'
+      );
+      expect(gradlePlugin).toBeDefined();
+      expect(() => {
+        runCLI(`show projects`);
+        runCLI('build kotlin-app');
+      }).not.toThrow();
+    } finally {
+      // Cleanup
+      runCommand(`git add .`);
+      runCommand(`git commit -am 'import kotlin project'`);
+    }
   });
 
   it('should be able to import a groovy gradle app', () => {
@@ -123,33 +126,36 @@ describe('Nx Import Gradle', () => {
     const source = '.';
     const directory = 'projects/gradle-app-groovy';
 
-    runCLI(
-      `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
-      {
-        verbose: true,
-      }
-    );
-    runCLI(`g @nx/gradle:init --no-interactive`);
+    try {
+      runCLI(
+        `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
+        {
+          verbose: true,
+        }
+      );
+      runCLI(`g @nx/gradle:init --no-interactive`);
 
-    checkFilesExist(
-      `${directory}/build.gradle`,
-      `${directory}/settings.gradle`,
-      `${directory}/gradlew`,
-      `${directory}/gradlew.bat`
-    );
-    const nxJson = readJson('nx.json');
-    const gradlePlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/gradle'
-    );
-    gradlePlugin.exclude = [];
-    updateJson('nx.json', () => nxJson);
-    expect(() => {
-      runCLI(`show projects`);
-      runCLI('build groovy-app');
-    }).not.toThrow();
-
-    runCommand(`git add .`);
-    runCommand(`git commit -am 'import groovy project'`);
+      checkFilesExist(
+        `${directory}/build.gradle`,
+        `${directory}/settings.gradle`,
+        `${directory}/gradlew`,
+        `${directory}/gradlew.bat`
+      );
+      const nxJson = readJson('nx.json');
+      const gradlePlugin = nxJson.plugins.find(
+        (plugin) => plugin.plugin === '@nx/gradle'
+      );
+      gradlePlugin.exclude = [];
+      updateJson('nx.json', () => nxJson);
+      expect(() => {
+        runCLI(`show projects`);
+        runCLI('build groovy-app');
+      }).not.toThrow();
+    } finally {
+      // Cleanup
+      runCommand(`git add .`);
+      runCommand(`git commit -am 'import groovy project'`);
+    }
   });
 });
 

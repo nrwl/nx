@@ -152,7 +152,7 @@ export async function verifyOrUpdateNxCloudClient(
   };
 }
 
-function getBundleInstallDefaultLocation() {
+export function getBundleInstallDefaultLocation() {
   const legacyPath = join(
     workspaceRoot,
     'node_modules',

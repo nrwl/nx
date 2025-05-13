@@ -24,26 +24,11 @@ Make sure to install the `@nx/express` version that matches the version of `nx` 
 
 In any Nx workspace, you can install `@nx/express` by running the following command:
 
-{% tabs %}
-{% tab label="Nx 18+" %}
-
 ```shell {% skipRescope=true %}
 nx add @nx/express
 ```
 
 This will install the correct version of `@nx/express`.
-
-{% /tab %}
-{% tab label="Nx < 18" %}
-
-Install the `@nx/express` package with your package manager.
-
-```shell
-npm add -D @nx/express
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Recipes
 

@@ -191,11 +191,20 @@ export interface NxReleaseChangelogConfiguration {
   createRelease?:
     | false
     | 'github'
+    | 'gitlab'
     | {
         provider: 'github-enterprise-server';
         hostname: string;
         /**
          * If not set, this will default to `https://${hostname}/api/v3`
+         */
+        apiBaseUrl?: string;
+      }
+    | {
+        provider: 'gitlab';
+        hostname: string;
+        /**
+         * If not set, this will default to `https://${hostname}/api/v4`
          */
         apiBaseUrl?: string;
       };
@@ -650,11 +659,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
-
-  /**
-   * Use the legacy file system cache instead of the db cache
-   */
-  useLegacyCache?: boolean;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
