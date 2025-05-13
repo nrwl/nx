@@ -46,7 +46,7 @@ pub struct NxConsoleMessageConnection {
 
 static LAST_UPDATES: Lazy<Mutex<HashMap<&'static str, Instant>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
-const THROTTLE_DURATION: Duration = Duration::from_secs(10);
+const THROTTLE_DURATION: Duration = Duration::from_secs(2);
 
 /// Utility function to check if an operation should be throttled.
 /// Returns true if the operation should be throttled (skipped), false if it should proceed.
