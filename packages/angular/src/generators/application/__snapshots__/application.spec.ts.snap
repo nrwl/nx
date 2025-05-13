@@ -227,7 +227,7 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack inc
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -239,7 +239,7 @@ import { appRoutes } from './app.routes';
     BrowserModule,
     RouterModule.forRoot(appRoutes),
   ],
-  providers: [],
+  providers: [provideBrowserGlobalErrorListeners()],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -291,7 +291,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
@@ -300,7 +300,7 @@ import { AppComponent } from './app.component';
   imports: [
     BrowserModule,
   ],
-  providers: [],
+  providers: [provideBrowserGlobalErrorListeners()],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -446,12 +446,16 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(appRoutes)]
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes)
+  ]
 };
 "
 `;
@@ -523,10 +527,13 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`app --standalone should generate a standalone app correctly without routing 2`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true })]
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true })
+  ]
 };
 "
 `;
@@ -725,7 +732,7 @@ export default defineConfig(() => ({
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
 
 exports[`app format files should format files 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -735,7 +742,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [],
+  providers: [provideBrowserGlobalErrorListeners()],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

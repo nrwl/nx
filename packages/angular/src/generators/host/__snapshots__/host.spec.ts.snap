@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import {
   BrowserModule,
   provideClientHydration,
@@ -15,7 +15,10 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [provideClientHydration(withEventReplay())],
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideClientHydration(withEventReplay()),
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
@@ -357,7 +360,11 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import {
@@ -368,6 +375,7 @@ import {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
+    provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
@@ -583,7 +591,11 @@ export const appRoutes: Route[] = [
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
-"import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+"import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import {
@@ -594,6 +606,7 @@ import {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideClientHydration(withEventReplay()),
+    provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
   ],
@@ -662,7 +675,7 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 1`] = `
-"import { NgModule } from '@angular/core';
+"import { NgModule, provideBrowserGlobalErrorListeners } from '@angular/core';
 import {
   BrowserModule,
   provideClientHydration,
@@ -676,7 +689,10 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 @NgModule({
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
-  providers: [provideClientHydration(withEventReplay())],
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideClientHydration(withEventReplay()),
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
