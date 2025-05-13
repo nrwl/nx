@@ -6,6 +6,26 @@ import tutorialStore from 'tutorialkit:store';
 export function GlobalCustomizations() {
   useEffect(() => {
     // These actions run on every page load
+    // Disable for unsupported browsers
+    if (navigator.userAgent.includes('Gecko/')) {
+      const lesson = tutorialStore.lesson;
+      if (lesson) {
+        tutorialStore.setLesson({
+          ...lesson,
+          data: {
+            ...lesson.data,
+            editor: false,
+            terminal: false,
+            previews: false,
+          },
+        });
+      }
+      const htmlEl = document.querySelector('html');
+      htmlEl?.classList.add('unsupported');
+    } else {
+      const htmlEl = document.querySelector('html');
+      htmlEl?.classList.add('supported');
+    }
 
     // Disable previous and next buttons if this is the first or last lesson of a tutorial
     function waitForTopBar() {
@@ -60,8 +80,12 @@ export function GlobalCustomizations() {
         callOnce(() => {
           setTimeout(() => {
             terminal.input('export PATH="$PATH:/home/tutorial"\n');
-            setTimeout(() => {
+            setTimeout(async () => {
               terminal.input('clear\n');
+              const packageJson = await wc.fs.readFile('package.json');
+              if (packageJson) {
+                terminal.input('npm install\n');
+              }
             }, 10);
           }, 10);
         })

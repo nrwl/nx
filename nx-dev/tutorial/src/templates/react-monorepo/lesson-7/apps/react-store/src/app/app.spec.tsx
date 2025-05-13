@@ -18,8 +18,6 @@ describe('App', () => {
         <App />
       </BrowserRouter>
     );
-    expect(
-      getByText(new RegExp('Home', 'gi'))
-    ).toBeTruthy();
+    expect(getByText(new RegExp('Home', 'gi'))).toBeTruthy();
   });
 });

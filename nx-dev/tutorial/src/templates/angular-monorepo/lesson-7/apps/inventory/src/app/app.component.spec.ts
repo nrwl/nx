@@ -14,9 +14,7 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('p')?.textContent).toContain(
-      'Products'
-    );
+    expect(compiled.querySelector('p')?.textContent).toContain('Products');
   });
 
   it(`should have as title 'inventory'`, () => {

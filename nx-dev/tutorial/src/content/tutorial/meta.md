@@ -10,5 +10,4 @@ i18n:
 downloadAsZip: true
 prepareCommands:
   - ['chmod +x git', 'Stubbing git']
-  - ['npm install', 'Installing dependencies']
 ---

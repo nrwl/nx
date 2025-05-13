@@ -19,3 +19,13 @@
   line-height: revert;
   margin: revert;
 }
+
+html:not(.unsupported):not(.supported) [data-id='container'] > * {
+  display: none;
+}
+[data-id='container'] {
+  background-color: var(--tk-elements-app-backgroundColor);
+}
+html.unsupported [data-id='container'] {
+  --pos: 100% !important;
+}
