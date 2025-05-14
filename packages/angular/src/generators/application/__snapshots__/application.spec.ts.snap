@@ -32,7 +32,13 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   "ssr": {
     "entry": "./src/server.ts"
   },
-  "server": "./src/main.server.ts"
+  "server": "./src/main.server.ts",
+  "prerender": {
+    "discoverRoutes": true,
+    "routes": [
+      "/"
+    ]
+  }
 
     }
   }, {
@@ -52,7 +58,11 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
     }
   ],
   "outputHashing": "all",
-  "devServer": {}
+  "devServer": {},
+  "prerender": {
+    "discoverRoutes": true,
+    "routes": []
+  }
 
         }
       },
@@ -65,7 +75,11 @@ exports[`app --minimal should generate a correct setup when --bundler=rspack and
   "extractLicenses": false,
   "sourceMap": true,
   "namedChunks": true,
-  "devServer": {}
+  "devServer": {},
+  "prerender": {
+    "discoverRoutes": true,
+    "routes": []
+  }
 
         }
       }});"
