@@ -4,6 +4,7 @@ import {
   Configuration,
 } from '@rspack/core';
 import { NormalizedAngularRspackPluginOptions } from '../../models';
+import { TransferSizePlugin } from '../../plugins/transfer-size-plugin';
 
 export const VENDORS_TEST = /[\\/]node_modules[\\/]/;
 
@@ -39,6 +40,7 @@ export function getOptimization(
             },
           }),
           new LightningCssMinimizerRspackPlugin(),
+          ...(platform === 'browser' ? [new TransferSizePlugin()] : []),
         ]
       : [],
     splitChunks: {

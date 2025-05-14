@@ -104,14 +104,22 @@ export class I18nInlinePlugin implements RspackPluginInstance {
       for (const [localeSubPath, files] of filesToOutput.entries()) {
         for (const [filename, { text, map }] of files.entries()) {
           const localeFileName = `${localeSubPath}/${filename}`;
+          const asset = compilation.getAsset(filename);
+          const assetInfo = asset?.info;
+
           if (map) {
             compilation.emitAsset(
               localeFileName,
-              new sources.SourceMapSource(text, localeFileName, map)
+              new sources.SourceMapSource(text, localeFileName, map),
+              (newAssetInfo) => ({ ...assetInfo, ...newAssetInfo })
             );
           }
-          compilation.emitAsset(localeFileName, new sources.RawSource(text));
-          if (compilation.getAsset(filename)) {
+          compilation.emitAsset(
+            localeFileName,
+            new sources.RawSource(text),
+            (newAssetInfo) => ({ ...assetInfo, ...newAssetInfo })
+          );
+          if (asset) {
             compilation.deleteAsset(filename);
           }
         }

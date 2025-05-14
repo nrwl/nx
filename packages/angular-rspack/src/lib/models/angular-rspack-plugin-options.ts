@@ -3,6 +3,7 @@ import type {
   InlineStyleLanguage,
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
+import type { BudgetEntry } from '@angular/build/private';
 import type { PluginUnsupportedOptions } from './unsupported-options';
 import { I18nProjectMetadata } from './i18n';
 
@@ -165,6 +166,10 @@ export type NormalizedIndexElement =
       transformer: IndexHtmlTransform | undefined;
     };
 
+export type NormalizedEntryPoint = Required<
+  Exclude<ScriptOrStyleEntry, string>
+>;
+
 export interface SourceMap {
   scripts: boolean;
   styles: boolean;
@@ -185,6 +190,10 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
    */
   baseHref?: string;
   browser?: string;
+  /**
+   * Budget thresholds to ensure parts of your application stay within boundaries which you set.
+   */
+  budgets?: BudgetEntry[];
   commonChunk?: boolean;
   /**
    * Define the `crossorigin` attribute setting of elements that provide CORS
@@ -326,6 +335,7 @@ export interface NormalizedAngularRspackPluginOptions
   aot: boolean;
   assets: NormalizedAssetElement[];
   browser: string;
+  budgets: BudgetEntry[];
   commonChunk: boolean;
   crossOrigin: 'none' | 'anonymous' | 'use-credentials';
   deleteOutputPath: boolean;
@@ -346,6 +356,8 @@ export interface NormalizedAngularRspackPluginOptions
   projectName: string | undefined;
   progress: boolean;
   root: string;
+  scripts: ScriptOrStyleEntry[];
+  styles: ScriptOrStyleEntry[];
   sourceMap: SourceMap;
   subresourceIntegrity: boolean;
   supportedBrowsers: string[];

@@ -238,6 +238,7 @@ export async function normalizeOptions(
     aot,
     baseHref: options.baseHref,
     browser: options.browser ?? './src/main.ts',
+    budgets: options.budgets ?? [],
     commonChunk: options.commonChunk ?? true,
     crossOrigin: options.crossOrigin ?? 'none',
     define: options.define ?? {},
@@ -263,12 +264,14 @@ export async function normalizeOptions(
     projectName: project?.name ?? undefined,
     progress: options.progress ?? true,
     root,
+    scripts: options.scripts ?? [],
     serviceWorker: options.serviceWorker,
     server,
     skipTypeChecking: options.skipTypeChecking ?? false,
     sourceMap: normalizeSourceMap(options.sourceMap),
     ssr: normalizedSsr,
     statsJson: options.statsJson ?? false,
+    styles: options.styles ?? [],
     stylePreprocessorOptions: options.stylePreprocessorOptions,
     subresourceIntegrity: options.subresourceIntegrity ?? false,
     supportedBrowsers: getSupportedBrowsers(root, { warn: console.warn }),
@@ -280,7 +283,7 @@ export async function normalizeOptions(
   };
 }
 
-function normalizeOptimization(
+export function normalizeOptimization(
   optimization: AngularRspackPluginOptions['optimization']
 ): NormalizedOptimizationOptions {
   if (typeof optimization === 'boolean') {
