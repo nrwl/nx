@@ -39,7 +39,6 @@ export function ensureAngularDependencies(tree: Tree): GeneratorCallback {
     dependencies['@angular/core'] = angularVersion;
     dependencies['@angular/forms'] = angularVersion;
     dependencies['@angular/platform-browser'] = angularVersion;
-    dependencies['@angular/platform-browser-dynamic'] = angularVersion;
     dependencies['@angular/router'] = angularVersion;
     dependencies.rxjs = rxjsVersion;
     dependencies.tslib = tsLibVersion;

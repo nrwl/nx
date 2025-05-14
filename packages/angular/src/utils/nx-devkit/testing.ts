@@ -51,11 +51,11 @@ export class AppModule {}
   );
   tree.write(
     `${appName}/src/main.ts`,
-    `import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+    `import { platformBrowser } from '@angular/platform-browser';
 
 import { AppModule } from './app/app.module';
 
-platformBrowserDynamic()
+platformBrowser()
   .bootstrapModule(AppModule)
   .catch(err => console.log(err));
   `
