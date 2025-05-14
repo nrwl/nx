@@ -68,9 +68,6 @@ describe('app', () => {
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
-    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion
-    );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
@@ -1022,10 +1019,10 @@ describe('app', () => {
 
     // ASSERT
     expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+      "import { platformBrowser } from '@angular/platform-browser';
       import { AppModule } from './app/app.module';
 
-      platformBrowserDynamic()
+      platformBrowser()
         .bootstrapModule(AppModule, {
           ngZoneEventCoalescing: true
         })
@@ -1432,6 +1429,30 @@ describe('app', () => {
           "strictInputAccessModifiers": true,
           "strictTemplates": true,
         }
+      `);
+    });
+
+    it('should use platformBrowserDynamic for versions lower than v20', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~19.0.0',
+        },
+      }));
+
+      await generateApp(appTree, 'myapp');
+
+      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        import { AppModule } from './app/app.module';
+
+        platformBrowserDynamic()
+          .bootstrapModule(AppModule, {
+            ngZoneEventCoalescing: true
+          })
+          .catch((err) => console.error(err));
+        "
       `);
     });
   });

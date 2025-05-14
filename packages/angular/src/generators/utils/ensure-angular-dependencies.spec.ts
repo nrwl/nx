@@ -22,9 +22,6 @@ describe('ensureAngularDependencies', () => {
     expect(dependencies['@angular/compiler']).toBe(angularVersion);
     expect(dependencies['@angular/core']).toBe(angularVersion);
     expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
-    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
-      angularVersion
-    );
     expect(dependencies['@angular/router']).toBe(angularVersion);
     expect(dependencies['rxjs']).toBeDefined();
     expect(dependencies['tslib']).toBeDefined();
