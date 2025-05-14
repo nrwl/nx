@@ -86,7 +86,7 @@ export default function CustomApp({
       </Link>
       <Component {...pageProps} />
       {/* <LiveStreamNotifier /> */}
-      {/*<WebinarNotifier />*/}
+      <WebinarNotifier />
 
       {/* Global Site Tag (gtag.js) - Google Analytics */}
       <Script
