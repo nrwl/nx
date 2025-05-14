@@ -56,6 +56,7 @@ export async function createFiles(
     setStandaloneFalse: angularMajorVersion >= 19,
     setStandaloneTrue: angularMajorVersion < 19,
     provideGlobalErrorListener: angularMajorVersion >= 20,
+    usePlatformBrowserDynamic: angularMajorVersion < 20,
     connectCloudUrl,
     tutorialUrl: options.standalone
       ? 'https://nx.dev/getting-started/tutorials/angular-standalone-tutorial?utm_source=nx-project'
