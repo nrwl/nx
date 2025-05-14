@@ -26,10 +26,10 @@ export class AppModule {}
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 2`] = `
-"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+"import { platformBrowser } from '@angular/platform-browser';
 import { AppModule } from './app/app.module';
 
-platformBrowserDynamic()
+platformBrowser()
   .bootstrapModule(AppModule, {
     ngZoneEventCoalescing: true,
   })
@@ -700,10 +700,10 @@ export class AppModule {}
 `;
 
 exports[`Host App Generator --ssr should generate the correct files when --typescript=true 2`] = `
-"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+"import { platformBrowser } from '@angular/platform-browser';
 import { AppModule } from './app/app.module';
 
-platformBrowserDynamic()
+platformBrowser()
   .bootstrapModule(AppModule, {
     ngZoneEventCoalescing: true,
   })

@@ -44,10 +44,10 @@ describe('setupSSR', () => {
         "
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        "import { platformBrowser } from '@angular/platform-browser';
         import { AppModule } from './app/app.module';
 
-        platformBrowserDynamic()
+        platformBrowser()
           .bootstrapModule(AppModule, {
             ngZoneEventCoalescing: true,
           })
@@ -318,10 +318,10 @@ describe('setupSSR', () => {
         "
       `);
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        "import { platformBrowser } from '@angular/platform-browser';
         import { AppModule } from './app/app.module';
 
-        platformBrowserDynamic()
+        platformBrowser()
           .bootstrapModule(AppModule, {
             ngZoneEventCoalescing: true
           })
