@@ -36,4 +36,22 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
       );
     }
   }
+
+  if (lt(angularVersion, '20.0.0')) {
+    if (
+      options.sourceMap &&
+      typeof options.sourceMap === 'object' &&
+      options.sourceMap.sourcesContent === false
+    ) {
+      throw new Error(
+        `The "sourceMap.sourcesContent" option requires Angular version 20.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+
+    if (options.conditions) {
+      throw new Error(
+        `The "conditions" option requires Angular version 20.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
 }
