@@ -1581,7 +1581,7 @@ describe('lib', () => {
       expect(
         tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(tree.children('my-lib/src/lib')).toMatchInlineSnapshot(`
+      expect(tree.children('my-lib/src/lib').sort()).toMatchInlineSnapshot(`
         [
           "lib.routes.ts",
           "my-lib.component.css",
@@ -1590,7 +1590,7 @@ describe('lib', () => {
           "my-lib.component.ts",
         ]
       `);
-      expect(tree.children('my-lib/src')).toMatchInlineSnapshot(`
+      expect(tree.children('my-lib/src').sort()).toMatchInlineSnapshot(`
         [
           "index.ts",
           "lib",
