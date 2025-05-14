@@ -591,6 +591,7 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
+    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "esModuleInterop": true,
@@ -1093,6 +1094,7 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true,
+    "typeCheckHostBindings": true,
   },
   "compilerOptions": {
     "esModuleInterop": true,
