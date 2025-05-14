@@ -1,8 +1,11 @@
 import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
-import { InlineStyleLanguage, FileReplacement } from '../models';
+import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
-import { ComponentStylesheetBundler } from '@angular/build/src/tools/esbuild/angular/component-stylesheets';
+import {
+  ComponentStylesheetBundler,
+  type ComponentStylesheetResult
+} from '@angular/build/src/tools/esbuild/angular/component-stylesheets';
 import { transformSupportedBrowsersToTargets } from '../utils/targets-from-browsers';
 import { getSupportedBrowsers } from '@angular/build/private';
 
@@ -14,6 +17,8 @@ export interface SetupCompilationOptions {
   fileReplacements: Array<FileReplacement>;
   useTsProjectReferences?: boolean;
   hasServer?: boolean;
+  includePaths?: string[];
+  sass?: Sass;
 }
 
 export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
@@ -71,6 +76,8 @@ export async function setupCompilation(
           warn: (message) => console.warn(message),
         })
       ),
+      includePaths: options.includePaths,
+      sass: options.sass,
     },
     options.inlineStyleLanguage,
     false
@@ -92,7 +99,7 @@ export function styleTransform(
     stylesheetFile?: string
   ) => {
     try {
-      let stylesheetResult;
+      let stylesheetResult: ComponentStylesheetResult;
       if (stylesheetFile) {
         stylesheetResult = await componentStylesheetBundler.bundleFile(
           stylesheetFile
@@ -103,6 +110,14 @@ export function styleTransform(
           containingFile,
           containingFile.endsWith('.html') ? 'css' : undefined
         );
+      }
+      if (stylesheetResult.errors && stylesheetResult.errors.length > 0) {
+        for (const error of stylesheetResult.errors) {
+          console.error(
+            'Failed to compile styles. Continuing execution ignoring failing stylesheet...',
+            error.text
+          );
+        }
       }
       return stylesheetResult.contents;
     } catch (e) {
