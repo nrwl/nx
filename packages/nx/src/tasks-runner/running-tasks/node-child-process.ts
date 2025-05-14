@@ -113,8 +113,8 @@ function addPrefixTransformer(prefix?: string) {
 const colors = [
   chalk.green,
   chalk.greenBright,
-  chalk.red,
-  chalk.redBright,
+  chalk.blue,
+  chalk.blueBright,
   chalk.cyan,
   chalk.cyanBright,
   chalk.yellow,
