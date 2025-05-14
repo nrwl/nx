@@ -41,6 +41,7 @@ class AddTestCiTargetsTest {
         }
 
     val testFiles = project.files(testFile1, testFile2)
+    testTask.inputs.files(testFiles)
 
     val targets = mutableMapOf<String, MutableMap<String, Any?>>()
     val targetGroups = mutableMapOf<String, MutableList<String>>()
@@ -76,7 +77,19 @@ class AddTestCiTargetsTest {
     val firstTarget = targets["ci--MyFirstTest"]!!
     assertEquals(firstTarget["executor"], "@nx/gradle:gradle")
     assertEquals(true, firstTarget["cache"])
-    assertTrue((firstTarget["inputs"] as Array<*>)[0].toString().contains("{projectRoot}"))
+
+    val actualInputs =
+        firstTarget["inputs"] as? Collection<*> ?: error("Missing or invalid 'inputs' field")
+    val actualInputStrings = actualInputs.map { it.toString() }
+
+    testFiles.forEach { file ->
+      val expectedInput =
+          replaceRootInPath(file.path, projectRoot.absolutePath, workspaceRoot.absolutePath)
+      assertTrue(
+          expectedInput in actualInputStrings,
+          "Expected input '$expectedInput' not found in actual inputs: $actualInputStrings")
+    }
+
     assertEquals("nx:noop", parentCi["executor"])
   }
 }
