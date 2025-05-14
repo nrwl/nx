@@ -1,4 +1,4 @@
-import { getSupportedBrowsers } from '@angular/build/private';
+import { BudgetEntry, getSupportedBrowsers } from '@angular/build/private';
 import type { FileReplacement } from '@nx/angular-rspack-compiler';
 import { workspaceRoot, type ProjectGraphProjectNode } from '@nx/devkit';
 import assert from 'node:assert';
@@ -209,6 +209,13 @@ export async function normalizeOptions(
       (options.index.preloadInitial ?? true),
   };
 
+  const budgets: BudgetEntry[] = !options.budgets
+    ? []
+    : options.budgets.map((budget) => ({
+        ...budget,
+        type: budget.type as any,
+      }));
+
   return {
     advancedOptimizations,
     appShell: options.appShell ?? false,
@@ -216,7 +223,7 @@ export async function normalizeOptions(
     aot,
     baseHref: options.baseHref,
     browser: options.browser ?? './src/main.ts',
-    budgets: options.budgets ?? [],
+    budgets,
     commonChunk: options.commonChunk ?? true,
     crossOrigin: options.crossOrigin ?? 'none',
     define: options.define ?? {},

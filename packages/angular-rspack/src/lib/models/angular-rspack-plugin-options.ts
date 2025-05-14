@@ -176,6 +176,19 @@ export interface SourceMap {
   vendor: boolean;
 }
 
+type PatchedBudgetType =
+  | 'all'
+  | 'allScript'
+  | 'any'
+  | 'anyScript'
+  | 'anyComponentStyle'
+  | 'bundle'
+  | 'initial';
+
+type PatchedBudgetEntry = Omit<BudgetEntry, 'type'> & {
+  type: PatchedBudgetType;
+};
+
 export interface AngularRspackPluginOptions {
   /**
    * @deprecated This is a no-op and can be safely removed.
@@ -196,7 +209,7 @@ export interface AngularRspackPluginOptions {
   /**
    * Budget thresholds to ensure parts of your application stay within boundaries which you set.
    */
-  budgets?: BudgetEntry[];
+  budgets?: PatchedBudgetEntry[];
   commonChunk?: boolean;
   /**
    * Define the `crossorigin` attribute setting of elements that provide CORS
