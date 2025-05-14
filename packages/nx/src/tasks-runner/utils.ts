@@ -1,27 +1,30 @@
-import { output } from '../utils/output';
-import { relative } from 'path';
-import { join } from 'path/posix';
-import { Task, TaskGraph } from '../config/task-graph';
+import { minimatch } from 'minimatch';
+import { relative } from 'node:path';
+import { join } from 'node:path/posix';
+import {
+  getExecutorInformation,
+  parseExecutor,
+} from '../command-line/run/executor-utils';
+import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import {
   TargetConfiguration,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
-import { workspaceRoot } from '../utils/workspace-root';
-import { joinPathFragments } from '../utils/path';
-import { isRelativePath } from '../utils/fileutils';
-import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitByColons } from '../utils/split-target';
-import { getExecutorInformation } from '../command-line/run/executor-utils';
-import { CustomHasher, ExecutorConfig } from '../config/misc-interfaces';
-import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
-import { findMatchingProjects } from '../utils/find-matching-projects';
-import { minimatch } from 'minimatch';
-import { isGlobPattern } from '../utils/globs';
 import {
   getTransformableOutputs,
   validateOutputs as nativeValidateOutputs,
 } from '../native';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import { isRelativePath } from '../utils/fileutils';
+import { findMatchingProjects } from '../utils/find-matching-projects';
+import { isGlobPattern } from '../utils/globs';
+import { joinPathFragments } from '../utils/path';
+import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
+import { splitByColons } from '../utils/split-target';
+import { workspaceRoot } from '../utils/workspace-root';
+import { isTuiEnabled } from './is-tui-enabled';
 
 export type NormalizedTargetDependencyConfig = TargetDependencyConfig & {
   projects: string[];
@@ -429,7 +432,7 @@ export function getExecutorForTask(
   projectGraph: ProjectGraph
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   const executor = getExecutorNameForTask(task, projectGraph);
-  const [nodeModule, executorName] = executor.split(':');
+  const [nodeModule, executorName] = parseExecutor(executor);
 
   return getExecutorInformation(
     nodeModule,
@@ -451,18 +454,20 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
-  const newGraph = removeIdsFromGraph<Task>(graph, ids, graph.tasks);
+  const newGraph = removeIdsFromTaskGraph<Task>(graph, ids, graph.tasks);
   return {
     dependencies: newGraph.dependencies,
+    continuousDependencies: newGraph.continuousDependencies,
     roots: newGraph.roots,
     tasks: newGraph.mapWithIds,
   };
 }
 
-export function removeIdsFromGraph<T>(
+function removeIdsFromTaskGraph<T>(
   graph: {
     roots: string[];
     dependencies: Record<string, string[]>;
+    continuousDependencies: Record<string, string[]>;
   },
   ids: string[],
   mapWithIds: Record<string, T>
@@ -470,9 +475,11 @@ export function removeIdsFromGraph<T>(
   mapWithIds: Record<string, T>;
   roots: string[];
   dependencies: Record<string, string[]>;
+  continuousDependencies: Record<string, string[]>;
 } {
   const filteredMapWithIds = {};
   const dependencies = {};
+  const continuousDependencies = {};
   const removedSet = new Set(ids);
   for (let id of Object.keys(mapWithIds)) {
     if (!removedSet.has(id)) {
@@ -480,13 +487,18 @@ export function removeIdsFromGraph<T>(
       dependencies[id] = graph.dependencies[id].filter(
         (depId) => !removedSet.has(depId)
       );
+      continuousDependencies[id] = graph.continuousDependencies[id].filter(
+        (depId) => !removedSet.has(depId)
+      );
     }
   }
   return {
     mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
-    roots: Object.keys(dependencies).filter(
-      (k) => dependencies[k].length === 0
+    continuousDependencies,
+    roots: Object.keys(filteredMapWithIds).filter(
+      (k) =>
+        dependencies[k].length === 0 && continuousDependencies[k].length === 0
     ),
   };
 }
@@ -501,6 +513,12 @@ export function calculateReverseDeps(
 
   Object.keys(taskGraph.dependencies).forEach((taskId) => {
     taskGraph.dependencies[taskId].forEach((d) => {
+      reverseTaskDeps[d].push(taskId);
+    });
+  });
+
+  Object.keys(taskGraph.continuousDependencies).forEach((taskId) => {
+    taskGraph.continuousDependencies[taskId].forEach((d) => {
       reverseTaskDeps[d].push(taskId);
     });
   });
@@ -540,7 +558,10 @@ export function shouldStreamOutput(
   task: Task,
   initiatingProject: string | null
 ): boolean {
+  // For now, disable streaming output on the JS side when running the TUI
+  if (isTuiEnabled()) return false;
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
+  if (process.env.NX_STREAM_OUTPUT === 'false') return false;
   if (longRunningTask(task)) return true;
   if (task.target.project === initiatingProject) return true;
   return false;

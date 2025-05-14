@@ -28,9 +28,10 @@ interface Schema {
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
   linter?: Linter | LinterType;
-  bundler?: 'vite' | 'webpack';
+  bundler?: 'vite' | 'webpack' | 'rspack';
   standaloneApi?: boolean;
   routing?: boolean;
+  useReactRouter?: boolean;
   packageManager?: PackageManager;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
@@ -42,6 +43,7 @@ interface Schema {
   formatter?: 'none' | 'prettier';
   workspaces?: boolean;
   workspaceGlobs?: string | string[];
+  useProjectJson?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

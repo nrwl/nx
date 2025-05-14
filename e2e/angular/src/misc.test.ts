@@ -144,3 +144,25 @@ describe('Move Angular Project', () => {
     expect(lib2File).toContain(`extends ${newModule}`);
   });
 });
+
+describe('Convert Angular Webpack Project to Rspack', () => {
+  let proj: string;
+  let app1: string;
+
+  beforeAll(() => {
+    proj = newProject({ packages: ['@nx/angular'] });
+    app1 = uniq('app1');
+    runCLI(
+      `generate @nx/angular:app ${app1} --bundler=webpack --no-interactive`
+    );
+  });
+
+  afterAll(() => cleanupProject());
+
+  it('should convert an Angular Webpack project to Rspack', async () => {
+    runCLI(`generate @nx/angular:convert-to-rspack --project=${app1}`);
+    const buildOutput = runCLI(`build ${app1}`);
+    expect(buildOutput).toContain('rspack build');
+    expect(buildOutput).toContain('browser compiled');
+  });
+});

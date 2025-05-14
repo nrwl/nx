@@ -27,5 +27,8 @@ export default defineConfig({
      * More Info: https://docs.cypress.io/guides/references/migration-guide#Test-Isolation
      **/
     testIsolation: false,
+    // Please ensure you use `cy.origin()` when navigating between domains and remove this option.
+    // See https://docs.cypress.io/app/references/migration-guide#Changes-to-cyorigin
+    injectDocumentDomain: true,
   },
 });

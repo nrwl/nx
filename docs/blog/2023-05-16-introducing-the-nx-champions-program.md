@@ -2,8 +2,9 @@
 title: 'Introducing the Nx Champions Program'
 slug: 'introducing-the-nx-champions-program'
 authors: ['Isaac Mann']
-cover_image: '/blog/images/2023-05-16/cVGLh0H-uOpy7-D6.png'
+cover_image: '/blog/images/2023-05-16/cVGLh0H-uOpy7-D6.avif'
 tags: [nx]
+description: Introducing the Nx Champions program, recognizing and supporting community leaders in Nx expertise, content creation, and community bridging.
 ---
 
 The Nx community is too large to be adequately supported by the Nx team alone. Luckily, there are many people who volunteer their time and expertise to help others and share how they use Nx to solve their problems. We are launching the Nx Champions program as a way of acknowledging the work of key members of the community and supporting them in their ongoing efforts.
@@ -19,7 +20,7 @@ A full list of Nx Champions is available at [/community](/community).
 ![](/blog/images/2023-05-16/j58ocCsWEnDe4-8ZMsQd5g.avif)
 _List of Nx Champions_
 
-We appreciate everyone who was part of the initial group of Nx Champions, but acknowledge that there are more people who could qualify. If you are interested in joining the program, fill out the [application form](https://forms.gle/wYd9mC3ka64ki96G7) and let’s talk about it.
+We appreciate everyone who was part of the initial group of Nx Champions, but acknowledge that there are more people who could qualify. If you are interested in joining the program, fill out the [application form](https://forms.gle/wYd9mC3ka64ki96G7) and let's talk about it.
 
 ## Learn more about Nx
 

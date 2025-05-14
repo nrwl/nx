@@ -1,3 +1,7 @@
+import { performance } from 'node:perf_hooks';
+
+performance.mark(`plugin worker ${process.pid} code loading -- start`);
+
 import { consumeMessage, isPluginWorkerMessage } from './messaging';
 import { createSerializableError } from '../../../utils/serializable-error';
 import { consumeMessagesFromSocket } from '../../../utils/consume-messages-from-socket';
@@ -9,6 +13,13 @@ import { unlinkSync } from 'fs';
 if (process.env.NX_PERF_LOGGING === 'true') {
   require('../../../utils/perf-logging');
 }
+
+performance.mark(`plugin worker ${process.pid} code loading -- end`);
+performance.measure(
+  `plugin worker ${process.pid} code loading`,
+  `plugin worker ${process.pid} code loading -- start`,
+  `plugin worker ${process.pid} code loading -- end`
+);
 
 global.NX_GRAPH_CREATION = true;
 global.NX_PLUGIN_WORKER = true;
@@ -206,14 +217,16 @@ const server = createServer((socket) => {
 
 server.listen(socketPath);
 
-setTimeout(() => {
-  if (!connected) {
-    console.error(
-      'The plugin worker is exiting as it was not connected to within 5 seconds.'
-    );
-    process.exit(1);
-  }
-}, 5000).unref();
+if (process.env.NX_PLUGIN_NO_TIMEOUTS !== 'true') {
+  setTimeout(() => {
+    if (!connected) {
+      console.error(
+        'The plugin worker is exiting as it was not connected to within 5 seconds.'
+      );
+      process.exit(1);
+    }
+  }, 5000).unref();
+}
 
 const exitHandler = (exitCode: number) => () => {
   server.close();

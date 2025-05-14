@@ -1,4 +1,8 @@
-import { Argv, ParserConfigurationOptions } from 'yargs';
+import { readNxJson } from '../../config/nx-json';
+import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
+import { NxArgs } from '../../utils/command-line-utils';
+import { Argv, coerce, ParserConfigurationOptions } from 'yargs';
+import { availableParallelism, cpus } from 'node:os';
 
 interface ExcludeOptions {
   exclude: string[];
@@ -39,6 +43,31 @@ export interface RunOptions {
   useAgents: boolean;
   excludeTaskDependencies: boolean;
   skipSync: boolean;
+}
+
+export interface TuiOptions {
+  tuiAutoExit: boolean | number;
+}
+
+export function withTuiOptions<T>(yargs: Argv<T>): Argv<T & TuiOptions> {
+  return yargs
+    .options('tuiAutoExit', {
+      describe:
+        'Whether or not to exit the TUI automatically after all tasks finish, and after how long. If set to `true`, the TUI will exit immediately. If set to `false` the TUI will not automatically exit. If set to a number, an interruptible countdown popup will be shown for that many seconds before the TUI exits.',
+      type: 'string',
+      coerce: (v) => coerceTuiAutoExit(v),
+    })
+    .middleware((args) => {
+      if (args.tuiAutoExit !== undefined) {
+        process.env.NX_TUI_AUTO_EXIT = args.tuiAutoExit.toString();
+      } else if (process.env.NX_TUI_AUTO_EXIT) {
+        args.tuiAutoExit = coerceTuiAutoExit(
+          process.env.NX_TUI_AUTO_EXIT
+          // have to cast here because yarg's typings do not account for the
+          // coercion function
+        ) as unknown as string;
+      }
+    }) as Argv<T & TuiOptions>;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -112,7 +141,6 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
       type: 'boolean',
       hidden: true,
     })
-
     .options('dte', {
       type: 'boolean',
       hidden: true,
@@ -262,29 +290,45 @@ export function withOverrides<T extends { _: Array<string | number> }>(
 }
 
 const allOutputStyles = [
+  'tui',
   'dynamic',
+  'dynamic-legacy',
   'static',
   'stream',
   'stream-without-prefixes',
-  'compact',
 ] as const;
 
 export type OutputStyle = (typeof allOutputStyles)[number];
 
-export function withOutputStyleOption(
-  yargs: Argv,
+export function withOutputStyleOption<T>(
+  yargs: Argv<T>,
   choices: ReadonlyArray<OutputStyle> = [
+    'dynamic-legacy',
     'dynamic',
+    'tui',
     'static',
     'stream',
     'stream-without-prefixes',
   ]
 ) {
-  return yargs.option('output-style', {
-    describe: `Defines how Nx emits outputs tasks logs. **dynamic**: use dynamic output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended on your local development environments. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
-    type: 'string',
-    choices,
-  });
+  return yargs
+    .option('outputStyle', {
+      describe: `Defines how Nx emits outputs tasks logs. **tui**: enables the Nx Terminal UI, recommended for local development environments. **dynamic-legacy**: use dynamic-legacy output life cycle, previous content is overwritten or modified as new outputs are added, display minimal logs by default, always show errors. This output format is recommended for local development environments where tui is not supported. **static**: uses static output life cycle, no previous content is rewritten or modified as new outputs are added. This output format is recommened for CI environments. **stream**: nx by default logs output to an internal output stream, enable this option to stream logs to stdout / stderr. **stream-without-prefixes**: nx prefixes the project name the target is running on, use this option remove the project name prefix from output.`,
+      type: 'string',
+      choices,
+    })
+    .middleware([
+      (args) => {
+        const useTui = shouldUseTui(readNxJson(), args as NxArgs);
+        if (useTui) {
+          // We have to set both of these because `check` runs after the normalization that
+          // handles the kebab-case'd args -> camelCase'd args translation.
+          (args as any)['output-style'] = 'tui';
+          (args as any).outputStyle = 'tui';
+        }
+        process.env.NX_TUI = useTui.toString();
+      },
+    ]) as Argv<T & { outputStyle: OutputStyle }>;
 }
 
 export function withRunOneOptions(yargs: Argv) {
@@ -337,16 +381,40 @@ export function readParallelFromArgsAndEnv(args: { [k: string]: any }) {
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
     args['parallel'] === '' ||
-    // dont require passing --parallel if NX_PARALLEL is set, but allow overriding it
+    // don't require passing --parallel if NX_PARALLEL is set, but allow overriding it
     (process.env.NX_PARALLEL && args['parallel'] === undefined)
   ) {
-    return Number(
+    return concurrency(
       args['maxParallel'] ||
         args['max-parallel'] ||
         process.env.NX_PARALLEL ||
-        3
+        '3'
     );
   } else if (args['parallel'] !== undefined) {
-    return Number(args['parallel']);
+    return concurrency(args['parallel']);
   }
+}
+
+const coerceTuiAutoExit = (value: string) => {
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  const num = Number(value);
+  if (!Number.isNaN(num)) {
+    return num;
+  }
+  throw new Error(`Invalid value for --tui-auto-exit: ${value}`);
+};
+
+function concurrency(val: string | number) {
+  let parallel = typeof val === 'number' ? val : parseInt(val);
+
+  if (typeof val === 'string' && val.at(-1) === '%') {
+    const maxCores = availableParallelism?.() ?? cpus().length;
+    parallel = (maxCores * parallel) / 100;
+  }
+  return Math.max(1, Math.floor(parallel));
 }

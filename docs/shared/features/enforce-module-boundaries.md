@@ -1,3 +1,8 @@
+---
+title: 'Enforce Module Boundaries'
+description: 'Learn how to use Nx module boundaries to maintain a clean architecture by controlling dependencies between projects using tags and ESLint rules.'
+---
+
 # Enforce Module Boundaries
 
 If you partition your code into well-defined cohesive units, even a small organization will end up with a dozen apps and dozens or hundreds of libs. If all of them can depend on each other freely, chaos will ensue, and the workspace will become unmanageable.

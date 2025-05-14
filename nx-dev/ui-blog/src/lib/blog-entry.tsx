@@ -5,9 +5,10 @@ import Image from 'next/image';
 
 export interface BlogEntryProps {
   post: BlogPostDataEntry;
+  overrideLink?: string;
 }
 
-export function BlogEntry({ post }: BlogEntryProps) {
+export function BlogEntry({ post, overrideLink }: BlogEntryProps) {
   return (
     <div className="relative flex h-full transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 shadow transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg dark:border-slate-800">
       {post.cover_image && (
@@ -25,7 +26,7 @@ export function BlogEntry({ post }: BlogEntryProps) {
       <div className="flex flex-col gap-1 p-4">
         <BlogAuthors authors={post.authors} />
         <Link
-          href={`/blog/${post.slug}`}
+          href={overrideLink ? overrideLink : `/blog/${post.slug}`}
           title={post.title}
           className="text-balance text-lg font-semibold text-slate-900 dark:text-white"
           prefetch={false}

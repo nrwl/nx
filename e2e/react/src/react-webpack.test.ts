@@ -10,7 +10,7 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 
-describe('Build React applications and libraries with Vite', () => {
+describe('Build React applications and libraries with Webpack', () => {
   beforeAll(() => {
     newProject({
       packages: ['@nx/react'],

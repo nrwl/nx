@@ -13,7 +13,7 @@ import {
   reactNativeTestTarget,
 } from './get-targets';
 import { NormalizedSchema } from './normalize-options';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -23,18 +23,21 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       : p.plugin === '@nx/detox/plugin'
   );
 
-  if (isUsingTsSolutionSetup(host)) {
-    writeJson(host, joinPathFragments(options.e2eProjectRoot, 'package.json'), {
-      name: options.e2eProjectName,
-      version: '0.0.1',
-      private: true,
-      nx: {
-        sourceRoot: `${options.e2eProjectRoot}/src`,
-        projectType: 'application',
-        targets: hasPlugin ? undefined : getTargets(options),
-        implicitDependencies: [options.appProject],
-      },
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+  };
+
+  if (!options.useProjectJson) {
+    packageJson.nx = {
+      name:
+        options.e2eProjectName !== options.importPath
+          ? options.e2eProjectName
+          : undefined,
+      targets: hasPlugin ? undefined : getTargets(options),
+      implicitDependencies: [options.appProject],
+    };
   } else {
     addProjectConfiguration(host, options.e2eProjectName, {
       root: options.e2eProjectRoot,
@@ -44,6 +47,14 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       tags: [],
       implicitDependencies: [options.appProject],
     });
+  }
+
+  if (!options.useProjectJson || options.isUsingTsSolutionConfig) {
+    writeJson(
+      host,
+      joinPathFragments(options.e2eProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 }
 

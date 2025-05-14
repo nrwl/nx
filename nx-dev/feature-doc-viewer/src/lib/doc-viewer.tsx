@@ -72,14 +72,14 @@ export function DocViewer({
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.'
+          'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.',
+            'Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.',
           images: [
             {
               url: `https://nx.dev/images/open-graph/${router.asPath
@@ -115,7 +115,7 @@ export function DocViewer({
           </div>
           <div className="min-w-0 flex-auto pb-24 lg:pb-16">
             {/*MAIN CONTENT*/}
-            <div className="flex justify-between">
+            <div className="justify-between xl:flex">
               <div className="relative">
                 <div
                   ref={ref}

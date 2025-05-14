@@ -15,10 +15,6 @@ What will you learn?
 - how to modularize your codebase and impose architectural constraints for better maintainability
 - [how to speed up CI with Nx Cloud ⚡](#fast-ci)
 
-{% callout type="info" title="Looking for an Angular standalone app?" %}
-Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for an Angular standalone app setup then check out our [Angular standalone app tutorial](/getting-started/tutorials/angular-standalone-tutorial).
-{% /callout %}
-
 ## Nx CLI vs. Angular CLI
 
 Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/why-nx#how-does-nx-work). As a result, adopting Nx as an Angular user is relatively straightforward. Your existing code, including builders and schematics, will still work as before, but you'll also have access to all the benefits Nx offers.
@@ -134,7 +130,7 @@ Nx uses the following syntax to run tasks:
 
 The project tasks are defined in the `project.json` file.
 
-```json {% fileName="apps/angular-store/project.json"}
+```json {% fileName="apps/angular-store/project.json" %}
 {
   "name": "angular-store",
   ...
@@ -151,7 +147,7 @@ The project tasks are defined in the `project.json` file.
 
 Each target contains a configuration object that tells Nx how to run that target.
 
-```json {% fileName="project.json"}
+```json {% fileName="project.json" %}
 {
   "name": "angular-store",
   ...
@@ -472,16 +468,15 @@ export const appRoutes: Route[] = [
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
+```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,5] %}
 import { Component } from '@angular/core';
 import { ProductsComponent } from '@angular-monorepo/products';
 
 @Component({
-  standalone: true,
   imports: [ProductsComponent],
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'inventory';
@@ -1294,6 +1289,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

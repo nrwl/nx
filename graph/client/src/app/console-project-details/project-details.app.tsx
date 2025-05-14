@@ -3,7 +3,7 @@ import {
   ErrorToastUI,
   ExpandedTargetsProvider,
   getExternalApiService,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import { useSelector } from '@xstate/react';
 import { useCallback } from 'react';
 import { Interpreter } from 'xstate';

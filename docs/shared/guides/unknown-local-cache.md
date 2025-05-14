@@ -1,3 +1,8 @@
+---
+title: Unknown Local Cache Error
+description: Learn how to troubleshoot and resolve Nx cache errors related to machine ID changes, network drives, and understand how Nx ensures cache security.
+---
+
 # Unknown Local Cache Error
 
 This document will explain why the following errors happen and how to address them.
@@ -68,19 +73,4 @@ allow overwrites.
    the cache artifacts created in `main` might be accessible by anyone across any branch, whereas the artifacts created
    in your PR could be shared only within your PR runs.
 
-4. **Access Token Traceability:** Nx Cloud keeps a record of the access token used to create a cache artifact. In case
-   an access token gets compromised it can be easily removed, in turn deleting all the cache artifacts that were created
-   using it.
-
-Nx Replay is not the only remote cache you can use. You can also use one of the [Powerpack self-hosted remote cache plugins](/nx-enterprise/powerpack/custom-caching). These plugins offer the performance benefits of a remote cache, but do not have the same security guarantees as Nx Replay.
-
-## Self-Hosted Remote Cache
-
-If you can't use Nx Replay, Nx provides plugins that enable you to [self-host the remote cache](/nx-enterprise/powerpack/custom-caching). These plugins are available as part of the [Nx Powerpack](/powerpack), which you can unlock by [activating your license](/nx-enterprise/activate-powerpack). There are plugins to self-host your remote cache in the following locations:
-
-- [Amazon S3 Bucket](/nx-api/powerpack-s3-cache)
-- [Google Cloud Storage](/nx-api/powerpack-gcs-cache)
-- [Azure](/nx-api/powerpack-azure-cache)
-- [Shared File System](/nx-api/powerpack-shared-fs-cache)
-
-These plugins will ensure that the task metadata and project graph information are correctly associated with the file artifacts in your cache.
+4. **Access Token Traceability:** Nx Cloud keeps a record of the access token used to create a cache artifact. In case an access token gets compromised it can be easily removed, in turn deleting all the cache artifacts that were created using it.

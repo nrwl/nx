@@ -27,7 +27,6 @@ export async function withModuleFederation(
     config.output.scriptType = 'text/javascript';
     config.optimization = {
       ...(config.optimization ?? {}),
-      runtimeChunk: false,
     };
 
     if (

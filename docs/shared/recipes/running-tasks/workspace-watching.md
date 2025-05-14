@@ -1,3 +1,8 @@
+---
+title: Workspace Watching
+description: Learn how to use Nx's workspace watching feature to automatically execute commands when files change, improving development workflow and productivity.
+---
+
 # Workspace Watching
 
 {% youtube src="https://youtu.be/0eVplUl1zBE?si=KtmiyRm1AcYc01td" title="Workspace watching" /%}

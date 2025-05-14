@@ -65,7 +65,7 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Set <base href> for the resulting index.html.
    */
-  baseHref?: string;
+  baseHref?: string | false;
   /**
    * Build the libraries from source. Default is `true`.
    */
@@ -82,7 +82,9 @@ export interface NxAppWebpackPluginOptions {
   crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
   /**
    * Delete the output path before building.
+   * @deprecated Use the `output.clean` option in Webpack. https://webpack.js.org/guides/output-management/#cleaning-up-the-dist-folder
    */
+  // TODO(v22): Add migration to remove this option and remove it.
   deleteOutputPath?: boolean;
   /**
    * The deploy path for the application. e.g. `/my-app/`
@@ -194,7 +196,11 @@ export interface NxAppWebpackPluginOptions {
   /**
    * Options for the style preprocessor. e.g. `{ "includePaths": [] }` for SASS.
    */
-  stylePreprocessorOptions?: any;
+  stylePreprocessorOptions?: {
+    includePaths?: string[];
+    sassOptions?: Record<string, any>;
+    lessOptions?: Record<string, any>;
+  };
   /**
    * External stylesheets that will be included with the application.
    */
@@ -215,6 +221,12 @@ export interface NxAppWebpackPluginOptions {
    * Use tsconfig-paths-webpack-plugin to resolve modules using paths in the tsconfig file.
    */
   useTsconfigPaths?: boolean;
+  // TODO(v22): Remove in version 22.
+  /**
+   * The implementation of the SASS compiler to use. Can be either `sass` or `sass-embedded`. Defaults to `sass-embedded`.
+   * @deprecated Sass option will be removed in Nx 22. This option will also be removed in Nx 22 as it is no longer needed.
+   */
+  sassImplementation?: 'sass' | 'sass-embedded';
   /**
    * Generate a separate vendor chunk for 3rd party packages.
    */
@@ -235,6 +247,10 @@ export interface NxAppWebpackPluginOptions {
    * Whether to rebase absolute path for assets in postcss cli resources.
    */
   rebaseRootRelative?: boolean;
+  /**
+   * Watch buildable dependencies and rebuild when they change.
+   */
+  watchDependencies?: boolean;
 }
 
 export interface NormalizedNxAppWebpackPluginOptions

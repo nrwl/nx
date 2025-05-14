@@ -151,9 +151,10 @@ function generateGlobalConfig(tree: Tree, isJS: boolean) {
 module.exports = async () => ({
   projects: await getJestProjectsAsync()
 });`
-    : `import { getJestProjectsAsync } from '@nx/jest';
+    : `import type { Config } from 'jest';
+import { getJestProjectsAsync } from '@nx/jest';
 
-export default async () => ({
+export default async (): Promise<Config> => ({
   projects: await getJestProjectsAsync()
 });`;
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);

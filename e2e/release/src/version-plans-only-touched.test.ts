@@ -92,9 +92,7 @@ describe('nx release version plans only touched', () => {
           },
         },
         version: {
-          generatorOptions: {
-            specifierSource: 'version-plans',
-          },
+          specifierSource: 'version-plans',
         },
         changelog: {
           projectChangelogs: true,

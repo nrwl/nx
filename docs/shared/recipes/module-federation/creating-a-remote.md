@@ -1,3 +1,8 @@
+---
+title: Creating a Module Federation Remote
+description: Learn how to generate and configure a remote application for Module Federation in React and Angular using Nx generators.
+---
+
 # Creating a Remote
 
 In the concept of Module Federation a `remote` is the term given to an application that exposes modules that can be

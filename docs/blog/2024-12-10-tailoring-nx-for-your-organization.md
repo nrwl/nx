@@ -4,13 +4,14 @@ slug: tailoring-nx-for-your-organization
 authors: ['Philip Fulcher']
 tags: [nx]
 cover_image: /blog/images/2024-12-10/header.avif
+description: Create custom Nx plugins to enforce standards and automate workflows, making your monorepo more maintainable and efficient.
 ---
 
 Maintaining a scalable and maintainable monorepo is one of the biggest challenges for growing teams. Standards are essential for keeping code consistent, but relying on documentation and human diligence often falls short. The real challenge is _how_ to enforce those standards effectively and sustainably.
 
 This is where Nx comes in. Nx provides ["drop-in" plugins](/plugin-registry) that enhance the developer experience in monorepos, offering solutions for everything from code generation to automating caching and task execution. One of the biggest benefits is how easily you can **create [custom plugins](/extending-nx/intro/getting-started)** which allow you to **automate your standards based on your organization's needs**.
 
-In this article, we’ll explore how Nx plugins, including custom ones, can help you maintain scalable monorepos while simplifying workflows for your team.
+In this article, we'll explore how Nx plugins, including custom ones, can help you maintain scalable monorepos while simplifying workflows for your team.
 
 ## What are Nx Plugins and why do you need them?
 
@@ -20,7 +21,7 @@ Nx plugins reduce the overhead of using specific tools or frameworks in a monore
 - **Executors**: For automating tasks like building, testing, or deploying.
 - **Migrations**: For updating codebases, similar to codemods.
 
-You’re not required to use Nx plugins, but they can significantly simplify your workflows. For example, they automate repetitive tasks and enforce consistency across your projects. You can explore the [Nx Plugin Registry](/plugin-registry) to see the available plugins, including those built by the Nx core team and contributions from the community.
+You're not required to use Nx plugins, but they can significantly simplify your workflows. For example, they automate repetitive tasks and enforce consistency across your projects. You can explore the [Nx Plugin Registry](/plugin-registry) to see the available plugins, including those built by the Nx core team and contributions from the community.
 
 Installing a plugin is straightforward. Use the `nx add` command to integrate a plugin into your workspace. For example:
 
@@ -28,9 +29,9 @@ Installing a plugin is straightforward. Use the `nx add` command to integrate a 
 nx add @nx/playwright
 ```
 
-The plugins provided by the Nx team are usually designed to cover general use cases, like setting up popular frameworks or tools. However, the real power of lies in **creating your own plugins—or extending existing ones—to** automate your organization’s specific workflows.
+The plugins provided by the Nx team are usually designed to cover general use cases, like setting up popular frameworks or tools. However, the real power of lies in **creating your own plugins—or extending existing ones—to** automate your organization's specific workflows.
 
-Creating a custom plugin might sound intimidating, but it’s simpler than you think. The `@nx/devkit` package provides utilities to help you build functionality just like the Nx core team. You’re not starting from scratch; you’re leveraging an established API designed to make the process accessible and efficient.
+Creating a custom plugin might sound intimidating, but it's simpler than you think. The `@nx/devkit` package provides utilities to help you build functionality just like the Nx core team. You're not starting from scratch; you're leveraging an established API designed to make the process accessible and efficient.
 
 ## Getting started with custom plugins
 
@@ -99,7 +100,7 @@ export async function libraryGenerator(
     directory,
     importPath,
     tags: [`type:${options.type}`, `scope:${shared}`],
-    linter: Linter.EsLint,
+    linter: 'eslint',
     style: 'css',
     unitTestRunner: 'vitest',
   });
@@ -110,7 +111,7 @@ export async function libraryGenerator(
 export default libraryGenerator;
 ```
 
-This example of a generator doesn’t do much on its own, but it pre-populates options for the underlying generator. This can already be a huge gain in terms of ensuring consistency as it:
+This example of a generator doesn't do much on its own, but it pre-populates options for the underlying generator. This can already be a huge gain in terms of ensuring consistency as it:
 
 - Names the project appropriately
 - Creates the correct import path
@@ -128,9 +129,9 @@ These generators will also show up in [Nx Console](/getting-started/editor-setup
 
 Nx plugins that are located within an existing Nx workspace can be run directly, without the need to build, bundle, or package. They just work and respond to changes just as quickly as any other project in your workspace.
 
-Since we’re the monorepo people, it might seem wild to suggest that you would have multiple monorepos in your organization; but this is a common scenario, and we whole-heartedly support it.
+Since we're the monorepo people, it might seem wild to suggest that you would have multiple monorepos in your organization; but this is a common scenario, and we whole-heartedly support it.
 
-To support consistency across your org, you can publish this plugin so that all of your Nx workspaces share the same generators and inferred tasks you just created. This makes onboarding any new Nx workspace easier and more consistent. The generator for your plugin will include configuration for [`nx release`](/features/manage-releases) so that you’re ready to publish immediately:
+To support consistency across your org, you can publish this plugin so that all of your Nx workspaces share the same generators and inferred tasks you just created. This makes onboarding any new Nx workspace easier and more consistent. The generator for your plugin will include configuration for [`nx release`](/features/manage-releases) so that you're ready to publish immediately:
 
 ```bash
 nx release --first-release
@@ -144,7 +145,7 @@ nx local-registry
 
 ## Presets to create your workspace the way you want it, every time
 
-If you’re publishing a plugin for multiple workspaces in your organization, you’ll want those new workspaces to be created as consistently as your projects. When you create an Nx workspace, you might use a preset like this:
+If you're publishing a plugin for multiple workspaces in your organization, you'll want those new workspaces to be created as consistently as your projects. When you create an Nx workspace, you might use a preset like this:
 
 ```shell
 npx create-nx-workspace@latest react-monorepo --preset=react-monorepo

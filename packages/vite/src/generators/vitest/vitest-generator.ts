@@ -7,6 +7,7 @@ import {
   logger,
   offsetFromRoot,
   ProjectType,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -19,19 +20,18 @@ import {
   getProjectType,
   isUsingTsSolutionSetup,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { typesNodeVersion } from '@nx/js/src/utils/versions';
 import { join } from 'path';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import {
   addOrChangeTestTarget,
   createOrEditViteConfig,
 } from '../../utils/generator-utils';
-import {
-  vitestCoverageIstanbulVersion,
-  vitestCoverageV8Version,
-} from '../../utils/versions';
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
+import { getVitestDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { coerce, major } from 'semver';
 
 /**
  * @param hasPlugin some frameworks (e.g. Nuxt) provide their own plugin. Their generators handle the plugin detection.
@@ -69,9 +69,15 @@ export async function vitestGeneratorInternal(
   const isRootProject = root === '.';
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+
+  const pkgJson = readJson(tree, 'package.json');
+  const useVite5 =
+    major(coerce(pkgJson.devDependencies['vite']) ?? '6.0.0') === 5;
   const initTask = await initGenerator(tree, {
+    projectRoot: root,
     skipFormat: true,
     addPlugin: schema.addPlugin,
+    useViteV5: useVite5,
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { ...schema, uiFramework }));
@@ -165,20 +171,24 @@ getTestBed().initTestEnvironment(
     nxJson.targetDefaults ??= {};
     nxJson.targetDefaults[testTarget] ??= {};
     nxJson.targetDefaults[testTarget].dependsOn ??= [];
-    nxJson.targetDefaults[testTarget].dependsOn.push('^build');
+    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
+      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
+    );
     updateNxJson(tree, nxJson);
   }
 
-  const coverageProviderDependency = getCoverageProviderDependency(
+  const devDependencies = await getCoverageProviderDependency(
+    tree,
     schema.coverageProvider
   );
+  devDependencies['@types/node'] = typesNodeVersion;
 
-  const installCoverageProviderTask = addDependenciesToPackageJson(
+  const installDependenciesTask = addDependenciesToPackageJson(
     tree,
     {},
-    coverageProviderDependency
+    devDependencies
   );
-  tasks.push(installCoverageProviderTask);
+  tasks.push(installDependenciesTask);
 
   // Setup workspace config file (https://vitest.dev/guide/workspace.html)
   if (
@@ -192,7 +202,7 @@ getTestBed().initTestEnvironment(
   ) {
     tree.write(
       'vitest.workspace.ts',
-      `export default ['**/*/vite.config.{ts,mts}', '**/*/vitest.config.{ts,mts}'];`
+      `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];`
     );
   }
 
@@ -342,21 +352,24 @@ function createFiles(
   });
 }
 
-function getCoverageProviderDependency(
+async function getCoverageProviderDependency(
+  tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
-) {
+): Promise<Record<string, string>> {
+  const { vitestCoverageV8, vitestCoverageIstanbul } =
+    await getVitestDependenciesVersionsToInstall(tree);
   switch (coverageProvider) {
     case 'v8':
       return {
-        '@vitest/coverage-v8': vitestCoverageV8Version,
+        '@vitest/coverage-v8': vitestCoverageV8,
       };
     case 'istanbul':
       return {
-        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+        '@vitest/coverage-istanbul': vitestCoverageIstanbul,
       };
     default:
       return {
-        '@vitest/coverage-v8': vitestCoverageV8Version,
+        '@vitest/coverage-v8': vitestCoverageV8,
       };
   }
 }

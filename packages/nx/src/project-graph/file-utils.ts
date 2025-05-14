@@ -1,34 +1,12 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
-import { basename, extname, join, relative, sep } from 'path';
-import { readNxJson } from '../config/configuration';
-import { FileData } from '../config/project-graph';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+import { extname, join, relative, sep } from 'path';
+import type { FileData } from '../config/project-graph';
 import type { NxArgs } from '../utils/command-line-utils';
-import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { jsonDiff } from '../utils/json-diff';
-import {
-  readCachedProjectGraph,
-  readProjectsConfigurationFromProjectGraph,
-} from './project-graph';
-import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
-import {
-  mergeProjectConfigurationIntoRootMap,
-  readProjectConfigurationsFromRootMap,
-} from './utils/project-configuration-utils';
-import {
-  buildProjectConfigurationFromPackageJson,
-  getGlobPatternsFromPackageManagerWorkspaces,
-} from '../plugins/package-json';
-import { globWithWorkspaceContextSync } from '../utils/workspace-context';
-import { buildProjectFromProjectJson } from '../plugins/project-json/build-nodes/project-json';
-import { PackageJson } from '../utils/package-json';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { jsonDiff } from '../utils/json-diff';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export interface Change {
   type: string;
@@ -134,36 +112,6 @@ function defaultReadFileAtRevision(
   }
 }
 
-/**
- * TODO(v21): Remove this function
- * @deprecated To get projects use {@link retrieveProjectConfigurations} instead. This will be removed in v21.
- */
-export function readWorkspaceConfig(opts: {
-  format: 'angularCli' | 'nx';
-  path?: string;
-}): ProjectsConfigurations {
-  let configuration: ProjectsConfigurations | null = null;
-  const root = opts.path || process.cwd();
-  const nxJson = readNxJson(root);
-  try {
-    const projectGraph = readCachedProjectGraph();
-    configuration = {
-      ...nxJson,
-      ...readProjectsConfigurationFromProjectGraph(projectGraph),
-    };
-  } catch {
-    configuration = {
-      version: 2,
-      projects: getProjectsSync(root, nxJson),
-    };
-  }
-  if (opts.format === 'angularCli') {
-    return toOldFormat(configuration);
-  } else {
-    return configuration;
-  }
-}
-
 export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(workspaceRoot, filePath), 'utf-8');
 }
@@ -178,64 +126,3 @@ export function readPackageJson(root: string = workspaceRoot): any {
 
 // Original Exports
 export { FileData };
-
-/**
- * TODO(v21): Remove this function.
- */
-function getProjectsSync(
-  root: string,
-  nxJson: NxJsonConfiguration
-): {
-  [name: string]: ProjectConfiguration;
-} {
-  /**
-   * We can't update projects that come from plugins anyways, so we are going
-   * to ignore them for now. Plugins should add their own add/create/update methods
-   * if they would like to use devkit to update inferred projects.
-   */
-  const patterns = [
-    '**/project.json',
-    'project.json',
-    ...getGlobPatternsFromPackageManagerWorkspaces(root, readJsonFile),
-  ];
-  const projectFiles = globWithWorkspaceContextSync(root, patterns);
-
-  const rootMap: Record<string, ProjectConfiguration> = {};
-  for (const projectFile of projectFiles) {
-    if (basename(projectFile) === 'project.json') {
-      const json = readJsonFile(projectFile);
-      const config = buildProjectFromProjectJson(json, projectFile);
-      mergeProjectConfigurationIntoRootMap(
-        rootMap,
-        config,
-        undefined,
-        undefined,
-        true
-      );
-    } else if (basename(projectFile) === 'package.json') {
-      const packageJson = readJsonFile<PackageJson>(projectFile);
-      const config = buildProjectConfigurationFromPackageJson(
-        packageJson,
-        root,
-        projectFile,
-        nxJson
-      );
-      if (!rootMap[config.root]) {
-        mergeProjectConfigurationIntoRootMap(
-          rootMap,
-          // Inferred targets, tags, etc don't show up when running generators
-          // This is to help avoid running into issues when trying to update the workspace
-          {
-            name: config.name,
-            root: config.root,
-          },
-          undefined,
-          undefined,
-          true
-        );
-      }
-    }
-  }
-
-  return readProjectConfigurationsFromRootMap(rootMap);
-}

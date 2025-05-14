@@ -12,9 +12,6 @@ export default async function (
   const tasks = [];
   const initTask = await rspackInitGenerator(tree, {
     ..._options,
-    // TODO: Crystalize the default rspack.config.js file.
-    // The default setup isn't crystalized so don't add plugin.
-    addPlugin: false,
   });
   tasks.push(initTask);
 

@@ -1,3 +1,8 @@
+---
+title: Nx Devkit and Angular Devkit
+description: Compare Nx Devkit and Angular Devkit for creating generators and executors, understand key differences in implementation, and learn how to convert between the two approaches.
+---
+
 # Nx Devkit and Angular Devkit
 
 {% callout type="note" title="Nx & Angular" %}

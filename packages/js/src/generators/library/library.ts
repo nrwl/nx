@@ -5,14 +5,12 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
   names,
   offsetFromRoot,
-  output,
   ProjectConfiguration,
-  ProjectGraphProjectNode,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -25,16 +23,17 @@ import {
 } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
-  ensureProjectName,
+  ensureRootProjectName,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { shouldUseLegacyVersioning } from 'nx/src/command-line/release/config/use-legacy-versioning';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
+import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
@@ -61,14 +60,16 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
-import setupVerdaccio from '../setup-verdaccio/generator';
 import type {
   Bundler,
   LibraryGeneratorSchema,
   NormalizedLibraryGeneratorOptions,
 } from './schema';
-import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
-import { getImportPath } from '../../utils/get-import-path';
+import {
+  addReleaseConfigForNonTsSolution,
+  addReleaseConfigForTsSolution,
+  releaseTasks,
+} from './utils/add-release-config';
 
 const defaultOutputDirectory = 'dist';
 
@@ -101,12 +102,6 @@ export async function libraryGeneratorInternal(
   );
   const options = await normalizeOptions(tree, schema);
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.projectRoot);
-  }
-
   createFiles(tree, options);
 
   await configureProject(tree, options);
@@ -115,8 +110,10 @@ export async function libraryGeneratorInternal(
     tasks.push(addProjectDependencies(tree, options));
   }
 
-  if (options.publishable) {
-    tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.projectRoot);
   }
 
   if (options.bundler === 'rollup') {
@@ -249,9 +246,7 @@ export async function libraryGeneratorInternal(
   }
 
   if (options.publishable) {
-    tasks.push(() => {
-      logNxReleaseDocsInfo();
-    });
+    tasks.push(await releaseTasks(tree));
   }
 
   // Always run install to link packages.
@@ -270,9 +265,14 @@ async function configureProject(
   tree: Tree,
   options: NormalizedLibraryGeneratorOptions
 ) {
+  const nxJson = readNxJson(tree);
+
   if (options.hasPlugin) {
-    const nxJson = readNxJson(tree);
-    ensureProjectIsIncludedInPluginRegistrations(nxJson, options.projectRoot);
+    ensureProjectIsIncludedInPluginRegistrations(
+      nxJson,
+      options.projectRoot,
+      options.bundler === 'none' ? null : 'build'
+    );
     updateNxJson(tree, nxJson);
   }
 
@@ -337,32 +337,21 @@ async function configureProject(
   }
 
   if (options.publishable) {
-    if (!options.isUsingTsSolutionConfig) {
-      const packageRoot = joinPathFragments(
-        defaultOutputDirectory,
-        '{projectRoot}'
+    if (options.isUsingTsSolutionConfig) {
+      await addReleaseConfigForTsSolution(
+        tree,
+        options.name,
+        projectConfiguration
       );
-
-      projectConfiguration.targets ??= {};
-      projectConfiguration.targets['nx-release-publish'] = {
-        options: {
-          packageRoot,
-        },
-      };
-
-      projectConfiguration.release = {
-        version: {
-          generatorOptions: {
-            packageRoot,
-            // using git tags to determine the current version is required here because
-            // the version in the package root is overridden with every build
-            currentVersionResolver: 'git-tag',
-          },
-        },
-      };
+    } else {
+      await addReleaseConfigForNonTsSolution(
+        shouldUseLegacyVersioning(nxJson.release),
+        tree,
+        options.name,
+        projectConfiguration,
+        defaultOutputDirectory
+      );
     }
-
-    await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
   }
 
   if (!options.useProjectJson) {
@@ -382,13 +371,7 @@ async function configureProject(
     }
 
     // empty targets are cleaned up automatically by `updateProjectConfiguration`
-    updateProjectConfiguration(
-      tree,
-      options.isUsingTsSolutionConfig
-        ? options.importPath ?? options.name
-        : options.name,
-      projectConfiguration
-    );
+    updateProjectConfiguration(tree, options.name, projectConfiguration);
   } else if (options.config === 'workspace' || options.config === 'project') {
     addProjectConfiguration(tree, options.name, projectConfiguration);
   } else {
@@ -652,6 +635,9 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         options.isUsingTsSolutionConfig &&
         !['none', 'rollup', 'vite'].includes(options.bundler)
       ) {
+        // the file must exist in the TS solution setup
+        const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
         return getUpdatedPackageJsonContent(updatedPackageJson, {
           main: join(options.projectRoot, 'src/index.ts'),
           outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -660,6 +646,10 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
           generateExportsField: true,
           packageJsonPath,
           format: ['esm'],
+          skipDevelopmentExports:
+            !tsconfigBase.compilerOptions?.customConditions?.includes(
+              'development'
+            ),
         });
       }
 
@@ -685,6 +675,8 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
       options.isUsingTsSolutionConfig &&
       !['none', 'rollup', 'vite'].includes(options.bundler)
     ) {
+      const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
       packageJson = getUpdatedPackageJsonContent(packageJson, {
         main: join(options.projectRoot, 'src/index.ts'),
         outputPath: joinPathFragments(options.projectRoot, 'dist'),
@@ -693,7 +685,17 @@ function createFiles(tree: Tree, options: NormalizedLibraryGeneratorOptions) {
         generateExportsField: true,
         packageJsonPath,
         format: ['esm'],
+        skipDevelopmentExports:
+          !tsconfigBase.compilerOptions?.customConditions?.includes(
+            'development'
+          ),
       });
+    }
+
+    if (!options.useProjectJson && options.name !== options.importPath) {
+      packageJson.nx = {
+        name: options.name,
+      };
     }
 
     writeJson<PackageJson>(tree, packageJsonPath, packageJson);
@@ -774,7 +776,7 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedLibraryGeneratorOptions> {
-  await ensureProjectName(tree, options, 'library');
+  await ensureRootProjectName(options, 'library');
   const nxJson = readNxJson(tree);
   options.addPlugin ??=
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -848,7 +850,7 @@ async function normalizeOptions(
   }
 
   if (options.publishable) {
-    if (!options.importPath) {
+    if (!isUsingTsSolutionConfig && !options.importPath) {
       throw new Error(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
       );
@@ -915,9 +917,7 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    name: isUsingTsSolutionConfig
-      ? getImportPath(tree, projectName)
-      : projectName,
+    name: isUsingTsSolutionConfig && !options.name ? importPath : projectName,
     projectNames,
     projectRoot,
     parsedTags,
@@ -1045,10 +1045,7 @@ function createProjectTsConfigs(
         .map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`)
         .join(',\n    '),
       tmpl: '',
-      outDir:
-        options.bundler === 'tsc'
-          ? 'dist'
-          : `out-tsc/${options.projectRoot.split('/').pop()}`,
+      outDir: 'dist',
       emitDeclarationOnly: options.bundler === 'tsc' ? false : true,
     }
   );
@@ -1257,120 +1254,6 @@ function determineEntryFields(
       return {};
     }
   }
-}
-
-function projectsConfigMatchesProject(
-  projectsConfig: string | string[] | undefined,
-  project: ProjectGraphProjectNode
-): boolean {
-  if (!projectsConfig) {
-    return false;
-  }
-
-  if (typeof projectsConfig === 'string') {
-    projectsConfig = [projectsConfig];
-  }
-
-  const graph: Record<string, ProjectGraphProjectNode> = {
-    [project.name]: project,
-  };
-
-  const matchingProjects = findMatchingProjects(projectsConfig, graph);
-
-  return matchingProjects.includes(project.name);
-}
-
-async function addProjectToNxReleaseConfig(
-  tree: Tree,
-  options: NormalizedLibraryGeneratorOptions,
-  projectConfiguration: ProjectConfiguration
-) {
-  const nxJson = readNxJson(tree);
-
-  const addPreVersionCommand = () => {
-    const pmc = getPackageManagerCommand();
-
-    nxJson.release = {
-      ...nxJson.release,
-      version: {
-        preVersionCommand: `${pmc.dlx} nx run-many -t build`,
-        ...nxJson.release?.version,
-      },
-    };
-  };
-
-  if (!nxJson.release || (!nxJson.release.projects && !nxJson.release.groups)) {
-    // skip adding any projects configuration since the new project should be
-    // automatically included by nx release's default project detection logic
-    addPreVersionCommand();
-    writeJson(tree, 'nx.json', nxJson);
-    return;
-  }
-
-  const project: ProjectGraphProjectNode = {
-    name: options.name,
-    type: 'lib' as const,
-    data: {
-      root: projectConfiguration.root,
-      tags: projectConfiguration.tags,
-    },
-  };
-
-  if (projectsConfigMatchesProject(nxJson.release.projects, project)) {
-    output.log({
-      title: `Project already included in existing release configuration`,
-    });
-    addPreVersionCommand();
-    writeJson(tree, 'nx.json', nxJson);
-    return;
-  }
-
-  if (Array.isArray(nxJson.release.projects)) {
-    nxJson.release.projects.push(options.name);
-    addPreVersionCommand();
-    writeJson(tree, 'nx.json', nxJson);
-    output.log({
-      title: `Added project to existing release configuration`,
-    });
-  }
-
-  if (nxJson.release.groups) {
-    const allGroups = Object.entries(nxJson.release.groups);
-
-    for (const [name, group] of allGroups) {
-      if (projectsConfigMatchesProject(group.projects, project)) {
-        addPreVersionCommand();
-        writeJson(tree, 'nx.json', nxJson);
-        return `Project already included in existing release configuration for group ${name}`;
-      }
-    }
-
-    output.warn({
-      title: `Could not find a release group that includes ${options.name}`,
-      bodyLines: [
-        `Ensure that ${options.name} is included in a release group's "projects" list in nx.json so it can be published with "nx release"`,
-      ],
-    });
-    addPreVersionCommand();
-    writeJson(tree, 'nx.json', nxJson);
-    return;
-  }
-
-  if (typeof nxJson.release.projects === 'string') {
-    nxJson.release.projects = [nxJson.release.projects, options.name];
-    addPreVersionCommand();
-    writeJson(tree, 'nx.json', nxJson);
-    output.log({
-      title: `Added project to existing release configuration`,
-    });
-    return;
-  }
-}
-
-function logNxReleaseDocsInfo() {
-  output.log({
-    title: `📦 To learn how to publish this library, see https://nx.dev/core-features/manage-releases.`,
-  });
 }
 
 function findRootJestPreset(tree: Tree): string | null {

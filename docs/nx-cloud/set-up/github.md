@@ -63,3 +63,10 @@ Make sure [GitHub checks are enabled](https://circleci.com/docs/2.0/enable-check
 Ensure this step from the plugin instructions is followed:
 
     Prerequisite: only GitHub App with proper permissions can publish checks, this guide helps you authenticate your Jenkins as a GitHub App.
+
+## Github Status Checks
+
+The Nx Cloud GitHub Integration updates your PR with commit statuses that reflect the real-time progress of your runs. These statuses are generated dynamically based on your running commands. Enforcing these dynamically-named checks within your branch protection rules is not recommended, as it can result in stuck checks displaying `Waiting for status to be reported`.
+
+From your repository, go to `Settings -> Branches -> Protect matching branches` and ensure that no Nx Cloud status checks are listed in the `Require status checks to pass before merging` list. Enforcing that status checks pass on your default branch is sufficient.
+![Ensure that any NxCloud status check is deselected from your branch protection rules](/nx-cloud/set-up/do-not-enforce-nx-cloud-status-checks.webp)

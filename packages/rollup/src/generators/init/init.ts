@@ -8,8 +8,8 @@ import {
 } from '@nx/devkit';
 import { nxVersion, rollupVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import { addPluginV1 } from '@nx/devkit/src/utils/add-plugin';
-import { createNodes } from '../../plugins/plugin';
+import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
+import { createNodesV2 } from '../../plugins/plugin';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback = () => {};
@@ -34,11 +34,11 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   }
 
   if (schema.addPlugin) {
-    await addPluginV1(
+    await addPlugin(
       tree,
       await createProjectGraphAsync(),
       '@nx/rollup/plugin',
-      createNodes,
+      createNodesV2,
       {
         buildTargetName: ['build', 'rollup:build', 'rollup-build'],
         buildDepsTargetName: [

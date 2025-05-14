@@ -1,3 +1,8 @@
+---
+title: Preserving Git Histories when Migrating Projects to Nx
+description: Learn techniques for maintaining git history when importing standalone projects into your Nx workspace, including proper directory reorganization and merge strategies.
+---
+
 # Preserving Git Histories when Migrating other Projects to your Nx Workspace
 
 {% callout type="note" title="Automatically import with 'nx import'" %}

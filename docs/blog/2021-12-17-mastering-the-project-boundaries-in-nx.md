@@ -2,13 +2,14 @@
 title: 'Taming Code Organization with Module Boundaries in Nx'
 slug: 'mastering-the-project-boundaries-in-nx'
 authors: ['Miroslav Jonaš']
-cover_image: '/blog/images/2021-12-17/PIUl1QGk7mOpSFdEwFQ8OA.png'
+cover_image: '/blog/images/2021-12-17/PIUl1QGk7mOpSFdEwFQ8OA.avif'
 tags: [nx]
+description: Learn how to organize growing Nx repositories using module boundaries and ESLint rules to enforce clean architecture and prevent unwanted dependencies between domains.
 ---
 
-As your repository grows, it becomes more challenging to organize and name the applications and libraries. This organization, when done right, feels intuitive and allows team members to easily find projects and understand how they work together. When done poorly, it results in a mess we eventually end up calling “the legacy software”. This article will show you different ways how you can prevent your repo from descending into chaos.
+As your repository grows, it becomes more challenging to organize and name the applications and libraries. This organization, when done right, feels intuitive and allows team members to easily find projects and understand how they work together. When done poorly, it results in a mess we eventually end up calling "the legacy software". This article will show you different ways how you can prevent your repo from descending into chaos.
 
-Our book [Enterprise Angular Monorepo Patterns](https://go.nx.dev/angular-enterprise-monorepo-patterns-new-book) presents an in-depth guide to assist you with naming and organization. If you still haven’t read this book, we warmly recommend you do. Don’t let the name fool you, though — the architecture guidelines explained in this book apply to any framework.
+Our book [Enterprise Angular Monorepo Patterns](https://go.nx.dev/angular-enterprise-monorepo-patterns-new-book) presents an in-depth guide to assist you with naming and organization. If you still haven't read this book, we warmly recommend you do. Don't let the name fool you, though — the architecture guidelines explained in this book apply to any framework.
 
 On large projects, you will most likely find multiple teams working on different parts of the solution. Those projects are usually split into logical domains, where each team focuses on a single domain. Each domain block can have a clear public API which other domains can use to consume the information.
 
@@ -47,13 +48,13 @@ When you generate the first project in your workspace using one of our generator
 }
 ```
 
-Let’s dissect what each of these properties does.
+Let's dissect what each of these properties does.
 
 The `allow` array acts as a whitelist listing the import definitions that should be omitted from further checks. You can read more about it in the **Overriding the overrides** section below.
 
 The `depConstraints` section is the one you will be spending most time fine-tuning. It represents an array of constraints, each consisting of `sourceTag` and `onlyDependOnLibsWithTags` properties. The default configuration has a wildcard `*` set as a value for both of them, meaning that any project can import (depend on) any other project.
 
-> Note, the wildcard only applies to libraries. Applications and E2E applications cannot be imported. It wouldn’t make any sense. If you want to combine applications, you should use the [micro-frontends](/recipes/angular/dynamic-module-federation-with-angular) approach with the module federation.
+> Note, the wildcard only applies to libraries. Applications and E2E applications cannot be imported. It wouldn't make any sense. If you want to combine applications, you should use the [micro-frontends](/recipes/angular/dynamic-module-federation-with-angular) approach with the module federation.
 
 The circular dependency chains such as `lib A -> lib B -> lib C -> lib A` are also not allowed. The self circular dependency (when lib imports from a named alias of itself), while not recommended, can be overridden by setting the flag `allowCircularSelfDependency` to true.
 
@@ -91,7 +92,7 @@ First, we will use the project configuration to annotate our projects with `tags
 
 - Tags used to live in `nx.json` but were in the recent version moved closer to the project, so you can locate them now in your `project.json` or `workspace.json`
 
-Let’s define the types of projects. We will use the following tags:
+Let's define the types of projects. We will use the following tags:
 
 - `type:app` for application
 - `type:feature` for feature library
@@ -147,12 +148,12 @@ Now, that we have marked all of our projects, we can continue to define the rule
 
 ## Adding a second dimension
 
-We said that a feature library can depend on any other feature library, but there is a small catch. Our two apps could be built with a different framework so mixing feature libraries would not be possible. To avoid any future impediments, we don’t want to allow a feature library used in `Store` to depend on the feature library from `Admin` and vice versa. Additionally, only our apps should be able to load the `Core` library.
+We said that a feature library can depend on any other feature library, but there is a small catch. Our two apps could be built with a different framework so mixing feature libraries would not be possible. To avoid any future impediments, we don't want to allow a feature library used in `Store` to depend on the feature library from `Admin` and vice versa. Additionally, only our apps should be able to load the `Core` library.
 
 ![](/blog/images/2021-12-17/mr_MbGgWVbBcfBhss0hNqA.avif)
 _Project graph with type tags and technology badges_
 
-Let’s add another dimension to allow such restrictions. We will define the necessary scope tags:
+Let's add another dimension to allow such restrictions. We will define the necessary scope tags:
 
 - `scope:store` for store app-related projects
 - `scope:admin` for admin app related projects
@@ -266,9 +267,9 @@ Using the wildcard `*` to match multiple projects e.g. `react*` we can save ours
 
 ## Restricting transitive dependencies
 
-Our solution doesn’t contain only internal projects but also depends on various external NPM packages. These external dependencies are explicitly declared in our `package.json`. Unfortunately, a package is rarely an island. They often consist of a tree of transitive dependencies branching out leading to thousands of packages being installed in your `node_modules` folder. Although we have control over what version or which direct dependency we install, we have no control over what versions of what packages this dependency depends on. The transitive dependencies are often the source of our app's vulnerabilities. We can also never guarantee those dependencies will be there. Just by simply running `npm install` parent may get updated to a patch or minor version that would wipe out one of the transitive dependencies or replace it with one with breaking changes.
+Our solution doesn't contain only internal projects but also depends on various external NPM packages. These external dependencies are explicitly declared in our `package.json`. Unfortunately, a package is rarely an island. They often consist of a tree of transitive dependencies branching out leading to thousands of packages being installed in your `node_modules` folder. Although we have control over what version or which direct dependency we install, we have no control over what versions of what packages this dependency depends on. The transitive dependencies are often the source of our app's vulnerabilities. We can also never guarantee those dependencies will be there. Just by simply running `npm install` parent may get updated to a patch or minor version that would wipe out one of the transitive dependencies or replace it with one with breaking changes.
 
-Therefore it’s wise not to allow developers to import transitive dependencies in their projects. Our ESLint plugin provides a simple flag to turn this restriction on.
+Therefore it's wise not to allow developers to import transitive dependencies in their projects. Our ESLint plugin provides a simple flag to turn this restriction on.
 
 ```json5 {% fileName=".eslintrc.json" %}
 {

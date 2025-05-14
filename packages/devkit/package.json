@@ -38,7 +38,7 @@
     "enquirer": "~2.3.6"
   },
   "peerDependencies": {
-    "nx": ">= 19 <= 21"
+    "nx": ">= 20 <= 22"
   },
   "publishConfig": {
     "access": "public"

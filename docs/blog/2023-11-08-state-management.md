@@ -2,8 +2,9 @@
 title: State Management Nx React Native/Expo Apps with TanStack Query and Redux
 slug: 'state-management-nx-react-native-expo-apps-with-tanstack-query-and-redux'
 authors: [Emily Xiong]
-cover_image: '/blog/images/2023-11-08/featured_img.webp'
+cover_image: '/blog/images/2023-11-08/featured_img.avif'
 tags: [nx, React Native]
+description: Implementing state management in Nx React Native/Expo apps with TanStack Query and Redux, covering setup, dev tools, and unit testing.
 ---
 
 There are currently countless numbers of state management libraries out there. This blog will show you how to use state management for React Native in Nx monorepo with [TanStack Query](https://tanstack.com/query/latest) (which happens to use [Nx on their repo](https://cloud.nx.app/orgs/6412ca9d1c251d000efa21ba/workspaces/6412c827e6da5d7b4a0b1fe3/overview)) and Redux.
@@ -88,7 +89,7 @@ const App = () => {
 export default App;
 ```
 
-Note: the [React Query Devtools](https://tanstack.com/query/latest/docs/framework/react/devtools) currently do not support react native, and it only works on the web, so there is a condition: `{ Platform.OS === ‘web’ && <ReactQueryDevtools />}.`
+Note: the [React Query Devtools](https://tanstack.com/query/latest/docs/framework/react/devtools) currently do not support react native, and it only works on the web, so there is a condition: `{ Platform.OS === 'web' && <ReactQueryDevtools />}.`
 
 For the react native apps, in order to use this tool, you need to use [react-native-web](https://necolas.github.io/react-native-web/) to interpolate your native app to the web app first.
 
@@ -102,9 +103,9 @@ Or you can run `npx nx serve cats` to launch the app in a web browser and debug 
 
 What is a query?
 
-> “A query is a declarative dependency on an asynchronous source of data that is tied to a unique key. A query can be used with any Promise-based method (including GET and POST methods) to fetch data from a server.” [(https://tanstack.com/query/v4/docs/react/guides/queries)](https://tanstack.com/query/v4/docs/react/guides/queries)
+> "A query is a declarative dependency on an asynchronous source of data that is tied to a unique key. A query can be used with any Promise-based method (including GET and POST methods) to fetch data from a server." [(https://tanstack.com/query/v4/docs/react/guides/queries)](https://tanstack.com/query/v4/docs/react/guides/queries)
 
-Now let’s add our first query. In this example, it will be added under `lib/queries` folder. To create a query to fetch a new fact about cats, run the command:
+Now let's add our first query. In this example, it will be added under `lib/queries` folder. To create a query to fetch a new fact about cats, run the command:
 
 ```shell
 # expo workspace
@@ -124,7 +125,7 @@ Now notice under libs folder, `use-cat-fact` folder got created under `libs/quer
 
 If you use React Native CLI, just add a folder in your workspace root.
 
-For this app, let’s use this API: [https://catfact.ninja/](https://catfact.ninja/). At `libs/queries/use-cat-fact/src/lib/use-cat-fact.ts`, add code to fetch the data from this API:
+For this app, let's use this API: [https://catfact.ninja/](https://catfact.ninja/). At `libs/queries/use-cat-fact/src/lib/use-cat-fact.ts`, add code to fetch the data from this API:
 
 ```ts
 import { useQuery } from '@tanstack/react-query';
@@ -187,7 +188,7 @@ fetchMock.enableMocks();
 
 **2\. Create Mock Query Provider**
 
-In order to test out `useQuery` hook, you need to wrap it inside a mock `QueryClientProvider`. Since this mock query provider is going to be used more than once, let’s create a library for this wrapper:
+In order to test out `useQuery` hook, you need to wrap it inside a mock `QueryClientProvider`. Since this mock query provider is going to be used more than once, let's create a library for this wrapper:
 
 ```shell
 # expo library

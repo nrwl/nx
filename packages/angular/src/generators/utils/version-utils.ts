@@ -8,6 +8,13 @@ import {
 import * as latestVersions from '../../utils/versions';
 import { angularVersion } from '../../utils/versions';
 
+export function getInstalledAngularDevkitVersion(tree: Tree): string | null {
+  return (
+    getInstalledPackageVersion(tree, '@angular-devkit/build-angular') ??
+    getInstalledPackageVersion(tree, '@angular/build')
+  );
+}
+
 export function getInstalledAngularVersion(tree: Tree): string {
   const pkgJson = readJson(tree, 'package.json');
   const installedAngularVersion =

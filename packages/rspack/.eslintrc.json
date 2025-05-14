@@ -45,11 +45,15 @@
               "@module-federation/node",
               // @nx/workspace is only required in < 15.8
               "@nx/workspace",
+              "@nx/react",
               // Imported types only
               "@module-federation/sdk",
               "@module-federation/enhanced",
               "css-loader",
-              "webpack"
+              "webpack",
+              "sass-embedded",
+              "sass",
+              "ts-checker-rspack-plugin"
             ]
           }
         ]

@@ -1,4 +1,7 @@
-import { ProjectGraphError } from '../project-graph/error-types';
+import type {
+  ProjectConfigurationsError,
+  ProjectGraphError,
+} from '../project-graph/error-types';
 import { logger } from './logger';
 import { output } from './output';
 
@@ -32,6 +35,23 @@ export async function handleErrors(
         bodyLines: isVerbose
           ? formatErrorStackAndCause(projectGraphError, isVerbose)
           : projectGraphError.getErrors().map((e) => e.message),
+      });
+    } else if (err.name === 'ProjectConfigurationsError') {
+      const projectConfigurationsError = err as ProjectConfigurationsError;
+      let title = projectConfigurationsError.message;
+      if (
+        projectConfigurationsError.cause &&
+        typeof projectConfigurationsError.cause === 'object' &&
+        'message' in projectConfigurationsError.cause
+      ) {
+        title += ' ' + projectConfigurationsError.cause.message + '.';
+      }
+
+      output.error({
+        title,
+        bodyLines: isVerbose
+          ? formatErrorStackAndCause(projectConfigurationsError, isVerbose)
+          : projectConfigurationsError.errors.map((e) => e.message),
       });
     } else {
       const lines = (err.message ? err.message : err.toString()).split('\n');

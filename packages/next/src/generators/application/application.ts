@@ -7,8 +7,11 @@ import {
   Tree,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { setupTailwindGenerator } from '@nx/react';
-import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
+import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
+import {
+  testingLibraryDomVersion,
+  testingLibraryReactVersion,
+} from '@nx/react/src/utils/versions';
 import { getReactDependenciesVersionsToInstall } from '@nx/react/src/utils/version-utils';
 
 import { normalizeOptions } from './lib/normalize-options';
@@ -32,10 +35,12 @@ import {
   updateTsconfigFiles,
 } from '@nx/js/src/utils/typescript/ts-solution-setup';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -50,8 +55,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     js: options.js,
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
-    addTsPlugin: schema.useTsSolution,
-    formatter: schema.formatter,
+    addTsPlugin: options.isTsSolutionSetup,
+    formatter: options.formatter,
     platform: 'web',
   });
   tasks.push(jsInitTask);
@@ -65,6 +70,12 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   createApplicationFiles(host, options);
 
   addProject(host, options);
+
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isTsSolutionSetup) {
+    await addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
+  }
 
   const e2eTask = await addE2e(host, options);
   tasks.push(e2eTask);
@@ -93,6 +104,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   updateCypressTsConfig(host, options);
   setDefaults(host, options);
 
+  if (options.swc) {
+    const swcTask = configureForSwc(host, options.appProjectRoot);
+    tasks.push(swcTask);
+  }
+
   if (options.customServer) {
     await customServerGenerator(host, {
       project: options.projectName,
@@ -109,6 +125,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
     if (options.unitTestRunner && options.unitTestRunner !== 'none') {
       devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+      devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
     }
 
     tasks.push(
@@ -134,12 +151,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       : ['.next'],
     options.src ? 'src' : '.'
   );
-
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.useTsSolution) {
-    addProjectToTsSolutionWorkspace(host, options.appProjectRoot);
-  }
 
   sortPackageJsonFields(host, options.appProjectRoot);
 

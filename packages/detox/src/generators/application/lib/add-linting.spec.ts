@@ -1,6 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { addLinting } from './add-linting';
 import { addProject } from './add-project';
 
@@ -13,13 +12,14 @@ describe('Add Linting', () => {
       e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
@@ -30,13 +30,14 @@ describe('Add Linting', () => {
       e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.EsLint,
+      linter: 'eslint',
       isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });
@@ -49,13 +50,14 @@ describe('Add Linting', () => {
       e2eDirectory: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
+      importPath: '@proj/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
       appDisplayName: 'MyApp',
       appExpoName: 'MyApp',
       appRoot: 'apps/my-app',
-      linter: Linter.None,
+      linter: 'none',
       isUsingTsSolutionConfig: false,
       framework: 'react-native',
     });

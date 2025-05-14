@@ -21,4 +21,5 @@ export interface Schema {
   nxCloudToken?: string;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'none';
+  useProjectJson?: boolean;
 }

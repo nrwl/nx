@@ -61,19 +61,19 @@ const linuxArm64 = [
   {
     icon: <LinuxIcon aria-hidden="true" className="size-6" />,
     name: 'Medium',
-    description: '2 vCPU, 4GB RAM',
+    description: '2 vCPU, 8GB RAM',
     creditCost: 13,
   },
   {
     icon: <LinuxIcon aria-hidden="true" className="size-6" />,
     name: 'Large',
-    description: '4 vCPU, 8GB RAM',
+    description: '4 vCPU, 16GB RAM',
     creditCost: 26,
   },
   {
     icon: <LinuxIcon aria-hidden="true" className="size-6" />,
     name: 'Extra large',
-    description: '8 vCPU, 16GB RAM',
+    description: '8 vCPU, 32GB RAM',
     creditCost: 52,
   },
 ];

@@ -1,3 +1,8 @@
+---
+title: Define Environment Variables
+description: Learn how to set and use environment variables in Nx projects, including file-based configuration, custom env files, and ad-hoc variable definition across different operating systems.
+---
+
 # Define Environment Variables
 
 Environment variables are global system variables accessible by all the processes running under the Operating System (OS).

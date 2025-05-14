@@ -43,11 +43,8 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/build/packages/detox"],
-      "options": {
-        "command": "node ./scripts/copy-readme.js detox"
-      }
+      "outputs": ["{workspaceRoot}/build/packages/detox/README.md"],
+      "command": "node ./scripts/copy-readme.js detox"
     }
   }
 }

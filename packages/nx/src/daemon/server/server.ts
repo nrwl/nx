@@ -55,8 +55,13 @@ import {
   watchOutputFiles,
   watchWorkspace,
 } from './watcher';
-import { handleGlob } from './handle-glob';
-import { GLOB, isHandleGlobMessage } from '../message-types/glob';
+import { handleGlob, handleMultiGlob } from './handle-glob';
+import {
+  GLOB,
+  isHandleGlobMessage,
+  isHandleMultiGlobMessage,
+  MULTI_GLOB,
+} from '../message-types/glob';
 import {
   GET_NX_WORKSPACE_FILES,
   isHandleNxWorkspaceFilesMessage,
@@ -72,8 +77,12 @@ import {
   isHandleGetFilesInDirectoryMessage,
 } from '../message-types/get-files-in-directory';
 import { handleGetFilesInDirectory } from './handle-get-files-in-directory';
-import { HASH_GLOB, isHandleHashGlobMessage } from '../message-types/hash-glob';
-import { handleHashGlob } from './handle-hash-glob';
+import {
+  HASH_GLOB,
+  isHandleHashGlobMessage,
+  isHandleHashMultiGlobMessage,
+} from '../message-types/hash-glob';
+import { handleHashGlob, handleHashMultiGlob } from './handle-hash-glob';
 import {
   GET_ESTIMATED_TASK_TIMINGS,
   GET_FLAKY_TASKS,
@@ -239,6 +248,10 @@ async function handleMessage(socket, data: string) {
     await handleResult(socket, GLOB, () =>
       handleGlob(payload.globs, payload.exclude)
     );
+  } else if (isHandleMultiGlobMessage(payload)) {
+    await handleResult(socket, MULTI_GLOB, () =>
+      handleMultiGlob(payload.globs, payload.exclude)
+    );
   } else if (isHandleNxWorkspaceFilesMessage(payload)) {
     await handleResult(socket, GET_NX_WORKSPACE_FILES, () =>
       handleNxWorkspaceFiles(payload.projectRootMap)
@@ -254,6 +267,10 @@ async function handleMessage(socket, data: string) {
   } else if (isHandleHashGlobMessage(payload)) {
     await handleResult(socket, HASH_GLOB, () =>
       handleHashGlob(payload.globs, payload.exclude)
+    );
+  } else if (isHandleHashMultiGlobMessage(payload)) {
+    await handleResult(socket, HASH_GLOB, () =>
+      handleHashMultiGlob(payload.globGroups)
     );
   } else if (isHandleGetFlakyTasksMessage(payload)) {
     await handleResult(socket, GET_FLAKY_TASKS, () =>
@@ -402,6 +419,7 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'yarn.lock'),
     join(workspaceRoot, 'pnpm-lock.yaml'),
     join(workspaceRoot, 'bun.lockb'),
+    join(workspaceRoot, 'bun.lock'),
   ]
     .filter((file) => existsSync(file))
     .map((file) => hashFile(file));

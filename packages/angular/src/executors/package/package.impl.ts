@@ -2,7 +2,6 @@ import type { ExecutorContext } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectBuildableDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   type DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
@@ -65,25 +64,14 @@ export function createLibraryExecutor(
       );
     }
 
-    const { target, dependencies, topLevelDependencies } =
-      calculateProjectBuildableDependencies(
-        context.taskGraph,
-        context.projectGraph,
-        context.root,
-        context.projectName,
-        context.targetName,
-        context.configurationName
-      );
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      return Promise.resolve({ success: false });
-    }
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
+      context.projectGraph,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
 
     if (options.watch) {
       return yield* eachValueFrom(

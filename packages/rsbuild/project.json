@@ -49,7 +49,7 @@
     },
     "build": {
       "command": "node ./scripts/copy-readme.js rsbuild",
-      "outputs": ["{workspaceRoot}/build/packages/rsbuild"]
+      "outputs": ["{workspaceRoot}/build/packages/rsbuild/README.md"]
     }
   }
 }

@@ -30,7 +30,7 @@ const packagesToUpdate: PackageSpec[] = [
   },
   {
     main: '@angular/material',
-    children: ['@angular/cdk'],
+    children: ['@angular/cdk', '@angular/google-maps'],
   },
   'ng-packagr',
 ];

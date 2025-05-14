@@ -1,0 +1,91 @@
+---
+type: lesson
+title: Generate a Starter Repository
+filesystem:
+  watch: ['/angular-monorepo/*', '/angular-monorepo/apps/**']
+prepareCommands:
+  - ['chmod +x git', 'Stubbing git']
+---
+
+## Creating a new Angular Monorepo
+
+{/* // import { VideoLink } from '@nx/nx-dev/ui-markdoc'; */}
+
+{/* <VideoLink link="https://youtu.be/ZzTP4bVJEnI?t=90"></VideoLink> */}
+
+Create a new Angular monorepo with the following command:
+
+:::info
+
+##### In-Browser Editing Tips
+
+Instructions for each step will appear in this left-hand panel. You can edit files in the editor in the top right and execute terminal commands in the bottom right.
+
+The file system and terminal will be reset at each step of the tutorial, so don't worry about breaking the workspace while experimenting. If you are stuck on a step, click the `Solve` button in the top right to set the file system to the solved state.
+
+If you experience technical issues with the in-browser tutorial, try refreshing the page or use the download button in the top right to download the files for the current step to your local machine.
+
+:::
+
+```shell
+npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo
+```
+
+```
+NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+
+✔ Application name · angular-store
+✔ Which bundler would you like to use? · esbuild
+✔ Default stylesheet format · css
+✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
+✔ Which unit test runner would you like to use? · jest
+✔ Test runner to use for end to end (E2E) tests · cypress
+✔ Which CI provider would you like to use? · github
+```
+
+Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. We'll talk more about how Nx integrates with GitHub Actions later in the tutorial. The above command generates the following structure:
+
+```
+└─ angular-monorepo
+   ├─ ...
+   ├─ apps
+   │  ├─ angular-store
+   │  │  ├─ src
+   │  │  │  ├─ app
+   │  │  │  │  ├─ app.component.css
+   │  │  │  │  ├─ app.component.html
+   │  │  │  │  ├─ app.component.spec.ts
+   │  │  │  │  ├─ app.component.ts
+   │  │  │  │  ├─ app.config.ts
+   │  │  │  │  ├─ app.routes.ts
+   │  │  │  │  └─ nx-welcome.component.ts
+   │  │  │  ├─ assets
+   │  │  │  ├─ index.html
+   │  │  │  ├─ main.ts
+   │  │  │  ├─ styles.css
+   │  │  │  └─ test-setup.ts
+   │  │  ├─ eslintrc.json
+   │  │  ├─ jest.config.ts
+   │  │  ├─ project.json
+   │  │  ├─ tsconfig.app.json
+   │  │  ├─ tsconfig.editor.json
+   │  │  ├─ tsconfig.json
+   │  │  └─ tsconfig.spec.json
+   │  └─ angular-store-e2e
+   │     └─ ...
+   ├─ nx.json
+   ├─ tsconfig.base.json
+   └─ package.json
+```
+
+The setup includes:
+
+- a new Angular application (`apps/angular-store/`)
+- a Cypress based set of e2e tests (`apps/angular-store-e2e/`)
+- Prettier preconfigured
+- ESLint preconfigured
+- Jest preconfigured
+
+One way to structure an Nx monorepo is to place application projects in the `apps` folder and library projects in the `libs` folder. Applications are encouraged to be as light-weight as possible so that more code is pushed into libraries and can be reused in other projects. This folder structure is just a suggestion and can be modified to suit your organization's needs.
+
+The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/angular-store/project.json` file contains [settings that are specific to the `angular-store` project](/reference/project-configuration). We'll examine that file more in the next section.

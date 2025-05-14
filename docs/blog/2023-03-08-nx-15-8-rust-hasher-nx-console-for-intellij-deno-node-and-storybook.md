@@ -2,11 +2,12 @@
 title: 'Nx 15.8 — Rust Hasher, Nx Console for IntelliJ, Deno, Node and Storybook'
 slug: 'nx-15-8-rust-hasher-nx-console-for-intellij-deno-node-and-storybook'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-03-08/2gKrC6_Yx3hVkQaHxnw5xw.png'
+cover_image: '/blog/images/2023-03-08/2gKrC6_Yx3hVkQaHxnw5xw.avif'
 tags: [nx, release]
+description: Nx 15.8 brings Rust-based hasher, IntelliJ IDE support, Deno integration, enhanced Node.js features, and Storybook CSF3 support for improved performance.
 ---
 
-Just weeks after the [release of Nx 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning) (release video [here](https://www.youtube.com/watch?v=IStJODzZSoc)), the Nx team has now launched Nx 15.8, with exciting new features and enhancements aimed at improving developer experience, productivity, and efficiency. Let’s dive straight in.
+Just weeks after the [release of Nx 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning) (release video [here](https://www.youtube.com/watch?v=IStJODzZSoc)), the Nx team has now launched Nx 15.8, with exciting new features and enhancements aimed at improving developer experience, productivity, and efficiency. Let's dive straight in.
 
 **Table of Contents**  
 · [Rustifying the Nx Hasher](#rustifying-the-nx-hasher)  
@@ -18,7 +19,7 @@ Just weeks after the [release of Nx 15.7](/blog/nx-15-7-node-support-angular-lts
 · [How to Update Nx](#how-to-update-nx)  
 · [Learn more](#learn-more)
 
-## Prefer a video? We’ve got you covered!
+## Prefer a video? We've got you covered!
 
 {% youtube src="https://www.youtube.com/watch?v=4XdHT5Y7zj4" /%}
 
@@ -33,16 +34,16 @@ Enable notifications here:
 
 Starting with Nx 15.8, we now have a Rust-based Hasher enabled by default!
 
-Performance is at the core of what we do at Nx. Hence it isn’t surprising that Nx is the fastest JS-based monorepo solution out there. We’ve shown [that a couple of times](https://github.com/vsavkin/large-monorepo). But every millisecond counts! As such, we decided to experiment with Rust to see whether we could further optimize our project graph creation as well as the hasher function that is used for the [computation cache](/features/cache-task-results).
+Performance is at the core of what we do at Nx. Hence it isn't surprising that Nx is the fastest JS-based monorepo solution out there. We've shown [that a couple of times](https://github.com/vsavkin/large-monorepo). But every millisecond counts! As such, we decided to experiment with Rust to see whether we could further optimize our project graph creation as well as the hasher function that is used for the [computation cache](/features/cache-task-results).
 
 Our original implementation used Git to calculate the hash. But it had some downsides as
 
-- it didn’t work if you don’t have or use Git (obviously)
-- it didn’t work if you used Git submodules
+- it didn't work if you don't have or use Git (obviously)
+- it didn't work if you used Git submodules
 - it became super slow if you had a lot of file changes on your Git working tree, like when switching between branches
 - it triggered a lot of `execSync` calls to get different git status which was a fragile implementation
 
-In some situations where we couldn’t rely on or use the Git hasher, we did a fallback to a node implementation which made things even slower.
+In some situations where we couldn't rely on or use the Git hasher, we did a fallback to a node implementation which made things even slower.
 
 **All nice and good, but show me the numbers!**
 
@@ -61,13 +62,13 @@ When running these tests on Windows (not WSL), the Nx repo hashing timings turne
 - Rust hasher: 72ms
 - Git hasher: 330ms
 
-Right now, we only observed the Rust hasher to be slightly slower on large repositories when you don’t have any changes. Once you start making changes the Git hasher becomes slower again and is overtaken by the Rust version which remains stable in performance.
+Right now, we only observed the Rust hasher to be slightly slower on large repositories when you don't have any changes. Once you start making changes the Git hasher becomes slower again and is overtaken by the Rust version which remains stable in performance.
 
 An interesting side-effect of using the Rust-based hasher is the size of the generated hashes, which are much smaller and thus allow for a quicker serialization between the [Nx Daemon](/concepts/nx-daemon) and Nx.
 
 **Future work**
 
-While we started with the hasher optimization, the next implementation we’re exploring is using a binary format to communicate between the Nx Daemon and the Nx client. Currently, we serialize the JSON to a string and pass that through an IPC socket. Using a binary format will significantly speed up the communication here.
+While we started with the hasher optimization, the next implementation we're exploring is using a binary format to communicate between the Nx Daemon and the Nx client. Currently, we serialize the JSON to a string and pass that through an IPC socket. Using a binary format will significantly speed up the communication here.
 
 **Opting out**
 
@@ -87,7 +88,7 @@ As such, it should work on most CI and local developer machines. If we missed so
 
 {% youtube src="https://youtu.be/NpH8cFSp51E" /%}
 
-Nx Deno support [already landed in 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning), but didn’t make it into the blog post. So here we go: we have a brand new Nx Deno plugin published at `@nrwl/deno`. For now, it is experimental and lives in our [labs repository](https://github.com/nrwl/nx-labs).
+Nx Deno support [already landed in 15.7](/blog/nx-15-7-node-support-angular-lts-lockfile-pruning), but didn't make it into the blog post. So here we go: we have a brand new Nx Deno plugin published at `@nrwl/deno`. For now, it is experimental and lives in our [labs repository](https://github.com/nrwl/nx-labs).
 
 This plugin features the ability to generate Deno applications and libraries inside of an Nx workspace. Obviously, all the other much-loved Nx features such as caching, affected commands and the project graph visualization work out of the box as well.
 
@@ -109,9 +110,9 @@ Or generate a new library with:
 npx nx g @nrwl/deno:lib mydenolib
 ```
 
-We’re excited to see folks welcome in Deno APIs to their Nx workspaces and be able to easily share their Typescript packages across Deno, Node, and web applications, all inside the same monorepo.
+We're excited to see folks welcome in Deno APIs to their Nx workspaces and be able to easily share their Typescript packages across Deno, Node, and web applications, all inside the same monorepo.
 
-Given this is still experimental, we’re more than happy to receive feedback and hear about ways you are using Deno right now and/or plan to use it in an Nx workspace.
+Given this is still experimental, we're more than happy to receive feedback and hear about ways you are using Deno right now and/or plan to use it in an Nx workspace.
 
 To see some of this in action, be sure to check out our [recent livestream with Caleb and Chau](https://youtu.be/Um8xXR54upQ), two of our engineers that have been working on this plugin:
 
@@ -125,7 +126,7 @@ Developer tool CLIs are known for being, well, command-line interfaces. Nx comes
 - [providing IntelliSense](https://twitter.com/NxDevTools/status/1573323012476051456) support for Nx configuration files
 - [integrating Nx Cloud](https://youtu.be/WfWmK1x52HE)
 
-With the growing popularity, the ask for an equivalent extension for JetBrains’ IntelliJ & WebStorm editors got louder and louder. At Nx, we’re lucky to have an awesome community. [Issam Guissouma](https://twitter.com/iguissouma) and [Edward Tkachev](https://twitter.com/etkachev) from the Nx community jumped in and provided their implementation of Nx Console for IntelliJ.
+With the growing popularity, the ask for an equivalent extension for JetBrains' IntelliJ & WebStorm editors got louder and louder. At Nx, we're lucky to have an awesome community. [Issam Guissouma](https://twitter.com/iguissouma) and [Edward Tkachev](https://twitter.com/etkachev) from the Nx community jumped in and provided their implementation of Nx Console for IntelliJ.
 
 Since our team [now works full-time on Nx](/blog/from-bootstrapped-to-venture-backed) and the surrounding tooling, we decided to have a dedicated Nx Console extensions for IntelliJ and WebStorm that is actively maintained and developed by the core team. We reached out to Issam and Edward and started collaborating on it. The result can now be installed from the JetBrains marketplace:  
 [https://plugins.jetbrains.com/plugin/21060-nx-console](https://plugins.jetbrains.com/plugin/21060-nx-console)
@@ -143,7 +144,7 @@ Nx Console has proven a highly valuable tool for exploring Nx generators. Especi
 With a growing number of parameters that a generator can take, it started to get messy and overwhelming. Furthermore, in 80% of the cases, you would probably need the main parameters such as the name, bundler, and directory where to generate the output.  
 This is the main reason we introduced a `x-priority` flag to our generator metadata, to have a way to prioritize certain flags and show them more prominently to the end user. Available values are `important` and `internal`.
 
-The property can be defined for the desired parameters in the generator’s `schema.json`:
+The property can be defined for the desired parameters in the generator's `schema.json`:
 
 ```json
 {

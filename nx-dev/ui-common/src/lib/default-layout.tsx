@@ -16,7 +16,7 @@ export function DefaultLayout({
   headerCTAConfig?: ButtonLinkProps[];
 } & PropsWithChildren): JSX.Element {
   return (
-    <div className="w-full overflow-hidden dark:bg-slate-950">
+    <div className="w-full dark:bg-slate-950">
       {!hideHeader && <Header ctaButtons={headerCTAConfig} />}
       <div className="relative isolate">
         <div
@@ -31,7 +31,10 @@ export function DefaultLayout({
             }}
           />
         </div>
-        <main className={isHome || hideHeader ? '' : 'py-24 sm:py-32'}>
+        <main
+          data-document="main"
+          className={isHome || hideHeader ? '' : 'py-24 sm:py-32'}
+        >
           {children}
         </main>
       </div>

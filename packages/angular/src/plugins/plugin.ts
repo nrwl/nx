@@ -208,6 +208,7 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.devServer.has(angularTarget.builder)) {
+        targets[nxTargetName].continuous = true;
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.extractI18n.has(angularTarget.builder)) {
         targets[nxTargetName].metadata.help.example.options = {
@@ -233,6 +234,7 @@ async function buildAngularProjects(
           namedInputs
         );
       } else if (knownExecutors.serveSsr.has(angularTarget.builder)) {
+        targets[nxTargetName].continuous = true;
         targets[nxTargetName].metadata.help.example.options = { port: 4201 };
       } else if (knownExecutors.prerender.has(angularTarget.builder)) {
         prerenderTargets.push({ target: nxTargetName, project: projectName });

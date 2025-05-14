@@ -41,7 +41,7 @@
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.2",
     "@zkochan/js-yaml": "0.0.7",
-    "axios": "^1.7.4",
+    "axios": "^1.8.3",
     "chalk": "^4.1.0",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -66,6 +66,7 @@
     "string-width": "^4.2.3",
     "tar-stream": "~2.2.0",
     "tmp": "~0.2.1",
+    "tree-kill": "^1.2.2",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
     "yaml": "^2.6.0",
@@ -166,5 +167,8 @@
       "x86_64-unknown-linux-musl",
       "x86_64-unknown-freebsd"
     ]
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.12.0"
   }
 }

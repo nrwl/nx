@@ -143,7 +143,7 @@ describe('updateJestConfig', () => {
     expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 
-  it('updates the root config if not using `getJestProjects()`', async () => {
+  it('updates the root config if not using `getJestProjectsAsync()`', async () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
@@ -180,7 +180,7 @@ describe('updateJestConfig', () => {
     );
   });
 
-  it('updates the root config if `getJestProjects()` is used but old path exists', async () => {
+  it('updates the root config if `getJestProjectsAsync()` is used but old path exists', async () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
@@ -188,11 +188,11 @@ describe('updateJestConfig', () => {
     });
     tree.write(
       rootJestConfigPath,
-      `const { getJestProjects } = require('@nx/jest');
+      `const { getJestProjectsAsync } = require('@nx/jest');
 
-module.exports = {
-  projects: [...getJestProjects(), '<rootDir>/some/test/dir/my-source']
-};
+module.exports = async () => ({
+  projects: [...(await getJestProjectsAsync()), '<rootDir>/some/test/dir/my-source']
+});
 `
     );
     const projectConfig = readProjectConfiguration(
@@ -217,10 +217,10 @@ module.exports = {
     expect(rootJestConfigAfter).not.toContain(
       '<rootDir>/other/test/dir/my-destination'
     );
-    expect(rootJestConfigAfter).toContain('getJestProjects()');
+    expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 
-  it('updates the root config if `getJestProjects()` is used with other projects in the array', async () => {
+  it('updates the root config if `getJestProjectsAsync()` is used with other projects in the array', async () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'some-test-dir-my-source',
@@ -228,11 +228,11 @@ module.exports = {
     });
     tree.write(
       rootJestConfigPath,
-      `const { getJestProjects } = require('@nx/jest');
+      `const { getJestProjectsAsync } = require('@nx/jest');
 
-module.exports = {
-  projects: [...getJestProjects(), '<rootDir>/some/test/dir/my-source', '<rootDir>/foo']
-};
+module.exports = async () => ({
+  projects: [...(await getJestProjectsAsync()), '<rootDir>/some/test/dir/my-source', '<rootDir>/foo']
+});
 `
     );
     const projectConfig = readProjectConfiguration(
@@ -258,6 +258,6 @@ module.exports = {
       '<rootDir>/other/test/dir/my-destination'
     );
     expect(rootJestConfigAfter).toContain('<rootDir>/foo');
-    expect(rootJestConfigAfter).toContain('getJestProjects()');
+    expect(rootJestConfigAfter).toContain('getJestProjectsAsync()');
   });
 });

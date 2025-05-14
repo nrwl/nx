@@ -4,7 +4,19 @@
   "packages": {
     "@typescript-eslint/parser": { "version": "^7.16.0" },
     "@typescript-eslint/eslint-plugin": { "version": "^7.16.0" },
-    "@typescript-eslint/utils": { "version": "^7.16.0" }
+    "@typescript-eslint/utils": { "version": "^7.16.0" },
+    "@typescript-eslint/rule-tester": {
+      "version": "^7.16.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@typescript-eslint/scope-manager": {
+      "version": "^7.16.0",
+      "alwaysAddToPackageJson": false
+    },
+    "@typescript-eslint/typescript-estree": {
+      "version": "^7.16.0",
+      "alwaysAddToPackageJson": false
+    }
   },
   "aliases": [],
   "description": "",

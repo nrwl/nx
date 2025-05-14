@@ -48,10 +48,17 @@ const config: StorybookConfig = {
       },
       resolve: {
         extensions: [
+          '.mjs',
           '.web.tsx',
+          '.tsx',
           '.web.ts',
+          '.ts',
           '.web.jsx',
+          '.jsx',
           '.web.js',
+          '.js',
+          '.css',
+          '.json',
           ...(config.resolve?.extensions ?? []),
         ],
         alias: {

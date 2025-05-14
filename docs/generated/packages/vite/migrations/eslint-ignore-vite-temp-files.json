@@ -1,0 +1,12 @@
+{
+  "name": "eslint-ignore-vite-temp-files",
+  "version": "20.5.0-beta.3",
+  "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
+  "implementation": "/packages/vite/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite",
+  "schema": null,
+  "type": "migration",
+  "examplesFile": "#### Sample Code Changes\n\nAdd `vite.config.*.timestamp*` and `vitest.config.*.timestamp*` to the root `eslint.config.mjs` file (using **ESLint Flat Config**).\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```js {% fileName=\"eslint.config.mjs\" %}\nexport default [\n  {\n    ignores: ['dist'],\n  },\n];\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```js {% highlightLines=[3] fileName=\"eslint.config.mjs\" %}\nexport default [\n  {\n    ignores: ['dist', 'vite.config.*.timestamp*', 'vitest.config.*.timestamp*'],\n  },\n];\n```\n\n{% /tab %}\n\n{% /tabs %}\n\nAdd `vite.config.*.timestamp*` and `vitest.config.*.timestamp*` to the project's `.eslintrc.json` file (using **eslintrc** format config).\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"apps/app1/eslintrc.json\" %}\n{\n  \"ignorePatterns\": [\"!**/*\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% highlightLines=[4,5] fileName=\"apps/app1/eslintrc.json\" %}\n{\n  \"ignorePatterns\": [\n    \"!**/*\",\n    \"vite.config.*.timestamp*\",\n    \"vitest.config.*.timestamp*\"\n  ]\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+}

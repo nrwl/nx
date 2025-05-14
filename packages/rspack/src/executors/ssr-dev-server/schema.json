@@ -1,4 +1,5 @@
 {
+  "continuous": true,
   "outputCapture": "direct-nodejs",
   "title": "Rspack SSR Dev Server",
   "description": "Serve a SSR application using rspack.",

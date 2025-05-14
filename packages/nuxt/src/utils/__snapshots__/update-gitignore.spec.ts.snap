@@ -2,7 +2,7 @@
 
 exports[`update gitignore should add entries to .gitignore if they do not exist 1`] = `
 "
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
 dist
@@ -32,7 +32,7 @@ node_modules
 
 exports[`update gitignore should not add duplicate entries to .gitignore if they already exist 1`] = `
 "
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
 dist

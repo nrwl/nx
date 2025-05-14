@@ -6,22 +6,30 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { nxVersion, vitestVersion, viteVersion } from '../../../utils/versions';
+import {
+  jitiVersion,
+  nxVersion,
+  viteV5Version,
+  viteVersion,
+} from '../../../utils/versions';
 import { InitGeneratorSchema } from '../schema';
+import { getVitestDependenciesVersionsToInstall } from '../../../utils/version-utils';
 
-export function checkDependenciesInstalled(
+export async function checkDependenciesInstalled(
   host: Tree,
   schema: InitGeneratorSchema
 ) {
+  const { vitest } = await getVitestDependenciesVersionsToInstall(host);
   return addDependenciesToPackageJson(
     host,
     {},
     {
       '@nx/vite': nxVersion,
       '@nx/web': nxVersion,
-      vite: viteVersion,
-      vitest: vitestVersion,
-      '@vitest/ui': vitestVersion,
+      vite: schema.useViteV5 ? viteV5Version : viteVersion,
+      vitest: vitest,
+      '@vitest/ui': vitest,
+      jiti: jitiVersion,
     },
     undefined,
     schema.keepExistingVersions

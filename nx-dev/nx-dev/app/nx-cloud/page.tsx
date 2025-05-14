@@ -1,6 +1,7 @@
 import {
   AgentNumberOverTime,
   AutomatedAgentsManagement,
+  EnhancedSecurity,
   EnhancedWithAi,
   FasterAndCheaper,
   Hero,
@@ -20,6 +21,9 @@ export const metadata: Metadata = {
   title: 'Nx Cloud',
   description:
     'Nx Cloud is the end-to-end solution for smart, efficient and maintainable CI.',
+  alternates: {
+    canonical: 'https://nx.dev/nx-cloud',
+  },
   openGraph: {
     url: 'https://nx.dev/nx-cloud',
     title: 'Nx Cloud',
@@ -57,6 +61,9 @@ export default function NxCloudPage(): ReactElement {
 
       <div className="mt-32 lg:mt-56">
         <FasterAndCheaper />
+      </div>
+      <div className="mt-32 lg:mt-56">
+        <EnhancedSecurity />
       </div>
       <div className="mt-32 lg:mt-56">
         <UnderstandWorkspace />

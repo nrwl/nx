@@ -4,19 +4,20 @@ slug: managing-ts-packages-in-monorepos
 authors: [Juri Strumpflohner]
 tags: [typescript, monorepo, nx]
 cover_image: /blog/images/articles/bg-managing-typescript-packages.jpg
+description: Compare strategies for managing TypeScript packages in monorepos, from relative imports to project references, and find the best approach for your project.
 ---
 
-{% callout type="deepdive" title="TypeScript Project References Series" %}
+{% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
 
 This article is part of the TypeScript Project References series:
 
 - [Everything You Need to Know About TypeScript Project References](/blog/typescript-project-references)
 - **Managing TypeScript Packages in Monorepos**
-- _A new Nx Experience For TypeScript Monorepos and Beyond_ (coming soon)
+- [A new Nx Experience For TypeScript Monorepos and Beyond](/blog/new-nx-experience-for-typescript-monorepos)
 
 {% /callout %}
 
-Managing TypeScript packages in a monorepo presents unique challenges. As your monorepo grows, so does the complexity of structuring and resolving dependencies between packages. From using simple relative imports to taking advantage of TypeScript path aliases, project references, and your package manager’s workspaces feature, developers have a variety of strategies at their disposal. But which approach is the best fit for you?
+Managing TypeScript packages in a monorepo presents unique challenges. As your monorepo grows, so does the complexity of structuring and resolving dependencies between packages. From using simple relative imports to taking advantage of TypeScript path aliases, project references, and your package manager's workspaces feature, developers have a variety of strategies at their disposal. But which approach is the best fit for you?
 
 {% toc /%}
 
@@ -245,12 +246,10 @@ This is distinct from `tsconfig.base.json`, which is used to share common config
     "module": "NodeNext",
     "strict": true,
     "moduleResolution": "NodeNext",
-+   "composite": true,
-+   "declaration": true,
-+   "declarationMap": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": ".",
--   "rootDir": ".",
     "paths": {
       "@ts-monorepo-linking/lib-a": ["packages/lib-a/src/index.ts"]
     }
@@ -400,10 +399,6 @@ This approach **eliminates the need for TypeScript path aliases for module resol
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
--   "baseUrl": ".",
--   "paths": {
--     "@ts-monorepo-linking/lib-a": ["packages/lib-a/src/index.ts"]
--   }
   }
 }
 ```
@@ -475,7 +470,7 @@ Here's our updated `package.json` for `lib-a`:
 }
 ```
 
-Note how it directly exports the `index.ts` file, eliminating the need for pre-compilation. This approach works regardless of whether you use TypeScript project references, as long as the consuming application handles compilation or transpilation. The package manager's workspaces feature makes sure that the packages are properly linked s.t. they can be resolved at runtime (by Node or respective bundler).
+Note how it directly exports the `index.ts` file, eliminating the need for pre-compilation. This approach works regardless of whether you use TypeScript project references, as long as the consuming application handles compilation or transpilation. The package manager's workspaces feature makes sure that the packages are properly linked so they can be resolved at runtime (by Node or respective bundler).
 
 ### Do I need to reference dependent packages in the consuming package's `package.json`?
 
@@ -677,4 +672,4 @@ Also check out our docs:
 - 🧠 [Nx Docs](/getting-started/intro)
 - 👩‍💻 [Nx GitHub](https://github.com/nrwl/nx)
 - 💬 [Nx Official Discord Server](https://go.nx.dev/community)
-- 📹 [Nx Youtube Channel](https://www.youtube.com/nrwl_io)
+- 📹 [Nx Youtube Channel](https://www.youtube.com/@nxdevtools)

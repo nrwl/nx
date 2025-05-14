@@ -112,7 +112,6 @@ function getWorkspaceGlobsFromPreset(preset: string): string[] {
     case Preset.Nuxt:
     case Preset.ReactNative:
     case Preset.ReactMonorepo:
-    case Preset.RemixMonorepo:
     case Preset.VueMonorepo:
     case Preset.WebComponents:
       return ['apps/*'];

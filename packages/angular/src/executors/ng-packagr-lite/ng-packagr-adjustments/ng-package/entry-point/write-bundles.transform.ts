@@ -7,18 +7,31 @@
  * - Fake the FESM2022 outputs pointing them to the ESM2022 outputs.
  */
 
-import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
-import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
-import type { NgEntryPoint as NgEntryPointBase } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
-import { isEntryPoint, isPackage } from 'ng-packagr/lib/ng-package/nodes';
+import type { NgEntryPoint } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
 import type { NgPackagrOptions } from 'ng-packagr/lib/ng-package/options.di';
-import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { NgEntryPoint } from './entry-point';
+import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
+import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
+import { createNgEntryPoint } from './entry-point';
 
-export const writeBundlesTransform = (_options: NgPackagrOptions) =>
-  transformFromPromise(async (graph) => {
+export const writeBundlesTransform = (_options: NgPackagrOptions) => {
+  const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
+
+  const { BuildGraph } = importNgPackagrPath<
+    typeof import('ng-packagr/lib/graph/build-graph')
+  >('ng-packagr/lib/graph/build-graph', ngPackagrMajorVersion);
+  const { transformFromPromise } = importNgPackagrPath<
+    typeof import('ng-packagr/lib/graph/transform')
+  >('ng-packagr/lib/graph/transform', ngPackagrMajorVersion);
+  const { isEntryPoint, isPackage } = importNgPackagrPath<
+    typeof import('ng-packagr/lib/ng-package/nodes')
+  >('ng-packagr/lib/ng-package/nodes', ngPackagrMajorVersion);
+  const { NgPackage } = importNgPackagrPath<
+    typeof import('ng-packagr/lib/ng-package/package')
+  >('ng-packagr/lib/ng-package/package', ngPackagrMajorVersion);
+
+  return transformFromPromise(async (graph) => {
     const updatedGraph = new BuildGraph();
 
     for (const entry of graph.entries()) {
@@ -46,9 +59,10 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) =>
 
     return updatedGraph;
   });
+};
 
-function toCustomNgEntryPoint(entryPoint: NgEntryPointBase): NgEntryPoint {
-  return new NgEntryPoint(
+function toCustomNgEntryPoint(entryPoint: NgEntryPoint): NgEntryPoint {
+  return createNgEntryPoint(
     entryPoint.packageJson,
     entryPoint.ngPackageJson,
     entryPoint.basePath,

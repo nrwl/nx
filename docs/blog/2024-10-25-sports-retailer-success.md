@@ -2,9 +2,9 @@
 title: Improve your architecture and CI pipeline times with Nx projects
 slug: improve-architecture-and-ci-times-with-projects
 authors: [Philip Fulcher]
-tags: [nx, 'customer story']
+tags: ['customer story']
 cover_image: '/blog/images/2024-10-25/header.avif'
-pinned: true
+description: "US sports retailer's Nx monorepo transformation: CI pipeline times from 1hr to 7-9min, cache hit rates from 20% to 57%."
 ---
 
 When adopting monorepos and Nx, it can feel like there's a lot that needs to be understood first before you get all the benefits. Oftentimes it's tempting to skip some fundamentals and just add all your code into one monorepo and call it a day. Following this mentality is the best way to actually _increase_ your CI run times and cost. Monorepos should simplify your architecture and reduce costs, not cause you to spend more money and time to build, test, and deploy. To make this possible, following a simple restructure of multiple applications and investing time and effort into setting up your monorepo can pay off in the long run. But what does this ideal structure look like, and what are the benefits?
@@ -17,7 +17,7 @@ While it's easy to say this architectural approach is better, it does help to hi
 
 ## Projects All The Way Down
 
-In our sports retailer monorepo, let’s consider that we have three apps for different parts of our frontend. In a worst case scenario, we bring all these apps together, configure their CI pipelines, and call it a day. This bare minimum, while it does give us a monorepo, it does not provide any real substantial value outside of dependencies being matched across the apps. As we start to add more and more to the monorepo, we'll see our CI run times start to increase. Anytime we try to cut a release, we'll be left waiting longer and longer. So what's the solution here?
+In our sports retailer monorepo, let's consider that we have three apps for different parts of our frontend. In a worst case scenario, we bring all these apps together, configure their CI pipelines, and call it a day. This bare minimum, while it does give us a monorepo, it does not provide any real substantial value outside of dependencies being matched across the apps. As we start to add more and more to the monorepo, we'll see our CI run times start to increase. Anytime we try to cut a release, we'll be left waiting longer and longer. So what's the solution here?
 
 Let's say we have some code in our app that exists in all three of our apps that is copied across all of them. When your PR hits CI, this portion of code is built, tested, and linted in every place that it is copied, which is unnecessary. One block of shared code won't fix our CI pipeline times, but it will set us on the correct path. The solution is to start migrating portions that are common across any apps in a monorepo into its own project that we can import.
 

@@ -1,6 +1,9 @@
 import { createNodesFromFiles, NxPluginV2 } from '../src/project-graph/plugins';
 import { workspaceRoot } from '../src/utils/workspace-root';
-import { createNodeFromPackageJson } from '../src/plugins/package-json';
+import {
+  buildPackageJsonWorkspacesMatcher,
+  createNodeFromPackageJson,
+} from '../src/plugins/package-json';
 import { workspaceDataDirectory } from '../src/utils/cache-directory';
 import { join } from 'path';
 import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
@@ -31,8 +34,19 @@ const plugin: NxPluginV2 = {
     (configFiles, options, context) => {
       const cache = readPackageJsonConfigurationCache();
 
+      const isInPackageJsonWorkspaces = buildPackageJsonWorkspacesMatcher(
+        context.workspaceRoot,
+        (f) => readJsonFile(join(context.workspaceRoot, f))
+      );
+
       const result = createNodesFromFiles(
-        (f) => createNodeFromPackageJson(f, workspaceRoot, cache),
+        (packageJsonPath) =>
+          createNodeFromPackageJson(
+            packageJsonPath,
+            workspaceRoot,
+            cache,
+            isInPackageJsonWorkspaces(packageJsonPath)
+          ),
         configFiles,
         options,
         context

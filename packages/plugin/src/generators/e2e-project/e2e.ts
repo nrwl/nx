@@ -17,10 +17,7 @@ import {
   type ProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  resolveImportPath,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { LinterType, lintProjectGenerator } from '@nx/eslint';
 import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
@@ -106,12 +103,14 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     join(projectConfiguration.root, 'package.json')
   );
 
+  const simplePluginName = options.pluginName.split('/').pop();
   generateFiles(host, join(__dirname, './files'), options.projectRoot, {
     ...options,
     tmpl: '',
     rootTsConfigPath: getRelativePathToRootTsConfig(host, options.projectRoot),
     packageManagerCommands: getPackageManagerCommand(),
     pluginPackageName,
+    simplePluginName,
   });
 }
 
@@ -129,7 +128,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
       host,
       joinPathFragments(options.projectRoot, 'package.json'),
       {
-        name: resolveImportPath(host, options.projectName, options.projectRoot),
+        name: options.projectName,
         version: '0.0.1',
         private: true,
       }
@@ -259,7 +258,7 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
   // If we are using the new TS solution
   // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
   if (options.isTsSolutionSetup) {
-    addProjectToTsSolutionWorkspace(host, options.projectRoot);
+    await addProjectToTsSolutionWorkspace(host, options.projectRoot);
   }
 
   if (!options.skipFormat) {

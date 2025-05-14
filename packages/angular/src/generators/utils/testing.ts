@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import type { Schema as ApplicationOptions } from '../application/schema';
@@ -58,7 +57,7 @@ export async function createStorybookTestWorkspaceForLib(
   await libraryGenerator(tree, {
     directory: libName,
     buildable: false,
-    linter: Linter.EsLint,
+    linter: 'eslint',
     publishable: false,
     simpleName: false,
     skipFormat: true,

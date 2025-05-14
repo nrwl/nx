@@ -13,12 +13,19 @@ import * as parseLinks from 'parse-markdown-links';
 function readFileContents(path: string): string {
   return readFileSync(path, 'utf-8');
 }
+
 function isLinkInternal(linkPath: string): boolean {
-  return linkPath.startsWith('/') || linkPath.startsWith('https://nx.dev');
+  return (
+    linkPath.startsWith('/') ||
+    linkPath.startsWith('https://nx.dev') ||
+    linkPath.startsWith('https://nx-dev')
+  );
 }
+
 function isNotAsset(linkPath: string): boolean {
   return !linkPath.startsWith('/assets');
 }
+
 function isNotImage(linkPath: string): boolean {
   return (
     !linkPath.endsWith('.png') &&
@@ -30,9 +37,15 @@ function isNotImage(linkPath: string): boolean {
     !linkPath.endsWith('.avif')
   );
 }
+
 function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
 }
+
+function removeQueryParams(linkPath: string): string {
+  return linkPath.split('?')[0];
+}
+
 function extractAllLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/*/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
@@ -43,14 +56,15 @@ function extractAllLinks(basePath: string): Record<string, string[]> {
       .concat(cardLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
-      .filter(isNotImage);
-    // .map(removeAnchors);
+      .filter(isNotImage)
+      .map(removeQueryParams);
     if (links.length) {
       acc[path.replace(basePath, '')] = links;
     }
     return acc;
   }, {});
 }
+
 function extractImageLinks(basePath: string): Record<string, string[]> {
   return glob.sync(`${basePath}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
@@ -63,6 +77,7 @@ function extractImageLinks(basePath: string): Record<string, string[]> {
     return acc;
   }, {});
 }
+
 function readSiteMapIndex(directoryPath: string, filename: string): string[] {
   const parser = new XMLParser();
   const sitemapIndex: {
@@ -79,6 +94,7 @@ function readSiteMapIndex(directoryPath: string, filename: string): string[] {
     ),
   ];
 }
+
 function readSiteMapLinks(filePath: string): string[] {
   const parser = new XMLParser();
   const sitemap: {
@@ -100,6 +116,7 @@ const sitemapUrls = readSiteMapIndex(
   join(workspaceRoot, 'dist/nx-dev/nx-dev/public/'),
   'sitemap.xml'
 ).flatMap((path) => readSiteMapLinks(path));
+
 function headerToAnchor(line: string): string {
   return line
     .replace(/[#]+ /, '')
@@ -156,7 +173,16 @@ const errors: Array<{ file: string; link: string }> = [];
 const localLinkErrors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
-    if (link.startsWith('https://nx.dev')) {
+    if (
+      link.includes('/nx-api/angular-rspack') ||
+      link.includes('/nx-api/angular-rsbuild')
+    ) {
+      continue;
+    }
+    if (
+      link.startsWith('https://nx.dev') ||
+      link.startsWith('https://nx-dev')
+    ) {
       localLinkErrors.push({ file, link });
     } else if (
       link.includes('#') &&

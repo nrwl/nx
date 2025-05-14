@@ -15,8 +15,9 @@ import {
   reactRefreshVersion,
   rspackCoreVersion,
   rspackDevServerVersion,
-  rspackPluginMinifyVersion,
   rspackPluginReactRefreshVersion,
+  sassEmbeddedVersion,
+  sassLoaderVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -86,9 +87,12 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
     '@rspack/cli': rspackCoreVersion,
-    '@rspack/plugin-minify': rspackPluginMinifyVersion,
-    '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
-    'react-refresh': reactRefreshVersion,
+    ...(!schema.framework || schema.framework === 'react'
+      ? {
+          '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
+          'react-refresh': reactRefreshVersion,
+        }
+      : {}),
   };
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -100,6 +104,10 @@ export async function rspackInitGenerator(
 
   if (schema.style === 'less') {
     devDependencies['less-loader'] = lessLoaderVersion;
+  }
+  if (schema.style === 'scss') {
+    devDependencies['sass-loader'] = sassLoaderVersion;
+    devDependencies['sass-embedded'] = sassEmbeddedVersion;
   }
 
   if (schema.framework !== 'none' || schema.devServer) {

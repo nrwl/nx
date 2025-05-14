@@ -15,6 +15,7 @@ import {
   isWorkspacesEnabled,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  parseVersionFromPackageManagerField,
   PackageManager,
 } from './package-manager';
 
@@ -29,8 +30,14 @@ describe('package-manager', () => {
           packageManager: 'pnpm',
         },
       });
-      const packageManager = detectPackageManager();
-      expect(packageManager).toEqual('pnpm');
+      expect(detectPackageManager()).toEqual('pnpm');
+
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
+        cli: {
+          packageManager: 'yarn',
+        },
+      });
+      expect(detectPackageManager()).toEqual('yarn');
     });
 
     it('should detect yarn package manager from yarn.lock', () => {
@@ -45,13 +52,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('yarn');
-      expect(fs.existsSync).toHaveBeenNthCalledWith(2, 'yarn.lock');
+      expect(fs.existsSync).toHaveBeenNthCalledWith(3, 'yarn.lock');
     });
 
     it('should detect pnpm package manager from pnpm-lock.yaml', () => {
@@ -66,13 +75,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
 
     it('should detect bun package manager from bun.lockb', () => {
@@ -87,6 +98,8 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return true;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
@@ -94,6 +107,29 @@ describe('package-manager', () => {
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('bun');
       expect(fs.existsSync).toHaveBeenCalledTimes(1);
+    });
+
+    it('should detect bun package manager from bun.lock', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn.lock':
+            return false;
+          case 'pnpm-lock.yaml':
+            return false;
+          case 'package-lock.json':
+            return false;
+          case 'bun.lock':
+            return true;
+          case 'bun.lockb':
+            return false;
+          default:
+            return jest.requireActual('fs').existsSync(p);
+        }
+      });
+      const packageManager = detectPackageManager();
+      expect(packageManager).toEqual('bun');
+      expect(fs.existsSync).toHaveBeenCalledTimes(2);
     });
 
     it('should use npm package manager as default', () => {
@@ -108,13 +144,15 @@ describe('package-manager', () => {
             return false;
           case 'bun.lockb':
             return false;
+          case 'bun.lock':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(3);
+      expect(fs.existsSync).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -482,6 +520,31 @@ describe('package-manager', () => {
           "
         `);
       });
+    });
+  });
+
+  describe('parseVersionFromPackageManagerField', () => {
+    it('should return null for invalid semver', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'bad')).toEqual(null);
+      expect(parseVersionFromPackageManagerField('yarn', '2.1')).toEqual(null);
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-3.2.3.tgz#sha224.16a0797d1710d1fb7ec40ab5c3801b68370a612a9b66ba117ad9924b'
+        )
+      ).toEqual(null);
+    });
+
+    it('should <major>.<minor>.<patch> version', () => {
+      expect(parseVersionFromPackageManagerField('yarn', 'yarn@3.2.3')).toEqual(
+        '3.2.3'
+      );
+      expect(
+        parseVersionFromPackageManagerField(
+          'yarn',
+          'yarn@3.2.3+sha224.953c8233f7a92884eee2de69a1b92d1f2ec1655e66d08071ba9a02fa'
+        )
+      ).toEqual('3.2.3');
     });
   });
 });

@@ -1,11 +1,13 @@
+---
+title: 'Manage Releases'
+description: 'Learn how to use Nx release tools to version, generate changelogs, and publish your projects with confidence using conventional commits.'
+---
+
 # Manage Releases - `nx release`
 
 Once you have leveraged Nx's powerful code generation and task running capabilities to build your libraries and applications, you will want to share them with your users.
 
-{% youtube
-src="https://youtu.be/KjZKFGu3_9I"
-title="Releasing Nx Release"
-width="100%" /%}
+{% link-card title="Free Course: Versioning and Releasing NPM packages with Nx" type="external" url="https://www.epicweb.dev/tutorials/versioning-and-releasing-npm-packages-with-nx" icon="/documentation/shared/images/nx-release-course-logo.webp" /%}
 
 Nx provides a set of tools to help you manage your releases called `nx release`.
 
@@ -73,7 +75,9 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
           // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
           "commitReferences": true,
           // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
+          "versionTitleDate": true,
+          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
+          "applyUsernameToAuthors": true
         }
       },
       "workspaceChangelog": {
@@ -83,7 +87,9 @@ Changelog render options can be passed as [an object](https://github.com/nrwl/nx
           // Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
           "commitReferences": true,
           // Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable with the default of (YYYY-MM-DD).
-          "versionTitleDate": true
+          "versionTitleDate": true,
+          // Whether to apply usernames to authors in the Thank You section. Note, this option was called mapAuthorsToGitHubUsernames prior to Nx v21.
+          "applyUsernameToAuthors": true
         }
       }
     }

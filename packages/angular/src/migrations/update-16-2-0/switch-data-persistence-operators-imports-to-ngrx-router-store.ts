@@ -5,12 +5,12 @@ import {
   readJson,
 } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
-import { FileChangeRecorder } from '../../utils/file-change-recorder';
-import { ngrxVersion } from '../../utils/versions';
-import { getProjectsFilteredByDependencies } from '../utils/projects';
-import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
+import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import type { ImportDeclaration, ImportSpecifier, Node } from 'typescript';
+import { versions } from '../../generators/utils/version-utils';
+import { FileChangeRecorder } from '../../utils/file-change-recorder';
+import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
@@ -169,7 +169,11 @@ function addNgrxRouterStoreIfNotInstalled(tree: Tree): void {
     return;
   }
 
-  addDependenciesToPackageJson(tree, { '@ngrx/router-store': ngrxVersion }, {});
+  addDependenciesToPackageJson(
+    tree,
+    { '@ngrx/router-store': versions(tree).ngrxVersion },
+    {}
+  );
 }
 
 function filterFilesWithNxAngularDep(files: FileData[]): FileData[] {

@@ -1,3 +1,8 @@
+---
+title: Add a New Express Project
+description: Learn how to create and configure Express applications and libraries in your Nx workspace using the @nx/express plugin.
+---
+
 # Add a New Express Project
 
 **Supported Features**

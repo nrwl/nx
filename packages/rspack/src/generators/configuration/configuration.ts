@@ -28,9 +28,6 @@ export async function configurationGenerator(
 ) {
   const task = await rspackInitGenerator(tree, {
     ...options,
-    // TODO: Crystalize the default rspack.config.js file.
-    // The default setup isn't crystalized so don't add plugin.
-    addPlugin: false,
   });
   const { targets, root, projectType } = readProjectConfiguration(
     tree,

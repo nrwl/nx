@@ -6,6 +6,7 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  symlinkSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -63,6 +64,24 @@ export class TempFs {
     writeFileSync(joinPathFragments(this.tempDir, filePath), content);
   }
 
+  createSymlinkSync(
+    fileOrDirPath: string,
+    symlinkPath: string,
+    type: 'dir' | 'file'
+  ) {
+    const absoluteFileOrDirPath = joinPathFragments(
+      this.tempDir,
+      fileOrDirPath
+    );
+    const absoluteSymlinkPath = joinPathFragments(this.tempDir, symlinkPath);
+    const symlinkDir = dirname(absoluteSymlinkPath);
+    if (!existsSync(symlinkDir)) {
+      mkdirSync(symlinkDir, { recursive: true });
+    }
+
+    symlinkSync(absoluteFileOrDirPath, absoluteSymlinkPath, type);
+  }
+
   async readFile(filePath: string): Promise<string> {
     return await readFile(joinPathFragments(this.tempDir, filePath), 'utf-8');
   }
@@ -86,12 +105,30 @@ export class TempFs {
   }
 
   cleanup() {
-    rmSync(this.tempDir, { recursive: true, force: true });
-    setWorkspaceRoot(this.previousWorkspaceRoot);
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      setWorkspaceRoot(this.previousWorkspaceRoot);
+    } catch (e) {
+      // We are experiencing flakiness in CI related to this cleanup, so log only for now
+      if (process.env.CI) {
+        console.error(`Failed to cleanup temp dir: ${e}`);
+      } else {
+        throw e;
+      }
+    }
   }
 
   reset() {
-    rmSync(this.tempDir, { recursive: true, force: true });
-    mkdirSync(this.tempDir, { recursive: true });
+    try {
+      rmSync(this.tempDir, { recursive: true, force: true, maxRetries: 5 });
+      mkdirSync(this.tempDir, { recursive: true });
+    } catch (e) {
+      // We are experiencing flakiness in CI related to this cleanup, so log only for now
+      if (process.env.CI) {
+        console.error(`Failed to cleanup temp dir: ${e}`);
+      } else {
+        throw e;
+      }
+    }
   }
 }

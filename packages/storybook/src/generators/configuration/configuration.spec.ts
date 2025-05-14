@@ -10,7 +10,6 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { Linter } from '@nx/eslint';
 import { libraryGenerator } from '@nx/js';
 import { TsConfig } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
@@ -478,7 +477,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     it("should update the project's .eslintrc.json if config exists", async () => {
       await libraryGenerator(tree, {
         directory: 'test-ui-lib2',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         addPlugin: true,
       });
 
@@ -509,7 +508,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
     it('should have the proper typings', async () => {
       await libraryGenerator(tree, {
         directory: 'test-ui-lib2',
-        linter: Linter.EsLint,
+        linter: 'eslint',
         addPlugin: true,
       });
 
@@ -822,6 +821,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         bundler: 'none',
         skipFormat: true,
         addPlugin: true,
+        useProjectJson: false,
       });
 
       await configurationGenerator(tree, {
@@ -843,6 +843,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
+              "moduleResolution": "node10",
             },
           },
         }

@@ -1,3 +1,8 @@
+---
+title: 'As Provided vs. Derived Generator Path Options'
+description: 'Learn about the transition from derived to as-provided path options in Nx generators, improving transparency and predictability in code generation.'
+---
+
 # As Provided vs. Derived Generator Path Options
 
 Nx is moving toward a more transparent and predictable way of determining where code will be generated when you run a generator. The new behavior is to take generator options _as provided_ and place the generated code in the exact folder that you specify. Nx will only use the new behavior in Nx version 20. The directory can be specified with a `--directory` flag or use a fully specified path (i.e. `libs/shared/my-lib/src/my-component`). The `--directory` flag will be calculated relative to where you run the command.

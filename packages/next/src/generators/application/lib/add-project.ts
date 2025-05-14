@@ -9,9 +9,9 @@ import {
 } from '@nx/devkit';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { nextVersion } from '../../../utils/versions';
 import { reactDomVersion, reactVersion } from '@nx/react';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};
@@ -72,26 +72,36 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  if (isUsingTsSolutionSetup(host)) {
-    writeJson(host, joinPathFragments(options.appProjectRoot, 'package.json'), {
-      name: getImportPath(host, options.name),
-      version: '0.0.1',
-      private: true,
-      dependencies: {
-        next: nextVersion,
-        react: reactVersion,
-        'react-dom': reactDomVersion,
-      },
-      nx: {
-        name: options.name,
-        projectType: 'application',
-        sourceRoot: options.appProjectRoot,
-        tags: options.parsedTags?.length ? options.parsedTags : undefined,
-      },
-    });
+  const packageJson: PackageJson = {
+    name: options.importPath,
+    version: '0.0.1',
+    private: true,
+    dependencies: {
+      next: nextVersion,
+      react: reactVersion,
+      'react-dom': reactDomVersion,
+    },
+  };
+
+  if (!options.useProjectJson) {
+    if (options.projectName !== options.importPath) {
+      packageJson.nx = { name: options.projectName };
+    }
+    if (options.parsedTags?.length) {
+      packageJson.nx ??= {};
+      packageJson.nx.tags = options.parsedTags;
+    }
   } else {
     addProjectConfiguration(host, options.projectName, {
       ...project,
     });
+  }
+
+  if (!options.useProjectJson || options.isTsSolutionSetup) {
+    writeJson(
+      host,
+      joinPathFragments(options.appProjectRoot, 'package.json'),
+      packageJson
+    );
   }
 }

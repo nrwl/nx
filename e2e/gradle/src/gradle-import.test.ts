@@ -17,10 +17,9 @@ import { createGradleProject } from './utils/create-gradle-project';
 import { createFileSync } from 'fs-extra';
 
 describe('Nx Import Gradle', () => {
-  let proj: string;
   const tempImportE2ERoot = join(e2eCwd, 'nx-import');
   beforeAll(() => {
-    proj = newProject({
+    newProject({
       packages: ['@nx/js'],
     });
 
@@ -66,61 +65,41 @@ describe('Nx Import Gradle', () => {
       'gradleProjectKotlin',
       'kotlin-'
     );
-    // Add project.json files to the gradle project to avoid duplicate project names
-    createFileSync(join(tempGraldeProjectPath, 'project.json'));
-    writeFileSync(
-      join(tempGraldeProjectPath, 'project.json'),
-      `{"name": "${tempGradleProjectName}"}`
-    );
-
-    execSync(`git init`, {
-      cwd: tempGraldeProjectPath,
-    });
-    execSync(`git add .`, {
-      cwd: tempGraldeProjectPath,
-    });
-    execSync(`git commit -am "initial commit"`, {
-      cwd: tempGraldeProjectPath,
-    });
-
-    try {
-      execSync(`git checkout -b main`, {
-        cwd: tempGraldeProjectPath,
-      });
-    } catch {
-      // This fails if git is already configured to have `main` branch, but that's OK
-    }
+    setupGradleProjectGit(tempGraldeProjectPath, tempGradleProjectName);
 
     const remote = tempGraldeProjectPath;
     const ref = 'main';
     const source = '.';
     const directory = 'projects/gradle-app-kotlin';
 
-    runCLI(
-      `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
-      {
-        verbose: true,
-      }
-    );
+    try {
+      runCLI(
+        `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
+        {
+          verbose: true,
+        }
+      );
 
-    checkFilesExist(
-      `${directory}/settings.gradle.kts`,
-      `${directory}/build.gradle.kts`,
-      `${directory}/gradlew`,
-      `${directory}/gradlew.bat`
-    );
-    const nxJson = readJson('nx.json');
-    const gradlePlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/gradle'
-    );
-    expect(gradlePlugin).toBeDefined();
-    expect(() => {
-      runCLI(`show projects`);
-      runCLI('build kotlin-app');
-    }).not.toThrow();
-
-    runCommand(`git add .`);
-    runCommand(`git commit -am 'import kotlin project'`);
+      checkFilesExist(
+        `${directory}/settings.gradle.kts`,
+        `${directory}/build.gradle.kts`,
+        `${directory}/gradlew`,
+        `${directory}/gradlew.bat`
+      );
+      const nxJson = readJson('nx.json');
+      const gradlePlugin = nxJson.plugins.find(
+        (plugin) => plugin.plugin === '@nx/gradle'
+      );
+      expect(gradlePlugin).toBeDefined();
+      expect(() => {
+        runCLI(`show projects`);
+        runCLI('build kotlin-app');
+      }).not.toThrow();
+    } finally {
+      // Cleanup
+      runCommand(`git add .`);
+      runCommand(`git commit -am 'import kotlin project'`);
+    }
   });
 
   it('should be able to import a groovy gradle app', () => {
@@ -140,56 +119,79 @@ describe('Nx Import Gradle', () => {
       'gradleProjectGroovy',
       'groovy-'
     );
-    // Add project.json files to the gradle project to avoid duplicate project names
-    createFileSync(join(tempGraldeProjectPath, 'project.json'));
-    writeFileSync(
-      join(tempGraldeProjectPath, 'project.json'),
-      `{"name": "${tempGradleProjectName}"}`
-    );
-
-    execSync(`git init`, {
-      cwd: tempGraldeProjectPath,
-    });
-    execSync(`git add .`, {
-      cwd: tempGraldeProjectPath,
-    });
-    execSync(`git commit -am "initial commit"`, {
-      cwd: tempGraldeProjectPath,
-    });
-
-    try {
-      execSync(`git checkout -b main`, {
-        cwd: tempGraldeProjectPath,
-      });
-    } catch {
-      // This fails if git is already configured to have `main` branch, but that's OK
-    }
+    setupGradleProjectGit(tempGraldeProjectPath, tempGradleProjectName);
 
     const remote = tempGraldeProjectPath;
     const ref = 'main';
     const source = '.';
     const directory = 'projects/gradle-app-groovy';
 
-    runCLI(
-      `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
-      {
-        verbose: true,
-      }
-    );
-    runCLI(`g @nx/gradle:init --no-interactive`);
+    try {
+      runCLI(
+        `import ${remote} ${directory} --ref ${ref} --source ${source} --no-interactive`,
+        {
+          verbose: true,
+        }
+      );
+      runCLI(`g @nx/gradle:init --no-interactive`);
 
-    checkFilesExist(
-      `${directory}/build.gradle`,
-      `${directory}/settings.gradle`,
-      `${directory}/gradlew`,
-      `${directory}/gradlew.bat`
-    );
-    expect(() => {
-      runCLI(`show projects`);
-      runCLI('build groovy-app');
-    }).not.toThrow();
-
-    runCommand(`git add .`);
-    runCommand(`git commit -am 'import groovy project'`);
+      checkFilesExist(
+        `${directory}/build.gradle`,
+        `${directory}/settings.gradle`,
+        `${directory}/gradlew`,
+        `${directory}/gradlew.bat`
+      );
+      const nxJson = readJson('nx.json');
+      const gradlePlugin = nxJson.plugins.find(
+        (plugin) => plugin.plugin === '@nx/gradle'
+      );
+      gradlePlugin.exclude = [];
+      updateJson('nx.json', () => nxJson);
+      expect(() => {
+        runCLI(`show projects`);
+        runCLI('build groovy-app');
+      }).not.toThrow();
+    } finally {
+      // Cleanup
+      runCommand(`git add .`);
+      runCommand(`git commit -am 'import groovy project'`);
+    }
   });
 });
+
+function setupGradleProjectGit(
+  tempGraldeProjectPath: string,
+  tempGradleProjectName: string
+) {
+  // Add project.json files to the gradle project to avoid duplicate project names
+  createFileSync(join(tempGraldeProjectPath, 'project.json'));
+  writeFileSync(
+    join(tempGraldeProjectPath, 'project.json'),
+    `{"name": "${tempGradleProjectName}"}`
+  );
+
+  execSync(`./gradlew --stop`, {
+    cwd: tempGraldeProjectPath,
+  });
+  execSync(`./gradlew clean`, {
+    cwd: tempGraldeProjectPath,
+  });
+
+  execSync(`git init`, {
+    cwd: tempGraldeProjectPath,
+  });
+  execSync(`git add .`, {
+    cwd: tempGraldeProjectPath,
+  });
+  execSync(`git commit -am "initial commit"`, {
+    cwd: tempGraldeProjectPath,
+  });
+
+  try {
+    execSync(`git checkout -b main`, {
+      cwd: tempGraldeProjectPath,
+    });
+  } catch {
+    // This fails if git is already configured to have `main` branch, but that's OK
+  }
+}

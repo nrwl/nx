@@ -54,6 +54,7 @@ export const allowedProjectExtensions = [
 // There are some props in here (root) that angular already knows about,
 // but it doesn't hurt to have them in here as well to help static analysis.
 export const allowedWorkspaceExtensions = [
+  '$schema',
   'implicitDependencies',
   'affected',
   'defaultBase',
@@ -81,6 +82,8 @@ export const allowedWorkspaceExtensions = [
   'neverConnectToCloud',
   'sync',
   'useLegacyCache',
+  'maxCacheSize',
+  'tui',
 ] as const;
 
 if (!patched) {

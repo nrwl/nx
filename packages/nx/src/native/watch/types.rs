@@ -124,8 +124,8 @@ pub fn transform_event_to_watch_events(
         #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
         {
             use crate::native::walker::nx_walker_sync;
-            use ignore::gitignore::GitignoreBuilder;
             use ignore::Match;
+            use ignore::gitignore::GitignoreBuilder;
 
             if matches!(event_kind, FileEventKind::Create(CreateKind::Folder)) {
                 let mut result = vec![];

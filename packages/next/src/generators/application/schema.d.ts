@@ -22,4 +22,5 @@ export interface Schema {
   addPlugin?: boolean;
   useTsSolution?: boolean;
   formatter?: 'prettier' | 'none';
+  useProjectJson?: boolean;
 }

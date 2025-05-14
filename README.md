@@ -21,7 +21,7 @@
 
 # Smart Monorepos · Fast CI
 
-Nx is a build system, optimized for monorepos, with plugins for popular frameworks and tools and advanced CI capabilities including caching and distribution.
+Build system, optimized for monorepos, with AI-powered architectural awareness and advanced CI capabilities.
 
 Create a new Nx workspace with
 

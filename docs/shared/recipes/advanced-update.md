@@ -1,3 +1,8 @@
+---
+title: Advanced Update Process
+description: Learn advanced techniques for updating Nx and workspace dependencies, including step-by-step migration strategies, managing complex updates, and troubleshooting common issues.
+---
+
 # Advanced update process
 
 This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/features/automate-updating-dependencies) and continues with those advanced use cases.

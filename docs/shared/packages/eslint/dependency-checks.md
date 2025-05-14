@@ -1,3 +1,8 @@
+---
+title: Dependency Checks ESLint Rule
+description: Learn how to use the @nx/dependency-checks ESLint rule to identify mismatches between dependencies in package.json and actual project dependencies.
+---
+
 # Dependency Checks rule
 
 The `@nx/dependency-checks` ESLint rule enables you to discover mismatches between dependencies specified in a project's `package.json` and the dependencies that your project depends on. If your project is using, for example, the `axios`, but the `package.json` does not specify it as a dependency, your library might not work correctly. This rule helps catch these problems before your users do.
@@ -79,13 +84,14 @@ Sometimes we intentionally want to add or remove a dependency from our `package.
 
 ## Options
 
-| Property                              | Type            | Default     | Description                                                                                                                               |
-| ------------------------------------- | --------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| buildTargets                          | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                |
-| checkMissingDependencies              | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                         |
-| checkObsoleteDependencies             | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                          |
-| checkVersionMismatches                | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                   |
-| ignoredDependencies                   | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                 |
-| ignoredFiles                          | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation. |
-| includeTransitiveDependencies         | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                       |
-| useLocalPathsForWorkspaceDependencies | _boolean_       | _false_     | Set workspace dependencies as relative file:// paths. Useful for monorepos that link via file:// in package.json files.                   |
+| Property                              | Type            | Default     | Description                                                                                                                                                                                                                                                      |
+| ------------------------------------- | --------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| buildTargets                          | _Array<string>_ | _["build"]_ | List of build target names                                                                                                                                                                                                                                       |
+| checkMissingDependencies              | _boolean_       | _true_      | Disable to skip checking for missing dependencies                                                                                                                                                                                                                |
+| checkObsoleteDependencies             | _boolean_       | _true_      | Disable to skip checking for unused dependencies                                                                                                                                                                                                                 |
+| checkVersionMismatches                | _boolean_       | _true_      | Disable to skip checking if version specifier matches installed version                                                                                                                                                                                          |
+| ignoredDependencies                   | _Array<string>_ | _[]_        | List of dependencies to ignore for checks                                                                                                                                                                                                                        |
+| ignoredFiles                          | _Array<string>_ | N/A         | List of files to ignore when collecting dependencies. The default value will be set based on the selected executor during the generation.                                                                                                                        |
+| includeTransitiveDependencies         | _boolean_       | _false_     | Enable to collect dependencies of children projects                                                                                                                                                                                                              |
+| useLocalPathsForWorkspaceDependencies | _boolean_       | _false_     | Set workspace dependencies as relative file:// paths. Useful for monorepos that link via file:// in package.json files.                                                                                                                                          |
+| runtimeHelpers                        | _Array<string>_ | _[]_        | List of helper packages used by the built output (e.g. `tslib` when using `tsc` and `importHelpers` is set to `true`). The rule already detects some of them in some scenarios, but this option can be used to detect them when it doesn't happen automatically. |

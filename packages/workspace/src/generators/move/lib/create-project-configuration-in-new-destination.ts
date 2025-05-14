@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
 
@@ -81,6 +82,11 @@ export function createProjectConfigurationInNewDestination(
     );
   }
 
-  // Create a new project with the root replaced
-  addProjectConfiguration(tree, schema.newProjectName, newProject);
+  if (schema.isNxConfiguredInPackageJson) {
+    // Update the existing project configuration in the package.json
+    updateProjectConfiguration(tree, schema.newProjectName, newProject);
+  } else {
+    // Create a new project with the root replaced
+    addProjectConfiguration(tree, schema.newProjectName, newProject);
+  }
 }

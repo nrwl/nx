@@ -13,6 +13,7 @@ const navigation = {
     { name: 'App', href: 'https://cloud.nx.app' },
     { name: 'Docs', href: '/ci/intro/ci-with-nx' },
     { name: 'Pricing', href: '/pricing' },
+    { name: 'Terms', href: 'https://cloud.nx.app/terms' },
   ],
   solutions: [
     { name: 'Nx', href: 'https://nx.dev' },
@@ -200,9 +201,6 @@ export function Footer({
                   </Link>
                 )
               )}
-            </div>
-            <div className="flex items-center text-sm">
-              Nx Version <VersionPicker />
             </div>
             <div className="flex items-center text-sm">
               Theme <ThemeSwitcher />

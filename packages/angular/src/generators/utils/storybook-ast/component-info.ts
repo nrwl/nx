@@ -261,7 +261,7 @@ function getComponentInfoFromDir(
 
   const componentImportPathChildren: string[] = [];
   visitNotIgnoredFiles(tree, dir, (filePath) => {
-    componentImportPathChildren.push(filePath);
+    componentImportPathChildren.push(normalizePath(filePath));
   });
 
   for (const candidateFile of componentImportPathChildren) {

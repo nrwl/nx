@@ -1,3 +1,8 @@
+---
+title: Nx Daemon
+description: Learn about the Nx Daemon, a background process that speeds up project graph computation in large workspaces by maintaining state between commands.
+---
+
 # Nx Daemon
 
 In version 13 we introduced the opt-in Nx Daemon which Nx can leverage to dramatically speed up project graph computation, particularly for large workspaces.

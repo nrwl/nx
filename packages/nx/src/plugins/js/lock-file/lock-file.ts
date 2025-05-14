@@ -3,8 +3,10 @@
  * It encapsulates the package manager specific logic and implementation details.
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { execSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { gte } from 'semver';
 
 import {
   detectPackageManager,
@@ -46,17 +48,20 @@ const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
 const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
 const BUN_LOCK_FILE = 'bun.lockb';
+const BUN_TEXT_LOCK_FILE = 'bun.lock';
 export const LOCKFILES = [
   YARN_LOCK_FILE,
   NPM_LOCK_FILE,
   PNPM_LOCK_FILE,
   BUN_LOCK_FILE,
+  BUN_TEXT_LOCK_FILE,
 ];
 
 const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
 const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
 const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 const BUN_LOCK_PATH = join(workspaceRoot, BUN_LOCK_FILE);
+const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
 
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
@@ -143,7 +148,7 @@ export function lockFileExists(packageManager: PackageManager): boolean {
     return existsSync(NPM_LOCK_PATH);
   }
   if (packageManager === 'bun') {
-    return existsSync(BUN_LOCK_PATH);
+    return existsSync(BUN_LOCK_PATH) || existsSync(BUN_TEXT_LOCK_PATH);
   }
   throw new Error(
     `Unknown package manager ${packageManager} or lock file missing`
@@ -182,7 +187,16 @@ function getLockFilePath(packageManager: PackageManager): string {
     return NPM_LOCK_PATH;
   }
   if (packageManager === 'bun') {
-    return BUN_LOCK_PATH;
+    try {
+      const bunVersion = execSync('bun --version').toString().trim();
+      // In version 1.2.0, bun switched to a text based lockfile format by default
+      if (gte(bunVersion, '1.2.0')) {
+        return BUN_TEXT_LOCK_FILE;
+      }
+      return BUN_LOCK_PATH;
+    } catch {
+      return BUN_LOCK_PATH;
+    }
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }

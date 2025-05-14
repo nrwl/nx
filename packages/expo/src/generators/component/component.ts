@@ -53,7 +53,9 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
-      options.projectSourceRoot,
+      ...(options.projectSourceRoot
+        ? [options.projectSourceRoot]
+        : [options.projectRoot, 'src']),
       options.fileExtensionType === 'js' ? 'index.js' : 'index.ts'
     );
 

@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { ExecutorContext } from '@nx/devkit';
 import { type Configuration } from '@rspack/core';
 import {
@@ -14,10 +13,16 @@ export async function getRspackConfigs(
   options: NormalizedRspackExecutorSchema & { devServer?: any },
   context: ExecutorContext
 ): Promise<Configuration | Configuration[]> {
-  let userDefinedConfig = resolveUserDefinedRspackConfig(
+  let maybeUserDefinedConfig = await resolveUserDefinedRspackConfig(
     options.rspackConfig,
     options.tsConfig
   );
+  let userDefinedConfig =
+    'default' in maybeUserDefinedConfig
+      ? 'default' in maybeUserDefinedConfig.default
+        ? maybeUserDefinedConfig.default.default
+        : maybeUserDefinedConfig.default
+      : maybeUserDefinedConfig;
 
   if (typeof userDefinedConfig.then === 'function') {
     userDefinedConfig = await userDefinedConfig;

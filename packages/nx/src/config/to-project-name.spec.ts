@@ -58,13 +58,13 @@ describe('Workspaces', () => {
           "metadata": {
             "description": "my-package description",
             "js": {
+              "isInPackageManagerWorkspaces": true,
               "packageName": "my-package",
             },
             "targetGroups": {},
           },
           "name": "my-package",
           "root": "packages/my-package",
-          "sourceRoot": "packages/my-package",
           "tags": [
             "npm:public",
           ],
@@ -81,6 +81,6 @@ describe('Workspaces', () => {
           },
         }
       `);
-    });
+    }, 50000);
   });
 });

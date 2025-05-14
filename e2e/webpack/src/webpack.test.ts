@@ -153,7 +153,9 @@ describe('Webpack Plugin', () => {
       module.exports = {
         target: 'node',
         output: {
-          path: path.join(__dirname, '../../dist/apps/${appName}')
+          path: path.join(__dirname, '../../dist/apps/${appName}'),
+          // do not remove dist, so files between builds will remain
+          clean: false,
         },
         plugins: [
           new NxAppWebpackPlugin({
@@ -179,6 +181,11 @@ describe('Webpack Plugin', () => {
     expect(runCommand(`node dist/apps/${appName}/main.js`)).toMatch(/Hello/);
     expect(runCommand(`node dist/apps/${appName}/foo.js`)).toMatch(/Foo/);
     expect(runCommand(`node dist/apps/${appName}/bar.js`)).toMatch(/Bar/);
+
+    // Ensure dist is not removed between builds since output.clean === false
+    createFile(`dist/apps/${appName}/extra.js`);
+    runCLI(`build ${appName} --skip-nx-cache`);
+    checkFilesExist(`dist/apps/${appName}/extra.js`);
   }, 500_000);
 
   it('should bundle in NX_PUBLIC_ environment variables', () => {

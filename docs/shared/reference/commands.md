@@ -1,3 +1,8 @@
+---
+title: Nx Commands
+description: A comprehensive reference of all available Nx CLI commands for modifying code, running tasks, displaying information, and integrating with Nx Cloud.
+---
+
 # Nx Commands
 
 The Nx CLI provides many commands. They are organized here into commands that:

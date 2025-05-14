@@ -2,15 +2,16 @@
 title: 'Bundling a Node API with Fastify, esbuild, and Nx'
 slug: 'bundling-a-node-api-with-fastify-esbuild-and-nx'
 authors: ['Jack Hsu']
-cover_image: '/blog/images/2023-02-28/PADY_RKrkXj39p4nj79ESw.png'
+cover_image: '/blog/images/2023-02-28/PADY_RKrkXj39p4nj79ESw.avif'
 tags: [nx, tutorial]
+description: Build and deploy a Node.js API with Fastify, Nx, esbuild, Docker, and Fly.io.
 ---
 
 There are many decisions to make when it comes to building a Node API. There are a variety of frameworks to choose from (Express, Fastify, Koa, etc.), and a million different ways to build and deploy the application.
 
-In this article, I’ll show you the easiest way to go from zero to production by using Nx to create a Node API project.
+In this article, I'll show you the easiest way to go from zero to production by using Nx to create a Node API project.
 
-We’ll be using [Fastify](https://www.fastify.io/) as the framework of choice. Fastify is a fast (as the name implies) and low-overhead server in Node. It has grown in popularity, recently crossing the 1 million weekly download mark on npm. I’m a fan of Fastify’s plugin architecture, and the ecosystem is quite impressive, boasting over [250 core and community plugins](https://www.fastify.io/ecosystem/).
+We'll be using [Fastify](https://www.fastify.io/) as the framework of choice. Fastify is a fast (as the name implies) and low-overhead server in Node. It has grown in popularity, recently crossing the 1 million weekly download mark on npm. I'm a fan of Fastify's plugin architecture, and the ecosystem is quite impressive, boasting over [250 core and community plugins](https://www.fastify.io/ecosystem/).
 
 ## **Table of Contents**
 
@@ -21,7 +22,7 @@ We’ll be using [Fastify](https://www.fastify.io/) as the framework of choice. 
 · [Deploying the server](#deploying-the-server)  
 · [Summary](#summary)
 
-**Prefer a video version? We’ve got you covered!**
+**Prefer a video version? We've got you covered!**
 
 {% youtube src="https://www.youtube.com/watch?v=K4f-fMuAoRY" /%}
 
@@ -57,7 +58,7 @@ In additional to generating the source code, Nx will also create two test suites
 1.  Unit tests via `npx nx test` (aliased to `npm run test`).
 2.  E2E tests via `npx nx e2e e2e` (aliased to `npm run e2e`).
 
-Unit tests take advantage of Fastify’s plugin architecture, and allows you to test each plugin in isolation. It runs using [Jest](https://jestjs.io/), which is the most popular test runner in Node.
+Unit tests take advantage of Fastify's plugin architecture, and allows you to test each plugin in isolation. It runs using [Jest](https://jestjs.io/), which is the most popular test runner in Node.
 
 ```
 // src/app/app.spec.ts
@@ -101,7 +102,7 @@ There are trade-offs between speed versus confidence when it comes to unit versu
 
 ## Building for production using esbuild
 
-Now that we have our production-ready app, let’s examine how Nx handles the build process using [`esbuild`](https://esbuild.github.io/).
+Now that we have our production-ready app, let's examine how Nx handles the build process using [`esbuild`](https://esbuild.github.io/).
 
 `esbuild` is a bundler written in Go that is extremely fast — it is much faster than other bundlers like webpack and parcel, but that may change in the future as other tools make their own speed improvements.
 
@@ -118,7 +119,7 @@ NX Successfully ran target build for project api (2s)
 
 ```
 
-A cool feature of Nx, is that commands such as `build` and `test` are cached if the project (or its dependencies) have not changed. If we run the build a second time, you’ll see it completes in a few milliseconds.
+A cool feature of Nx, is that commands such as `build` and `test` are cached if the project (or its dependencies) have not changed. If we run the build a second time, you'll see it completes in a few milliseconds.
 
 ```shell
 $ npx nx build
@@ -131,7 +132,7 @@ NX Successfully ran target build for project api (16ms) Nx read the output from 
 
 ```
 
-We’ll touch more on the caching when we look at Docker support.
+We'll touch more on the caching when we look at Docker support.
 
 And now that the server bundle is ready, we can run it.
 
@@ -188,9 +189,9 @@ $ docker run -p 3000:3000 -t api
 
 There are numerous platforms that we can deploy our app to. I like [Fly.io](https://fly.io) since it very easy to deploy all over the world using the CLI, and it comes with good [Docker support](https://fly.io/docs/languages-and-frameworks/dockerfile/).
 
-If you haven’t used Fly before, please follow their [short getting started guide](https://fly.io/docs/speedrun/) (5–10 mins).
+If you haven't used Fly before, please follow their [short getting started guide](https://fly.io/docs/speedrun/) (5–10 mins).
 
-Once you are ready, let’s configure our project.
+Once you are ready, let's configure our project.
 
 ```
 
@@ -224,7 +225,7 @@ And you can open the deployed server using `fly open`.
 
 ![](/blog/images/2023-02-28/tV8aAtjRoRMwlj1Tv17IAw.avif)
 
-That’s it! Our server is now deployed for the world to use.
+That's it! Our server is now deployed for the world to use.
 
 ## Summary
 

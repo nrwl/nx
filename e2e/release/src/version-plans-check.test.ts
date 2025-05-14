@@ -89,6 +89,8 @@ describe('nx release version plans check command', () => {
 
       Please ensure at least one release group has version plans enabled in your Nx release configuration if you want to use this command.
 
+      Learn more about version plans here: https://nx.dev/recipes/nx-release/file-based-versioning-version-plans
+
 
     `);
 

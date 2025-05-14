@@ -8,7 +8,6 @@ import {
 } from '@nx/devkit';
 import * as pc from 'picocolors';
 import { babelLoaderVersion, nxVersion } from '../../../../utils/versions';
-import { maybeJs } from '../../../../utils/maybe-js';
 import { NormalizedSchema, Schema } from '../../schema';
 
 export async function initRspack(
@@ -19,36 +18,9 @@ export async function initRspack(
   const { rspackInitGenerator } = ensurePackage('@nx/rspack', nxVersion);
   const rspackInitTask = await rspackInitGenerator(tree, {
     ...options,
-    addPlugin: false,
     skipFormat: true,
   });
   tasks.push(rspackInitTask);
-}
-
-export async function setupRspackConfiguration(
-  tree: Tree,
-  options: NormalizedSchema<Schema>,
-  tasks: any[]
-) {
-  const { configurationGenerator } = ensurePackage('@nx/rspack', nxVersion);
-  const rspackTask = await configurationGenerator(tree, {
-    project: options.projectName,
-    main: joinPathFragments(
-      options.appProjectRoot,
-      maybeJs(
-        {
-          js: options.js,
-          useJsx: true,
-        },
-        `src/main.tsx`
-      )
-    ),
-    tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    target: 'web',
-    newProject: true,
-    framework: 'react',
-  });
-  tasks.push(rspackTask);
 }
 
 export function handleStyledJsxForRspack(

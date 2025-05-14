@@ -29,7 +29,7 @@ import {
 import { readProjectGraph } from '../utils/project-graph-utils';
 import {
   appIsMFERemote,
-  belongsToDifferentNgEntryPoint,
+  belongsToDifferentEntryPoint,
   DepConstraint,
   findConstraintsFor,
   findDependenciesWithTags,
@@ -50,6 +50,7 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
+import { isProjectGraphProjectNode } from 'nx/src/config/project-graph';
 
 export type Options = [
   {
@@ -411,7 +412,7 @@ export default ESLintUtils.RuleCreator(
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !belongsToDifferentNgEntryPoint(
+          !belongsToDifferentEntryPoint(
             imp,
             sourceFilePath,
             sourceProject.data.root
@@ -525,6 +526,11 @@ export default ESLintUtils.RuleCreator(
         return;
       }
 
+      if (!isProjectGraphProjectNode(targetProject)) {
+        return;
+      }
+      targetProject = targetProject as ProjectGraphProjectNode;
+
       // check constraints between libs and apps
       // check for circular dependency
       const circularPath = checkCircularPath(
@@ -617,7 +623,9 @@ export default ESLintUtils.RuleCreator(
           node,
           projectGraph,
           sourceProject.name,
-          targetProject.name
+          targetProject.name,
+          imp,
+          sourceFilePath
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(

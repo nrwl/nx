@@ -75,7 +75,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'Scaling 700+ projects: How Nx Enterprise became a no-brainer for Caseware.',
+      'Scaling 700+ projects: How Nx Enterprise became a no-brainer for Caseware',
     metrics: [
       {
         value: 'Massive scale',
@@ -104,7 +104,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'How SiriusXM stays competitive by iterating and getting to market fast.',
+      'How SiriusXM stays competitive by iterating and getting to market fast',
     metrics: [
       {
         value: 'Faster releases',
@@ -135,7 +135,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'From 5 days to 2 hours: How Payfit improved velocity and offloads complexity.',
+      'From 5 days to 2 hours: How Payfit improved velocity and offloads complexity',
     metrics: [
       {
         value: 'From 5 days → 2 hours',
@@ -164,7 +164,7 @@ const testimonials: Testimonial[] = [
   {
     title: 'Customer story',
     subtitle:
-      'How UKG reduced build times while scaling development across teams.',
+      'How UKG reduced build times while scaling development across teams',
     metrics: [
       {
         value: 'From 1 day → instant builds',

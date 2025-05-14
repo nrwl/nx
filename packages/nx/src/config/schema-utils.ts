@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
-import { getPackageEntryPointsToProjectMap } from '../plugins/js/utils/packages';
+import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
 import { registerPluginTSTranspiler } from '../project-graph/plugins';
 import { normalizePath } from '../utils/path';
 import type { ProjectConfiguration } from './workspace-json-project-json';
@@ -119,16 +119,16 @@ export function resolveSchema(
   });
 }
 
-let packageEntryPointsToProjectMap: Record<string, ProjectConfiguration>;
+let packageToProjectMap: Record<string, ProjectConfiguration>;
 function tryResolveFromSource(
   path: string,
   directory: string,
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string | null {
-  packageEntryPointsToProjectMap ??=
-    getPackageEntryPointsToProjectMap(projects);
-  const localProject = packageEntryPointsToProjectMap[packageName];
+  packageToProjectMap ??=
+    getWorkspacePackagesMetadata(projects).packageToProjectMap;
+  const localProject = packageToProjectMap[packageName];
   if (!localProject) {
     // it doesn't match any of the package names from the local projects
     return null;

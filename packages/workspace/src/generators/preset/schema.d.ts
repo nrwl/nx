@@ -16,6 +16,7 @@ export interface Schema {
   nextAppDir?: boolean;
   nextSrcDir?: boolean;
   routing?: boolean;
+  useReactRouter?: boolean;
   standaloneApi?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
@@ -24,4 +25,5 @@ export interface Schema {
   serverRouting?: boolean;
   prefix?: string;
   nxCloudToken?: string;
+  useProjectJson?: boolean;
 }

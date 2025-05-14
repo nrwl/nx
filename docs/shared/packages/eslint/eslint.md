@@ -1,3 +1,8 @@
+---
+title: ESLint Plugin for Nx
+description: Learn how to set up and use the @nx/eslint plugin to integrate ESLint with Nx, enabling caching and providing code generators for ESLint configuration.
+---
+
 The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. It allows you to run ESLint through Nx with caching enabled. It also includes code generators to help you set up ESLint in your workspace.
 
 ## Setting Up @nx/eslint
@@ -9,9 +14,6 @@ Make sure to install the `@nx/eslint` version that matches the version of `nx` i
 {% /callout %}
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:
-
-{% tabs %}
-{% tab label="Nx 18+" %}
 
 ```shell {% skipRescope=true %}
 nx add @nx/eslint
@@ -25,11 +27,13 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 
 - `.eslintrc`
 - `.eslintrc.js`
+- `.eslintrc.mjs`
 - `.eslintrc.cjs`
 - `.eslintrc.yaml`
 - `.eslintrc.yml`
 - `.eslintrc.json`
 - `eslint.config.js`
+- `eslint.config.mjs`
 - `eslint.config.cjs`
 
 Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
@@ -58,27 +62,6 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 ```
 
 - The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
-
-{% /tab %}
-{% tab label="Nx 17" %}
-
-Install the `@nx/eslint` package with your package manager.
-
-```shell {% skipRescope=true %}
-npm add -D @nx/eslint
-```
-
-{% /tab %}
-{% tab label="Nx < 17" %}
-
-Install the `@nx/linter` package with your package manager.
-
-```shell
-npm add -D @nx/linter
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Lint
 

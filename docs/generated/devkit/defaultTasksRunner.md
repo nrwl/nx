@@ -12,6 +12,7 @@
 | `context.daemon?`            | `DaemonClient`                                                                             |
 | `context.hasher?`            | [`TaskHasher`](../../devkit/documents/TaskHasher)                                          |
 | `context.initiatingProject?` | `string`                                                                                   |
+| `context.initiatingTasks`    | [`Task`](../../devkit/documents/Task)[]                                                    |
 | `context.nxArgs`             | `NxArgs`                                                                                   |
 | `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\> |
 | `context.projectGraph`       | [`ProjectGraph`](../../devkit/documents/ProjectGraph)                                      |

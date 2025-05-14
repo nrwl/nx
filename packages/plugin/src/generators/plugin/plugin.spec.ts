@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
@@ -23,7 +22,7 @@ const getSchema: (overrides?: Partial<Schema>) => Schema = (
   skipTsConfig: false,
   skipFormat: false,
   skipLintChecks: false,
-  linter: Linter.EsLint,
+  linter: 'eslint',
   unitTestRunner: 'jest',
   ...overrides,
 });
@@ -339,6 +338,7 @@ describe('NxPlugin Plugin Generator', () => {
         compilerOptions: {
           composite: true,
           declaration: true,
+          customConditions: ['development'],
         },
       });
       writeJson(tree, 'tsconfig.json', {
@@ -354,6 +354,7 @@ describe('NxPlugin Plugin Generator', () => {
         getSchema({
           directory: 'my-plugin',
           unitTestRunner: 'jest',
+          useProjectJson: false,
         })
       );
 
@@ -446,6 +447,7 @@ describe('NxPlugin Plugin Generator', () => {
           "exports": {
             ".": {
               "default": "./dist/index.js",
+              "development": "./src/index.ts",
               "import": "./dist/index.js",
               "types": "./dist/index.d.ts",
             },
@@ -526,6 +528,70 @@ describe('NxPlugin Plugin Generator', () => {
           ],
         }
       `);
+    });
+
+    it('should not set the "development" condition in exports when it does not exist in tsconfig.base.json', async () => {
+      updateJson(tree, 'tsconfig.base.json', (json) => {
+        delete json.compilerOptions.customConditions;
+        return json;
+      });
+
+      await pluginGenerator(
+        tree,
+        getSchema({
+          e2eTestRunner: 'jest',
+          skipFormat: true,
+        })
+      );
+
+      expect(
+        readJson(tree, 'my-plugin/package.json').exports['.']
+      ).not.toHaveProperty('development');
+    });
+
+    it('should set "nx.name" in package.json when the user provides a name that is different than the package name and "useProjectJson" is "false"', async () => {
+      await pluginGenerator(tree, {
+        directory: 'my-plugin',
+        name: 'my-plugin', // import path contains the npm scope, so it would be different
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-plugin/package.json').nx.name).toBe(
+        'my-plugin'
+      );
+    });
+
+    it('should not set "nx.name" in package.json when the provided name matches the package name', async () => {
+      await pluginGenerator(tree, {
+        directory: 'my-plugin',
+        name: '@proj/my-plugin',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-plugin/package.json').nx.name).toBeUndefined();
+    });
+
+    it('should not set "nx" in package.json when "useProjectJson" is "true"', async () => {
+      await pluginGenerator(tree, {
+        directory: 'my-plugin',
+        name: '@proj/my-plugin',
+        useProjectJson: true,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-plugin/package.json').nx).toBeUndefined();
+    });
+
+    it('should not set "nx.name" in package.json when the user does not provide a name', async () => {
+      await pluginGenerator(tree, {
+        directory: 'my-plugin',
+        useProjectJson: false,
+        skipFormat: true,
+      });
+
+      expect(readJson(tree, 'my-plugin/package.json').nx.name).toBeUndefined();
     });
   });
 });

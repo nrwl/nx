@@ -15,8 +15,6 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import { LoadedNxPlugin } from 'nx/src/project-graph/plugins/loaded-nx-plugin';
 import { retrieveProjectConfigurations } from 'nx/src/project-graph/utils/retrieve-workspace-files';
 import { ProjectConfigurationsError } from 'nx/src/project-graph/error-types';
-import { createNodesV2 as webpackCreateNodesV2 } from '@nx/webpack/src/plugins/plugin';
-import { createNodesV2 as viteCreateNodesV2 } from '@nx/vite/plugin';
 import type { Node } from 'typescript';
 
 export default async function (tree: Tree) {
@@ -129,8 +127,11 @@ export default async function (tree: Tree) {
           ? 'serveStaticTargetName'
           : 'previewTargetName',
         projectToMigrate.configFileType === 'webpack'
-          ? webpackCreateNodesV2
-          : viteCreateNodesV2
+          ? (
+              require('@nx/webpack/plugin') as typeof import('@nx/webpack/plugin')
+            ).createNodesV2
+          : (require('@nx/vite/plugin') as typeof import('@nx/vite/plugin'))
+              .createNodesV2
       )) ??
       getServeStaticLikeTarget(
         tree,

@@ -11,6 +11,7 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
+import { NxReleaseVersionConfiguration } from 'nx/src/config/nx-json';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 describe('nx release - custom npm registries', () => {
@@ -306,7 +307,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "alpha" from registry ${e2eRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${e2eRegistryUrl}" tag=alpha`,
           'g'
         )
       ).length
@@ -315,7 +316,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "next" from registry ${customRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${customRegistryUrl}" tag=next`,
           'g'
         )
       ).length
@@ -324,7 +325,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "beta" from registry ${customRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "registry=${customRegistryUrl}" tag=beta`,
           'g'
         )
       ).length
@@ -333,7 +334,7 @@ describe('nx release - custom npm registries', () => {
     expect(
       versionResult.match(
         new RegExp(
-          `Resolved the current version as 0.0.0 for tag "prev" from registry ${e2eRegistryUrl}`,
+          `Resolved the current version as 0.0.0 from the remote registry: "@scope:registry=${e2eRegistryUrl}" tag=prev`,
           'g'
         )
       ).length
@@ -376,14 +377,14 @@ describe('nx release - custom npm registries', () => {
     });
 
     updateJson<ProjectConfiguration>(`${projectName}/project.json`, (json) => {
+      const releaseConfig = (json.release ?? {}) as {
+        version: NxReleaseVersionConfiguration;
+      };
+
       if (options.projectConfig) {
-        json.release = {
-          version: {
-            generatorOptions: {
-              currentVersionResolver: 'registry',
-              currentVersionResolverMetadata: {},
-            },
-          },
+        releaseConfig.version = {
+          currentVersionResolver: 'registry',
+          currentVersionResolverMetadata: {},
         };
         json.targets = {
           ...json.targets,
@@ -396,16 +397,20 @@ describe('nx release - custom npm registries', () => {
         json.targets['nx-release-publish'].options.registry =
           options.projectConfig.registry;
         (
-          json.release.version.generatorOptions
-            .currentVersionResolverMetadata as Record<string, string>
+          releaseConfig.version.currentVersionResolverMetadata as Record<
+            string,
+            string
+          >
         ).registry = options.projectConfig.registry;
       }
       if (options.projectConfig?.tag) {
         json.targets['nx-release-publish'].options.tag =
           options.projectConfig.tag;
         (
-          json.release.version.generatorOptions
-            .currentVersionResolverMetadata as Record<string, string>
+          releaseConfig.version.currentVersionResolverMetadata as Record<
+            string,
+            string
+          >
         ).tag = options.projectConfig.tag;
       }
       if (options.projectConfig?.publish?.registry) {
@@ -418,16 +423,21 @@ describe('nx release - custom npm registries', () => {
       }
       if (options.projectConfig?.version?.registry) {
         (
-          json.release.version.generatorOptions
-            .currentVersionResolverMetadata as Record<string, string>
+          releaseConfig.version.currentVersionResolverMetadata as Record<
+            string,
+            string
+          >
         ).registry = options.projectConfig.version.registry;
       }
       if (options.projectConfig?.version?.tag) {
         (
-          json.release.version.generatorOptions
-            .currentVersionResolverMetadata as Record<string, string>
+          releaseConfig.version.currentVersionResolverMetadata as Record<
+            string,
+            string
+          >
         ).tag = options.projectConfig.version.tag;
       }
+      json.release = releaseConfig;
       return json;
     });
 

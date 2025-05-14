@@ -1,9 +1,9 @@
 ---
-title: 'TypeScript Packages Tutorial'
+title: 'TypeScript Monorepo Tutorial'
 description: In this tutorial you'll add Nx to an existing TypeScript repo
 ---
 
-# TypeScript Packages Tutorial
+# TypeScript Monorepo Tutorial
 
 In this tutorial, you'll learn how to add Nx to a repository with an existing TypeScript project. The starting repository uses [NPM workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for project linking and is configured to build with [TypeScript project references](https://www.typescriptlang.org/docs/handbook/project-references.html).
 
@@ -453,6 +453,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: tree:0
+
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun

@@ -137,6 +137,7 @@ function buildDetoxTargets(
     },
     [options.startTargetName]: {
       command: `detox start`,
+      continuous: true,
       options: { cwd: projectRoot },
     },
     [options.testTargetName]: {

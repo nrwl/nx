@@ -33,18 +33,19 @@ export function createLibraryFiles(host: Tree, options: NormalizedSchema) {
 
   if (
     !options.isUsingTsSolutionConfig &&
+    options.useProjectJson &&
     (options.publishable || options.bundler !== 'none')
   ) {
     writeJson(host, joinPathFragments(options.projectRoot, 'package.json'), {
-      name: options.name,
+      name: options.importPath ?? options.projectName,
       version: '0.0.1',
       main: './index.js',
       types: './index.d.ts',
       exports: {
         '.': {
+          types: './index.d.ts',
           import: './index.mjs',
           require: './index.js',
-          types: './index.d.ts',
         },
       },
     });

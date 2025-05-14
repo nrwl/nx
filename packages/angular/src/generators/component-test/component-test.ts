@@ -19,8 +19,8 @@ export async function componentTestGenerator(
 ) {
   ensurePackage('@nx/cypress', nxVersion);
   const { assertMinimumCypressVersion } = <
-    typeof import('@nx/cypress/src/utils/cypress-version')
-  >require('@nx/cypress/src/utils/cypress-version');
+    typeof import('@nx/cypress/src/utils/versions')
+  >require('@nx/cypress/src/utils/versions');
   assertMinimumCypressVersion(10);
   const { root } = readProjectConfiguration(tree, options.project);
   const componentDirPath = joinPathFragments(root, options.componentDir);

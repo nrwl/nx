@@ -42,7 +42,7 @@ export function readPluginPackageJson(
           localPluginPath.path,
           'package.json'
         );
-        if (pluginTranspilerIsRegistered()) {
+        if (!pluginTranspilerIsRegistered()) {
           registerPluginTSTranspiler();
         }
         return {

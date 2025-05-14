@@ -1,0 +1,12 @@
+{
+  "name": "inventory-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "projectType": "application",
+    "sourceRoot": "apps/inventory-e2e/src",
+    "implicitDependencies": [
+      "@react-monorepo/inventory"
+    ]
+  }
+}

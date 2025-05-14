@@ -16,7 +16,7 @@ import {
   workspaceRoot,
   writeJson,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
+import type { LinterType } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -235,7 +235,7 @@ export function createStorybookTsconfigFile(
   };
 
   if (useTsSolution) {
-    const runtimeConfig = findRuntimeTsConfigName(tree, projectRoot);
+    const runtimeConfig = findRuntimeTsConfigName(projectRoot, tree);
     if (runtimeConfig) {
       storybookTsConfig.references ??= [];
       storybookTsConfig.references.push({
@@ -467,7 +467,7 @@ export function normalizeSchema(
 ): StorybookConfigureSchema {
   const defaults = {
     configureCypress: true,
-    linter: Linter.EsLint,
+    linter: 'eslint' as LinterType,
     js: false,
   };
   return {

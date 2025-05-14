@@ -11,6 +11,9 @@ import {
 export const metadata: Metadata = {
   title: 'Nx Blog - Updates from the Nx & Nx Cloud team',
   description: 'Latest news from the Nx & Nx Cloud core team',
+  alternates: {
+    canonical: 'https://nx.dev/blog',
+  },
   openGraph: {
     url: 'https://nx.dev/blog',
     title: 'Nx Blog - Updates from the Nx & Nx Cloud team',

@@ -1,4 +1,1 @@
-pnpm check-lock-files
-pnpm check-commit
-pnpm documentation
-pnpm pretty-quick --check
+pnpm nx prepush --parallel 8 --tuiAutoExit 0

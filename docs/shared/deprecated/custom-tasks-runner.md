@@ -1,14 +1,76 @@
+---
+title: 'Deprecating Custom Tasks Runner'
+description: 'Learn about the transition from Custom Tasks Runner to the new plugin-based API in Nx, including pre and post task execution hooks and self-hosted remote cache options.'
+---
+
 # Deprecating Custom Tasks Runner
 
-The Nx core has been migrated to Rust. However, the Custom Tasks Runner API is not compatible with this rewrite because it allows modifications to the lifecycle of the Nx command execution, which could break important invariants that Nx depends on.
+The Custom Task Runners API was created many years ago and has not been supported for several years. It was developed before we introduced a formal method for extending Nx through [plugins](/extending-nx/intro/getting-started). The API potentially allows modifications to the lifecycle of the Nx command execution, which breaks important invariants that Nx depends on. The new API leverages the plugins API for better performance and functionality.
 
-The custom task runners API was created many years ago and has not been supported for several years. It was developed before we introduced a formal method for extending Nx through plugins. The new API leverages the plugins API for better performance and functionality.
+This page guides you on how to migrate off the now deprecated Custom Task Runner API for both:
+
+- achieving self-hosted remote caching
+- implementing pre/post processing logic when running tasks
+
+## Self-Hosted Remote Cache
+
+Nx offers different ways to enable self-hosted remote caching for your workspace that can be used starting with Nx version 19.8 and higher. You can either use our official Nx packages that come with ready-to-use adapters for AWS S3, GCP, Azure and more, or build your own cache server by following the Nx Remote Caching OpenAPI spec.
+
+Read more in our [documentation](/recipes/running-tasks/self-hosted-caching).
+
+### Migrating from `@nx-aws-plugin`
+
+If you've been using the `@nx-aws-plugin/nx-aws-cache` community plugin, you should be easily able to migrate to the free [Nx S3 cache plugin](/nx-api/s3-cache). The specific modification depends on your repository's configuration.
+
+The following is one example, where a custom tasks runner configuration in `nx.json` will be removed:
+
+```json
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nx-aws-plugin/nx-aws-cache",
+      "options": {
+        "awsAccessKeyId": "key",
+        "awsSecretAccessKey": "secret",
+        "awsForcePathStyle": true,
+        "awsEndpoint": "http://custom",
+        "awsBucket": "my-bucket",
+        "awsRegion": "eu-central-1",
+        "encryptionFileKey": "key"
+      }
+    }
+  }
+}
+```
+
+And replaced with:
+
+```json
+{
+  "s3": {
+    "accessKeyId": "key",
+    "secretAccessKey": "secret",
+    "forcePathStyle": true,
+    "endpoint": "http://custom",
+    "bucket": "my-bucket",
+    "region": "eu-central-1",
+    "encryptionFileKey": "key",
+    "localMode": "read-write"
+  }
+}
+```
+
+The [API documentation](/recipes/running-tasks/self-hosted-caching#official-nx-selfhosted-cache-packages) for each plugin describes the available options.
 
 ## The preTasksExecution and postTasksExecution hooks
 
-### Custom Tasks Runner Version
+Starting with Nx 20.4, a dedicated plugin-based API has been introduced that allows you to safely hook into the task running lifecycle. This new approach provides pre and post execution hooks without compromising Nx's internal operations. For comprehensive documentation on this feature, see [Hook into the Task Running Lifecycle](/extending-nx/recipes/task-running-lifecycle).
 
-Let’s imagine that you have implemented a custom task runner as follows:
+Let's look into some concrete examples of how you can migrate from the previous custom task runners to this new API.
+
+### Before: Custom Tasks Runner Version
+
+Let's imagine that you have implemented a custom task runner as follows:
 
 ```typescript
 function serializeTasksResults(taskResults: { [taskId: string]: TaskResult }) {
@@ -67,7 +129,7 @@ And let's imagine you configured it in `nx.json` as follows:
 }
 ```
 
-### New API
+### After: Using the New API
 
 The new API includes `preTasksExecution` and `postTasksExecution` hooks that plugins can register. These hooks do not affect task execution and cannot violate any invariants.
 
@@ -173,7 +235,7 @@ You can then choose which hooks to use by setting the RUNNER env variable.
 
 ### Passing Options
 
-You can no longer augment options passed in to the default tasks runner, so instead you need to set env variables in the `preTasksExecution` hook.
+You can no longer augment options passed to the default tasks runner, so instead you need to set env variables in the `preTasksExecution` hook.
 
 ### Composing Plugins
 
@@ -182,56 +244,6 @@ Implementing hooks in plugins offers several advantages. It allows multiple plug
 ### Keeping State Across Command Invocations
 
 By default, every plugin initiates a long-running process, allowing you to maintain state across command invocations, which can be very useful for advanced analytics.
-
-## Self-Hosted Remote Cache
-
-The `preTasksExecution` and `postTasksExecution` hooks cannot modify the execution of tasks, making it impossible to use them for implementing a remote cache. Instead, you should [install and activate one of the Nx Powerpack packages](/nx-enterprise/activate-powerpack). Nx Powerpack does not make requests to external APIs, nor does it collect or send any data. **Additionally, it offers more security and prevents cache poisoning, unlike DIY solutions.**
-
-We recognize that many organizations have been using DIY remote cache solutions. Therefore, we have made the migration to Nx Powerpack as streamlined as possible.
-
-{% call-to-action title="Get a License and Activate Powerpack" icon="nx" description="Unlock all the features of the Nx CLI" url="/nx-enterprise/activate-powerpack" /%}
-
-### Example Configuration Change
-
-Enabling a Nx Powerpack plugin will configure it in `nx.json`. The specific modification depends on your repository’s configuration. The following is one example, where a custom tasks runner configuration in `nx.json` will be removed:
-
-```json
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "@nx-aws-plugin/nx-aws-cache",
-      "options": {
-        "awsAccessKeyId": "key",
-        "awsSecretAccessKey": "secret",
-        "awsForcePathStyle": true,
-        "awsEndpoint": "http://custom",
-        "awsBucket": "my-bucket",
-        "awsRegion": "eu-central-1",
-        "encryptionFileKey": "key"
-      }
-    }
-  }
-}
-```
-
-And replaced with:
-
-```json
-{
-  "s3": {
-    "accessKeyId": "key",
-    "secretAccessKey": "secret",
-    "forcePathStyle": true,
-    "endpoint": "http://custom",
-    "bucket": "my-bucket",
-    "region": "eu-central-1",
-    "encryptionFileKey": "key",
-    "localMode": "read-write"
-  }
-}
-```
-
-The API documentation for each plugin describes the available options.
 
 ## Unhandled Custom Tasks Runner Use Cases?
 

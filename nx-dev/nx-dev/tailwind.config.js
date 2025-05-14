@@ -96,6 +96,9 @@ module.exports = {
             'blockquote p:last-of-type::after': {
               content: '',
             },
+            s: {
+              '@apply text-gray-500': {},
+            },
           },
         },
       },

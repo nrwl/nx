@@ -2,11 +2,12 @@
 title: 'React, Vite and TypeScript: Get started in under 2 minutes'
 slug: 'react-vite-and-typescript-get-started-in-under-2-minutes'
 authors: ['Juri Strumpflohner']
-cover_image: '/blog/images/2023-01-12/ucL7YQ2v8aaOy426soLPZA.png'
+cover_image: '/blog/images/2023-01-12/ucL7YQ2v8aaOy426soLPZA.avif'
 tags: [nx]
+description: Learn how to quickly set up a modern React application with Vite and TypeScript using Nx, featuring built-in testing, linting, and development tools.
 ---
 
-Let’s be honest. Dealing with tooling is not something enjoyable if you have to deliver code. It should just work and not be in the way. So let’s explore how to kickstart your next React project using Vite, in under 2 minutes, without worrying about the setup.
+Let's be honest. Dealing with tooling is not something enjoyable if you have to deliver code. It should just work and not be in the way. So let's explore how to kickstart your next React project using Vite, in under 2 minutes, without worrying about the setup.
 
 ## Table of Contents
 
@@ -29,7 +30,7 @@ Let’s be honest. Dealing with tooling is not something enjoyable if you have t
 
 {% youtube src="https://youtu.be/fkTz6KJxhhE" /%}
 
-Traditionally, you might lean towards [Create-React-App (CRA)](https://create-react-app.dev/) started to do precisely that. But what if I told you there’s a better alternative, providing
+Traditionally, you might lean towards [Create-React-App (CRA)](https://create-react-app.dev/) started to do precisely that. But what if I told you there's a better alternative, providing
 
 - not just scaffolding for the initial setup but helping you along the way to generate components, routing, etc
 - automatically sets you up with best practices tools for e2e testing, unit testing, code formatting, and linting
@@ -38,14 +39,14 @@ Traditionally, you might lean towards [Create-React-App (CRA)](https://create-re
 - helps you modularize your application
 - comes with automated upgrade features to keep your tooling evergreen
 
-I’m talking about Nx. Nx comes with a set of plugins that come with code generation abilities and help abstract some of the lower-level tooling setups. And this can be really interesting for the use case we wanna tackle today.
+I'm talking about Nx. Nx comes with a set of plugins that come with code generation abilities and help abstract some of the lower-level tooling setups. And this can be really interesting for the use case we wanna tackle today.
 
-> **_Reader:_** _“Wait a minute, I heard about Nx. Isn’t that for monorepos?”_**_Me:_** _“Yeah you’re right. But in 15.3 they introduced something called ‘standalone apps’”  
-> Reader: “Standalone?”  
-> _**_Me:_** _“Yeah, a fancy term for a setting up a single app and allows for some cool modularization. There’s a video introducing that feature here:_ [_https://youtu.be/qEaVzh-oBBc_](https://youtu.be/qEaVzh-oBBc)_"  
-> _**_Reader:_** _“ha, interesting 🤔”_
+> **_Reader:_** _"Wait a minute, I heard about Nx. Isn't that for monorepos?"_**_Me:_** _"Yeah you're right. But in 15.3 they introduced something called 'standalone apps'"  
+> Reader: "Standalone?"  
+> _**_Me:_** _"Yeah, a fancy term for a setting up a single app and allows for some cool modularization. There's a video introducing that feature here:_ [_https://youtu.be/qEaVzh-oBBc_](https://youtu.be/qEaVzh-oBBc)_"  
+> _**_Reader:_** _"ha, interesting 🤔"_
 
-So let’s go and set up our **React + Vite + TypeScript project**.
+So let's go and set up our **React + Vite + TypeScript project**.
 
 ## How do I create a new project setup?
 
@@ -65,13 +66,13 @@ And then choose the option you prefer in the terminal prompt:
 
 ![](/blog/images/2023-01-12/WceoJTEWec2ZTp5X.avif)
 
-In the end, what you’ll get is the following structure:
+In the end, what you'll get is the following structure:
 
 ![](/blog/images/2023-01-12/mykjIRKX-a5VtyQl.avif)
 
 ## Running, building and testing the app
 
-First off, let’s run our new, shiny application. Just invoke
+First off, let's run our new, shiny application. Just invoke
 
 ```
 npm start
@@ -158,7 +159,7 @@ npx nx test
 
 You might have noticed the `e2e` folder. That's a fully-functioning setup of [Cypress](https://cypress.io/) for doing integration-level or even full end-to-end tests.
 
-This is excellent because you don’t have to configure anything at all. No need to
+This is excellent because you don't have to configure anything at all. No need to
 
 - Cypress configured to use Vite (instead of Webpack)
 - set up linting for the e2e project (yes writing good quality test code is just as important)
@@ -199,7 +200,7 @@ This might look weird initially, but basically, we run the `e2e` target (see `e2
 
 By default, these tests run in headless mode, but you can pass `--watch` to run it interactively with the Cypress test runner such that the tests get re-executed whenever we change our source.
 
-> _Want Cypress Component testing? There’s an Nx generator that can help set that up. Check out the docs:_ [_/nx-api/react/generators/cypress-component-configuration_](/nx-api/react/generators/cypress-component-configuration)
+> _Want Cypress Component testing? There's an Nx generator that can help set that up. Check out the docs:_ [_/nx-api/react/generators/cypress-component-configuration_](/nx-api/react/generators/cypress-component-configuration)
 
 ## Linting
 
@@ -209,7 +210,7 @@ And similarly, linting can be triggered by running the following command:
 npx nx lint
 ```
 
-There’s a `.eslintrc.json` file already at the workspace's root that contains some best practices rules.
+There's a `.eslintrc.json` file already at the workspace's root that contains some best practices rules.
 
 ## Customize Vite and Vitest
 
@@ -250,7 +251,7 @@ Nx is known for its caching that helps optimize the speed in monorepos. Caching 
 
 ![](/blog/images/2023-01-12/Af7lMrhaO0gcIUeY.avif)
 
-On every run, Nx compares that hash against a local cache folder. If the hash exists, Nx restores the command line output and potential artifacts (JS, CSS,… files) produced by a previous run. This helps speed up computation because you don’t run it if you don’t need to.
+On every run, Nx compares that hash against a local cache folder. If the hash exists, Nx restores the command line output and potential artifacts (JS, CSS,… files) produced by a previous run. This helps speed up computation because you don't run it if you don't need to.
 
 > _See Nx the docs for more info:_ [_/concepts/how-caching-works_](/concepts/how-caching-works)
 
@@ -269,7 +270,7 @@ Imagine a storefront application. You will probably have domain areas like
 - User Profile — which manages everything user related. Think of it when you access Amazon and go to your account. Things like managing your addresses
 - …
 
-We’re just scratching the surface here. This can become big quickly. The only way to manage such a structure with the current tooling (including CRA) is to organize these domains in folders. So you’d have something like this in a CRA setup:
+We're just scratching the surface here. This can become big quickly. The only way to manage such a structure with the current tooling (including CRA) is to organize these domains in folders. So you'd have something like this in a CRA setup:
 
 ```
 cra-app
@@ -301,13 +302,13 @@ cra-app
 
 Most devtools (including CRA) force you into a monolithic structure, where you divide your features into folders. Folders are limited in terms of isolation, though; as your application grows, this might quickly go out of hand.
 
-We can impose a different, stronger structure with Nx by extracting these areas into dedicated libraries or modules. These live side-by-side with your application. Let’s say we have a folder named “domains” which contains these domain areas. Then you can easily generate a new library with the following command:
+We can impose a different, stronger structure with Nx by extracting these areas into dedicated libraries or modules. These live side-by-side with your application. Let's say we have a folder named "domains" which contains these domain areas. Then you can easily generate a new library with the following command:
 
 ```shell
 npx nx g @nrwl/react:lib checkout --directory=domains/orders/checkout --bundler=none
 ```
 
-The above command creates a new “ checkout “ library in the `domains/orders/` folder. Here's what it looks like:
+The above command creates a new " checkout " library in the `domains/orders/` folder. Here's what it looks like:
 
 ```
 awesomereactapp
@@ -360,7 +361,7 @@ When generating the library, a TypeScript path mapping is automatically created 
 }
 ```
 
-In this way, anything that’s being exported from the `checkout` library can be consumed like
+In this way, anything that's being exported from the `checkout` library can be consumed like
 
 ```typescript
 import { SomeComponent } from '@awesomereactapp/domains/orders/checkout';
@@ -386,7 +387,7 @@ npx nx graph
 
 ![](/blog/images/2023-01-12/lQqPKUstJg1JHD-f.avif)
 
-It becomes even more interesting if you select the “Group by folder” checkbox as the domains become visible at that point:
+It becomes even more interesting if you select the "Group by folder" checkbox as the domains become visible at that point:
 
 ![](/blog/images/2023-01-12/5s3J449vgsfYVLkL.avif)
 
@@ -394,9 +395,9 @@ It becomes even more interesting if you select the “Group by folder” checkbo
 
 ## Hidden gem: Guard your boundaries
 
-Scaling a software product is more than just the initial structuring and modularization. It consists of a constant ongoing process of ensuring modules stay in shape and don’t contain any undesired cross-references or circular dependencies. You could leverage the Nx graph to verify that visually, but that doesn’t scale.
+Scaling a software product is more than just the initial structuring and modularization. It consists of a constant ongoing process of ensuring modules stay in shape and don't contain any undesired cross-references or circular dependencies. You could leverage the Nx graph to verify that visually, but that doesn't scale.
 
-To help with that, Nx has a built-in [module boundary lint rule](/features/enforce-module-boundaries). Projects can be assigned “tags”, like `type:domain`, `type:utils`, `type:shared` and `domain:products`, `domain:orders`, `domain:auth`. These tags can be assigned in the `project.json`, like
+To help with that, Nx has a built-in [module boundary lint rule](/features/enforce-module-boundaries). Projects can be assigned "tags", like `type:domain`, `type:utils`, `type:shared` and `domain:products`, `domain:orders`, `domain:auth`. These tags can be assigned in the `project.json`, like
 
 ```json
 {
@@ -441,13 +442,13 @@ In the `.eslintrc.base.json` you can then define the rules. Here for instance we
 
 If some of these lint rules need to be followed, your editor will show it right in your code, and you can also run lint checks for each PR on CI.
 
-If you’re curious, you can read more [here](/blog/mastering-the-project-boundaries-in-nx).
+If you're curious, you can read more [here](/blog/mastering-the-project-boundaries-in-nx).
 
 ## Hidden gem: Just run what changed
 
-In such a modular structure (as shown above) where your code is organized in smaller modules/libraries, it is very common that a given team member just works within a single domain area. Hence, very often PRs just touch a subset of the entire set of libraries. Nx comes with a backed-in command that allows you to take advantage of that on CI, using the so-called “[affected commands](/ci/features/affected)”.
+In such a modular structure (as shown above) where your code is organized in smaller modules/libraries, it is very common that a given team member just works within a single domain area. Hence, very often PRs just touch a subset of the entire set of libraries. Nx comes with a backed-in command that allows you to take advantage of that on CI, using the so-called "[affected commands](/ci/features/affected)".
 
-Let’s say we make a change in the `product-detail` library of our application. This would affect all other libraries that depend on it. You can also visualize it by running
+Let's say we make a change in the `product-detail` library of our application. This would affect all other libraries that depend on it. You can also visualize it by running
 
 ```shell
 npx nx affected:graph
@@ -469,7 +470,7 @@ npx nx affected:test
 
 ## Hidden gem: A dedicated Editor extension
 
-If you are not the “command line interface type” developer and you’d rather prefer something integrated within your IDE, then there’s good news. The Nx core team also ships a dedicated VSCode extension: [Nx Console](/getting-started/editor-setup).
+If you are not the "command line interface type" developer and you'd rather prefer something integrated within your IDE, then there's good news. The Nx core team also ships a dedicated VSCode extension: [Nx Console](/getting-started/editor-setup).
 
 It has a dedicated view within VSCode to trigger common commands, browse the workspace structure and even inline render the graph.
 
@@ -479,7 +480,7 @@ It also comes with contextual menus to quickly access most of the commonly used 
 
 ![](/blog/images/2023-01-12/0wOJ7DPKcNV25D-V.avif)
 
-Here’s a walkthrough video showing some of the powerful capabilities of Nx Console:
+Here's a walkthrough video showing some of the powerful capabilities of Nx Console:
 
 {% youtube src="https://youtu.be/ZST_rmhzRXI" /%}
 
@@ -503,7 +504,7 @@ Read more about how [Nx migrations work](/features/automate-updating-dependencie
 
 ## Using CRA? Automatically migrate to Vite + Nx
 
-If you’re currently on a [CRA](https://create-react-app.dev/) setup, you can easily migrate to an Nx + React + Vite-based setup by running the following command in your CRA project:
+If you're currently on a [CRA](https://create-react-app.dev/) setup, you can easily migrate to an Nx + React + Vite-based setup by running the following command in your CRA project:
 
 {% youtube src="https://youtu.be/zvYb7XCLQzU" /%}
 

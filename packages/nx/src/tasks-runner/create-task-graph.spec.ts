@@ -48,6 +48,7 @@ describe('createTaskGraph', () => {
                 executor: 'nx:run-commands',
               },
               serve: {
+                continuous: true,
                 executor: 'nx:run-commands',
               },
             },
@@ -90,6 +91,7 @@ describe('createTaskGraph', () => {
       roots: [],
       tasks: {},
       dependencies: {},
+      continuousDependencies: {},
     });
   });
 
@@ -117,9 +119,13 @@ describe('createTaskGraph', () => {
           overrides: { a: 123 },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
       },
     });
@@ -148,6 +154,7 @@ describe('createTaskGraph', () => {
           overrides: { a: 123 },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:test': {
           id: 'lib1:test',
@@ -159,9 +166,14 @@ describe('createTaskGraph', () => {
           overrides: { a: 123 },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+        'lib1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
         'lib1:test': [],
       },
@@ -299,6 +311,7 @@ describe('createTaskGraph', () => {
           overrides: {},
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -312,10 +325,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'lib1:compile:libDefault': ['lib2:compile'],
+        'lib2:compile': [],
+      },
+      continuousDependencies: {
+        'lib1:compile:libDefault': [],
         'lib2:compile': [],
       },
     });
@@ -343,6 +361,7 @@ describe('createTaskGraph', () => {
           overrides: {},
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile:libDefault': {
           id: 'lib1:compile:libDefault',
@@ -357,6 +376,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile:ci': {
           id: 'lib2:compile:ci',
@@ -371,11 +391,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile:ci': ['lib1:compile:libDefault'],
         'lib1:compile:libDefault': ['lib2:compile:ci'],
+        'lib2:compile:ci': [],
+      },
+      continuousDependencies: {
+        'app1:compile:ci': [],
+        'lib1:compile:libDefault': [],
         'lib2:compile:ci': [],
       },
     });
@@ -460,6 +486,10 @@ describe('createTaskGraph', () => {
         'app1:compile': ['lib3:compile'],
         'lib3:compile': [],
       },
+      continuousDependencies: {
+        'app1:compile': [],
+        'lib3:compile': [],
+      },
       roots: ['lib3:compile'],
       tasks: {
         'app1:compile': {
@@ -472,6 +502,7 @@ describe('createTaskGraph', () => {
             target: 'compile',
           },
           parallelism: true,
+          continuous: false,
         },
         'lib3:compile': {
           id: 'lib3:compile',
@@ -485,6 +516,7 @@ describe('createTaskGraph', () => {
             target: 'compile',
           },
           parallelism: true,
+          continuous: false,
         },
       },
     });
@@ -514,9 +546,13 @@ describe('createTaskGraph', () => {
           overrides: { a: '--value=app1-root' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
       },
     });
@@ -546,9 +582,13 @@ describe('createTaskGraph', () => {
           overrides: { a: '--base-href=/app1-root${deploymentId}' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:test': [],
+      },
+      continuousDependencies: {
         'app1:test': [],
       },
     });
@@ -661,6 +701,7 @@ describe('createTaskGraph', () => {
           overrides: { myFlag: 'flag value' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -672,6 +713,7 @@ describe('createTaskGraph', () => {
           overrides: { myFlag: 'flag value' },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -683,6 +725,7 @@ describe('createTaskGraph', () => {
           overrides: { myFlag: 'flag value' },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -694,12 +737,19 @@ describe('createTaskGraph', () => {
           overrides: { __overrides_unparsed__: [] },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'lib2:compile', 'app1:precompile'],
         'app1:precompile': [],
         'lib1:compile': ['lib2:compile'],
+        'lib2:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'lib1:compile': [],
         'lib2:compile': [],
       },
     });
@@ -732,6 +782,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -745,6 +796,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile2': {
           id: 'app1:precompile2',
@@ -758,6 +810,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -771,12 +824,134 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'app1:precompile', 'app1:precompile2'],
         'app1:precompile': [],
         'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app1:precompile': [],
+        'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+    });
+  });
+
+  it('should create graphs with continuous dependencies', () => {
+    projectGraph.nodes['app1'].data.targets['serve'].dependsOn = [
+      {
+        dependencies: true,
+        target: 'serve',
+      },
+      {
+        target: 'compile',
+      },
+    ];
+    projectGraph.nodes['app1'].data.targets['compile'].dependsOn = [
+      {
+        dependencies: true,
+        target: 'compile',
+      },
+    ];
+    projectGraph.nodes['lib1'].data.targets['serve'] = {
+      executor: 'nx:run-command',
+      continuous: true,
+      dependsOn: [
+        {
+          dependencies: true,
+          target: 'serve',
+        },
+        {
+          target: 'compile',
+        },
+      ],
+    };
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['app1'],
+      ['serve'],
+      undefined,
+      {
+        __overrides_unparsed__: [],
+      }
+    );
+    // precompile should also be in here
+    expect(taskGraph).toEqual({
+      roots: ['lib1:compile'],
+      tasks: {
+        'app1:serve': {
+          id: 'app1:serve',
+          target: {
+            project: 'app1',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: true,
+        },
+        'app1:compile': {
+          id: 'app1:compile',
+          target: {
+            project: 'app1',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'app1-root',
+          parallelism: true,
+          continuous: false,
+        },
+        'lib1:serve': {
+          id: 'lib1:serve',
+          target: {
+            project: 'lib1',
+            target: 'serve',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+          continuous: true,
+        },
+        'lib1:compile': {
+          id: 'lib1:compile',
+          target: {
+            project: 'lib1',
+            target: 'compile',
+          },
+          outputs: [],
+          overrides: {
+            __overrides_unparsed__: [],
+          },
+          projectRoot: 'lib1-root',
+          parallelism: true,
+          continuous: false,
+        },
+      },
+      dependencies: {
+        'app1:serve': ['app1:compile'],
+        'app1:compile': ['lib1:compile'],
+        'lib1:serve': ['lib1:compile'],
+        'lib1:compile': [],
+      },
+      continuousDependencies: {
+        'app1:serve': ['lib1:serve'],
+        'app1:compile': [],
+        'lib1:serve': [],
         'lib1:compile': [],
       },
     });
@@ -809,6 +984,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile': {
           id: 'app1:precompile',
@@ -822,6 +998,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:precompile2': {
           id: 'app1:precompile2',
@@ -835,6 +1012,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -848,10 +1026,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'app1:precompile', 'app1:precompile2'],
+        'app1:precompile': [],
+        'app1:precompile2': [],
+        'lib1:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
         'app1:precompile': [],
         'app1:precompile2': [],
         'lib1:compile': [],
@@ -955,6 +1140,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib1:compile': {
           id: 'lib1:compile',
@@ -968,6 +1154,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:compile': {
           id: 'lib2:compile',
@@ -981,6 +1168,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
         'lib3:compile': {
           id: 'lib3:compile',
@@ -994,12 +1182,19 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib3-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['lib1:compile', 'lib2:compile'],
         'lib1:compile': ['lib3:compile'],
         'lib2:compile': ['lib3:compile'],
+        'lib3:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'lib1:compile': [],
+        'lib2:compile': [],
         'lib3:compile': [],
       },
     });
@@ -1118,6 +1313,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           parallelism: true,
+          continuous: false,
         },
         'app2:compile': {
           id: 'app2:compile',
@@ -1126,6 +1322,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
           parallelism: true,
+          continuous: false,
         },
         'coreInfra:apply': {
           id: 'coreInfra:apply',
@@ -1134,6 +1331,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           parallelism: true,
+          continuous: false,
         },
         'app1:compile': {
           id: 'app1:compile',
@@ -1142,6 +1340,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { __overrides_unparsed__: [] },
           parallelism: true,
+          continuous: false,
         },
         'infra2:apply': {
           id: 'infra2:apply',
@@ -1150,6 +1349,7 @@ describe('createTaskGraph', () => {
           outputs: [],
           overrides: { myFlag: 'flag value' },
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
@@ -1163,6 +1363,13 @@ describe('createTaskGraph', () => {
         'coreInfra:apply': [],
         'app1:compile': [],
         'infra2:apply': ['app2:compile', 'coreInfra:apply'],
+      },
+      continuousDependencies: {
+        'infra1:apply': [],
+        'app2:compile': [],
+        'coreInfra:apply': [],
+        'app1:compile': [],
+        'infra2:apply': [],
       },
     });
   });
@@ -1217,6 +1424,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:test': {
           id: 'app1:test',
@@ -1230,11 +1438,16 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['app1:test'],
         'app1:test': ['app1:compile'],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
+        'app1:test': [],
       },
     });
   });
@@ -1326,6 +1539,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1339,6 +1553,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib3:build': expect.objectContaining({
           id: 'lib3:build',
@@ -1352,6 +1567,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib3-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib4:build': expect.objectContaining({
           id: 'lib4:build',
@@ -1365,6 +1581,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib4-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
@@ -1372,6 +1589,12 @@ describe('createTaskGraph', () => {
         'lib2:build': ['lib3:build'],
         'lib3:build': ['lib4:build'],
         'lib4:build': ['lib1:build'],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib3:build': [],
+        'lib4:build': [],
       },
     });
   });
@@ -1458,6 +1681,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1471,6 +1695,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib4:build': expect.objectContaining({
           id: 'lib4:build',
@@ -1484,11 +1709,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib4-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
         'lib2:build': ['lib4:build'],
+        'lib4:build': [],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
         'lib4:build': [],
       },
     });
@@ -1551,9 +1782,13 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
+        'lib1:build': [],
+      },
+      continuousDependencies: {
         'lib1:build': [],
       },
     });
@@ -1642,6 +1877,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1655,6 +1891,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib4:build': expect.objectContaining({
           id: 'lib4:build',
@@ -1668,12 +1905,18 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib4-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
         'lib2:build': [],
         'lib4:build': ['lib1:build'],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
+        'lib2:build': [],
+        'lib4:build': [],
       },
     });
   });
@@ -1757,6 +2000,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib1-root',
           parallelism: true,
+          continuous: false,
         }),
         'lib2:build': expect.objectContaining({
           id: 'lib2:build',
@@ -1770,10 +2014,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         }),
       },
       dependencies: {
         'lib1:build': ['lib2:build'],
+        'lib2:build': [],
+      },
+      continuousDependencies: {
+        'lib1:build': [],
         'lib2:build': [],
       },
     });
@@ -1852,6 +2101,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -1865,9 +2115,14 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app3-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:compile': [],
+        'app3:compile': [],
+      },
+      continuousDependencies: {
         'app1:compile': [],
         'app3:compile': [],
       },
@@ -1944,6 +2199,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -1957,9 +2213,14 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app3-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:compile': [],
+        'app3:compile': [],
+      },
+      continuousDependencies: {
         'app1:compile': [],
         'app3:compile': [],
       },
@@ -2042,6 +2303,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app1:test': {
           id: 'app1:test',
@@ -2055,6 +2317,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:dep': {
           id: 'lib2:dep',
@@ -2068,6 +2331,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
         'lib2:dep2': {
           id: 'lib2:dep2',
@@ -2081,11 +2345,18 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'lib2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:lint': ['lib2:dep'],
         'app1:test': ['lib2:dep2'],
+        'lib2:dep': [],
+        'lib2:dep2': [],
+      },
+      continuousDependencies: {
+        'app1:lint': [],
+        'app1:test': [],
         'lib2:dep': [],
         'lib2:dep2': [],
       },
@@ -2160,9 +2431,13 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
+        'app1:compile': [],
+      },
+      continuousDependencies: {
         'app1:compile': [],
       },
     });
@@ -2194,6 +2469,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app2:compile': {
           id: 'app2:compile',
@@ -2207,10 +2483,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app2-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['app2:compile'],
+        'app2:compile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
         'app2:compile': [],
       },
     });
@@ -2706,6 +2987,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app1-root',
           parallelism: true,
+          continuous: false,
         },
         'app4:precompile': {
           id: 'app4:precompile',
@@ -2719,10 +3001,15 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app4-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app1:compile': ['app4:precompile'],
+        'app4:precompile': [],
+      },
+      continuousDependencies: {
+        'app1:compile': [],
         'app4:precompile': [],
       },
     });
@@ -2752,6 +3039,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app2-root',
           parallelism: true,
+          continuous: false,
         },
         'app3:compile': {
           id: 'app3:compile',
@@ -2765,6 +3053,7 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app3-root',
           parallelism: true,
+          continuous: false,
         },
         'app4:precompile': {
           id: 'app4:precompile',
@@ -2778,11 +3067,17 @@ describe('createTaskGraph', () => {
           },
           projectRoot: 'app4-root',
           parallelism: true,
+          continuous: false,
         },
       },
       dependencies: {
         'app2:compile': ['app4:precompile'],
         'app3:compile': ['app4:precompile'],
+        'app4:precompile': [],
+      },
+      continuousDependencies: {
+        'app2:compile': [],
+        'app3:compile': [],
         'app4:precompile': [],
       },
     });

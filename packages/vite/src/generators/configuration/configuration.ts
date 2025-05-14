@@ -81,7 +81,11 @@ export async function viteConfigurationGeneratorInternal(
     tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
   });
   tasks.push(jsInitTask);
-  const initTask = await initGenerator(tree, { ...schema, skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    ...schema,
+    projectRoot,
+    skipFormat: true,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, schema));
 
@@ -215,6 +219,10 @@ function updatePackageJson(
     const rootDir = join(project.root, 'src');
     const outputPath = joinPathFragments(project.root, 'dist');
 
+    // the file must exist in the TS solution setup, which is the only case this
+    // function is called
+    const tsconfigBase = readJson(tree, 'tsconfig.base.json');
+
     packageJson = getUpdatedPackageJsonContent(packageJson, {
       main,
       outputPath,
@@ -223,6 +231,10 @@ function updatePackageJson(
       generateExportsField: true,
       packageJsonPath,
       format: ['esm'],
+      skipDevelopmentExports:
+        !tsconfigBase.compilerOptions?.customConditions?.includes(
+          'development'
+        ),
     });
   }
 

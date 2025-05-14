@@ -10,5 +10,5 @@
   "path": "/packages/rspack",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Migrate withModuleFederation Import to New Package\n\nUpdate the withModuleFederation import to use @nx/module-federation/rspack.\n\n#### Sample Code Changes\n\nUpdate import paths for `withModuleFederation` and `withModuleFederationForSSR`.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```ts {% fileName=\"apps/shell/rspack.config.ts\" %}\nimport {\n  withModuleFederation,\n  withModuleFederationForSSR,\n} from '@nx/rspack/module-federation';\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```ts {% fileName=\"apps/shell/rspack.config.ts\" %}\nimport {\n  withModuleFederation,\n  withModuleFederationForSSR,\n} from '@nx/module-federation/rspack';\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }

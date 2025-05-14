@@ -3,17 +3,18 @@ title: Everything You Need to Know About TypeScript Project References
 slug: typescript-project-references
 authors: [Zack DeRose]
 tags: [typescript, monorepo, nx]
-cover_image: /blog/images/articles/ts-islands.png
+cover_image: /blog/images/articles/ts-islands.avif
 youtubeUrl: https://youtu.be/SDE3cIq28s8
+description: Learn how TypeScript Project References create efficient boundaries in your codebase, improving build performance and type checking in large-scale projects.
 ---
 
-{% callout type="deepdive" title="TypeScript Project References Series" %}
+{% callout type="deepdive" title="TypeScript Project References Series" expanded=true %}
 
 This article is part of the TypeScript Project References series:
 
 - **Everything You Need to Know About TypeScript Project References**
-- _Managing TypeScript Packages in Monorepos_ (coming soon)
-- _A new Nx Experience For TypeScript Monorepos_ (coming soon)
+- [Managing TypeScript Packages in Monorepos](/blog/managing-ts-packages-in-monorepos)
+- [A new Nx Experience For TypeScript Monorepos and Beyond](/blog/new-nx-experience-for-typescript-monorepos)
 
 {% /callout %}
 

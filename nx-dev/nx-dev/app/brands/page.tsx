@@ -10,6 +10,9 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Brands & Guidelines',
+  alternates: {
+    canonical: 'https://nx.dev/brands',
+  },
   description:
     'We’ve created the following guidelines for 3rd party use of our logos, content, and trademarks.',
   openGraph: {

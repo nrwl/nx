@@ -1,5 +1,6 @@
-import type { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import { basename, dirname } from 'path';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export type StaticRemoteConfig = {
   basePath: string;
@@ -22,10 +23,25 @@ export function parseStaticRemotesConfig(
 
   const config: Record<string, StaticRemoteConfig> = {};
   for (const app of staticRemotes) {
-    const outputPath =
-      context.projectGraph.nodes[app].data.targets['build'].options.outputPath;
-    const basePath = dirname(outputPath);
-    const urlSegment = basename(outputPath);
+    const projectGraph = context.projectGraph;
+    const projectRoot = projectGraph.nodes[app].data.root;
+    let outputPath = interpolate(
+      projectGraph.nodes[app].data.targets?.['build']?.options?.outputPath ??
+        projectGraph.nodes[app].data.targets?.['build']?.outputs?.[0] ??
+        `${context.root}/${projectGraph.nodes[app].data.root}/dist`,
+      {
+        projectName: projectGraph.nodes[app].data.name,
+        projectRoot,
+        workspaceRoot: context.root,
+      }
+    );
+    if (outputPath.startsWith(projectRoot)) {
+      outputPath = joinPathFragments(context.root, outputPath);
+    }
+    const basePath = ['', '/', '.'].some((p) => dirname(outputPath) === p)
+      ? outputPath
+      : dirname(outputPath); // dist || dist/checkout -> dist
+    const urlSegment = app;
     const port =
       context.projectGraph.nodes[app].data.targets['serve'].options.port;
     config[app] = { basePath, outputPath, urlSegment, port };
@@ -43,11 +59,26 @@ export function parseStaticSsrRemotesConfig(
   }
   const config: Record<string, StaticRemoteConfig> = {};
   for (const app of staticRemotes) {
-    const outputPath = dirname(
-      context.projectGraph.nodes[app].data.targets['build'].options.outputPath // dist/checkout/browser -> checkout
-    ) as string;
-    const basePath = dirname(outputPath); // dist/checkout -> dist
-    const urlSegment = basename(outputPath); // dist/checkout -> checkout
+    const projectGraph = context.projectGraph;
+    const projectRoot = projectGraph.nodes[app].data.root;
+    let outputPath = interpolate(
+      projectGraph.nodes[app].data.targets?.['build']?.options?.outputPath ??
+        projectGraph.nodes[app].data.targets?.['build']?.outputs?.[0] ??
+        `${context.root}/${projectGraph.nodes[app].data.root}/dist`,
+      {
+        projectName: projectGraph.nodes[app].data.name,
+        projectRoot,
+        workspaceRoot: context.root,
+      }
+    );
+    if (outputPath.startsWith(projectRoot)) {
+      outputPath = joinPathFragments(context.root, outputPath);
+    }
+    outputPath = dirname(outputPath);
+    const basePath = ['', '/', '.'].some((p) => dirname(outputPath) === p)
+      ? outputPath
+      : dirname(outputPath); // dist || dist/checkout -> dist
+    const urlSegment = app;
     const port =
       context.projectGraph.nodes[app].data.targets['serve'].options.port;
     config[app] = { basePath, outputPath, urlSegment, port };

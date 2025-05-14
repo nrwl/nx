@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '../../config/project-graph';
-import type { PluginConfiguration } from '../../config/nx-json';
+import { readNxJson, type PluginConfiguration } from '../../config/nx-json';
 import {
   AggregateCreateNodesError,
   isAggregateCreateNodesError,
@@ -20,6 +20,7 @@ import { isIsolationEnabled } from './isolation/enabled';
 import { isDaemonEnabled } from '../../daemon/client/client';
 
 export class LoadedNxPlugin {
+  index?: number;
   readonly name: string;
   readonly createNodes?: [
     filePattern: string,
@@ -59,16 +60,9 @@ export class LoadedNxPlugin {
     }
 
     if (plugin.createNodes && !plugin.createNodesV2) {
-      this.createNodes = [
-        plugin.createNodes[0],
-        (configFiles, context) =>
-          createNodesFromFiles(
-            plugin.createNodes[1],
-            configFiles,
-            this.options,
-            context
-          ).then((results) => results.map((r) => [this.name, r[0], r[1]])),
-      ];
+      throw new Error(
+        `Plugin ${plugin.name} only provides \`createNodes\` which was removed in Nx 21, it should provide a \`createNodesV2\` implementation.`
+      );
     }
 
     if (plugin.createNodesV2) {
@@ -121,33 +115,26 @@ export class LoadedNxPlugin {
     if (plugin.preTasksExecution) {
       this.preTasksExecution = async (context: PreTasksExecutionContext) => {
         const updates = {};
-        let revokeFn: () => void;
+        let originalEnv = process.env;
         if (isIsolationEnabled() || isDaemonEnabled()) {
-          const { proxy, revoke } = Proxy.revocable<NodeJS.ProcessEnv>(
-            process.env,
-            {
-              set: (target, key: string, value) => {
-                target[key] = value;
-                updates[key] = value;
-                return true;
-              },
-            }
-          );
-          process.env = proxy;
-          revokeFn = revoke;
+          process.env = new Proxy<NodeJS.ProcessEnv>(originalEnv, {
+            set: (target, key: string, value) => {
+              target[key] = value;
+              updates[key] = value;
+              return true;
+            },
+          });
         }
         await plugin.preTasksExecution(this.options, context);
+        process.env = originalEnv;
 
-        if (revokeFn) {
-          revokeFn();
-        }
         return updates;
       };
+    }
 
-      if (plugin.postTasksExecution) {
-        this.postTasksExecution = async (context: PostTasksExecutionContext) =>
-          plugin.postTasksExecution(this.options, context);
-      }
+    if (plugin.postTasksExecution) {
+      this.postTasksExecution = async (context: PostTasksExecutionContext) =>
+        plugin.postTasksExecution(this.options, context);
     }
   }
 }

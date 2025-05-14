@@ -2,8 +2,9 @@
 title: 'Introducing Expo Support for Nx'
 slug: 'introducing-expo-support-for-nx'
 authors: ['Emily Xiong']
-cover_image: '/blog/images/2022-03-23/yYc8g4ifk9RApSjAhQysag.png'
+cover_image: '/blog/images/2022-03-23/yYc8g4ifk9RApSjAhQysag.avif'
 tags: [nx, release]
+description: Introducing @nrwl/expo for seamless Expo integration in Nx monorepos, with a tutorial on building a poetry app using Expo's development tools.
 ---
 
 We are very excited to announce our support for Expo with our new package `@nrwl/expo`. In addition to the React Native support, with this release of `@nrwl/expo`, you will be able to easily develop mobile apps in the monorepo. If you use Expo in a monorepo then Nx is the tool for you.
@@ -17,7 +18,7 @@ Github Repo: [xiongemi/nx-expo-poetry](https://github.com/xiongemi/nx-expo-poetr
 
 ## Before We Start
 
-When I just started to try out Expo, the first questions came to my mind were “what is the difference between Expo and React Native” and “when to choose Expo and when to choose React Native”? In short, Expo is a set of tools built on top of React Native. You can read it more at [https://stackoverflow.com/questions/39170622/what-is-the-difference-between-expo-and-react-native](https://stackoverflow.com/questions/39170622/what-is-the-difference-between-expo-and-react-native).
+When I just started to try out Expo, the first questions came to my mind were "what is the difference between Expo and React Native" and "when to choose Expo and when to choose React Native"? In short, Expo is a set of tools built on top of React Native. You can read it more at [https://stackoverflow.com/questions/39170622/what-is-the-difference-between-expo-and-react-native](https://stackoverflow.com/questions/39170622/what-is-the-difference-between-expo-and-react-native).
 
 Now I have created an app with Expo, to me, the most significant differences are developer experience and the build process.
 
@@ -32,7 +33,7 @@ Moreover, Expo provides [Expo Application Services(EAS)](https://docs.expo.dev/e
 
 ## Setup
 
-First, let’s create an Nx workspace:
+First, let's create an Nx workspace:
 
 ```shell
 npx create-nx-workspace nx-expo-poetry --preset=empty
@@ -73,7 +74,7 @@ _Expo Development Server_
 
 ## Create First Page
 
-Now we got the app running, let’s create our first page. In this example, we are going to use the [React Native Paper](https://callstack.github.io/react-native-paper/) as the material design library. To install:
+Now we got the app running, let's create our first page. In this example, we are going to use the [React Native Paper](https://callstack.github.io/react-native-paper/) as the material design library. To install:
 
 ```shell
 # npm
@@ -83,7 +84,7 @@ npm install react-native-paper --save
 yarn add react-native-paper
 ```
 
-Then, let’s create our first component. This component simply displays a poem on the page.
+Then, let's create our first component. This component simply displays a poem on the page.
 
 First, to add a component file under the app, run the below command:
 
@@ -291,11 +292,11 @@ With Nx, we can create as many libraries as we want to handle different concerns
 
 I hope you found this useful, and we look forward to hearing your [feedback](https://github.com/nrwl/nx-labs/issues).
 
-If you’re new to Nx and want to learn more, visit [our docs](/getting-started/intro)**.**
+If you're new to Nx and want to learn more, visit [our docs](/getting-started/intro)**.**
 
 _(Note, the repository with the code for this article is linked at the very top.)_
 
-This app is also available in the app store, just search “Poem of the Day”:
+This app is also available in the app store, just search "Poem of the Day":
 
 Android:
 

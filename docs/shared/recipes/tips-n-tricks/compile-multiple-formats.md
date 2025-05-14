@@ -1,3 +1,8 @@
+---
+title: Compile TypeScript Libraries to Multiple Formats
+description: Learn how to use Nx with Rollup to compile TypeScript libraries to both ESM and CommonJS formats for maximum compatibility.
+---
+
 # Compile Typescript Libraries to Multiple Formats
 
 {% youtube

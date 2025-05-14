@@ -21,7 +21,7 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 18
+  NODE_VERSION: 20.19.0
   PNPM_VERSION: 9.8.0 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
 
 jobs:
@@ -123,9 +123,13 @@ jobs:
         settings:
           - host: macos-13
             target: x86_64-apple-darwin
+            setup: |-
+              rustup target add aarch64-apple-darwin
             build: |
               pnpm nx run-many --target=build-native -- --target=x86_64-apple-darwin
           - host: windows-latest
+            setup: |-
+              rustup target add aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
           # Windows 32bit (not needed)
@@ -141,6 +145,7 @@ jobs:
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
+              rustup target add aarch64-unknown-linux-gnu &&
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-gnu
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
@@ -150,9 +155,12 @@ jobs:
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
+              rustup target add x86_64-unknown-linux-musl &&
               pnpm nx run-many --verbose --target=build-native -- --target=x86_64-unknown-linux-musl
           - host: macos-13
             target: aarch64-apple-darwin
+            setup: |-
+              rustup target add aarch64-apple-darwin
             build: |
               sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
               export CC=$(xcrun -f clang);
@@ -168,12 +176,14 @@ jobs:
               npm i -g pnpm@9.8.0 --force &&
               pnpm --version &&
               pnpm install --frozen-lockfile &&
+              rustup target add aarch64-unknown-linux-gnu &&
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-gnu
           - host: ubuntu-latest
             target: armv7-unknown-linux-gnueabihf
             setup: |
               sudo apt-get update
               sudo apt-get install gcc-arm-linux-gnueabihf -y
+              rustup target add armv7-unknown-linux-gnueabihf
             build: |
               CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=/usr/bin/arm-linux-gnueabihf-gcc pnpm nx run-many --target=build-native -- --target=armv7-unknown-linux-gnueabihf
           # Android (not needed)
@@ -197,6 +207,8 @@ jobs:
               pnpm nx run-many --verbose --target=build-native -- --target=aarch64-unknown-linux-musl
           - host: windows-latest
             target: aarch64-pc-windows-msvc
+            setup: |-
+              rustup target add aarch64-pc-windows-msvc
             build: pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
@@ -294,14 +306,12 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         with:
           repository: ${{ needs.resolve-required-data.outputs.repo }}
           ref: ${{ needs.resolve-required-data.outputs.ref }}
 
       - name: Build
         id: build
-        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         uses: cross-platform-actions/action@v0.25.0
         env:
           DEBUG: napi:*
@@ -343,7 +353,6 @@ jobs:
             echo "COMPLETE"
 
       - name: Upload artifact
-        if: ${{ github.event_name != 'schedule' && !github.event.inputs.pr }}
         uses: actions/upload-artifact@v4
         with:
           name: bindings-freebsd
@@ -406,6 +415,7 @@ jobs:
           VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
+          NX_VERBOSE_LOGGING: true
         run: |
           echo ""
           # Create and check out the publish branch

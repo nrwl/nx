@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readProjectConfiguration } from '@nx/devkit';
 // nx-ignore-next-line
@@ -33,6 +34,7 @@ describe('Convert webpack', () => {
       module.exports = composePlugins(
         withNx(),
         withReact({
+          useLegacyHtmlPlugin: true,
           // Uncomment this line if you don't want to use SVGR
           // See: https://react-svgr.com/
           // svgr: false
@@ -161,7 +163,7 @@ describe('Convert webpack', () => {
        */
       export default composePlugins(
         withNx(),
-        withReact(),
+        withReact({ useLegacyHtmlPlugin: true }),
         withModuleFederation(config, { dts: false })
       );
       "
@@ -261,7 +263,7 @@ describe('Convert webpack', () => {
        */
       export default composePlugins(
         withNx(),
-        withReact(),
+        withReact({ useLegacyHtmlPlugin: true }),
         withModuleFederation(config, { dts: false })
       );
       "
@@ -367,7 +369,7 @@ describe('Convert webpack', () => {
        */
       export default composePlugins(
         withNx(),
-        withReact(),
+        withReact({ useLegacyHtmlPlugin: true }),
         withModuleFederation(config, { dts: false })
       );
       "

@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/schema",
-  "$id": "NxWebpackConvertToInferred",
-  "description": "Convert existing Webpack project(s) using `@nx/webpack:wepack` executor to use `@nx/webpack/plugin`.",
-  "title": "Convert a Webpack project from executor to plugin",
+  "$id": "NxRspackConvertToInferred",
+  "description": "Convert existing Rspack project(s) using `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`.",
+  "title": "Convert a Rspack project from executor to plugin",
   "type": "object",
   "properties": {
     "project": {
       "type": "string",
-      "description": "The project to convert from using the `@nx/webpack:webpack` executor to use `@nx/webpack/plugin`. If not provided, all projects using the `@nx/webpack:webpack` executor will be converted.",
+      "description": "The project to convert from using the `@nx/rspack:rspack` executor to use `@nx/rspack/plugin`. If not provided, all projects using the `@nx/rspack:rspack` executor will be converted.",
       "x-priority": "important"
     },
     "skipFormat": {

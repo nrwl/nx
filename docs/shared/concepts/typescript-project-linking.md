@@ -1,4 +1,11 @@
+---
+title: 'TypeScript Project Linking'
+description: 'Learn how to efficiently reference code between TypeScript projects in your monorepo using project linking instead of relative paths.'
+---
+
 # Typescript Project Linking
+
+{% youtube src="https://youtu.be/D9D8KNffyBk" title="TypeScript Monorepos Done Right!" /%}
 
 The naive way to reference code in a separate project is to use a relative path in the `import` statement.
 
@@ -22,11 +29,15 @@ There are two different methods that Nx supports for linking TypeScript projects
 
 ## Project Linking with Workspaces
 
-To create a new Nx workspace that links projects with package manager workspaces, use the `--workspaces` flag.
+Create a new Nx workspace that links projects with package manager workspaces:
 
 ```shell
-npx create-nx-workspace --workspaces
+npx create-nx-workspace
 ```
+
+{% callout type="note" title="Opt-out of Workspaces" %}
+You can opt-out of workspaces by running `npx create-nx-workspace --no-workspaces`.
+{% /callout %}
 
 ### Set Up Package Manager Workspaces
 
@@ -37,7 +48,7 @@ The configuration for package manager workspaces varies based on which package m
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -58,7 +69,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -79,7 +90,7 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```json {% fileName="package.json" %}
 {
-  "workspaces": ["apps/**", "packages/**"]
+  "workspaces": ["apps/*", "packages/*"]
 }
 ```
 
@@ -100,8 +111,8 @@ If you want to reference a local library project with its own `build` task, you 
 
 ```yaml {% fileName="pnpm-workspace.yaml" %}
 packages:
-  - 'apps/**'
-  - 'packages/**'
+  - 'apps/*'
+  - 'packages/*'
 ```
 
 Defining the `packages` property in the root `pnpm-workspaces.yaml` file lets pnpm know to look for project `package.json` files in the specified folders. With this configuration in place, all the dependencies for the individual projects will be installed in the root `node_modules` folder when `pnpm install` is run in the root folder.
@@ -131,7 +142,7 @@ The root `tsconfig.base.json` should contain a `compilerOptions` property and no
     // Required compiler options
     "composite": true,
     "declaration": true,
-    "declarationMaps": true
+    "declarationMap": true
     // Other options...
   }
 }
@@ -218,6 +229,8 @@ The project's `tsconfig.spec.json` does not need to reference project dependenci
 ```
 
 ### TypeScript Project References Performance Benefits
+
+{% youtube src="https://youtu.be/O2xBQJMTs9E" title="Why TypeScript Project References Make Your CI Faster!" /%}
 
 Using TypeScript project references improves both the speed and memory usage of build and typecheck tasks. The repository below contains benchmarks showing the difference between running typecheck with and without using TypeScript project references.
 

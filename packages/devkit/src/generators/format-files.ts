@@ -2,7 +2,10 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 
 import { readJson, Tree, updateJson } from 'nx/src/devkit-exports';
-import { sortObjectByKeys } from 'nx/src/devkit-internals';
+import {
+  sortObjectByKeys,
+  isUsingPrettierInTree,
+} from 'nx/src/devkit-internals';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -21,6 +24,13 @@ export async function formatFiles(
   let prettier: typeof Prettier;
   try {
     prettier = await import('prettier');
+    /**
+     * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
+     * before proceeding to format with it.
+     */
+    if (!isUsingPrettierInTree(tree)) {
+      return;
+    }
   } catch {}
 
   if (options.sortRootTsconfigPaths) {

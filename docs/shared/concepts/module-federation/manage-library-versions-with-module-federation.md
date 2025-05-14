@@ -1,3 +1,8 @@
+---
+title: Manage Library Versions with Module Federation
+description: Learn how Module Federation's Shared API prevents dependency conflicts and reduces bundle size by managing shared library versions across federated modules.
+---
+
 # Manage Library Versions with Module Federation
 
 Federated modules are bundled and packaged independently with all the dependencies they need to run smoothly in federated applications called _remotes_. This means that if you have a federated module that depends on a library, the library will be bundled with the federated module within a remote. This independence provides much flexibility, allowing individual federated modules to function without relying on external resources.

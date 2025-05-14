@@ -5,6 +5,7 @@ import {
   readNxJson,
   runTasksInSerial,
   Tree,
+  updateJson,
   updateNxJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
@@ -32,7 +33,6 @@ import { initWebpack } from './lib/bundlers/add-webpack';
 import {
   handleStyledJsxForRspack,
   initRspack,
-  setupRspackConfiguration,
 } from './lib/bundlers/add-rspack';
 import {
   initRsbuild,
@@ -44,6 +44,7 @@ import {
 } from './lib/bundlers/add-vite';
 import { Schema } from './schema';
 import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+import { promptWhenInteractive } from '@nx/devkit/src/generators/prompt';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -51,6 +52,7 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
     addPlugin: false,
+    useProjectJson: true,
     ...schema,
   });
 }
@@ -73,11 +75,34 @@ export async function applicationGeneratorInternal(
 
   const options = await normalizeOptions(tree, schema);
 
-  // If we are using the new TS solution
-  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
-  if (options.isUsingTsSolutionConfig) {
-    addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
-  }
+  options.useReactRouter =
+    options.routing && options.bundler === 'vite'
+      ? options.useReactRouter ??
+        (await promptWhenInteractive<{
+          response: 'Yes' | 'No';
+        }>(
+          {
+            name: 'response',
+            message:
+              'Would you like to use react-router for server-side rendering?',
+            type: 'autocomplete',
+            choices: [
+              {
+                name: 'Yes',
+                message:
+                  'I want to use react-router   [ https://reactrouter.com/start/framework/routing   ]',
+              },
+              {
+                name: 'No',
+                message:
+                  'I do not want to use react-router for server-side rendering',
+              },
+            ],
+            initial: 0,
+          },
+          { response: 'No' }
+        ).then((r) => r.response === 'Yes'))
+      : false;
 
   showPossibleWarnings(tree, options);
 
@@ -116,6 +141,12 @@ export async function applicationGeneratorInternal(
   await createApplicationFiles(tree, options);
   addProject(tree, options);
 
+  // If we are using the new TS solution
+  // We need to update the workspace file (package.json or pnpm-workspaces.yaml) to include the new project
+  if (options.isUsingTsSolutionConfig) {
+    await addProjectToTsSolutionWorkspace(tree, options.appProjectRoot);
+  }
+
   if (options.style === 'tailwind') {
     const twTask = await setupTailwindGenerator(tree, {
       project: options.projectName,
@@ -123,10 +154,11 @@ export async function applicationGeneratorInternal(
     tasks.push(twTask);
   }
 
+  const lintTask = await addLinting(tree, options);
+  tasks.push(lintTask);
+
   if (options.bundler === 'vite') {
     await setupViteConfiguration(tree, options, tasks);
-  } else if (options.bundler === 'rspack') {
-    await setupRspackConfiguration(tree, options, tasks);
   } else if (options.bundler === 'rsbuild') {
     await setupRsbuildConfiguration(tree, options, tasks);
   }
@@ -147,9 +179,6 @@ export async function applicationGeneratorInternal(
     );
   }
 
-  const lintTask = await addLinting(tree, options);
-  tasks.push(lintTask);
-
   const e2eTask = await addE2e(tree, options);
   tasks.push(e2eTask);
 
@@ -160,18 +189,41 @@ export async function applicationGeneratorInternal(
 
   // Handle tsconfig.spec.json for jest or vitest
   updateSpecConfig(tree, options);
-  const stylePreprocessorTask = await installCommonDependencies(tree, options);
-  tasks.push(stylePreprocessorTask);
+  const commonDependencyTask = await installCommonDependencies(tree, options);
+  tasks.push(commonDependencyTask);
   const styledTask = addStyledModuleDependencies(tree, options);
   tasks.push(styledTask);
-  const routingTask = addRouting(tree, options);
-  tasks.push(routingTask);
+  if (!options.useReactRouter) {
+    const routingTask = addRouting(tree, options);
+    tasks.push(routingTask);
+  }
   setDefaults(tree, options);
 
   if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
     handleStyledJsxForRspack(tasks, tree, options);
   }
 
+  if (options.useReactRouter) {
+    updateJson(
+      tree,
+      joinPathFragments(options.appProjectRoot, 'tsconfig.json'),
+      (json) => {
+        const types = new Set(json.compilerOptions?.types || []);
+        types.add('@react-router/node');
+        return {
+          ...json,
+          compilerOptions: {
+            ...json.compilerOptions,
+            jsx: 'react-jsx',
+            moduleResolution: 'bundler',
+            types: Array.from(types),
+          },
+        };
+      }
+    );
+  }
+
+  // Only for the new TS solution
   updateTsconfigFiles(
     tree,
     options.appProjectRoot,
@@ -183,7 +235,8 @@ export async function applicationGeneratorInternal(
     },
     options.linter === 'eslint'
       ? ['eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs']
-      : undefined
+      : undefined,
+    options.useReactRouter ? 'app' : 'src'
   );
 
   sortPackageJsonFields(tree, options.appProjectRoot);

@@ -1,3 +1,8 @@
+---
+title: Nx Console & Nx Cloud Integration
+description: Learn how Nx Console integrates with Nx Cloud to provide CI pipeline visibility, notifications, and quick access to build results directly from your editor.
+---
+
 # Nx Console & Nx Cloud Integration
 
 Nx Console for VSCode is integrated with Nx Cloud to help you stay on top of your CI Pipelines without leaving the editor.

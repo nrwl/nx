@@ -16,11 +16,13 @@ export interface Schema {
   style?: 'css' | 'scss' | 'less' | 'none';
   nxCloudToken?: string;
   useTsSolution?: boolean;
+  useProjectJson?: boolean;
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Omit<Schema, 'useTsSolution'> {
   projectName: string;
   appProjectRoot: string;
+  importPath: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];

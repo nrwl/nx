@@ -48,6 +48,7 @@ export interface UpdatePackageJsonOption {
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   generateLockfile?: boolean;
   packageJsonPath?: string;
+  skipDevelopmentExports?: boolean;
 }
 
 export function updatePackageJson(
@@ -113,7 +114,10 @@ export function updatePackageJson(
   }
 
   // update package specific settings
-  packageJson = getUpdatedPackageJsonContent(packageJson, options);
+  packageJson = getUpdatedPackageJsonContent(packageJson, {
+    skipDevelopmentExports: true,
+    ...options,
+  });
 
   // save files
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
@@ -285,6 +289,21 @@ export function getUpdatedPackageJsonContent(
     packageJson.exports ??=
       typeof packageJson.exports === 'string' ? {} : { ...packageJson.exports };
     packageJson.exports['./package.json'] ??= './package.json';
+
+    if (!options.skipDevelopmentExports && (hasCjsFormat || hasEsmFormat)) {
+      packageJson.exports['.'] ??= {};
+      const developmentExports = getDevelopmentExports(options);
+      for (const [exportEntry, filePath] of Object.entries(
+        developmentExports
+      )) {
+        if (!packageJson.exports[exportEntry]) {
+          packageJson.exports[exportEntry] ??= {};
+          packageJson.exports[exportEntry]['development'] ??= filePath;
+        } else if (typeof packageJson.exports[exportEntry] === 'object') {
+          packageJson.exports[exportEntry].development ??= filePath;
+        }
+      }
+    }
   }
 
   if (!options.skipTypings) {
@@ -362,6 +381,47 @@ export function getUpdatedPackageJsonContent(
   }
 
   return packageJson;
+}
+
+function getDevelopmentExports(
+  options: Pick<
+    UpdatePackageJsonOption,
+    'additionalEntryPoints' | 'main' | 'projectRoot'
+  >
+) {
+  const mainRelativeDir = getRelativeDirectoryToProjectRoot(
+    options.main,
+    options.projectRoot
+  );
+  const exports: Exports = {
+    '.': mainRelativeDir + basename(options.main),
+  };
+
+  if (options.additionalEntryPoints?.length) {
+    const jsRegex = /\.[jt]sx?$/;
+
+    for (const file of options.additionalEntryPoints) {
+      const { ext: fileExt, name: fileName, base: baseName } = parse(file);
+      if (!jsRegex.test(fileExt)) {
+        continue;
+      }
+
+      const relativeDir = getRelativeDirectoryToProjectRoot(
+        file,
+        options.projectRoot
+      );
+      const sourceFilePath = relativeDir + baseName;
+      const entryRelativeDir = relativeDir.replace(/^\.\/src\//, './');
+      const entryFilePath = entryRelativeDir + fileName;
+      if (fileName === 'index') {
+        const barrelEntry = entryRelativeDir.replace(/\/$/, '');
+        exports[barrelEntry] = sourceFilePath;
+      }
+      exports[entryFilePath] = sourceFilePath;
+    }
+  }
+
+  return exports;
 }
 
 export function getOutputDir(

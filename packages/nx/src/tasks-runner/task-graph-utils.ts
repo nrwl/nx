@@ -1,9 +1,12 @@
 import { ProjectGraph } from '../config/project-graph';
-import { TaskGraph } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 import { output } from '../utils/output';
 
 function _findCycle(
-  graph: { dependencies: Record<string, string[]> },
+  graph: {
+    dependencies: Record<string, string[]>;
+    continuousDependencies?: Record<string, string[]>;
+  },
   id: string,
   visited: { [taskId: string]: boolean },
   path: string[]
@@ -11,7 +14,10 @@ function _findCycle(
   if (visited[id]) return null;
   visited[id] = true;
 
-  for (const d of graph.dependencies[id]) {
+  for (const d of [
+    ...graph.dependencies[id],
+    ...(graph.continuousDependencies?.[id] ?? []),
+  ]) {
     if (path.includes(d)) return [...path, d];
     const cycle = _findCycle(graph, d, visited, [...path, d]);
     if (cycle) return cycle;
@@ -25,6 +31,7 @@ function _findCycle(
  */
 export function findCycle(graph: {
   dependencies: Record<string, string[]>;
+  continuousDependencies?: Record<string, string[]>;
 }): string[] | null {
   const visited = {};
   for (const t of Object.keys(graph.dependencies)) {
@@ -45,6 +52,7 @@ export function findCycle(graph: {
  */
 export function findCycles(graph: {
   dependencies: Record<string, string[]>;
+  continuousDependencies?: Record<string, string[]>;
 }): Set<string> | null {
   const visited = {};
   const cycles = new Set<string>();
@@ -63,7 +71,10 @@ export function findCycles(graph: {
 }
 
 function _makeAcyclic(
-  graph: { dependencies: Record<string, string[]> },
+  graph: {
+    dependencies: Record<string, string[]>;
+    continuousDependencies?: Record<string, string[]>;
+  },
   id: string,
   visited: { [taskId: string]: boolean },
   path: string[]
@@ -72,9 +83,11 @@ function _makeAcyclic(
   visited[id] = true;
 
   const deps = graph.dependencies[id];
-  for (const d of [...deps]) {
+  const continuousDeps = graph.continuousDependencies?.[id] ?? [];
+  for (const d of [...deps, ...continuousDeps]) {
     if (path.includes(d)) {
       deps.splice(deps.indexOf(d), 1);
+      continuousDeps.splice(continuousDeps.indexOf(d), 1);
     } else {
       _makeAcyclic(graph, d, visited, [...path, d]);
     }
@@ -141,4 +154,75 @@ export function validateNoAtomizedTasks(
     });
   }
   process.exit(1);
+}
+
+export function assertTaskGraphDoesNotContainInvalidTargets(
+  taskGraph: TaskGraph
+) {
+  const invalidTasks = [];
+  for (const task of Object.values(taskGraph.tasks)) {
+    if (
+      task.parallelism === false &&
+      taskGraph.continuousDependencies[task.id].length > 0
+    ) {
+      invalidTasks.push(task);
+    }
+  }
+
+  if (invalidTasks.length > 0) {
+    throw new NonParallelTaskDependsOnContinuousTasksError(
+      invalidTasks,
+      taskGraph
+    );
+  }
+}
+
+class NonParallelTaskDependsOnContinuousTasksError extends Error {
+  constructor(public invalidTasks: Task[], taskGraph: TaskGraph) {
+    let message =
+      'The following tasks do not support parallelism but depend on continuous tasks:';
+
+    for (const task of invalidTasks) {
+      message += `\n - ${task.id} -> ${taskGraph.continuousDependencies[
+        task.id
+      ].join(', ')}`;
+    }
+
+    super(message);
+    this.name = 'NonParallelTaskDependsOnContinuousTasksError';
+  }
+}
+
+export function getLeafTasks(taskGraph: TaskGraph): Set<string> {
+  const reversed = reverseTaskGraph(taskGraph);
+  const leafTasks = new Set<string>();
+  for (const [taskId, dependencies] of Object.entries(reversed.dependencies)) {
+    if (dependencies.length === 0) {
+      leafTasks.add(taskId);
+    }
+  }
+
+  return leafTasks;
+}
+
+function reverseTaskGraph(taskGraph: TaskGraph): TaskGraph {
+  const reversed = {
+    tasks: taskGraph.tasks,
+    dependencies: Object.fromEntries(
+      Object.entries(taskGraph.tasks).map(([taskId]) => [taskId, []])
+    ),
+  } as TaskGraph;
+  for (const [taskId, dependencies] of Object.entries(taskGraph.dependencies)) {
+    for (const dependency of dependencies) {
+      reversed.dependencies[dependency].push(taskId);
+    }
+  }
+  for (const [taskId, dependencies] of Object.entries(
+    taskGraph.continuousDependencies
+  )) {
+    for (const dependency of dependencies) {
+      reversed.dependencies[dependency].push(taskId);
+    }
+  }
+  return reversed;
 }

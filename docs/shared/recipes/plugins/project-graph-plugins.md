@@ -1,3 +1,8 @@
+---
+title: Extending the Project Graph
+description: Learn how to create project graph plugins for Nx to add custom nodes and dependencies, enabling support for additional languages and technologies.
+---
+
 # Extending the Project Graph of Nx
 
 The Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
@@ -146,7 +151,7 @@ async function createNodesInternal(
 
 By checking for the presence of a `project.json` or `package.json` file, the plugin can be more confident that the project it is modifying is an existing Nx project.
 
-When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, and then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that run before them if a merge is not possible.
+When extending an existing project, its important to consider how Nx will merge the returned project configurations. In general, plugins are run in the order they are listed in `nx.json`, and then Nx's built-in plugins are run last. Plugins overwrite information that was identified by plugins that ran before them if a merge is not possible.
 
 Nx considers two identified projects to be the same if and only if they have the same root. If two projects are identified with the same name, but different roots, there will be an error.
 

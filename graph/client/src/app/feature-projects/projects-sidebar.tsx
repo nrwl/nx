@@ -33,7 +33,7 @@ import {
   useEnvironmentConfig,
   usePoll,
   useRouteConstructor,
-} from '@nx/graph/shared';
+} from '@nx/graph/legacy/shared';
 import {
   useNavigate,
   useParams,
@@ -325,7 +325,7 @@ export function ProjectsSidebar(): JSX.Element {
         type: 'enableCompositeGraph',
         context: compositeParam === 'true' ? null : compositeParam,
       });
-    } else if (!searchParams.has('composite')) {
+    } else if (!searchParams.has('composite') && compositeEnabled) {
       projectGraphService.send({ type: 'disableCompositeGraph' });
       navigate(routeConstructor('/projects', true));
     }

@@ -126,7 +126,12 @@ describe('ensureViteConfigIsCorrect', () => {
 
             build: {
           'my': 'option',
-          'lib': {"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es"]},
+          'lib': {
+            'entry': "src/index.ts",
+            'name': "my-app",
+            'fileName': "index",
+            'formats': ['es' as const],
+          },
           'rollupOptions': {"external":["react","react-dom","react/jsx-runtime"]},
         }
 
@@ -433,7 +438,12 @@ describe('ensureViteConfigIsCorrect', () => {
 
             build: {
           'my': 'option',
-          'lib': {"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es"]},
+          'lib': {
+            'entry': "src/index.ts",
+            'name': "my-app",
+            'fileName': "index",
+            'formats': ['es' as const],
+          },
           'rollupOptions': {"external":["react","react-dom","react/jsx-runtime"]},
         }
 

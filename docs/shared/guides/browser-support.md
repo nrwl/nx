@@ -1,3 +1,8 @@
+---
+title: Configuring Browser Support
+description: Learn how to configure browser compatibility for your Nx applications using browserslist, optimize bundle size with modern browser targets, and debug your browser support configuration.
+---
+
 # Configuring Browser Support
 
 The official Nx plugins rely on [browserslist](https://github.com/browserslist/browserslist) for configuring application browser support. This affects builds, both production and development, and will decide on which transformations will be run on the code when built.

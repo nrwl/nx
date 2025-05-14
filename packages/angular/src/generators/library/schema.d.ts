@@ -12,7 +12,6 @@ export interface Schema {
   buildable?: boolean;
   publishable?: boolean;
   importPath?: string;
-  standaloneConfig?: boolean;
   spec?: boolean;
   flat?: boolean;
   commonModule?: boolean;

@@ -54,11 +54,20 @@ export function addSwcConfig(
   tree: Tree,
   projectDir: string,
   type: 'commonjs' | 'es6' = 'commonjs',
-  supportTsx: boolean = false
+  supportTsx: boolean = false,
+  swcName: string = '.swcrc',
+  additionalExcludes: string[] = []
 ) {
-  const swcrcPath = join(projectDir, '.swcrc');
+  const swcrcPath = join(projectDir, swcName);
   if (tree.exists(swcrcPath)) return;
-  tree.write(swcrcPath, swcOptionsString(type, defaultExclude, supportTsx));
+  tree.write(
+    swcrcPath,
+    swcOptionsString(
+      type,
+      [...defaultExclude, ...additionalExcludes],
+      supportTsx
+    )
+  );
 }
 
 export function addSwcTestConfig(

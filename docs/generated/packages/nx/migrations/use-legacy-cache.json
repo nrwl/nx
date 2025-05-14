@@ -9,5 +9,5 @@
   "path": "/packages/nx",
   "schema": null,
   "type": "migration",
-  "examplesFile": ""
+  "examplesFile": "#### Use Legacy Cache\n\nSet `useLegacyCache` to true for migrating workspaces\n\n#### Sample Code Changes\n\nAdd `useLegacyCache` to `nx.json` unless `enableDbCache` was set to true.\n\n{% tabs %}\n{% tab label=\"Before\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {}\n}\n```\n\n{% /tab %}\n{% tab label=\"After\" %}\n\n```json {% fileName=\"nx.json\" %}\n{\n  \"targetDefaults\": {},\n  \"useLegacyCache\": true\n}\n```\n\n{% /tab %}\n{% /tabs %}\n"
 }

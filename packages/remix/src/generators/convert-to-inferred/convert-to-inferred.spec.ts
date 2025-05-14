@@ -9,12 +9,14 @@ import {
   readNxJson,
   type ExpandedPluginConfiguration,
   updateNxJson,
+  detectPackageManager,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
 import { join } from 'path';
 import { convertToInferred } from './convert-to-inferred';
+import { getLockFileName } from '@nx/js';
 
 let fs: TempFs;
 let projectGraph: ProjectGraph;
@@ -165,7 +167,9 @@ describe('Remix - Convert To Inferred', () => {
     fs = new TempFs('remix');
     tree = createTreeWithEmptyWorkspace();
     tree.root = fs.tempDir;
-
+    const lockFileName = getLockFileName(detectPackageManager(fs.tempDir));
+    fs.createFileSync(lockFileName, '');
+    tree.write(lockFileName, '');
     projectGraph = {
       nodes: {},
       dependencies: {},
@@ -242,7 +246,7 @@ describe('Remix - Convert To Inferred', () => {
           devTargetName: 'custom-dev',
           startTargetName: 'start',
           typecheckTargetName: 'typecheck',
-          staticServeTargetName: 'static-serve',
+          serveStaticTargetName: 'serve-static',
         },
       });
       updateNxJson(tree, nxJson);

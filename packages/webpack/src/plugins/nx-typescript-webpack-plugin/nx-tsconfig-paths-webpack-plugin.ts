@@ -46,7 +46,7 @@ export class NxTsconfigPathsWebpackPlugin {
 
   handleBuildLibsFromSource(
     config: Partial<WebpackOptionsNormalized | Configuration>,
-    options
+    options: NormalizedNxAppWebpackPluginOptions
   ): void {
     if (!options.buildLibsFromSource && options.targetName) {
       const remappedTarget =
@@ -75,7 +75,11 @@ export class NxTsconfigPathsWebpackPlugin {
 
         const buildCommand = `nx run-many --target=build --projects=${buildableDependencies}`;
 
-        config.plugins.push(new WebpackNxBuildCoordinationPlugin(buildCommand));
+        config.plugins.push(
+          new WebpackNxBuildCoordinationPlugin(buildCommand, {
+            skipWatchingDeps: options.watchDependencies === false,
+          })
+        );
       }
     }
   }

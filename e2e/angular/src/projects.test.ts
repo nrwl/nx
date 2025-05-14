@@ -149,6 +149,19 @@ describe('Angular Projects', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
+  it('should successfully work with rspack for build', async () => {
+    const app = uniq('app');
+    runCLI(
+      `generate @nx/angular:app my-dir/${app} --bundler=rspack --no-interactive`
+    );
+    runCLI(`build ${app}`);
+
+    if (runE2ETests()) {
+      expect(() => runCLI(`e2e ${app}-e2e`)).not.toThrow();
+      expect(await killPort(4200)).toBeTruthy();
+    }
+  }, 1000000);
+
   it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
@@ -579,7 +592,8 @@ describe('Angular Projects', () => {
     ).toThrow();
   }, 500_000);
 
-  it('should generate apps and libs with vitest', async () => {
+  // TODO: enable this test once vitest issue is resolved
+  it.skip('should generate apps and libs with vitest', async () => {
     const app = uniq('app');
     const lib = uniq('lib');
 

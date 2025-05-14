@@ -1,8 +1,8 @@
-# Custom Distributed Task Execution on Azure Pipelines
+# Manual Distributed Task Execution on Azure Pipelines
 
-Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. With an [enterprise license](/enterprise), you can set up distributed task execution on your own CI provider using the recipe below.
+Using [Nx Agents](/ci/features/distribute-task-execution) is the easiest way to distribute task execution, but it your organization may not be able to use hosted Nx Agents. You can set up distributed task execution on your own CI provider using the recipe below.
 
-## Run Custom Agents on Azure Pipelines
+## Run Agents on Azure Pipelines
 
 Run agents directly on Azure Pipelines with the workflow below:
 
@@ -33,6 +33,7 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+        fetchFilter: tree:0
         persistCredentials: true
 
       - script: npm ci

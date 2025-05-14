@@ -2,19 +2,15 @@ export interface JestProjectSchema {
   project: string;
   targetName?: string;
   supportTsx?: boolean;
-  /**
-   * @deprecated use setupFile instead
-   */
-  skipSetupFile?: boolean;
-  setupFile?: 'angular' | 'web-components' | 'react-native' | 'none';
+  setupFile?:
+    | 'angular'
+    | 'web-components'
+    | 'react-native'
+    | 'react-router'
+    | 'none';
   skipSerializers?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'none';
-  /**
-   * @deprecated use compiler: "babel" instead
-   */
-  babelJest?: boolean;
   skipFormat?: boolean;
-
   addPlugin?: boolean;
   compiler?: 'tsc' | 'babel' | 'swc';
   skipPackageJson?: boolean;
@@ -25,6 +21,16 @@ export interface JestProjectSchema {
    * @internal
    */
   addExplicitTargets?: boolean;
+
+  /**
+   * @deprecated Use the `compiler` option instead. It will be removed in Nx v22.
+   */
+  babelJest?: boolean;
+  /**
+   * @deprecated Use the `setupFile` option instead. It will be removed in Nx v22.
+   */
+  skipSetupFile?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export type NormalizedJestProjectSchema = JestProjectSchema & {
