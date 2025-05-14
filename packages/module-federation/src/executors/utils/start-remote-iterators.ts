@@ -1,5 +1,6 @@
 import { StartRemoteFn, type StartRemoteIteratorsOptions } from './models';
 import {
+  getBuildTargetNameFromMFDevServer,
   getModuleFederationConfig,
   getRemotes,
   parseStaticRemotesConfig,
@@ -29,8 +30,12 @@ export async function startRemoteIterators(
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(context.projectGraph);
   const project = workspaceProjects[context.projectName];
+  const buildTargetName = getBuildTargetNameFromMFDevServer(
+    project,
+    context.projectGraph
+  );
   const moduleFederationConfig = getModuleFederationConfig(
-    project.targets.build.options.tsConfig,
+    project.targets?.[buildTargetName]?.options?.tsConfig,
     context.root,
     project.root,
     pluginName
