@@ -6,7 +6,8 @@ export function checkAndCleanWithSemver(
 ): string {
   let newVersion = version;
 
-  if (valid(newVersion)) {
+  const isPnpmCatalog = newVersion.startsWith('catalog:');
+  if (valid(newVersion) || isPnpmCatalog) {
     return newVersion;
   }
 
