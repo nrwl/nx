@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 
 let load: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
+
 export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
   load ??= new Function('modulePath', `return import(modulePath);`) as Exclude<
     typeof load,
@@ -31,4 +32,14 @@ export function isPackageInstalled(root: string, name: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function assertNever(input: never): never {
+  throw new Error(
+    `Unexpected call to assertNever() with input: ${JSON.stringify(
+      input,
+      null /* replacer */,
+      4 /* tabSize */
+    )}`
+  );
 }

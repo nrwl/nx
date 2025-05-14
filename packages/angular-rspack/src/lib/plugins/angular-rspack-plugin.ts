@@ -1,4 +1,9 @@
-import { augmentAppWithServiceWorker } from '@angular/build/private';
+import {
+  augmentAppWithServiceWorker,
+  type BudgetCalculatorResult,
+  checkBudgets,
+  ThresholdSeverity,
+} from '@angular/build/private';
 import {
   buildAndAnalyze,
   DiagnosticModes,
@@ -23,6 +28,10 @@ import {
   type NormalizedAngularRspackPluginOptions,
 } from '../models';
 import { getLocaleBaseHref } from '../utils/get-locale-base-href';
+import { addError, addWarning } from '../utils/rspack-diagnostics';
+import { assertNever } from '../utils/misc-helpers';
+import { rspackStatsLogger } from '../utils/stats';
+import { getStatsOptions } from '../config/config-utils/get-stats-options';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
 type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
@@ -169,7 +178,11 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               originalSource
             );
 
-            compilation.updateAsset(assetName, concatLocaleSource);
+            compilation.updateAsset(
+              assetName,
+              concatLocaleSource,
+              (assetInfo) => assetInfo
+            );
           }
         }
       );
@@ -203,6 +216,45 @@ export class AngularRspackPlugin implements RspackPluginInstance {
 
       await this.#javascriptTransformer.close();
       callback();
+    });
+
+    compiler.hooks.afterEmit.tap(PLUGIN_NAME, (compilation) => {
+      // Check for budget errors and display them to the user.
+      const budgets = this.#_options.budgets;
+      let budgetFailures: BudgetCalculatorResult[] | undefined;
+
+      compiler.hooks.done.tap(PLUGIN_NAME, (statsValue) => {
+        const stats = statsValue.toJson();
+        if (budgets?.length) {
+          budgetFailures = [...checkBudgets(budgets, stats)];
+          for (const { severity, message } of budgetFailures) {
+            switch (severity) {
+              case ThresholdSeverity.Warning:
+                addWarning(compilation, {
+                  message,
+                  name: PLUGIN_NAME,
+                  hideStack: true,
+                });
+                break;
+              case ThresholdSeverity.Error:
+                addError(compilation, {
+                  message,
+                  name: PLUGIN_NAME,
+                  hideStack: true,
+                });
+                break;
+              default:
+                assertNever(severity);
+            }
+          }
+        }
+      });
+      compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
+        rspackStatsLogger(stats, getStatsOptions(this.#_options.verbose));
+        if (stats.hasErrors()) {
+          process.exit(1);
+        }
+      });
     });
 
     compiler.hooks.normalModuleFactory.tap(

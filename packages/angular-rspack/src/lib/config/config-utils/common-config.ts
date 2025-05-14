@@ -13,7 +13,6 @@ import { getStylesConfig } from './style-config-utils';
 import { getCrossOriginLoading } from './helpers';
 import { configureSourceMap } from './sourcemap-utils';
 import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
-import { getStatsOptions } from './get-stats-options';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
 import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
 
@@ -49,10 +48,14 @@ export async function getCommonConfig(
     mode: isProduction ? 'production' : 'development',
     devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : undefined,
     infrastructureLogging: {
+      appendOnly: false,
       debug: normalizedOptions.verbose,
-      level: normalizedOptions.verbose ? 'verbose' : 'error',
+      level: normalizedOptions.verbose ? 'verbose' : 'none',
     },
-    stats: getStatsOptions(normalizedOptions.verbose),
+    performance: {
+      hints: false,
+    },
+    stats: 'none', // This is handled in the AngularRspackPlugin by the rspackStatsLogger
     output: {
       uniqueName: normalizedOptions.projectName ?? 'rspack-angular',
       publicPath: normalizedOptions.deployUrl ?? '',

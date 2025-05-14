@@ -63,7 +63,11 @@ export class DevToolsIgnorePlugin implements RspackPluginInstance {
             }
 
             map[IGNORE_LIST] = ignoreList;
-            compilation.updateAsset(name, new RawSource(JSON.stringify(map)));
+            compilation.updateAsset(
+              name,
+              new RawSource(JSON.stringify(map)),
+              (assetInfo) => assetInfo
+            );
           }
         }
       );
