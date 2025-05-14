@@ -400,6 +400,11 @@ impl LayoutManager {
     /// - Number of tasks (single task prefers vertical layout)
     /// - Minimum dimensions requirements
     fn is_vertical_layout_preferred(&self, terminal_width: u16, terminal_height: u16) -> bool {
+        // Screen is pretty narrow so always prefer vertical layout
+        if terminal_width < 75 {
+            return true;
+        }
+
         // Calculate aspect ratio (width/height)
         let aspect_ratio = terminal_width as f32 / terminal_height as f32;
 
@@ -863,6 +868,29 @@ mod tests {
 
             let terminal = render_layout(100, 40, &layout_manager);
             insta::assert_snapshot!(terminal.backend());
+        }
+
+        /// Visual test for narrow screen rendering (width < 75)
+        #[test]
+        fn test_visualize_narrow_screen_layout() {
+            // Create layout with auto mode, which should pick vertical layout for narrow screens
+            let mut layout_manager = LayoutManager::new(5);
+            layout_manager.set_mode(LayoutMode::Auto);
+            layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
+            layout_manager.set_pane_arrangement(PaneArrangement::Single);
+            layout_manager.set_task_count(5);
+
+            // Test with a narrow screen (width < 75)
+            let terminal = render_layout(74, 40, &layout_manager);
+            insta::assert_snapshot!("narrow_screen_layout", terminal.backend());
+
+            // Also test with extremely narrow screen
+            let terminal = render_layout(50, 40, &layout_manager);
+            insta::assert_snapshot!("extremely_narrow_screen_layout", terminal.backend());
+
+            // Also test with slightly narrow screen
+            let terminal = render_layout(80, 40, &layout_manager);
+            insta::assert_snapshot!("slightly_narrow_screen_layout", terminal.backend());
         }
 
         // These tests will run even without the snapshot feature enabled
