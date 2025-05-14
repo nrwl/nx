@@ -180,32 +180,6 @@ describe('createConfig', () => {
       ]);
     });
 
-    it('should create config even when known unsupported options are provided and warn about them', async () => {
-      const warnSpy = vi.spyOn(console, 'warn');
-
-      await expect(
-        createConfig({
-          options: {
-            ...configBase,
-            appShell: true,
-            devServer: { allowedHosts: ['localhost'] },
-          },
-        })
-      ).resolves.not.toContain([
-        expect.objectContaining({
-          appShell: true,
-          devServer: expect.objectContaining({
-            allowedHosts: ['localhost'],
-          }),
-        }),
-      ]);
-      expect(warnSpy).toHaveBeenCalledWith(
-        `The following options are not yet supported:
-  "appShell"
-`
-      );
-    });
-
     it('should create config from options with a custom root', async () => {
       const customRoot = join(process.cwd(), 'custom-root');
       vi.spyOn(

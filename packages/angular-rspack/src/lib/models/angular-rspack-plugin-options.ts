@@ -4,7 +4,6 @@ import type {
   StylePreprocessorOptions,
 } from '@nx/angular-rspack-compiler';
 import type { BudgetEntry } from '@angular/build/private';
-import type { PluginUnsupportedOptions } from './unsupported-options';
 import { I18nProjectMetadata } from './i18n';
 
 export interface DevServerOptions {
@@ -177,12 +176,16 @@ export interface SourceMap {
   vendor: boolean;
 }
 
-export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
+export interface AngularRspackPluginOptions {
   /**
    * @deprecated This is a no-op and can be safely removed.
    * A list of CommonJS or AMD packages that are allowed to be used without a build time warning. Use `'*'` to allow all.
    */
   allowedCommonJsDependencies?: string[];
+  /**
+   *
+   */
+  appShell?: boolean;
   aot?: boolean;
   assets?: AssetElement[];
   /**
@@ -331,6 +334,7 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
 
 export interface NormalizedAngularRspackPluginOptions
   extends Omit<AngularRspackPluginOptions, 'index' | 'scripts' | 'styles'> {
+  appShell: boolean;
   advancedOptimizations: boolean;
   aot: boolean;
   assets: NormalizedAssetElement[];
