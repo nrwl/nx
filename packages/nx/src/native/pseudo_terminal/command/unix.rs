@@ -1,4 +1,4 @@
-use mio::{unix::SourceFd, Events};
+use mio::{Events, unix::SourceFd};
 use std::{
     io::{Read, Stdin, Write},
     os::fd::AsRawFd,
