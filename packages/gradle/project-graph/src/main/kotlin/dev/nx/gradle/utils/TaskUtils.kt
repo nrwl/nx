@@ -93,7 +93,7 @@ fun getInputsForTask(
     val mappedInputsIncludeExternal: MutableList<Any> = mutableListOf()
     val inputs = task.inputs
     val externalDependencies = mutableListOf<String>()
-    inputs.sourceFiles.forEach { file ->
+    inputs.files.forEach { file ->
       val path: String = file.path
       // replace the absolute path to contain {projectRoot} or {workspaceRoot}
       val pathWithReplacedRoot = replaceRootInPath(path, projectRoot, workspaceRoot)
@@ -101,8 +101,7 @@ fun getInputsForTask(
         mappedInputsIncludeExternal.add((pathWithReplacedRoot))
       }
       // if the path is outside of workspace
-      if (pathWithReplacedRoot == null &&
-          externalNodes != null) { // add it to external dependencies
+      if (pathWithReplacedRoot == null) { // add it to external dependencies
         try {
           val externalDep = getExternalDepFromInputFile(path, externalNodes, task.logger)
           externalDep?.let { externalDependencies.add(it) }
@@ -251,7 +250,7 @@ fun getMetadata(
  */
 fun getExternalDepFromInputFile(
     inputFile: String,
-    externalNodes: MutableMap<String, ExternalNode>,
+    externalNodes: MutableMap<String, ExternalNode>?,
     logger: org.gradle.api.logging.Logger
 ): String? {
   try {
@@ -279,7 +278,9 @@ fun getExternalDepFromInputFile(
     val externalKey = "gradle:$nameKey"
     val node = ExternalNode("gradle", externalKey, data)
 
-    externalNodes[externalKey] = node
+    if (externalNodes != null) {
+      externalNodes[externalKey] = node
+    }
 
     return externalKey
   } catch (e: Exception) {
