@@ -55,6 +55,47 @@ describe('component Generator', () => {
     );
   });
 
+  it('should use ".ng.html" extension when --ngHtml=true', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+
+    await componentGenerator(tree, {
+      path: 'libs/lib1/src/lib/example/example',
+      ngHtml: true,
+    });
+
+    expect(
+      tree.exists('libs/lib1/src/lib/example/example.component.ng.html')
+    ).toBe(true);
+    expect(
+      tree.exists('libs/lib1/src/lib/example/example.component.html')
+    ).toBe(false);
+    expect(
+      tree.read('libs/lib1/src/lib/example/example.component.ng.html', 'utf-8')
+    ).toMatchInlineSnapshot(`
+      "<p>example works!</p>
+      "
+    `);
+    expect(tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { Component } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+
+      @Component({
+        selector: 'example',
+        imports: [CommonModule],
+        templateUrl: './example.component.ng.html',
+        styleUrl: './example.component.css',
+      })
+      export class ExampleComponent {}
+      "
+    `);
+  });
+
   it('should export the component as default when exportDefault is true', async () => {
     const tree = createTreeWithEmptyWorkspace({});
     addProjectConfiguration(tree, 'lib1', {

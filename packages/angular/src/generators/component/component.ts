@@ -37,6 +37,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
         (angularMajorVersion >= 19 && !options.standalone) ||
         (angularMajorVersion < 19 && options.standalone),
       angularMajorVersion,
+      ngext: options.ngHtml ? '.ng' : '',
       tpl: '',
     }
   );
