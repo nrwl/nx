@@ -88,7 +88,8 @@ export async function getServerConfig(
         i18nOptions: i18n,
         platform: 'server',
       }),
-      ...(normalizedOptions.prerender && !isDevServer
+      ...(normalizedOptions.prerender ||
+      (normalizedOptions.appShell && !isDevServer)
         ? [new PrerenderPlugin(normalizedOptions, i18n)]
         : []),
     ],

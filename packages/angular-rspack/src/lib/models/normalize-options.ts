@@ -32,7 +32,6 @@ import type {
   ScriptOrStyleEntry,
   SourceMap,
 } from './angular-rspack-plugin-options';
-import { TOP_LEVEL_OPTIONS_PENDING_SUPPORT } from './unsupported-options';
 
 export const INDEX_HTML_CSR = 'index.csr.html';
 
@@ -88,31 +87,9 @@ export function validateSsr(ssr: AngularRspackPluginOptions['ssr']) {
     }
 }
 
-function validateGeneralUnsupportedOptions(
-  options: AngularRspackPluginOptions
-) {
-  const topLevelUnsupportedOptions = TOP_LEVEL_OPTIONS_PENDING_SUPPORT.filter(
-    (option) => options[option] !== undefined
-  ).sort();
-
-  const unsupportedOptions = [
-    ...topLevelUnsupportedOptions.map((option) => `"${option}"`),
-  ];
-
-  if (unsupportedOptions.length > 0) {
-    console.warn(
-      `The following options are not yet supported:\n  ${unsupportedOptions.join(
-        '\n  '
-      )}\n`
-    );
-  }
-}
-
 export async function normalizeOptions(
   options: AngularRspackPluginOptions
 ): Promise<NormalizedAngularRspackPluginOptions> {
-  validateGeneralUnsupportedOptions(options);
-
   const { fileReplacements = [], server, ssr, optimization } = options;
 
   validateSsr(ssr);
@@ -234,6 +211,7 @@ export async function normalizeOptions(
 
   return {
     advancedOptimizations,
+    appShell: options.appShell ?? false,
     assets,
     aot,
     baseHref: options.baseHref,

@@ -40,13 +40,106 @@ export class PrerenderPlugin implements RspackPluginInstance {
     compiler.hooks.afterEmit.tapAsync(
       'Angular Rspack',
       async (compilation, callback) => {
-        await this.#renderUniversal(compilation);
+        if (this.#_options.appShell) {
+          await this.#prerenderAppShell(compilation);
+        }
+        if (this.#_options.prerender) {
+          await this.#prerenderSSGUniversal(compilation);
+        }
         callback();
       }
     );
   }
 
-  async #renderUniversal(compilation: Compilation) {
+  async #prerenderAppShell(compilation: Compilation) {
+    // Users can specify a different base html file e.g. "src/home.html"
+    const indexFile = getIndexOutputFile(
+      this.#_options.index as IndexExpandedDefinition
+    );
+
+    const zonePackage = require.resolve('zone.js', {
+      paths: [workspaceRoot],
+    });
+
+    const worker = new WorkerPool({
+      filename: require.resolve('./tools/render-worker'),
+      maxThreads: maxWorkers(),
+      workerData: {
+        zonePackage,
+      },
+      recordTiming: false,
+    });
+
+    try {
+      const outputPaths = this.#i18n
+        ? ensureOutputPaths(this.#_options.outputPath.browser, this.#i18n)
+        : new Map([['', this.#_options.outputPath.browser]]);
+      const localeOutputPaths = this.#i18n
+        ? getLocaleOutputPaths(this.#i18n)
+        : new Map();
+      for (const [locale, outputPath] of outputPaths.entries()) {
+        const normalizedOutputPath = join(
+          this.#_options.outputPath.browser,
+          outputPath
+        );
+        const serverBundlePath = locale
+          ? join(
+              this.#_options.outputPath.server,
+              localeOutputPaths.get(locale),
+              'server.js'
+            )
+          : join(this.#_options.outputPath.server, 'server.js');
+
+        if (!existsSync(serverBundlePath)) {
+          throw new Error(
+            `Could not find the main bundle: ${serverBundlePath}`
+          );
+        }
+
+        try {
+          const options: RenderOptions = {
+            indexFile,
+            deployUrl: this.#_options.deployUrl || '',
+            inlineCriticalCss:
+              !!this.#_options.optimization.styles.inlineCritical,
+            minifyCss: !!this.#_options.optimization.styles.minify,
+            outputPath: normalizedOutputPath,
+            route: '/',
+            serverBundlePath,
+          };
+
+          const { errors, warnings } = await worker.run(options);
+          errors?.forEach((e) => addError(compilation, e));
+          warnings?.forEach((e) => addWarning(compilation, e));
+        } catch (error) {
+          assertIsError(error);
+          addError(compilation, error.message);
+        }
+
+        if (this.#_options.serviceWorker && this.#_options.ngswConfigPath) {
+          try {
+            await augmentAppWithServiceWorker(
+              this.#_options.root,
+              workspaceRoot,
+              outputPath,
+              this.#_options.baseHref || '/',
+              this.#_options.ngswConfigPath
+            );
+          } catch (error) {
+            assertIsError(error);
+            addError(compilation, error.message);
+          }
+        }
+      }
+    } catch (error) {
+      assertIsError(error);
+      addError(compilation, error.message);
+    } finally {
+      void worker.destroy();
+    }
+  }
+
+  async #prerenderSSGUniversal(compilation: Compilation) {
     // Users can specify a different base html file e.g. "src/home.html"
     const indexFile = getIndexOutputFile(
       this.#_options.index as IndexExpandedDefinition
