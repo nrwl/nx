@@ -1,10 +1,11 @@
+use super::utils::normalize_newlines;
+use crossterm::event::{KeyCode, KeyEvent, MouseEvent, MouseEventKind};
 use std::{
     io::{self, Write},
     sync::{Arc, Mutex, RwLock},
 };
+use tracing::debug;
 use vt100_ctt::Parser;
-
-use super::utils::normalize_newlines;
 
 /// A wrapper that provides access to the terminal screen without cloning
 ///
@@ -91,6 +92,58 @@ impl PtyInstance {
         }
 
         Ok(())
+    }
+
+    pub fn handle_arrow_keys(&mut self, event: KeyEvent) {
+        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
+        debug!("Alternate Screen: {:?}", alternative_screen);
+        if !alternative_screen {
+            match event.code {
+                KeyCode::Up => {
+                    self.scroll_up();
+                }
+                KeyCode::Down => {
+                    self.scroll_down();
+                }
+                _ => {}
+            }
+        } else {
+            match event.code {
+                KeyCode::Up => {
+                    self.write_input(b"\x1b[A").ok();
+                }
+                KeyCode::Down => {
+                    self.write_input(b"\x1b[B").ok();
+                }
+                _ => {}
+            }
+        }
+    }
+
+    pub fn send_mouse_event(&mut self, event: MouseEvent) {
+        let alternative_screen = self.parser.read().unwrap().screen().alternate_screen();
+        debug!("Alternate Screen: {:?}", alternative_screen);
+        if !alternative_screen {
+            match event.kind {
+                MouseEventKind::ScrollUp => {
+                    self.scroll_up();
+                }
+                MouseEventKind::ScrollDown => {
+                    self.scroll_down();
+                }
+                _ => {}
+            }
+        } else {
+            match event.kind {
+                MouseEventKind::ScrollUp => {
+                    self.write_input(b"\x1b[A").ok();
+                }
+                MouseEventKind::ScrollDown => {
+                    self.write_input(b"\x1b[B").ok();
+                }
+                _ => {}
+            }
+        }
     }
 
     pub fn get_screen(&self) -> Option<PtyScreenRef> {
