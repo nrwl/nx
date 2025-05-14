@@ -54,7 +54,6 @@
         "description": "The full path for the browser entry point to the application, relative to the current workspace."
       },
       "server": {
-        "type": "string",
         "description": "The full path for the server entry point to the application, relative to the current workspace.",
         "oneOf": [
           {
@@ -304,6 +303,11 @@
         "type": "object",
         "additionalProperties": { "type": "string" }
       },
+      "conditions": {
+        "description": "Custom package resolution conditions used to resolve conditional exports/imports. Defaults to ['module', 'development'/'production']. The following special conditions are always present if the requirements are satisfied: 'default', 'import', 'require', 'browser', 'node'. _Note: this is only supported in Angular versions >= 20.0.0_.",
+        "type": "array",
+        "items": { "type": "string" }
+      },
       "fileReplacements": {
         "description": "Replace compilation source files with other compilation source files in the build.",
         "type": "array",
@@ -387,6 +391,11 @@
                 "type": "boolean",
                 "description": "Resolve vendor packages source maps.",
                 "default": false
+              },
+              "sourcesContent": {
+                "type": "boolean",
+                "description": "Output original source content for files within the source map. _Note: this is only supported in Angular versions >= 20.0.0_.",
+                "default": true
               }
             },
             "additionalProperties": false
